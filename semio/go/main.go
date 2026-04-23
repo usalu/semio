@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"archive/zip"
 	"database/sql"
@@ -15859,7 +15860,13 @@ func GetGeometricInsightsForRepresentation(representation interface{}) (Geometri
 // #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
-// 🗄️KitFromSqlite reads a Kit from a SQLite database file
+// SemioKitSqliteSchemaVersion matches [`semio::io::sqlite::SCHEMA_VERSION`] in `semio/rs/lib.rs`.
+const SemioKitSqliteSchemaVersion = "2026-04-23-kit-vcs-sqlite-roundtrip"
+
+// SemioKitSqliteSchemaEngine matches [`semio::io::sqlite::SCHEMA_ENGINE`] in `semio/rs/lib.rs`.
+const SemioKitSqliteSchemaEngine = "semio-rs"
+
+// 🗄️KitFromSqlite reads a Kit from a SQLite database file (normalized `semio/sqlite/schema.sql`).
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -15869,13 +15876,10 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 
 	kit := &Kit{}
 
-	row := db.QueryRow("SELECT id, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1")
-	var version, description, icon, image, preview, remote, homepage, license sql.NullString
-	if err := row.Scan(&kit.Id, &kit.Name, &version, &description, &icon, &image, &preview, &remote, &homepage, &license); err != nil {
+	row := db.QueryRow(`SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at FROM kit LIMIT 1`)
+	var description, icon, image, preview, remote, homepage, license, uri, createdAt, updatedAt sql.NullString
+	if err := row.Scan(&kit.Id, &kit.Name, &description, &icon, &image, &preview, &remote, &homepage, &license, &uri, &createdAt, &updatedAt); err != nil {
 		return nil, fmt.Errorf("failed to scan kit: %w", err)
-	}
-	if version.Valid {
-		kit.Version = version.String
 	}
 	if description.Valid {
 		kit.Description = &description.String
@@ -15898,6 +15902,19 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	if license.Valid {
 		kit.License = &license.String
 	}
+	if createdAt.Valid {
+		kit.CreatedAt = createdAt.String
+	}
+	if updatedAt.Valid {
+		kit.UpdatedAt = updatedAt.String
+	}
+	_ = uri
+
+	families, err := loadFamilies(db, kit.Id)
+	if err != nil {
+		return nil, err
+	}
+	kit.Families = families
 
 	types, err := loadTypes(db, kit.Id)
 	if err != nil {
@@ -15905,7 +15922,7 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	}
 	kit.Types = types
 
-	designs, err := loadDesigns(db, kit.Id)
+	designs, err := loadDesigns(db, kit.Id, types)
 	if err != nil {
 		return nil, err
 	}
@@ -15914,9 +15931,93 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	return kit, nil
 }
 
+// 👪loadFamilies loads kit-level families and their ports.
+func loadFamilies(db *sql.DB, kitId string) ([]Family, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon FROM family WHERE kit_id = ? ORDER BY ordinal`, kitId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []Family
+	for rows.Next() {
+		var f Family
+		var description, icon sql.NullString
+		if err := rows.Scan(&f.Id, &f.Name, &description, &icon); err != nil {
+			return nil, err
+		}
+		if description.Valid {
+			f.Description = &description.String
+		}
+		if icon.Valid {
+			f.Icon = &icon.String
+		}
+		ports, err := loadPortsForFamily(db, kitId, f.Id)
+		if err != nil {
+			return nil, err
+		}
+		f.Ports = ports
+		out = append(out, f)
+	}
+	return out, nil
+}
+
+func loadPortsForFamily(db *sql.DB, kitId, familyId string) ([]Port, error) {
+	prows, err := db.Query(`SELECT id, name, icon, mandatory, t, description,
+		point_x, point_y, point_z, direction_x, direction_y, direction_z
+		FROM port WHERE kit_id = ? AND parent_family_id = ? ORDER BY ordinal`, kitId, familyId)
+	if err != nil {
+		return nil, err
+	}
+	defer prows.Close()
+
+	var ports []Port
+	for prows.Next() {
+		var p Port
+		var icon, description sql.NullString
+		var mandatory sql.NullInt64
+		var t sql.NullFloat64
+		var px, py, pz, dx, dy, dz sql.NullFloat64
+		if err := prows.Scan(&p.Id, &p.Name, &icon, &mandatory, &t, &description,
+			&px, &py, &pz, &dx, &dy, &dz); err != nil {
+			return nil, err
+		}
+		_ = mandatory
+		_ = t
+		_ = px
+		_ = py
+		_ = pz
+		_ = dx
+		_ = dy
+		_ = dz
+		if icon.Valid {
+			p.Icon = &icon.String
+		}
+		if description.Valid {
+			p.Description = &description.String
+		}
+		cprows, err := db.Query(`SELECT compatible_port_id FROM port_compatible_port WHERE port_id = ? ORDER BY ordinal`, p.Id)
+		if err != nil {
+			return nil, err
+		}
+		for cprows.Next() {
+			var cpid string
+			if err := cprows.Scan(&cpid); err != nil {
+				cprows.Close()
+				return nil, err
+			}
+			p.CompatiblePorts = append(p.CompatiblePorts, PortId{Id: cpid})
+		}
+		cprows.Close()
+		ports = append(ports, p)
+	}
+	return ports, nil
+}
+
 // 🏷️loadTypes loads all types belonging to a kit from the database
 func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
-	rows, err := db.Query("SELECT id, name, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_id = ?", kitId)
+	rows, err := db.Query(`SELECT id, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at
+		FROM type WHERE kit_id = ? ORDER BY ordinal`, kitId)
 	if err != nil {
 		return nil, err
 	}
@@ -15925,17 +16026,13 @@ func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
 	var types []Type
 	for rows.Next() {
 		var t Type
-		var folder, unit, description, icon, image sql.NullString
-		var stock sql.NullInt32
-		var isAbstract, virtual sql.NullBool
-		if err := rows.Scan(&t.Id, &t.Name, &isAbstract, &folder, &stock, &virtual, &unit, &description, &icon, &image); err != nil {
+		var description, icon, image, unit, locationID, createdAt, updatedAt sql.NullString
+		var stock, virtual sql.NullInt64
+		if err := rows.Scan(&t.Id, &t.Name, &description, &icon, &image, &stock, &virtual, &unit, &locationID, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
-		if folder.Valid {
-			t.Folder = &folder.String
-		}
 		if stock.Valid {
-			s := int(stock.Int32)
+			s := int(stock.Int64)
 			t.Stock = &s
 		}
 		if unit.Valid {
@@ -15950,13 +16047,29 @@ func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
 		if image.Valid {
 			t.Image = &image.String
 		}
-
-		if isAbstract.Valid {
-			t.IsAbstract = &isAbstract.Bool
-		}
 		if virtual.Valid {
-			t.Virtual = &virtual.Bool
+			v := virtual.Int64 != 0
+			t.Virtual = &v
 		}
+		if locationID.Valid {
+			t.Location = &LocationId{Id: locationID.String}
+		}
+		t.CreatedAt = createdAt.String
+		t.UpdatedAt = updatedAt.String
+
+		tfr, err := db.Query(`SELECT family_id FROM type_family WHERE type_id = ? ORDER BY ordinal`, t.Id)
+		if err != nil {
+			return nil, err
+		}
+		for tfr.Next() {
+			var fid string
+			if err := tfr.Scan(&fid); err != nil {
+				tfr.Close()
+				return nil, err
+			}
+			t.Families = append(t.Families, FamilyId{Id: fid})
+		}
+		tfr.Close()
 
 		connectors, err := loadConnectors(db, t.Id)
 		if err != nil {
@@ -15970,10 +16083,9 @@ func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
 }
 
 // ➕loadDesigns loads all designs belonging to a kit from the database
-func loadDesigns(db *sql.DB, kitId string) ([]Design, error) {
-	rows, err := db.Query(`SELECT id, name, unit, folder, 
-        is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
-        FROM design WHERE kit_id = ?`, kitId)
+func loadDesigns(db *sql.DB, kitId string, types []Type) ([]Design, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon, image, location_id, unit, created_at, updated_at
+        FROM design WHERE kit_id = ? ORDER BY ordinal`, kitId)
 	if err != nil {
 		return nil, err
 	}
@@ -15982,27 +16094,12 @@ func loadDesigns(db *sql.DB, kitId string) ([]Design, error) {
 	var designs []Design
 	for rows.Next() {
 		var d Design
-		var unit, folder, description, icon, image sql.NullString
-		var isAbstract, canScale, canMirror sql.NullBool
-		var created, updated string
-		if err := rows.Scan(&d.Id, &d.Name, &unit, &folder,
-			&isAbstract, &canScale, &canMirror, &description, &icon, &image, &created, &updated); err != nil {
+		var description, icon, image, locationID, unit, createdAt, updatedAt sql.NullString
+		if err := rows.Scan(&d.Id, &d.Name, &description, &icon, &image, &locationID, &unit, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
 		if unit.Valid {
 			d.Unit = &unit.String
-		}
-		if folder.Valid {
-			d.Folder = &folder.String
-		}
-		if isAbstract.Valid {
-			d.IsAbstract = &isAbstract.Bool
-		}
-		if canScale.Valid {
-			d.CanScale = &canScale.Bool
-		}
-		if canMirror.Valid {
-			d.CanMirror = &canMirror.Bool
 		}
 		if description.Valid {
 			d.Description = &description.String
@@ -16013,8 +16110,25 @@ func loadDesigns(db *sql.DB, kitId string) ([]Design, error) {
 		if image.Valid {
 			d.Image = &image.String
 		}
-		d.CreatedAt = created
-		d.UpdatedAt = updated
+		if locationID.Valid {
+			d.Location = &LocationId{Id: locationID.String}
+		}
+		d.CreatedAt = createdAt.String
+		d.UpdatedAt = updatedAt.String
+
+		dfr, err := db.Query(`SELECT family_id FROM design_family WHERE design_id = ? ORDER BY ordinal`, d.Id)
+		if err != nil {
+			return nil, err
+		}
+		for dfr.Next() {
+			var fid string
+			if err := dfr.Scan(&fid); err != nil {
+				dfr.Close()
+				return nil, err
+			}
+			d.Families = append(d.Families, FamilyId{Id: fid})
+		}
+		dfr.Close()
 
 		pieces, err := loadPieces(db, d.Id)
 		if err != nil {
@@ -16022,7 +16136,7 @@ func loadDesigns(db *sql.DB, kitId string) ([]Design, error) {
 		}
 		d.Pieces = pieces
 
-		connections, err := loadConnections(db, d.Id)
+		connections, err := loadConnections(db, d.Id, pieces, types)
 		if err != nil {
 			return nil, err
 		}
@@ -16035,12 +16149,13 @@ func loadDesigns(db *sql.DB, kitId string) ([]Design, error) {
 
 // 🧩loadPieces loads all pieces belonging to a design from the database
 func loadPieces(db *sql.DB, designId string) ([]Piece, error) {
-	rows, err := db.Query(`SELECT id, name, type_id, design_id_ref,
+	rows, err := db.Query(`SELECT id, name, description,
         plane_origin_x, plane_origin_y, plane_origin_z,
         plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
         plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
-        center_u, center_v, scale, is_hidden, is_locked, color, description
-        FROM piece WHERE design_id = ?`, designId)
+        center_x, center_y, center_z,
+        scale, hidden, locked, color, type_id, design_ref_id, design_id
+        FROM piece WHERE design_id = ? ORDER BY ordinal`, designId)
 	if err != nil {
 		return nil, err
 	}
@@ -16051,13 +16166,16 @@ func loadPieces(db *sql.DB, designId string) ([]Piece, error) {
 		var p Piece
 		var name, typeId, designIdRef, color, description sql.NullString
 		var originX, originY, originZ, xAxisX, xAxisY, xAxisZ, yAxisX, yAxisY, yAxisZ sql.NullFloat64
-		var centerU, centerV, scale sql.NullFloat64
-		var isHidden, isLocked bool
-		if err := rows.Scan(&p.Id, &name, &typeId, &designIdRef,
+		var centerX, centerY, centerZ, scale sql.NullFloat64
+		var hidden, locked sql.NullInt64
+		var designID string
+		if err := rows.Scan(&p.Id, &name, &description,
 			&originX, &originY, &originZ, &xAxisX, &xAxisY, &xAxisZ, &yAxisX, &yAxisY, &yAxisZ,
-			&centerU, &centerV, &scale, &isHidden, &isLocked, &color, &description); err != nil {
+			&centerX, &centerY, &centerZ,
+			&scale, &hidden, &locked, &color, &typeId, &designIdRef, &designID); err != nil {
 			return nil, err
 		}
+		_ = designID
 		if name.Valid {
 			p.Name = &name.String
 		}
@@ -16067,38 +16185,54 @@ func loadPieces(db *sql.DB, designId string) ([]Piece, error) {
 		if designIdRef.Valid {
 			p.Design = &DesignId{Id: designIdRef.String}
 		}
-		if originX.Valid {
+		if originX.Valid && originY.Valid && originZ.Valid &&
+			xAxisX.Valid && xAxisY.Valid && xAxisZ.Valid &&
+			yAxisX.Valid && yAxisY.Valid && yAxisZ.Valid {
 			p.Plane = &Plane{
 				Origin: Point{X: originX.Float64, Y: originY.Float64, Z: originZ.Float64},
 				XAxis:  Vector{X: xAxisX.Float64, Y: xAxisY.Float64, Z: xAxisZ.Float64},
 				YAxis:  Vector{X: yAxisX.Float64, Y: yAxisY.Float64, Z: yAxisZ.Float64},
 			}
 		}
-		if centerU.Valid && centerV.Valid {
-			p.Center = &Coordinate{U: centerU.Float64, V: centerV.Float64}
+		if centerX.Valid && centerY.Valid {
+			p.Center = &Coordinate{U: centerX.Float64, V: centerY.Float64}
 		}
 		if scale.Valid {
 			p.Scale = &scale.Float64
 		}
-		p.IsHidden = &isHidden
-		p.IsLocked = &isLocked
+		if hidden.Valid {
+			h := hidden.Int64 != 0
+			p.IsHidden = &h
+		}
+		if locked.Valid {
+			l := locked.Int64 != 0
+			p.IsLocked = &l
+		}
 		if color.Valid {
 			p.Color = &color.String
 		}
 		if description.Valid {
 			p.Description = &description.String
 		}
+		_ = centerZ
 		pieces = append(pieces, p)
 	}
 	return pieces, nil
 }
 
-// 🔌loadConnections loads all connections belonging to a design from the database
-func loadConnections(db *sql.DB, designId string) ([]Connection, error) {
-	rows, err := db.Query(`SELECT id, connected_piece_id, connected_connector_id,
-        connecting_piece_id, connecting_connector_id,
-        gap, shift, rise, rotation, turn, tilt, u, v, description
-        FROM connection WHERE design_id = ?`, designId)
+// 🔌loadConnections loads all connections belonging to a design from the database.
+func loadConnections(db *sql.DB, designId string, pieces []Piece, types []Type) ([]Connection, error) {
+	pieceType := make(map[string]string)
+	for _, p := range pieces {
+		if p.Type != nil {
+			pieceType[p.Id] = p.Type.Id
+		}
+	}
+	rows, err := db.Query(`SELECT id,
+		connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+		connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+		gap, shift, rise, rotation, turn, tilt, x, y, description
+		FROM connection WHERE design_id = ? ORDER BY ordinal`, designId)
 	if err != nil {
 		return nil, err
 	}
@@ -16107,32 +16241,55 @@ func loadConnections(db *sql.DB, designId string) ([]Connection, error) {
 	var connections []Connection
 	for rows.Next() {
 		var c Connection
-		var connectedConnectorId, connectingConnectorId sql.NullString
-		var u, v sql.NullFloat64
+		var id, cPiece, gPiece string
+		var cPort, cDesPiece, gPort, gDesPiece sql.NullString
+		var gap, shift, rise, rotation, turn, tilt, x, y sql.NullFloat64
 		var description sql.NullString
-		var gap, shift, rise, rotation, turn, tilt float64
-		if err := rows.Scan(&c.Id, &c.Connected.Piece.Id, &connectedConnectorId,
-			&c.Connecting.Piece.Id, &connectingConnectorId,
-			&gap, &shift, &rise, &rotation, &turn, &tilt, &u, &v, &description); err != nil {
+		var cSide, gSide string
+		if err := rows.Scan(&id, &cSide, &cPiece, &cPort, &cDesPiece, &gSide, &gPiece, &gPort, &gDesPiece,
+			&gap, &shift, &rise, &rotation, &turn, &tilt, &x, &y, &description); err != nil {
 			return nil, err
 		}
-		if connectedConnectorId.Valid {
-			c.Connected.Connector = &ConnectorId{Id: connectedConnectorId.String}
+		_ = cSide
+		_ = gSide
+		c.Id = id
+		c.Connected.Piece = PieceId{Id: cPiece}
+		if cDesPiece.Valid {
+			c.Connected.DesignPiece = &PieceId{Id: cDesPiece.String}
 		}
-		if connectingConnectorId.Valid {
-			c.Connecting.Connector = &ConnectorId{Id: connectingConnectorId.String}
+		if connID := connectorIDForTypePort(types, pieceType[cPiece], cPort); connID != nil {
+			c.Connected.Connector = connID
 		}
-		c.Gap = gap
-		c.Shift = shift
-		c.Rise = rise
-		c.Rotation = rotation
-		c.Turn = turn
-		c.Tilt = tilt
-		if u.Valid {
-			c.U = u.Float64
+		c.Connecting.Piece = PieceId{Id: gPiece}
+		if gDesPiece.Valid {
+			c.Connecting.DesignPiece = &PieceId{Id: gDesPiece.String}
 		}
-		if v.Valid {
-			c.V = v.Float64
+		if connID := connectorIDForTypePort(types, pieceType[gPiece], gPort); connID != nil {
+			c.Connecting.Connector = connID
+		}
+		if gap.Valid {
+			c.Gap = gap.Float64
+		}
+		if shift.Valid {
+			c.Shift = shift.Float64
+		}
+		if rise.Valid {
+			c.Rise = rise.Float64
+		}
+		if rotation.Valid {
+			c.Rotation = rotation.Float64
+		}
+		if turn.Valid {
+			c.Turn = turn.Float64
+		}
+		if tilt.Valid {
+			c.Tilt = tilt.Float64
+		}
+		if x.Valid {
+			c.U = x.Float64
+		}
+		if y.Valid {
+			c.V = y.Float64
 		}
 		if description.Valid {
 			c.Description = &description.String
@@ -16142,11 +16299,27 @@ func loadConnections(db *sql.DB, designId string) ([]Connection, error) {
 	return connections, nil
 }
 
+func connectorIDForTypePort(types []Type, typeID string, portID sql.NullString) *ConnectorId {
+	if !portID.Valid || typeID == "" {
+		return nil
+	}
+	for _, typ := range types {
+		if typ.Id != typeID {
+			continue
+		}
+		for i := range typ.Connectors {
+			co := &typ.Connectors[i]
+			if co.Port != nil && co.Port.Id == portID.String {
+				return &ConnectorId{Id: co.Id}
+			}
+		}
+	}
+	return nil
+}
+
 // 🔌loadConnectors loads all connectors belonging to a type from the database
 func loadConnectors(db *sql.DB, typeId string) ([]Connector, error) {
-	rows, err := db.Query(`SELECT id, name, point_x, point_y, point_z,
-        direction_x, direction_y, direction_z, t, mandatory, port_id, description
-        FROM connector WHERE type_id = ?`, typeId)
+	rows, err := db.Query(`SELECT id, name, description, port_id FROM connector WHERE type_id = ? ORDER BY ordinal`, typeId)
 	if err != nil {
 		return nil, err
 	}
@@ -16155,22 +16328,18 @@ func loadConnectors(db *sql.DB, typeId string) ([]Connector, error) {
 	var connectors []Connector
 	for rows.Next() {
 		var c Connector
-		var name, portId, description sql.NullString
-		var pointX, pointY, pointZ, dirX, dirY, dirZ, t float64
-		var mandatory bool
-		if err := rows.Scan(&c.Id, &name, &pointX, &pointY, &pointZ,
-			&dirX, &dirY, &dirZ, &t, &mandatory, &portId, &description); err != nil {
+		var name, description, portID sql.NullString
+		if err := rows.Scan(&c.Id, &name, &description, &portID); err != nil {
 			return nil, err
 		}
 		if name.Valid {
 			c.Name = &name.String
 		}
-		c.Point = Point{X: pointX, Y: pointY, Z: pointZ}
-		c.Direction = Vector{X: dirX, Y: dirY, Z: dirZ}
-		c.T = t
-		c.Mandatory = &mandatory
-		if portId.Valid {
-			c.Port = &PortId{Id: portId.String}
+		c.Point = Point{}
+		c.Direction = Vector{}
+		c.T = 0
+		if portID.Valid {
+			c.Port = &PortId{Id: portID.String}
 		}
 		if description.Valid {
 			c.Description = &description.String
@@ -16180,8 +16349,149 @@ func loadConnectors(db *sql.DB, typeId string) ([]Connector, error) {
 	return connectors, nil
 }
 
+func kitSqliteTimestamps(k *Kit) (created, updated string) {
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	created = k.CreatedAt
+	if created == "" {
+		created = now
+	}
+	updated = k.UpdatedAt
+	if updated == "" {
+		updated = now
+	}
+	return created, updated
+}
+
+func portIDForConnector(types []Type, connectorID string) (string, error) {
+	for _, typ := range types {
+		for i := range typ.Connectors {
+			c := typ.Connectors[i]
+			if c.Id == connectorID {
+				if c.Port == nil {
+					return "", fmt.Errorf("connector %s has no port reference", connectorID)
+				}
+				return c.Port.Id, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("connector %s not found", connectorID)
+}
+
+func connectionSidePortID(types []Type, side Side) (*string, error) {
+	if side.Connector == nil {
+		return nil, nil
+	}
+	pid, err := portIDForConnector(types, side.Connector.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pid, nil
+}
+
+func insertPortRow(db *sql.DB, kitID string, familyID *string, port Port, ordinal int) error {
+	var fam any
+	if familyID != nil {
+		fam = *familyID
+	}
+	if _, err := db.Exec(`INSERT INTO port (
+			id, ordinal, name, icon, mandatory, t, description,
+			point_x, point_y, point_z, direction_x, direction_y, direction_z,
+			kit_id, parent_family_id
+		) VALUES (?, ?, ?, ?, NULL, NULL, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?)`,
+		port.Id, ordinal, port.Name, port.Icon, port.Description, kitID, fam,
+	); err != nil {
+		return fmt.Errorf("failed to insert port %s: %w", port.Id, err)
+	}
+	for cpi, cp := range port.CompatiblePorts {
+		if _, err := db.Exec(`INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?, ?, ?)`,
+			port.Id, cpi, cp.Id); err != nil {
+			return fmt.Errorf("port_compatible_port: %w", err)
+		}
+	}
+	return nil
+}
+
+func insertPieceRow(db *sql.DB, designID string, p Piece, ordinal int) error {
+	var ox, oy, oz, xx, xy, xz, yx, yy, yz *float64
+	if p.Plane != nil {
+		ox = &p.Plane.Origin.X
+		oy = &p.Plane.Origin.Y
+		oz = &p.Plane.Origin.Z
+		xx = &p.Plane.XAxis.X
+		xy = &p.Plane.XAxis.Y
+		xz = &p.Plane.XAxis.Z
+		yx = &p.Plane.YAxis.X
+		yy = &p.Plane.YAxis.Y
+		yz = &p.Plane.YAxis.Z
+	}
+	var cx, cy, cz *float64
+	if p.Center != nil {
+		cx = &p.Center.U
+		cy = &p.Center.V
+	}
+	var mox, moy, moz, mxx, mxy, mxz, myx, myy, myz *float64
+	if p.MirrorPlane != nil {
+		mox = &p.MirrorPlane.Origin.X
+		moy = &p.MirrorPlane.Origin.Y
+		moz = &p.MirrorPlane.Origin.Z
+		mxx = &p.MirrorPlane.XAxis.X
+		mxy = &p.MirrorPlane.XAxis.Y
+		mxz = &p.MirrorPlane.XAxis.Z
+		myx = &p.MirrorPlane.YAxis.X
+		myy = &p.MirrorPlane.YAxis.Y
+		myz = &p.MirrorPlane.YAxis.Z
+	}
+	hidden := sql.NullInt64{}
+	if p.IsHidden != nil {
+		v := int64(0)
+		if *p.IsHidden {
+			v = 1
+		}
+		hidden = sql.NullInt64{Int64: v, Valid: true}
+	}
+	locked := sql.NullInt64{}
+	if p.IsLocked != nil {
+		v := int64(0)
+		if *p.IsLocked {
+			v = 1
+		}
+		locked = sql.NullInt64{Int64: v, Valid: true}
+	}
+	var typeID, designRef *string
+	if p.Type != nil {
+		typeID = &p.Type.Id
+	}
+	if p.Design != nil {
+		designRef = &p.Design.Id
+	}
+	_, err := db.Exec(`INSERT INTO piece (
+			id, ordinal, name, description,
+			plane_origin_x, plane_origin_y, plane_origin_z,
+			plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+			plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+			center_x, center_y, center_z, scale,
+			mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+			mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+			mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+			hidden, locked, color, type_id, design_ref_id, design_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.Id, ordinal, p.Name, p.Description,
+		ox, oy, oz, xx, xy, xz, yx, yy, yz,
+		cx, cy, cz, p.Scale,
+		mox, moy, moz, mxx, mxy, mxz, myx, myy, myz,
+		hidden, locked, p.Color, typeID, designRef, designID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert piece %s: %w", p.Id, err)
+	}
+	return nil
+}
+
 // ✏️KitToSqlite writes a Kit to a SQLite database file
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
+	if kit == nil {
+		return fmt.Errorf("kit is nil")
+	}
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return err
@@ -16196,80 +16506,151 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 		return fmt.Errorf("failed to disable foreign keys: %w", err)
 	}
 
-	if _, err := db.Exec(`INSERT INTO kit (id, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-		kit.Id, kit.Name, kit.Version, kit.Description, kit.Icon, kit.Image, kit.Preview, kit.Remote, kit.Homepage, kit.License); err != nil {
+	created, updated := kitSqliteTimestamps(kit)
+	vcsInitial := "{}"
+	if _, err := db.Exec(`INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?, ?, datetime('now'))`,
+		SemioKitSqliteSchemaVersion, SemioKitSqliteSchemaEngine); err != nil {
+		return fmt.Errorf("failed to insert semio_schema: %w", err)
+	}
+	if _, err := db.Exec(`INSERT INTO kit (
+			id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		kit.Id, kit.Name, kit.Description, kit.Icon, kit.Image, kit.Preview, kit.Remote, kit.Homepage, kit.License, nil, created, updated, vcsInitial,
+	); err != nil {
 		return fmt.Errorf("failed to insert kit: %w", err)
 	}
 
-	for _, t := range kit.Types {
-		virtualVal := false
+	for fi := range kit.Families {
+		fam := kit.Families[fi]
+		if _, err := db.Exec(`INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?, ?, ?, ?, ?, ?)`,
+			fam.Id, fi, fam.Name, fam.Description, fam.Icon, kit.Id); err != nil {
+			return fmt.Errorf("failed to insert family %s: %w", fam.Id, err)
+		}
+		fid := fam.Id
+		for pi := range fam.Ports {
+			if err := insertPortRow(db, kit.Id, &fid, fam.Ports[pi], pi); err != nil {
+				return err
+			}
+		}
+	}
+
+	for ti := range kit.Types {
+		t := kit.Types[ti]
+		virtualVal := sql.NullInt64{}
 		if t.Virtual != nil {
-			virtualVal = *t.Virtual
+			v := int64(0)
+			if *t.Virtual {
+				v = 1
+			}
+			virtualVal = sql.NullInt64{Int64: v, Valid: true}
 		}
-		isAbstractVal := false
-		if t.IsAbstract != nil {
-			isAbstractVal = *t.IsAbstract
+		var stock sql.NullInt64
+		if t.Stock != nil {
+			stock = sql.NullInt64{Int64: int64(*t.Stock), Valid: true}
 		}
-		if _, err := db.Exec(`INSERT INTO type (id, name, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			t.Id, t.Name, isAbstractVal, t.Folder, t.Stock, virtualVal, t.Unit, t.Description, t.Icon, t.Image, kit.Id); err != nil {
+		var locID *string
+		if t.Location != nil {
+			locID = &t.Location.Id
+		}
+		var createdT, updatedT any
+		createdT = t.CreatedAt
+		if t.CreatedAt == "" {
+			createdT = nil
+		}
+		updatedT = t.UpdatedAt
+		if t.UpdatedAt == "" {
+			updatedT = nil
+		}
+		if _, err := db.Exec(`INSERT INTO type (
+				id, ordinal, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at, kit_id
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.Id, ti, t.Name, t.Description, t.Icon, t.Image, stock, virtualVal, t.Unit, locID, createdT, updatedT, kit.Id,
+		); err != nil {
 			return fmt.Errorf("failed to insert type %s: %w", t.Id, err)
 		}
-		for _, c := range t.Connectors {
-			var portId *string
-			if c.Port != nil {
-				portId = &c.Port.Id
+		for fi := range t.Families {
+			ref := t.Families[fi]
+			if _, err := db.Exec(`INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?, ?, ?)`, t.Id, ref.Id, fi); err != nil {
+				return fmt.Errorf("failed to insert type_family for type %s: %w", t.Id, err)
 			}
-			if _, err := db.Exec(`INSERT INTO connector (id, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_id, description, type_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				c.Id, c.Name, c.Point.X, c.Point.Y, c.Point.Z, c.Direction.X, c.Direction.Y, c.Direction.Z, c.T, c.Mandatory, portId, c.Description, t.Id); err != nil {
+		}
+		for ci := range t.Connectors {
+			c := t.Connectors[ci]
+			if c.Port == nil {
+				return fmt.Errorf("connector %s on type %s needs port_id for SQLite", c.Id, t.Id)
+			}
+			cname := ""
+			if c.Name != nil {
+				cname = *c.Name
+			}
+			if _, err := db.Exec(`INSERT INTO connector (id, ordinal, name, description, port_id, type_id) VALUES (?, ?, ?, ?, ?, ?)`,
+				c.Id, ci, cname, c.Description, c.Port.Id, t.Id); err != nil {
 				return fmt.Errorf("failed to insert connector %s: %w", c.Id, err)
 			}
 		}
 	}
 
-	for _, d := range kit.Designs {
-		if _, err := db.Exec(`INSERT INTO design (id, name, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			d.Id, d.Name, d.Unit, d.Folder, d.IsAbstract, d.CanScale, d.CanMirror, d.Description, d.Icon, d.Image, kit.Id); err != nil {
+	for di := range kit.Designs {
+		d := kit.Designs[di]
+		var locID *string
+		if d.Location != nil {
+			locID = &d.Location.Id
+		}
+		var createdD, updatedD any
+		createdD = d.CreatedAt
+		if d.CreatedAt == "" {
+			createdD = nil
+		}
+		updatedD = d.UpdatedAt
+		if d.UpdatedAt == "" {
+			updatedD = nil
+		}
+		if _, err := db.Exec(`INSERT INTO design (
+				id, ordinal, name, description, icon, image, location_id, unit, created_at, updated_at, kit_id
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			d.Id, di, d.Name, d.Description, d.Icon, d.Image, locID, d.Unit, createdD, updatedD, kit.Id,
+		); err != nil {
 			return fmt.Errorf("failed to insert design %s: %w", d.Id, err)
 		}
-		for _, p := range d.Pieces {
-			var typeId, designRef *string
-			if p.Type != nil {
-				typeId = &p.Type.Id
-			}
-			if p.Design != nil {
-				designRef = &p.Design.Id
-			}
-			var ox, oy, oz, xx, xy, xz, yx, yy, yz *float64
-			if p.Plane != nil {
-				ox, oy, oz = &p.Plane.Origin.X, &p.Plane.Origin.Y, &p.Plane.Origin.Z
-				xx, xy, xz = &p.Plane.XAxis.X, &p.Plane.XAxis.Y, &p.Plane.XAxis.Z
-				yx, yy, yz = &p.Plane.YAxis.X, &p.Plane.YAxis.Y, &p.Plane.YAxis.Z
-			}
-			var cu, cv *float64
-			if p.Center != nil {
-				cu, cv = &p.Center.U, &p.Center.V
-			}
-			if _, err := db.Exec(`INSERT INTO piece (id, name, type_id, design_id_ref, plane_origin_x, plane_origin_y, plane_origin_z, plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z, center_u, center_v, scale, is_hidden, is_locked, color, description, design_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				p.Id, p.Name, typeId, designRef, ox, oy, oz, xx, xy, xz, yx, yy, yz, cu, cv, p.Scale, p.IsHidden, p.IsLocked, p.Color, p.Description, d.Id); err != nil {
-				return fmt.Errorf("failed to insert piece %s: %w", p.Id, err)
+		for fi := range d.Families {
+			ref := d.Families[fi]
+			if _, err := db.Exec(`INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?, ?, ?)`, d.Id, ref.Id, fi); err != nil {
+				return fmt.Errorf("failed to insert design_family: %w", err)
 			}
 		}
-		for _, c := range d.Connections {
-			var cdConnId, cgConnId *string
-			if c.Connected.Connector != nil {
-				cdConnId = &c.Connected.Connector.Id
+		for pi := range d.Pieces {
+			if err := insertPieceRow(db, d.Id, d.Pieces[pi], pi); err != nil {
+				return err
 			}
-			if c.Connecting.Connector != nil {
-				cgConnId = &c.Connecting.Connector.Id
+		}
+		for ci := range d.Connections {
+			c := d.Connections[ci]
+			cpid, err := connectionSidePortID(kit.Types, c.Connected)
+			if err != nil {
+				return fmt.Errorf("connection %s connected side: %w", c.Id, err)
 			}
-			if _, err := db.Exec(`INSERT INTO connection (id, connected_piece_id, connected_connector_id, connecting_piece_id, connecting_connector_id, gap, shift, rise, rotation, turn, tilt, u, v, description, design_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				c.Id, c.Connected.Piece.Id, cdConnId, c.Connecting.Piece.Id, cgConnId, c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id); err != nil {
+			gpid, err := connectionSidePortID(kit.Types, c.Connecting)
+			if err != nil {
+				return fmt.Errorf("connection %s connecting side: %w", c.Id, err)
+			}
+			var cdes, gdes *string
+			if c.Connected.DesignPiece != nil {
+				cdes = &c.Connected.DesignPiece.Id
+			}
+			if c.Connecting.DesignPiece != nil {
+				gdes = &c.Connecting.DesignPiece.Id
+			}
+			if _, err := db.Exec(`INSERT INTO connection (
+					id, ordinal,
+					connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+					connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+					gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				c.Id, ci,
+				fmt.Sprintf("%s:connected", c.Id), c.Connected.Piece.Id, cpid, cdes,
+				fmt.Sprintf("%s:connecting", c.Id), c.Connecting.Piece.Id, gpid, gdes,
+				c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id,
+			); err != nil {
 				return fmt.Errorf("failed to insert connection %s: %w", c.Id, err)
 			}
 		}

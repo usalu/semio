@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS core.kit (
 	icon TEXT,
 	image TEXT,
 	preview TEXT,
-	version TEXT,
 	remote TEXT,
 	homepage TEXT,
 	license TEXT,

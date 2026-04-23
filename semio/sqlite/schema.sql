@@ -542,7 +542,7 @@ CREATE TABLE IF NOT EXISTS draft (
 	FOREIGN KEY (alternative_id) REFERENCES alternative (id) ON DELETE SET NULL
 );
 
-CREATE TABLE IF NOT EXISTS transaction (
+CREATE TABLE IF NOT EXISTS "transaction" (
 	id TEXT NOT NULL,
 	draft_id TEXT NOT NULL,
 	time TEXT NOT NULL,
@@ -556,7 +556,7 @@ CREATE TABLE IF NOT EXISTS transaction_forward_command (
 	ordinal INTEGER NOT NULL,
 	command_json TEXT NOT NULL,
 	PRIMARY KEY (transaction_id, ordinal),
-	FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE
+	FOREIGN KEY (transaction_id) REFERENCES "transaction" (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS transaction_inverse_command (
@@ -564,7 +564,7 @@ CREATE TABLE IF NOT EXISTS transaction_inverse_command (
 	ordinal INTEGER NOT NULL,
 	command_json TEXT NOT NULL,
 	PRIMARY KEY (transaction_id, ordinal),
-	FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE
+	FOREIGN KEY (transaction_id) REFERENCES "transaction" (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS kit_main_line (

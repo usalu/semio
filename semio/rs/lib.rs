@@ -20,7 +20,7 @@ pub mod read_command {
     use crate::connector::ConnectorIdDto;
     use crate::design::DesignFullDto;
     use crate::design::DesignIdDto;
-    use crate::kit::KitFullDto;
+    use crate::kit_graph::KitFullDto;
     use crate::piece::PieceFullDto;
     use crate::piece::PieceIdDto;
     use crate::port::PortFullDto;
@@ -346,7 +346,7 @@ pub mod read_command {
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    // Granular change commands: run against `KitStoreRef`, inverses for undo.
+    // Granular change commands: run against `KitGraphRef`, inverses for undo.
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::Arc;
@@ -389,9 +389,9 @@ pub mod change_command {
     use crate::group::GroupIdDto;
     use crate::group::GroupStore;
     use crate::id::Id;
-    use crate::kit::KitFullDto;
-    use crate::kit::KitStore;
-    use crate::kit::KitStoreRef;
+    use crate::kit_graph::KitFullDto;
+    use crate::kit_graph::KitGraph;
+    use crate::kit_graph::KitGraphRef;
     use crate::kit_change::KitChangeKind;
     use crate::layer::LayerFullDto;
     use crate::layer::LayerIdDto;
@@ -1247,7 +1247,7 @@ pub mod change_command {
     }
 
     impl ChangeKitQualityCommand {
-        pub fn apply(&self, kit: &KitStoreRef, q: &QualityStoreRef) -> Result<Vec<ChangeKitQualityCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, q: &QualityStoreRef) -> Result<Vec<ChangeKitQualityCommand>> {
             match self {
                 ChangeKitQualityCommand::Key { key } => {
                     let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.key.clone();
@@ -1341,7 +1341,7 @@ pub mod change_command {
 
     impl ChangeKitCommand {
         /// Apply the command; does not return inverses (checkpoint replay, redo).
-        pub fn run(&self, kit: &KitStoreRef) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef) -> Result<()> {
             self.apply(kit).map(|_| ())
         }
 
@@ -1404,7 +1404,7 @@ pub mod change_command {
         }
 
         /// Apply and return `(forward kit diff, inverse command list)`.
-        pub fn apply(&self, kit: &KitStoreRef) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+        pub fn apply(&self, kit: &KitGraphRef) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
@@ -1464,16 +1464,16 @@ pub mod change_command {
                 }
                 ChangeKitCommand::ReplaceKitFromFullDto { dto } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitStore::replace_from_full_dto(kit, dto.clone()).map_err(se)?;
+                    KitGraph::replace_from_full_dto(kit, dto.clone()).map_err(se)?;
                     Ok(if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
                 ChangeKitCommand::AddType { r#type } => {
                     let id = r#type.id.clone();
-                    KitStore::insert_type_dto(kit, r#type.clone()).map_err(se)?;
+                    KitGraph::insert_type_dto(kit, r#type.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveType { type_id } => {
-                    let snap = KitStore::remove_type_dto(kit, type_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_type_dto(kit, type_id.id.as_str()).map_err(se)?;
                     let inv = if let Some(dto) = snap {
                         vec![ChangeKitCommand::AddType { r#type: dto }]
                     } else {
@@ -1483,11 +1483,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddDesign { design } => {
                     let id = design.id.clone();
-                    KitStore::insert_design_ref(kit, design.clone()).map_err(se)?;
+                    KitGraph::insert_design_ref(kit, design.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveDesign { design_id } => {
-                    let snap = KitStore::remove_design_dto(kit, design_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_design_dto(kit, design_id.id.as_str()).map_err(se)?;
                     let inv = if let Some(dto) = snap {
                         vec![ChangeKitCommand::AddDesign { design: dto }]
                     } else {
@@ -1497,11 +1497,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddFile { file } => {
                     let id = file.id.clone();
-                    KitStore::insert_file_dto(kit, file.clone()).map_err(se)?;
+                    KitGraph::insert_file_dto(kit, file.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveFile { file_id } => {
-                    let snap = KitStore::remove_file_dto(kit, file_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_file_dto(kit, file_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddFile { file: d }])
                     } else {
@@ -1510,11 +1510,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddFolder { folder } => {
                     let id = folder.id.clone();
-                    KitStore::insert_folder_dto(kit, folder.clone()).map_err(se)?;
+                    KitGraph::insert_folder_dto(kit, folder.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveFolder { folder_id } => {
-                    let snap = KitStore::remove_folder_dto(kit, folder_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_folder_dto(kit, folder_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddFolder { folder: d }])
                     } else {
@@ -1523,11 +1523,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddAuthor { author } => {
                     let id = author.id.clone();
-                    KitStore::insert_author_dto(kit, author.clone()).map_err(se)?;
+                    KitGraph::insert_author_dto(kit, author.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveAuthor { author_id } => {
-                    let snap = KitStore::remove_author_dto(kit, author_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_author_dto(kit, author_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddAuthor { author: d }])
                     } else {
@@ -1536,11 +1536,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddConcept { concept } => {
                     let id = concept.id.clone();
-                    KitStore::insert_concept_dto(kit, concept.clone()).map_err(se)?;
+                    KitGraph::insert_concept_dto(kit, concept.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveConcept { concept_id } => {
-                    let snap = KitStore::remove_concept_dto(kit, concept_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_concept_dto(kit, concept_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddConcept { concept: d }])
                     } else {
@@ -1549,11 +1549,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddTag { tag } => {
                     let id = tag.id.clone();
-                    KitStore::insert_tag_dto(kit, tag.clone()).map_err(se)?;
+                    KitGraph::insert_tag_dto(kit, tag.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveTag { tag_id } => {
-                    let snap = KitStore::remove_tag_dto(kit, tag_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_tag_dto(kit, tag_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddTag { tag: d }])
                     } else {
@@ -1562,11 +1562,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
-                    KitStore::insert_quality_dto(kit, quality.clone()).map_err(se)?;
+                    KitGraph::insert_quality_dto(kit, quality.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveQuality { quality_id } => {
-                    let snap = KitStore::remove_quality_dto(kit, quality_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_quality_dto(kit, quality_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
                         Ok(vec![ChangeKitCommand::AddQuality { quality: d }])
                     } else {
@@ -1746,11 +1746,11 @@ pub mod change_command {
                 }
                 ChangeKitCommand::AddFamily { family } => {
                     let id = family.id.clone();
-                    KitStore::insert_family_dto(kit, family.clone()).map_err(se)?;
+                    KitGraph::insert_family_dto(kit, family.clone()).map_err(se)?;
                     Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveFamily { family_id } => {
-                    let snap = KitStore::remove_family_dto(kit, family_id.id.as_str()).map_err(se)?;
+                    let snap = KitGraph::remove_family_dto(kit, family_id.id.as_str()).map_err(se)?;
                     if let Some(dto) = snap {
                         Ok(vec![ChangeKitCommand::AddFamily { family: dto }])
                     } else {
@@ -1781,7 +1781,7 @@ pub mod change_command {
 
         /// Apply many commands in order; inverses are concatenated in **undo order** (last command's
         /// inverses first) so that applying the returned `Vec` once reverses the whole batch.
-        pub fn apply_many(kit: &KitStoreRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
             let mut merged = crate::kit_diff::KitDiff::default();
             let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
             for c in cmds {
@@ -1797,7 +1797,7 @@ pub mod change_command {
         }
 
         /// Same as [`Self::apply_many`] (merged diff + inverses); kept for call sites that want an explicit name.
-        pub fn apply_many_kit_diff(kit: &KitStoreRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+        pub fn apply_many_kit_diff(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
             Self::apply_many(kit, cmds)
         }
 
@@ -1849,12 +1849,12 @@ pub mod change_command {
     // the editor size limit. See the remaining impls appended below.
 
     impl ChangeTypeCommand {
-        pub fn run(&self, kit: &KitStoreRef, type_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, type_id: &Id) -> Result<()> {
             self.apply(kit, type_id)?;
             Ok(())
         }
         /// Returns inverse fragments (forward order) — the caller will reverse for nesting.
-        pub fn apply(&self, kit: &KitStoreRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
             let t = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
             match self {
                 ChangeTypeCommand::Name { name } => {
@@ -2230,12 +2230,12 @@ pub mod change_command {
     }
 
     impl ChangeDesignCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id) -> Result<()> {
             self.apply(kit, design_id)?;
             Ok(())
         }
         /// Inverse atoms in forward order; [`ChangeKitCommand`] reverses the batch.
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             match self {
                 ChangeDesignCommand::Name { name } => {
@@ -2688,11 +2688,11 @@ pub mod change_command {
     }
 
     impl ChangePieceCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, piece_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<()> {
             self.apply(kit, design_id, piece_id)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
             let pref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -2878,11 +2878,11 @@ pub mod change_command {
     }
 
     impl ChangeConnectionCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, connection_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<()> {
             self.apply(kit, design_id, connection_id)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
             let cref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -3031,11 +3031,11 @@ pub mod change_command {
     }
 
     impl ChangeLayerCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, layer_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<()> {
             self.apply(kit, design_id, layer_id)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let l = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
             match self {
@@ -3097,11 +3097,11 @@ pub mod change_command {
         }
     }
     impl ChangeGroupCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, group_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<()> {
             self.apply(kit, design_id, group_id)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let g = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
             match self {
@@ -3157,11 +3157,11 @@ pub mod change_command {
         }
     }
     impl ChangeStatCommand {
-        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, stat_id: &Id) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<()> {
             self.apply(kit, design_id, stat_id)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let s = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
             match self {
@@ -3280,11 +3280,11 @@ pub mod change_command {
     }
 
     impl ChangeFamilyCommand {
-        pub fn run(&self, kit: &KitStoreRef, fam: &FamilyStoreRef) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<()> {
             self.apply(kit, fam)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
             match self {
                 ChangeFamilyCommand::Name { name } => {
                     let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.name.clone();
@@ -3354,7 +3354,7 @@ pub mod change_command {
                     Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortIdDto { id: pid } }])
                 }
                 ChangeFamilyCommand::RemovePort { port_id } => {
-                    KitStore::ensure_port_unused_by_connectors(kit, &port_id.id)?;
+                    KitGraph::ensure_port_unused_by_connectors(kit, &port_id.id)?;
                     let pos = fam
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("family"))?
@@ -3366,7 +3366,7 @@ pub mod change_command {
                     };
                     let pr = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?.ports.remove(pos);
                     let dto = pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full_dto();
-                    KitStore::purge_dead_port_compatibility(kit);
+                    KitGraph::purge_dead_port_compatibility(kit);
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeFamilyCommand::AddPort { port: dto }])
@@ -3393,11 +3393,11 @@ pub mod change_command {
     }
 
     impl ChangePortCommand {
-        pub fn run(&self, p: &PortStoreRef, kit: &KitStoreRef) -> Result<()> {
+        pub fn run(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<()> {
             self.apply(p, kit)?;
             Ok(())
         }
-        pub fn apply(&self, p: &PortStoreRef, kit: &KitStoreRef) -> Result<Vec<ChangePortCommand>> {
+        pub fn apply(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<Vec<ChangePortCommand>> {
             match self {
                 ChangePortCommand::Id { id } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.id.clone();
@@ -3569,11 +3569,11 @@ pub mod change_command {
         }
     }
     impl ChangeRepresentationCommand {
-        pub fn run(&self, kit: &KitStoreRef, r: &RepresentationStoreRef) -> Result<()> {
+        pub fn run(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<()> {
             self.apply(kit, r)?;
             Ok(())
         }
-        pub fn apply(&self, kit: &KitStoreRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
+        pub fn apply(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
             match self {
                 ChangeRepresentationCommand::Url { url } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.url.clone();
@@ -3677,7 +3677,7 @@ pub mod kit_checkpoint {
     use std::collections::HashMap;
 
     use crate::id::Id;
-    use crate::kit::{KitFullDto, KitStore};
+    use crate::kit_graph::{KitFullDto, KitGraph};
     use crate::kit_change::KitChange;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3690,7 +3690,7 @@ pub mod kit_checkpoint {
 
     impl MaterializedKit {
         pub fn compute(&self) -> KitFullDto {
-            let k = KitStore::from_full_dto(self.initial.clone());
+            let k = KitGraph::from_full_dto(self.initial.clone());
             for c in &self.change_list {
                 let _ = KitChange::apply_forward(c, &k);
             }
@@ -3775,7 +3775,7 @@ pub mod kit_checkpoint {
                 return initial.clone();
             };
             let path = Self::chain_root_to_leaf_from(at_id, map);
-            let k = KitStore::from_full_dto(initial.clone());
+            let k = KitGraph::from_full_dto(initial.clone());
             for cid in &path {
                 if let Some(cp) = map.get(cid) {
                     for ch in &cp.changes {
@@ -3972,7 +3972,7 @@ pub mod kit_draft {
     use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
-    use crate::kit::KitFullDto;
+    use crate::kit_graph::KitFullDto;
     use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
     use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
 
@@ -4206,8 +4206,8 @@ pub mod kit_store_command {
 
     use crate::change_command::ChangeKitCommand;
     use crate::id::Id;
-    use crate::kit::KitStore;
-    use crate::kit::KitStoreRef;
+    use crate::kit_graph::KitGraph;
+    use crate::kit_graph::KitGraphRef;
     use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
     use crate::kit_change::{KitChange, KitChangeKind};
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
@@ -4217,9 +4217,9 @@ pub mod kit_store_command {
     use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
     use crate::{error::Result, error::SemioError};
 
-    type KitFullDto = crate::kit::KitFullDto;
+    type KitFullDto = crate::kit_graph::KitFullDto;
 
-    impl KitStore {
+    impl KitGraph {
         /// Materialize the DTO view of the main `the_kit` line.
         pub fn the_kit_dto(&self) -> KitFullDto {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
@@ -4247,8 +4247,8 @@ pub mod kit_store_command {
 
         /// Replace the live graph from a full DTO while preserving the VCS tree,
         /// event bus, and in-memory undo/transaction state.
-        pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
-            KitStore::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
+        pub fn replace_live_graph(kit: &KitGraphRef, d: KitFullDto) -> Result<()> {
+            KitGraph::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
     }
 
@@ -4305,7 +4305,7 @@ pub mod kit_store_command {
         /// Top-level VCS / CRUD command dispatch.
         ///
         /// Locks the kit store internally as needed.
-        pub fn execute(self, kit: &KitStoreRef) -> Result<KitStoreCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
             match self {
                 KitStoreCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
@@ -4371,7 +4371,7 @@ pub mod kit_store_command {
 
     impl SessionCommand {
         /// Execute a session-scoped command against `kit[sid]`.
-        pub fn execute(self, kit: &KitStoreRef, sid: &Id) -> Result<SessionCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, sid: &Id) -> Result<SessionCommandResult> {
             match self {
                 SessionCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4390,7 +4390,7 @@ pub mod kit_store_command {
                         }
                         g.materialize_at(checkpoint_id.as_ref())
                     };
-                    KitStore::replace_live_graph(kit, base.clone())?;
+                    KitGraph::replace_live_graph(kit, base.clone())?;
                     let draft = crate::kit_draft::Draft::new(checkpoint_id, alternative_id, base);
                     let aid = draft.id.clone();
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4410,7 +4410,7 @@ pub mod kit_store_command {
 
     impl KitDraftCommand {
         /// Execute a draft-scoped command against `kit[sid][did]`.
-        pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4454,7 +4454,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn draft_undo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_undo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -4476,7 +4476,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Undo { ok: true })
         }
 
-        fn draft_redo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_redo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -4498,7 +4498,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Redo { ok: true })
         }
 
-        fn finalize_draft(kit: &KitStoreRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
+        fn finalize_draft(kit: &KitGraphRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
             let (parent, alt, kc) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.sessions.get(sid).and_then(|s| s.draft(did)).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
@@ -4546,7 +4546,7 @@ pub mod kit_store_command {
 
     impl TransactionCommand {
         /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
-        pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4622,7 +4622,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn tx_undo(kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_undo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4648,7 +4648,7 @@ pub mod kit_store_command {
             Ok(TransactionCommandResult::UndoAll { ok: true })
         }
 
-        fn tx_redo(kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_redo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4677,7 +4677,7 @@ pub mod kit_store_command {
 
     impl KitCheckpointCommand {
         /// Execute a checkpoint-scoped command.
-        pub fn execute(self, kit: &KitStoreRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
             match self {
                 KitCheckpointCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4705,7 +4705,7 @@ pub mod kit_store_command {
 
     impl KitAlternativeCommand {
         /// Execute an alternative-scoped command.
-        pub fn execute(self, kit: &KitStoreRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
             match self {
                 KitAlternativeCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4762,7 +4762,7 @@ pub mod attribute {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
     use crate::connection::ConnectionStoreWeak;
@@ -4781,7 +4781,7 @@ pub mod attribute {
         pub key: String,
         pub value: String,
         pub definition: Option<String>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub parent_piece: Option<PieceStoreWeak>,
@@ -5028,7 +5028,7 @@ pub mod author {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
     pub type AuthorStoreRef = std::sync::Arc<RwLock<AuthorStore>>;
@@ -5042,7 +5042,7 @@ pub mod author {
         pub email: String,
         pub role: Option<String>,
         pub rank: Option<i64>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -5445,7 +5445,7 @@ pub mod concept {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
     pub type ConceptStoreRef = std::sync::Arc<RwLock<ConceptStore>>;
@@ -5458,7 +5458,7 @@ pub mod concept {
         pub name: String,
         pub description: Option<String>,
         pub order: Option<i64>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -6274,7 +6274,7 @@ pub mod design {
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStore;
+    use crate::kit_graph::KitGraph;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
     use crate::location::LocationIdDto;
     use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
@@ -6313,7 +6313,7 @@ pub mod design {
         pub stats: Vec<StatStoreRef>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
+        pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         flatten_cache: Cache<HashMap<Id, (Plane, Coordinate)>>,
@@ -6343,7 +6343,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitIdDto>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -6365,7 +6365,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6411,7 +6411,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6700,7 +6700,7 @@ pub mod design {
         }
 
         /// Like [`Self::invalidate_hash`] but does not bubble to the parent kit (avoids deadlock when
-        /// the kit already holds its write lock, e.g. during [`KitStore::apply_design_diff`]).
+        /// the kit already holds its write lock, e.g. during [`KitGraph::apply_design_diff`]).
         pub(crate) fn invalidate_hash_local(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -6896,7 +6896,7 @@ pub mod design {
             m
         }
 
-        fn compute_flatten_with_kit(&self, kit: &KitStore) -> HashMap<Id, (Plane, Coordinate)> {
+        fn compute_flatten_with_kit(&self, kit: &KitGraph) -> HashMap<Id, (Plane, Coordinate)> {
             let mut types_by_id: HashMap<Id, TypeStoreRef> = HashMap::new();
             for t in &kit.types {
                 if let Ok(tr) = t.read() {
@@ -7339,7 +7339,7 @@ pub mod design {
 
         /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
         /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
-        /// validation invalidation (see [`KitStore::apply_design_diff`]).
+        /// validation invalidation (see [`KitGraph::apply_design_diff`]).
         pub fn delete_pieces(&mut self, piece_ids: &[Id]) -> usize {
             self.delete_pieces_inner(piece_ids, true)
         }
@@ -8116,7 +8116,7 @@ pub mod design {
         }
 
         pub fn to_metadata_dto(&self) -> DesignMetadataDto {
-            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit::KitIdDto { id: k.id.clone() }));
+            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit_graph::KitIdDto { id: k.id.clone() }));
             DesignMetadataDto {
                 id: self.id.clone(),
                 name: self.name.clone(),
@@ -8188,7 +8188,7 @@ pub mod design {
         }
 
         /// Rebuild design graph from DTO (pieces, connections with [`SideStore`] ends, nested leaves).
-        /// Only [`crate::kit::KitStore::from_full_dto`] should construct designs in host code.
+        /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct designs in host code.
         pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
             let DesignFullDto {
                 id,
@@ -8372,7 +8372,7 @@ pub mod diff {
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::group::{GroupFullDto, GroupIdDto};
     use crate::id::Id;
-    use crate::kit::KitIdDto;
+    use crate::kit_graph::KitIdDto;
     use crate::layer::{LayerFullDto, LayerIdDto};
     use crate::location::LocationIdDto;
     use crate::piece::{PieceFullDto, PieceIdDto};
@@ -11121,7 +11121,7 @@ pub mod kit_diff {
     use crate::file::FileIdDto;
     use crate::folder::FolderIdDto;
     use crate::id::Id;
-    use crate::kit::KitFullDto;
+    use crate::kit_graph::KitFullDto;
     use crate::prop::PropIdDto;
     use crate::quality::QualityIdDto;
     use crate::tag::TagIdDto;
@@ -11609,13 +11609,13 @@ pub mod kit_change {
 
     impl KitChange {
         /// Apply the forward step to a store.
-        pub fn apply_forward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
+        pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
             Ok(())
         }
 
         /// Apply the backward (undo) step to a store.
-        pub fn apply_backward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
+        pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.inverse).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
             Ok(())
         }
@@ -12103,7 +12103,7 @@ pub(crate) mod event_wire {
     use crate::file::FileStoreRef;
     use crate::folder::FolderStoreRef;
     use crate::group::GroupStoreRef;
-    use crate::kit::KitStoreRef;
+    use crate::kit_graph::KitGraphRef;
     use crate::layer::LayerStoreRef;
     use crate::location::LocationStoreRef;
     use crate::piece::PieceStoreRef;
@@ -12113,7 +12113,7 @@ pub(crate) mod event_wire {
     use crate::stat::StatStoreRef;
     use crate::typ::TypeStoreRef;
 
-    pub(crate) fn wire_graph_bus(kit: &KitStoreRef) {
+    pub(crate) fn wire_graph_bus(kit: &KitGraphRef) {
         let w = {
             let kr = kit.read().expect("kit read");
             Arc::downgrade(&kr.event_bus)
@@ -12400,7 +12400,7 @@ pub(crate) mod event_wire {
     }
 
     /// Re-point all `parent_kit` weak links at `kit` after in-place graph replacement (undo/redo).
-    pub(crate) fn rewire_parent_kits(kit: &KitStoreRef) {
+    pub(crate) fn rewire_parent_kits(kit: &KitGraphRef) {
         let kw = Arc::downgrade(kit);
         let kg = kit.read().expect("kit read");
         for a in &kg.authors {
@@ -12678,7 +12678,7 @@ pub mod file {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
 
     pub type FileStoreRef = Arc<RwLock<FileStore>>;
     pub type FileStoreWeak = Weak<RwLock<FileStore>>;
@@ -12694,7 +12694,7 @@ pub mod file {
         pub description: Option<String>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
@@ -12985,7 +12985,7 @@ pub mod folder {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
 
     pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
     pub type FolderStoreWeak = Weak<RwLock<FolderStore>>;
@@ -12996,7 +12996,7 @@ pub mod folder {
         pub id: Id,
         pub path: String,
         pub description: Option<String>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
@@ -13369,7 +13369,7 @@ pub mod location {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
 
     pub type LocationStoreRef = std::sync::Arc<std::sync::RwLock<LocationStore>>;
     pub type LocationStoreWeak = std::sync::Weak<std::sync::RwLock<LocationStore>>;
@@ -13381,7 +13381,7 @@ pub mod location {
         pub latitude: f64,
         pub altitude: Option<f64>,
         pub attributes: Vec<AttributeStoreRef>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: std::sync::Weak<EventBus>,
         hash_cache: crate::hash::Cache<String>,
     }
@@ -13952,7 +13952,7 @@ pub mod merkle {
     }
 }
 
-pub mod kit {
+pub mod kit_graph {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
@@ -13983,8 +13983,8 @@ pub mod kit {
     use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
     use crate::typ::{TypeFullDto, TypeIdDto, TypeStore, TypeStoreRef};
 
-    pub type KitStoreRef = Arc<RwLock<KitStore>>;
-    pub type KitStoreWeak = Weak<RwLock<KitStore>>;
+    pub type KitGraphRef = Arc<RwLock<KitGraph>>;
+    pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
 
     /// 🧾 One undo step as JSON `KitFullDto` values (keeps `KitStore` before `KitFullDto` in this module).
     #[derive(Clone, Debug)]
@@ -13995,7 +13995,7 @@ pub mod kit {
 
     /// Root aggregate: a kit owns all components of the system.
     #[derive(Debug)]
-    pub struct KitStore {
+    pub struct KitGraph {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
@@ -14203,7 +14203,7 @@ pub mod kit {
         pub path: Vec<String>,
     }
 
-    impl KitStore {
+    impl KitGraph {
         pub fn new(name: impl Into<String>) -> Self {
             let mut s = Self {
                 id: Id::new_v7(),
@@ -14561,7 +14561,7 @@ pub mod kit {
 
         /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
         pub fn change_kit_commands_for_field_patch(
-            kit: &KitStoreRef,
+            kit: &KitGraphRef,
             entity_kind: EntityKind,
             id: &str,
             field: &str,
@@ -14976,7 +14976,7 @@ pub mod kit {
         }
 
         /// 🌐 Worker boundary: set one scalar field via [`ChangeKitCommand`] batch + undo snapshot.
-        pub fn set_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
+        pub fn set_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -14985,7 +14985,7 @@ pub mod kit {
         }
 
         /// 🌐 Read one field as JSON (read-only).
-        pub fn get_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
+        pub fn get_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
                 EntityKind::Kit => {
@@ -15054,7 +15054,7 @@ pub mod kit {
         }
 
         /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
-        pub fn replace_from_full_dto(kit: &KitStoreRef, d: KitFullDto) -> SetResult {
+        pub fn replace_from_full_dto(kit: &KitGraphRef, d: KitFullDto) -> SetResult {
             let new_arc = Self::from_full_dto(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
                 Ok(rw) => match rw.into_inner() {
@@ -15097,12 +15097,12 @@ pub mod kit {
         /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
         ///
         /// Delegates to the OO dispatcher [`crate::kit_store_command::KitStoreCommand::execute`].
-        pub fn execute_vcs(kit: &KitStoreRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+        pub fn execute_vcs(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
             cmd.execute(kit)
         }
 
         /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit`).
-        pub fn with_undo<F>(kit: &KitStoreRef, f: F) -> SetResult
+        pub fn with_undo<F>(kit: &KitGraphRef, f: F) -> SetResult
         where
             F: FnOnce() -> SetResult,
         {
@@ -15126,7 +15126,7 @@ pub mod kit {
         }
 
         /// Pop last applied state and restore `before` snapshot.
-        pub fn undo(kit: &KitStoreRef) -> SetResult {
+        pub fn undo(kit: &KitGraphRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_past.pop()
@@ -15159,7 +15159,7 @@ pub mod kit {
         }
 
         /// Re-apply a popped redo step.
-        pub fn redo(kit: &KitStoreRef) -> SetResult {
+        pub fn redo(kit: &KitGraphRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_future.pop()
@@ -15191,16 +15191,16 @@ pub mod kit {
             }
         }
 
-        pub fn can_undo(kit: &KitStoreRef) -> bool {
+        pub fn can_undo(kit: &KitGraphRef) -> bool {
             kit.read().map(|g| !g.undo_past.is_empty()).unwrap_or(false)
         }
 
-        pub fn can_redo(kit: &KitStoreRef) -> bool {
+        pub fn can_redo(kit: &KitGraphRef) -> bool {
             kit.read().map(|g| !g.undo_future.is_empty()).unwrap_or(false)
         }
 
         pub fn change_kit_commands_for_add_child(
-            kit: &KitStoreRef,
+            kit: &KitGraphRef,
             parent_kind: EntityKind,
             parent_id: &str,
             child_kind: EntityKind,
@@ -15231,7 +15231,7 @@ pub mod kit {
         }
 
         pub fn change_kit_commands_for_remove_child(
-            kit: &KitStoreRef,
+            kit: &KitGraphRef,
             parent_kind: EntityKind,
             parent_id: &str,
             child_kind: EntityKind,
@@ -15266,7 +15266,7 @@ pub mod kit {
         }
 
         /// Add a child entity under `parent` (`Kit → Family`, `Design → Piece`).
-        pub fn add_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
+        pub fn add_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -15275,7 +15275,7 @@ pub mod kit {
         }
 
         /// Remove a child entity from `parent` (`Kit → Family`, `Design → Piece`).
-        pub fn remove_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
+        pub fn remove_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -15410,7 +15410,7 @@ pub mod kit {
             result
         }
 
-        pub fn are_equal(&self, other: &KitStore) -> bool {
+        pub fn are_equal(&self, other: &KitGraph) -> bool {
             self.hash() == other.hash()
         }
 
@@ -15537,7 +15537,7 @@ pub mod kit {
         }
 
         /// Hydrate the full kit graph from a [`KitFullDto`].
-        pub fn from_full_dto(mut d: KitFullDto) -> KitStoreRef {
+        pub fn from_full_dto(mut d: KitFullDto) -> KitGraphRef {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let vcs_root = d.clone();
             let KitFullDto {
@@ -15578,7 +15578,7 @@ pub mod kit {
                 }
             }
 
-            let kit = Arc::new(RwLock::new(KitStore {
+            let kit = Arc::new(RwLock::new(KitGraph {
                 id: id.clone(),
                 name: name.clone(),
                 description: description.clone(),
@@ -15872,7 +15872,7 @@ pub mod kit {
             None
         }
 
-        fn build_family_port_index(g: &KitStore) -> (HashMap<Id, FamilyStoreRef>, HashMap<Id, PortStoreRef>) {
+        fn build_family_port_index(g: &KitGraph) -> (HashMap<Id, FamilyStoreRef>, HashMap<Id, PortStoreRef>) {
             let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
             for f in &g.families {
                 if let Ok(fr) = f.read() {
@@ -15897,16 +15897,16 @@ pub mod kit {
             (family_by_id, port_by_id)
         }
 
-        fn domain_type_index(kit: &KitStore) -> HashMap<Id, TypeStoreRef> {
+        fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeStoreRef> {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
 
-        fn domain_family_index(kit: &KitStore) -> HashMap<Id, FamilyStoreRef> {
+        fn domain_family_index(kit: &KitGraph) -> HashMap<Id, FamilyStoreRef> {
             kit.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect()
         }
 
         /// Rebuild one type from `to_full_dto` + sparse [`crate::diff::TypeDiff`] (remove → insert).
-        pub fn apply_type_diff_fragment(kit: &KitStoreRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
+        pub fn apply_type_diff_fragment(kit: &KitGraphRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
             if fragment.is_empty() {
                 return Ok(());
             }
@@ -15918,14 +15918,14 @@ pub mod kit {
             };
             let mut dto = dto;
             crate::diff::merge_type_diff_into_full(&mut dto, fragment);
-            if KitStore::remove_type_dto(kit, type_id.as_str())?.is_none() {
+            if KitGraph::remove_type_dto(kit, type_id.as_str())?.is_none() {
                 return Err(SetError::NotFound(format!("type {}", type_id)));
             }
-            KitStore::insert_type_dto(kit, dto)
+            KitGraph::insert_type_dto(kit, dto)
         }
 
         /// Central sparse kit patch (kit metadata, then each child collection: **removed → updated → added**).
-        pub fn apply_kit_diff(kit: &KitStoreRef, diff: &crate::kit_diff::KitDiff) -> SetResult {
+        pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> SetResult {
             if diff.is_empty() {
                 return Ok(());
             }
@@ -15967,18 +15967,18 @@ pub mod kit {
             }
             if let Some(ts) = &diff.types {
                 for tid in &ts.removed {
-                    KitStore::remove_type_dto(kit, tid.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("type {}", tid.id)))?;
+                    KitGraph::remove_type_dto(kit, tid.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("type {}", tid.id)))?;
                 }
                 for u in &ts.updated {
-                    KitStore::apply_type_diff_fragment(kit, &u.id.id, &u.diff)?;
+                    KitGraph::apply_type_diff_fragment(kit, &u.id.id, &u.diff)?;
                 }
                 for t in &ts.added {
-                    KitStore::insert_type_dto(kit, t.clone())?;
+                    KitGraph::insert_type_dto(kit, t.clone())?;
                 }
             }
             if let Some(ds) = &diff.designs {
                 for id in &ds.removed {
-                    KitStore::remove_design_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("design {}", id.id)))?;
+                    KitGraph::remove_design_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("design {}", id.id)))?;
                 }
                 for u in &ds.updated {
                     let (dref, type_index, family_by_id) = {
@@ -15992,36 +15992,36 @@ pub mod kit {
                     dref.write().map_err(|_| SetError::LockPoisoned("design".into()))?.apply_diff(&u.diff, &type_index, weak, &family_by_id).map_err(|e| SetError::Internal(e.to_string()))?;
                 }
                 for d in &ds.added {
-                    KitStore::insert_design_ref(kit, d.clone())?;
+                    KitGraph::insert_design_ref(kit, d.clone())?;
                 }
             }
             if let Some(fs) = &diff.files {
                 for id in &fs.removed {
-                    KitStore::remove_file_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("file {}", id.id)))?;
+                    KitGraph::remove_file_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("file {}", id.id)))?;
                 }
                 for u in &fs.updated {
                     let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.file(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("file {}", u.id.id)))?.clone();
                     f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
                 }
                 for f in &fs.added {
-                    KitStore::insert_file_dto(kit, f.clone())?;
+                    KitGraph::insert_file_dto(kit, f.clone())?;
                 }
             }
             if let Some(fs) = &diff.folders {
                 for id in &fs.removed {
-                    KitStore::remove_folder_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("folder {}", id.id)))?;
+                    KitGraph::remove_folder_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("folder {}", id.id)))?;
                 }
                 for u in &fs.updated {
                     let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.folder(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("folder {}", u.id.id)))?.clone();
                     f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
                 }
                 for f in &fs.added {
-                    KitStore::insert_folder_dto(kit, f.clone())?;
+                    KitGraph::insert_folder_dto(kit, f.clone())?;
                 }
             }
             if let Some(ad) = &diff.authors {
                 for id in &ad.removed {
-                    KitStore::remove_author_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", id.id)))?;
+                    KitGraph::remove_author_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", id.id)))?;
                 }
                 for u in &ad.updated {
                     let mut dto = {
@@ -16031,16 +16031,16 @@ pub mod kit {
                         dto
                     };
                     crate::diff::merge_author_diff_into_full(&mut dto, &u.diff);
-                    KitStore::remove_author_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
-                    KitStore::insert_author_dto(kit, dto)?;
+                    KitGraph::remove_author_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
+                    KitGraph::insert_author_dto(kit, dto)?;
                 }
                 for a in &ad.added {
-                    KitStore::insert_author_dto(kit, a.clone())?;
+                    KitGraph::insert_author_dto(kit, a.clone())?;
                 }
             }
             if let Some(cd) = &diff.concepts {
                 for id in &cd.removed {
-                    KitStore::remove_concept_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", id.id)))?;
+                    KitGraph::remove_concept_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", id.id)))?;
                 }
                 for u in &cd.updated {
                     let mut dto = {
@@ -16050,16 +16050,16 @@ pub mod kit {
                         dto
                     };
                     crate::diff::merge_concept_diff_into_full(&mut dto, &u.diff);
-                    KitStore::remove_concept_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
-                    KitStore::insert_concept_dto(kit, dto)?;
+                    KitGraph::remove_concept_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
+                    KitGraph::insert_concept_dto(kit, dto)?;
                 }
                 for c in &cd.added {
-                    KitStore::insert_concept_dto(kit, c.clone())?;
+                    KitGraph::insert_concept_dto(kit, c.clone())?;
                 }
             }
             if let Some(td) = &diff.tags {
                 for id in &td.removed {
-                    KitStore::remove_tag_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", id.id)))?;
+                    KitGraph::remove_tag_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", id.id)))?;
                 }
                 for u in &td.updated {
                     let mut dto = {
@@ -16069,16 +16069,16 @@ pub mod kit {
                         dto
                     };
                     crate::diff::merge_tag_diff_into_full(&mut dto, &u.diff);
-                    KitStore::remove_tag_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
-                    KitStore::insert_tag_dto(kit, dto)?;
+                    KitGraph::remove_tag_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
+                    KitGraph::insert_tag_dto(kit, dto)?;
                 }
                 for t in &td.added {
-                    KitStore::insert_tag_dto(kit, t.clone())?;
+                    KitGraph::insert_tag_dto(kit, t.clone())?;
                 }
             }
             if let Some(qd) = &diff.qualities {
                 for id in &qd.removed {
-                    KitStore::remove_quality_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", id.id)))?;
+                    KitGraph::remove_quality_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", id.id)))?;
                 }
                 for u in &qd.updated {
                     let mut dto = {
@@ -16088,11 +16088,11 @@ pub mod kit {
                         dto
                     };
                     crate::diff::merge_quality_diff_into_full(&mut dto, &u.diff);
-                    KitStore::remove_quality_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
-                    KitStore::insert_quality_dto(kit, dto)?;
+                    KitGraph::remove_quality_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
+                    KitGraph::insert_quality_dto(kit, dto)?;
                 }
                 for q in &qd.added {
-                    KitStore::insert_quality_dto(kit, q.clone())?;
+                    KitGraph::insert_quality_dto(kit, q.clone())?;
                 }
             }
             if let Some(pd) = &diff.props {
@@ -16216,7 +16216,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn insert_design_ref(kit: &KitStoreRef, dto: DesignFullDto) -> SetResult {
+        pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
@@ -16239,7 +16239,7 @@ pub mod kit {
         }
 
         /// Insert a type from a full DTO (same shape as `from_full_dto` hydration for one type).
-        pub fn insert_type_dto(kit: &KitStoreRef, dto: TypeFullDto) -> SetResult {
+        pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("type {}", dto.id)));
@@ -16255,7 +16255,7 @@ pub mod kit {
         }
 
         /// Remove a type and return its [`TypeFullDto`] for undo, or `None` if missing.
-        pub fn remove_type_dto(kit: &KitStoreRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
+        pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.types.iter().position(|t| t.read().map(|r| r.id.as_str() == type_id).unwrap_or(false))
@@ -16277,7 +16277,7 @@ pub mod kit {
             Ok(None)
         }
 
-        fn check_port_unused_by_connectors(g: &KitStore, pid: &Id) -> std::result::Result<(), SetError> {
+        fn check_port_unused_by_connectors(g: &KitGraph, pid: &Id) -> std::result::Result<(), SetError> {
             for t in &g.types {
                 let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
                 if tr.connector_for_port_id(pid).is_some() {
@@ -16291,7 +16291,7 @@ pub mod kit {
             Ok(())
         }
 
-        fn assert_family_removable(g: &KitStore, fid: &Id) -> std::result::Result<(), SetError> {
+        fn assert_family_removable(g: &KitGraph, fid: &Id) -> std::result::Result<(), SetError> {
             for t in &g.types {
                 let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
                 for w in &tr.families {
@@ -16341,7 +16341,7 @@ pub mod kit {
         }
 
         /// Insert a family (with ports) onto the kit graph.
-        pub fn insert_family_dto(kit: &KitStoreRef, dto: FamilyFullDto) -> SetResult {
+        pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("family {}", dto.id)));
@@ -16398,7 +16398,7 @@ pub mod kit {
         }
 
         /// Remove a family and return its [`FamilyFullDto`] for undo, or `None` if missing.
-        pub fn remove_family_dto(kit: &KitStoreRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
+        pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
             let fid = Id::from(family_id);
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -16423,12 +16423,12 @@ pub mod kit {
             Ok(Some(dto))
         }
 
-        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitStoreRef, pid: &Id) -> std::result::Result<(), SemioError> {
+        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitGraphRef, pid: &Id) -> std::result::Result<(), SemioError> {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             Self::check_port_unused_by_connectors(&*g, pid).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
 
-        pub(crate) fn purge_dead_port_compatibility(kit: &KitStoreRef) {
+        pub(crate) fn purge_dead_port_compatibility(kit: &KitGraphRef) {
             let Ok(g) = kit.read() else {
                 return;
             };
@@ -16448,7 +16448,7 @@ pub mod kit {
             }
         }
 
-        pub fn insert_file_dto(kit: &KitStoreRef, dto: FileFullDto) -> SetResult {
+        pub fn insert_file_dto(kit: &KitGraphRef, dto: FileFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.files.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("file {}", dto.id)));
@@ -16466,7 +16466,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_file_dto(kit: &KitStoreRef, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
+        pub fn remove_file_dto(kit: &KitGraphRef, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.files.iter().position(|f| f.read().map(|r| r.id.as_str() == file_id).unwrap_or(false))
@@ -16488,7 +16488,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn insert_folder_dto(kit: &KitStoreRef, dto: FolderFullDto) -> SetResult {
+        pub fn insert_folder_dto(kit: &KitGraphRef, dto: FolderFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.folders.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("folder {}", dto.id)));
@@ -16506,7 +16506,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_folder_dto(kit: &KitStoreRef, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
+        pub fn remove_folder_dto(kit: &KitGraphRef, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.folders.iter().position(|f| f.read().map(|r| r.id.as_str() == folder_id).unwrap_or(false))
@@ -16528,7 +16528,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn insert_author_dto(kit: &KitStoreRef, dto: AuthorFullDto) -> SetResult {
+        pub fn insert_author_dto(kit: &KitGraphRef, dto: AuthorFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.authors.iter().any(|a| a.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("author {}", dto.id)));
@@ -16546,7 +16546,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_author_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
+        pub fn remove_author_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.authors.iter().position(|a| a.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -16568,7 +16568,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn insert_concept_dto(kit: &KitStoreRef, dto: ConceptFullDto) -> SetResult {
+        pub fn insert_concept_dto(kit: &KitGraphRef, dto: ConceptFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.concepts.iter().any(|c| c.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("concept {}", dto.id)));
@@ -16586,7 +16586,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_concept_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
+        pub fn remove_concept_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.concepts.iter().position(|c| c.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -16608,7 +16608,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn insert_tag_dto(kit: &KitStoreRef, dto: TagFullDto) -> SetResult {
+        pub fn insert_tag_dto(kit: &KitGraphRef, dto: TagFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tags.iter().any(|t| t.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("tag {}", dto.id)));
@@ -16626,7 +16626,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_tag_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
+        pub fn remove_tag_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.tags.iter().position(|t| t.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -16648,7 +16648,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn insert_quality_dto(kit: &KitStoreRef, dto: QualityFullDto) -> SetResult {
+        pub fn insert_quality_dto(kit: &KitGraphRef, dto: QualityFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.qualities.iter().any(|q| q.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("quality {}", dto.id)));
@@ -16668,7 +16668,7 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn remove_quality_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
+        pub fn remove_quality_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.qualities.iter().position(|q| q.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -16691,7 +16691,7 @@ pub mod kit {
         }
 
         /// Remove a design and return its [`DesignFullDto`] for undo, or `None` if missing.
-        pub fn remove_design_dto(kit: &KitStoreRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
+        pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == design_id).unwrap_or(false))
@@ -16713,7 +16713,7 @@ pub mod kit {
             Ok(None)
         }
 
-        pub fn cluster_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
@@ -16797,7 +16797,7 @@ pub mod kit {
             false
         }
 
-        pub fn drag_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -16842,7 +16842,7 @@ pub mod kit {
             })
         }
 
-        pub fn move_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+        pub fn move_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -16875,7 +16875,7 @@ pub mod kit {
             })
         }
 
-        pub fn fix_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -16897,7 +16897,7 @@ pub mod kit {
             })
         }
 
-        pub fn delete_connection_in_design(kit: &KitStoreRef, design_id: &str, connection_id: &str) -> SetResult {
+        pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
             Self::with_undo(kit, || {
@@ -16907,7 +16907,7 @@ pub mod kit {
             })
         }
 
-        pub fn flatten_design_apply(kit: &KitStoreRef, design_id: &str) -> SetResult {
+        pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let forward = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -16926,7 +16926,7 @@ pub mod kit {
             })
         }
 
-        fn design_dto_by_id(kit: &KitStore, id: &str) -> Option<DesignFullDto> {
+        fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFullDto> {
             kit.design(id).and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
         }
 
@@ -16945,7 +16945,7 @@ pub mod kit {
             o
         }
 
-        fn expand_nested_design_pieces_in_dto(kit: &KitStore, mut design: DesignFullDto) -> std::result::Result<DesignFullDto, SetError> {
+        fn expand_nested_design_pieces_in_dto(kit: &KitGraph, mut design: DesignFullDto) -> std::result::Result<DesignFullDto, SetError> {
             let nested_ids: Vec<String> = {
                 let mut s: HashSet<String> = HashSet::new();
                 for c in &design.connections {
@@ -16976,7 +16976,7 @@ pub mod kit {
             Ok(design)
         }
 
-        pub fn expand_nested_design(kit: &KitStoreRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
             Self::with_undo(kit, || {
@@ -17017,7 +17017,7 @@ pub mod kit {
             })
         }
 
-        pub fn change_piece_type(kit: &KitStoreRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
+        pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let piece_id = piece_id.to_string();
             let ntg = new_type_id.to_string();
@@ -17043,19 +17043,19 @@ pub mod kit {
             })
         }
 
-        pub fn paste_design_selection(_kit: &KitStoreRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
+        pub fn paste_design_selection(_kit: &KitGraphRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
             Err(SetError::InvalidValue("pasteDesignSelection: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_hanging_pieces(_kit: &KitStoreRef, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
+        pub fn create_hanging_pieces(_kit: &KitGraphRef, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createHangingPieces: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_connected_piece(_kit: &KitStoreRef, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
+        pub fn create_connected_piece(_kit: &KitGraphRef, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
             Err(SetError::InvalidValue("createConnectedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_fixed_piece(_kit: &KitStoreRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
+        pub fn create_fixed_piece(_kit: &KitGraphRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
@@ -18594,7 +18594,7 @@ pub mod port {
         }
 
         /// Resolve [`PortIdDto`] list to weak refs using the kit’s global port table (families + kit-level ports).
-        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit::KitStore) {
+        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit_graph::KitGraph) {
             self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
         }
 
@@ -18673,7 +18673,7 @@ pub mod family {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::port::PortStoreRef;
 
     pub type FamilyStoreRef = Arc<RwLock<FamilyStore>>;
@@ -18687,7 +18687,7 @@ pub mod family {
         pub icon: Option<String>,
         pub ports: Vec<PortStoreRef>,
         pub attributes: Vec<AttributeStore>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         pub(crate) hash_cache: Cache<String>,
     }
@@ -18823,7 +18823,7 @@ pub mod prop {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::piece::PieceStoreWeak;
     use crate::typ::TypeStoreWeak;
 
@@ -18838,7 +18838,7 @@ pub mod prop {
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub parent_piece: Option<PieceStoreWeak>,
@@ -18869,7 +18869,7 @@ pub mod prop {
         pub unit: Option<String>,
     }
 
-    /// Wire: either `key` or `quality: { id }` (resolved to `key` from kit `qualities` in [`crate::kit::KitStore::from_full_dto`]).
+    /// Wire: either `key` or `quality: { id }` (resolved to `key` from kit `qualities` in [`crate::kit_graph::KitGraph::from_full_dto`]).
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropFullDto {
         pub id: Id,
@@ -19029,7 +19029,7 @@ pub mod quality {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::port::PortStoreWeak;
     use crate::representation::RepresentationStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -19047,7 +19047,7 @@ pub mod quality {
         pub definition: Option<String>,
         pub description: Option<String>,
         pub benchmarks: Vec<BenchmarkStoreRef>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub parent_port: Option<PortStoreWeak>,
@@ -19828,7 +19828,7 @@ pub mod stat {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
 
     pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
     pub type StatStoreWeak = Weak<RwLock<StatStore>>;
@@ -19841,7 +19841,7 @@ pub mod stat {
         pub value: String,
         pub unit: Option<String>,
         pub description: Option<String>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
@@ -20025,7 +20025,7 @@ pub mod tag {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::kit::KitStoreWeak;
+    use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
     pub type TagStoreRef = std::sync::Arc<RwLock<TagStore>>;
@@ -20037,7 +20037,7 @@ pub mod tag {
         pub id: Id,
         pub name: String,
         pub order: Option<i64>,
-        pub parent_kit: Option<KitStoreWeak>,
+        pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -20250,7 +20250,7 @@ pub mod typ {
         pub attributes: Vec<AttributeStoreRef>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
+        pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
@@ -20684,8 +20684,8 @@ pub mod typ {
         }
 
         /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
-        /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
-        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
+        /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct types in host code.
+        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
             let TypeFullDto { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
@@ -20856,18 +20856,18 @@ pub mod typ {
 }
 
 mod async_kit {
-    //! Async facades for [`crate::kit::KitStore`]: no lock held across `.await`.
+    //! Async facades for [`crate::kit_graph::KitGraph`]: no lock held across `.await`.
     #![allow(dead_code)]
 
     use futures_lite::future::ready;
 
     use crate::diff::{DesignChange, DesignDiff};
     use crate::error::{Result, SemioError};
-    use crate::kit::{KitStore, KitStoreRef};
+    use crate::kit_graph::{KitGraph, KitGraphRef};
     use crate::report::{SemioReport, ValidationResult};
 
-    impl KitStore {
-        pub async fn set_name_async(this: &KitStoreRef, name: String) -> Result<()> {
+    impl KitGraph {
+        pub async fn set_name_async(this: &KitGraphRef, name: String) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_name(name)?;
@@ -20876,7 +20876,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_description_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_description_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_description(v)?;
@@ -20885,7 +20885,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_icon_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_icon_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_icon(v)?;
@@ -20894,7 +20894,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_image_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_image_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_image(v)?;
@@ -20903,7 +20903,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_preview_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_preview_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_preview(v)?;
@@ -20912,7 +20912,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_remote_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_remote_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_remote(v)?;
@@ -20921,7 +20921,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_homepage_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_homepage_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_homepage(v)?;
@@ -20930,7 +20930,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_license_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_license_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_license(v)?;
@@ -20939,7 +20939,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_uri_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_uri_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_uri(v)?;
@@ -20948,7 +20948,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_created_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_created_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_created(v)?;
@@ -20957,7 +20957,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_updated_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
+        pub async fn set_updated_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_updated(v)?;
@@ -20966,7 +20966,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn hash_async(this: &KitStoreRef) -> Result<String> {
+        pub async fn hash_async(this: &KitGraphRef) -> Result<String> {
             let r = match this.read() {
                 Ok(g) => Ok(g.hash()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -20974,7 +20974,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn validate_async(this: &KitStoreRef) -> Result<ValidationResult> {
+        pub async fn validate_async(this: &KitGraphRef) -> Result<ValidationResult> {
             let r = match this.read() {
                 Ok(g) => Ok(g.validate()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -20982,7 +20982,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn apply_design_diff_async(this: &KitStoreRef, design_id: &str, diff: &DesignDiff) -> Result<()> {
+        pub async fn apply_design_diff_async(this: &KitGraphRef, design_id: &str, diff: &DesignDiff) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.apply_design_diff(design_id, diff)
@@ -20990,7 +20990,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn flatten_design_async(this: &KitStoreRef, design_id: &str) -> Result<SemioReport<DesignChange>> {
+        pub async fn flatten_design_async(this: &KitGraphRef, design_id: &str) -> Result<SemioReport<DesignChange>> {
             let r = match this.read() {
                 Ok(g) => g.flatten_design(design_id),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -21002,7 +21002,7 @@ mod async_kit {
 
 pub mod io {
     //! I/O backends for kit persistence. Each backend implements methods on
-    //! [`crate::kit::KitStore`] behind its own cfg, keeping the domain layer free of
+    //! [`crate::kit_graph::KitGraph`] behind its own cfg, keeping the domain layer free of
     //! transport concerns.
 
     pub mod json {
@@ -21012,13 +21012,13 @@ pub mod io {
         use std::path::Path;
 
         use crate::error::Result;
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
 
-        impl KitStore {
+        impl KitGraph {
             /// Parse a kit from a JSON string into a fully hydrated graph.
-            pub fn from_json_str(s: &str) -> Result<KitStoreRef> {
+            pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
                 let dto: KitFullDto = serde_json::from_str(s)?;
-                Ok(KitStore::from_full_dto(dto))
+                Ok(KitGraph::from_full_dto(dto))
             }
 
             pub fn to_json_pretty(&self) -> Result<String> {
@@ -21031,7 +21031,7 @@ pub mod io {
 
             #[cfg(not(target_arch = "wasm32"))]
             /// Load a dev kit from a JSON file containing a fully embedded snapshot.
-            pub fn load_json_file(path: &Path) -> Result<KitStoreRef> {
+            pub fn load_json_file(path: &Path) -> Result<KitGraphRef> {
                 let payload = fs::read_to_string(path)?;
                 Self::from_json_str(&payload)
             }
@@ -21071,7 +21071,7 @@ pub mod io {
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::group::GroupFullDto;
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
@@ -21192,7 +21192,7 @@ pub mod io {
             tx.execute_batch(
                 "DELETE FROM transaction_forward_command;
                 DELETE FROM transaction_inverse_command;
-                DELETE FROM transaction;
+                DELETE FROM \"transaction\";
                 DELETE FROM draft;
                 DELETE FROM session;
                 DELETE FROM alternative_checkpoint;
@@ -21248,7 +21248,7 @@ pub mod io {
             children
         }
 
-        fn save_kit_vcs(tx: &Transaction<'_>, g: &KitStore, kit_id: &Id) -> Result<()> {
+        fn save_kit_vcs(tx: &Transaction<'_>, g: &KitGraph, kit_id: &Id) -> Result<()> {
             let mut cp_ids: Vec<&Id> = g.checkpoints.keys().collect();
             cp_ids.sort_by_key(|id| id.as_str());
             for cp_id in cp_ids {
@@ -21322,7 +21322,7 @@ pub mod io {
             Ok(())
         }
 
-        fn load_kit_vcs_into(conn: &SqlConnection, g: &mut KitStore) -> Result<()> {
+        fn load_kit_vcs_into(conn: &SqlConnection, g: &mut KitGraph) -> Result<()> {
             let kit_id = g.id.clone();
             g.the_kit_head = conn
                 .query_row("SELECT head_checkpoint_id FROM kit_main_line WHERE kit_id = ?1", params![kit_id.as_str()], |row| {
@@ -22242,7 +22242,7 @@ pub mod io {
                     unit: row.get(6)?,
                     created: row.get(7)?,
                     updated: row.get(8)?,
-                    kit: Some(crate::kit::KitIdDto { id: kit_id.clone() }),
+                    kit: Some(crate::kit_graph::KitIdDto { id: kit_id.clone() }),
                     families: load_design_family_ids(conn, &id)?,
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
@@ -22324,7 +22324,7 @@ pub mod io {
             ))
         }
 
-        impl KitStore {
+        impl KitGraph {
             /// Write the full kit graph to a normalized SQLite database at `path`.
             pub fn save_sqlite(&self, path: &Path) -> Result<()> {
                 let mut conn = SqlConnection::open(path)?;
@@ -22391,11 +22391,11 @@ pub mod io {
             }
 
             /// Load a full kit graph from a normalized SQLite database at `path`.
-            pub fn load_sqlite(path: &Path) -> Result<KitStoreRef> {
+            pub fn load_sqlite(path: &Path) -> Result<KitGraphRef> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
                 let (dto, vcs_initial) = load_kit_dto(&conn)?;
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     g.initial = vcs_initial;
@@ -22421,7 +22421,7 @@ pub mod io {
 
         use crate::error::{Result, SemioError};
         use crate::file::FileFullDto;
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
 
         const LOCAL_DIR: &str = ".semio";
         const LOCAL_DB: &str = "kit.db";
@@ -22551,13 +22551,13 @@ pub mod io {
             Ok(())
         }
 
-        impl KitStore {
+        impl KitGraph {
             /// Load a local kit folder containing `.semio/kit.db` and regular asset files.
-            pub fn load_local_folder(folder_path: &Path) -> Result<KitStoreRef> {
-                let kit = KitStore::load_sqlite(&local_db_path(folder_path))?;
+            pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphRef> {
+                let kit = KitGraph::load_sqlite(&local_db_path(folder_path))?;
                 let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                 hydrate_files(&mut dto, folder_path)?;
-                Ok(KitStore::from_full_dto(dto))
+                Ok(KitGraph::from_full_dto(dto))
             }
 
             /// Save a local kit folder with `.semio/kit.db` plus externalized file payloads.
@@ -22569,7 +22569,7 @@ pub mod io {
                 let temp_db_dir = folder_path.join(LOCAL_DIR);
                 let temp_db = NamedTempFile::new_in(&temp_db_dir)?;
                 let temp_path = temp_db.path().to_path_buf();
-                KitStore::from_full_dto(dto).read().map_err(|_| SemioError::LockPoisoned("kit"))?.save_sqlite(&temp_path)?;
+                KitGraph::from_full_dto(dto).read().map_err(|_| SemioError::LockPoisoned("kit"))?.save_sqlite(&temp_path)?;
                 let final_db_path = local_db_path(folder_path);
                 temp_db.persist(&final_db_path).map_err(|err| err.error)?;
                 Ok(())
@@ -22584,7 +22584,7 @@ pub mod io {
         use serde::de::DeserializeOwned;
 
         use crate::error::{Result, SemioError};
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
 
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         pub struct RemoteKitSession {
@@ -22639,7 +22639,7 @@ pub mod io {
             format!("{}/sessions/{session_id}/snapshot", normalize_hub_url(hub_url))
         }
 
-        impl KitStore {
+        impl KitGraph {
             /// Create a remote hub session seeded with the current full kit snapshot.
             pub fn create_remote_session(&self, hub_url: &str) -> Result<RemoteKitSession> {
                 let hub_url = normalize_hub_url(hub_url);
@@ -22649,10 +22649,10 @@ pub mod io {
             }
 
             /// Load a full kit snapshot from a remote hub session.
-            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitStoreRef> {
+            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphRef> {
                 let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
                 let dto: KitFullDto = serde_json::from_value(response.kit)?;
-                Ok(KitStore::from_full_dto(dto))
+                Ok(KitGraph::from_full_dto(dto))
             }
 
             /// Replace the persisted hub snapshot for an existing remote session.
@@ -22677,11 +22677,11 @@ pub mod io {
         use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
         use crate::error::{Result, SemioError};
-        use crate::kit::{KitStore, KitStoreRef};
+        use crate::kit_graph::{KitGraph, KitGraphRef};
 
         const KIT_JSON: &str = "kit.json";
 
-        impl KitStore {
+        impl KitGraph {
             /// Preferred API (plan): write `kit.json` into a zip at `path`.
             pub fn save_zip(&self, path: &Path) -> Result<()> {
                 let file = File::create(path)?;
@@ -22694,7 +22694,7 @@ pub mod io {
             }
 
             /// Preferred API (plan): read `kit.json` from a zip at `path`.
-            pub fn load_zip(path: &Path) -> Result<KitStoreRef> {
+            pub fn load_zip(path: &Path) -> Result<KitGraphRef> {
                 let file = File::open(path)?;
                 let mut archive = ZipArchive::new(file)?;
                 let mut kit_json = String::new();
@@ -22708,7 +22708,7 @@ pub mod io {
                 if kit_json.is_empty() {
                     return Err(SemioError::InvalidOperation(format!("zip missing {KIT_JSON}")));
                 }
-                KitStore::from_json_str(&kit_json)
+                KitGraph::from_json_str(&kit_json)
             }
         }
     }
@@ -22723,7 +22723,7 @@ pub mod wasm {
     use wasm_bindgen_futures::future_to_promise;
 
     use crate::id::Id;
-    use crate::kit::{KitStore, KitStoreRef};
+    use crate::kit_graph::{KitGraph, KitGraphRef};
     use crate::read_command::ReadKitCommand;
     use serde::Serialize;
 
@@ -22747,7 +22747,7 @@ pub mod wasm {
     pub fn wasm_kit_from_json(s: &str) -> js_sys::Promise {
         let s = s.to_string();
         future_to_promise(async move {
-            match KitStore::from_json_str(&s) {
+            match KitGraph::from_json_str(&s) {
                 Ok(kit) => {
                     let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
                     serde_wasm_bindgen::to_value(&guard.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
@@ -22760,8 +22760,8 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitToJson)]
     pub fn wasm_kit_to_json(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let kit = KitStore::from_full_dto(dto);
+            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let kit = KitGraph::from_full_dto(dto);
             let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
             guard.to_json_pretty().map(|json| JsValue::from_str(&json)).map_err(|e| JsValue::from_str(&e.to_string()))
         })
@@ -22770,9 +22770,9 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitValidate)]
     pub fn wasm_kit_validate(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let kit = KitStore::from_full_dto(dto);
-            match KitStore::validate_async(&kit).await {
+            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let kit = KitGraph::from_full_dto(dto);
+            match KitGraph::validate_async(&kit).await {
                 Ok(v) => serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
@@ -22782,10 +22782,10 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitsAreEqual)]
     pub fn wasm_kits_are_equal(a: JsValue, b: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let a: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let b: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let ka = KitStore::from_full_dto(a);
-            let kb = KitStore::from_full_dto(b);
+            let a: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let b: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ka = KitGraph::from_full_dto(a);
+            let kb = KitGraph::from_full_dto(b);
             let ga = ka.read().map_err(|_| JsValue::from_str("a poisoned"))?;
             let gb = kb.read().map_err(|_| JsValue::from_str("b poisoned"))?;
             Ok(JsValue::from_bool(ga.are_equal(&gb)))
@@ -22796,9 +22796,9 @@ pub mod wasm {
     pub fn wasm_flatten_design(kit: JsValue, design_id: &str) -> js_sys::Promise {
         let design_id = design_id.to_string();
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let k = KitStore::from_full_dto(dto);
-            match KitStore::flatten_design_async(&k, &design_id).await {
+            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(kit).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let k = KitGraph::from_full_dto(dto);
+            match KitGraph::flatten_design_async(&k, &design_id).await {
                 Ok(rep) => serde_wasm_bindgen::to_value(&rep).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
@@ -22816,18 +22816,18 @@ pub mod wasm {
         s.trim().to_ascii_lowercase().replace(|c: char| c.is_whitespace(), "-")
     }
 
-    /// 🌐 Stateful [`KitStoreRef`] for web-worker-hosted mutations + event stream.
+    /// 🌐 Stateful [`KitGraphRef`] for web-worker-hosted mutations + event stream.
     #[wasm_bindgen]
-    pub struct KitStoreHandle {
-        inner: KitStoreRef,
+    pub struct KitGraphHandle {
+        inner: KitGraphRef,
     }
 
     #[wasm_bindgen]
     impl KitStoreHandle {
         #[wasm_bindgen(js_name = create)]
         pub fn create(dto: JsValue) -> Result<KitStoreHandle, JsValue> {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            Ok(KitStoreHandle { inner: KitStore::from_full_dto(dto) })
+            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            Ok(KitStoreHandle { inner: KitGraph::from_full_dto(dto) })
         }
 
         #[wasm_bindgen(js_name = snapshot)]
@@ -22846,7 +22846,7 @@ pub mod wasm {
             } else {
                 serde_wasm_bindgen::from_value(cmd).map_err(|e| JsValue::from_str(&e.to_string()))?
             };
-            let r = KitStore::execute_vcs(&self.inner, c).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let r = KitGraph::execute_vcs(&self.inner, c).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&r).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
@@ -22857,8 +22857,8 @@ pub mod wasm {
             let cmds: Vec<ChangeKitCommand> = serde_wasm_bindgen::from_value(cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let kind = ChangeKitCommand::batch_kind(&cmds);
             let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
-            KitStore::with_undo(&self.inner, || {
-                let (_merged, inv) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| KitStore::map_semio_err(e))?;
+            KitGraph::with_undo(&self.inner, || {
+                let (_merged, inv) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| KitGraph::map_semio_err(e))?;
                 inverse_out = inv;
                 Ok(())
             })
@@ -22873,26 +22873,26 @@ pub mod wasm {
 
         #[wasm_bindgen(js_name = changeKitCommandsForFieldPatch)]
         pub fn change_kit_commands_for_field_patch_wasm(&self, kind: &str, id: &str, field: &str, value: JsValue) -> Result<JsValue, JsValue> {
-            let ek = KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ek = KitGraph::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let val: serde_json::Value = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let cmds = KitStore::change_kit_commands_for_field_patch(&self.inner, ek, id, field, val).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.inner, ek, id, field, val).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = changeKitCommandsForAddChild)]
         pub fn change_kit_commands_for_add_child_wasm(&self, parent_kind: &str, parent_id: &str, child_kind: &str, dto: JsValue) -> Result<JsValue, JsValue> {
-            let pk = KitStore::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let ck = KitStore::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let dto: serde_json::Value = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let cmds = KitStore::change_kit_commands_for_add_child(&self.inner, pk, parent_id, ck, dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_add_child(&self.inner, pk, parent_id, ck, dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = changeKitCommandsForRemoveChild)]
         pub fn change_kit_commands_for_remove_child_wasm(&self, parent_kind: &str, parent_id: &str, child_kind: &str, child_id: &str) -> Result<JsValue, JsValue> {
-            let pk = KitStore::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let ck = KitStore::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let cmds = KitStore::change_kit_commands_for_remove_child(&self.inner, pk, parent_id, ck, child_id).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_remove_child(&self.inner, pk, parent_id, ck, child_id).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
@@ -22906,7 +22906,7 @@ pub mod wasm {
             serde_wasm_bindgen::to_value(&results).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        /// [`KitStore::materialize_at`]: `at` = checkpoint id string, or `undefined` / empty for `initial` only.
+        /// [`KitGraph::materialize_at`]: `at` = checkpoint id string, or `undefined` / empty for `initial` only.
         #[wasm_bindgen(js_name = materializeAt)]
         pub fn materialize_at_wasm(&self, at: JsValue) -> Result<JsValue, JsValue> {
             let opt: Option<Id> = if at.is_undefined() || at.is_null() {
@@ -23050,8 +23050,8 @@ pub mod wasm {
 
         #[wasm_bindgen(js_name = getField)]
         pub fn get_field(&self, kind: &str, id: &str, field: &str) -> Result<JsValue, JsValue> {
-            let ek = KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let v = KitStore::get_field_rpc(&self.inner, ek, id, field).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ek = KitGraph::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let v = KitGraph::get_field_rpc(&self.inner, ek, id, field).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
@@ -23062,7 +23062,7 @@ pub mod wasm {
             let cn = cluster_name.to_string();
             future_to_promise(async move {
                 let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("clusterPieces piece_ids: {e}")))?;
-                js_settle_set(KitStore::cluster_pieces(&inner, &dg, ids, cn))
+                js_settle_set(KitGraph::cluster_pieces(&inner, &dg, ids, cn))
             })
         }
 
@@ -23072,7 +23072,7 @@ pub mod wasm {
             let dg = design_id.to_string();
             future_to_promise(async move {
                 let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("dragPieces piece_ids: {e}")))?;
-                js_settle_set(KitStore::drag_pieces(&inner, &dg, ids, du, dv))
+                js_settle_set(KitGraph::drag_pieces(&inner, &dg, ids, du, dv))
             })
         }
 
@@ -23082,7 +23082,7 @@ pub mod wasm {
             let dg = design_id.to_string();
             future_to_promise(async move {
                 let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("movePieces piece_ids: {e}")))?;
-                js_settle_set(KitStore::move_pieces(&inner, &dg, ids, gap, shift, rise))
+                js_settle_set(KitGraph::move_pieces(&inner, &dg, ids, gap, shift, rise))
             })
         }
 
@@ -23092,7 +23092,7 @@ pub mod wasm {
             let dg = design_id.to_string();
             future_to_promise(async move {
                 let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("fixPieces piece_ids: {e}")))?;
-                js_settle_set(KitStore::fix_pieces(&inner, &dg, ids))
+                js_settle_set(KitGraph::fix_pieces(&inner, &dg, ids))
             })
         }
 
@@ -23100,7 +23100,7 @@ pub mod wasm {
         pub fn flatten_design_bind(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
-            future_to_promise(async move { js_settle_set(KitStore::flatten_design_apply(&inner, &dg)) })
+            future_to_promise(async move { js_settle_set(KitGraph::flatten_design_apply(&inner, &dg)) })
         }
 
         #[wasm_bindgen(js_name = expandDesign)]
@@ -23108,7 +23108,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
-            future_to_promise(async move { js_settle_set(KitStore::expand_nested_design(&inner, &pg, &ng)) })
+            future_to_promise(async move { js_settle_set(KitGraph::expand_nested_design(&inner, &pg, &ng)) })
         }
 
         #[wasm_bindgen(js_name = deleteConnection)]
@@ -23116,7 +23116,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
-            future_to_promise(async move { js_settle_set(KitStore::delete_connection_in_design(&inner, &dg, &cg)) })
+            future_to_promise(async move { js_settle_set(KitGraph::delete_connection_in_design(&inner, &dg, &cg)) })
         }
 
         #[wasm_bindgen(js_name = changePieceType)]
@@ -23125,7 +23125,7 @@ pub mod wasm {
             let dg = design_id.to_string();
             let pg = piece_id.to_string();
             let tg = new_type_id.to_string();
-            future_to_promise(async move { js_settle_set(KitStore::change_piece_type(&inner, &dg, &pg, &tg)) })
+            future_to_promise(async move { js_settle_set(KitGraph::change_piece_type(&inner, &dg, &pg, &tg)) })
         }
 
         #[wasm_bindgen(js_name = pasteDesignSelection)]
@@ -23135,7 +23135,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let sel: serde_json::Value = serde_wasm_bindgen::from_value(selection).map_err(|e| JsValue::from_str(&format!("pasteDesignSelection selection: {e}")))?;
                 let pl: Option<crate::geom::Plane> = if plane.is_undefined() || plane.is_null() { None } else { Some(serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("pasteDesignSelection plane: {e}")))?) };
-                js_settle_set(KitStore::paste_design_selection(&inner, &dg, sel, pl))
+                js_settle_set(KitGraph::paste_design_selection(&inner, &dg, sel, pl))
             })
         }
 
@@ -23146,7 +23146,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_ids).map_err(|e| JsValue::from_str(&format!("createHangingPieces type_ids: {e}")))?;
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("createHangingPieces plane: {e}")))?;
-                js_settle_set(KitStore::create_hanging_pieces(&inner, &dg, tgs, pl))
+                js_settle_set(KitGraph::create_hanging_pieces(&inner, &dg, tgs, pl))
             })
         }
 
@@ -23158,7 +23158,7 @@ pub mod wasm {
             let pport = parent_port.to_string();
             let ct = child_type.to_string();
             let cport = child_port.to_string();
-            future_to_promise(async move { js_settle_set(KitStore::create_connected_piece(&inner, &dg, &pp, &pport, &ct, &cport)) })
+            future_to_promise(async move { js_settle_set(KitGraph::create_connected_piece(&inner, &dg, &pp, &pport, &ct, &cport)) })
         }
 
         #[wasm_bindgen(js_name = createFixedPiece)]
@@ -23168,30 +23168,30 @@ pub mod wasm {
             let tg = type_id.to_string();
             future_to_promise(async move {
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
-                js_settle_set(KitStore::create_fixed_piece(&inner, &dg, &tg, pl))
+                js_settle_set(KitGraph::create_fixed_piece(&inner, &dg, &tg, pl))
             })
         }
 
         #[wasm_bindgen(js_name = undo)]
         pub fn undo_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
-            future_to_promise(async move { js_settle_set(KitStore::undo(&inner)) })
+            future_to_promise(async move { js_settle_set(KitGraph::undo(&inner)) })
         }
 
         #[wasm_bindgen(js_name = redo)]
         pub fn redo_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
-            future_to_promise(async move { js_settle_set(KitStore::redo(&inner)) })
+            future_to_promise(async move { js_settle_set(KitGraph::redo(&inner)) })
         }
 
         #[wasm_bindgen(js_name = canUndo)]
         pub fn can_undo_wasm(&self) -> bool {
-            KitStore::can_undo(&self.inner)
+            KitGraph::can_undo(&self.inner)
         }
 
         #[wasm_bindgen(js_name = canRedo)]
         pub fn can_redo_wasm(&self) -> bool {
-            KitStore::can_redo(&self.inner)
+            KitGraph::can_redo(&self.inner)
         }
 
         #[wasm_bindgen(js_name = getPiecesMetadata)]
@@ -23290,13 +23290,13 @@ mod tests {
     mod io_json {
         use std::sync::{Arc, RwLock};
 
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         #[test]
         fn kit_json_roundtrip_hash_stable() {
-            let kit = Arc::new(RwLock::new(KitStore::new("roundtrip-test")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("roundtrip-test")));
             let json = kit.read().expect("read").to_json_pretty().expect("to json");
-            let kit2 = KitStore::from_json_str(&json).expect("from json");
+            let kit2 = KitGraph::from_json_str(&json).expect("from json");
             assert_eq!(kit.read().expect("read").hash(), kit2.read().expect("read2").hash(), "hash stable across JSON round-trip");
         }
     }
@@ -23309,19 +23309,19 @@ mod tests {
         use crate::design::DesignFullDto;
         use crate::design::DesignIdDto;
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::piece::PieceFullDto;
         use crate::piece::PieceIdDto;
         use crate::typ::TypeFullDto;
         use crate::typ::TypeIdDto;
 
-        fn small_kit() -> (KitStoreRef, Id, Id, Id) {
+        fn small_kit() -> (KitGraphRef, Id, Id, Id) {
             let kid = Id::new_v7();
             let tid = Id::new_v7();
             let did = Id::new_v7();
             let pid = Id::new_v7();
-            let kit = KitStore::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full_dto(KitFullDto {
                 id: kid,
                 name: "k".into(),
                 types: vec![TypeFullDto { id: tid.clone(), name: "T0".into(), ..Default::default() }],
@@ -23331,7 +23331,7 @@ mod tests {
             (kit, tid, did, pid)
         }
 
-        fn undo_inverses(kit: &KitStoreRef, inv: &[ChangeKitCommand]) {
+        fn undo_inverses(kit: &KitGraphRef, inv: &[ChangeKitCommand]) {
             for u in inv {
                 u.run(kit).expect("undo step");
             }
@@ -23339,7 +23339,7 @@ mod tests {
 
         #[test]
         fn roundtrip_kit_metadata_scalar() {
-            let kit = Arc::new(RwLock::new(KitStore::new("orig")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("orig")));
             let before = kit.read().expect("read").to_full_dto();
             let cmd = ChangeKitCommand::Name { name: "renamed".into() };
             let (_, inv) = cmd.apply(&kit).expect("apply");
@@ -23391,7 +23391,7 @@ mod tests {
             let (kit, _, _, _) = small_kit();
             let before = kit.read().expect("read").to_full_dto();
             let cmds = vec![ChangeKitCommand::Name { name: "via-change".into() }];
-            let tmp = KitStore::from_full_dto(before.clone());
+            let tmp = KitGraph::from_full_dto(before.clone());
             let (_, inv) = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
             let kc = KitChange { forward: cmds, inverse: inv, kind: KitChangeKind::Inferred, author: None, time: None };
             KitChange::apply_forward(&kc, &kit).expect("forward");
@@ -23402,7 +23402,7 @@ mod tests {
 
         #[test]
         fn apply_many_concatenates_inverses_for_undo_order() {
-            let kit = Arc::new(RwLock::new(KitStore::new("a")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("a")));
             let cmds = [ChangeKitCommand::Name { name: "b".into() }, ChangeKitCommand::Name { name: "c".into() }];
             let (_, inv) = ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
             assert_eq!(kit.read().expect("r").name, "c");
@@ -23421,9 +23421,9 @@ mod tests {
         #[test]
         fn compact_preserves_final_kit_dto() {
             let cmds = vec![ChangeKitCommand::Name { name: "n1".into() }, ChangeKitCommand::Name { name: "n2".into() }, ChangeKitCommand::Description { description: Some("d".into()) }, ChangeKitCommand::Description { description: None }];
-            let seed = KitStore::new("k0").to_full_dto();
-            let a = KitStore::from_full_dto(seed.clone());
-            let b = KitStore::from_full_dto(seed);
+            let seed = KitGraph::new("k0").to_full_dto();
+            let a = KitGraph::from_full_dto(seed.clone());
+            let b = KitGraph::from_full_dto(seed);
             ChangeKitCommand::apply_many(&a, &cmds).expect("apply_many a");
             let compacted = ChangeKitCommand::compact(cmds);
             ChangeKitCommand::apply_many(&b, &compacted).expect("apply_many b");
@@ -23432,7 +23432,7 @@ mod tests {
 
         #[test]
         fn apply_many_kit_diff_matches_baseline_between() {
-            let kit = Arc::new(RwLock::new(KitStore::new("k0")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("k0")));
             let before = kit.read().expect("r").to_full_dto();
             let cmds = [ChangeKitCommand::Name { name: "k1".into() }];
             let (diff, _) = ChangeKitCommand::apply_many_kit_diff(&kit, &cmds).expect("apply_many_kit_diff");
@@ -23462,13 +23462,13 @@ mod tests {
         use crate::design::{DesignFullDto, DesignStore};
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore};
+        use crate::kit_graph::{KitFullDto, KitGraph};
         use crate::piece::{PieceFullDto, PieceIdDto};
         use crate::port::{PortFullDto, PortIdDto};
         use crate::side::SideMetadataDto;
         use crate::typ::{TypeFullDto, TypeIdDto};
 
-        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit::KitStoreRef, Id, Id, Id, Id) {
+        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphRef, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
             let type_id = Id::new_v7();
             let port_id = Id::new_v7();
@@ -23484,7 +23484,7 @@ mod tests {
             let ab_id = Id::new_v7();
             let bc_id = Id::new_v7();
 
-            let kit = KitStore::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full_dto(KitFullDto {
                 id: kit_id,
                 name: "kit".into(),
                 ports: vec![PortFullDto { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
@@ -23689,11 +23689,11 @@ mod tests {
     mod invalidation {
         use std::sync::{Arc, RwLock};
 
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         #[test]
         fn kit_name_change_recomputes_validation() {
-            let kit = Arc::new(RwLock::new(KitStore::new("ok")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("ok")));
             assert!(kit.read().expect("r").validate().is_valid);
             assert!(kit.write().expect("w").set_name("   ".to_string()).is_err());
             assert!(kit.read().expect("r").validate().is_valid);
@@ -23702,11 +23702,11 @@ mod tests {
     }
 
     mod validation {
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         #[test]
         fn validate_empty_kit_name_fails() {
-            let mut k = KitStore::new(" ");
+            let mut k = KitGraph::new(" ");
             k.name = "  ".to_string();
             let v = k.validate();
             assert!(!v.is_valid);
@@ -23739,7 +23739,7 @@ mod tests {
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::piece::{PieceFullDto, PieceIdDto};
         use crate::port::{PortFullDto, PortIdDto};
         use crate::side::SideMetadataDto;
@@ -23784,7 +23784,7 @@ mod tests {
             serde_json::from_str(&load_asset_text(name)).expect("parse typed asset")
         }
 
-        fn synthetic_replaceable_kit() -> (KitStoreRef, HashMap<&'static str, Id>) {
+        fn synthetic_replaceable_kit() -> (KitGraphRef, HashMap<&'static str, Id>) {
             let port_l = Id::from("port-L");
             let port_l_compatible = Id::from("port-L-compatible");
             let port_g = Id::from("port-G");
@@ -23934,7 +23934,7 @@ mod tests {
             ids.insert("candidate-design-free-lg", candidate_design_free_lg.clone());
             ids.insert("candidate-design-consumed-lg", candidate_design_consumed_lg.clone());
             ids.insert("candidate-design-empty", candidate_design_empty.clone());
-            (KitStore::from_full_dto(dto), ids)
+            (KitGraph::from_full_dto(dto), ids)
         }
 
         fn contains_id<T>(items: &[T], expected_id: &str, id_of: impl Fn(&T) -> Id) -> bool {
@@ -24042,15 +24042,15 @@ mod tests {
 
         use tempfile::tempdir;
 
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         #[test]
         fn json_file_roundtrip() {
-            let kit = Arc::new(RwLock::new(KitStore::new("json-file-roundtrip")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("json-file-roundtrip")));
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.json");
             kit.read().expect("read").save_json_file(&path).expect("save");
-            let kit2 = KitStore::load_json_file(&path).expect("load");
+            let kit2 = KitGraph::load_json_file(&path).expect("load");
             assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "JSON file roundtrip preserves hash");
         }
     }
@@ -24060,7 +24060,7 @@ mod tests {
     mod metabolism_kit {
         use std::path::Path;
 
-        use crate::kit::{KitFullDto, KitStore};
+        use crate::kit_graph::{KitFullDto, KitGraph};
 
         #[test]
         fn metabolism_asset_loads_families_and_nested_ports() {
@@ -24072,7 +24072,7 @@ mod tests {
             assert_eq!(family_count, 12, "fixture should list 12 families");
             assert_eq!(ports_in_dto, 18, "fixture should contain 18 ports under families");
 
-            let kit = KitStore::from_full_dto(dto);
+            let kit = KitGraph::from_full_dto(dto);
             let kr = kit.read().expect("kit read");
             assert_eq!(kr.families.len(), 12, "hydrated kit keeps all families");
             let ports_loaded: usize = kr.families.iter().filter_map(|f| f.read().ok()).map(|f| f.ports.len()).sum();
@@ -24087,7 +24087,7 @@ mod tests {
 
         use crate::design::DesignFullDto;
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore};
+        use crate::kit_graph::{KitFullDto, KitGraph};
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::kit_checkpoint::KitCheckpoint;
         use crate::piece::PieceFullDto;
@@ -24098,7 +24098,7 @@ mod tests {
         fn sqlite_schema_roundtrip() {
             let type_id = Id::new_v7();
             let piece_id = Id::new_v7();
-            let kit = KitStore::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full_dto(KitFullDto {
                 id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
                 ports: vec![PortFullDto { id: Id::from("top"), ..Default::default() }],
@@ -24116,7 +24116,7 @@ mod tests {
             let port_rows: i64 = conn.query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0)).expect("count port rows");
             assert_eq!(port_rows, 1, "normalized port rows should be persisted");
 
-            let kit2 = KitStore::load_sqlite(&path).expect("load");
+            let kit2 = KitGraph::load_sqlite(&path).expect("load");
             assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "normalized SQLite roundtrip preserves hash");
         }
 
@@ -24124,7 +24124,7 @@ mod tests {
         fn sqlite_vcs_roundtrip() {
             use std::sync::{Arc, RwLock};
 
-            let kit: Arc<RwLock<KitStore>> = Arc::new(RwLock::new(KitStore::new("vcs-sqlite")));
+            let kit: Arc<RwLock<KitGraph>> = Arc::new(RwLock::new(KitGraph::new("vcs-sqlite")));
             let kc = KitChange {
                 forward: vec![],
                 inverse: vec![],
@@ -24143,7 +24143,7 @@ mod tests {
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.db");
             kit.read().expect("read").save_sqlite(&path).expect("save");
-            let kit2 = KitStore::load_sqlite(&path).expect("load");
+            let kit2 = KitGraph::load_sqlite(&path).expect("load");
             let r = kit2.read().expect("r2");
             assert_eq!(r.the_kit_head.as_ref(), Some(&cp_id));
             assert_eq!(r.checkpoints.len(), 1);
@@ -24158,7 +24158,7 @@ mod tests {
         use crate::file::FileFullDto;
         use crate::folder::FolderFullDto;
         use crate::id::Id;
-        use crate::kit::{KitFullDto, KitStore};
+        use crate::kit_graph::{KitFullDto, KitGraph};
 
         #[test]
         fn local_folder_roundtrip_externalizes_and_rehydrates_assets() {
@@ -24171,17 +24171,17 @@ mod tests {
                 folders: vec![FolderFullDto { id: folder_id, path: "assets/docs".into(), ..Default::default() }],
                 ..Default::default()
             };
-            let kit = KitStore::from_full_dto(dto);
+            let kit = KitGraph::from_full_dto(dto);
             let dir = tempdir().expect("tempdir");
 
             kit.read().expect("read").save_local_folder(dir.path()).expect("save local folder");
 
-            let persisted = KitStore::load_sqlite(&dir.path().join(".semio").join("kit.db")).expect("load persisted snapshot");
+            let persisted = KitGraph::load_sqlite(&dir.path().join(".semio").join("kit.db")).expect("load persisted snapshot");
             let persisted_file_url = persisted.read().expect("persisted read").files[0].read().expect("persisted file read").url.clone();
             assert_eq!(persisted_file_url, format!("files/{file_id}.txt"), "local snapshot stores a regular relative file path");
             assert!(dir.path().join(&persisted_file_url).exists(), "local asset file should be materialized next to the sqlite snapshot");
 
-            let loaded = KitStore::load_local_folder(dir.path()).expect("load local folder");
+            let loaded = KitGraph::load_local_folder(dir.path()).expect("load local folder");
             let loaded_file_url = loaded.read().expect("loaded read").files[0].read().expect("loaded file read").url.clone();
             assert!(loaded_file_url.starts_with("data:text/plain;base64,"), "loaded local kit should rehydrate external files into embedded data URLs");
             assert_eq!(kit.read().expect("r1").hash(), loaded.read().expect("r2").hash(), "local folder roundtrip preserves hash after rehydration");
@@ -24200,7 +24200,7 @@ mod tests {
 
         use crate::id::Id;
         use crate::io::remote::RemoteKitSession;
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         fn read_http_request(stream: &mut TcpStream) -> (String, HashMap<String, String>, Vec<u8>) {
             let mut buffer = Vec::new();
@@ -24312,14 +24312,14 @@ mod tests {
                 }
             });
 
-            let seed_kit = KitStore::new("remote-seed");
+            let seed_kit = KitGraph::new("remote-seed");
             let remote = seed_kit.create_remote_session(&hub_url).expect("create remote session");
             assert_eq!(remote.session_id, expected_session_id);
 
-            let updated_kit = KitStore::new("remote-updated");
+            let updated_kit = KitGraph::new("remote-updated");
             updated_kit.save_remote_session(&RemoteKitSession { hub_url: remote.hub_url.clone(), session_id: remote.session_id.clone(), kit_id: remote.kit_id.clone(), owner_token: expected_owner_token }).expect("save remote snapshot");
 
-            let loaded = KitStore::load_remote_session(&remote.hub_url, &remote.session_id).expect("load remote session");
+            let loaded = KitGraph::load_remote_session(&remote.hub_url, &remote.session_id).expect("load remote session");
             assert_eq!(updated_kit.hash(), loaded.read().expect("loaded read").hash(), "remote snapshot roundtrip preserves the latest saved kit");
 
             server.join().expect("join mock server");
@@ -24332,15 +24332,15 @@ mod tests {
 
         use tempfile::tempdir;
 
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
 
         #[test]
         fn zip_kit_json_roundtrip() {
-            let kit = Arc::new(RwLock::new(KitStore::new("zip-roundtrip")));
+            let kit = Arc::new(RwLock::new(KitGraph::new("zip-roundtrip")));
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.zip");
             kit.read().expect("read").save_zip(&path).expect("save zip");
-            let kit2 = KitStore::load_zip(&path).expect("load zip");
+            let kit2 = KitGraph::load_zip(&path).expect("load zip");
             assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "zip kit.json preserves hash");
         }
     }
@@ -24358,7 +24358,7 @@ mod tests {
             use crate::file::FileFullDto;
             use crate::group::GroupFullDto;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+            use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
             use crate::layer::LayerFullDto;
             use crate::piece::{PieceFullDto, PieceIdDto};
             use crate::port::{PortFullDto, PortIdDto};
@@ -24374,13 +24374,13 @@ mod tests {
                 out
             }
 
-            pub fn kit_entity_ref(kit: &KitStoreRef) -> EntityRef {
+            pub fn kit_entity_ref(kit: &KitGraphRef) -> EntityRef {
                 let g = kit.read().expect("kit read").id.clone();
                 EntityRef::new(EntityKind::Kit, g)
             }
 
             /// Minimal kit with one type, one design, one piece (valid type ref).
-            pub fn kit_with_piece() -> (KitStoreRef, Id, Id, Id) {
+            pub fn kit_with_piece() -> (KitGraphRef, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -24393,12 +24393,12 @@ mod tests {
                     designs: vec![DesignFullDto { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, type_id, design_id, piece_id)
             }
 
             /// One design with a layer and one piece (piece required for valid design content).
-            pub fn kit_with_layer() -> (KitStoreRef, Id, Id) {
+            pub fn kit_with_layer() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -24417,12 +24417,12 @@ mod tests {
                     }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, design_id, layer_id)
             }
 
             /// Design with one group referencing the single piece.
-            pub fn kit_with_group() -> (KitStoreRef, Id, Id) {
+            pub fn kit_with_group() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -24441,11 +24441,11 @@ mod tests {
                     }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, design_id, group_id)
             }
 
-            pub fn kit_with_type_connector() -> (KitStoreRef, Id, Id) {
+            pub fn kit_with_type_connector() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let conn_id = Id::new_v7();
@@ -24462,19 +24462,19 @@ mod tests {
                     }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, type_id, conn_id)
             }
 
             /// Kit with one type containing one port (for port setter tests).
-            pub fn kit_with_type_only() -> (KitStoreRef, Id) {
+            pub fn kit_with_type_only() -> (KitGraphRef, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitFullDto { id: kit_id, name: "kit".into(), types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
-                (KitStore::from_full_dto(dto), type_id)
+                (KitGraph::from_full_dto(dto), type_id)
             }
 
-            pub fn kit_with_port() -> (KitStoreRef, Id, Id) {
+            pub fn kit_with_port() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let kit_id = Id::new_v7();
@@ -24485,20 +24485,20 @@ mod tests {
                     types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, type_id, port_id)
             }
 
-            pub fn kit_with_file() -> (KitStoreRef, Id) {
+            pub fn kit_with_file() -> (KitGraphRef, Id) {
                 let file_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitFullDto { id: kit_id, name: "kit".into(), files: vec![FileFullDto { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, file_id)
             }
 
             /// One design, two pieces, one connection (for connection / side tests).
-            pub fn kit_with_connection() -> (KitStoreRef, Id, Id, Id, Id, Id) {
+            pub fn kit_with_connection() -> (KitGraphRef, Id, Id, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_a = Id::new_v7();
@@ -24529,7 +24529,7 @@ mod tests {
                     }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
@@ -24649,12 +24649,12 @@ mod tests {
             use crate::attribute::AttributeFullDto;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
 
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFullDto { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFullDto { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -24670,12 +24670,12 @@ mod tests {
             use crate::author::AuthorFullDto;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
 
             #[test]
             fn author_set_email_emits() {
                 let ag = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), authors: vec![AuthorFullDto { id: ag.clone(), name: "n".into(), email: "e@x".into(), role: None, rank: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), authors: vec![AuthorFullDto { id: ag.clone(), name: "n".into(), email: "e@x".into(), role: None, rank: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -24691,12 +24691,12 @@ mod tests {
             use std::sync::Arc;
 
             use super::common::drain;
-            use crate::kit::KitStore;
-            use crate::KitStoreRef;
+            use crate::kit_graph::KitGraph;
+            use crate::KitGraphRef;
 
             #[test]
             fn subscribe_receives_ordered_stream() {
-                let kit: KitStoreRef = Arc::new(std::sync::RwLock::new(KitStore::new("a")));
+                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("a")));
                 let mut a = kit.read().unwrap().subscribe();
                 let mut b = kit.read().unwrap().subscribe();
                 kit.write().unwrap().set_name("b".into()).unwrap();
@@ -24708,17 +24708,17 @@ mod tests {
 
             #[test]
             fn no_lock_held_across_concurrent_read_and_async_setter() {
-                let kit: KitStoreRef = Arc::new(std::sync::RwLock::new(KitStore::new("c")));
+                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("c")));
                 let k2 = kit.clone();
                 futures_lite::future::block_on(async {
-                    let _ = futures_lite::future::zip(crate::KitStore::set_name_async(&k2, "d".into()), async { k2.read().map(|_| ()).unwrap_or(()) }).await;
+                    let _ = futures_lite::future::zip(crate::KitGraph::set_name_async(&k2, "d".into()), async { k2.read().map(|_| ()).unwrap_or(()) }).await;
                 });
                 assert_eq!(kit.read().unwrap().name, "d");
             }
 
             #[test]
             fn drop_kit_closes_bus() {
-                let kit: KitStoreRef = Arc::new(std::sync::RwLock::new(KitStore::new("e")));
+                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("e")));
                 let mut rx = kit.read().unwrap().subscribe();
                 drop(kit);
                 let r = futures_lite::future::block_on(rx.recv());
@@ -24730,7 +24730,7 @@ mod tests {
             use crate::benchmark::BenchmarkFullDto;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::port::PortFullDto;
             use crate::quality::QualityFullDto;
             use crate::typ::TypeFullDto;
@@ -24741,7 +24741,7 @@ mod tests {
                 let pg = Id::new_v7();
                 let qg = Id::new_v7();
                 let bg = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
                     ports: vec![PortFullDto {
@@ -24771,12 +24771,12 @@ mod tests {
             use crate::concept::ConceptFullDto;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
 
             #[test]
             fn concept_set_name_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), concepts: vec![ConceptFullDto { id: g.clone(), name: "c".into(), description: None, order: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), concepts: vec![ConceptFullDto { id: g.clone(), name: "c".into(), description: None, order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let c = {
                     let kr = kit.read().unwrap();
@@ -24931,7 +24931,7 @@ mod tests {
                 use crate::diff::{DesignDiff, FamilyIdsDiff};
                 use crate::events::KitEvent;
                 use crate::family::{FamilyFullDto, FamilyIdDto};
-                use crate::kit::{KitFullDto, KitStore};
+                use crate::kit_graph::{KitFullDto, KitGraph};
                 use crate::piece::PieceFullDto;
                 use crate::typ::{TypeFullDto, TypeIdDto};
 
@@ -24953,7 +24953,7 @@ mod tests {
                     }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 let mut rx = kit.read().unwrap().subscribe();
                 let diff = DesignDiff {
                     families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
@@ -24989,12 +24989,12 @@ mod tests {
             use crate::events::KitEvent;
             use crate::folder::FolderFullDto;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
 
             #[test]
             fn folder_set_description_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), folders: vec![FolderFullDto { id: g.clone(), path: "/p".into(), description: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), folders: vec![FolderFullDto { id: g.clone(), path: "/p".into(), description: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let f = {
                     let kr = kit.read().unwrap();
@@ -25031,7 +25031,7 @@ mod tests {
                 ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
-                        let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitStore::new("i")));
+                        let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitGraph::new("i")));
                         let kref = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         {
@@ -25044,21 +25044,21 @@ mod tests {
                 };
             }
 
-            kit_meta_test!(kit_set_name, crate::events::KitField::Name, |k: &mut crate::KitStore| { k.set_name("a".into()) });
-            kit_meta_test!(kit_set_description, crate::events::KitField::Description, |k: &mut crate::KitStore| { k.set_description(Some("d".into())) });
-            kit_meta_test!(kit_set_icon, crate::events::KitField::Icon, |k: &mut crate::KitStore| { k.set_icon(Some("ic".into())) });
-            kit_meta_test!(kit_set_image, crate::events::KitField::Image, |k: &mut crate::KitStore| { k.set_image(Some("im".into())) });
-            kit_meta_test!(kit_set_preview, crate::events::KitField::Preview, |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) });
-            kit_meta_test!(kit_set_remote, crate::events::KitField::Remote, |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) });
-            kit_meta_test!(kit_set_homepage, crate::events::KitField::Homepage, |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) });
-            kit_meta_test!(kit_set_license, crate::events::KitField::License, |k: &mut crate::KitStore| { k.set_license(Some("l".into())) });
-            kit_meta_test!(kit_set_uri, crate::events::KitField::Uri, |k: &mut crate::KitStore| { k.set_uri(Some("u".into())) });
-            kit_meta_test!(kit_set_created, crate::events::KitField::Created, |k: &mut crate::KitStore| { k.set_created(Some("c".into())) });
-            kit_meta_test!(kit_set_updated, crate::events::KitField::Updated, |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) });
+            kit_meta_test!(kit_set_name, crate::events::KitField::Name, |k: &mut crate::kit_graph::KitGraph| { k.set_name("a".into()) });
+            kit_meta_test!(kit_set_description, crate::events::KitField::Description, |k: &mut crate::kit_graph::KitGraph| { k.set_description(Some("d".into())) });
+            kit_meta_test!(kit_set_icon, crate::events::KitField::Icon, |k: &mut crate::kit_graph::KitGraph| { k.set_icon(Some("ic".into())) });
+            kit_meta_test!(kit_set_image, crate::events::KitField::Image, |k: &mut crate::kit_graph::KitGraph| { k.set_image(Some("im".into())) });
+            kit_meta_test!(kit_set_preview, crate::events::KitField::Preview, |k: &mut crate::kit_graph::KitGraph| { k.set_preview(Some("pr".into())) });
+            kit_meta_test!(kit_set_remote, crate::events::KitField::Remote, |k: &mut crate::kit_graph::KitGraph| { k.set_remote(Some("r".into())) });
+            kit_meta_test!(kit_set_homepage, crate::events::KitField::Homepage, |k: &mut crate::kit_graph::KitGraph| { k.set_homepage(Some("https://example.com".into())) });
+            kit_meta_test!(kit_set_license, crate::events::KitField::License, |k: &mut crate::kit_graph::KitGraph| { k.set_license(Some("l".into())) });
+            kit_meta_test!(kit_set_uri, crate::events::KitField::Uri, |k: &mut crate::kit_graph::KitGraph| { k.set_uri(Some("u".into())) });
+            kit_meta_test!(kit_set_created, crate::events::KitField::Created, |k: &mut crate::kit_graph::KitGraph| { k.set_created(Some("c".into())) });
+            kit_meta_test!(kit_set_updated, crate::events::KitField::Updated, |k: &mut crate::kit_graph::KitGraph| { k.set_updated(Some("u2".into())) });
 
             #[test]
             fn kit_set_name_idempotent_no_events() {
-                let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitStore::new("same")));
+                let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitGraph::new("same")));
                 let mut rx = kit.read().unwrap().subscribe();
                 kit.write().unwrap().set_name("same".into()).unwrap();
                 assert!(super::common::drain(&mut rx).is_empty());
@@ -25268,13 +25268,13 @@ mod tests {
         mod prop {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::prop::PropFullDto;
 
             #[test]
             fn prop_set_unit_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None, quality: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None, quality: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
                     let kr = kit.read().unwrap();
@@ -25289,13 +25289,13 @@ mod tests {
         mod quality {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::quality::QualityFullDto;
 
             #[test]
             fn quality_set_key_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), qualities: vec![QualityFullDto { id: g.clone(), key: "k1".into(), ..Default::default() }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), qualities: vec![QualityFullDto { id: g.clone(), key: "k1".into(), ..Default::default() }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let q = {
                     let kr = kit.read().unwrap();
@@ -25311,7 +25311,7 @@ mod tests {
             use crate::events::KitEvent;
             use crate::file::{FileFullDto, FileIdDto};
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::representation::RepresentationFullDto;
             use crate::typ::TypeFullDto;
 
@@ -25320,7 +25320,7 @@ mod tests {
                 let fg = Id::new_v7();
                 let rg = Id::new_v7();
                 let tg = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
                     files: vec![FileFullDto { id: fg.clone(), url: "https://f".into(), ..Default::default() }],
@@ -25377,7 +25377,7 @@ mod tests {
             use crate::design::DesignFullDto;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::piece::PieceFullDto;
             use crate::stat::StatFullDto;
             use crate::typ::{TypeFullDto, TypeIdDto};
@@ -25388,7 +25388,7 @@ mod tests {
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
                 let stat_id = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
                     types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
@@ -25417,13 +25417,13 @@ mod tests {
         mod tag {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit::{KitFullDto, KitStore};
+            use crate::kit_graph::{KitFullDto, KitGraph};
             use crate::tag::TagFullDto;
 
             #[test]
             fn tag_set_order_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), tags: vec![TagFullDto { id: g.clone(), name: "t".into(), order: None }], ..Default::default() });
+                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), tags: vec![TagFullDto { id: g.clone(), name: "t".into(), order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let t = {
                     let kr = kit.read().unwrap();
@@ -25474,7 +25474,7 @@ mod tests {
             fn type_add_family_ref_roundtrip() {
                 use crate::diff::{FamilyIdsDiff, TypeDiff};
                 use crate::family::{FamilyFullDto, FamilyIdDto};
-                use crate::kit::{KitFullDto, KitStore};
+                use crate::kit_graph::{KitFullDto, KitGraph};
                 use crate::typ::TypeFullDto;
 
                 let family_id = Id::new_v7();
@@ -25487,12 +25487,12 @@ mod tests {
                     types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitStore::from_full_dto(dto);
+                let kit = KitGraph::from_full_dto(dto);
                 let fragment = TypeDiff {
                     families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
                     ..Default::default()
                 };
-                KitStore::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
+                KitGraph::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
                 let t = kit.read().unwrap().semio_type(type_id.as_str()).unwrap();
                 let tr = t.read().unwrap();
                 assert_eq!(tr.families.len(), 1);
@@ -25506,7 +25506,7 @@ mod tests {
 
         use crate::change_command::ChangeKitCommand;
         use crate::id::Id;
-        use crate::kit::KitStore;
+        use crate::kit_graph::KitGraph;
         use crate::kit_alternative::KitAlternativeCommand;
         use crate::kit_checkpoint::KitCheckpointCommand;
         use crate::kit_draft::KitDraftCommand;
@@ -25517,8 +25517,8 @@ mod tests {
         use crate::typ::TypeIdDto;
         use crate::typ::TypeStore;
 
-        fn make_kit_with_type() -> (Arc<RwLock<KitStore>>, Id) {
-            let mut inner = KitStore::new("k");
+        fn make_kit_with_type() -> (Arc<RwLock<KitGraph>>, Id) {
+            let mut inner = KitGraph::new("k");
             let t = Arc::new(RwLock::new(TypeStore::new("T0")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
@@ -25526,7 +25526,7 @@ mod tests {
             (Arc::new(RwLock::new(inner)), tid)
         }
 
-        fn read_type_name(dto: &crate::kit::KitFullDto, tid: &Id) -> String {
+        fn read_type_name(dto: &crate::kit_graph::KitFullDto, tid: &Id) -> String {
             let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::Name] };
             let r = cmd.execute(dto).expect("read type");
             match r {
@@ -25540,17 +25540,17 @@ mod tests {
 
         #[test]
         fn the_kit_starts_as_initial() {
-            let k = KitStore::new("h");
+            let k = KitGraph::new("h");
             assert_eq!(k.the_kit_dto(), k.initial);
         }
 
         #[test]
         fn kit_replace_command_matches_renamed_snapshot() {
-            let a = KitStore::new("a");
-            let mut b = KitStore::new("b");
+            let a = KitGraph::new("a");
+            let mut b = KitGraph::new("b");
             b.set_name("renamed".into()).unwrap();
             let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: b.to_full_dto() };
-            let ka = KitStore::from_full_dto(a.to_full_dto());
+            let ka = KitGraph::from_full_dto(a.to_full_dto());
             cmd.apply(&ka).expect("apply");
             assert_eq!(ka.read().unwrap().name, "renamed");
         }
@@ -25558,9 +25558,9 @@ mod tests {
         #[test]
         fn add_family_change_command_undo_roundtrip() {
             use crate::family::FamilyFullDto;
-            use crate::kit::KitFullDto;
+            use crate::kit_graph::KitFullDto;
 
-            let kit = KitStore::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full_dto(KitFullDto {
                 id: Id::new_v7(),
                 name: "k".into(),
                 ..Default::default()
@@ -25581,25 +25581,25 @@ mod tests {
 
         #[test]
         fn vcs_session_draft_checkpoint_roundtrip() {
-            let mut inner = KitStore::new("p");
+            let mut inner = KitGraph::new("p");
             let t = Arc::new(RwLock::new(TypeStore::new("T")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
             // VCS base materialization replays from `initial`; keep it in sync with the live graph.
             inner.initial = inner.to_full_dto();
             let k = Arc::new(RwLock::new(inner));
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25611,7 +25611,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            KitStore::execute_vcs(
+            KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -25640,7 +25640,7 @@ mod tests {
 
         #[test]
         fn read_command_nested_type() {
-            let k = Arc::new(RwLock::new(KitStore::new("rk")));
+            let k = Arc::new(RwLock::new(KitGraph::new("rk")));
             let mut inner = k.write().expect("w");
             let t = Arc::new(RwLock::new(TypeStore::new("Ty")));
             let tid = t.read().expect("tr").id.clone();
@@ -25669,18 +25669,18 @@ mod tests {
         #[test]
         fn transaction_change_undo_redo() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25692,7 +25692,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let res = KitStore::execute_vcs(
+            let res = KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -25753,11 +25753,11 @@ mod tests {
         #[test]
         fn draft_undo_across_transactions() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
@@ -25765,7 +25765,7 @@ mod tests {
                 _ => panic!(),
             };
             let run_tx = |name: &str| {
-                let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                     .expect("st")
                 {
                     kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25777,7 +25777,7 @@ mod tests {
                     },
                     _ => panic!(),
                 };
-                KitStore::execute_vcs(
+                KitGraph::execute_vcs(
                     &k,
                     KitStoreCommand::ExecuteSessionCommands {
                         id: sid.clone(),
@@ -25801,7 +25801,7 @@ mod tests {
             run_tx("A2");
             let dto_b = k.read().expect("g").to_full_dto();
             assert_eq!(read_type_name(&dto_b, &tid), "A2");
-            KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
+            KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
             let dto_a = k.read().expect("g").to_full_dto();
             assert_eq!(read_type_name(&dto_a, &tid), "A1");
         }
@@ -25809,18 +25809,18 @@ mod tests {
         #[test]
         fn finalize_to_checkpoint_first_has_none_parent() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25832,7 +25832,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp = match KitStore::execute_vcs(
+            let cp = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -25875,18 +25875,18 @@ mod tests {
         fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
             let (k, tid) = make_kit_with_type();
             // First checkpoint on main
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25898,7 +25898,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp_main = match KitStore::execute_vcs(
+            let cp_main = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid.clone(),
@@ -25932,12 +25932,12 @@ mod tests {
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
             // Branch from cp_main
-            let alt_id = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
+            let alt_id = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             // Draft on alternative tip
-            let did1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
+            let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
@@ -25945,7 +25945,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let tx1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -25957,7 +25957,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _ = KitStore::execute_vcs(
+            let _ = KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -25992,18 +25992,18 @@ mod tests {
         #[test]
         fn alternative_share_checkpoints() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -26015,7 +26015,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp0 = match KitStore::execute_vcs(
+            let cp0 = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -26047,11 +26047,11 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let a1 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
+            let a1 = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let a2 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
+            let a2 = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
@@ -26064,19 +26064,19 @@ mod tests {
         #[test]
         fn unify_alternative_replaces_list_with_root_and_new() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
             // cp0 on main: T0->M
-            let did0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -26088,7 +26088,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp0 = match KitStore::execute_vcs(
+            let cp0 = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid.clone(),
@@ -26120,19 +26120,19 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let alt = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
+            let alt = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             // extend alt: cp0 -> cp1
-            let did1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
+            let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -26144,7 +26144,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _cp1 = match KitStore::execute_vcs(
+            let _cp1 = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -26181,7 +26181,7 @@ mod tests {
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
                 g.materialize_at(Some(&t))
             };
-            let _ = KitStore::execute_vcs(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
+            let _ = KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
@@ -26196,18 +26196,18 @@ mod tests {
         #[test]
         fn release_caches_materialized_kit() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -26219,7 +26219,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp = match KitStore::execute_vcs(
+            let cp = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -26251,7 +26251,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _ = KitStore::execute_vcs(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
+            let _ = KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
             let g = k.read().expect("g");
             let mk = g.checkpoints.get(&cp).expect("cp").release.as_ref().expect("mk");
             let computed = mk.compute();
@@ -26282,12 +26282,12 @@ mod tests {
 mod wasm_handle_tests {
     use wasm_bindgen_test::*;
 
-    use crate::kit::KitStore;
+    use crate::kit_graph::KitGraph;
     use crate::wasm::KitStoreHandle;
 
     #[wasm_bindgen_test]
     fn kit_store_handle_create_roundtrips_snapshot() {
-        let kit = KitStore::new("wasm-kit-test");
+        let kit = KitGraph::new("wasm-kit-test");
         let dto = kit.read().unwrap().to_full_dto();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
         let snap = h.snapshot().expect("snapshot");
@@ -26316,7 +26316,7 @@ pub use geom::{Camera, Coordinate, Plane, Point, Vector};
 pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak};
+pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitGraphRef, KitGraphWeak};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_change::{KitChange, KitChangeKind};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
