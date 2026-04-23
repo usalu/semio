@@ -56,6 +56,48 @@ se:Kit
       sh:name "design"@en ;
       sh:description "A design of the kit."@en ;
       sh:class se:Design ;
+    ] ,
+    [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family (ports) owned by the kit."@en ;
+      sh:class se:Family ;
+    ] ;
+.
+se:Family
+  a sh:NodeShape ;
+  sh:targetClass se:Family ;
+  sh:name "Family"@en ;
+  sh:description "Kit-level family owning ports; types and designs reference families."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the family."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
+    ] ,
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "A port defined on this family."@en ;
+      sh:class se:Port ;
+    ] ;
+.
+se:Port
+  a sh:NodeShape ;
+  sh:targetClass se:Port ;
+  sh:name "Port"@en ;
+  sh:description "Geometry and compatibility for a connector slot on a family."@en ;
+  sh:property
+    [
+      sh:path se:name ;
+      sh:name "name"@en ;
+      sh:description "The name of the port."@en ;
+      sh:minCount 1 ;
+      sh:datatype rdf:langString ;
+      sh:uniqueLang true ;
     ] ;
 .
 se:Design
@@ -89,6 +131,12 @@ se:Design
       sh:name "connection"@en ;
       sh:description "An connection of the design."@en ;
       sh:class se:Connection ;
+    ] ,
+    [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family referenced by this design."@en ;
+      sh:class se:Family ;
     ] ;
 .
 se:Piece
@@ -231,10 +279,15 @@ se:Type
       )
     ] ,
     [
+      sh:path se:family ;
+      sh:name "family"@en ;
+      sh:description "A family referenced by this type."@en ;
+      sh:class se:Family ;
+    ] ,
+    [
       sh:path se:connector ;
       sh:name "connector"@en ;
       sh:description "A connector of the type."@en ;
-      sh:minCount 1 ;
       sh:class se:Connector ;
     ] ;
 .
@@ -242,22 +295,22 @@ se:Connector
   a sh:NodeShape ;
   sh:targetClass se:Connector ;
   sh:name "connector"@en ;
-  sh:description "A connector is a 3d interface."@en ;
+  sh:description "Type-owned connector referencing a port on a kit family; geometry lives on the port."@en ;
   sh:property
+    [
+      sh:path se:port ;
+      sh:name "port"@en ;
+      sh:description "The family port filled by this connector."@en ;
+      sh:minCount 1 ;
+      sh:maxCount 1 ;
+      sh:class se:Port ;
+    ] ,
     [
       sh:path se:maxChildren ;
       sh:name "maxChildren"@en ;
-      sh:description "Maximum number of connections. Defaults to 1."@en ;
+      sh:description "Maximum number of connections. Defaults to 1. May override the port default."@en ;
       sh:maxCount 1 ;
       sh:datatype xsd:integer ;
-    ] ,
-    [
-      sh:path se:plane ;
-      sh:name "plane"@en ;
-      sh:description "The plane of the connector."@en ;
-      sh:minCount 1 ;
-      sh:maxCount 1 ;
-      sh:class se:Plane ;
     ] ,
     [
       sh:path se:attribute ;

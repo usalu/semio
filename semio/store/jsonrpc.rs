@@ -417,14 +417,20 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let (_diff, inv) = ChangeKitCommand::apply_many(&k, &cmds).map_err(e32000)?;
         let kind = ChangeKitCommand::batch_kind(&cmds);
+        let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
+        KitStore::with_undo(&k, || {
+            let (_d, inv) = ChangeKitCommand::apply_many(&k, &cmds).map_err(KitStore::map_semio_err)?;
+            inverse_out = inv;
+            Ok(())
+        })
+        .map_err(|e| e32000(e.to_string()))?;
         #[derive(Serialize)]
         struct Out {
             kind: KitChangeKind,
             inverse: Vec<ChangeKitCommand>,
         }
-        return Ok(serde_json::to_value(&Out { kind, inverse: inv }).map_err(e32000)?);
+        return Ok(serde_json::to_value(&Out { kind, inverse: inverse_out }).map_err(e32000)?);
     }
     if method == "kit.executeReadKitCommands" {
         let o = p_obj(&params)?;
@@ -503,7 +509,7 @@ fn run_method(
         let v = KitStore::get_field_rpc(&k, ek, &id, &field).map_err(e32000)?;
         return Ok(serde_json::to_value(&v).map_err(e32000)?);
     }
-    if method == "kit.setField" {
+    if method == "kit.changeKitCommandsForFieldPatch" {
         let o = p_obj(&params)?;
         let kind = take_str(o, "kind")?;
         let id = take_str(o, "id")?;
@@ -513,10 +519,10 @@ fn run_method(
             .ok_or_else(|| e32602("missing value"))?
             .clone();
         let ek = KitStore::parse_entity_kind(&kind).map_err(e32000)?;
-        let r = KitStore::set_field_rpc(&k, ek, &id, &field, val);
-        return Ok(settle_v(r));
+        let cmds = KitStore::change_kit_commands_for_field_patch(&k, ek, &id, &field, val).map_err(|e| e32000(e.to_string()))?;
+        return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
-    if method == "kit.addChild" {
+    if method == "kit.changeKitCommandsForAddChild" {
         let o = p_obj(&params)?;
         let parent_kind = take_str(o, "parentKind")?;
         let parent_id = take_str(o, "parentId")?;
@@ -527,10 +533,10 @@ fn run_method(
             .clone();
         let pk = KitStore::parse_entity_kind(&parent_kind).map_err(e32000)?;
         let ck = KitStore::parse_entity_kind(&child_kind).map_err(e32000)?;
-        let r = KitStore::add_child_rpc(&k, pk, &parent_id, ck, dto);
-        return Ok(settle_v(r));
+        let cmds = KitStore::change_kit_commands_for_add_child(&k, pk, &parent_id, ck, dto).map_err(|e| e32000(e.to_string()))?;
+        return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
-    if method == "kit.removeChild" {
+    if method == "kit.changeKitCommandsForRemoveChild" {
         let o = p_obj(&params)?;
         let parent_kind = take_str(o, "parentKind")?;
         let parent_id = take_str(o, "parentId")?;
@@ -538,8 +544,8 @@ fn run_method(
         let child_id = take_str(o, "childId")?;
         let pk = KitStore::parse_entity_kind(&parent_kind).map_err(e32000)?;
         let ck = KitStore::parse_entity_kind(&child_kind).map_err(e32000)?;
-        let r = KitStore::remove_child_rpc(&k, pk, &parent_id, ck, &child_id);
-        return Ok(settle_v(r));
+        let cmds = KitStore::change_kit_commands_for_remove_child(&k, pk, &parent_id, ck, &child_id).map_err(|e| e32000(e.to_string()))?;
+        return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
 
     if method == "design.clusterPieces" {

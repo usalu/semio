@@ -138,3 +138,67 @@ fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::error::
     assert!(st.success(), "sidecar should exit 0 on stdin EOF, got {st:?}");
     Ok(())
 }
+
+#[test]
+fn sidecar_planner_then_execute_field_patch() -> Result<(), Box<dyn std::error::Error>> {
+    let exe = std::path::Path::new(env!("CARGO_BIN_EXE_semio-store"));
+    let mut child = Command::new(exe)
+        .env("SEMIO_STORE_NO_EVENTS", "1")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    let mut stdin = child.stdin.take().ok_or("no stdin on child")?;
+    let stdout = child.stdout.take().ok_or("no stdout on child")?;
+    let mut reader = BufReader::new(stdout);
+
+    let kid = Id::new_v7();
+    let dto = KitFullDto {
+        id: kid.clone(),
+        name: "P".to_string(),
+        ..Default::default()
+    };
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "kit.create",
+            "params": { "dto": serde_json::to_value(&dto)? }
+        }))?
+    )?;
+    let _r1 = until_response(&mut reader, 1)?;
+
+    let req2 = json!({
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "kit.changeKitCommandsForFieldPatch",
+        "params": {
+            "kind": "Kit",
+            "id": kid.as_str(),
+            "field": "name",
+            "value": "Q"
+        }
+    });
+    writeln!(stdin, "{}", serde_json::to_string(&req2)?)?;
+    let cmds = until_response(&mut reader, 2)?;
+    let req3 = json!({
+        "jsonrpc": "2.0",
+        "id": 3,
+        "method": "kit.executeChangeKitCommands",
+        "params": { "cmds": cmds }
+    });
+    writeln!(stdin, "{}", serde_json::to_string(&req3)?)?;
+    let _r3 = until_response(&mut reader, 3)?;
+
+    writeln!(stdin, r#"{{"jsonrpc":"2.0","id":4,"method":"kit.snapshot","params":{{}}}}"#)?;
+    let snap = until_response(&mut reader, 4)?;
+    assert_eq!(snap.get("name").and_then(|n| n.as_str()), Some("Q"));
+
+    drop(stdin);
+    let st = child.wait()?;
+    assert!(st.success(), "sidecar exit {st:?}");
+    Ok(())
+}

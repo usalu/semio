@@ -13,16 +13,16 @@ todos:
    status: completed
  - id: rs_vcs
    content: "semio/rs/lib.rs: add alternative/checkpoint/session/draft/transaction modules + stores + Dtos; checkpoint hash (blake3 of parent+changes); snapshot(ref) materialization; remove legacy wasm applyKitDiff/applyDesignDiff/setField etc."
-   status: pending
+   status: completed
  - id: rs_commands
    content: "semio/rs/lib.rs: add Family/Port commands; remove Type/Design parent/variant/view/isAbstract commands and Connector geometry commands; add Type/Design AddFamilyRef/RemoveFamilyRef/SetFamilies; add Connector::Port"
-   status: pending
+   status: completed
  - id: rs_io
    content: "semio/rs/lib.rs io::sqlite + io::json: rewrite readers/writers to the new schema including VCS tables and command blobs"
-   status: pending
+   status: completed
  - id: store_sidecar
    content: "semio/store: update jsonrpc.rs method catalog, AGENTS.md, and tests/rpc.rs to new VCS/snapshot surface"
-   status: pending
+   status: completed
  - id: graphql_postgres_go
    content: "semio/postgres + semio/graphql resolvers + semio/go: mirror sqlite schema; wire graphql queries/mutations/subscriptions to the sidecar"
    status: pending

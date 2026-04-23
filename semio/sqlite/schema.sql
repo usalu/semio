@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS kit (
 	uri TEXT,
 	created_at TEXT,
 	updated_at TEXT,
+	vcs_initial_json TEXT NOT NULL,
 	PRIMARY KEY (id)
 );
 
@@ -486,6 +487,7 @@ CREATE TABLE IF NOT EXISTS checkpoint (
 	time TEXT,
 	is_release INTEGER NOT NULL DEFAULT 0,
 	materialized_kit_hash TEXT,
+	author_ids TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
 	FOREIGN KEY (change_id) REFERENCES kit_change (id) ON DELETE CASCADE
@@ -563,6 +565,20 @@ CREATE TABLE IF NOT EXISTS transaction_inverse_command (
 	command_json TEXT NOT NULL,
 	PRIMARY KEY (transaction_id, ordinal),
 	FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS kit_main_line (
+	kit_id TEXT NOT NULL,
+	head_checkpoint_id TEXT,
+	PRIMARY KEY (kit_id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS kit_sessions_bundle (
+	kit_id TEXT NOT NULL,
+	json TEXT NOT NULL,
+	PRIMARY KEY (kit_id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 -- #endregion Version control
 

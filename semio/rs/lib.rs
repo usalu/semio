@@ -351,7 +351,6 @@ pub mod change_command {
     use std::collections::HashMap;
     use std::sync::Arc;
     use std::sync::RwLock;
-
     use crate::attribute::AttributeFullDto;
     use crate::attribute::AttributeIdDto;
     use crate::attribute::AttributeStore;
@@ -378,7 +377,7 @@ pub mod change_command {
     use crate::event_wire;
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
-    use crate::family::FamilyIdDto;
+    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreRef};
     use crate::file::FileStoreRef;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
@@ -615,6 +614,33 @@ pub mod change_command {
             design_id: DesignIdDto,
             commands: Vec<ChangeDesignCommand>,
         },
+        /// Ports attached directly to the kit (not under a [`FamilyStore`]).
+        ChangeKitPortCommands {
+            port_id: PortIdDto,
+            commands: Vec<ChangePortCommand>,
+        },
+        AddFamily {
+            family: FamilyFullDto,
+        },
+        RemoveFamily {
+            family_id: FamilyIdDto,
+        },
+        ChangeFamilyCommands {
+            family_id: FamilyIdDto,
+            commands: Vec<ChangeFamilyCommand>,
+        },
+    }
+
+    /// Per-field on [`crate::family::FamilyStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeFamilyCommand {
+        Name { name: String },
+        Description { description: Option<String> },
+        Icon { icon: Option<String> },
+        AddPort { port: PortFullDto },
+        RemovePort { port_id: PortIdDto },
+        ChangePortCommands { port_id: PortIdDto, commands: Vec<ChangePortCommand> },
     }
 
     /// Per-field on [`crate::file::FileStore`].
@@ -1359,6 +1385,10 @@ pub mod change_command {
                 ChangeKitCommand::AddFile { .. } | ChangeKitCommand::RemoveFile { .. } | ChangeKitCommand::AddFolder { .. } | ChangeKitCommand::RemoveFolder { .. } => KitChangeKind::ModifyType,
                 ChangeKitCommand::ChangeTypeCommands { .. } => KitChangeKind::ModifyType,
                 ChangeKitCommand::ChangeDesignCommands { .. } => KitChangeKind::ModifyDesign,
+                ChangeKitCommand::ChangeKitPortCommands { .. } => KitChangeKind::ModifyType,
+                ChangeKitCommand::AddFamily { .. } => KitChangeKind::Other("addFamily".into()),
+                ChangeKitCommand::RemoveFamily { .. } => KitChangeKind::Other("removeFamily".into()),
+                ChangeKitCommand::ChangeFamilyCommands { .. } => KitChangeKind::Other("modifyFamily".into()),
             }
         }
 
@@ -1698,6 +1728,52 @@ pub mod change_command {
                     let inv_nested: Vec<ChangeDesignCommand> = inv_nested.into_iter().rev().collect();
                     Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }])
                 }
+                ChangeKitCommand::ChangeKitPortCommands { port_id, commands } => {
+                    let pref: PortStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
+                    {
+                        let pr = pref.read().map_err(|_| SemioError::LockPoisoned("port"))?;
+                        if pr.parent_family.upgrade().is_some() {
+                            return Err(SemioError::InvalidOperation("ChangeKitPortCommands applies only to kit-level ports".into()));
+                        }
+                    }
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&pref, kit)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeKitCommand::ChangeKitPortCommands { port_id: port_id.clone(), commands: inv }])
+                }
+                ChangeKitCommand::AddFamily { family } => {
+                    let id = family.id.clone();
+                    KitStore::insert_family_dto(kit, family.clone()).map_err(se)?;
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyIdDto { id } }])
+                }
+                ChangeKitCommand::RemoveFamily { family_id } => {
+                    let snap = KitStore::remove_family_dto(kit, family_id.id.as_str()).map_err(se)?;
+                    if let Some(dto) = snap {
+                        Ok(vec![ChangeKitCommand::AddFamily { family: dto }])
+                    } else {
+                        Err(SemioError::NotFound { kind: "Family", id: family_id.id.clone() })
+                    }
+                }
+                ChangeKitCommand::ChangeFamilyCommands { family_id, commands } => {
+                    let f: FamilyStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .families
+                        .iter()
+                        .find(|x| x.read().map(|r| r.id == family_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Family", id: family_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(kit, &f)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeKitCommand::ChangeFamilyCommands { family_id: family_id.clone(), commands: inv }])
+                }
             }?;
             let after = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             Ok((crate::kit_diff::KitDiff::between(&before, &after), inv))
@@ -1754,6 +1830,12 @@ pub mod change_command {
                         out.pop();
                     }
                     (ChangeKitCommand::AddDesign { design }, Some(ChangeKitCommand::RemoveDesign { design_id })) if design.id == design_id.id => {
+                        out.pop();
+                    }
+                    (ChangeKitCommand::RemoveFamily { family_id }, Some(ChangeKitCommand::AddFamily { family })) if family.id == family_id.id => {
+                        out.pop();
+                    }
+                    (ChangeKitCommand::AddFamily { family }, Some(ChangeKitCommand::RemoveFamily { family_id })) if family.id == family_id.id => {
                         out.pop();
                     }
                     _ => out.push(c),
@@ -3196,6 +3278,120 @@ pub mod change_command {
             }
         }
     }
+
+    impl ChangeFamilyCommand {
+        pub fn run(&self, kit: &KitStoreRef, fam: &FamilyStoreRef) -> Result<()> {
+            self.apply(kit, fam)?;
+            Ok(())
+        }
+        pub fn apply(&self, kit: &KitStoreRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
+            match self {
+                ChangeFamilyCommand::Name { name } => {
+                    let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.name.clone();
+                    {
+                        let mut fw = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?;
+                        fw.name = name.clone();
+                    }
+                    fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFamilyCommand::Name { name: old }])
+                    }
+                }
+                ChangeFamilyCommand::Description { description } => {
+                    let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.description.clone();
+                    {
+                        let mut fw = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?;
+                        fw.description = description.clone();
+                    }
+                    fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFamilyCommand::Description { description: old }])
+                    }
+                }
+                ChangeFamilyCommand::Icon { icon } => {
+                    let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.icon.clone();
+                    {
+                        let mut fw = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?;
+                        fw.icon = icon.clone();
+                    }
+                    fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    if old == *icon {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFamilyCommand::Icon { icon: old }])
+                    }
+                }
+                ChangeFamilyCommand::AddPort { port } => {
+                    let pid = port.id.clone();
+                    if kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid).is_some() {
+                        return Err(SemioError::InvalidOperation(format!("duplicate port id {}", pid.as_str())));
+                    }
+                    let pr: PortStoreRef = {
+                        let fw = Arc::downgrade(fam);
+                        let mut pstore = PortStore::from_full_dto(port.clone());
+                        pstore.parent_family = fw;
+                        Arc::new(RwLock::new(pstore))
+                    };
+                    {
+                        let mut fr = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?;
+                        fr.ports.push(pr.clone());
+                    }
+                    {
+                        let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        pr.write()
+                            .map_err(|_| SemioError::LockPoisoned("port"))?
+                            .set_compatible_ports_from_ids(&port.compatible_ports, &*kr);
+                    }
+                    pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortIdDto { id: pid } }])
+                }
+                ChangeFamilyCommand::RemovePort { port_id } => {
+                    KitStore::ensure_port_unused_by_connectors(kit, &port_id.id)?;
+                    let pos = fam
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("family"))?
+                        .ports
+                        .iter()
+                        .position(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Port", id: port_id.id.clone() });
+                    };
+                    let pr = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?.ports.remove(pos);
+                    let dto = pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full_dto();
+                    KitStore::purge_dead_port_compatibility(kit);
+                    fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeFamilyCommand::AddPort { port: dto }])
+                }
+                ChangeFamilyCommand::ChangePortCommands { port_id, commands } => {
+                    let pref: PortStoreRef = {
+                        let fr = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?;
+                        fr.ports
+                            .iter()
+                            .find(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false))
+                            .cloned()
+                            .ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?
+                    };
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&pref, kit)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeFamilyCommand::ChangePortCommands { port_id: port_id.clone(), commands: inv }])
+                }
+            }
+        }
+    }
+
     impl ChangePortCommand {
         pub fn run(&self, p: &PortStoreRef, kit: &KitStoreRef) -> Result<()> {
             self.apply(p, kit)?;
@@ -3616,7 +3812,7 @@ pub mod kit_alternative {
         pub id: Id,
         pub name: String,
         /// Main-line fork point; `None` when the line starts from the initial kit (no main-line checkpoint).
-        /// Legacy/alternatives with a fork always have `Some`.
+        /// Alternatives with a fork use `Some` (main-line checkpoint id).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub root: Option<Id>,
         /// Ordered checkpoint ids (may share ids with other alternatives).
@@ -14357,104 +14553,434 @@ pub mod kit {
                 "Quality" => Ok(EntityKind::Quality),
                 "Stat" => Ok(EntityKind::Stat),
                 "Benchmark" => Ok(EntityKind::Benchmark),
+                "Family" => Ok(EntityKind::Family),
+                "Location" => Ok(EntityKind::Location),
                 _ => Err(SetError::InvalidValue(format!("unknown entity kind '{s}'"))),
             }
         }
 
-        /// 🌐 Worker boundary: set one scalar field (extend match as hooks grow).
-        pub fn set_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
+        /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
+        pub fn change_kit_commands_for_field_patch(
+            kit: &KitStoreRef,
+            entity_kind: EntityKind,
+            id: &str,
+            field: &str,
+            value: serde_json::Value,
+        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
-            Self::with_undo(kit, || match entity_kind {
+            use crate::change_command::{
+                ChangeAuthorCommand, ChangeConceptCommand, ChangeDesignCommand, ChangeFamilyCommand, ChangeFileCommand, ChangeFolderCommand, ChangeKitCommand,
+                ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand, ChangeTypeCommand,
+            };
+            use crate::author::AuthorIdDto;
+            use crate::concept::ConceptIdDto;
+            use crate::design::DesignIdDto;
+            use crate::file::FileIdDto;
+            use crate::folder::FolderIdDto;
+            use crate::family::FamilyIdDto;
+            use crate::piece::PieceIdDto;
+            use crate::port::PortIdDto;
+            use crate::quality::QualityIdDto;
+            use crate::tag::TagIdDto;
+            use crate::typ::TypeIdDto;
+            Ok(match entity_kind {
                 EntityKind::Kit => {
-                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     if g.id.as_str() != id {
                         return Err(SetError::NotFound(format!("kit {id}")));
                     }
-                    match field.as_str() {
+                    drop(g);
+                    vec![match field.as_str() {
                         "name" => {
                             let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_name(s)
+                            ChangeKitCommand::Name { name: s }
                         }
                         "description" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_description(v)
+                            ChangeKitCommand::Description { description: v }
                         }
                         "icon" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_icon(v)
+                            ChangeKitCommand::Icon { icon: v }
                         }
                         "image" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_image(v)
+                            ChangeKitCommand::Image { image: v }
                         }
                         "homepage" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_homepage(v)
+                            ChangeKitCommand::Homepage { homepage: v }
                         }
                         "license" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_license(v)
+                            ChangeKitCommand::License { license: v }
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
-                    }
+                        _ => return Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
+                    }]
                 }
                 EntityKind::Design => {
-                    let d = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.design(id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {id}")))?
-                    };
-                    let mut dw = d.write().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    match field.as_str() {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if g.design(id.as_str()).is_none() {
+                        return Err(SetError::NotFound(format!("design {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
                         "name" => {
                             let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            dw.set_name(s)
+                            ChangeDesignCommand::Name { name: s }
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
-                    }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeDesignCommand::Description { description: v }
+                        }
+                        "icon" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeDesignCommand::Icon { icon: v }
+                        }
+                        "image" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeDesignCommand::Image { image: v }
+                        }
+                        "unit" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeDesignCommand::Unit { unit: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeDesignCommands {
+                        design_id: DesignIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
                 }
                 EntityKind::Type => {
-                    let t = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.semio_type(id.as_str()).ok_or_else(|| SetError::NotFound(format!("type {id}")))?
-                    };
-                    let mut tw = t.write().map_err(|_| SetError::LockPoisoned("type".into()))?;
-                    match field.as_str() {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if g.semio_type(id.as_str()).is_none() {
+                        return Err(SetError::NotFound(format!("type {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
                         "name" => {
                             let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            tw.set_name(s)
+                            ChangeTypeCommand::Name { name: s }
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
-                    }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::Description { description: v }
+                        }
+                        "icon" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::Icon { icon: v }
+                        }
+                        "image" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::Image { image: v }
+                        }
+                        "stock" => {
+                            let v: Option<i64> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::Stock { stock: v }
+                        }
+                        "virtual" | "typeVirtual" | "isAbstract" => {
+                            let v: Option<bool> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::TypeVirtual { value: v }
+                        }
+                        "unit" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTypeCommand::Unit { unit: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeTypeCommands {
+                        type_id: TypeIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
                 }
                 EntityKind::Piece => {
-                    let pref = {
+                    let design_id = {
                         let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let mut found: Option<PieceStoreRef> = None;
+                        let mut found: Option<Id> = None;
                         for d in &g.designs {
                             if let Ok(dr) = d.read() {
-                                if let Some(p) = dr.piece(id.as_str()) {
-                                    found = Some(p);
+                                if dr.piece(id.as_str()).is_some() {
+                                    found = Some(dr.id.clone());
                                     break;
                                 }
                             }
                         }
                         found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
                     };
-                    let mut pw = pref.write().map_err(|_| SetError::LockPoisoned("piece".into()))?;
-                    match field.as_str() {
+                    let piece_cmd = match field.as_str() {
                         "name" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            pw.set_name(v)
+                            ChangePieceCommand::Name { name: v }
                         }
                         "color" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            pw.set_color(v)
+                            ChangePieceCommand::Color { color: v }
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
+                        _ => return Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeDesignCommands {
+                        design_id: DesignIdDto { id: design_id },
+                        commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                            piece_id: PieceIdDto { id: Id::from(id.as_str()) },
+                            commands: vec![piece_cmd],
+                        }],
+                    }]
+                }
+                EntityKind::Author => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.authors.iter().any(|a| a.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("author {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeAuthorCommand::Name { name: s }
+                        }
+                        "email" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeAuthorCommand::Email { email: s }
+                        }
+                        "role" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeAuthorCommand::Role { role: v }
+                        }
+                        "rank" => {
+                            let v: Option<i64> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeAuthorCommand::Rank { rank: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown author field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeAuthorCommands {
+                        author_id: AuthorIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Concept => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.concepts.iter().any(|c| c.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("concept {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeConceptCommand::Name { name: s }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeConceptCommand::Description { description: v }
+                        }
+                        "order" | "orderIndex" => {
+                            let v: Option<i64> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeConceptCommand::Order { order: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown concept field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeConceptCommands {
+                        concept_id: ConceptIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Tag => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.tags.iter().any(|t| t.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("tag {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTagCommand::Name { name: s }
+                        }
+                        "order" | "orderIndex" => {
+                            let v: Option<i64> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeTagCommand::Order { order: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown tag field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeTagCommands {
+                        tag_id: TagIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::File => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.files.iter().any(|f| f.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("file {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "url" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Url { url: s }
+                        }
+                        "mime" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Mime { mime: v }
+                        }
+                        "size" => {
+                            let v: Option<i64> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Size { size: v }
+                        }
+                        "hash" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Hash { hash: v }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Description { description: v }
+                        }
+                        "created" | "createdAt" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Created { created: v }
+                        }
+                        "updated" | "updatedAt" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFileCommand::Updated { updated: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown file field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeFileCommands {
+                        file_id: FileIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Folder => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.folders.iter().any(|f| f.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("folder {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "path" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFolderCommand::Path { path: s }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFolderCommand::Description { description: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown folder field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeFolderCommands {
+                        folder_id: FolderIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Quality => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.qualities.iter().any(|q| q.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("quality {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "key" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitQualityCommand::Key { key: s }
+                        }
+                        "value" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitQualityCommand::Value { value: v }
+                        }
+                        "unit" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitQualityCommand::Unit { unit: v }
+                        }
+                        "definition" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitQualityCommand::Definition { definition: v }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitQualityCommand::Description { description: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown quality field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeKitQualityCommands {
+                        quality_id: QualityIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Family => {
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if !g.families.iter().any(|f| f.read().map(|r| r.id.as_str() == id.as_str()).unwrap_or(false)) {
+                        return Err(SetError::NotFound(format!("family {id}")));
+                    }
+                    drop(g);
+                    let cmd = match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFamilyCommand::Name { name: s }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFamilyCommand::Description { description: v }
+                        }
+                        "icon" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeFamilyCommand::Icon { icon: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown family field '{field}'"))),
+                    };
+                    vec![ChangeKitCommand::ChangeFamilyCommands {
+                        family_id: FamilyIdDto { id: Id::from(id.as_str()) },
+                        commands: vec![cmd],
+                    }]
+                }
+                EntityKind::Port => {
+                    let pref = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.port_by_id(&Id::from(id.as_str()))
+                            .ok_or_else(|| SetError::NotFound(format!("port {id}")))?
+                    };
+                    let parent_fam_id: Option<Id> = match pref.read().map_err(|_| SetError::LockPoisoned("port".into()))?.parent_family.upgrade() {
+                        Some(pf) => Some(pf.read().map_err(|_| SetError::LockPoisoned("family".into()))?.id.clone()),
+                        None => None,
+                    };
+                    let pcmd = match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangePortCommand::Name { name: s }
+                        }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangePortCommand::Description { description: v }
+                        }
+                        "icon" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangePortCommand::Icon { icon: v }
+                        }
+                        _ => return Err(SetError::InvalidValue(format!("unknown port field '{field}'"))),
+                    };
+                    let pid = Id::from(id.as_str());
+                    if let Some(fid) = parent_fam_id {
+                        vec![ChangeKitCommand::ChangeFamilyCommands {
+                            family_id: FamilyIdDto { id: fid },
+                            commands: vec![ChangeFamilyCommand::ChangePortCommands {
+                                port_id: PortIdDto { id: pid },
+                                commands: vec![pcmd],
+                            }],
+                        }]
+                    } else {
+                        vec![ChangeKitCommand::ChangeKitPortCommands {
+                            port_id: PortIdDto { id: pid },
+                            commands: vec![pcmd],
+                        }]
                     }
                 }
-                _ => Err(SetError::InvalidValue(format!("set_field_rpc not implemented for {entity_kind:?}"))),
+                _ => return Err(SetError::InvalidValue(format!("change_kit_commands_for_field_patch not implemented for {entity_kind:?}"))),
+            })
+        }
+
+        /// 🌐 Worker boundary: set one scalar field via [`ChangeKitCommand`] batch + undo snapshot.
+        pub fn set_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
+            let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
+            Self::with_undo(kit, || {
+                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                Ok(())
             })
         }
 
@@ -14512,7 +15038,7 @@ pub mod kit {
             }
         }
 
-        fn map_semio_err(e: SemioError) -> SetError {
+        pub fn map_semio_err(e: SemioError) -> SetError {
             match e {
                 SemioError::NotFound { kind, id } => SetError::NotFound(format!("{} {}", kind, id.as_str())),
                 SemioError::LockPoisoned(s) => SetError::LockPoisoned(s.to_string()),
@@ -14673,34 +15199,88 @@ pub mod kit {
             kit.read().map(|g| !g.undo_future.is_empty()).unwrap_or(false)
         }
 
-        /// Add a child entity under `parent` (currently `Design → Piece` only).
-        pub fn add_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
+        pub fn change_kit_commands_for_add_child(
+            kit: &KitStoreRef,
+            parent_kind: EntityKind,
+            parent_id: &str,
+            child_kind: EntityKind,
+            dto: serde_json::Value,
+        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+            use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
+            use crate::design::DesignIdDto;
+            use crate::family::FamilyFullDto;
             let pg = parent_id.to_string();
             match (parent_kind, child_kind) {
+                (EntityKind::Kit, EntityKind::Family) => {
+                    let kid = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.id.as_str().to_string();
+                    if pg != kid {
+                        return Err(SetError::NotFound(format!("kit {pg}")));
+                    }
+                    let family: FamilyFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                    Ok(vec![ChangeKitCommand::AddFamily { family }])
+                }
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                    Self::with_undo(kit, || {
-                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![piece], ..Default::default() }), ..Default::default() };
-                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
-                    })
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands {
+                        design_id: DesignIdDto { id: Id::from(pg.as_str()) },
+                        commands: vec![ChangeDesignCommand::AddPiece { piece }],
+                    }])
                 }
-                _ => Err(SetError::InvalidValue(format!("add_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"))),
+                _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_add_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
-        /// Remove a child entity from `parent` (currently `Design → Piece` only).
-        pub fn remove_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
+        pub fn change_kit_commands_for_remove_child(
+            kit: &KitStoreRef,
+            parent_kind: EntityKind,
+            parent_id: &str,
+            child_kind: EntityKind,
+            child_id: &str,
+        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+            use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
+            use crate::design::DesignIdDto;
+            use crate::family::FamilyIdDto;
+            use crate::piece::PieceIdDto;
             let pg = parent_id.to_string();
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
-                (EntityKind::Design, EntityKind::Piece) => Self::with_undo(kit, || {
-                    let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { removed: vec![PieceIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }), ..Default::default() };
-                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
-                }),
-                _ => Err(SetError::InvalidValue(format!("remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"))),
+                (EntityKind::Kit, EntityKind::Family) => {
+                    let kid = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.id.as_str().to_string();
+                    if pg != kid {
+                        return Err(SetError::NotFound(format!("kit {pg}")));
+                    }
+                    Ok(vec![ChangeKitCommand::RemoveFamily {
+                        family_id: FamilyIdDto { id: Id::from(cg.as_str()) },
+                    }])
+                }
+                (EntityKind::Design, EntityKind::Piece) => Ok(vec![ChangeKitCommand::ChangeDesignCommands {
+                    design_id: DesignIdDto { id: Id::from(pg.as_str()) },
+                    commands: vec![ChangeDesignCommand::RemovePiece {
+                        piece_id: PieceIdDto { id: Id::from(cg.as_str()) },
+                    }],
+                }]),
+                _ => Err(SetError::InvalidValue(format!(
+                    "change_kit_commands_for_remove_child not implemented for {parent_kind:?} -> {child_kind:?}"
+                ))),
             }
+        }
+
+        /// Add a child entity under `parent` (`Kit → Family`, `Design → Piece`).
+        pub fn add_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
+            let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
+            Self::with_undo(kit, || {
+                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                Ok(())
+            })
+        }
+
+        /// Remove a child entity from `parent` (`Kit → Family`, `Design → Piece`).
+        pub fn remove_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
+            let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
+            Self::with_undo(kit, || {
+                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                Ok(())
+            })
         }
 
         pub fn validate(&self) -> ValidationResult {
@@ -15695,6 +16275,177 @@ pub mod kit {
                 return Ok(Some(dto));
             }
             Ok(None)
+        }
+
+        fn check_port_unused_by_connectors(g: &KitStore, pid: &Id) -> std::result::Result<(), SetError> {
+            for t in &g.types {
+                let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
+                if tr.connector_for_port_id(pid).is_some() {
+                    return Err(SetError::InvalidValue(format!(
+                        "port {} is still referenced by a connector on type {}",
+                        pid.as_str(),
+                        tr.id.as_str()
+                    )));
+                }
+            }
+            Ok(())
+        }
+
+        fn assert_family_removable(g: &KitStore, fid: &Id) -> std::result::Result<(), SetError> {
+            for t in &g.types {
+                let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
+                for w in &tr.families {
+                    if let Some(fr) = w.upgrade() {
+                        if let Ok(r) = fr.read() {
+                            if r.id == *fid {
+                                return Err(SetError::InvalidValue(format!(
+                                    "family {} is still referenced by type {}",
+                                    fid.as_str(),
+                                    tr.id.as_str()
+                                )));
+                            }
+                        }
+                    }
+                }
+            }
+            for d in &g.designs {
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                for w in &dr.families {
+                    if let Some(fr) = w.upgrade() {
+                        if let Ok(r) = fr.read() {
+                            if r.id == *fid {
+                                return Err(SetError::InvalidValue(format!(
+                                    "family {} is still referenced by design {}",
+                                    fid.as_str(),
+                                    dr.id.as_str()
+                                )));
+                            }
+                        }
+                    }
+                }
+            }
+            let Some(fam) = g.families.iter().find(|f| f.read().map(|r| r.id == *fid).unwrap_or(false)) else {
+                return Ok(());
+            };
+            let port_ids: Vec<Id> = fam
+                .read()
+                .map_err(|_| SetError::LockPoisoned("family".into()))?
+                .ports
+                .iter()
+                .filter_map(|p| p.read().ok().map(|r| r.id.clone()))
+                .collect();
+            for pid in &port_ids {
+                Self::check_port_unused_by_connectors(g, pid)?;
+            }
+            Ok(())
+        }
+
+        /// Insert a family (with ports) onto the kit graph.
+        pub fn insert_family_dto(kit: &KitStoreRef, dto: FamilyFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("family {}", dto.id)));
+            }
+            for pd in &dto.ports {
+                if g.port_by_id(&pd.id).is_some() {
+                    return Err(SetError::DuplicateId(format!("port {}", pd.id)));
+                }
+            }
+            let fam = Arc::new(RwLock::new(FamilyStore {
+                id: dto.id.clone(),
+                name: dto.name.clone(),
+                description: dto.description.clone(),
+                icon: dto.icon.clone(),
+                ports: Vec::new(),
+                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_full_dto).collect(),
+                parent_kit: None,
+                event_bus: Weak::new(),
+                hash_cache: Cache::default(),
+            }));
+            let fw = Arc::downgrade(&fam);
+            let mut port_refs: Vec<PortStoreRef> = Vec::new();
+            for pd in dto.ports.clone() {
+                let mut pstore = PortStore::from_full_dto(pd);
+                pstore.parent_family = fw.clone();
+                port_refs.push(Arc::new(RwLock::new(pstore)));
+            }
+            if let Ok(mut frw) = fam.write() {
+                frw.ports = port_refs;
+            }
+            g.families.push(fam);
+            let kw = Arc::downgrade(kit);
+            if let Some(ff) = g.families.last() {
+                if let Ok(mut fa) = ff.write() {
+                    fa.parent_kit = Some(kw);
+                }
+            }
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            {
+                let g2 = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                for pd in &dto.ports {
+                    let Some(pref) = g2.port_by_id(&pd.id) else {
+                        return Err(SetError::Internal(format!("port {} missing after family insert", pd.id)));
+                    };
+                    pref.write()
+                        .map_err(|_| SetError::LockPoisoned("port".into()))?
+                        .set_compatible_ports_from_ids(&pd.compatible_ports, &*g2);
+                }
+            }
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        /// Remove a family and return its [`FamilyFullDto`] for undo, or `None` if missing.
+        pub fn remove_family_dto(kit: &KitStoreRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
+            let fid = Id::from(family_id);
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.families.iter().position(|f| f.read().map(|r| r.id == fid).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                Self::assert_family_removable(&*g, &fid)?;
+            }
+            let fam = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.families.remove(pos) };
+            let dto = fam.read().map_err(|_| SetError::LockPoisoned("family".into()))?.to_full_dto();
+            {
+                let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.invalidate_hash();
+                g.invalidate_validation();
+            }
+            Self::purge_dead_port_compatibility(kit);
+            event_wire::wire_graph_bus(kit);
+            Ok(Some(dto))
+        }
+
+        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitStoreRef, pid: &Id) -> std::result::Result<(), SemioError> {
+            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+            Self::check_port_unused_by_connectors(&*g, pid).map_err(|e| SemioError::InvalidOperation(e.to_string()))
+        }
+
+        pub(crate) fn purge_dead_port_compatibility(kit: &KitStoreRef) {
+            let Ok(g) = kit.read() else {
+                return;
+            };
+            for p in &g.ports {
+                if let Ok(mut pw) = p.write() {
+                    pw.compatible_ports.retain(|w| w.upgrade().is_some());
+                }
+            }
+            for f in &g.families {
+                if let Ok(fr) = f.read() {
+                    for p in &fr.ports {
+                        if let Ok(mut pw) = p.write() {
+                            pw.compatible_ports.retain(|w| w.upgrade().is_some());
+                        }
+                    }
+                }
+            }
         }
 
         pub fn insert_file_dto(kit: &KitStoreRef, dto: FileFullDto) -> SetResult {
@@ -20305,7 +21056,7 @@ pub mod io {
 
         use std::path::Path;
 
-        use rusqlite::{params, Connection as SqlConnection, Transaction};
+        use rusqlite::{params, Connection as SqlConnection, OptionalExtension, Transaction};
 
         use crate::attribute::AttributeFullDto;
         use crate::author::AuthorFullDto;
@@ -20321,6 +21072,9 @@ pub mod io {
         use crate::group::GroupFullDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_alternative::KitAlternative;
+        use crate::kit_change::KitChange;
+        use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
         use crate::layer::LayerFullDto;
         use crate::location::LocationIdDto;
         use crate::piece::PieceFullDto;
@@ -20334,7 +21088,7 @@ pub mod io {
         use crate::typ::TypeFullDto;
 
         const SCHEMA_SQL: &str = include_str!("../sqlite/schema.sql");
-        const SCHEMA_VERSION: &str = "2026-04-23-kit-vcs-port-compat-sqlite";
+        const SCHEMA_VERSION: &str = "2026-04-23-kit-vcs-sqlite-roundtrip";
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
@@ -20446,6 +21200,8 @@ pub mod io {
                 DELETE FROM checkpoint;
                 DELETE FROM alternative;
                 DELETE FROM kit_change;
+                DELETE FROM kit_sessions_bundle;
+                DELETE FROM kit_main_line;
                 DELETE FROM attribute;
                 DELETE FROM prop;
                 DELETE FROM benchmark;
@@ -20474,6 +21230,197 @@ pub mod io {
                 DELETE FROM kit;
                 DELETE FROM semio_schema;",
             )?;
+            Ok(())
+        }
+
+        fn checkpoint_kit_change_id(cp_id: &Id) -> String {
+            format!("{}/kc", cp_id.as_str())
+        }
+
+        fn rebuild_checkpoint_children(checkpoints: &std::collections::HashMap<Id, KitCheckpoint>) -> std::collections::HashMap<Option<Id>, Vec<Id>> {
+            let mut children: std::collections::HashMap<Option<Id>, Vec<Id>> = std::collections::HashMap::new();
+            for (cid, cp) in checkpoints {
+                children.entry(cp.parent.clone()).or_default().push(cid.clone());
+            }
+            for v in children.values_mut() {
+                v.sort();
+            }
+            children
+        }
+
+        fn save_kit_vcs(tx: &Transaction<'_>, g: &KitStore, kit_id: &Id) -> Result<()> {
+            let mut cp_ids: Vec<&Id> = g.checkpoints.keys().collect();
+            cp_ids.sort_by_key(|id| id.as_str());
+            for cp_id in cp_ids {
+                let cp = g.checkpoints.get(cp_id).expect("key from iter");
+                let kc_id = checkpoint_kit_change_id(&cp.id);
+                let forward_json = serde_json::to_string(&cp.changes)?;
+                tx.execute(
+                    "INSERT INTO kit_change (id, kind, forward_json, inverse_json, author_id, time) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                    params![
+                        kc_id.as_str(),
+                        "checkpoint",
+                        forward_json,
+                        "[]",
+                        cp.authors.first().map(|a| a.as_str()),
+                        cp.time.clone(),
+                    ],
+                )?;
+                let author_ids = serde_json::to_string(&cp.authors.iter().map(|a| a.to_string()).collect::<Vec<_>>())?;
+                let is_release = if cp.release.is_some() { 1i64 } else { 0 };
+                tx.execute(
+                    "INSERT INTO checkpoint (id, kit_id, parent_checkpoint_id, change_id, message, time, is_release, materialized_kit_hash, author_ids)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                    params![
+                        cp.id.as_str(),
+                        kit_id.as_str(),
+                        cp.parent.as_ref().map(|p| p.as_str()),
+                        kc_id.as_str(),
+                        cp.message.clone(),
+                        cp.time.clone(),
+                        is_release,
+                        Option::<String>::None,
+                        author_ids,
+                    ],
+                )?;
+                if let Some(mk) = &cp.release {
+                    let kit_json = serde_json::to_string(mk)?;
+                    tx.execute("INSERT INTO materialized_kit (checkpoint_id, kit_json) VALUES (?1, ?2)", params![cp.id.as_str(), kit_json])?;
+                }
+            }
+
+            let mut alts: Vec<&KitAlternative> = g.alternatives.values().collect();
+            alts.sort_by_key(|a| a.id.as_str());
+            for (ordinal, a) in alts.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO alternative (id, ordinal, kit_id, name, description, branch_from_checkpoint_id)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                    params![
+                        a.id.as_str(),
+                        ordinal as i64,
+                        kit_id.as_str(),
+                        a.name.as_str(),
+                        Option::<String>::None,
+                        a.root.as_ref().map(|r| r.as_str()),
+                    ],
+                )?;
+                for (ord_cp, ck) in a.checkpoints.iter().enumerate() {
+                    tx.execute(
+                        "INSERT INTO alternative_checkpoint (alternative_id, ordinal, checkpoint_id) VALUES (?1, ?2, ?3)",
+                        params![a.id.as_str(), ord_cp as i64, ck.as_str()],
+                    )?;
+                }
+            }
+
+            tx.execute(
+                "INSERT INTO kit_main_line (kit_id, head_checkpoint_id) VALUES (?1, ?2)",
+                params![kit_id.as_str(), g.the_kit_head.as_ref().map(|h| h.as_str())],
+            )?;
+
+            let sessions_json = serde_json::to_string(&g.sessions)?;
+            tx.execute("INSERT INTO kit_sessions_bundle (kit_id, json) VALUES (?1, ?2)", params![kit_id.as_str(), sessions_json])?;
+            Ok(())
+        }
+
+        fn load_kit_vcs_into(conn: &SqlConnection, g: &mut KitStore) -> Result<()> {
+            let kit_id = g.id.clone();
+            g.the_kit_head = conn
+                .query_row("SELECT head_checkpoint_id FROM kit_main_line WHERE kit_id = ?1", params![kit_id.as_str()], |row| {
+                    let h: Option<String> = row.get(0)?;
+                    Ok(h.filter(|s| !s.is_empty()).map(Id::from))
+                })
+                .optional()?
+                .flatten();
+
+            let mut checkpoints: std::collections::HashMap<Id, KitCheckpoint> = std::collections::HashMap::new();
+            let mut stmt = conn.prepare(
+                "SELECT c.id, c.parent_checkpoint_id, c.message, c.time, c.is_release, c.author_ids, k.forward_json
+                 FROM checkpoint c
+                 JOIN kit_change k ON k.id = c.change_id
+                 WHERE c.kit_id = ?1",
+            )?;
+            let mut rows = stmt.query(params![kit_id.as_str()])?;
+            while let Some(row) = rows.next()? {
+                let id_s: String = row.get(0)?;
+                let id = Id::from(id_s.as_str());
+                let parent: Option<String> = row.get(1)?;
+                let parent = parent.filter(|s| !s.is_empty()).map(|s| Id::from(s.as_str()));
+                let message: Option<String> = row.get(2)?;
+                let time: Option<String> = row.get(3)?;
+                let is_release: i64 = row.get(4)?;
+                let author_ids_s: Option<String> = row.get(5)?;
+                let forward_json: String = row.get(6)?;
+                let changes: Vec<KitChange> = serde_json::from_str(&forward_json)?;
+                let authors: Vec<Id> = match author_ids_s {
+                    None => Vec::new(),
+                    Some(s) if s.trim().is_empty() => Vec::new(),
+                    Some(s) => {
+                        let v: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
+                        v.into_iter().map(Id::from).collect()
+                    }
+                };
+                let mut release: Option<MaterializedKit> = None;
+                if is_release != 0 {
+                    let mk_j: Option<String> = conn
+                        .query_row("SELECT kit_json FROM materialized_kit WHERE checkpoint_id = ?1", params![id_s.as_str()], |r| r.get(0))
+                        .optional()?;
+                    if let Some(j) = mk_j {
+                        release = Some(serde_json::from_str(&j)?);
+                    }
+                }
+                checkpoints.insert(
+                    id.clone(),
+                    KitCheckpoint {
+                        id,
+                        parent,
+                        changes,
+                        message,
+                        time,
+                        authors,
+                        release,
+                    },
+                );
+            }
+
+            let mut alternatives: std::collections::HashMap<Id, KitAlternative> = std::collections::HashMap::new();
+            let mut a_stmt = conn.prepare("SELECT id, name, branch_from_checkpoint_id FROM alternative WHERE kit_id = ?1 ORDER BY ordinal ASC")?;
+            let mut a_rows = a_stmt.query(params![kit_id.as_str()])?;
+            while let Some(row) = a_rows.next()? {
+                let aid: String = row.get(0)?;
+                let name: String = row.get(1)?;
+                let branch_from: Option<String> = row.get(2)?;
+                let root = branch_from.filter(|s| !s.is_empty()).map(|s| Id::from(s.as_str()));
+                let alt_id = Id::from(aid.as_str());
+                let mut cp_stmt = conn.prepare("SELECT checkpoint_id FROM alternative_checkpoint WHERE alternative_id = ?1 ORDER BY ordinal ASC")?;
+                let mut cp_rows = cp_stmt.query(params![aid.as_str()])?;
+                let mut checkpoints_ordered: Vec<Id> = Vec::new();
+                while let Some(cr) = cp_rows.next()? {
+                    let cid: String = cr.get(0)?;
+                    checkpoints_ordered.push(Id::from(cid.as_str()));
+                }
+                alternatives.insert(
+                    alt_id.clone(),
+                    KitAlternative {
+                        id: alt_id,
+                        name,
+                        root,
+                        checkpoints: checkpoints_ordered,
+                    },
+                );
+            }
+
+            if let Some(json) = conn
+                .query_row("SELECT json FROM kit_sessions_bundle WHERE kit_id = ?1", params![kit_id.as_str()], |row| row.get::<_, String>(0))
+                .optional()?
+            {
+                g.sessions = serde_json::from_str(&json)?;
+            } else {
+                g.sessions.clear();
+            }
+
+            g.checkpoints = checkpoints;
+            g.alternatives = alternatives;
+            g.children = rebuild_checkpoint_children(&g.checkpoints);
             Ok(())
         }
 
@@ -21336,41 +22283,45 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_kit_dto(conn: &SqlConnection) -> Result<KitFullDto> {
+        fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFullDto, KitFullDto)> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at
+                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
             let row = rows.next()?.expect("kit row must exist in sqlite persistence");
             let id = Id::from(row.get::<_, String>(0)?);
-            Ok(KitFullDto {
-                id: id.clone(),
-                name: row.get(1)?,
-                description: row.get(2)?,
-                icon: row.get(3)?,
-                image: row.get(4)?,
-                preview: row.get(5)?,
-                remote: row.get(6)?,
-                homepage: row.get(7)?,
-                license: row.get(8)?,
-                uri: row.get(9)?,
-                created: row.get(10)?,
-                updated: row.get(11)?,
-                types: load_types(conn, &id)?,
-                designs: load_designs(conn, &id)?,
-                files: load_files(conn, &id)?,
-                folders: load_folders(conn, &id)?,
-                authors: load_authors_for_scope(conn, "kit_id", &id)?,
-                concepts: load_concepts_for_scope(conn, "kit_id", &id)?,
-                tags: load_tags_for_scope(conn, "kit_id", &id)?,
-                qualities: load_qualities_for_scope(conn, "kit_id", &id)?,
-                props: load_props_for_scope(conn, "kit_id", &id)?,
-                attributes: load_attributes_for_scope(conn, "kit_id", &id)?,
-                ports: load_ports_for_parent(conn, &id, None)?,
-                families: load_families(conn, &id)?,
-                locations: Vec::new(),
-            })
+            let vcs_initial: KitFullDto = serde_json::from_str(&row.get::<_, String>(12)?)?;
+            Ok((
+                KitFullDto {
+                    id: id.clone(),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    icon: row.get(3)?,
+                    image: row.get(4)?,
+                    preview: row.get(5)?,
+                    remote: row.get(6)?,
+                    homepage: row.get(7)?,
+                    license: row.get(8)?,
+                    uri: row.get(9)?,
+                    created: row.get(10)?,
+                    updated: row.get(11)?,
+                    types: load_types(conn, &id)?,
+                    designs: load_designs(conn, &id)?,
+                    files: load_files(conn, &id)?,
+                    folders: load_folders(conn, &id)?,
+                    authors: load_authors_for_scope(conn, "kit_id", &id)?,
+                    concepts: load_concepts_for_scope(conn, "kit_id", &id)?,
+                    tags: load_tags_for_scope(conn, "kit_id", &id)?,
+                    qualities: load_qualities_for_scope(conn, "kit_id", &id)?,
+                    props: load_props_for_scope(conn, "kit_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "kit_id", &id)?,
+                    ports: load_ports_for_parent(conn, &id, None)?,
+                    families: load_families(conn, &id)?,
+                    locations: Vec::new(),
+                },
+                vcs_initial,
+            ))
         }
 
         impl KitStore {
@@ -21382,13 +22333,14 @@ pub mod io {
                 clear_schema(&tx)?;
 
                 let dto = self.to_full_dto();
+                let vcs_initial_json = serde_json::to_string(&self.initial)?;
                 tx.execute("INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))", params![SCHEMA_VERSION, SCHEMA_ENGINE])?;
                 tx.execute(
                     "INSERT INTO kit (
                         id, name, description, icon, image, preview,
-                        remote, homepage, license, uri, created_at, updated_at
-                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated,],
+                        remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated, vcs_initial_json,],
                 )?;
 
                 for (ordinal, folder) in dto.folders.iter().enumerate() {
@@ -21432,6 +22384,8 @@ pub mod io {
                     insert_attribute(&tx, attribute, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
 
+                save_kit_vcs(&tx, self, &dto.id)?;
+
                 tx.commit()?;
                 Ok(())
             }
@@ -21440,18 +22394,14 @@ pub mod io {
             pub fn load_sqlite(path: &Path) -> Result<KitStoreRef> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
-                let dto = load_kit_dto(&conn)?;
-                Ok(KitStore::from_full_dto(dto))
-            }
-
-            /// Back-compat alias for [`KitStore::load_sqlite`].
-            pub fn from_sqlite(path: &Path) -> Result<KitStoreRef> {
-                Self::load_sqlite(path)
-            }
-
-            /// Back-compat alias for [`KitStore::save_sqlite`].
-            pub fn to_sqlite(&self, path: &Path) -> Result<()> {
-                self.save_sqlite(path)
+                let (dto, vcs_initial) = load_kit_dto(&conn)?;
+                let kit = KitStore::from_full_dto(dto);
+                {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    g.initial = vcs_initial;
+                    load_kit_vcs_into(&conn, &mut g)?;
+                }
+                Ok(kit)
             }
         }
     }
@@ -21760,14 +22710,6 @@ pub mod io {
                 }
                 KitStore::from_json_str(&kit_json)
             }
-
-            pub fn from_zip(path: &Path) -> Result<KitStoreRef> {
-                Self::load_zip(path)
-            }
-
-            pub fn to_zip(&self, path: &Path) -> Result<()> {
-                self.save_zip(path)
-            }
         }
     }
 }
@@ -21780,7 +22722,6 @@ pub mod wasm {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
 
-    use crate::error::SetError;
     use crate::id::Id;
     use crate::kit::{KitStore, KitStoreRef};
     use crate::read_command::ReadKitCommand;
@@ -21914,14 +22855,45 @@ pub mod wasm {
         pub fn execute_change_kit_commands(&self, cmds: JsValue) -> Result<JsValue, JsValue> {
             use crate::change_command::ChangeKitCommand;
             let cmds: Vec<ChangeKitCommand> = serde_wasm_bindgen::from_value(cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let (_merged, inverse) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let kind = ChangeKitCommand::batch_kind(&cmds);
+            let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
+            KitStore::with_undo(&self.inner, || {
+                let (_merged, inv) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| KitStore::map_semio_err(e))?;
+                inverse_out = inv;
+                Ok(())
+            })
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
             #[derive(Serialize)]
             struct Out {
                 kind: crate::kit_change::KitChangeKind,
                 inverse: Vec<ChangeKitCommand>,
             }
-            serde_wasm_bindgen::to_value(&Out { kind, inverse }).map_err(|e| JsValue::from_str(&e.to_string()))
+            serde_wasm_bindgen::to_value(&Out { kind, inverse: inverse_out }).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = changeKitCommandsForFieldPatch)]
+        pub fn change_kit_commands_for_field_patch_wasm(&self, kind: &str, id: &str, field: &str, value: JsValue) -> Result<JsValue, JsValue> {
+            let ek = KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let val: serde_json::Value = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitStore::change_kit_commands_for_field_patch(&self.inner, ek, id, field, val).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = changeKitCommandsForAddChild)]
+        pub fn change_kit_commands_for_add_child_wasm(&self, parent_kind: &str, parent_id: &str, child_kind: &str, dto: JsValue) -> Result<JsValue, JsValue> {
+            let pk = KitStore::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ck = KitStore::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let dto: serde_json::Value = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitStore::change_kit_commands_for_add_child(&self.inner, pk, parent_id, ck, dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = changeKitCommandsForRemoveChild)]
+        pub fn change_kit_commands_for_remove_child_wasm(&self, parent_kind: &str, parent_id: &str, child_kind: &str, child_id: &str) -> Result<JsValue, JsValue> {
+            let pk = KitStore::parse_entity_kind(parent_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ck = KitStore::parse_entity_kind(child_kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let cmds = KitStore::change_kit_commands_for_remove_child(&self.inner, pk, parent_id, ck, child_id).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&cmds).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         /// Run [`ReadKitCommand`]s against the **live** graph (`to_full_dto`) — not `the_kit` materialization.
@@ -22022,7 +22994,7 @@ pub mod wasm {
                     message: c.message.clone(),
                     time: c.time.clone(),
                     authors: c.authors.iter().map(|a| a.to_string()).collect(),
-                    hash: c.hash.clone(),
+                    hash: c.id.to_string(),
                     is_release: c.release.is_some(),
                     change_count: c.changes.len(),
                 })
@@ -22081,72 +23053,6 @@ pub mod wasm {
             let ek = KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let v = KitStore::get_field_rpc(&self.inner, ek, id, field).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = setField)]
-        pub fn set_field(&self, kind: &str, id: &str, field: &str, value: JsValue) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            let kind = kind.to_string();
-            let id = id.to_string();
-            let field = field.to_string();
-            future_to_promise(async move {
-                let ek = match KitStore::parse_entity_kind(&kind) {
-                    Ok(v) => v,
-                    Err(e) => return js_settle_set(Err(e)),
-                };
-                let val: serde_json::Value = match serde_wasm_bindgen::from_value(value) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
-                    }
-                };
-                js_settle_set(KitStore::set_field_rpc(&inner, ek, &id, &field, val))
-            })
-        }
-
-        #[wasm_bindgen(js_name = addChild)]
-        pub fn add_child(&self, parent_kind: &str, parent_id: &str, child_kind: &str, dto: JsValue) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            let pk = parent_kind.to_string();
-            let pg = parent_id.to_string();
-            let ck = child_kind.to_string();
-            future_to_promise(async move {
-                let pk = match KitStore::parse_entity_kind(&pk) {
-                    Ok(v) => v,
-                    Err(e) => return js_settle_set(Err(e)),
-                };
-                let ck = match KitStore::parse_entity_kind(&ck) {
-                    Ok(v) => v,
-                    Err(e) => return js_settle_set(Err(e)),
-                };
-                let dto: serde_json::Value = match serde_wasm_bindgen::from_value(dto) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
-                    }
-                };
-                js_settle_set(KitStore::add_child_rpc(&inner, pk, &pg, ck, dto))
-            })
-        }
-
-        #[wasm_bindgen(js_name = removeChild)]
-        pub fn remove_child(&self, parent_kind: &str, parent_id: &str, child_kind: &str, child_id: &str) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            let pk = parent_kind.to_string();
-            let pg = parent_id.to_string();
-            let ck = child_kind.to_string();
-            let cg = child_id.to_string();
-            future_to_promise(async move {
-                let pk = match KitStore::parse_entity_kind(&pk) {
-                    Ok(v) => v,
-                    Err(e) => return js_settle_set(Err(e)),
-                };
-                let ck = match KitStore::parse_entity_kind(&ck) {
-                    Ok(v) => v,
-                    Err(e) => return js_settle_set(Err(e)),
-                };
-                js_settle_set(KitStore::remove_child_rpc(&inner, pk, &pg, ck, &cg))
-            })
         }
 
         #[wasm_bindgen(js_name = clusterPieces)]
@@ -23182,6 +24088,8 @@ mod tests {
         use crate::design::DesignFullDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore};
+        use crate::kit_change::{KitChange, KitChangeKind};
+        use crate::kit_checkpoint::KitCheckpoint;
         use crate::piece::PieceFullDto;
         use crate::port::PortFullDto;
         use crate::typ::TypeFullDto;
@@ -23210,6 +24118,36 @@ mod tests {
 
             let kit2 = KitStore::load_sqlite(&path).expect("load");
             assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "normalized SQLite roundtrip preserves hash");
+        }
+
+        #[test]
+        fn sqlite_vcs_roundtrip() {
+            use std::sync::{Arc, RwLock};
+
+            let kit: Arc<RwLock<KitStore>> = Arc::new(RwLock::new(KitStore::new("vcs-sqlite")));
+            let kc = KitChange {
+                forward: vec![],
+                inverse: vec![],
+                kind: KitChangeKind::Inferred,
+                author: None,
+                time: None,
+            };
+            let cp = KitCheckpoint::new(None, vec![kc], Some("test".into()));
+            let cp_id = cp.id.clone();
+            {
+                let mut g = kit.write().expect("write");
+                g.checkpoints.insert(cp_id.clone(), cp);
+                g.children.entry(None).or_default().push(cp_id.clone());
+                g.the_kit_head = Some(cp_id.clone());
+            }
+            let dir = tempdir().expect("tempdir");
+            let path = dir.path().join("kit.db");
+            kit.read().expect("read").save_sqlite(&path).expect("save");
+            let kit2 = KitStore::load_sqlite(&path).expect("load");
+            let r = kit2.read().expect("r2");
+            assert_eq!(r.the_kit_head.as_ref(), Some(&cp_id));
+            assert_eq!(r.checkpoints.len(), 1);
+            assert!(r.checkpoints.contains_key(&cp_id));
         }
     }
 
@@ -24615,6 +25553,30 @@ mod tests {
             let ka = KitStore::from_full_dto(a.to_full_dto());
             cmd.apply(&ka).expect("apply");
             assert_eq!(ka.read().unwrap().name, "renamed");
+        }
+
+        #[test]
+        fn add_family_change_command_undo_roundtrip() {
+            use crate::family::FamilyFullDto;
+            use crate::kit::KitFullDto;
+
+            let kit = KitStore::from_full_dto(KitFullDto {
+                id: Id::new_v7(),
+                name: "k".into(),
+                ..Default::default()
+            });
+            let fid = Id::new_v7();
+            let cmd = ChangeKitCommand::AddFamily {
+                family: FamilyFullDto {
+                    id: fid.clone(),
+                    name: "Fam".into(),
+                    ..Default::default()
+                },
+            };
+            let (_, inv) = cmd.apply(&kit).expect("apply add family");
+            assert_eq!(kit.read().expect("kr").families.len(), 1);
+            ChangeKitCommand::apply_many(&kit, &inv).expect("undo");
+            assert_eq!(kit.read().expect("kr").families.len(), 0);
         }
 
         #[test]

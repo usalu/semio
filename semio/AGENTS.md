@@ -6,15 +6,9 @@ emoji: 👤
 
 ## 🕸️ Systems
 
-### Kit, design, types, families, ports
+### Kits, Families, Designs, Types
 
-- **Kit** [`KitFullDto`](rs/lib.rs) has no `version` field; persistence uses `semio/sqlite/schema.sql` without a `kit.version` column.
-- **Family** is first-class on the kit (`families: FamilyFullDto[]`). **Type** and **design** reference families with `families: FamilyIdDto[]` (ordered); SQLite stores junction rows in `type_family` and `design_family`.
-- **Port** DTOs are scoped under a family or at kit root; SQLite stores `port.kit_id` plus optional `parent_family_id` (NULL = kit-level port). Legacy fields **removed** from the normalized schema: `type.variant`, `design.variant`, `design.view`.
-
-### Kit, Design, Types, Ports
-
-### Types, Shapes, Connectors
+### Types, Representations, Ports, Connectors
 
 ### Designs, Pieces, Connections, Layers, Groups
 
@@ -2364,6 +2358,29 @@ C_K = \text{concepts},
 \qquad
 Attr_K = \text{kit-level attributes}.
 $$
+
+- `kit store` is the master process and is full control plane to do everything. It has three concurrent tasks: wip kit, backbone kit stub and kit coordinator. It has a kit conflict registry to manage conflicts between the wip kit and the backbone kit.
+- `wip kit` is an async task that is a replica of the kit graph.
+- `backbone kit stub` an async task kit graph stub to an authorative persisted out-of-process kit graph.
+- `kit graph` is a complete in-memory kit graph (including history, sessions, drafts, transactions, etc)
+- `kit coordinator` is an asnyc task to coordinate the wip kit process and the backbone kit graph process.
+- `kit history` is the complete history of a kit (initial kit, checkpoints, alternatives)
+- `kit checkpoint tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit change` is a forward list of kit change commands and a backward list of kit change commands.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
 
 ### 🏘 Design
 

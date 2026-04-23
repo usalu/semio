@@ -19875,15 +19875,45 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.setField(kind, id, field, value));
+    return this.settleMutateAndRefresh(
+      (async () => {
+        try {
+          const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value);
+          this.handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   }
 
   async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.addChild(parentKind, parentId, childKind, dto));
+    return this.settleMutateAndRefresh(
+      (async () => {
+        try {
+          const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
+          this.handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   }
 
   async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.removeChild(parentKind, parentId, childKind, childId));
+    return this.settleMutateAndRefresh(
+      (async () => {
+        try {
+          const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
+          this.handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   }
 
   async applyDesignDiff(designId: string, diff: unknown): Promise<SetResult> {

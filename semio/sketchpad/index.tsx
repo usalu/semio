@@ -48660,10 +48660,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   }
 
   async function expectMomentaryToolbarCommandButton(button: Locator, label: string): Promise<void> {
-    const isVisible = await button.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`[${label}] visible: ${isVisible}`);
-    if (!isVisible) return;
-    const ariaPressed = await button.getAttribute("aria-pressed").catch(() => null);
+    const count = await button.count().catch(() => 0);
+    console.log(`[${label}] count: ${count}`);
+    if (count === 0) return;
+    const ariaPressed = await button.first().getAttribute("aria-pressed").catch(() => null);
     console.log(`[${label}] aria-pressed attribute: ${ariaPressed}`);
     expect(ariaPressed).toBeNull();
   }
@@ -49895,26 +49895,26 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Kit] Testing toolbar zone structure");
       const kitToolbar = page.locator('[id="semio.sketchpad.toolbar"]:visible').first();
       const kitToolsZone = page.locator('[id="semio.sketchpad.toolbar.zone.tools"]:visible').first();
-      const kitToolbarVisible = await kitToolbar.isVisible({ timeout: 3000 }).catch(() => false);
-      const kitToolsZoneVisible = await kitToolsZone.isVisible({ timeout: 3000 }).catch(() => false);
-      console.log(`[Kit] Visible toolbar shell: ${kitToolbarVisible}, visible tools zone: ${kitToolsZoneVisible}`);
-      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.undo"]'), "Kit History Undo");
-      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.redo"]'), "Kit History Redo");
-      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.toolbar.reset"]'), "Kit Toolbar Reset");
+      const kitToolbarCount = await kitToolbar.count().catch(() => 0);
+      const kitToolsZoneCount = await kitToolsZone.count().catch(() => 0);
+      console.log(`[Kit] Visible toolbar shell count: ${kitToolbarCount}, visible tools zone count: ${kitToolsZoneCount}`);
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.undo"]:visible').first(), "Kit History Undo");
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.history.redo"]:visible').first(), "Kit History Redo");
+      await expectMomentaryToolbarCommandButton(page.locator('[id="semio.sketchpad.app.kit.toolbar.reset"]:visible').first(), "Kit Toolbar Reset");
 
       console.log("[Kit] Testing toolbar group toggles");
       const kitSelectionGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.selection"]:visible').first();
-      const hasKitSelectionGroup = await kitSelectionGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      const hasKitSelectionGroup = (await kitSelectionGroupToggle.count().catch(() => 0)) > 0;
       console.log(`[Kit] Selection group toggle visible: ${hasKitSelectionGroup}`);
       expect(hasKitSelectionGroup).toBe(true);
 
       const kitFilterGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.filter"]:visible').first();
-      const hasKitFilterGroup = await kitFilterGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      const hasKitFilterGroup = (await kitFilterGroupToggle.count().catch(() => 0)) > 0;
       console.log(`[Kit] Filter group toggle visible: ${hasKitFilterGroup}`);
       expect(hasKitFilterGroup).toBe(true);
 
       const kitCreateGroupToggle = page.locator('[id="semio.sketchpad.toolbar.group.create"]:visible').first();
-      const hasKitCreateGroup = await kitCreateGroupToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      const hasKitCreateGroup = (await kitCreateGroupToggle.count().catch(() => 0)) > 0;
       console.log(`[Kit] Create group toggle visible: ${hasKitCreateGroup}`);
       expect(hasKitCreateGroup).toBe(true);
 

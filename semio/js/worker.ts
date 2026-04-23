@@ -36,15 +36,45 @@ const api = {
   },
   setField(kind: string, id: string, field: string, value: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.setField(kind, id, field, value)));
+    return settle(
+      (async () => {
+        try {
+          const cmds = handle.changeKitCommandsForFieldPatch(kind, id, field, value);
+          handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
   addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.addChild(parentKind, parentId, childKind, dto)));
+    return settle(
+      (async () => {
+        try {
+          const cmds = handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
+          handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.removeChild(parentKind, parentId, childKind, childId)));
+    return settle(
+      (async () => {
+        try {
+          const cmds = handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
+          handle.executeChangeKitCommands(cmds);
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
   applyDesignDiff(designId: string, diff: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
