@@ -2632,6 +2632,34 @@ func TestKitKind(t *testing.T) {
 		}
 	})
 
+	t.Run("Kit/Postgres schema: includes normalized snapshots and VCS tables", func(t *testing.T) {
+		schemaPath := filepath.Join("..", "postgres", "schema.sql")
+		schemaBytes, err := os.ReadFile(schemaPath)
+		if err != nil {
+			t.Fatalf("Failed to read postgres schema: %v", err)
+		}
+		schema := string(schemaBytes)
+		checks := []string{
+			"CREATE TABLE IF NOT EXISTS core.kit_snapshot",
+			"CREATE TABLE IF NOT EXISTS core.family",
+			"CREATE TABLE IF NOT EXISTS core.type_entity",
+			"CREATE TABLE IF NOT EXISTS core.design",
+			"CREATE TABLE IF NOT EXISTS history.kit_checkpoint",
+			"CREATE TABLE IF NOT EXISTS history.kit_alternative",
+			"CREATE TABLE IF NOT EXISTS history.kit_release",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_session",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_draft",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_transaction",
+			"CREATE TABLE IF NOT EXISTS runtime.kit_transaction_change",
+			"CREATE UNIQUE INDEX IF NOT EXISTS idx_draft_one_active_branch",
+		}
+		for _, check := range checks {
+			if !strings.Contains(schema, check) {
+				t.Fatalf("postgres schema is missing %q", check)
+			}
+		}
+	})
+
 	t.Run("Kit/Remote: validates remote URL field", func(t *testing.T) {
 		remote := "https://example.com/metabolism.kit.json"
 		kit := Kit{Id: "remote-kit-id", Name: "RemoteKit Test", Remote: &remote}

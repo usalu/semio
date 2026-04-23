@@ -252,6 +252,12 @@ const config: StorybookConfig = {
       "process.env.NODE_ENV": JSON.stringify("development"),
     };
 
+    // ⚙️Storybook builds use code-splitting; module-worker (semio/js spawns `./worker.ts` with `{type:"module"}`) requires ES worker format (iife rejects split chunks).
+    config.worker = {
+      ...(config.worker || {}),
+      format: "es",
+    };
+
     return config;
   },
 };

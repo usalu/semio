@@ -240,7 +240,7 @@ pub mod read_command {
         pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
             match self {
                 ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
-                ReadPortCommand::Name => ReadPortCommandResult::Name { name: p.family.clone().unwrap_or_default() },
+                ReadPortCommand::Name => ReadPortCommandResult::Name { name: p.name.clone() },
                 ReadPortCommand::Other => ReadPortCommandResult::Other,
             }
         }
@@ -266,7 +266,7 @@ pub mod read_command {
     }
 
     impl ReadTypeCommand {
-        pub fn execute(&self, t: &TypeFullDto) -> Result<ReadTypeCommandResult> {
+        pub fn execute(&self, t: &TypeFullDto, kit: &KitFullDto) -> Result<ReadTypeCommandResult> {
             match self {
                 ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
                 ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name { name: t.name.clone() }),
@@ -281,7 +281,7 @@ pub mod read_command {
                     Ok(ReadTypeCommandResult::ReadRepresentationCommands { results: commands.iter().map(|cmd| cmd.execute(r)).collect() })
                 }
                 ReadTypeCommand::ReadPortCommands { id, commands } => {
-                    let p = t.ports.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: id.id.clone() })?;
+                    let p = kit.find_port_dto(&id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: id.id.clone() })?;
                     Ok(ReadTypeCommandResult::ReadPortCommands { results: commands.iter().map(|cmd| cmd.execute(p)).collect() })
                 }
                 ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
@@ -320,7 +320,7 @@ pub mod read_command {
                     let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Type", id: id.id.clone() })?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
-                        results.push(c.execute(t)?);
+                        results.push(c.execute(t, kit)?);
                     }
                     Ok(ReadKitCommandResult::ReadTypeCommands { results })
                 }
@@ -356,52 +356,38 @@ pub mod change_command {
     use crate::attribute::AttributeIdDto;
     use crate::attribute::AttributeStore;
     use crate::attribute::AttributeStoreRef;
+    use crate::author::AuthorFullDto;
+    use crate::author::AuthorIdDto;
     use crate::author::AuthorStore;
     use crate::author::AuthorStoreRef;
     use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
-    use crate::concept::ConceptStore;
-    use crate::concept::ConceptStoreRef;
-    use crate::connector::ConnectorStore;
-    use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignStore;
-    use crate::event_wire;
-    use crate::file::FileStoreRef;
-    use crate::folder::FolderStoreRef;
-    use crate::group::GroupStore;
-    use crate::layer::LayerStore;
-    use crate::piece::PieceStoreRef;
-    use crate::piece::PieceStoreWeak;
-    use crate::stat::StatStore;
-    use crate::port::{PortStore, PortStoreRef};
-    use crate::prop::PropStore;
-    use crate::prop::PropStoreRef;
-    use crate::quality::QualityStore;
-    use crate::quality::QualityStoreRef;
-    use crate::representation::RepresentationStore;
-    use crate::representation::RepresentationStoreRef;
-    use crate::side::SideStoreRef;
-    use crate::tag::TagStore;
-    use crate::author::AuthorFullDto;
-    use crate::author::AuthorIdDto;
     use crate::concept::ConceptFullDto;
     use crate::concept::ConceptIdDto;
+    use crate::concept::ConceptStore;
+    use crate::concept::ConceptStoreRef;
     use crate::connection::ConnectionFullDto;
     use crate::connection::ConnectionIdDto;
     use crate::connector::ConnectorFullDto;
     use crate::connector::ConnectorIdDto;
+    use crate::connector::ConnectorStore;
+    use crate::connector::ConnectorStoreRef;
     use crate::design::DesignFullDto;
     use crate::design::DesignIdDto;
+    use crate::design::DesignStore;
     use crate::diff::DesignDiff;
+    use crate::event_wire;
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
+    use crate::file::FileStoreRef;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
+    use crate::folder::FolderStoreRef;
     use crate::geom::Coordinate;
     use crate::geom::Plane;
     use crate::geom::Point;
-    use crate::location::LocationIdDto;
     use crate::group::GroupFullDto;
     use crate::group::GroupIdDto;
+    use crate::group::GroupStore;
     use crate::id::Id;
     use crate::kit::KitFullDto;
     use crate::kit::KitStore;
@@ -409,21 +395,35 @@ pub mod change_command {
     use crate::kit_change::KitChangeKind;
     use crate::layer::LayerFullDto;
     use crate::layer::LayerIdDto;
+    use crate::layer::LayerStore;
+    use crate::location::LocationIdDto;
     use crate::piece::PieceFullDto;
     use crate::piece::PieceIdDto;
+    use crate::piece::PieceStoreRef;
+    use crate::piece::PieceStoreWeak;
     use crate::port::PortFullDto;
     use crate::port::PortIdDto;
+    use crate::port::{PortStore, PortStoreRef};
     use crate::prop::PropFullDto;
     use crate::prop::PropIdDto;
+    use crate::prop::PropStore;
+    use crate::prop::PropStoreRef;
     use crate::quality::QualityFullDto;
     use crate::quality::QualityIdDto;
+    use crate::quality::QualityStore;
+    use crate::quality::QualityStoreRef;
     use crate::representation::RepresentationFullDto;
     use crate::representation::RepresentationIdDto;
+    use crate::representation::RepresentationStore;
+    use crate::representation::RepresentationStoreRef;
     use crate::side::SideMetadataDto;
+    use crate::side::SideStoreRef;
     use crate::stat::StatFullDto;
     use crate::stat::StatIdDto;
+    use crate::stat::StatStore;
     use crate::tag::TagFullDto;
     use crate::tag::TagIdDto;
+    use crate::tag::TagStore;
     use crate::typ::TypeFullDto;
     use crate::typ::TypeIdDto;
     use crate::{error::Result, error::SemioError};
@@ -451,11 +451,10 @@ pub mod change_command {
                     if let Some(tw) = &pc.type_ref {
                         if let Some(t) = tw.upgrade() {
                             if let Ok(tr) = t.read() {
-                                for pr in &tr.ports {
-                                    if let Ok(prr) = pr.read() {
-                                        if prr.id == port_id.id {
-                                            let _ = w.set_port_weak(Some(Arc::downgrade(pr)));
-                                            break;
+                                if let Some(kw) = tr.parent_kit.upgrade() {
+                                    if let Ok(kit) = kw.read() {
+                                        if let Some(pr) = kit.port_by_id(&port_id.id) {
+                                            let _ = w.set_port_weak(Some(Arc::downgrade(&pr)));
                                         }
                                     }
                                 }
@@ -624,135 +623,72 @@ pub mod change_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeFileCommand {
-        Url {
-            url: String,
-        },
-        Mime {
-            mime: Option<String>,
-        },
-        Size {
-            size: Option<i64>,
-        },
-        Hash {
-            hash: Option<String>,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Created {
-            created: Option<String>,
-        },
-        Updated {
-            updated: Option<String>,
-        },
+        Url { url: String },
+        Mime { mime: Option<String> },
+        Size { size: Option<i64> },
+        Hash { hash: Option<String> },
+        Description { description: Option<String> },
+        Created { created: Option<String> },
+        Updated { updated: Option<String> },
     }
 
     /// Per-field on [`crate::folder::FolderStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeFolderCommand {
-        Path {
-            path: String,
-        },
-        Description {
-            description: Option<String>,
-        },
+        Path { path: String },
+        Description { description: Option<String> },
     }
 
     /// Per-field on kit-level [`crate::author::AuthorStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeAuthorCommand {
-        Name {
-            name: String,
-        },
-        Email {
-            email: String,
-        },
-        Role {
-            role: Option<String>,
-        },
-        Rank {
-            rank: Option<i64>,
-        },
+        Name { name: String },
+        Email { email: String },
+        Role { role: Option<String> },
+        Rank { rank: Option<i64> },
     }
 
     /// Per-field on kit-level [`crate::concept::ConceptStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeConceptCommand {
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Order {
-            order: Option<i64>,
-        },
+        Name { name: String },
+        Description { description: Option<String> },
+        Order { order: Option<i64> },
     }
 
     /// Per-field on kit-level [`crate::tag::TagStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeTagCommand {
-        Name {
-            name: String,
-        },
-        Order {
-            order: Option<i64>,
-        },
+        Name { name: String },
+        Order { order: Option<i64> },
     }
 
     /// Quality on the kit (not on a type/port), including benchmarks.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeKitQualityCommand {
-        Key {
-            key: String,
-        },
-        Value {
-            value: Option<String>,
-        },
-        Unit {
-            unit: Option<String>,
-        },
-        Definition {
-            definition: Option<String>,
-        },
-        Description {
-            description: Option<String>,
-        },
-        AddBenchmark {
-            benchmark: BenchmarkFullDto,
-        },
-        RemoveBenchmark {
-            benchmark_id: BenchmarkIdDto,
-        },
-        ChangeBenchmarkCommands {
-            benchmark_id: BenchmarkIdDto,
-            commands: Vec<ChangeBenchmarkCommand>,
-        },
+        Key { key: String },
+        Value { value: Option<String> },
+        Unit { unit: Option<String> },
+        Definition { definition: Option<String> },
+        Description { description: Option<String> },
+        AddBenchmark { benchmark: BenchmarkFullDto },
+        RemoveBenchmark { benchmark_id: BenchmarkIdDto },
+        ChangeBenchmarkCommands { benchmark_id: BenchmarkIdDto, commands: Vec<ChangeBenchmarkCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeBenchmarkCommand {
-        Name {
-            name: String,
-        },
-        Min {
-            min: Option<f64>,
-        },
-        Max {
-            max: Option<f64>,
-        },
-        MinExcluded {
-            min_excluded: Option<bool>,
-        },
-        MaxExcluded {
-            max_excluded: Option<bool>,
-        },
+        Name { name: String },
+        Min { min: Option<f64> },
+        Max { max: Option<f64> },
+        MinExcluded { min_excluded: Option<bool> },
+        MaxExcluded { max_excluded: Option<bool> },
     }
 
     /// Per-field commands on a [`crate::typ::TypeStore`].
@@ -792,12 +728,6 @@ pub mod change_command {
         },
         Updated {
             updated: Option<String>,
-        },
-        AddPort {
-            port: PortFullDto,
-        },
-        RemovePort {
-            port_id: PortIdDto,
         },
         ChangePortCommands {
             port_id: PortIdDto,
@@ -861,416 +791,172 @@ pub mod change_command {
         },
     }
 
-    /// Per-field on [`crate::port::PortStore`].
+    /// Per-field on kit/family-scoped [`crate::port::PortStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangePortCommand {
-        Id {
-            id: Id,
-        },
-        Family {
-            family: Option<String>,
-        },
-        CompatibleFamilies {
-            families: Vec<String>,
-        },
-        Mandatory {
-            mandatory: Option<bool>,
-        },
-        T {
-            t: Option<f64>,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Point {
-            point: Option<Point>,
-        },
-        Direction {
-            direction: Option<crate::geom::Vector>,
-        },
-        AddPortQuality {
-            quality: QualityFullDto,
-        },
-        RemovePortQuality {
-            quality_id: QualityIdDto,
-        },
-        AddPortAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemovePortAttribute {
-            id: AttributeIdDto,
-        },
+        Id { id: Id },
+        Name { name: String },
+        Description { description: Option<String> },
+        Icon { icon: Option<String> },
+        CompatiblePorts { ports: Vec<PortIdDto> },
+        AddPortAttribute { attribute: AttributeFullDto },
+        RemovePortAttribute { id: AttributeIdDto },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeConnectorCommand {
-        Code {
-            code: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Port {
-            port: Option<PortIdDto>,
-        },
-        AddConnectorQuality {
-            quality: QualityFullDto,
-        },
-        RemoveConnectorQuality {
-            quality_id: QualityIdDto,
-        },
-        AddAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveAttribute {
-            id: AttributeIdDto,
-        },
+        Code { code: String },
+        Description { description: Option<String> },
+        Port { port: Option<PortIdDto> },
+        AddConnectorQuality { quality: QualityFullDto },
+        RemoveConnectorQuality { quality_id: QualityIdDto },
+        AddAttribute { attribute: AttributeFullDto },
+        RemoveAttribute { id: AttributeIdDto },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeRepresentationCommand {
-        Url {
-            url: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        File {
-            file: Option<FileIdDto>,
-        },
-        AddRepresentationTag {
-            tag: TagFullDto,
-        },
-        RemoveRepresentationTag {
-            tag_id: TagIdDto,
-        },
-        AddQuality {
-            quality: QualityFullDto,
-        },
-        RemoveQuality {
-            quality_id: QualityIdDto,
-        },
-        AddAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveAttribute {
-            id: AttributeIdDto,
-        },
+        Url { url: String },
+        Description { description: Option<String> },
+        File { file: Option<FileIdDto> },
+        AddRepresentationTag { tag: TagFullDto },
+        RemoveRepresentationTag { tag_id: TagIdDto },
+        AddQuality { quality: QualityFullDto },
+        RemoveQuality { quality_id: QualityIdDto },
+        AddAttribute { attribute: AttributeFullDto },
+        RemoveAttribute { id: AttributeIdDto },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeDesignCommand {
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Icon {
-            icon: Option<String>,
-        },
-        Image {
-            image: Option<String>,
-        },
-        Variant {
-            variant: Option<String>,
-        },
-        View {
-            view: Option<String>,
-        },
-        Location {
-            location: Option<LocationIdDto>,
-        },
-        Unit {
-            unit: Option<String>,
-        },
-        Created {
-            created: Option<String>,
-        },
-        Updated {
-            updated: Option<String>,
-        },
-        AddPiece {
-            piece: PieceFullDto,
-        },
-        RemovePiece {
-            piece_id: PieceIdDto,
-        },
-        ChangePieceCommands {
-            piece_id: PieceIdDto,
-            commands: Vec<ChangePieceCommand>,
-        },
-        AddConnection {
-            connection: ConnectionFullDto,
-        },
-        RemoveConnection {
-            connection_id: ConnectionIdDto,
-        },
-        ChangeConnectionCommands {
-            connection_id: ConnectionIdDto,
-            commands: Vec<ChangeConnectionCommand>,
-        },
-        AddLayer {
-            layer: LayerFullDto,
-        },
-        RemoveLayer {
-            layer_id: LayerIdDto,
-        },
-        ChangeLayerCommands {
-            layer_id: LayerIdDto,
-            commands: Vec<ChangeLayerCommand>,
-        },
-        AddGroup {
-            group: GroupFullDto,
-        },
-        RemoveGroup {
-            group_id: GroupIdDto,
-        },
-        ChangeGroupCommands {
-            group_id: GroupIdDto,
-            commands: Vec<ChangeGroupCommand>,
-        },
-        AddStat {
-            stat: StatFullDto,
-        },
-        RemoveStat {
-            stat_id: StatIdDto,
-        },
-        ChangeStatCommands {
-            stat_id: StatIdDto,
-            commands: Vec<ChangeStatCommand>,
-        },
-        AddDesignAuthor {
-            author: AuthorFullDto,
-        },
-        RemoveDesignAuthor {
-            author_id: AuthorIdDto,
-        },
-        AddDesignConcept {
-            concept: ConceptFullDto,
-        },
-        RemoveDesignConcept {
-            concept_id: ConceptIdDto,
-        },
-        AddDesignTag {
-            tag: TagFullDto,
-        },
-        RemoveDesignTag {
-            tag_id: TagIdDto,
-        },
-        AddDesignQuality {
-            quality: QualityFullDto,
-        },
-        RemoveDesignQuality {
-            quality_id: QualityIdDto,
-        },
-        AddDesignProp {
-            prop: PropFullDto,
-        },
-        RemoveDesignProp {
-            prop_id: PropIdDto,
-        },
-        AddDesignAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveDesignAttribute {
-            id: AttributeIdDto,
-        },
+        Name { name: String },
+        Description { description: Option<String> },
+        Icon { icon: Option<String> },
+        Image { image: Option<String> },
+        Variant { variant: Option<String> },
+        View { view: Option<String> },
+        Location { location: Option<LocationIdDto> },
+        Unit { unit: Option<String> },
+        Created { created: Option<String> },
+        Updated { updated: Option<String> },
+        AddPiece { piece: PieceFullDto },
+        RemovePiece { piece_id: PieceIdDto },
+        ChangePieceCommands { piece_id: PieceIdDto, commands: Vec<ChangePieceCommand> },
+        AddConnection { connection: ConnectionFullDto },
+        RemoveConnection { connection_id: ConnectionIdDto },
+        ChangeConnectionCommands { connection_id: ConnectionIdDto, commands: Vec<ChangeConnectionCommand> },
+        AddLayer { layer: LayerFullDto },
+        RemoveLayer { layer_id: LayerIdDto },
+        ChangeLayerCommands { layer_id: LayerIdDto, commands: Vec<ChangeLayerCommand> },
+        AddGroup { group: GroupFullDto },
+        RemoveGroup { group_id: GroupIdDto },
+        ChangeGroupCommands { group_id: GroupIdDto, commands: Vec<ChangeGroupCommand> },
+        AddStat { stat: StatFullDto },
+        RemoveStat { stat_id: StatIdDto },
+        ChangeStatCommands { stat_id: StatIdDto, commands: Vec<ChangeStatCommand> },
+        AddDesignAuthor { author: AuthorFullDto },
+        RemoveDesignAuthor { author_id: AuthorIdDto },
+        AddDesignConcept { concept: ConceptFullDto },
+        RemoveDesignConcept { concept_id: ConceptIdDto },
+        AddDesignTag { tag: TagFullDto },
+        RemoveDesignTag { tag_id: TagIdDto },
+        AddDesignQuality { quality: QualityFullDto },
+        RemoveDesignQuality { quality_id: QualityIdDto },
+        AddDesignProp { prop: PropFullDto },
+        RemoveDesignProp { prop_id: PropIdDto },
+        AddDesignAttribute { attribute: AttributeFullDto },
+        RemoveDesignAttribute { id: AttributeIdDto },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeLayerCommand {
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Color {
-            color: Option<String>,
-        },
-        Order {
-            order: Option<i64>,
-        },
-        Visible {
-            visible: Option<bool>,
-        },
-        Locked {
-            locked: Option<bool>,
-        },
+        Name { name: String },
+        Description { description: Option<String> },
+        Color { color: Option<String> },
+        Order { order: Option<i64> },
+        Visible { visible: Option<bool> },
+        Locked { locked: Option<bool> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeGroupCommand {
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Color {
-            color: Option<String>,
-        },
-        Icon {
-            icon: Option<String>,
-        },
-        Pieces {
-            pieces: Vec<PieceIdDto>,
-        },
+        Name { name: String },
+        Description { description: Option<String> },
+        Color { color: Option<String> },
+        Icon { icon: Option<String> },
+        Pieces { pieces: Vec<PieceIdDto> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeStatCommand {
-        Key {
-            key: String,
-        },
-        Value {
-            value: String,
-        },
-        Unit {
-            unit: Option<String>,
-        },
-        Description {
-            description: Option<String>,
-        },
+        Key { key: String },
+        Value { value: String },
+        Unit { unit: Option<String> },
+        Description { description: Option<String> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeConnectionCommand {
-        Gap {
-            value: Option<f64>,
-        },
-        Shift {
-            value: Option<f64>,
-        },
-        Rise {
-            value: Option<f64>,
-        },
-        Rotation {
-            value: Option<f64>,
-        },
-        Turn {
-            value: Option<f64>,
-        },
-        Tilt {
-            value: Option<f64>,
-        },
-        X {
-            value: Option<f64>,
-        },
-        Y {
-            value: Option<f64>,
-        },
-        Description {
-            value: Option<String>,
-        },
-        ReplaceConnected {
-            side: SideMetadataDto,
-        },
-        ReplaceConnecting {
-            side: SideMetadataDto,
-        },
-        AddConnectionAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveConnectionAttribute {
-            id: AttributeIdDto,
-        },
+        Gap { value: Option<f64> },
+        Shift { value: Option<f64> },
+        Rise { value: Option<f64> },
+        Rotation { value: Option<f64> },
+        Turn { value: Option<f64> },
+        Tilt { value: Option<f64> },
+        X { value: Option<f64> },
+        Y { value: Option<f64> },
+        Description { value: Option<String> },
+        ReplaceConnected { side: SideMetadataDto },
+        ReplaceConnecting { side: SideMetadataDto },
+        AddConnectionAttribute { attribute: AttributeFullDto },
+        RemoveConnectionAttribute { id: AttributeIdDto },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangePieceCommand {
-        Name {
-            name: Option<String>,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Plane {
-            plane: Option<Plane>,
-        },
-        Center {
-            center: Option<Coordinate>,
-        },
-        Color {
-            color: Option<String>,
-        },
-        Type {
-            type_id: Option<TypeIdDto>,
-        },
-        Scale {
-            scale: Option<f64>,
-        },
-        MirrorPlane {
-            mirror_plane: Option<Plane>,
-        },
-        Hidden {
-            hidden: Option<bool>,
-        },
-        Locked {
-            locked: Option<bool>,
-        },
-        Id {
-            id: Id,
-        },
-        AddProp {
-            prop: PropFullDto,
-        },
-        RemoveProp {
-            prop_id: PropIdDto,
-        },
-        ChangePropCommands {
-            prop_id: PropIdDto,
-            commands: Vec<ChangePropCommand>,
-        },
-        AddAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveAttribute {
-            id: AttributeIdDto,
-        },
-        ChangeAttributeCommands {
-            id: AttributeIdDto,
-            commands: Vec<ChangeAttributeCommand>,
-        },
+        Name { name: Option<String> },
+        Description { description: Option<String> },
+        Plane { plane: Option<Plane> },
+        Center { center: Option<Coordinate> },
+        Color { color: Option<String> },
+        Type { type_id: Option<TypeIdDto> },
+        Scale { scale: Option<f64> },
+        MirrorPlane { mirror_plane: Option<Plane> },
+        Hidden { hidden: Option<bool> },
+        Locked { locked: Option<bool> },
+        Id { id: Id },
+        AddProp { prop: PropFullDto },
+        RemoveProp { prop_id: PropIdDto },
+        ChangePropCommands { prop_id: PropIdDto, commands: Vec<ChangePropCommand> },
+        AddAttribute { attribute: AttributeFullDto },
+        RemoveAttribute { id: AttributeIdDto },
+        ChangeAttributeCommands { id: AttributeIdDto, commands: Vec<ChangeAttributeCommand> },
         Fix,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangePropCommand {
-        Key {
-            key: String,
-        },
-        Value {
-            value: String,
-        },
-        Unit {
-            unit: Option<String>,
-        },
+        Key { key: String },
+        Value { value: String },
+        Unit { unit: Option<String> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeAttributeCommand {
-        Key {
-            key: String,
-        },
-        Value {
-            value: String,
-        },
-        Definition {
-            definition: Option<String>,
-        },
+        Key { key: String },
+        Value { value: String },
+        Definition { definition: Option<String> },
     }
 
     impl ChangeFileCommand {
@@ -1578,14 +1264,7 @@ pub mod change_command {
                             return Err(SemioError::InvalidOperation("duplicate benchmark id on quality".into()));
                         }
                         let mut b = BenchmarkStore::empty_shell(benchmark.id.clone());
-                        b.apply_metadata_dto(BenchmarkMetadataDto {
-                            id: benchmark.id.clone(),
-                            name: benchmark.name.clone(),
-                            min: benchmark.min,
-                            max: benchmark.max,
-                            min_excluded: benchmark.min_excluded,
-                            max_excluded: benchmark.max_excluded,
-                        });
+                        b.apply_metadata_dto(BenchmarkMetadataDto { id: benchmark.id.clone(), name: benchmark.name.clone(), min: benchmark.min, max: benchmark.max, min_excluded: benchmark.min_excluded, max_excluded: benchmark.max_excluded });
                         b.parent_quality = Some(Arc::downgrade(q));
                         qg.benchmarks.push(Arc::new(RwLock::new(b)));
                     }
@@ -1606,11 +1285,7 @@ pub mod change_command {
                 ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id, commands } => {
                     let b: BenchmarkStoreRef = {
                         let qg = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?;
-                        qg.benchmarks
-                            .iter()
-                            .find(|x| x.read().map(|r| r.id == benchmark_id.id).unwrap_or(false))
-                            .cloned()
-                            .ok_or_else(|| SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() })?
+                        qg.benchmarks.iter().find(|x| x.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() })?
                     };
                     let mut inv: Vec<ChangeBenchmarkCommand> = Vec::new();
                     for c in commands {
@@ -1925,11 +1600,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::AddKitAttribute { attribute: dto }])
                 }
                 ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
-                    let f: FileStoreRef = kit
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("kit"))?
-                        .file(file_id.id.as_str())
-                        .ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
+                    let f: FileStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(file_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -1939,11 +1610,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeFolderCommands { folder_id, commands } => {
-                    let f: FolderStoreRef = kit
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("kit"))?
-                        .folder(folder_id.id.as_str())
-                        .ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
+                    let f: FolderStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.folder(folder_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -1987,14 +1654,8 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeTagCommands { tag_id, commands } => {
-                    let t: crate::tag::TagStoreRef = kit
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("kit"))?
-                        .tags
-                        .iter()
-                        .find(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false))
-                        .cloned()
-                        .ok_or_else(|| SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })?;
+                    let t: crate::tag::TagStoreRef =
+                        kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.tags.iter().find(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&t)?;
@@ -2004,11 +1665,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeKitQualityCommands { quality_id, commands } => {
-                    let q: QualityStoreRef = kit
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("kit"))?
-                        .quality(quality_id.id.as_str())
-                        .ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
+                    let q: QualityStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.quality(quality_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(kit, &q)?;
@@ -2201,37 +1858,11 @@ pub mod change_command {
                     }
                     Ok(vec![ChangeTypeCommand::Updated { updated: old }])
                 }
-                ChangeTypeCommand::AddPort { port: pdto } => {
-                    let id = pdto.id.clone();
-                    {
-                        let tw = Arc::downgrade(&t);
-                        let mut p = PortStore::from_full_dto(pdto.clone());
-                        p.parent_type = tw.clone();
-                        let pref = Arc::new(RwLock::new(p));
-                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
-                        m.ports.push(pref);
-                        m.invalidate_hash();
-                        m.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemovePort { port_id: PortIdDto { id } }])
-                }
-                ChangeTypeCommand::RemovePort { port_id } => {
-                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.ports.iter().position(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false));
-                    let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Port", id: port_id.id.clone() });
-                    };
-                    let p = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.ports.remove(pos);
-                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full_dto();
-                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::AddPort { port: dto }])
-                }
                 ChangeTypeCommand::ChangePortCommands { port_id, commands } => {
-                    let pref = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(port_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
+                    let pref = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
                     let mut inv: Vec<ChangePortCommand> = Vec::new();
                     for c in commands {
-                        inv.extend(c.apply(&pref)?);
+                        inv.extend(c.apply(&pref, kit)?);
                     }
                     inv.reverse();
                     Ok(vec![ChangeTypeCommand::ChangePortCommands { port_id: port_id.clone(), commands: inv }])
@@ -2242,7 +1873,7 @@ pub mod change_command {
                         let mut c = ConnectorStore::from_full_dto(cdto.clone());
                         c.parent_type = Arc::downgrade(&t);
                         if let Some(pidd) = &cdto.port {
-                            if let Some(pr) = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(pidd.id.as_str()) {
+                            if let Some(pr) = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pidd.id) {
                                 c.port = Some(Arc::downgrade(&pr));
                             }
                         }
@@ -2567,10 +2198,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff {
-                            pieces: Some(crate::diff::PiecesDiff { added: vec![piece.clone()], ..Default::default() }),
-                            ..Default::default()
-                        };
+                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![piece.clone()], ..Default::default() }), ..Default::default() };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
@@ -2587,10 +2215,7 @@ pub mod change_command {
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff {
-                            pieces: Some(crate::diff::PiecesDiff { removed: vec![piece_id.clone()], ..Default::default() }),
-                            ..Default::default()
-                        };
+                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { removed: vec![piece_id.clone()], ..Default::default() }), ..Default::default() };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
@@ -2609,10 +2234,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff {
-                            connections: Some(crate::diff::ConnectionsDiff { added: vec![connection.clone()], ..Default::default() }),
-                            ..Default::default()
-                        };
+                        let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { added: vec![connection.clone()], ..Default::default() }), ..Default::default() };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionIdDto { id } }])
@@ -2628,10 +2250,7 @@ pub mod change_command {
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff {
-                            connections: Some(crate::diff::ConnectionsDiff { removed: vec![connection_id.clone()], ..Default::default() }),
-                            ..Default::default()
-                        };
+                        let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { removed: vec![connection_id.clone()], ..Default::default() }), ..Default::default() };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
@@ -2684,9 +2303,7 @@ pub mod change_command {
                         g.parent_design = Arc::downgrade(&d);
                         let mut weaks = Vec::with_capacity(group.pieces.len());
                         for pid in &group.pieces {
-                            let pr = dr
-                                .piece(pid.id.as_str())
-                                .ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })?;
+                            let pr = dr.piece(pid.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })?;
                             weaks.push(Arc::downgrade(&pr));
                         }
                         g.pieces = weaks;
@@ -2760,12 +2377,7 @@ pub mod change_command {
                     Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorIdDto { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAuthor { author_id } => {
-                    let pos = d
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("design"))?
-                        .authors
-                        .iter()
-                        .position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
                     let Some(pos) = pos else {
                         return Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() });
                     };
@@ -2787,12 +2399,7 @@ pub mod change_command {
                     Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptIdDto { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignConcept { concept_id } => {
-                    let pos = d
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("design"))?
-                        .concepts
-                        .iter()
-                        .position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
                     let Some(pos) = pos else {
                         return Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() });
                     };
@@ -2846,12 +2453,7 @@ pub mod change_command {
                     Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityIdDto { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignQuality { quality_id } => {
-                    let pos = d
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("design"))?
-                        .qualities
-                        .iter()
-                        .position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
                     let Some(pos) = pos else {
                         return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
                     };
@@ -2895,12 +2497,7 @@ pub mod change_command {
                     Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id: AttributeIdDto { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAttribute { id: aid } => {
-                    let pos = d
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("design"))?
-                        .attributes
-                        .iter()
-                        .position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
                     let Some(pos) = pos else {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
@@ -3047,14 +2644,8 @@ pub mod change_command {
                     Ok(vec![ChangePieceCommand::AddProp { prop: dto }])
                 }
                 ChangePieceCommand::ChangePropCommands { prop_id, commands } => {
-                    let p = pref
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("piece"))?
-                        .props
-                        .iter()
-                        .find(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false))
-                        .cloned()
-                        .ok_or_else(|| SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() })?;
+                    let p =
+                        pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.props.iter().find(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() })?;
                     let mut inv: Vec<ChangePropCommand> = Vec::new();
                     for c in commands {
                         inv.extend(c.apply(&p)?);
@@ -3270,44 +2861,61 @@ pub mod change_command {
         }
         pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
-            let l = d
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("design"))?
-                .layers
-                .iter()
-                .find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false))
-                .cloned()
-                .ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
+            let l = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
             match self {
                 ChangeLayerCommand::Name { name } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.name.clone();
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_name(name.clone()).map_err(se)?;
-                    if old == *name { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Name { name: old }]) }
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Name { name: old }])
+                    }
                 }
                 ChangeLayerCommand::Description { description } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.description.clone();
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Description { description: old }]) }
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Description { description: old }])
+                    }
                 }
                 ChangeLayerCommand::Color { color } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.color.clone();
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_color(color.clone()).map_err(se)?;
-                    if old == *color { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Color { color: old }]) }
+                    if old == *color {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Color { color: old }])
+                    }
                 }
                 ChangeLayerCommand::Order { order } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.order;
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_order(*order).map_err(se)?;
-                    if old == *order { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Order { order: old }]) }
+                    if old == *order {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Order { order: old }])
+                    }
                 }
                 ChangeLayerCommand::Visible { visible } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.visible;
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_visible(*visible).map_err(se)?;
-                    if old == *visible { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Visible { visible: old }]) }
+                    if old == *visible {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Visible { visible: old }])
+                    }
                 }
                 ChangeLayerCommand::Locked { locked } => {
                     let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.locked;
                     l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_locked(*locked).map_err(se)?;
-                    if old == *locked { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Locked { locked: old }]) }
+                    if old == *locked {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeLayerCommand::Locked { locked: old }])
+                    }
                 }
             }
         }
@@ -3319,49 +2927,55 @@ pub mod change_command {
         }
         pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
-            let g = d
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("design"))?
-                .groups
-                .iter()
-                .find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false))
-                .cloned()
-                .ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
+            let g = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
             match self {
                 ChangeGroupCommand::Name { name } => {
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.name.clone();
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_name(name.clone()).map_err(se)?;
-                    if old == *name { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Name { name: old }]) }
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeGroupCommand::Name { name: old }])
+                    }
                 }
                 ChangeGroupCommand::Description { description } => {
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.description.clone();
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Description { description: old }]) }
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeGroupCommand::Description { description: old }])
+                    }
                 }
                 ChangeGroupCommand::Color { color } => {
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.color.clone();
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_color(color.clone()).map_err(se)?;
-                    if old == *color { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Color { color: old }]) }
+                    if old == *color {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeGroupCommand::Color { color: old }])
+                    }
                 }
                 ChangeGroupCommand::Icon { icon } => {
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.icon.clone();
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_icon(icon.clone()).map_err(se)?;
-                    if old == *icon { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Icon { icon: old }]) }
+                    if old == *icon {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeGroupCommand::Icon { icon: old }])
+                    }
                 }
                 ChangeGroupCommand::Pieces { pieces } => {
                     let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto().pieces;
-                    let weaks: Result<Vec<PieceStoreWeak>> = pieces
-                        .iter()
-                        .map(|pid| {
-                            dr.piece(pid.id.as_str())
-                                .map(|p| Arc::downgrade(&p))
-                                .ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })
-                        })
-                        .collect();
+                    let weaks: Result<Vec<PieceStoreWeak>> = pieces.iter().map(|pid| dr.piece(pid.id.as_str()).map(|p| Arc::downgrade(&p)).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })).collect();
                     let weaks = weaks?;
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_pieces(weaks).map_err(se)?;
-                    if old == *pieces { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Pieces { pieces: old }]) }
+                    if old == *pieces {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeGroupCommand::Pieces { pieces: old }])
+                    }
                 }
             }
         }
@@ -3373,34 +2987,43 @@ pub mod change_command {
         }
         pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
-            let s = d
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("design"))?
-                .stats
-                .iter()
-                .find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false))
-                .cloned()
-                .ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
+            let s = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
             match self {
                 ChangeStatCommand::Key { key } => {
                     let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.key.clone();
                     s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_key(key.clone()).map_err(se)?;
-                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Key { key: old }]) }
+                    if old == *key {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeStatCommand::Key { key: old }])
+                    }
                 }
                 ChangeStatCommand::Value { value } => {
                     let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.value.clone();
                     s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_value(value.clone()).map_err(se)?;
-                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Value { value: old }]) }
+                    if old == *value {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeStatCommand::Value { value: old }])
+                    }
                 }
                 ChangeStatCommand::Unit { unit } => {
                     let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.unit.clone();
                     s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_unit(unit.clone()).map_err(se)?;
-                    if old == *unit { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Unit { unit: old }]) }
+                    if old == *unit {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeStatCommand::Unit { unit: old }])
+                    }
                 }
                 ChangeStatCommand::Description { description } => {
                     let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.description.clone();
                     s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Description { description: old }]) }
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeStatCommand::Description { description: old }])
+                    }
                 }
             }
         }
@@ -3415,17 +3038,29 @@ pub mod change_command {
                 ChangePropCommand::Key { key } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.key.clone();
                     p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_key(key.clone()).map_err(se)?;
-                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Key { key: old }]) }
+                    if old == *key {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePropCommand::Key { key: old }])
+                    }
                 }
                 ChangePropCommand::Value { value } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.value.clone();
                     p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_value(value.clone()).map_err(se)?;
-                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Value { value: old }]) }
+                    if old == *value {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePropCommand::Value { value: old }])
+                    }
                 }
                 ChangePropCommand::Unit { unit } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.unit.clone();
                     p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_unit(unit.clone()).map_err(se)?;
-                    if old == *unit { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Unit { unit: old }]) }
+                    if old == *unit {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePropCommand::Unit { unit: old }])
+                    }
                 }
             }
         }
@@ -3440,98 +3075,88 @@ pub mod change_command {
                 ChangeAttributeCommand::Key { key } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.key.clone();
                     a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_key(key.clone()).map_err(se)?;
-                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Key { key: old }]) }
+                    if old == *key {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAttributeCommand::Key { key: old }])
+                    }
                 }
                 ChangeAttributeCommand::Value { value } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.value.clone();
                     a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_value(value.clone()).map_err(se)?;
-                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Value { value: old }]) }
+                    if old == *value {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAttributeCommand::Value { value: old }])
+                    }
                 }
                 ChangeAttributeCommand::Definition { definition } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.definition.clone();
                     a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_definition(definition.clone()).map_err(se)?;
-                    if old == *definition { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Definition { definition: old }]) }
+                    if old == *definition {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAttributeCommand::Definition { definition: old }])
+                    }
                 }
             }
         }
     }
     impl ChangePortCommand {
-        pub fn run(&self, p: &PortStoreRef) -> Result<()> {
-            self.apply(p)?;
+        pub fn run(&self, p: &PortStoreRef, kit: &KitStoreRef) -> Result<()> {
+            self.apply(p, kit)?;
             Ok(())
         }
-        pub fn apply(&self, p: &PortStoreRef) -> Result<Vec<ChangePortCommand>> {
+        pub fn apply(&self, p: &PortStoreRef, kit: &KitStoreRef) -> Result<Vec<ChangePortCommand>> {
             match self {
                 ChangePortCommand::Id { id } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.id.clone();
                     p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_id(id.clone()).map_err(se)?;
-                    if old == *id { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Id { id: old }]) }
+                    if old == *id {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::Id { id: old }])
+                    }
                 }
-                ChangePortCommand::Family { family } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.family.clone();
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_family(family.clone()).map_err(se)?;
-                    if old == *family { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Family { family: old }]) }
-                }
-                ChangePortCommand::CompatibleFamilies { families } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_families.clone();
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_families(families.clone()).map_err(se)?;
-                    if old == *families { Ok(vec![]) } else { Ok(vec![ChangePortCommand::CompatibleFamilies { families: old }]) }
-                }
-                ChangePortCommand::Mandatory { mandatory } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.mandatory;
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_mandatory(*mandatory).map_err(se)?;
-                    if old == *mandatory { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Mandatory { mandatory: old }]) }
-                }
-                ChangePortCommand::T { t } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.t;
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_t(*t).map_err(se)?;
-                    if old == *t { Ok(vec![]) } else { Ok(vec![ChangePortCommand::T { t: old }]) }
+                ChangePortCommand::Name { name } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.name.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::Name { name: old }])
+                    }
                 }
                 ChangePortCommand::Description { description } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.description.clone();
                     p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Description { description: old }]) }
-                }
-                ChangePortCommand::Point { point } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.point;
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_point(*point).map_err(se)?;
-                    if old == *point { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Point { point: old }]) }
-                }
-                ChangePortCommand::Direction { direction } => {
-                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.direction;
-                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_direction(*direction).map_err(se)?;
-                    if old == *direction { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Direction { direction: old }]) }
-                }
-                ChangePortCommand::AddPortQuality { quality } => {
-                    let id = quality.id.clone();
-                    {
-                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
-                        {
-                            let wq = Arc::downgrade(&q);
-                            if let Ok(mut qg) = q.write() {
-                                qg.parent_port = Some(Arc::downgrade(p));
-                                for b in &qg.benchmarks {
-                                    if let Ok(mut bw) = b.write() {
-                                        bw.parent_quality = Some(wq.clone());
-                                    }
-                                }
-                            }
-                        }
-                        let mut w = p.write().map_err(|_| SemioError::LockPoisoned("port"))?;
-                        w.qualities.push(q);
-                        w.invalidate_hash();
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::Description { description: old }])
                     }
-                    Ok(vec![ChangePortCommand::RemovePortQuality { quality_id: QualityIdDto { id } }])
                 }
-                ChangePortCommand::RemovePortQuality { quality_id } => {
-                    let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
-                    let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
-                    };
-                    let q = p.write().map_err(|_| SemioError::LockPoisoned("port"))?.qualities.remove(pos);
-                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                ChangePortCommand::Icon { icon } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.icon.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_icon(icon.clone()).map_err(se)?;
+                    if old == *icon {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::Icon { icon: old }])
+                    }
+                }
+                ChangePortCommand::CompatiblePorts { ports } => {
+                    let old_dto: Vec<PortIdDto> = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|r| r.read().ok().map(|x| PortIdDto { id: x.id.clone() }))).collect();
+                    {
+                        let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_ports_from_ids(ports, &*kr);
+                    }
                     p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
-                    Ok(vec![ChangePortCommand::AddPortQuality { quality: dto }])
+                    if old_dto == *ports {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::CompatiblePorts { ports: old_dto }])
+                    }
                 }
                 ChangePortCommand::AddPortAttribute { attribute } => {
                     let id = attribute.id.clone();
@@ -3566,28 +3191,32 @@ pub mod change_command {
                 ChangeConnectorCommand::Code { code } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.code.clone();
                     c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_code(code.clone()).map_err(se)?;
-                    if old == *code { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Code { code: old }]) }
+                    if old == *code {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConnectorCommand::Code { code: old }])
+                    }
                 }
                 ChangeConnectorCommand::Description { description } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.description.clone();
                     c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Description { description: old }]) }
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConnectorCommand::Description { description: old }])
+                    }
                 }
                 ChangeConnectorCommand::Port { port: pid } => {
-                    let t = c
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("connector"))?
-                        .parent_type
-                        .upgrade()
-                        .ok_or_else(|| SemioError::InvalidOperation("connector has no parent type".into()))?;
+                    let t = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.parent_type.upgrade().ok_or_else(|| SemioError::InvalidOperation("connector has no parent type".into()))?;
+                    let kit = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.parent_kit.upgrade().ok_or_else(|| SemioError::InvalidOperation("type has no parent kit".into()))?;
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.port.as_ref().and_then(|w| w.upgrade()).and_then(|pr| pr.read().ok().map(|r| r.to_id_dto()));
-                    let new_port = if let Some(pid) = pid {
-                        t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(pid.id.as_str()).map(|x| Arc::downgrade(&x))
-                    } else {
-                        None
-                    };
+                    let new_port = if let Some(pid) = pid { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid.id).map(|x| Arc::downgrade(&x)) } else { None };
                     c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_port_weak(new_port).map_err(se)?;
-                    if &old == pid { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Port { port: old }]) }
+                    if &old == pid {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConnectorCommand::Port { port: old }])
+                    }
                 }
                 ChangeConnectorCommand::AddConnectorQuality { quality } => {
                     let id = quality.id.clone();
@@ -3650,29 +3279,34 @@ pub mod change_command {
                 ChangeRepresentationCommand::Url { url } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.url.clone();
                     r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_url(url.clone()).map_err(se)?;
-                    if old == *url { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::Url { url: old }]) }
+                    if old == *url {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeRepresentationCommand::Url { url: old }])
+                    }
                 }
                 ChangeRepresentationCommand::Description { description } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.description.clone();
                     r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_description(description.clone()).map_err(se)?;
-                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::Description { description: old }]) }
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeRepresentationCommand::Description { description: old }])
+                    }
                 }
                 ChangeRepresentationCommand::File { file: fidd } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_metadata_dto().file;
-                    let w = if let Some(fid) = fidd {
-                        kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(fid.id.as_str()).map(|x| Arc::downgrade(&x))
-                    } else {
-                        None
-                    };
+                    let w = if let Some(fid) = fidd { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(fid.id.as_str()).map(|x| Arc::downgrade(&x)) } else { None };
                     r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_file(w).map_err(se)?;
-                    if &old == fidd { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::File { file: old }]) }
+                    if &old == fidd {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeRepresentationCommand::File { file: old }])
+                    }
                 }
                 ChangeRepresentationCommand::AddRepresentationTag { tag } => {
                     let id = tag.id.clone();
-                    r.write()
-                        .map_err(|_| SemioError::LockPoisoned("representation"))?
-                        .tags
-                        .push(TagStore::from_full_dto(tag.clone()));
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.push(TagStore::from_full_dto(tag.clone()));
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagIdDto { id } }])
                 }
@@ -3925,7 +3559,9 @@ pub mod kit_alternative {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitAlternativeCommandResult {
-        ReadKitCommands { results: Vec<crate::read_command::ReadKitCommandResult> },
+        ReadKitCommands {
+            results: Vec<crate::read_command::ReadKitCommandResult>,
+        },
         UnifyKitCheckpointsToSingleKitCheckpoint {
             #[serde(rename = "newCheckpointId")]
             new_checkpoint_id: Id,
@@ -4151,7 +3787,9 @@ pub mod kit_draft {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitDraftCommandResult {
-        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        ReadKitCommands {
+            results: Vec<ReadKitCommandResult>,
+        },
         StartTransaction {
             #[serde(rename = "transactionId")]
             transaction_id: Id,
@@ -4160,12 +3798,24 @@ pub mod kit_draft {
             #[serde(rename = "checkpointId")]
             checkpoint_id: Id,
         },
-        Abort { ok: bool },
-        Undo { ok: bool },
-        CanUndo { can: bool },
-        Redo { ok: bool },
-        CanRedo { can: bool },
-        ExecuteTransactionCommands { results: Vec<TransactionCommandResult> },
+        Abort {
+            ok: bool,
+        },
+        Undo {
+            ok: bool,
+        },
+        CanUndo {
+            can: bool,
+        },
+        Redo {
+            ok: bool,
+        },
+        CanRedo {
+            can: bool,
+        },
+        ExecuteTransactionCommands {
+            results: Vec<TransactionCommandResult>,
+        },
         Nothing,
     }
 }
@@ -4223,13 +3873,17 @@ pub mod kit_session {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum SessionCommandResult {
-        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        ReadKitCommands {
+            results: Vec<ReadKitCommandResult>,
+        },
         /// Field name on the wire is `draftId` (struct-variant fields are not covered by the enum’s `rename_all`).
         NewDraft {
             #[serde(rename = "draftId")]
             draft_id: Id,
         },
-        ExecuteKitDraftCommands { results: Vec<KitDraftCommandResult> },
+        ExecuteKitDraftCommands {
+            results: Vec<KitDraftCommandResult>,
+        },
         Nothing,
     }
 }
@@ -4551,13 +4205,7 @@ pub mod kit_store_command {
                 if forward.is_empty() {
                     return Err(SemioError::InvalidOperation("no change to finalize in draft".into()));
                 }
-                let kc = KitChange {
-                    forward,
-                    inverse,
-                    kind: KitChangeKind::Inferred,
-                    author: None,
-                    time: None,
-                };
+                let kc = KitChange { forward, inverse, kind: KitChangeKind::Inferred, author: None, time: None };
                 (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
             let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
@@ -5789,19 +5437,8 @@ pub mod connection {
         pub attributes: Vec<AttributeFullDto>,
     }
 
-    /// Port-local anchor for a connector (type space).
-    pub fn connector_anchor_ports(c: &ConnectorStore) -> (Point, Vector) {
-        if let Some(w) = &c.port {
-            if let Some(p) = w.upgrade() {
-                if let Ok(p) = p.read() {
-                    let pt = p.point.unwrap_or(Point::ZERO);
-                    let dir = p.direction.unwrap_or(Vector::Z);
-                    let n = dir.length();
-                    let d = if n > 1e-10 { dir.scale(1.0 / n) } else { Vector::Z };
-                    return (pt, d);
-                }
-            }
-        }
+    /// Default anchor for a connector until geometry lives on [`ConnectorStore`] in the wire format.
+    pub fn connector_anchor_ports(_c: &ConnectorStore) -> (Point, Vector) {
         (Point::ZERO, Vector::Z)
     }
 
@@ -5983,10 +5620,7 @@ pub mod connection {
             let (_, pd) = connector_anchor_ports(parent_connector);
             let connection_u = self.x.unwrap_or(0.0);
             let connection_v = self.y.unwrap_or(0.0);
-            let t = match parent_connector.port.as_ref().and_then(|w| w.upgrade()) {
-                Some(p) => p.read().ok().and_then(|g| g.t).unwrap_or(0.0),
-                None => 0.0,
-            };
+            let t = 0.0_f64;
             compute_child_center_uv(parent_center, connection_u, connection_v, pd.z, t)
         }
 
@@ -6093,7 +5727,7 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -6310,20 +5944,20 @@ pub mod design {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::error::SemioError;
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::benchmark::BenchmarkFullDto;
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
+    use crate::error::SemioError;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane};
-    use crate::location::LocationIdDto;
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStore;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
+    use crate::location::LocationIdDto;
     use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
     use crate::port::PortStoreRef;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
@@ -6576,11 +6210,10 @@ pub mod design {
                         if let Some(tw) = &pc.type_ref {
                             if let Some(t) = tw.upgrade() {
                                 if let Ok(tr) = t.read() {
-                                    for pr in &tr.ports {
-                                        if let Ok(prr) = pr.read() {
-                                            if prr.id == port_id.id {
-                                                let _ = w.set_port_weak(Some(Arc::downgrade(pr)));
-                                                break;
+                                    if let Some(kw) = tr.parent_kit.upgrade() {
+                                        if let Ok(kit) = kw.read() {
+                                            if let Some(pr) = kit.port_by_id(&port_id.id) {
+                                                let _ = w.set_port_weak(Some(Arc::downgrade(&pr)));
                                             }
                                         }
                                     }
@@ -7262,23 +6895,21 @@ pub mod design {
             Some(available_ports)
         }
 
+        fn port_lists_compatible_id(port: &crate::port::PortStore, other_id: &Id) -> bool {
+            port.compatible_ports.iter().filter_map(|w| w.upgrade()).any(|p| p.read().map(|r| r.id == *other_id).unwrap_or(false))
+        }
+
         fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
-            let Ok(candidate_port) = candidate_port.read() else {
+            let Ok(c) = candidate_port.read() else {
                 return false;
             };
-            let Ok(required_port) = required_port.read() else {
+            let Ok(r) = required_port.read() else {
                 return false;
             };
-            if candidate_port.id == required_port.id {
+            if c.id == r.id {
                 return true;
             }
-            let Some(candidate_family) = candidate_port.family.as_deref() else {
-                return false;
-            };
-            let Some(required_family) = required_port.family.as_deref() else {
-                return false;
-            };
-            candidate_family == required_family || candidate_port.compatible_families.iter().any(|family| family == required_family) || required_port.compatible_families.iter().any(|family| family == candidate_family)
+            Self::port_lists_compatible_id(&c, &r.id) || Self::port_lists_compatible_id(&r, &c.id)
         }
 
         fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
@@ -7436,7 +7067,7 @@ pub mod design {
             before - self.pieces.len()
         }
 
-fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDiff) {
+        fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDiff) {
             if let Some(v) = &d.name {
                 dto.name = v.clone();
             }
@@ -7780,12 +7411,7 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 }
                 for u in &cc.updated {
                     if self.connections.iter().any(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)) {
-                        let cref = self
-                            .connections
-                            .iter()
-                            .find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false))
-                            .cloned()
-                            .expect("connection");
+                        let cref = self.connections.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)).cloned().expect("connection");
                         let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_full_dto();
                         Self::merge_connection_sparse_into_full(&mut dto, &u.diff);
                         self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
@@ -8163,14 +7789,7 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
             let after = self.to_full_dto();
             let forward = crate::diff::DesignDiff::between(&before, &after);
             let backward = crate::diff::DesignDiff::between(&after, &before);
-            SemioReport::ok(DesignChange {
-                forward,
-                backward,
-                author: None,
-                time: None,
-                before: Some(before),
-                after: Some(after),
-            })
+            SemioReport::ok(DesignChange { forward, backward, author: None, time: None, before: Some(before), after: Some(after) })
         }
 
         pub fn to_id_dto(&self) -> DesignIdDto {
@@ -8420,13 +8039,3215 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
 }
 
 pub mod diff {
-    include!("diff_body.rs");
+    // Sparse structural diffs (mirror Semio.cs: removed → updated → added). Included by `pub mod diff` in lib.rs.
+    use serde::{Deserialize, Serialize};
+    use std::collections::{HashMap, HashSet};
+
+    use crate::attribute::{AttributeFullDto, AttributeIdDto};
+    use crate::author::{AuthorFullDto, AuthorIdDto};
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto};
+    use crate::concept::{ConceptFullDto, ConceptIdDto};
+    use crate::connection::{ConnectionFullDto, ConnectionIdDto};
+    use crate::connector::{ConnectorFullDto, ConnectorIdDto};
+    use crate::design::DesignFullDto;
+    use crate::family::FamilyIdDto;
+    use crate::file::{FileFullDto, FileIdDto};
+    use crate::folder::{FolderFullDto, FolderIdDto};
+    use crate::geom::{Coordinate, Plane, Point, Vector};
+    use crate::group::{GroupFullDto, GroupIdDto};
+    use crate::id::Id;
+    use crate::kit::KitIdDto;
+    use crate::layer::{LayerFullDto, LayerIdDto};
+    use crate::location::LocationIdDto;
+    use crate::piece::{PieceFullDto, PieceIdDto};
+    use crate::port::{PortFullDto, PortIdDto};
+    use crate::prop::{PropFullDto, PropIdDto};
+    use crate::quality::{QualityFullDto, QualityIdDto};
+    use crate::representation::{RepresentationFullDto, RepresentationIdDto};
+    use crate::side::SideMetadataDto;
+    use crate::stat::{StatFullDto, StatIdDto};
+    use crate::tag::{TagFullDto, TagIdDto};
+    use crate::typ::{TypeFullDto, TypeIdDto};
+
+    #[inline]
+    pub fn merge_opt<T: Clone>(a: &Option<T>, b: &Option<T>) -> Option<T> {
+        b.clone().or_else(|| a.clone())
+    }
+
+    #[inline]
+    pub fn merge_opt_nested<T: Clone>(a: &Option<T>, b: &Option<T>, f: impl FnOnce(&T, &T) -> T) -> Option<T> {
+        match (a.as_ref(), b.as_ref()) {
+            (None, None) => None,
+            (Some(x), None) => Some(x.clone()),
+            (None, Some(y)) => Some(y.clone()),
+            (Some(x), Some(y)) => Some(f(x, y)),
+        }
+    }
+
+    /// Forward + backward sparse design deltas (replaces old `DesignChange`).
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignDiffPair {
+        pub forward: DesignDiff,
+        pub backward: DesignDiff,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub time: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub before: Option<DesignFullDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub after: Option<DesignFullDto>,
+    }
+
+    /// Back-compat name for [`DesignDiffPair`].
+    pub type DesignChange = DesignDiffPair;
+
+    // --- Attribute ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AttributeDiff {
+        pub key: Option<String>,
+        pub value: Option<String>,
+        pub definition: Option<Option<String>>,
+    }
+
+    impl AttributeDiff {
+        pub fn is_empty(&self) -> bool {
+            self.key.is_none() && self.value.is_none() && self.definition.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { key: merge_opt(&self.key, &b.key), value: merge_opt(&self.value, &b.value), definition: merge_opt_nested(&self.definition, &b.definition, |_x, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AttributeDiffUpdate {
+        pub id: AttributeIdDto,
+        #[serde(flatten)]
+        pub diff: AttributeDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AttributesDiff {
+        #[serde(default)]
+        pub removed: Vec<AttributeIdDto>,
+        #[serde(default)]
+        pub updated: Vec<AttributeDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<AttributeFullDto>,
+    }
+
+    impl AttributesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        fn merge_updated(a: &[AttributeDiffUpdate], b: &[AttributeDiffUpdate]) -> Vec<AttributeDiffUpdate> {
+            let mut m: HashMap<Id, AttributeDiffUpdate> = HashMap::new();
+            for u in a {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in b {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| AttributeDiffUpdate { id: u.id.clone(), diff: AttributeDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            m.into_values().collect()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            Self { removed, updated: Self::merge_updated(&self.updated, &b.updated), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Prop ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PropDiff {
+        pub key: Option<String>,
+        pub value: Option<String>,
+        pub unit: Option<Option<String>>,
+    }
+
+    impl PropDiff {
+        pub fn is_empty(&self) -> bool {
+            self.key.is_none() && self.value.is_none() && self.unit.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { key: merge_opt(&self.key, &b.key), value: merge_opt(&self.value, &b.value), unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PropDiffUpdate {
+        pub id: PropIdDto,
+        #[serde(flatten)]
+        pub diff: PropDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PropsDiff {
+        #[serde(default)]
+        pub removed: Vec<PropIdDto>,
+        #[serde(default)]
+        pub updated: Vec<PropDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<PropFullDto>,
+    }
+
+    impl PropsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, PropDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| PropDiffUpdate { id: u.id.clone(), diff: PropDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Benchmark ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct BenchmarkDiff {
+        pub name: Option<String>,
+        pub min: Option<Option<f64>>,
+        pub max: Option<Option<f64>>,
+        #[serde(rename = "minExcluded", default)]
+        pub min_excluded: Option<Option<bool>>,
+        #[serde(rename = "maxExcluded", default)]
+        pub max_excluded: Option<Option<bool>>,
+    }
+
+    impl BenchmarkDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.min.is_none() && self.max.is_none() && self.min_excluded.is_none() && self.max_excluded.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                min: merge_opt_nested(&self.min, &b.min, |_, y| y.clone()),
+                max: merge_opt_nested(&self.max, &b.max, |_, y| y.clone()),
+                min_excluded: merge_opt_nested(&self.min_excluded, &b.min_excluded, |_, y| y.clone()),
+                max_excluded: merge_opt_nested(&self.max_excluded, &b.max_excluded, |_, y| y.clone()),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct BenchmarkDiffUpdate {
+        pub id: BenchmarkIdDto,
+        #[serde(flatten)]
+        pub diff: BenchmarkDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct BenchmarksDiff {
+        #[serde(default)]
+        pub removed: Vec<BenchmarkIdDto>,
+        #[serde(default)]
+        pub updated: Vec<BenchmarkDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<BenchmarkFullDto>,
+    }
+
+    impl BenchmarksDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, BenchmarkDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| BenchmarkDiffUpdate { id: u.id.clone(), diff: BenchmarkDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Quality ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QualityDiff {
+        pub key: Option<String>,
+        pub value: Option<Option<String>>,
+        pub unit: Option<Option<String>>,
+        pub definition: Option<Option<String>>,
+        pub description: Option<Option<String>>,
+        #[serde(default)]
+        pub benchmarks: Option<BenchmarksDiff>,
+    }
+
+    impl QualityDiff {
+        pub fn is_empty(&self) -> bool {
+            self.key.is_none() && self.value.is_none() && self.unit.is_none() && self.definition.is_none() && self.description.is_none() && self.benchmarks.as_ref().map_or(true, |b| b.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                key: merge_opt(&self.key, &b.key),
+                value: merge_opt_nested(&self.value, &b.value, |_, y| y.clone()),
+                unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
+                definition: merge_opt_nested(&self.definition, &b.definition, |_, y| y.clone()),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                benchmarks: merge_opt_nested(&self.benchmarks, &b.benchmarks, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QualityDiffUpdate {
+        pub id: QualityIdDto,
+        #[serde(flatten)]
+        pub diff: QualityDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QualitiesDiff {
+        #[serde(default)]
+        pub removed: Vec<QualityIdDto>,
+        #[serde(default)]
+        pub updated: Vec<QualityDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<QualityFullDto>,
+    }
+
+    impl QualitiesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, QualityDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| QualityDiffUpdate { id: u.id.clone(), diff: QualityDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Author / Concept / Tag (design & type scoped copies) ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AuthorDiff {
+        pub name: Option<String>,
+        pub email: Option<String>,
+        pub role: Option<Option<String>>,
+        pub rank: Option<Option<i64>>,
+    }
+
+    impl AuthorDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.email.is_none() && self.role.is_none() && self.rank.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { name: merge_opt(&self.name, &b.name), email: merge_opt(&self.email, &b.email), role: merge_opt_nested(&self.role, &b.role, |_, y| y.clone()), rank: merge_opt_nested(&self.rank, &b.rank, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AuthorDiffUpdate {
+        pub id: AuthorIdDto,
+        #[serde(flatten)]
+        pub diff: AuthorDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct AuthorsDiff {
+        #[serde(default)]
+        pub removed: Vec<AuthorIdDto>,
+        #[serde(default)]
+        pub updated: Vec<AuthorDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<AuthorFullDto>,
+    }
+
+    impl AuthorsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, AuthorDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| AuthorDiffUpdate { id: u.id.clone(), diff: AuthorDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConceptDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub order: Option<Option<i64>>,
+    }
+
+    impl ConceptDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.description.is_none() && self.order.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { name: merge_opt(&self.name, &b.name), description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()), order: merge_opt_nested(&self.order, &b.order, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConceptDiffUpdate {
+        pub id: ConceptIdDto,
+        #[serde(flatten)]
+        pub diff: ConceptDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConceptsDiff {
+        #[serde(default)]
+        pub removed: Vec<ConceptIdDto>,
+        #[serde(default)]
+        pub updated: Vec<ConceptDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<ConceptFullDto>,
+    }
+
+    impl ConceptsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, ConceptDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| ConceptDiffUpdate { id: u.id.clone(), diff: ConceptDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TagDiff {
+        pub name: Option<String>,
+        pub order: Option<Option<i64>>,
+    }
+
+    impl TagDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.order.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { name: merge_opt(&self.name, &b.name), order: merge_opt_nested(&self.order, &b.order, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TagDiffUpdate {
+        pub id: TagIdDto,
+        #[serde(flatten)]
+        pub diff: TagDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TagsDiff {
+        #[serde(default)]
+        pub removed: Vec<TagIdDto>,
+        #[serde(default)]
+        pub updated: Vec<TagDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<TagFullDto>,
+    }
+
+    impl TagsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, TagDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| TagDiffUpdate { id: u.id.clone(), diff: TagDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Stat ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StatDiff {
+        pub key: Option<String>,
+        pub value: Option<String>,
+        pub unit: Option<Option<String>>,
+        pub description: Option<Option<String>>,
+    }
+
+    impl StatDiff {
+        pub fn is_empty(&self) -> bool {
+            self.key.is_none() && self.value.is_none() && self.unit.is_none() && self.description.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { key: merge_opt(&self.key, &b.key), value: merge_opt(&self.value, &b.value), unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()), description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StatDiffUpdate {
+        pub id: StatIdDto,
+        #[serde(flatten)]
+        pub diff: StatDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StatsDiff {
+        #[serde(default)]
+        pub removed: Vec<StatIdDto>,
+        #[serde(default)]
+        pub updated: Vec<StatDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<StatFullDto>,
+    }
+
+    impl StatsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, StatDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| StatDiffUpdate { id: u.id.clone(), diff: StatDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Layer / Group ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct LayerDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub color: Option<Option<String>>,
+        pub order: Option<Option<i64>>,
+        pub visible: Option<Option<bool>>,
+        pub locked: Option<Option<bool>>,
+    }
+
+    impl LayerDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.description.is_none() && self.color.is_none() && self.order.is_none() && self.visible.is_none() && self.locked.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                color: merge_opt_nested(&self.color, &b.color, |_, y| y.clone()),
+                order: merge_opt_nested(&self.order, &b.order, |_, y| y.clone()),
+                visible: merge_opt_nested(&self.visible, &b.visible, |_, y| y.clone()),
+                locked: merge_opt_nested(&self.locked, &b.locked, |_, y| y.clone()),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct LayerDiffUpdate {
+        pub id: LayerIdDto,
+        #[serde(flatten)]
+        pub diff: LayerDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct LayersDiff {
+        #[serde(default)]
+        pub removed: Vec<LayerIdDto>,
+        #[serde(default)]
+        pub updated: Vec<LayerDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<LayerFullDto>,
+    }
+
+    impl LayersDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, LayerDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| LayerDiffUpdate { id: u.id.clone(), diff: LayerDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct GroupDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub color: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        #[serde(default)]
+        pub pieces: Option<Vec<PieceIdDto>>,
+    }
+
+    impl GroupDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none() && self.description.is_none() && self.color.is_none() && self.icon.is_none() && self.pieces.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                color: merge_opt_nested(&self.color, &b.color, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                pieces: merge_opt(&self.pieces, &b.pieces),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct GroupDiffUpdate {
+        pub id: GroupIdDto,
+        #[serde(flatten)]
+        pub diff: GroupDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct GroupsDiff {
+        #[serde(default)]
+        pub removed: Vec<GroupIdDto>,
+        #[serde(default)]
+        pub updated: Vec<GroupDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<GroupFullDto>,
+    }
+
+    impl GroupsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, GroupDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| GroupDiffUpdate { id: u.id.clone(), diff: GroupDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Piece ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PieceDiff {
+        pub name: Option<Option<String>>,
+        pub description: Option<Option<String>>,
+        pub plane: Option<Option<Plane>>,
+        pub center: Option<Option<Coordinate>>,
+        pub scale: Option<Option<f64>>,
+        #[serde(rename = "mirrorPlane", default)]
+        pub mirror_plane: Option<Option<Plane>>,
+        pub hidden: Option<Option<bool>>,
+        pub locked: Option<Option<bool>>,
+        pub color: Option<Option<String>>,
+        #[serde(rename = "type", default)]
+        pub r#type: Option<Option<TypeIdDto>>,
+        pub design: Option<Option<crate::design::DesignIdDto>>,
+        #[serde(default)]
+        pub props: Option<PropsDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl PieceDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none()
+                && self.description.is_none()
+                && self.plane.is_none()
+                && self.center.is_none()
+                && self.scale.is_none()
+                && self.mirror_plane.is_none()
+                && self.hidden.is_none()
+                && self.locked.is_none()
+                && self.color.is_none()
+                && self.r#type.is_none()
+                && self.design.is_none()
+                && self.props.as_ref().map_or(true, |p| p.is_empty())
+                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt_nested(&self.name, &b.name, |_, y| y.clone()),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                plane: merge_opt_nested(&self.plane, &b.plane, |_, y| y.clone()),
+                center: merge_opt_nested(&self.center, &b.center, |_, y| y.clone()),
+                scale: merge_opt_nested(&self.scale, &b.scale, |_, y| y.clone()),
+                mirror_plane: merge_opt_nested(&self.mirror_plane, &b.mirror_plane, |_, y| y.clone()),
+                hidden: merge_opt_nested(&self.hidden, &b.hidden, |_, y| y.clone()),
+                locked: merge_opt_nested(&self.locked, &b.locked, |_, y| y.clone()),
+                color: merge_opt_nested(&self.color, &b.color, |_, y| y.clone()),
+                r#type: merge_opt_nested(&self.r#type, &b.r#type, |_, y| y.clone()),
+                design: merge_opt_nested(&self.design, &b.design, |_, y| y.clone()),
+                props: merge_opt_nested(&self.props, &b.props, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PieceDiffUpdate {
+        pub id: PieceIdDto,
+        #[serde(flatten)]
+        pub diff: PieceDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PiecesDiff {
+        #[serde(default)]
+        pub removed: Vec<PieceIdDto>,
+        #[serde(default)]
+        pub updated: Vec<PieceDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<PieceFullDto>,
+    }
+
+    impl PiecesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, PieceDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| PieceDiffUpdate { id: u.id.clone(), diff: PieceDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Connection ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectionDiff {
+        pub connected: Option<SideMetadataDto>,
+        pub connecting: Option<SideMetadataDto>,
+        pub gap: Option<Option<f64>>,
+        pub shift: Option<Option<f64>>,
+        pub rise: Option<Option<f64>>,
+        pub rotation: Option<Option<f64>>,
+        pub turn: Option<Option<f64>>,
+        pub tilt: Option<Option<f64>>,
+        pub x: Option<Option<f64>>,
+        pub y: Option<Option<f64>>,
+        pub description: Option<Option<String>>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl ConnectionDiff {
+        pub fn is_empty(&self) -> bool {
+            self.connected.is_none()
+                && self.connecting.is_none()
+                && self.gap.is_none()
+                && self.shift.is_none()
+                && self.rise.is_none()
+                && self.rotation.is_none()
+                && self.turn.is_none()
+                && self.tilt.is_none()
+                && self.x.is_none()
+                && self.y.is_none()
+                && self.description.is_none()
+                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                connected: merge_opt(&self.connected, &b.connected),
+                connecting: merge_opt(&self.connecting, &b.connecting),
+                gap: merge_opt_nested(&self.gap, &b.gap, |_, y| y.clone()),
+                shift: merge_opt_nested(&self.shift, &b.shift, |_, y| y.clone()),
+                rise: merge_opt_nested(&self.rise, &b.rise, |_, y| y.clone()),
+                rotation: merge_opt_nested(&self.rotation, &b.rotation, |_, y| y.clone()),
+                turn: merge_opt_nested(&self.turn, &b.turn, |_, y| y.clone()),
+                tilt: merge_opt_nested(&self.tilt, &b.tilt, |_, y| y.clone()),
+                x: merge_opt_nested(&self.x, &b.x, |_, y| y.clone()),
+                y: merge_opt_nested(&self.y, &b.y, |_, y| y.clone()),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectionDiffUpdate {
+        pub id: ConnectionIdDto,
+        #[serde(flatten)]
+        pub diff: ConnectionDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectionsDiff {
+        #[serde(default)]
+        pub removed: Vec<ConnectionIdDto>,
+        #[serde(default)]
+        pub updated: Vec<ConnectionDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<ConnectionFullDto>,
+    }
+
+    impl ConnectionsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, ConnectionDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| ConnectionDiffUpdate { id: u.id.clone(), diff: ConnectionDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Port / Connector / Representation ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PortDiff {
+        #[serde(default)]
+        pub id: Option<Id>,
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        #[serde(rename = "compatiblePorts", default)]
+        pub compatible_ports: Option<Vec<PortIdDto>>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl PortDiff {
+        pub fn is_empty(&self) -> bool {
+            self.id.is_none() && self.name.is_none() && self.description.is_none() && self.icon.is_none() && self.compatible_ports.is_none() && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                id: merge_opt(&self.id, &b.id),
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                compatible_ports: merge_opt(&self.compatible_ports, &b.compatible_ports),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PortDiffUpdate {
+        pub id: PortIdDto,
+        #[serde(flatten)]
+        pub diff: PortDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PortsDiff {
+        #[serde(default)]
+        pub removed: Vec<PortIdDto>,
+        #[serde(default)]
+        pub updated: Vec<PortDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<PortFullDto>,
+    }
+
+    impl PortsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, PortDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| PortDiffUpdate { id: u.id.clone(), diff: PortDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectorDiff {
+        pub code: Option<String>,
+        pub description: Option<Option<String>>,
+        pub port: Option<Option<PortIdDto>>,
+        #[serde(default)]
+        pub qualities: Option<QualitiesDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl ConnectorDiff {
+        pub fn is_empty(&self) -> bool {
+            self.code.is_none() && self.description.is_none() && self.port.is_none() && self.qualities.as_ref().map_or(true, |q| q.is_empty()) && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                code: merge_opt(&self.code, &b.code),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                port: merge_opt_nested(&self.port, &b.port, |_, y| y.clone()),
+                qualities: merge_opt_nested(&self.qualities, &b.qualities, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectorDiffUpdate {
+        pub id: ConnectorIdDto,
+        #[serde(flatten)]
+        pub diff: ConnectorDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectorsDiff {
+        #[serde(default)]
+        pub removed: Vec<ConnectorIdDto>,
+        #[serde(default)]
+        pub updated: Vec<ConnectorDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<ConnectorFullDto>,
+    }
+
+    impl ConnectorsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, ConnectorDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| ConnectorDiffUpdate { id: u.id.clone(), diff: ConnectorDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct RepresentationDiff {
+        pub url: Option<String>,
+        pub description: Option<Option<String>>,
+        pub file: Option<Option<FileIdDto>>,
+        #[serde(default)]
+        pub tags: Option<TagsDiff>,
+        #[serde(default)]
+        pub qualities: Option<QualitiesDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl RepresentationDiff {
+        pub fn is_empty(&self) -> bool {
+            self.url.is_none()
+                && self.description.is_none()
+                && self.file.is_none()
+                && self.tags.as_ref().map_or(true, |t| t.is_empty())
+                && self.qualities.as_ref().map_or(true, |q| q.is_empty())
+                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                url: merge_opt(&self.url, &b.url),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                file: merge_opt_nested(&self.file, &b.file, |_, y| y.clone()),
+                tags: merge_opt_nested(&self.tags, &b.tags, |x, y| x.merge(y)),
+                qualities: merge_opt_nested(&self.qualities, &b.qualities, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct RepresentationDiffUpdate {
+        pub id: RepresentationIdDto,
+        #[serde(flatten)]
+        pub diff: RepresentationDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct RepresentationsDiff {
+        #[serde(default)]
+        pub removed: Vec<RepresentationIdDto>,
+        #[serde(default)]
+        pub updated: Vec<RepresentationDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<RepresentationFullDto>,
+    }
+
+    impl RepresentationsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, RepresentationDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| RepresentationDiffUpdate { id: u.id.clone(), diff: RepresentationDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    /// Added/removed [`FamilyIdDto`] refs on a [`crate::typ::TypeFullDto`].
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FamilyIdsDiff {
+        #[serde(default)]
+        pub removed: Vec<FamilyIdDto>,
+        #[serde(default)]
+        pub added: Vec<FamilyIdDto>,
+    }
+
+    impl FamilyIdsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut added: Vec<_> = self.added.iter().chain(b.added.iter()).cloned().collect();
+            added.sort_by(|x, y| x.id.cmp(&y.id));
+            added.dedup_by(|x, y| x.id == y.id);
+            Self { removed, added }
+        }
+    }
+
+    // --- Type ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TypeDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        pub image: Option<Option<String>>,
+        pub variant: Option<Option<String>>,
+        pub stock: Option<Option<i64>>,
+        #[serde(rename = "typeVirtual", default)]
+        pub type_virtual: Option<Option<bool>>,
+        pub unit: Option<Option<String>>,
+        pub location: Option<Option<LocationIdDto>>,
+        pub created: Option<Option<String>>,
+        pub updated: Option<Option<String>>,
+        #[serde(default)]
+        pub families: Option<FamilyIdsDiff>,
+        #[serde(default)]
+        pub connectors: Option<ConnectorsDiff>,
+        #[serde(default)]
+        pub representations: Option<RepresentationsDiff>,
+        #[serde(default)]
+        pub authors: Option<AuthorsDiff>,
+        #[serde(default)]
+        pub concepts: Option<ConceptsDiff>,
+        #[serde(default)]
+        pub tags: Option<TagsDiff>,
+        #[serde(default)]
+        pub qualities: Option<QualitiesDiff>,
+        #[serde(default)]
+        pub props: Option<PropsDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl TypeDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none()
+                && self.description.is_none()
+                && self.icon.is_none()
+                && self.image.is_none()
+                && self.variant.is_none()
+                && self.stock.is_none()
+                && self.type_virtual.is_none()
+                && self.unit.is_none()
+                && self.location.is_none()
+                && self.created.is_none()
+                && self.updated.is_none()
+                && self.families.as_ref().map_or(true, |x| x.is_empty())
+                && self.connectors.as_ref().map_or(true, |x| x.is_empty())
+                && self.representations.as_ref().map_or(true, |x| x.is_empty())
+                && self.authors.as_ref().map_or(true, |x| x.is_empty())
+                && self.concepts.as_ref().map_or(true, |x| x.is_empty())
+                && self.tags.as_ref().map_or(true, |x| x.is_empty())
+                && self.qualities.as_ref().map_or(true, |x| x.is_empty())
+                && self.props.as_ref().map_or(true, |x| x.is_empty())
+                && self.attributes.as_ref().map_or(true, |x| x.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
+                variant: merge_opt_nested(&self.variant, &b.variant, |_, y| y.clone()),
+                stock: merge_opt_nested(&self.stock, &b.stock, |_, y| y.clone()),
+                type_virtual: merge_opt_nested(&self.type_virtual, &b.type_virtual, |_, y| y.clone()),
+                unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
+                location: merge_opt_nested(&self.location, &b.location, |_, y| y.clone()),
+                created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
+                updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
+                families: merge_opt_nested(&self.families, &b.families, |x, y| x.merge(y)),
+                connectors: merge_opt_nested(&self.connectors, &b.connectors, |x, y| x.merge(y)),
+                representations: merge_opt_nested(&self.representations, &b.representations, |x, y| x.merge(y)),
+                authors: merge_opt_nested(&self.authors, &b.authors, |x, y| x.merge(y)),
+                concepts: merge_opt_nested(&self.concepts, &b.concepts, |x, y| x.merge(y)),
+                tags: merge_opt_nested(&self.tags, &b.tags, |x, y| x.merge(y)),
+                qualities: merge_opt_nested(&self.qualities, &b.qualities, |x, y| x.merge(y)),
+                props: merge_opt_nested(&self.props, &b.props, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TypeDiffUpdate {
+        pub id: TypeIdDto,
+        #[serde(flatten)]
+        pub diff: TypeDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TypesDiff {
+        #[serde(default)]
+        pub removed: Vec<TypeIdDto>,
+        #[serde(default)]
+        pub updated: Vec<TypeDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<TypeFullDto>,
+    }
+
+    impl TypesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, TypeDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| TypeDiffUpdate { id: u.id.clone(), diff: TypeDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- File / Folder (kit scoped) ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FileDiff {
+        pub url: Option<String>,
+        pub mime: Option<Option<String>>,
+        pub size: Option<Option<i64>>,
+        pub hash: Option<Option<String>>,
+        pub description: Option<Option<String>>,
+        pub created: Option<Option<String>>,
+        pub updated: Option<Option<String>>,
+    }
+
+    impl FileDiff {
+        pub fn is_empty(&self) -> bool {
+            self.url.is_none() && self.mime.is_none() && self.size.is_none() && self.hash.is_none() && self.description.is_none() && self.created.is_none() && self.updated.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                url: merge_opt(&self.url, &b.url),
+                mime: merge_opt_nested(&self.mime, &b.mime, |_, y| y.clone()),
+                size: merge_opt_nested(&self.size, &b.size, |_, y| y.clone()),
+                hash: merge_opt_nested(&self.hash, &b.hash, |_, y| y.clone()),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
+                updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FileDiffUpdate {
+        pub id: FileIdDto,
+        #[serde(flatten)]
+        pub diff: FileDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FilesDiff {
+        #[serde(default)]
+        pub removed: Vec<FileIdDto>,
+        #[serde(default)]
+        pub updated: Vec<FileDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<FileFullDto>,
+    }
+
+    impl FilesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, FileDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| FileDiffUpdate { id: u.id.clone(), diff: FileDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FolderDiff {
+        pub path: Option<String>,
+        pub description: Option<Option<String>>,
+    }
+
+    impl FolderDiff {
+        pub fn is_empty(&self) -> bool {
+            self.path.is_none() && self.description.is_none()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self { path: merge_opt(&self.path, &b.path), description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()) }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FolderDiffUpdate {
+        pub id: FolderIdDto,
+        #[serde(flatten)]
+        pub diff: FolderDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FoldersDiff {
+        #[serde(default)]
+        pub removed: Vec<FolderIdDto>,
+        #[serde(default)]
+        pub updated: Vec<FolderDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<FolderFullDto>,
+    }
+
+    impl FoldersDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, FolderDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| FolderDiffUpdate { id: u.id.clone(), diff: FolderDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    // --- Design (scoped diff, no design id) ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        pub image: Option<Option<String>>,
+        pub variant: Option<Option<String>>,
+        pub view: Option<Option<String>>,
+        pub location: Option<Option<LocationIdDto>>,
+        pub unit: Option<Option<String>>,
+        pub created: Option<Option<String>>,
+        pub updated: Option<Option<String>>,
+        pub kit: Option<Option<KitIdDto>>,
+        #[serde(default)]
+        pub pieces: Option<PiecesDiff>,
+        #[serde(default)]
+        pub connections: Option<ConnectionsDiff>,
+        #[serde(default)]
+        pub layers: Option<LayersDiff>,
+        #[serde(default)]
+        pub groups: Option<GroupsDiff>,
+        #[serde(default)]
+        pub authors: Option<AuthorsDiff>,
+        #[serde(default)]
+        pub concepts: Option<ConceptsDiff>,
+        #[serde(default)]
+        pub tags: Option<TagsDiff>,
+        #[serde(default)]
+        pub qualities: Option<QualitiesDiff>,
+        #[serde(default)]
+        pub props: Option<PropsDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+        #[serde(default)]
+        pub stats: Option<StatsDiff>,
+    }
+
+    impl DesignDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none()
+                && self.description.is_none()
+                && self.icon.is_none()
+                && self.image.is_none()
+                && self.variant.is_none()
+                && self.view.is_none()
+                && self.location.is_none()
+                && self.unit.is_none()
+                && self.created.is_none()
+                && self.updated.is_none()
+                && self.kit.is_none()
+                && self.pieces.as_ref().map_or(true, |x| x.is_empty())
+                && self.connections.as_ref().map_or(true, |x| x.is_empty())
+                && self.layers.as_ref().map_or(true, |x| x.is_empty())
+                && self.groups.as_ref().map_or(true, |x| x.is_empty())
+                && self.authors.as_ref().map_or(true, |x| x.is_empty())
+                && self.concepts.as_ref().map_or(true, |x| x.is_empty())
+                && self.tags.as_ref().map_or(true, |x| x.is_empty())
+                && self.qualities.as_ref().map_or(true, |x| x.is_empty())
+                && self.props.as_ref().map_or(true, |x| x.is_empty())
+                && self.attributes.as_ref().map_or(true, |x| x.is_empty())
+                && self.stats.as_ref().map_or(true, |x| x.is_empty())
+        }
+
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
+                variant: merge_opt_nested(&self.variant, &b.variant, |_, y| y.clone()),
+                view: merge_opt_nested(&self.view, &b.view, |_, y| y.clone()),
+                location: merge_opt_nested(&self.location, &b.location, |_, y| y.clone()),
+                unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
+                created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
+                updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
+                kit: merge_opt_nested(&self.kit, &b.kit, |_, y| y.clone()),
+                pieces: merge_opt_nested(&self.pieces, &b.pieces, |x, y| x.merge(y)),
+                connections: merge_opt_nested(&self.connections, &b.connections, |x, y| x.merge(y)),
+                layers: merge_opt_nested(&self.layers, &b.layers, |x, y| x.merge(y)),
+                groups: merge_opt_nested(&self.groups, &b.groups, |x, y| x.merge(y)),
+                authors: merge_opt_nested(&self.authors, &b.authors, |x, y| x.merge(y)),
+                concepts: merge_opt_nested(&self.concepts, &b.concepts, |x, y| x.merge(y)),
+                tags: merge_opt_nested(&self.tags, &b.tags, |x, y| x.merge(y)),
+                qualities: merge_opt_nested(&self.qualities, &b.qualities, |x, y| x.merge(y)),
+                props: merge_opt_nested(&self.props, &b.props, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+                stats: merge_opt_nested(&self.stats, &b.stats, |x, y| x.merge(y)),
+            }
+        }
+
+        /// DTO-level delta (pieces/connections and design metadata) for tests / tooling.
+        pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
+            Self::between_dto(before, after)
+        }
+
+        /// DTO-level delta (pieces/connections and design metadata) for tests / tooling.
+        pub fn between_dto(before: &DesignFullDto, after: &DesignFullDto) -> Self {
+            let mut d = DesignDiff::default();
+            if before.name != after.name {
+                d.name = Some(after.name.clone());
+            }
+            if before.description != after.description {
+                d.description = Some(after.description.clone());
+            }
+            if before.icon != after.icon {
+                d.icon = Some(after.icon.clone());
+            }
+            if before.image != after.image {
+                d.image = Some(after.image.clone());
+            }
+            if before.variant != after.variant {
+                d.variant = Some(after.variant.clone());
+            }
+            if before.view != after.view {
+                d.view = Some(after.view.clone());
+            }
+            if before.location != after.location {
+                d.location = Some(after.location.clone());
+            }
+            if before.unit != after.unit {
+                d.unit = Some(after.unit.clone());
+            }
+            if before.created != after.created {
+                d.created = Some(after.created.clone());
+            }
+            if before.updated != after.updated {
+                d.updated = Some(after.updated.clone());
+            }
+            if before.kit != after.kit {
+                d.kit = Some(after.kit.clone());
+            }
+            let bp: HashMap<Id, &PieceFullDto> = before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let ap: HashMap<Id, &PieceFullDto> = after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let kb: std::collections::HashSet<Id> = bp.keys().cloned().collect();
+            let ka: std::collections::HashSet<Id> = ap.keys().cloned().collect();
+            let mut pd = PiecesDiff::default();
+            for g in kb.difference(&ka) {
+                pd.removed.push(PieceIdDto { id: g.clone() });
+            }
+            for g in ka.difference(&kb) {
+                pd.added.push((*ap[g]).clone());
+            }
+            for g in ka.intersection(&kb) {
+                if bp[g] != ap[g] {
+                    pd.updated.push(PieceDiffUpdate { id: PieceIdDto { id: g.clone() }, diff: piece_full_delta(bp[g], ap[g]) });
+                }
+            }
+            if !pd.is_empty() {
+                d.pieces = Some(pd);
+            }
+            let bc: HashMap<Id, &ConnectionFullDto> = before.connections.iter().map(|c| (c.id.clone(), c)).collect();
+            let ac: HashMap<Id, &ConnectionFullDto> = after.connections.iter().map(|c| (c.id.clone(), c)).collect();
+            let kbc: std::collections::HashSet<Id> = bc.keys().cloned().collect();
+            let kac: std::collections::HashSet<Id> = ac.keys().cloned().collect();
+            let mut cd = ConnectionsDiff::default();
+            for g in kbc.difference(&kac) {
+                cd.removed.push(ConnectionIdDto { id: g.clone() });
+            }
+            for g in kac.difference(&kbc) {
+                cd.added.push((*ac[g]).clone());
+            }
+            for g in kac.intersection(&kbc) {
+                if bc[g] != ac[g] {
+                    cd.updated.push(ConnectionDiffUpdate { id: ConnectionIdDto { id: g.clone() }, diff: connection_full_delta(bc[g], ac[g]) });
+                }
+            }
+            if !cd.is_empty() {
+                d.connections = Some(cd);
+            }
+            d.layers = layers_between(&before.layers, &after.layers);
+            d.groups = groups_between(&before.groups, &after.groups);
+            d.authors = authors_between(&before.authors, &after.authors);
+            d.concepts = concepts_between(&before.concepts, &after.concepts);
+            d.tags = tags_between(&before.tags, &after.tags);
+            d.qualities = qualities_between(&before.qualities, &after.qualities);
+            let pr = props_between(&before.props, &after.props);
+            if !pr.is_empty() {
+                d.props = Some(pr);
+            }
+            let at = attributes_between(&before.attributes, &after.attributes);
+            if !at.is_empty() {
+                d.attributes = Some(at);
+            }
+            d.stats = stats_between(&before.stats, &after.stats);
+            d
+        }
+    }
+
+    fn piece_full_delta(b: &PieceFullDto, a: &PieceFullDto) -> PieceDiff {
+        let mut d = PieceDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.plane != a.plane {
+            d.plane = Some(a.plane);
+        }
+        if b.center != a.center {
+            d.center = Some(a.center);
+        }
+        if b.scale != a.scale {
+            d.scale = Some(a.scale);
+        }
+        if b.mirror_plane != a.mirror_plane {
+            d.mirror_plane = Some(a.mirror_plane);
+        }
+        if b.hidden != a.hidden {
+            d.hidden = Some(a.hidden);
+        }
+        if b.locked != a.locked {
+            d.locked = Some(a.locked);
+        }
+        if b.color != a.color {
+            d.color = Some(a.color.clone());
+        }
+        if b.r#type != a.r#type {
+            d.r#type = Some(a.r#type.clone());
+        }
+        if b.design != a.design {
+            d.design = Some(a.design.clone());
+        }
+        let pp = props_between(&b.props, &a.props);
+        if !pp.is_empty() {
+            d.props = Some(pp);
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    fn connection_full_delta(b: &ConnectionFullDto, a: &ConnectionFullDto) -> ConnectionDiff {
+        let mut d = ConnectionDiff::default();
+        if b.connected != a.connected {
+            d.connected = Some(a.connected.clone());
+        }
+        if b.connecting != a.connecting {
+            d.connecting = Some(a.connecting.clone());
+        }
+        if b.gap != a.gap {
+            d.gap = Some(a.gap);
+        }
+        if b.shift != a.shift {
+            d.shift = Some(a.shift);
+        }
+        if b.rise != a.rise {
+            d.rise = Some(a.rise);
+        }
+        if b.rotation != a.rotation {
+            d.rotation = Some(a.rotation);
+        }
+        if b.turn != a.turn {
+            d.turn = Some(a.turn);
+        }
+        if b.tilt != a.tilt {
+            d.tilt = Some(a.tilt);
+        }
+        if b.x != a.x {
+            d.x = Some(a.x);
+        }
+        if b.y != a.y {
+            d.y = Some(a.y);
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    fn layers_between(before: &[LayerFullDto], after: &[LayerFullDto]) -> Option<LayersDiff> {
+        let mut d = LayersDiff::default();
+        let bm: HashMap<Id, &LayerFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &LayerFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(LayerIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = LayerDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.description != a.description {
+                    df.description = Some(a.description.clone());
+                }
+                if b.color != a.color {
+                    df.color = Some(a.color.clone());
+                }
+                if b.order != a.order {
+                    df.order = Some(a.order);
+                }
+                if b.visible != a.visible {
+                    df.visible = Some(a.visible);
+                }
+                if b.locked != a.locked {
+                    df.locked = Some(a.locked);
+                }
+                d.updated.push(LayerDiffUpdate { id: LayerIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn groups_between(before: &[GroupFullDto], after: &[GroupFullDto]) -> Option<GroupsDiff> {
+        let mut d = GroupsDiff::default();
+        let bm: HashMap<Id, &GroupFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &GroupFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(GroupIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = GroupDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.description != a.description {
+                    df.description = Some(a.description.clone());
+                }
+                if b.color != a.color {
+                    df.color = Some(a.color.clone());
+                }
+                if b.icon != a.icon {
+                    df.icon = Some(a.icon.clone());
+                }
+                if b.pieces != a.pieces {
+                    df.pieces = Some(a.pieces.clone());
+                }
+                d.updated.push(GroupDiffUpdate { id: GroupIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn authors_between(before: &[AuthorFullDto], after: &[AuthorFullDto]) -> Option<AuthorsDiff> {
+        let mut d = AuthorsDiff::default();
+        let bm: HashMap<Id, &AuthorFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &AuthorFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(AuthorIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = AuthorDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.email != a.email {
+                    df.email = Some(a.email.clone());
+                }
+                if b.role != a.role {
+                    df.role = Some(a.role.clone());
+                }
+                if b.rank != a.rank {
+                    df.rank = Some(a.rank);
+                }
+                d.updated.push(AuthorDiffUpdate { id: AuthorIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn concepts_between(before: &[ConceptFullDto], after: &[ConceptFullDto]) -> Option<ConceptsDiff> {
+        let mut d = ConceptsDiff::default();
+        let bm: HashMap<Id, &ConceptFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &ConceptFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(ConceptIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = ConceptDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.description != a.description {
+                    df.description = Some(a.description.clone());
+                }
+                if b.order != a.order {
+                    df.order = Some(a.order);
+                }
+                d.updated.push(ConceptDiffUpdate { id: ConceptIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn tags_between(before: &[TagFullDto], after: &[TagFullDto]) -> Option<TagsDiff> {
+        let mut d = TagsDiff::default();
+        let bm: HashMap<Id, &TagFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &TagFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(TagIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = TagDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.order != a.order {
+                    df.order = Some(a.order);
+                }
+                d.updated.push(TagDiffUpdate { id: TagIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn qualities_between(before: &[QualityFullDto], after: &[QualityFullDto]) -> Option<QualitiesDiff> {
+        let mut d = QualitiesDiff::default();
+        let bm: HashMap<Id, &QualityFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &QualityFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(QualityIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = QualityDiff::default();
+                if b.key != a.key {
+                    df.key = Some(a.key.clone());
+                }
+                if b.value != a.value {
+                    df.value = Some(a.value.clone());
+                }
+                if b.unit != a.unit {
+                    df.unit = Some(a.unit.clone());
+                }
+                if b.definition != a.definition {
+                    df.definition = Some(a.definition.clone());
+                }
+                if b.description != a.description {
+                    df.description = Some(a.description.clone());
+                }
+                let bm = benchmarks_between(&b.benchmarks, &a.benchmarks);
+                if !bm.is_empty() {
+                    df.benchmarks = Some(bm);
+                }
+                d.updated.push(QualityDiffUpdate { id: QualityIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    fn benchmarks_between(before: &[BenchmarkFullDto], after: &[BenchmarkFullDto]) -> BenchmarksDiff {
+        let mut d = BenchmarksDiff::default();
+        let bm: HashMap<Id, &BenchmarkFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &BenchmarkFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(BenchmarkIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = BenchmarkDiff::default();
+                if b.name != a.name {
+                    df.name = Some(a.name.clone());
+                }
+                if b.min != a.min {
+                    df.min = Some(a.min);
+                }
+                if b.max != a.max {
+                    df.max = Some(a.max);
+                }
+                if b.min_excluded != a.min_excluded {
+                    df.min_excluded = Some(a.min_excluded);
+                }
+                if b.max_excluded != a.max_excluded {
+                    df.max_excluded = Some(a.max_excluded);
+                }
+                d.updated.push(BenchmarkDiffUpdate { id: BenchmarkIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        d
+    }
+
+    fn props_between(before: &[PropFullDto], after: &[PropFullDto]) -> PropsDiff {
+        let mut d = PropsDiff::default();
+        let bm: HashMap<Id, &PropFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &PropFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(PropIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = PropDiff::default();
+                if b.key != a.key {
+                    df.key = Some(a.key.clone());
+                }
+                if b.value != a.value {
+                    df.value = Some(a.value.clone());
+                }
+                if b.unit != a.unit {
+                    df.unit = Some(a.unit.clone());
+                }
+                d.updated.push(PropDiffUpdate { id: PropIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        d
+    }
+
+    fn attributes_between(before: &[AttributeFullDto], after: &[AttributeFullDto]) -> AttributesDiff {
+        let mut d = AttributesDiff::default();
+        let bm: HashMap<Id, &AttributeFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &AttributeFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(AttributeIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = AttributeDiff::default();
+                if b.key != a.key {
+                    df.key = Some(a.key.clone());
+                }
+                if b.value != a.value {
+                    df.value = Some(a.value.clone());
+                }
+                if b.definition != a.definition {
+                    df.definition = Some(a.definition.clone());
+                }
+                d.updated.push(AttributeDiffUpdate { id: AttributeIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        d
+    }
+
+    fn stats_between(before: &[StatFullDto], after: &[StatFullDto]) -> Option<StatsDiff> {
+        let mut d = StatsDiff::default();
+        let bm: HashMap<Id, &StatFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &StatFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(StatIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                let mut df = StatDiff::default();
+                if b.key != a.key {
+                    df.key = Some(a.key.clone());
+                }
+                if b.value != a.value {
+                    df.value = Some(a.value.clone());
+                }
+                if b.unit != a.unit {
+                    df.unit = Some(a.unit.clone());
+                }
+                if b.description != a.description {
+                    df.description = Some(a.description.clone());
+                }
+                d.updated.push(StatDiffUpdate { id: StatIdDto { id: g.clone() }, diff: df });
+            }
+        }
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+
+    pub fn attribute_full_delta(b: &AttributeFullDto, a: &AttributeFullDto) -> AttributeDiff {
+        let mut d = AttributeDiff::default();
+        if b.key != a.key {
+            d.key = Some(a.key.clone());
+        }
+        if b.value != a.value {
+            d.value = Some(a.value.clone());
+        }
+        if b.definition != a.definition {
+            d.definition = Some(a.definition.clone());
+        }
+        d
+    }
+
+    pub fn prop_full_delta(b: &PropFullDto, a: &PropFullDto) -> PropDiff {
+        let mut d = PropDiff::default();
+        if b.key != a.key {
+            d.key = Some(a.key.clone());
+        }
+        if b.value != a.value {
+            d.value = Some(a.value.clone());
+        }
+        if b.unit != a.unit {
+            d.unit = Some(a.unit.clone());
+        }
+        d
+    }
+
+    pub fn author_full_delta(b: &AuthorFullDto, a: &AuthorFullDto) -> AuthorDiff {
+        let mut d = AuthorDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.email != a.email {
+            d.email = Some(a.email.clone());
+        }
+        if b.role != a.role {
+            d.role = Some(a.role.clone());
+        }
+        if b.rank != a.rank {
+            d.rank = Some(a.rank);
+        }
+        d
+    }
+
+    pub fn concept_full_delta(b: &ConceptFullDto, a: &ConceptFullDto) -> ConceptDiff {
+        let mut d = ConceptDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.order != a.order {
+            d.order = Some(a.order);
+        }
+        d
+    }
+
+    pub fn tag_full_delta(b: &TagFullDto, a: &TagFullDto) -> TagDiff {
+        let mut d = TagDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.order != a.order {
+            d.order = Some(a.order);
+        }
+        d
+    }
+
+    pub fn quality_full_delta(b: &QualityFullDto, a: &QualityFullDto) -> QualityDiff {
+        let mut d = QualityDiff::default();
+        if b.key != a.key {
+            d.key = Some(a.key.clone());
+        }
+        if b.value != a.value {
+            d.value = Some(a.value.clone());
+        }
+        if b.unit != a.unit {
+            d.unit = Some(a.unit.clone());
+        }
+        if b.definition != a.definition {
+            d.definition = Some(a.definition.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        let bm = benchmarks_between(&b.benchmarks, &a.benchmarks);
+        if !bm.is_empty() {
+            d.benchmarks = Some(bm);
+        }
+        d
+    }
+
+    pub fn file_full_delta(b: &FileFullDto, a: &FileFullDto) -> FileDiff {
+        let mut d = FileDiff::default();
+        if b.url != a.url {
+            d.url = Some(a.url.clone());
+        }
+        if b.mime != a.mime {
+            d.mime = Some(a.mime.clone());
+        }
+        if b.size != a.size {
+            d.size = Some(a.size);
+        }
+        if b.hash != a.hash {
+            d.hash = Some(a.hash.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.created != a.created {
+            d.created = Some(a.created.clone());
+        }
+        if b.updated != a.updated {
+            d.updated = Some(a.updated.clone());
+        }
+        d
+    }
+
+    pub fn folder_full_delta(b: &FolderFullDto, a: &FolderFullDto) -> FolderDiff {
+        let mut d = FolderDiff::default();
+        if b.path != a.path {
+            d.path = Some(a.path.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        d
+    }
+
+    pub fn type_full_delta(b: &TypeFullDto, a: &TypeFullDto) -> TypeDiff {
+        let mut d = TypeDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.icon != a.icon {
+            d.icon = Some(a.icon.clone());
+        }
+        if b.image != a.image {
+            d.image = Some(a.image.clone());
+        }
+        if b.variant != a.variant {
+            d.variant = Some(a.variant.clone());
+        }
+        if b.stock != a.stock {
+            d.stock = Some(a.stock);
+        }
+        if b.virtual_ != a.virtual_ {
+            d.type_virtual = Some(a.virtual_);
+        }
+        if b.unit != a.unit {
+            d.unit = Some(a.unit.clone());
+        }
+        if b.location != a.location {
+            d.location = Some(a.location.clone());
+        }
+        if b.created != a.created {
+            d.created = Some(a.created.clone());
+        }
+        if b.updated != a.updated {
+            d.updated = Some(a.updated.clone());
+        }
+        if let Some(fd) = family_ids_between(&b.families, &a.families) {
+            d.families = Some(fd);
+        }
+        let cd = connectors_between(&b.connectors, &a.connectors);
+        if !cd.is_empty() {
+            d.connectors = Some(cd);
+        }
+        let rd = representations_between(&b.representations, &a.representations);
+        if !rd.is_empty() {
+            d.representations = Some(rd);
+        }
+        let ad = authors_between(&b.authors, &a.authors);
+        if ad.is_some() {
+            d.authors = ad;
+        }
+        let co = concepts_between(&b.concepts, &a.concepts);
+        if co.is_some() {
+            d.concepts = co;
+        }
+        let tg = tags_between(&b.tags, &a.tags);
+        if tg.is_some() {
+            d.tags = tg;
+        }
+        let ql = qualities_between(&b.qualities, &a.qualities);
+        if ql.is_some() {
+            d.qualities = ql;
+        }
+        let pr = props_between(&b.props, &a.props);
+        if !pr.is_empty() {
+            d.props = Some(pr);
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    fn family_ids_between(before: &[FamilyIdDto], after: &[FamilyIdDto]) -> Option<FamilyIdsDiff> {
+        let kb: HashSet<Id> = before.iter().map(|x| x.id.clone()).collect();
+        let ka: HashSet<Id> = after.iter().map(|x| x.id.clone()).collect();
+        let mut removed = Vec::new();
+        for id in kb.difference(&ka) {
+            removed.push(FamilyIdDto { id: id.clone() });
+        }
+        let mut added = Vec::new();
+        for id in ka.difference(&kb) {
+            added.push(FamilyIdDto { id: id.clone() });
+        }
+        if removed.is_empty() && added.is_empty() {
+            None
+        } else {
+            Some(FamilyIdsDiff { removed, added })
+        }
+    }
+
+    fn ports_between(before: &[PortFullDto], after: &[PortFullDto]) -> PortsDiff {
+        let mut d = PortsDiff::default();
+        let bm: HashMap<Id, &PortFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &PortFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(PortIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                d.updated.push(PortDiffUpdate { id: PortIdDto { id: g.clone() }, diff: port_full_delta(b, a) });
+            }
+        }
+        d
+    }
+
+    fn port_full_delta(b: &PortFullDto, a: &PortFullDto) -> PortDiff {
+        let mut d = PortDiff::default();
+        if b.id != a.id {
+            d.id = Some(a.id.clone());
+        }
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.icon != a.icon {
+            d.icon = Some(a.icon.clone());
+        }
+        if b.compatible_ports != a.compatible_ports {
+            d.compatible_ports = Some(a.compatible_ports.clone());
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    fn connectors_between(before: &[ConnectorFullDto], after: &[ConnectorFullDto]) -> ConnectorsDiff {
+        let mut d = ConnectorsDiff::default();
+        let bm: HashMap<Id, &ConnectorFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &ConnectorFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(ConnectorIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                d.updated.push(ConnectorDiffUpdate { id: ConnectorIdDto { id: g.clone() }, diff: connector_full_delta(b, a) });
+            }
+        }
+        d
+    }
+
+    fn connector_full_delta(b: &ConnectorFullDto, a: &ConnectorFullDto) -> ConnectorDiff {
+        let mut d = ConnectorDiff::default();
+        if b.code != a.code {
+            d.code = Some(a.code.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.port != a.port {
+            d.port = Some(a.port.clone());
+        }
+        let ql = qualities_between(&b.qualities, &a.qualities);
+        if ql.is_some() {
+            d.qualities = ql;
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    fn representations_between(before: &[RepresentationFullDto], after: &[RepresentationFullDto]) -> RepresentationsDiff {
+        let mut d = RepresentationsDiff::default();
+        let bm: HashMap<Id, &RepresentationFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &RepresentationFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
+        let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            d.removed.push(RepresentationIdDto { id: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            d.added.push((*am[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bm[g];
+            let a = am[g];
+            if b != a {
+                d.updated.push(RepresentationDiffUpdate { id: RepresentationIdDto { id: g.clone() }, diff: representation_full_delta(b, a) });
+            }
+        }
+        d
+    }
+
+    fn representation_full_delta(b: &RepresentationFullDto, a: &RepresentationFullDto) -> RepresentationDiff {
+        let mut d = RepresentationDiff::default();
+        if b.url != a.url {
+            d.url = Some(a.url.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.file != a.file {
+            d.file = Some(a.file.clone());
+        }
+        let tg = tags_between(&b.tags, &a.tags);
+        if tg.is_some() {
+            d.tags = tg;
+        }
+        let ql = qualities_between(&b.qualities, &a.qualities);
+        if ql.is_some() {
+            d.qualities = ql;
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
+    // --- Merge sparse diffs into full DTOs (central `apply_diff` / kit patch) ---
+
+    pub fn merge_file_diff_into_full(fd: &mut FileFullDto, d: &FileDiff) {
+        if let Some(v) = &d.url {
+            fd.url = v.clone();
+        }
+        if let Some(v) = &d.mime {
+            fd.mime = v.clone();
+        }
+        if let Some(v) = &d.size {
+            fd.size = *v;
+        }
+        if let Some(v) = &d.hash {
+            fd.hash = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.created {
+            fd.created = v.clone();
+        }
+        if let Some(v) = &d.updated {
+            fd.updated = v.clone();
+        }
+    }
+
+    pub fn merge_folder_diff_into_full(fd: &mut FolderFullDto, d: &FolderDiff) {
+        if let Some(v) = &d.path {
+            fd.path = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+    }
+
+    pub fn merge_attribute_diff_into_full(fd: &mut AttributeFullDto, d: &AttributeDiff) {
+        if let Some(v) = &d.key {
+            fd.key = v.clone();
+        }
+        if let Some(v) = &d.value {
+            fd.value = v.clone();
+        }
+        if let Some(v) = &d.definition {
+            fd.definition = v.clone();
+        }
+    }
+
+    pub fn merge_prop_diff_into_full(fd: &mut PropFullDto, d: &PropDiff) {
+        if let Some(v) = &d.key {
+            fd.key = v.clone();
+        }
+        if let Some(v) = &d.value {
+            fd.value = v.clone();
+        }
+        if let Some(v) = &d.unit {
+            fd.unit = v.clone();
+        }
+    }
+
+    pub fn merge_author_diff_into_full(fd: &mut AuthorFullDto, d: &AuthorDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.email {
+            fd.email = v.clone();
+        }
+        if let Some(v) = &d.role {
+            fd.role = v.clone();
+        }
+        if let Some(v) = &d.rank {
+            fd.rank = *v;
+        }
+    }
+
+    pub fn merge_concept_diff_into_full(fd: &mut ConceptFullDto, d: &ConceptDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.order {
+            fd.order = *v;
+        }
+    }
+
+    pub fn merge_tag_diff_into_full(fd: &mut TagFullDto, d: &TagDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.order {
+            fd.order = *v;
+        }
+    }
+
+    pub fn merge_benchmark_diff_into_full(fd: &mut BenchmarkFullDto, d: &BenchmarkDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.min {
+            fd.min = *v;
+        }
+        if let Some(v) = &d.max {
+            fd.max = *v;
+        }
+        if let Some(v) = &d.min_excluded {
+            fd.min_excluded = *v;
+        }
+        if let Some(v) = &d.max_excluded {
+            fd.max_excluded = *v;
+        }
+    }
+
+    pub fn merge_benchmarks_diff_into_vec(vec: &mut Vec<BenchmarkFullDto>, d: &BenchmarksDiff) {
+        for id in &d.removed {
+            vec.retain(|b| b.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(b) = vec.iter_mut().find(|b| b.id == u.id.id) {
+                merge_benchmark_diff_into_full(b, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_quality_diff_into_full(fd: &mut QualityFullDto, d: &QualityDiff) {
+        if let Some(v) = &d.key {
+            fd.key = v.clone();
+        }
+        if let Some(v) = &d.value {
+            fd.value = v.clone();
+        }
+        if let Some(v) = &d.unit {
+            fd.unit = v.clone();
+        }
+        if let Some(v) = &d.definition {
+            fd.definition = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(b) = &d.benchmarks {
+            merge_benchmarks_diff_into_vec(&mut fd.benchmarks, b);
+        }
+    }
+
+    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeFullDto>, d: &AttributesDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_attribute_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_props_coll_into_vec(vec: &mut Vec<PropFullDto>, d: &PropsDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_prop_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_authors_coll_into_vec(vec: &mut Vec<AuthorFullDto>, d: &AuthorsDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_author_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_concepts_coll_into_vec(vec: &mut Vec<ConceptFullDto>, d: &ConceptsDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_concept_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_tags_coll_into_vec(vec: &mut Vec<TagFullDto>, d: &TagsDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_tag_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_qualities_coll_into_vec(vec: &mut Vec<QualityFullDto>, d: &QualitiesDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_quality_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_port_diff_into_full(fd: &mut PortFullDto, d: &PortDiff) {
+        if let Some(v) = &d.id {
+            fd.id = v.clone();
+        }
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.icon {
+            fd.icon = v.clone();
+        }
+        if let Some(v) = &d.compatible_ports {
+            fd.compatible_ports = v.clone();
+        }
+        if let Some(a) = &d.attributes {
+            merge_attributes_coll_into_vec(&mut fd.attributes, a);
+        }
+    }
+
+    pub fn merge_family_ids_into_vec(vec: &mut Vec<FamilyIdDto>, d: &FamilyIdsDiff) {
+        for r in &d.removed {
+            vec.retain(|x| x.id != r.id);
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_ports_diff_into_vec(vec: &mut Vec<PortFullDto>, d: &PortsDiff) {
+        for id in &d.removed {
+            vec.retain(|p| p.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(p) = vec.iter_mut().find(|p| p.id == u.id.id) {
+                merge_port_diff_into_full(p, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_connector_diff_into_full(fd: &mut ConnectorFullDto, d: &ConnectorDiff) {
+        if let Some(v) = &d.code {
+            fd.code = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.port {
+            fd.port = v.clone();
+        }
+        if let Some(q) = &d.qualities {
+            merge_qualities_coll_into_vec(&mut fd.qualities, q);
+        }
+        if let Some(a) = &d.attributes {
+            merge_attributes_coll_into_vec(&mut fd.attributes, a);
+        }
+    }
+
+    pub fn merge_connectors_diff_into_vec(vec: &mut Vec<ConnectorFullDto>, d: &ConnectorsDiff) {
+        for id in &d.removed {
+            vec.retain(|c| c.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(c) = vec.iter_mut().find(|c| c.id == u.id.id) {
+                merge_connector_diff_into_full(c, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_representation_diff_into_full(fd: &mut RepresentationFullDto, d: &RepresentationDiff) {
+        if let Some(v) = &d.url {
+            fd.url = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.file {
+            fd.file = v.clone();
+        }
+        if let Some(t) = &d.tags {
+            merge_tags_coll_into_vec(&mut fd.tags, t);
+        }
+        if let Some(q) = &d.qualities {
+            merge_qualities_coll_into_vec(&mut fd.qualities, q);
+        }
+        if let Some(a) = &d.attributes {
+            merge_attributes_coll_into_vec(&mut fd.attributes, a);
+        }
+    }
+
+    pub fn merge_representations_diff_into_vec(vec: &mut Vec<RepresentationFullDto>, d: &RepresentationsDiff) {
+        for id in &d.removed {
+            vec.retain(|r| r.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(r) = vec.iter_mut().find(|r| r.id == u.id.id) {
+                merge_representation_diff_into_full(r, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    /// Apply a sparse [`TypeDiff`] onto an in-memory [`TypeFullDto`] (then re-hydrate the live type).
+    pub fn merge_type_diff_into_full(fd: &mut TypeFullDto, d: &TypeDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.icon {
+            fd.icon = v.clone();
+        }
+        if let Some(v) = &d.image {
+            fd.image = v.clone();
+        }
+        if let Some(v) = &d.variant {
+            fd.variant = v.clone();
+        }
+        if let Some(v) = &d.stock {
+            fd.stock = *v;
+        }
+        if let Some(v) = &d.type_virtual {
+            fd.virtual_ = *v;
+        }
+        if let Some(v) = &d.unit {
+            fd.unit = v.clone();
+        }
+        if let Some(v) = &d.location {
+            fd.location = v.clone();
+        }
+        if let Some(v) = &d.created {
+            fd.created = v.clone();
+        }
+        if let Some(v) = &d.updated {
+            fd.updated = v.clone();
+        }
+        if let Some(f) = &d.families {
+            merge_family_ids_into_vec(&mut fd.families, f);
+        }
+        if let Some(c) = &d.connectors {
+            merge_connectors_diff_into_vec(&mut fd.connectors, c);
+        }
+        if let Some(r) = &d.representations {
+            merge_representations_diff_into_vec(&mut fd.representations, r);
+        }
+        if let Some(a) = &d.authors {
+            merge_authors_coll_into_vec(&mut fd.authors, a);
+        }
+        if let Some(c) = &d.concepts {
+            merge_concepts_coll_into_vec(&mut fd.concepts, c);
+        }
+        if let Some(t) = &d.tags {
+            merge_tags_coll_into_vec(&mut fd.tags, t);
+        }
+        if let Some(q) = &d.qualities {
+            merge_qualities_coll_into_vec(&mut fd.qualities, q);
+        }
+        if let Some(p) = &d.props {
+            merge_props_coll_into_vec(&mut fd.props, p);
+        }
+        if let Some(a) = &d.attributes {
+            merge_attributes_coll_into_vec(&mut fd.attributes, a);
+        }
+    }
 }
 
 pub mod kit_diff {
-    include!("kit_diff_body.rs");
-}
+    // Kit-scoped sparse diff. Included by `pub mod kit_diff` in lib.rs.
+    use serde::{Deserialize, Serialize};
+    use std::collections::{HashMap, HashSet};
 
+    use crate::attribute::AttributeIdDto;
+    use crate::author::{AuthorFullDto, AuthorIdDto};
+    use crate::concept::ConceptIdDto;
+    use crate::design::{DesignFullDto, DesignIdDto};
+    use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
+    use crate::file::FileIdDto;
+    use crate::folder::FolderIdDto;
+    use crate::id::Id;
+    use crate::kit::KitFullDto;
+    use crate::prop::PropIdDto;
+    use crate::quality::QualityIdDto;
+    use crate::tag::TagIdDto;
+    use crate::typ::TypeIdDto;
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignDiffUpdate {
+        #[serde(rename = "designId")]
+        pub design_id: Id,
+        #[serde(flatten)]
+        pub diff: DesignDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignsDiff {
+        #[serde(default)]
+        pub removed: Vec<DesignIdDto>,
+        #[serde(default)]
+        pub updated: Vec<DesignDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<DesignFullDto>,
+    }
+
+    impl DesignsDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, DesignDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.design_id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.design_id.clone()).or_insert_with(|| DesignDiffUpdate { design_id: u.design_id.clone(), diff: DesignDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct KitDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        pub image: Option<Option<String>>,
+        pub preview: Option<Option<String>>,
+        pub version: Option<Option<String>>,
+        pub remote: Option<Option<String>>,
+        pub homepage: Option<Option<String>>,
+        pub license: Option<Option<String>>,
+        pub uri: Option<Option<String>>,
+        pub created: Option<Option<String>>,
+        pub updated: Option<Option<String>>,
+        #[serde(default)]
+        pub types: Option<TypesDiff>,
+        #[serde(default)]
+        pub designs: Option<DesignsDiff>,
+        #[serde(default)]
+        pub files: Option<FilesDiff>,
+        #[serde(default)]
+        pub folders: Option<FoldersDiff>,
+        #[serde(default)]
+        pub authors: Option<AuthorsDiff>,
+        #[serde(default)]
+        pub concepts: Option<ConceptsDiff>,
+        #[serde(default)]
+        pub tags: Option<TagsDiff>,
+        #[serde(default)]
+        pub qualities: Option<QualitiesDiff>,
+        #[serde(default)]
+        pub props: Option<PropsDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl KitDiff {
+        /// Alias for [`Self::between_dto`].
+        pub fn between(before: &KitFullDto, after: &KitFullDto) -> Self {
+            Self::between_dto(before, after)
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none()
+                && self.description.is_none()
+                && self.icon.is_none()
+                && self.image.is_none()
+                && self.preview.is_none()
+                && self.version.is_none()
+                && self.remote.is_none()
+                && self.homepage.is_none()
+                && self.license.is_none()
+                && self.uri.is_none()
+                && self.created.is_none()
+                && self.updated.is_none()
+                && self.types.as_ref().map_or(true, |x| x.is_empty())
+                && self.designs.as_ref().map_or(true, |x| x.is_empty())
+                && self.files.as_ref().map_or(true, |x| x.is_empty())
+                && self.folders.as_ref().map_or(true, |x| x.is_empty())
+                && self.authors.as_ref().map_or(true, |x| x.is_empty())
+                && self.concepts.as_ref().map_or(true, |x| x.is_empty())
+                && self.tags.as_ref().map_or(true, |x| x.is_empty())
+                && self.qualities.as_ref().map_or(true, |x| x.is_empty())
+                && self.props.as_ref().map_or(true, |x| x.is_empty())
+                && self.attributes.as_ref().map_or(true, |x| x.is_empty())
+        }
+
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
+                preview: merge_opt_nested(&self.preview, &b.preview, |_, y| y.clone()),
+                version: merge_opt_nested(&self.version, &b.version, |_, y| y.clone()),
+                remote: merge_opt_nested(&self.remote, &b.remote, |_, y| y.clone()),
+                homepage: merge_opt_nested(&self.homepage, &b.homepage, |_, y| y.clone()),
+                license: merge_opt_nested(&self.license, &b.license, |_, y| y.clone()),
+                uri: merge_opt_nested(&self.uri, &b.uri, |_, y| y.clone()),
+                created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
+                updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
+                types: merge_opt_nested(&self.types, &b.types, |x, y| x.merge(y)),
+                designs: merge_opt_nested(&self.designs, &b.designs, |x, y| x.merge(y)),
+                files: merge_opt_nested(&self.files, &b.files, |x, y| x.merge(y)),
+                folders: merge_opt_nested(&self.folders, &b.folders, |x, y| x.merge(y)),
+                authors: merge_opt_nested(&self.authors, &b.authors, |x, y| x.merge(y)),
+                concepts: merge_opt_nested(&self.concepts, &b.concepts, |x, y| x.merge(y)),
+                tags: merge_opt_nested(&self.tags, &b.tags, |x, y| x.merge(y)),
+                qualities: merge_opt_nested(&self.qualities, &b.qualities, |x, y| x.merge(y)),
+                props: merge_opt_nested(&self.props, &b.props, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+
+        /// Single-design patch lifted to kit scope (for command folding).
+        pub fn for_design(design_id: Id, d: DesignDiff) -> Self {
+            if d.is_empty() {
+                return Self::default();
+            }
+            Self { designs: Some(DesignsDiff { removed: vec![], updated: vec![DesignDiffUpdate { design_id, diff: d }], added: vec![] }), ..Default::default() }
+        }
+    }
+
+    fn diff_id_vec<T: PartialEq + Clone>(before: &[T], after: &[T], get_id: impl Fn(&T) -> &Id) -> (Vec<T>, Vec<Id>, Vec<T>) {
+        let bm: HashMap<Id, &T> = before.iter().map(|t| (get_id(t).clone(), t)).collect();
+        let am: HashMap<Id, &T> = after.iter().map(|t| (get_id(t).clone(), t)).collect();
+        let kb: HashSet<Id> = bm.keys().cloned().collect();
+        let ka: HashSet<Id> = am.keys().cloned().collect();
+        let mut added = Vec::new();
+        let mut removed = Vec::new();
+        let mut modified = Vec::new();
+        for id in ka.difference(&kb) {
+            added.push((**am.get(id).expect("a")).clone());
+        }
+        for id in kb.difference(&ka) {
+            removed.push(id.clone());
+        }
+        for id in ka.intersection(&kb) {
+            let b = *bm.get(id).expect("b");
+            let a = *am.get(id).expect("a");
+            if b != a {
+                modified.push(a.clone());
+            }
+        }
+        (added, removed, modified)
+    }
+
+    impl KitDiff {
+        /// Structural delta from `before` to `after` kit DTOs (for debugging / tooling).
+        pub fn between_dto(before: &KitFullDto, after: &KitFullDto) -> Self {
+            let mut d = Self::default();
+            if before.name != after.name {
+                d.name = Some(after.name.clone());
+            }
+            if before.description != after.description {
+                d.description = Some(after.description.clone());
+            }
+            if before.icon != after.icon {
+                d.icon = Some(after.icon.clone());
+            }
+            if before.image != after.image {
+                d.image = Some(after.image.clone());
+            }
+            if before.preview != after.preview {
+                d.preview = Some(after.preview.clone());
+            }
+            if before.version != after.version {
+                d.version = Some(after.version.clone());
+            }
+            if before.remote != after.remote {
+                d.remote = Some(after.remote.clone());
+            }
+            if before.homepage != after.homepage {
+                d.homepage = Some(after.homepage.clone());
+            }
+            if before.license != after.license {
+                d.license = Some(after.license.clone());
+            }
+            if before.uri != after.uri {
+                d.uri = Some(after.uri.clone());
+            }
+            if before.created != after.created {
+                d.created = Some(after.created.clone());
+            }
+            if before.updated != after.updated {
+                d.updated = Some(after.updated.clone());
+            }
+            let (a_t, r_t, m_t) = diff_id_vec(&before.types, &after.types, |t| &t.id);
+            if !a_t.is_empty() || !r_t.is_empty() || !m_t.is_empty() {
+                d.types = Some(TypesDiff {
+                    removed: r_t.iter().map(|i| TypeIdDto { id: i.clone() }).collect(),
+                    updated: m_t
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.types.iter().find(|t| t.id == full.id)?;
+                            let diff = crate::diff::type_full_delta(b, full);
+                            if diff.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::TypeDiffUpdate { id: TypeIdDto { id: full.id.clone() }, diff })
+                            }
+                        })
+                        .collect(),
+                    added: a_t,
+                });
+                if d.types.as_ref().unwrap().is_empty() {
+                    d.types = None;
+                }
+            }
+            let bm: HashMap<Id, &DesignFullDto> = before.designs.iter().map(|x| (x.id.clone(), x)).collect();
+            let am: HashMap<Id, &DesignFullDto> = after.designs.iter().map(|x| (x.id.clone(), x)).collect();
+            let kb: HashSet<Id> = bm.keys().cloned().collect();
+            let ka: HashSet<Id> = am.keys().cloned().collect();
+            let mut des = DesignsDiff::default();
+            for id in kb.difference(&ka) {
+                des.removed.push(DesignIdDto { id: id.clone() });
+            }
+            for id in ka.difference(&kb) {
+                des.added.push((*am.get(id).expect("a")).clone());
+            }
+            for id in ka.intersection(&kb) {
+                let b = *bm.get(id).expect("b");
+                let a = *am.get(id).expect("a");
+                if b != a {
+                    let dd = DesignDiff::between_dto(b, a);
+                    if !dd.is_empty() {
+                        des.updated.push(DesignDiffUpdate { design_id: id.clone(), diff: dd });
+                    }
+                }
+            }
+            if !des.is_empty() {
+                d.designs = Some(des);
+            }
+            let (a_f, r_f, m_f) = diff_id_vec(&before.files, &after.files, |t| &t.id);
+            if !a_f.is_empty() || !r_f.is_empty() || !m_f.is_empty() {
+                d.files = Some(FilesDiff {
+                    removed: r_f.iter().map(|i| FileIdDto { id: i.clone() }).collect(),
+                    updated: m_f
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.files.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::file_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::FileDiffUpdate { id: FileIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a_f,
+                });
+                if d.files.as_ref().unwrap().is_empty() {
+                    d.files = None;
+                }
+            }
+            let (a_fo, r_fo, m_fo) = diff_id_vec(&before.folders, &after.folders, |t| &t.id);
+            if !a_fo.is_empty() || !r_fo.is_empty() || !m_fo.is_empty() {
+                d.folders = Some(FoldersDiff {
+                    removed: r_fo.iter().map(|i| FolderIdDto { id: i.clone() }).collect(),
+                    updated: m_fo
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.folders.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::folder_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::FolderDiffUpdate { id: FolderIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a_fo,
+                });
+                if d.folders.as_ref().unwrap().is_empty() {
+                    d.folders = None;
+                }
+            }
+            let merge_simple_authors = |bf: &[AuthorFullDto], af: &[AuthorFullDto]| -> Option<AuthorsDiff> {
+                let (a, r, m) = diff_id_vec(bf, af, |t| &t.id);
+                if a.is_empty() && r.is_empty() && m.is_empty() {
+                    return None;
+                }
+                Some(AuthorsDiff {
+                    removed: r.iter().map(|i| AuthorIdDto { id: i.clone() }).collect(),
+                    updated: m
+                        .iter()
+                        .filter_map(|full| {
+                            let b = bf.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::author_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::AuthorDiffUpdate { id: AuthorIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a,
+                })
+            };
+            d.authors = merge_simple_authors(&before.authors, &after.authors);
+            d.concepts = {
+                let (a, r, m) = diff_id_vec(&before.concepts, &after.concepts, |t| &t.id);
+                if a.is_empty() && r.is_empty() && m.is_empty() {
+                    None
+                } else {
+                    Some(ConceptsDiff {
+                        removed: r.iter().map(|i| ConceptIdDto { id: i.clone() }).collect(),
+                        updated: m
+                            .iter()
+                            .filter_map(|full| {
+                                let b = before.concepts.iter().find(|t| t.id == full.id)?;
+                                let df = crate::diff::concept_full_delta(b, full);
+                                if df.is_empty() {
+                                    None
+                                } else {
+                                    Some(crate::diff::ConceptDiffUpdate { id: ConceptIdDto { id: full.id.clone() }, diff: df })
+                                }
+                            })
+                            .collect(),
+                        added: a,
+                    })
+                }
+            };
+            d.tags = {
+                let (a, r, m) = diff_id_vec(&before.tags, &after.tags, |t| &t.id);
+                if a.is_empty() && r.is_empty() && m.is_empty() {
+                    None
+                } else {
+                    Some(TagsDiff {
+                        removed: r.iter().map(|i| TagIdDto { id: i.clone() }).collect(),
+                        updated: m
+                            .iter()
+                            .filter_map(|full| {
+                                let b = before.tags.iter().find(|t| t.id == full.id)?;
+                                let df = crate::diff::tag_full_delta(b, full);
+                                if df.is_empty() {
+                                    None
+                                } else {
+                                    Some(crate::diff::TagDiffUpdate { id: TagIdDto { id: full.id.clone() }, diff: df })
+                                }
+                            })
+                            .collect(),
+                        added: a,
+                    })
+                }
+            };
+            d.qualities = {
+                let (a, r, m) = diff_id_vec(&before.qualities, &after.qualities, |t| &t.id);
+                if a.is_empty() && r.is_empty() && m.is_empty() {
+                    None
+                } else {
+                    Some(QualitiesDiff {
+                        removed: r.iter().map(|i| QualityIdDto { id: i.clone() }).collect(),
+                        updated: m
+                            .iter()
+                            .filter_map(|full| {
+                                let b = before.qualities.iter().find(|t| t.id == full.id)?;
+                                let df = crate::diff::quality_full_delta(b, full);
+                                if df.is_empty() {
+                                    None
+                                } else {
+                                    Some(crate::diff::QualityDiffUpdate { id: QualityIdDto { id: full.id.clone() }, diff: df })
+                                }
+                            })
+                            .collect(),
+                        added: a,
+                    })
+                }
+            };
+            let (a_p, r_p, m_p) = diff_id_vec(&before.props, &after.props, |t| &t.id);
+            if !a_p.is_empty() || !r_p.is_empty() || !m_p.is_empty() {
+                let pd = PropsDiff {
+                    removed: r_p.iter().map(|i| PropIdDto { id: i.clone() }).collect(),
+                    updated: m_p
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.props.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::prop_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::PropDiffUpdate { id: PropIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a_p,
+                };
+                if !pd.is_empty() {
+                    d.props = Some(pd);
+                }
+            }
+            let (a_at, r_at, m_at) = diff_id_vec(&before.attributes, &after.attributes, |t| &t.id);
+            if !a_at.is_empty() || !r_at.is_empty() || !m_at.is_empty() {
+                let ad = AttributesDiff {
+                    removed: r_at.iter().map(|i| AttributeIdDto { id: i.clone() }).collect(),
+                    updated: m_at
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.attributes.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::attribute_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::AttributeDiffUpdate { id: AttributeIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a_at,
+                };
+                if !ad.is_empty() {
+                    d.attributes = Some(ad);
+                }
+            }
+            d
+        }
+    }
+}
 
 /// Command-list forward and inverse (see [`crate::change_command::ChangeKitCommand`]).
 pub mod kit_change {
@@ -8752,7 +11573,7 @@ pub mod events {
     event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Version, Remote, Homepage, License, Uri, Created, Updated });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
     event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
-    event_field_enum!(PortField { Id, Name, Description, Icon, CompatiblePorts, Attributes });
+    event_field_enum!(PortField { Id, Name, Description, Icon, Family, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
     event_field_enum!(PropField { Key, Value, Unit, Description });
     event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
     event_field_enum!(RepresentationField { Url, Description, File });
@@ -8967,11 +11788,13 @@ pub(crate) mod event_wire {
     use crate::connector::ConnectorStoreRef;
     use crate::design::DesignStoreRef;
     use crate::events::EventBus;
+    use crate::family::FamilyStoreRef;
     use crate::file::FileStoreRef;
     use crate::folder::FolderStoreRef;
     use crate::group::GroupStoreRef;
     use crate::kit::KitStoreRef;
     use crate::layer::LayerStoreRef;
+    use crate::location::LocationStoreRef;
     use crate::piece::PieceStoreRef;
     use crate::port::PortStoreRef;
     use crate::quality::QualityStoreRef;
@@ -8996,6 +11819,15 @@ pub(crate) mod event_wire {
         }
         for f in &kg.folders {
             wire_folder(f, &w);
+        }
+        for p in &kg.ports {
+            wire_port(p, &w);
+        }
+        for fam in &kg.families {
+            wire_family(fam, &w);
+        }
+        for loc in &kg.locations {
+            wire_location(loc, &w);
         }
         for a in &kg.authors {
             if let Ok(mut g) = a.write() {
@@ -9030,9 +11862,6 @@ pub(crate) mod event_wire {
     fn wire_type(t: &TypeStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = t.write() {
             g.event_bus = w.clone();
-            for p in &g.ports {
-                wire_port(p, w);
-            }
             for c in &g.connectors {
                 wire_connector(c, w);
             }
@@ -9073,11 +11902,31 @@ pub(crate) mod event_wire {
     fn wire_port(p: &PortStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
-            for q in &g.qualities {
-                wire_quality(q, w);
+            for a in g.attributes.iter_mut() {
+                a.event_bus = w.clone();
+            }
+        }
+    }
+
+    fn wire_family(f: &FamilyStoreRef, w: &Weak<EventBus>) {
+        if let Ok(mut g) = f.write() {
+            g.event_bus = w.clone();
+            for p in &g.ports {
+                wire_port(p, w);
             }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
+            }
+        }
+    }
+
+    fn wire_location(l: &LocationStoreRef, w: &Weak<EventBus>) {
+        if let Ok(mut g) = l.write() {
+            g.event_bus = w.clone();
+            for a in &g.attributes {
+                if let Ok(mut aw) = a.write() {
+                    aw.event_bus = w.clone();
+                }
             }
         }
     }
@@ -9347,11 +12196,7 @@ pub(crate) mod flatten_math {
         let ox = m[(0, 3)];
         let oy = m[(1, 3)];
         let oz = m[(2, 3)];
-        Plane {
-            origin: Point::new(ox, oy, oz),
-            x_axis: Vector::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]),
-            y_axis: Vector::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]),
-        }
+        Plane { origin: Point::new(ox, oy, oz), x_axis: Vector::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]), y_axis: Vector::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]) }
     }
 
     // Quaternion (qx,qy,qz,qw) from two unit vectors
@@ -9428,19 +12273,7 @@ pub(crate) mod flatten_math {
     }
 
     /// `parent_connector` / `child_connector`: local anchor point + direction in type space.
-    pub(crate) fn compute_child_plane(
-        parent_plane: &Plane,
-        parent_point: Point,
-        parent_direction: Vector,
-        child_point: Point,
-        child_direction: Vector,
-        gap: f64,
-        shift: f64,
-        rise: f64,
-        rotation_deg: f64,
-        turn_deg: f64,
-        tilt_deg: f64,
-    ) -> Plane {
+    pub(crate) fn compute_child_plane(parent_plane: &Plane, parent_point: Point, parent_direction: Vector, child_point: Point, child_direction: Vector, gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> Plane {
         let parent_matrix = plane_to_matrix(parent_plane);
         let parent_pt = v3p(parent_point);
         let parent_dir = normalize(v3v(parent_direction));
@@ -10011,9 +12844,15 @@ pub mod geom {
     #[derive(Deserialize)]
     #[serde(untagged)]
     enum PieceCenterWire {
-        Uv { u: f64, v: f64 },
+        Uv {
+            u: f64,
+            v: f64,
+        },
         /// Flat JSON `x`/`y` (three floats) — treated as (u, v) with any z dropped.
-        Xy { x: f64, y: f64 },
+        Xy {
+            x: f64,
+            y: f64,
+        },
     }
 
     impl From<PieceCenterWire> for Coordinate {
@@ -10120,11 +12959,7 @@ pub mod geom {
             (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
         }
         pub fn cross(&self, o: &Vector) -> Vector {
-            Vector::new(
-                self.y * o.z - self.z * o.y,
-                self.z * o.x - self.x * o.z,
-                self.x * o.y - self.y * o.x,
-            )
+            Vector::new(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x)
         }
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.f64(self.x).f64(self.y).f64(self.z);
@@ -10214,6 +13049,7 @@ pub mod geom {
 /// See `hash_location` in `semio/py/main.py`.
 pub mod location {
     use serde::{Deserialize, Serialize};
+    use std::sync::{Arc, RwLock};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
@@ -10274,16 +13110,7 @@ pub mod location {
 
     impl LocationStore {
         pub fn new(lon: f64, lat: f64) -> Self {
-            Self {
-                id: Id::new_v7(),
-                longitude: lon,
-                latitude: lat,
-                altitude: None,
-                attributes: Vec::new(),
-                parent_kit: None,
-                event_bus: std::sync::Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), longitude: lon, latitude: lat, altitude: None, attributes: Vec::new(), parent_kit: None, event_bus: std::sync::Weak::new(), hash_cache: Cache::default() }
         }
 
         fn entity_ref(&self) -> EntityRef {
@@ -10292,6 +13119,23 @@ pub mod location {
 
         pub fn to_id_dto(&self) -> LocationIdDto {
             LocationIdDto { id: self.id.clone() }
+        }
+
+        pub fn from_full_dto(d: LocationFullDto) -> Self {
+            Self {
+                id: d.id,
+                longitude: d.longitude,
+                latitude: d.latitude,
+                altitude: d.altitude,
+                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
+                parent_kit: None,
+                event_bus: std::sync::Weak::new(),
+                hash_cache: Cache::default(),
+            }
+        }
+
+        pub fn to_full_dto(&self) -> LocationFullDto {
+            LocationFullDto { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() }
         }
     }
 }
@@ -10805,12 +13649,15 @@ pub mod kit {
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::family::{FamilyFullDto, FamilyStore, FamilyStoreRef};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
+    use crate::location::{LocationFullDto, LocationStore, LocationStoreRef};
     use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
+    use crate::port::{PortFullDto, PortStore, PortStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::report::{SemioReport, ValidationResult};
@@ -10853,6 +13700,10 @@ pub mod kit {
         pub qualities: Vec<QualityStoreRef>,
         pub props: Vec<PropStoreRef>,
         pub attributes: Vec<AttributeStoreRef>,
+        /// Ports attached directly to the kit (rare; most ports live on [`FamilyStore`].
+        pub ports: Vec<PortStoreRef>,
+        pub families: Vec<FamilyStoreRef>,
+        pub locations: Vec<LocationStoreRef>,
         /// Broadcast bus for graph change notifications (kit holds strong ref).
         pub(crate) event_bus: Arc<EventBus>,
         hash_cache: Cache<String>,
@@ -11001,6 +13852,31 @@ pub mod kit {
         pub props: Vec<PropFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub ports: Vec<PortFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub families: Vec<FamilyFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub locations: Vec<LocationFullDto>,
+    }
+
+    impl KitFullDto {
+        /// Resolve a port id from kit-level list or from any nested `families[*].ports`.
+        pub fn find_port_dto(&self, id: &Id) -> Option<&PortFullDto> {
+            for p in &self.ports {
+                if &p.id == id {
+                    return Some(p);
+                }
+            }
+            for f in &self.families {
+                for p in &f.ports {
+                    if &p.id == id {
+                        return Some(p);
+                    }
+                }
+            }
+            None
+        }
     }
 
     #[derive(Clone, Debug, Serialize)]
@@ -11041,6 +13917,9 @@ pub mod kit {
                 qualities: Vec::new(),
                 props: Vec::new(),
                 attributes: Vec::new(),
+                ports: Vec::new(),
+                families: Vec::new(),
+                locations: Vec::new(),
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
@@ -11537,17 +14416,7 @@ pub mod kit {
             merged.event_bus = bus;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let preserve = (
-                    g.undo_past.clone(),
-                    g.undo_future.clone(),
-                    g.undo_inhibit,
-                    g.initial.clone(),
-                    g.checkpoints.clone(),
-                    g.alternatives.clone(),
-                    g.the_kit_head.clone(),
-                    g.sessions.clone(),
-                    g.children.clone(),
-                );
+                let preserve = (g.undo_past.clone(), g.undo_future.clone(), g.undo_inhibit, g.initial.clone(), g.checkpoints.clone(), g.alternatives.clone(), g.the_kit_head.clone(), g.sessions.clone(), g.children.clone());
                 *g = merged;
                 g.undo_past = preserve.0;
                 g.undo_future = preserve.1;
@@ -11681,10 +14550,7 @@ pub mod kit {
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                     Self::with_undo(kit, || {
-                        let diff = DesignDiff {
-                            pieces: Some(crate::diff::PiecesDiff { added: vec![piece], ..Default::default() }),
-                            ..Default::default()
-                        };
+                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![piece], ..Default::default() }), ..Default::default() };
                         let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                         g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                     })
@@ -11699,10 +14565,7 @@ pub mod kit {
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => Self::with_undo(kit, || {
-                    let diff = DesignDiff {
-                        pieces: Some(crate::diff::PiecesDiff { removed: vec![PieceIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }),
-                        ..Default::default()
-                    };
+                    let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { removed: vec![PieceIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }), ..Default::default() };
                     let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                 }),
@@ -11724,6 +14587,27 @@ pub mod kit {
             let mut ids: Vec<String> = Vec::new();
             ids.push(self.id.as_str().to_string());
 
+            for p in &self.ports {
+                if let Ok(p) = p.read() {
+                    ids.push(p.id.as_str().to_string());
+                }
+            }
+            for f in &self.families {
+                if let Ok(f) = f.read() {
+                    ids.push(f.id.as_str().to_string());
+                    for p in &f.ports {
+                        if let Ok(p) = p.read() {
+                            ids.push(p.id.as_str().to_string());
+                        }
+                    }
+                }
+            }
+            for loc in &self.locations {
+                if let Ok(loc) = loc.read() {
+                    ids.push(loc.id.as_str().to_string());
+                }
+            }
+
             for t in &self.types {
                 if let Ok(t) = t.read() {
                     if t.name.trim().is_empty() {
@@ -11731,11 +14615,6 @@ pub mod kit {
                         result.errors.push(format!("type {} has empty name", t.id));
                     }
                     ids.push(t.id.as_str().to_string());
-                    for p in &t.ports {
-                        if let Ok(p) = p.read() {
-                            ids.push(p.id.as_str().to_string());
-                        }
-                    }
                     for c in &t.connectors {
                         if let Ok(c) = c.read() {
                             ids.push(c.id.as_str().to_string());
@@ -11850,6 +14729,9 @@ pub mod kit {
                 qualities: Vec::new(),
                 props: Vec::new(),
                 attributes: Vec::new(),
+                ports: Vec::new(),
+                families: Vec::new(),
+                locations: Vec::new(),
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
@@ -11890,6 +14772,9 @@ pub mod kit {
                 qualities: Vec::new(),
                 props: Vec::new(),
                 attributes: Vec::new(),
+                ports: Vec::new(),
+                families: Vec::new(),
+                locations: Vec::new(),
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
@@ -11947,7 +14832,44 @@ pub mod kit {
         pub fn from_full_dto(mut d: KitFullDto) -> KitStoreRef {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let vcs_root = d.clone();
-            let KitFullDto { id, name, description, icon, image, preview, version, remote, homepage, license, uri, created, updated, types, designs, files, folders, authors, concepts, tags, qualities, props, attributes } = d;
+            let KitFullDto {
+                id,
+                name,
+                description,
+                icon,
+                image,
+                preview,
+                version,
+                remote,
+                homepage,
+                license,
+                uri,
+                created,
+                updated,
+                types,
+                designs,
+                files,
+                folders,
+                families,
+                locations,
+                ports: kit_port_dtos,
+                authors,
+                concepts,
+                tags,
+                qualities,
+                props,
+                attributes,
+            } = d;
+
+            let mut port_dto_index: HashMap<Id, PortFullDto> = HashMap::new();
+            for p in &kit_port_dtos {
+                port_dto_index.insert(p.id.clone(), p.clone());
+            }
+            for f in &families {
+                for p in &f.ports {
+                    port_dto_index.insert(p.id.clone(), p.clone());
+                }
+            }
 
             let kit = Arc::new(RwLock::new(KitStore {
                 id: id.clone(),
@@ -11973,6 +14895,9 @@ pub mod kit {
                 qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect(),
                 props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect(),
                 attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
+                ports: Vec::new(),
+                families: Vec::new(),
+                locations: Vec::new(),
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
@@ -12024,10 +14949,65 @@ pub mod kit {
             let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f)))).collect();
             let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f)))).collect();
 
+            let location_refs: Vec<LocationStoreRef> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_full_dto(l)))).collect();
+
+            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
+            let mut kit_level_port_refs: Vec<PortStoreRef> = Vec::new();
+            for pd in kit_port_dtos {
+                let iid = pd.id.clone();
+                let mut p = PortStore::from_full_dto(pd);
+                p.parent_family = Weak::new();
+                let pr = Arc::new(RwLock::new(p));
+                port_by_id.insert(iid, pr.clone());
+                kit_level_port_refs.push(pr);
+            }
+
+            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
+            let mut family_refs: Vec<FamilyStoreRef> = Vec::new();
+            for fd in families {
+                let fid = fd.id.clone();
+                let fam = Arc::new(RwLock::new(FamilyStore {
+                    id: fd.id,
+                    name: fd.name,
+                    description: fd.description,
+                    icon: fd.icon,
+                    ports: Vec::new(),
+                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_full_dto(a)).collect(),
+                    parent_kit: None,
+                    event_bus: Weak::new(),
+                    hash_cache: Cache::default(),
+                }));
+                let fw = Arc::downgrade(&fam);
+                let mut port_refs: Vec<PortStoreRef> = Vec::new();
+                for pd in fd.ports {
+                    let iid = pd.id.clone();
+                    let mut p = PortStore::from_full_dto(pd);
+                    p.parent_family = fw.clone();
+                    let pr = Arc::new(RwLock::new(p));
+                    port_by_id.insert(iid, pr.clone());
+                    port_refs.push(pr);
+                }
+                if let Ok(mut g) = fam.write() {
+                    g.ports = port_refs;
+                }
+                family_by_id.insert(fid, fam.clone());
+                family_refs.push(fam);
+            }
+
+            for (pid, pr) in &port_by_id {
+                let Some(dto) = port_dto_index.get(pid) else {
+                    continue;
+                };
+                let weaks: Vec<crate::port::PortStoreWeak> = dto.compatible_ports.iter().filter_map(|c| port_by_id.get(&c.id).map(|p| Arc::downgrade(p))).collect();
+                if let Ok(mut pw) = pr.write() {
+                    pw.compatible_ports = weaks;
+                }
+            }
+
             let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
             let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
             for tdto in types {
-                let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs);
+                let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
                 if let Ok(tr) = t.read() {
                     type_index.insert(tr.id.clone(), t.clone());
                 }
@@ -12061,6 +15041,19 @@ pub mod kit {
                 k.designs = design_refs;
                 k.files = file_refs;
                 k.folders = folder_refs;
+                k.ports = kit_level_port_refs;
+                k.families = family_refs;
+                k.locations = location_refs;
+                for fam in &k.families {
+                    if let Ok(mut fa) = fam.write() {
+                        fa.parent_kit = Some(kw.clone());
+                    }
+                }
+                for loc in &k.locations {
+                    if let Ok(mut lw) = loc.write() {
+                        lw.parent_kit = Some(kw.clone());
+                    }
+                }
             }
             event_wire::wire_graph_bus(&kit);
             kit
@@ -12143,7 +15136,54 @@ pub mod kit {
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
                 attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
+                locations: self.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect(),
             }
+        }
+
+        /// Resolve a port anywhere on the kit (kit-level list or nested under families).
+        pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
+            for p in &self.ports {
+                if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
+                    return Some(p.clone());
+                }
+            }
+            for f in &self.families {
+                if let Ok(fr) = f.read() {
+                    for p in &fr.ports {
+                        if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
+                            return Some(p.clone());
+                        }
+                    }
+                }
+            }
+            None
+        }
+
+        fn build_family_port_index(g: &KitStore) -> (HashMap<Id, FamilyStoreRef>, HashMap<Id, PortStoreRef>) {
+            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
+            for f in &g.families {
+                if let Ok(fr) = f.read() {
+                    family_by_id.insert(fr.id.clone(), f.clone());
+                }
+            }
+            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
+            for p in &g.ports {
+                if let Ok(pr) = p.read() {
+                    port_by_id.insert(pr.id.clone(), p.clone());
+                }
+            }
+            for f in &g.families {
+                if let Ok(fr) = f.read() {
+                    for p in &fr.ports {
+                        if let Ok(pr) = p.read() {
+                            port_by_id.insert(pr.id.clone(), p.clone());
+                        }
+                    }
+                }
+            }
+            (family_by_id, port_by_id)
         }
 
         fn domain_type_index(kit: &KitStore) -> HashMap<Id, TypeStoreRef> {
@@ -12231,17 +15271,14 @@ pub mod kit {
                 for u in &ds.updated {
                     let dref = {
                         let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.design(u.design_id.as_str())
-                            .ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?
-                            .clone()
+                        g.design(u.design_id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?.clone()
                     };
-                    let type_index = { let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?; Self::domain_type_index(&g) };
+                    let type_index = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        Self::domain_type_index(&g)
+                    };
                     let weak = Arc::downgrade(&dref);
-                    dref
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?
-                        .apply_diff(&u.diff, &type_index, weak)
-                        .map_err(|e| SetError::Internal(e.to_string()))?;
+                    dref.write().map_err(|_| SetError::LockPoisoned("design".into()))?.apply_diff(&u.diff, &type_index, weak).map_err(|e| SetError::Internal(e.to_string()))?;
                 }
                 for d in &ds.added {
                     KitStore::insert_design_ref(kit, d.clone())?;
@@ -12495,7 +15532,8 @@ pub mod kit {
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("type {}", dto.id)));
             }
-            let t = TypeStore::hydrate_from_full_dto(dto, kit, &g.files);
+            let (family_by_id, port_by_id) = Self::build_family_port_index(&g);
+            let t = TypeStore::hydrate_from_full_dto(dto, kit, &g.files, &family_by_id, &port_by_id);
             g.types.push(t);
             g.invalidate_hash();
             g.invalidate_validation();
@@ -12980,10 +16018,7 @@ pub mod kit {
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
             Self::with_undo(kit, || {
-                let diff = DesignDiff {
-                    connections: Some(crate::diff::ConnectionsDiff { removed: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }),
-                    ..Default::default()
-                };
+                let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { removed: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }), ..Default::default() };
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
@@ -13115,10 +16150,7 @@ pub mod kit {
                 np.r#type = Some(TypeIdDto { id: Id::from(ntg.as_str()) });
                 let diff = DesignDiff {
                     pieces: Some(crate::diff::PiecesDiff {
-                        updated: vec![crate::diff::PieceDiffUpdate {
-                            id: PieceIdDto { id: np.id.clone() },
-                            diff: crate::diff::PieceDiff { r#type: Some(np.r#type.clone()), ..Default::default() },
-                        }],
+                        updated: vec![crate::diff::PieceDiffUpdate { id: PieceIdDto { id: np.id.clone() }, diff: crate::diff::PieceDiff { r#type: Some(np.r#type.clone()), ..Default::default() } }],
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -14412,11 +17444,13 @@ pub mod port {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::family::FamilyStoreWeak;
+    use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
@@ -14428,8 +17462,15 @@ pub mod port {
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
+        pub family: Option<String>,
+        pub compatible_families: Vec<String>,
+        pub mandatory: Option<bool>,
+        pub t: Option<f64>,
+        pub point: Option<Point>,
+        pub direction: Option<Vector>,
         /// Weak refs to compatible ports (resolved from wire `compatiblePorts` after the full port map exists).
         pub compatible_ports: Vec<PortStoreWeak>,
+        pub qualities: Vec<QualityStoreRef>,
         pub attributes: Vec<AttributeStore>,
         pub parent_family: FamilyStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
@@ -14459,8 +17500,22 @@ pub mod port {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub family: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
+        pub compatible_families: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub mandatory: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub t: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub point: Option<Point>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
         pub compatible_ports: Vec<PortIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub qualities: Vec<QualityShallowDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeShallowDto>,
     }
@@ -14474,8 +17529,22 @@ pub mod port {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub family: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
+        pub compatible_families: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub mandatory: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub t: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub point: Option<Point>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
         pub compatible_ports: Vec<PortIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub qualities: Vec<QualityFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeFullDto>,
     }
@@ -14487,7 +17556,14 @@ pub mod port {
                 name: String::new(),
                 description: None,
                 icon: None,
+                family: None,
+                compatible_families: Vec::new(),
+                mandatory: None,
+                t: None,
+                point: None,
+                direction: None,
                 compatible_ports: Vec::new(),
+                qualities: Vec::new(),
                 attributes: Vec::new(),
                 parent_family: Weak::new(),
                 event_bus: Weak::new(),
@@ -14505,41 +17581,42 @@ pub mod port {
         }
 
         pub fn from_id_dto(d: PortIdDto) -> Self {
-            Self {
-                id: d.id,
-                name: String::new(),
-                description: None,
-                icon: None,
-                compatible_ports: Vec::new(),
-                attributes: Vec::new(),
-                parent_family: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            let mut s = Self::new();
+            s.id = d.id;
+            s
         }
 
         pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                icon: d.icon,
-                compatible_ports: Vec::new(),
-                attributes: Vec::new(),
-                parent_family: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            let mut s = Self::new();
+            s.id = d.id;
+            s.name = d.name;
+            s.description = d.description;
+            s.icon = d.icon;
+            s
         }
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
+            s.family = d.family;
+            s.compatible_families = d.compatible_families;
+            s.mandatory = d.mandatory;
+            s.t = d.t;
+            s.point = d.point;
+            s.direction = d.direction;
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
+            s.family = d.family;
+            s.compatible_families = d.compatible_families;
+            s.mandatory = d.mandatory;
+            s.t = d.t;
+            s.point = d.point;
+            s.direction = d.direction;
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
         }
@@ -14549,45 +17626,46 @@ pub mod port {
         }
 
         pub fn to_metadata_dto(&self) -> PortMetadataDto {
-            PortMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                icon: self.icon.clone(),
-            }
+            PortMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
         /// Serialised `compatiblePorts`: ids in wire order; when graph is not wired, emit stored ids from [`PortFullDto`] load is not kept — use `to_full_dto` after hydration only for round-trip.
         pub fn to_shallow_dto(&self) -> PortShallowDto {
             let m = self.to_metadata_dto();
-            let compatible_ports: Vec<PortIdDto> = self
-                .compatible_ports
-                .iter()
-                .filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() })))
-                .collect();
+            let compatible_ports: Vec<PortIdDto> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() }))).collect();
             PortShallowDto {
                 id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
+                family: self.family.clone(),
+                compatible_families: self.compatible_families.clone(),
+                mandatory: self.mandatory,
+                t: self.t,
+                point: self.point,
+                direction: self.direction,
                 compatible_ports,
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
                 attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
             }
         }
 
         pub fn to_full_dto(&self) -> PortFullDto {
             let m = self.to_metadata_dto();
-            let compatible_ports: Vec<PortIdDto> = self
-                .compatible_ports
-                .iter()
-                .filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() })))
-                .collect();
+            let compatible_ports: Vec<PortIdDto> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() }))).collect();
             PortFullDto {
                 id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
+                family: self.family.clone(),
+                compatible_families: self.compatible_families.clone(),
+                mandatory: self.mandatory,
+                t: self.t,
+                point: self.point,
+                direction: self.direction,
                 compatible_ports,
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
                 attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
             }
         }
@@ -14632,6 +17710,21 @@ pub mod port {
             Ok(())
         }
 
+        pub fn set_family(&mut self, v: Option<String>) -> crate::error::SetResult {
+            if self.family == v {
+                return Ok(());
+            }
+            self.family = v;
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family) });
+            self.invalidate_hash();
+            Ok(())
+        }
+
+        /// Resolve [`PortIdDto`] list to weak refs using the kit’s global port table (families + kit-level ports).
+        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit::KitStore) {
+            self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -14654,6 +17747,27 @@ pub mod port {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("port");
+            w.opt_str(self.family.as_deref());
+            for family in &self.compatible_families {
+                w.str(family);
+            }
+            if let Some(v) = self.mandatory {
+                w.bool(v);
+            }
+            if let Some(v) = self.t {
+                w.f64(v);
+            }
+            if let Some(p) = self.point {
+                p.hash_into(w);
+            }
+            if let Some(v) = self.direction {
+                v.hash_into(w);
+            }
+            for q in &self.qualities {
+                if let Ok(q) = q.read() {
+                    q.hash_into(w);
+                }
+            }
             for a in &self.attributes {
                 a.hash_into(w);
             }
@@ -14683,12 +17797,12 @@ pub mod family {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
-    use crate::port::{PortStore, PortStoreRef};
+    use crate::port::PortStoreRef;
 
     pub type FamilyStoreRef = Arc<RwLock<FamilyStore>>;
     pub type FamilyStoreWeak = Weak<RwLock<FamilyStore>>;
@@ -14700,7 +17814,7 @@ pub mod family {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub ports: Vec<PortStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub attributes: Vec<AttributeStore>,
         pub parent_kit: Option<KitStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
@@ -14749,17 +17863,7 @@ pub mod family {
 
     impl FamilyStore {
         pub fn new(name: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                name: name.into(),
-                description: None,
-                icon: None,
-                ports: Vec::new(),
-                attributes: Vec::new(),
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), name: name.into(), description: None, icon: None, ports: Vec::new(), attributes: Vec::new(), parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         fn entity_ref(&self) -> EntityRef {
@@ -14775,17 +17879,12 @@ pub mod family {
         }
 
         pub fn to_metadata_dto(&self) -> FamilyMetadataDto {
-            FamilyMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                icon: self.icon.clone(),
-            }
+            FamilyMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> FamilyShallowDto {
             let m = self.to_metadata_dto();
-            FamilyShallowDto { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect() }
+            FamilyShallowDto { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.to_shallow_dto()).collect() }
         }
 
         pub fn to_full_dto(&self) -> FamilyFullDto {
@@ -14796,7 +17895,7 @@ pub mod family {
                 description: m.description,
                 icon: m.icon,
                 ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+                attributes: self.attributes.iter().map(|a| a.to_full_dto()).collect(),
             }
         }
 
@@ -14834,6 +17933,12 @@ pub mod family {
             for a in &self.attributes {
                 a.hash_into(w);
             }
+        }
+    }
+
+    impl Default for FamilyStore {
+        fn default() -> Self {
+            Self::new("")
         }
     }
 }
@@ -16227,6 +19332,8 @@ pub mod tag {
 }
 
 pub mod typ {
+    use std::collections::HashMap;
+
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
@@ -16235,6 +19342,7 @@ pub mod typ {
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::family::{FamilyIdDto, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::location::LocationIdDto;
@@ -16260,7 +19368,7 @@ pub mod typ {
         pub virtual_: Option<bool>,
         pub unit: Option<String>,
         pub location: Option<LocationIdDto>,
-        pub ports: Vec<PortStoreRef>,
+        pub families: Vec<FamilyStoreWeak>,
         pub connectors: Vec<ConnectorStoreRef>,
         pub representations: Vec<RepresentationStoreRef>,
         pub authors: Vec<AuthorStoreRef>,
@@ -16332,7 +19440,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<PortShallowDto>,
+        pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub connectors: Vec<ConnectorShallowDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -16376,7 +19484,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<PortFullDto>,
+        pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub connectors: Vec<ConnectorFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -16408,7 +19516,7 @@ pub mod typ {
                 virtual_: None,
                 unit: None,
                 location: None,
-                ports: Vec::new(),
+                families: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
                 authors: Vec::new(),
@@ -16595,9 +19703,11 @@ pub mod typ {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("type").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.variant.as_deref()).opt_str(self.unit.as_deref());
-            for p in &self.ports {
-                if let Ok(p) = p.read() {
-                    p.hash_into(w);
+            for fam in &self.families {
+                if let Some(f) = fam.upgrade() {
+                    if let Ok(fr) = f.read() {
+                        w.str(fr.id.as_str());
+                    }
                 }
             }
             for c in &self.connectors {
@@ -16642,12 +19752,15 @@ pub mod typ {
             }
         }
 
-        pub fn port(&self, id: &str) -> Option<PortStoreRef> {
-            self.ports.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
-        }
-
         pub fn connector(&self, id: &str) -> Option<ConnectorStoreRef> {
             self.connectors.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
+        }
+
+        pub fn port(&self, id: &str) -> Option<PortStoreRef> {
+            self.families.iter().filter_map(|f| f.upgrade()).find_map(|f| {
+                let fr = f.read().ok()?;
+                fr.ports.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
+            })
         }
 
         pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
@@ -16670,6 +19783,7 @@ pub mod typ {
                 virtual_: None,
                 unit: None,
                 location: None,
+                families: Vec::new(),
                 ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
@@ -16699,6 +19813,7 @@ pub mod typ {
                 virtual_: d.virtual_,
                 unit: d.unit,
                 location: d.location,
+                families: Vec::new(),
                 ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
@@ -16716,10 +19831,12 @@ pub mod typ {
             }
         }
 
-        /// Hydrate type graph from full DTO (ports, connectors, representations, kit link).
+        /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
-        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef]) -> TypeStoreRef {
-            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, ports, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
+        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
+            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, families, ports, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
+
+            let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
 
             let t = Arc::new(RwLock::new(TypeStore {
                 id: id.clone(),
@@ -16732,6 +19849,7 @@ pub mod typ {
                 virtual_,
                 unit: unit.clone(),
                 location,
+                families: Vec::new(),
                 ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
@@ -16748,23 +19866,13 @@ pub mod typ {
                 hash_cache: Cache::default(),
             }));
 
-            let tw_pre = Arc::downgrade(&t);
-            let port_refs: Vec<PortStoreRef> = ports
-                .into_iter()
-                .map(|p| {
-                    let mut port = PortStore::from_full_dto(p);
-                    port.parent_type = tw_pre.clone();
-                    Arc::new(RwLock::new(port))
-                })
-                .collect();
-
             let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
             for cdto in connectors {
                 let port_id = cdto.port.as_ref().map(|p| p.id.clone());
                 let mut c = ConnectorStore::from_full_dto(cdto);
                 c.parent_type = Arc::downgrade(&t);
                 if let Some(pg) = port_id {
-                    if let Some(pref) = port_refs.iter().find(|p| p.read().map(|p| p.id == pg).unwrap_or(false)) {
+                    if let Some(pref) = port_by_id.get(&pg) {
                         c.port = Some(Arc::downgrade(pref));
                     }
                 }
@@ -16816,7 +19924,7 @@ pub mod typ {
                         aw.parent_type = Some(tw.clone());
                     }
                 }
-                t_mut.ports = port_refs;
+                t_mut.families = family_weaks;
                 t_mut.connectors = connector_refs;
                 t_mut.representations = rep_refs;
             }
@@ -16859,7 +19967,7 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow_dto())).collect(),
                 authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
@@ -16886,7 +19994,7 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full_dto())).collect(),
                 authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
@@ -17123,11 +20231,11 @@ pub mod io {
         use crate::file::{FileFullDto, FileIdDto};
         use crate::folder::FolderFullDto;
         use crate::geom::{Coordinate, Plane, Point, Vector};
-        use crate::location::LocationIdDto;
         use crate::group::GroupFullDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
         use crate::layer::LayerFullDto;
+        use crate::location::LocationIdDto;
         use crate::piece::PieceFullDto;
         use crate::port::{PortFullDto, PortIdDto};
         use crate::prop::PropFullDto;
@@ -17183,17 +20291,7 @@ pub mod io {
 
         fn plane_parts(value: Option<&Plane>) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
             match value {
-                Some(p) => (
-                    Some(p.origin.x),
-                    Some(p.origin.y),
-                    Some(p.origin.z),
-                    Some(p.x_axis.x),
-                    Some(p.x_axis.y),
-                    Some(p.x_axis.z),
-                    Some(p.y_axis.x),
-                    Some(p.y_axis.y),
-                    Some(p.y_axis.z),
-                ),
+                Some(p) => (Some(p.origin.x), Some(p.origin.y), Some(p.origin.z), Some(p.x_axis.x), Some(p.x_axis.y), Some(p.x_axis.z), Some(p.y_axis.x), Some(p.y_axis.y), Some(p.y_axis.z)),
                 None => (None, None, None, None, None, None, None, None, None),
             }
         }
@@ -17375,28 +20473,6 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(tx: &Transaction<'_>, type_id: &Id, port: &PortFullDto, ordinal: usize) -> Result<()> {
-            let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
-            let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
-            tx.execute(
-                "INSERT INTO port (
-                    id, ordinal, family, mandatory, t, description,
-                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                params![port.id.as_str(), ordinal as i64, port.family, opt_bool_to_int(port.mandatory), port.t, port.description, point_x, point_y, point_z, dir_x, dir_y, dir_z, type_id.as_str(),],
-            )?;
-            for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
-                tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family])?;
-            }
-            for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
-            }
-            for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
-            }
-            Ok(())
-        }
-
         fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO connector (id, ordinal, code, description, port_id, type_id)
@@ -17439,9 +20515,6 @@ pub mod io {
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                 params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.variant, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_id, typ.created, typ.updated, kit_id.as_str(),],
             )?;
-            for (port_ordinal, port) in typ.ports.iter().enumerate() {
-                insert_port(tx, &typ.id, port, port_ordinal)?;
-            }
             for (connector_ordinal, connector) in typ.connectors.iter().enumerate() {
                 insert_connector(tx, &typ.id, connector, connector_ordinal)?;
             }
@@ -17614,21 +20687,7 @@ pub mod io {
                     ?9,
                     ?10, ?11, ?12, ?13
                  )",
-                params![
-                    design.id.as_str(),
-                    ordinal as i64,
-                    design.name,
-                    design.description,
-                    design.icon,
-                    design.image,
-                    design.variant,
-                    design.view,
-                    location_id,
-                    design.unit,
-                    design.created,
-                    design.updated,
-                    kit_id.as_str(),
-                ],
+                params![design.id.as_str(), ordinal as i64, design.name, design.description, design.icon, design.image, design.variant, design.view, location_id, design.unit, design.created, design.updated, kit_id.as_str(),],
             )?;
             for (layer_ordinal, layer) in design.layers.iter().enumerate() {
                 insert_layer(tx, &design.id, layer, layer_ordinal)?;
@@ -17750,38 +20809,6 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_ports(conn: &SqlConnection, type_id: &Id) -> Result<Vec<PortFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, family, mandatory, t, description,
-                        point_x, point_y, point_z, direction_x, direction_y, direction_z
-                 FROM port WHERE type_id = ?1 ORDER BY ordinal",
-            )?;
-            let mut rows = stmt.query([type_id.as_str()])?;
-            let mut values = Vec::new();
-            while let Some(row) = rows.next()? {
-                let id = Id::from(row.get::<_, String>(0)?);
-                let mut compatibility_stmt = conn.prepare("SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
-                let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
-                let mut compatible_families = Vec::new();
-                while let Some(compatibility_row) = compatibility_rows.next()? {
-                    compatible_families.push(compatibility_row.get(0)?);
-                }
-                values.push(PortFullDto {
-                    id: id.clone(),
-                    family: row.get(1)?,
-                    compatible_families,
-                    mandatory: opt_int_to_bool(row.get(2)?),
-                    t: row.get(3)?,
-                    description: row.get(4)?,
-                    point: point_from_parts3(row.get(5)?, row.get(6)?, row.get(7)?),
-                    direction: vector_from_parts3(row.get(8)?, row.get(9)?, row.get(10)?),
-                    qualities: load_qualities_for_scope(conn, "port_id", &id)?,
-                    attributes: load_attributes_for_scope(conn, "port_id", &id)?,
-                });
-            }
-            Ok(values)
-        }
-
         fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
             let mut stmt = conn.prepare("SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
@@ -17843,7 +20870,7 @@ pub mod io {
                     location: location_dto_from_id_cell(row.get(9)?),
                     created: row.get(10)?,
                     updated: row.get(11)?,
-                    ports: load_ports(conn, &id)?,
+                    families: Vec::new(),
                     connectors: load_connectors(conn, &id)?,
                     representations: load_representations(conn, &id)?,
                     authors: load_authors_for_scope(conn, "type_id", &id)?,
@@ -18078,6 +21105,9 @@ pub mod io {
                 qualities: load_qualities_for_scope(conn, "kit_id", &id)?,
                 props: load_props_for_scope(conn, "kit_id", &id)?,
                 attributes: load_attributes_for_scope(conn, "kit_id", &id)?,
+                ports: Vec::new(),
+                families: Vec::new(),
+                locations: Vec::new(),
             })
         }
 
@@ -18730,16 +21760,8 @@ pub mod wasm {
                 })
                 .collect();
             checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut alternatives: Vec<VcsAlternative> = g
-                .alternatives
-                .values()
-                .map(|a| VcsAlternative {
-                    id: a.id.to_string(),
-                    name: a.name.clone(),
-                    root: a.root.to_string(),
-                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
-                })
-                .collect();
+            let mut alternatives: Vec<VcsAlternative> =
+                g.alternatives.values().map(|a| VcsAlternative { id: a.id.to_string(), name: a.name.clone(), root: a.root.to_string(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() }).collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
             let mut sessions: Vec<VcsSession> = g
                 .sessions
@@ -18764,19 +21786,8 @@ pub mod wasm {
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
-            let the_kit_line: Vec<String> = g
-                .the_kit_head
-                .as_ref()
-                .map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect())
-                .unwrap_or_default();
-            let out = VcsState {
-                the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
-                root: VcsRoot { id: g.initial.id.to_string(), name: g.initial.name.clone() },
-                checkpoints,
-                alternatives,
-                sessions,
-                the_kit_line,
-            };
+            let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
+            let out = VcsState { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRoot { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line };
             serde_wasm_bindgen::to_value(&out).map_err(|e| JsValue::from_str(&e.to_string()))
         }
         // #endregion 🌳VcsState
@@ -19227,12 +22238,7 @@ mod tests {
 
         #[test]
         fn compact_preserves_final_kit_dto() {
-            let cmds = vec![
-                ChangeKitCommand::Name { name: "n1".into() },
-                ChangeKitCommand::Name { name: "n2".into() },
-                ChangeKitCommand::Description { description: Some("d".into()) },
-                ChangeKitCommand::Description { description: None },
-            ];
+            let cmds = vec![ChangeKitCommand::Name { name: "n1".into() }, ChangeKitCommand::Name { name: "n2".into() }, ChangeKitCommand::Description { description: Some("d".into()) }, ChangeKitCommand::Description { description: None }];
             let seed = KitStore::new("k0").to_full_dto();
             let a = KitStore::from_full_dto(seed.clone());
             let b = KitStore::from_full_dto(seed);
@@ -19728,8 +22734,20 @@ mod tests {
                         ],
                         connections: vec![ConnectionFullDto {
                             id: Id::from("candidate-consumed-lg-left"),
-                            connected: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-primary"), piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() }, port: Some(PortIdDto { id: port_l_compatible.clone() }), design_piece: None, connector: None },
-                            connecting: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-neighbor"), piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                            connected: SideMetadataDto {
+                                id: Id::from("candidate-consumed-lg-left-primary"),
+                                piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() },
+                                port: Some(PortIdDto { id: port_l_compatible.clone() }),
+                                design_piece: None,
+                                connector: None,
+                            },
+                            connecting: SideMetadataDto {
+                                id: Id::from("candidate-consumed-lg-left-neighbor"),
+                                piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() },
+                                port: Some(PortIdDto { id: port_l.clone() }),
+                                design_piece: None,
+                                connector: None,
+                            },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -20633,13 +23651,7 @@ mod tests {
             fn apply_design_diff_add_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
-                let diff = DesignDiff {
-                    pieces: Some(crate::diff::PiecesDiff {
-                        added: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }],
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                };
+                let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }], ..Default::default() }), ..Default::default() };
                 let mut rx = kit.read().unwrap().subscribe();
                 kit.write().unwrap().apply_design_diff(dg.as_str(), &diff).unwrap();
                 let evs = super::common::drain(&mut rx);
@@ -21999,7 +25011,6 @@ pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
 pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
 pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
@@ -22013,6 +25024,7 @@ pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
 pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};
+pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
 pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak};
 pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak};
 pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
