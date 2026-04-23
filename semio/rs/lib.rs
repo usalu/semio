@@ -5687,7 +5687,7 @@ pub mod connection {
     use crate::connector::ConnectorStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
-    use crate::geom::{Coordinate, Plane};
+    use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
@@ -5802,19 +5802,19 @@ pub mod connection {
     }
 
     /// Port-local anchor for a connector (type space).
-    pub fn connector_anchor_ports(c: &ConnectorStore) -> (Coordinate, Coordinate) {
+    pub fn connector_anchor_ports(c: &ConnectorStore) -> (Point, Vector) {
         if let Some(w) = &c.port {
             if let Some(p) = w.upgrade() {
                 if let Ok(p) = p.read() {
-                    let pt = p.point.unwrap_or(Coordinate::ZERO);
-                    let dir = p.direction.unwrap_or(Coordinate::new(0.0, 0.0, 1.0));
+                    let pt = p.point.unwrap_or(Point::ZERO);
+                    let dir = p.direction.unwrap_or(Vector::Z);
                     let n = dir.length();
-                    let d = if n > 1e-10 { Coordinate::new(dir.x / n, dir.y / n, dir.z / n) } else { Coordinate::new(0.0, 0.0, 1.0) };
+                    let d = if n > 1e-10 { dir.scale(1.0 / n) } else { Vector::Z };
                     return (pt, d);
                 }
             }
         }
-        (Coordinate::ZERO, Coordinate::new(0.0, 0.0, 1.0))
+        (Point::ZERO, Vector::Z)
     }
 
     impl ConnectionStore {
@@ -6329,7 +6329,8 @@ pub mod design {
     use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Camera, Coordinate, Location, Plane};
+    use crate::geom::{Coordinate, Plane};
+    use crate::location::LocationIdDto;
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -8754,6 +8755,8 @@ pub mod events {
         Quality,
         Stat,
         Benchmark,
+        Family,
+        Location,
     }
 
     /// 🪪Stable identity for event payloads.
@@ -9332,17 +9335,24 @@ pub(crate) mod flatten_math {
 
     use nalgebra::{Matrix4, Vector3};
 
-    use crate::geom::{Coordinate, Plane};
+    use crate::geom::{Coordinate, Plane, Point, Vector};
 
     pub(crate) const FLATTEN_TOLERANCE: f64 = 1e-5;
 
-    fn v3(c: Coordinate) -> Vector3<f64> {
+    fn v3p(c: Point) -> Vector3<f64> {
         Vector3::new(c.x, c.y, c.z)
     }
 
-    #[allow(dead_code)]
-    fn coordinate(v: Vector3<f64>) -> Coordinate {
-        Coordinate::new(v.x, v.y, v.z)
+    fn v3v(c: Vector) -> Vector3<f64> {
+        Vector3::new(c.x, c.y, c.z)
+    }
+
+    fn point(v: Vector3<f64>) -> Point {
+        Point::new(v.x, v.y, v.z)
+    }
+
+    fn gvec(v: Vector3<f64>) -> Vector {
+        Vector::new(v.x, v.y, v.z)
     }
 
     fn normalize(v: Vector3<f64>) -> Vector3<f64> {
@@ -9355,9 +9365,9 @@ pub(crate) mod flatten_math {
     }
 
     pub(crate) fn plane_to_matrix(p: &Plane) -> Matrix4<f64> {
-        let o = v3(p.origin);
-        let x = normalize(v3(p.x_axis));
-        let y = normalize(v3(p.y_axis));
+        let o = v3p(p.origin);
+        let x = normalize(v3v(p.x_axis));
+        let y = normalize(v3v(p.y_axis));
         let z = normalize(x.cross(&y));
         let mut m = Matrix4::identity();
         m[(0, 0)] = x.x;
@@ -9379,7 +9389,11 @@ pub(crate) mod flatten_math {
         let ox = m[(0, 3)];
         let oy = m[(1, 3)];
         let oz = m[(2, 3)];
-        Plane { origin: Coordinate::new(ox, oy, oz), x_axis: Coordinate::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]), y_axis: Coordinate::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]) }
+        Plane {
+            origin: Point::new(ox, oy, oz),
+            x_axis: Vector::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]),
+            y_axis: Vector::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]),
+        }
     }
 
     // Quaternion (qx,qy,qz,qw) from two unit vectors
@@ -9458,10 +9472,10 @@ pub(crate) mod flatten_math {
     /// `parent_connector` / `child_connector`: local anchor point + direction in type space.
     pub(crate) fn compute_child_plane(
         parent_plane: &Plane,
-        parent_point: Coordinate,
-        parent_direction: Coordinate,
-        child_point: Coordinate,
-        child_direction: Coordinate,
+        parent_point: Point,
+        parent_direction: Vector,
+        child_point: Point,
+        child_direction: Vector,
         gap: f64,
         shift: f64,
         rise: f64,
@@ -9470,10 +9484,10 @@ pub(crate) mod flatten_math {
         tilt_deg: f64,
     ) -> Plane {
         let parent_matrix = plane_to_matrix(parent_plane);
-        let parent_pt = v3(parent_point);
-        let parent_dir = normalize(v3(parent_direction));
-        let child_pt = v3(child_point);
-        let child_dir = normalize(v3(child_direction));
+        let parent_pt = v3p(parent_point);
+        let parent_dir = normalize(v3v(parent_direction));
+        let child_pt = v3p(child_point);
+        let child_dir = normalize(v3v(child_direction));
 
         let rotation_rad = rotation_deg.to_radians();
         let turn_rad = turn_deg.to_radians();
@@ -9527,15 +9541,9 @@ pub(crate) mod flatten_math {
 
         let final_matrix = parent_matrix * transform;
         let mut pl = matrix_to_plane(&final_matrix);
-        pl.origin.x = round_tol(pl.origin.x);
-        pl.origin.y = round_tol(pl.origin.y);
-        pl.origin.z = round_tol(pl.origin.z);
-        pl.x_axis.x = round_tol(pl.x_axis.x);
-        pl.x_axis.y = round_tol(pl.x_axis.y);
-        pl.x_axis.z = round_tol(pl.x_axis.z);
-        pl.y_axis.x = round_tol(pl.y_axis.x);
-        pl.y_axis.y = round_tol(pl.y_axis.y);
-        pl.y_axis.z = round_tol(pl.y_axis.z);
+        pl.origin = Point::new(round_tol(pl.origin.x), round_tol(pl.origin.y), round_tol(pl.origin.z));
+        pl.x_axis = Vector::new(round_tol(pl.x_axis.x), round_tol(pl.x_axis.y), round_tol(pl.x_axis.z));
+        pl.y_axis = Vector::new(round_tol(pl.y_axis.x), round_tol(pl.y_axis.y), round_tol(pl.y_axis.z));
         pl
     }
 
@@ -9545,15 +9553,15 @@ pub(crate) mod flatten_math {
 
     /// UV center for child from parent center and connection u/v (matches Python BFS).
     pub(crate) fn compute_child_center_uv(parent_center: Coordinate, connection_u: f64, connection_v: f64, parent_connector_dir_z: f64, parent_t: f64) -> Coordinate {
-        let pu = parent_center.x;
-        let pv = parent_center.y;
+        let pu = parent_center.u;
+        let pv = parent_center.v;
         if pu.abs() < FLATTEN_TOLERANCE && pv.abs() < FLATTEN_TOLERANCE {
             let angle = 2.0 * std::f64::consts::PI * parent_t;
-            Coordinate::new(round_tol(FLATTEN_RADIUS * angle.sin()), round_tol(FLATTEN_RADIUS * angle.cos()), 0.0)
+            Coordinate::new(round_tol(FLATTEN_RADIUS * angle.sin()), round_tol(FLATTEN_RADIUS * angle.cos()))
         } else {
             let is_vertical = parent_connector_dir_z.abs() > 0.5;
             let (cu, cv) = if is_vertical { (pu + connection_u, pv + connection_v + FLATTEN_VERTICAL_V_EXTRA) } else { (pu + connection_u * FLATTEN_HORIZONTAL_SCALE, pv + connection_v * FLATTEN_HORIZONTAL_SCALE) };
-            Coordinate::new(round_tol(cu), round_tol(cv), 0.0)
+            Coordinate::new(round_tol(cu), round_tol(cv))
         }
     }
 }
@@ -10033,135 +10041,294 @@ pub mod geom {
     use serde::{Deserialize, Serialize};
 
     use crate::hash::HashWriter;
+    use crate::merkle::Writer as MerkleWriter;
 
-    /// 3D coordinate (right-handed).
+    /// 2D diagram coordinate (`hash_coordinate` in `semio/py/main.py` — "Coordinate" + u + v).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Coordinate {
-        pub x: f64,
-        pub y: f64,
-        pub z: f64,
+        pub u: f64,
+        pub v: f64,
     }
 
-    /// Metabolism (and other exporters) use `{ u, v }` for 2D placement; map to 3D `x`, `y`, `0`.
     #[derive(Deserialize)]
     #[serde(untagged)]
     enum PieceCenterWire {
-        Xyz { x: f64, y: f64, z: f64 },
         Uv { u: f64, v: f64 },
+        /// Legacy: three floats saved as `x`/`y` — treated as (u, v) with z dropped.
+        Xy { x: f64, y: f64 },
     }
 
     impl From<PieceCenterWire> for Coordinate {
         fn from(w: PieceCenterWire) -> Self {
             match w {
-                PieceCenterWire::Xyz { x, y, z } => Coordinate { x, y, z },
-                PieceCenterWire::Uv { u, v } => Coordinate { x: u, y: v, z: 0.0 },
+                PieceCenterWire::Uv { u, v } => Coordinate { u, v },
+                PieceCenterWire::Xy { x, y } => Coordinate { u: x, v: y },
             }
         }
     }
 
-    /// [`PieceFullDto`]/[`PieceMetadataDto`] `center` accepts xyz or uv wire shapes.
     pub fn deserialize_option_piece_center<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Coordinate>, D::Error> {
         let o: Option<PieceCenterWire> = Option::deserialize(d)?;
         Ok(o.map(Into::into))
     }
 
     impl Coordinate {
-        pub const ZERO: Coordinate = Coordinate { x: 0.0, y: 0.0, z: 0.0 };
+        pub const ZERO: Coordinate = Coordinate { u: 0.0, v: 0.0 };
+
+        pub fn new(u: f64, v: f64) -> Self {
+            Self { u, v }
+        }
+
+        /// Fast path for legacy in-memory / entity [`HashWriter`] (tag-based) — not the Python Merkle.
+        pub fn hash_into(&self, w: &mut HashWriter) {
+            w.f64(self.u).f64(self.v);
+        }
+
+        /// Python `hash_coordinate` (prefix "Coordinate" + u + v)
+        pub fn merkle_hash(&self) -> String {
+            let mut w = MerkleWriter::new();
+            w.string("Coordinate");
+            w.string("u");
+            w.number(self.u);
+            w.string("v");
+            w.number(self.v);
+            w.digest()
+        }
+    }
+
+    /// 2D screen offset (Python `hash_vec` "Vec" + u + v). Same field layout as [`Coordinate`].
+    pub type Uv = Coordinate;
+
+    /// 3D point (`hash_point` in `semio/py/main.py`).
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct Point {
+        pub x: f64,
+        pub y: f64,
+        pub z: f64,
+    }
+
+    impl Point {
+        pub const ZERO: Point = Point { x: 0.0, y: 0.0, z: 0.0 };
+        pub fn new(x: f64, y: f64, z: f64) -> Self {
+            Self { x, y, z }
+        }
+        pub fn hash_into(&self, w: &mut HashWriter) {
+            w.f64(self.x).f64(self.y).f64(self.z);
+        }
+        pub fn merkle_hash(&self) -> String {
+            let mut w = MerkleWriter::new();
+            w.string("Point");
+            w.string("x");
+            w.number(self.x);
+            w.string("y");
+            w.number(self.y);
+            w.string("z");
+            w.number(self.z);
+            w.digest()
+        }
+    }
+
+    /// 3D direction (`hash_vector` in `semio/py/main.py`). Not necessarily unit length.
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct Vector {
+        pub x: f64,
+        pub y: f64,
+        pub z: f64,
+    }
+
+    impl Vector {
+        pub const X: Vector = Vector { x: 1.0, y: 0.0, z: 0.0 };
+        pub const Y: Vector = Vector { x: 0.0, y: 1.0, z: 0.0 };
+        pub const Z: Vector = Vector { x: 0.0, y: 0.0, z: 1.0 };
 
         pub fn new(x: f64, y: f64, z: f64) -> Self {
             Self { x, y, z }
         }
-
-        pub fn hash_into(&self, w: &mut HashWriter) {
-            w.f64(self.x).f64(self.y).f64(self.z);
+        pub fn add(&self, o: &Vector) -> Vector {
+            Vector::new(self.x + o.x, self.y + o.y, self.z + o.z)
         }
-
-        pub fn add(&self, other: &Coordinate) -> Coordinate {
-            Coordinate::new(self.x + other.x, self.y + other.y, self.z + other.z)
+        pub fn sub(&self, o: &Vector) -> Vector {
+            Vector::new(self.x - o.x, self.y - o.y, self.z - o.z)
         }
-
-        pub fn sub(&self, other: &Coordinate) -> Coordinate {
-            Coordinate::new(self.x - other.x, self.y - other.y, self.z - other.z)
+        pub fn scale(&self, s: f64) -> Vector {
+            Vector::new(self.x * s, self.y * s, self.z * s)
         }
-
-        pub fn scale(&self, s: f64) -> Coordinate {
-            Coordinate::new(self.x * s, self.y * s, self.z * s)
-        }
-
         pub fn length(&self) -> f64 {
             (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
         }
+        pub fn cross(&self, o: &Vector) -> Vector {
+            Vector::new(
+                self.y * o.z - self.z * o.y,
+                self.z * o.x - self.x * o.z,
+                self.x * o.y - self.y * o.x,
+            )
+        }
+        pub fn hash_into(&self, w: &mut HashWriter) {
+            w.f64(self.x).f64(self.y).f64(self.z);
+        }
+        pub fn merkle_hash(&self) -> String {
+            let mut w = MerkleWriter::new();
+            w.string("Vector");
+            w.string("x");
+            w.number(self.x);
+            w.string("y");
+            w.number(self.y);
+            w.string("z");
+            w.number(self.z);
+            w.digest()
+        }
     }
 
-    /// 3D unit vector (the type is not enforced at construction time).
-    pub type Vector = Coordinate;
-
-    /// Oriented plane: origin `p`, x-axis and y-axis directions.
+    /// Oriented plane: origin, x-axis, y-axis (Python `hash_plane`).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Plane {
         #[serde(default)]
-        pub origin: Coordinate,
-        #[serde(default = "Plane::default_x_axis", rename = "xAxis")]
+        pub origin: Point,
+        #[serde(default = "Plane::def_x", rename = "xAxis")]
         pub x_axis: Vector,
-        #[serde(default = "Plane::default_y_axis", rename = "yAxis")]
+        #[serde(default = "Plane::def_y", rename = "yAxis")]
         pub y_axis: Vector,
     }
 
     impl Plane {
-        fn default_x_axis() -> Vector {
-            Vector::new(1.0, 0.0, 0.0)
+        fn def_x() -> Vector {
+            Vector::X
         }
-        fn default_y_axis() -> Vector {
-            Vector::new(0.0, 1.0, 0.0)
+        fn def_y() -> Vector {
+            Vector::Y
         }
-
         pub fn world_xy() -> Self {
-            Self { origin: Coordinate::ZERO, x_axis: Self::default_x_axis(), y_axis: Self::default_y_axis() }
+            Self { origin: Point::ZERO, x_axis: Vector::X, y_axis: Vector::Y }
         }
-
         pub fn hash_into(&self, w: &mut HashWriter) {
             self.origin.hash_into(w);
             self.x_axis.hash_into(w);
             self.y_axis.hash_into(w);
         }
+        pub fn merkle_hash(&self) -> String {
+            let mut w = MerkleWriter::new();
+            w.string("Plane");
+            w.string("origin");
+            w.sub_hash(&self.origin.merkle_hash());
+            w.string("xAxis");
+            w.sub_hash(&self.x_axis.merkle_hash());
+            w.string("yAxis");
+            w.sub_hash(&self.y_axis.merkle_hash());
+            w.digest()
+        }
     }
 
-    /// Simple orbital camera descriptor.
+    /// View camera (`hash_camera` in `semio/py/main.py` — position, forward, up).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Camera {
         #[serde(default)]
-        pub position: Coordinate,
+        pub position: Point,
         #[serde(default)]
-        pub target: Coordinate,
-        #[serde(default = "Camera::default_up")]
+        pub forward: Vector,
+        #[serde(default = "Camera::def_up")]
         pub up: Vector,
-        #[serde(default = "Camera::default_fov")]
-        pub fov: f64,
     }
 
     impl Camera {
-        fn default_up() -> Vector {
-            Vector::new(0.0, 0.0, 1.0)
+        fn def_up() -> Vector {
+            Vector::Z
         }
-        fn default_fov() -> f64 {
-            45.0
+        pub fn merkle_hash(&self) -> String {
+            let mut w = MerkleWriter::new();
+            w.string("Camera");
+            w.string("forward");
+            w.sub_hash(&self.forward.merkle_hash());
+            w.string("position");
+            w.sub_hash(&self.position.merkle_hash());
+            w.string("up");
+            w.sub_hash(&self.up.merkle_hash());
+            w.digest()
         }
     }
+}
 
-    /// 2D location on the diagram canvas.
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
-    pub struct Location {
-        pub x: f64,
-        pub y: f64,
+/// 🌍Geographic or named `Location` entity (kit-level table). Wire shape uses `{ id, longitude, latitude, … }`.
+/// See `hash_location` in `semio/py/main.py`.
+pub mod location {
+    use serde::{Deserialize, Serialize};
+
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
+    use crate::kit::KitStoreWeak;
+
+    pub type LocationStoreRef = std::sync::Arc<std::sync::RwLock<LocationStore>>;
+    pub type LocationStoreWeak = std::sync::Weak<std::sync::RwLock<LocationStore>>;
+
+    #[derive(Debug)]
+    pub struct LocationStore {
+        pub id: Id,
+        pub longitude: f64,
+        pub latitude: f64,
+        pub altitude: Option<f64>,
+        pub attributes: Vec<AttributeStoreRef>,
+        pub parent_kit: Option<KitStoreWeak>,
+        pub(crate) event_bus: std::sync::Weak<EventBus>,
+        hash_cache: crate::hash::Cache<String>,
     }
 
-    impl Location {
-        pub fn new(x: f64, y: f64) -> Self {
-            Self { x, y }
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+    pub struct LocationIdDto {
+        pub id: Id,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct LocationMetadataDto {
+        pub id: Id,
+        pub longitude: f64,
+        pub latitude: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub altitude: Option<f64>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct LocationShallowDto {
+        pub id: Id,
+        pub longitude: f64,
+        pub latitude: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub altitude: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeShallowDto>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct LocationFullDto {
+        pub id: Id,
+        pub longitude: f64,
+        pub latitude: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub altitude: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeFullDto>,
+    }
+
+    impl LocationStore {
+        pub fn new(lon: f64, lat: f64) -> Self {
+            Self {
+                id: Id::new_v7(),
+                longitude: lon,
+                latitude: lat,
+                altitude: None,
+                attributes: Vec::new(),
+                parent_kit: None,
+                event_bus: std::sync::Weak::new(),
+                hash_cache: Cache::default(),
+            }
         }
 
-        pub fn hash_into(&self, w: &mut HashWriter) {
-            w.f64(self.x).f64(self.y);
+        fn entity_ref(&self) -> EntityRef {
+            EntityRef::new(EntityKind::Location, self.id.clone())
+        }
+
+        pub fn to_id_dto(&self) -> LocationIdDto {
+            LocationIdDto { id: self.id.clone() }
         }
     }
 }
@@ -10580,6 +10747,85 @@ pub mod hash {
     }
 }
 
+/// 🧾Merkle writer matching `semio/py/main.py` `HashWriter` (SHA-256 over structured bytestream).
+/// Used to produce the same `digest()` values as `hash_coordinate` / `hash_kit` / … in Python.
+pub mod merkle {
+    use sha2::{Digest, Sha256};
+
+    /// Same rules as `main.py` `\_format_number_for_hash`.
+    pub fn format_number(n: f64) -> String {
+        if n.is_finite() && n.fract() == 0.0 {
+            format!("{}", n as i64)
+        } else {
+            n.to_string()
+        }
+    }
+
+    /// Structured writer — byte layout matches `HashWriter` in `semio/py/main.py`.
+    pub struct Writer {
+        parts: Vec<u8>,
+    }
+
+    impl Writer {
+        pub fn new() -> Self {
+            Self { parts: Vec::new() }
+        }
+
+        fn write_string_bytes(&mut self, s: &str) {
+            let b = s.as_bytes();
+            self.parts.extend((b.len() as u32).to_be_bytes());
+            self.parts.extend(b);
+        }
+
+        /// Python `writeString(s)` — `>I` length big-endian + utf-8
+        pub fn string(&mut self, s: &str) {
+            self.write_string_bytes(s);
+        }
+
+        /// Python `writeNumber(n)` — as decimal string, formatted like JS Number.toString
+        pub fn number(&mut self, n: f64) {
+            self.write_string_bytes(&format_number(n));
+        }
+
+        pub fn bool(&mut self, b: bool) {
+            self.parts.push(u8::from(b));
+        }
+
+        /// Python `writeHash` — 64-char hex digest written as a string
+        pub fn sub_hash(&mut self, h: &str) {
+            self.write_string_bytes(h);
+        }
+
+        /// Sorted hex hashes, count big-endian, then each string
+        pub fn hash_list_sorted(&mut self, mut hashes: Vec<String>) {
+            hashes.sort();
+            self.parts.extend((hashes.len() as u32).to_be_bytes());
+            for h in hashes {
+                self.write_string_bytes(&h);
+            }
+        }
+
+        /// Sorted id strings, count big-endian, then each string
+        pub fn id_list_sorted(&mut self, mut ids: Vec<String>) {
+            ids.sort();
+            self.parts.extend((ids.len() as u32).to_be_bytes());
+            for g in ids {
+                self.write_string_bytes(&g);
+            }
+        }
+
+        pub fn digest(self) -> String {
+            hex::encode(Sha256::digest(&self.parts))
+        }
+    }
+
+    impl Default for Writer {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+}
+
 pub mod kit {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet, VecDeque};
@@ -10598,7 +10844,7 @@ pub mod kit {
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
-    use crate::geom::{Coordinate, Plane};
+    use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
@@ -13266,7 +13512,7 @@ pub mod piece {
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Coordinate, Plane};
+    use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
@@ -14209,7 +14455,7 @@ pub mod port {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Coordinate, Vector};
+    use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -14227,7 +14473,7 @@ pub mod port {
         pub mandatory: Option<bool>,
         pub t: Option<f64>,
         pub description: Option<String>,
-        pub point: Option<Coordinate>,
+        pub point: Option<Point>,
         pub direction: Option<Vector>,
         pub qualities: Vec<QualityStoreRef>,
         pub attributes: Vec<AttributeStore>,
@@ -14255,7 +14501,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coordinate>,
+        pub point: Option<Point>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
     }
@@ -14274,7 +14520,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coordinate>,
+        pub point: Option<Point>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -14297,7 +14543,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coordinate>,
+        pub point: Option<Point>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -16847,7 +17093,8 @@ pub mod io {
         use crate::error::Result;
         use crate::file::{FileFullDto, FileIdDto};
         use crate::folder::FolderFullDto;
-        use crate::geom::{Camera, Coordinate, Location, Plane};
+        use crate::geom::{Coordinate, Plane};
+    use crate::location::LocationIdDto;
         use crate::group::GroupFullDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
@@ -18907,7 +19154,7 @@ mod tests {
         use crate::connection::ConnectionFullDto;
         use crate::connector::ConnectorFullDto;
         use crate::design::{DesignFullDto, DesignStore};
-        use crate::geom::{Coordinate, Plane};
+        use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore};
         use crate::piece::{PieceFullDto, PieceIdDto};
@@ -20466,7 +20713,7 @@ mod tests {
 
         mod piece {
             use crate::events::{EntityKind, EntityRef};
-            use crate::geom::{Coordinate, Plane};
+            use crate::geom::{Coordinate, Plane, Point, Vector};
 
             macro_rules! piece_pose_test {
                 ($fn:ident, $field:expr, $op:expr) => {

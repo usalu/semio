@@ -1,0 +1,99 @@
+{
+  "id": "40a1879a-931f-475d-8ea1-c42a058400d1",
+  "uri": "repo://session/40a1879a-931f-475d-8ea1-c42a058400d1",
+  "client": "copilot-chat",
+  "second": "2026-04-23T00:41:46Z",
+  "checkpoint": "31836965c3e053ed9c12a888198bbaef9d07ae80",
+  "contributor": "unknown",
+  "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "31836965c3e053ed9c12a888198bbaef9d07ae80",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-23T00:41:46Z",
+        "session": "40a1879a-931f-475d-8ea1-c42a058400d1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T00:41:44.780Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "40a1879a-931f-475d-8ea1-c42a058400d1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
+          "source": "new",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "31836965c3e053ed9c12a888198bbaef9d07ae80",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-23T00:41:52Z",
+        "session": "40a1879a-931f-475d-8ea1-c42a058400d1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T00:41:44.780Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "40a1879a-931f-475d-8ea1-c42a058400d1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
+          "source": "new",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "31836965c3e053ed9c12a888198bbaef9d07ae80",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-23T00:41:55Z",
+        "session": "40a1879a-931f-475d-8ea1-c42a058400d1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T00:41:53.605Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "40a1879a-931f-475d-8ea1-c42a058400d1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
+          "prompt": "semio/postgres:\r\nExtend the sql schema to match the new version-control-features (parts are already implemeted in semio/rs)\r\nhere some specs:\r\n- `kit store` is a complete in-memory graph and offers the api to do everything.\r\n- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.\r\n- `kit tree` is the tree of all checkpoints.\r\n- `initial kit` is a kit snapshot.\r\n- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.\r\n- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).\r\n- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.\r\n- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.\r\n- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.\r\n- `kit diff` is a diff to a kit snapshot.\r\n- `kit command` is a command to a `kit store`\r\n- `kit read command` is a read-only command to a `kit store`\r\n- `kit change command` is a command that changes part of the kit within a `kit transaction`\r\n- `kit snapshot` is a point-in-time representation of a kit.\r\n- `materialized kit` is a computed kit snapshot that is computed from an initial kit\r\n- `the kit` means the the last materlialized from non-alternative\r\n- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.\r\n---\r\nUpdate the rest to match metabolism json",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "31836965c3e053ed9c12a888198bbaef9d07ae80",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-23T00:42:00Z",
+        "session": "40a1879a-931f-475d-8ea1-c42a058400d1",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T00:41:53.605Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "40a1879a-931f-475d-8ea1-c42a058400d1",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\40a1879a-931f-475d-8ea1-c42a058400d1.jsonl",
+          "prompt": "semio/postgres:\r\nExtend the sql schema to match the new version-control-features (parts are already implemeted in semio/rs)\r\nhere some specs:\r\n- `kit store` is a complete in-memory graph and offers the api to do everything.\r\n- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.\r\n- `kit tree` is the tree of all checkpoints.\r\n- `initial kit` is a kit snapshot.\r\n- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.\r\n- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).\r\n- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.\r\n- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.\r\n- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.\r\n- `kit diff` is a diff to a kit snapshot.\r\n- `kit command` is a command to a `kit store`\r\n- `kit read command` is a read-only command to a `kit store`\r\n- `kit change command` is a command that changes part of the kit within a `kit transaction`\r\n- `kit snapshot` is a point-in-time representation of a kit.\r\n- `materialized kit` is a computed kit snapshot that is computed from an initial kit\r\n- `the kit` means the the last materlialized from non-alternative\r\n- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.\r\n---\r\nUpdate the rest to match metabolism json",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

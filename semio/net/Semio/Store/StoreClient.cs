@@ -151,6 +151,10 @@ public static class StorePaths
     {
         var env = Environment.GetEnvironmentVariable("SEMIO_STORE_BIN");
         if (!string.IsNullOrWhiteSpace(env) && System.IO.File.Exists(env)) return env!.Trim();
+        var nextTo = Path.Combine(AppContext.BaseDirectory, "semio-store.exe");
+        if (System.IO.File.Exists(nextTo)) return nextTo;
+        var nextToNix = Path.Combine(AppContext.BaseDirectory, "semio-store");
+        if (System.IO.File.Exists(nextToNix)) return nextToNix;
         for (var here = new DirectoryInfo(AppContext.BaseDirectory); here != null; here = here.Parent)
         {
             var win = Path.Combine(here.FullName, "target", "release", "semio-store.exe");
