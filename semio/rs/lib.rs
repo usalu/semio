@@ -6881,6 +6881,24 @@ pub mod connection {
             }
         }
 
+        /// Optional parent/child [`SideFullDto`] pair for flattening when `child_id` is on this connection.
+        pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side::SideFullDto, crate::side::SideFullDto)> {
+            let (a, b) = self.flatten_parent_and_child_sides(child_id)?;
+            Some((a.read().ok()?.to_full_dto(), b.read().ok()?.to_full_dto()))
+        }
+
+        /// 4×4 transform cache for child plane (column-major rows for JSON stability). Defaults to identity when unset.
+        pub fn child_plane_matrix_rows(&self) -> [[f64; 4]; 4] {
+            let m = self.child_plane_matrix.get_or_init(|| nalgebra::Matrix4::identity());
+            let mut out = [[0f64; 4]; 4];
+            for r in 0..4 {
+                for c in 0..4 {
+                    out[r][c] = m[(r, c)];
+                }
+            }
+            out
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.child_plane_matrix.invalidate();
@@ -14328,6 +14346,21 @@ pub mod location {
             }
         }
 
+        pub fn to_metadata_dto(&self) -> LocationMetadataDto {
+            LocationMetadataDto { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude }
+        }
+
+        pub fn to_shallow_dto(&self) -> LocationShallowDto {
+            let m = self.to_metadata_dto();
+            LocationShallowDto {
+                id: m.id,
+                longitude: m.longitude,
+                latitude: m.latitude,
+                altitude: m.altitude,
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+            }
+        }
+
         pub fn to_full_dto(&self) -> LocationFullDto {
             LocationFullDto { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() }
         }
@@ -18348,6 +18381,40 @@ pub mod piece {
         pub id: Id,
     }
 
+    /// Explicit plane + center placement (world or local), used by read commands and narrow piece views.
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PoseFullDto {
+        pub plane: Plane,
+        pub center: Coordinate,
+    }
+
+    /// Invariant: piece has a defined pose and is not attached via parent piece/connection.
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FixedPieceOutputDto {
+        pub piece: PieceIdDto,
+        pub pose: PoseFullDto,
+    }
+
+    /// Invariant: piece is attached under a parent piece and connection; includes derived world-space flat pose.
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ConnectedPieceOutputDto {
+        pub piece: PieceIdDto,
+        pub parent_piece: PieceIdDto,
+        pub parent_connection: crate::connection::ConnectionIdDto,
+        pub flat_pose: PoseFullDto,
+    }
+
+    /// Serializable replacement catalog for [`PieceAlternatives`] (ids only).
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PieceAlternativesDto {
+        pub types: Vec<crate::typ::TypeIdDto>,
+        pub designs: Vec<crate::design::DesignIdDto>,
+    }
+
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceMetadataDto {
         pub id: Id,
@@ -18783,6 +18850,19 @@ pub mod piece {
         /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coordinate {
             self.flat_center.get_or_init(|| self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default())
+        }
+
+        /// Pose from explicit [`PoseStore`] fields (local), for fixed / root pieces.
+        pub fn pose_full_dto(&self) -> PoseFullDto {
+            PoseFullDto {
+                plane: self.pose.plane.unwrap_or_else(Plane::world_xy),
+                center: self.pose.center.unwrap_or_default(),
+            }
+        }
+
+        /// World-space flat pose (uses [`Self::flat_plane`] / [`Self::flat_center`]).
+        pub fn flat_pose_full_dto(&self) -> PoseFullDto {
+            PoseFullDto { plane: self.flat_plane(), center: self.flat_center() }
         }
 
         /// 🧭Path from the fixed (root) piece down to and including this piece, computed by
