@@ -2,45 +2,45 @@
 name: kit vcs schema consolidation
 overview: "Align the entire monorepo (schemas, rust, store, persistence, client bundles, UI, assets, tests, docs) with the version-controlled kit model: Kit → Alternatives → Checkpoints → (Session → Draft → Transaction → ChangeCommands); Kit owns first-class Families (with Ports) that Types/Designs reference; Artifacts drop parent/variant/view; Kits drop version/release; KitChange becomes forward/inverse command lists; snapshots are parameterized by (alternativeId?, checkpointHash?, sessionId?, draftId?, transactionId?)."
 todos:
-  - id: canonical_spec
-    content: "Rewrite canonical spec: semio/AGENTS.md, semio/SPECS.md, semio/DOCS.md — new Kit/Family/Port/Connector/Type/Design shape + VCS entities"
-    status: pending
-  - id: canonical_schemas
-    content: Update semio/sqlite/schema.sql, semio/graphql/schema.graphql, semio/openapi, semio/jsonschema, semio/rdf, semio/owl to the new entity graph
-    status: pending
-  - id: rs_entities
-    content: "semio/rs/lib.rs: add FamilyStore; reshape PortStore to family-scoped with geometry; slim ConnectorStore to (id, name, port_id, desc, attrs); remove parent/variant/view/isAbstract from Type/Design; remove version/release from Kit"
-    status: pending
-  - id: rs_vcs
-    content: "semio/rs/lib.rs: add alternative/checkpoint/session/draft/transaction modules + stores + Dtos; checkpoint hash (blake3 of parent+changes); snapshot(ref) materialization; remove legacy wasm applyKitDiff/applyDesignDiff/setField etc."
-    status: pending
-  - id: rs_commands
-    content: "semio/rs/lib.rs: add Family/Port commands; remove Type/Design parent/variant/view/isAbstract commands and Connector geometry commands; add Type/Design AddFamilyRef/RemoveFamilyRef/SetFamilies; add Connector::Port"
-    status: pending
-  - id: rs_io
-    content: "semio/rs/lib.rs io::sqlite + io::json: rewrite readers/writers to the new schema including VCS tables and command blobs"
-    status: pending
-  - id: store_sidecar
-    content: "semio/store: update jsonrpc.rs method catalog, AGENTS.md, and tests/rpc.rs to new VCS/snapshot surface"
-    status: pending
-  - id: graphql_postgres_go
-    content: "semio/postgres + semio/graphql resolvers + semio/go: mirror sqlite schema; wire graphql queries/mutations/subscriptions to the sidecar"
-    status: pending
-  - id: clients_parallel
-    content: "Parallel subagents: semio/py, semio/net, semio/rb, semio/js, semio/react, semio/liveblocks — regen DTOs, update store clients, extend existing tests"
-    status: pending
-  - id: apps_parallel
-    content: "Parallel subagents: semio/sketchpad, semio/desktop, semio/vscode, semio/hub, semio/gh, semio/3dm — UI + integrations to the new snapshot-based API"
-    status: pending
-  - id: assets
-    content: Regenerate semio/assets/semio/metabolism/.semio/kit.db and metabolism.zip against the new schema; update semio/examples kits; fix semio/assets/index.ts
-    status: pending
-  - id: tests
-    content: Extend existing test files across every bundle to cover family ops, snapshot(ref), session/draft/transaction, release, alternatives, checkpoint hashing, round-trips
-    status: pending
-  - id: docs
-    content: Update every AGENTS.md listed in section 10 to match the new model
-    status: pending
+ - id: canonical_spec
+   content: "Rewrite canonical spec: semio/AGENTS.md, semio/SPECS.md, semio/DOCS.md — new Kit/Family/Port/Connector/Type/Design shape + VCS entities"
+   status: pending
+ - id: canonical_schemas
+   content: Update semio/sqlite/schema.sql, semio/graphql/schema.graphql, semio/openapi, semio/jsonschema, semio/rdf, semio/owl to the new entity graph
+   status: pending
+ - id: rs_entities
+   content: "semio/rs/lib.rs: add FamilyStore; reshape PortStore to family-scoped with geometry; slim ConnectorStore to (id, name, port_id, desc, attrs); remove parent/variant/view/isAbstract from Type/Design; remove version/release from Kit"
+   status: in_progress
+ - id: rs_vcs
+   content: "semio/rs/lib.rs: add alternative/checkpoint/session/draft/transaction modules + stores + Dtos; checkpoint hash (blake3 of parent+changes); snapshot(ref) materialization; remove legacy wasm applyKitDiff/applyDesignDiff/setField etc."
+   status: pending
+ - id: rs_commands
+   content: "semio/rs/lib.rs: add Family/Port commands; remove Type/Design parent/variant/view/isAbstract commands and Connector geometry commands; add Type/Design AddFamilyRef/RemoveFamilyRef/SetFamilies; add Connector::Port"
+   status: pending
+ - id: rs_io
+   content: "semio/rs/lib.rs io::sqlite + io::json: rewrite readers/writers to the new schema including VCS tables and command blobs"
+   status: pending
+ - id: store_sidecar
+   content: "semio/store: update jsonrpc.rs method catalog, AGENTS.md, and tests/rpc.rs to new VCS/snapshot surface"
+   status: pending
+ - id: graphql_postgres_go
+   content: "semio/postgres + semio/graphql resolvers + semio/go: mirror sqlite schema; wire graphql queries/mutations/subscriptions to the sidecar"
+   status: pending
+ - id: clients_parallel
+   content: "Parallel subagents: semio/py, semio/net, semio/rb, semio/js, semio/react, semio/liveblocks — regen DTOs, update store clients, extend existing tests"
+   status: pending
+ - id: apps_parallel
+   content: "Parallel subagents: semio/sketchpad, semio/desktop, semio/vscode, semio/hub, semio/gh, semio/3dm — UI + integrations to the new snapshot-based API"
+   status: pending
+ - id: assets
+   content: Regenerate semio/assets/semio/metabolism/.semio/kit.db and metabolism.zip against the new schema; update semio/examples kits; fix semio/assets/index.ts
+   status: pending
+ - id: tests
+   content: Extend existing test files across every bundle to cover family ops, snapshot(ref), session/draft/transaction, release, alternatives, checkpoint hashing, round-trips
+   status: pending
+ - id: docs
+   content: Update every AGENTS.md listed in section 10 to match the new model
+   status: pending
 isProject: false
 ---
 

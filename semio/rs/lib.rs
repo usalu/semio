@@ -378,6 +378,7 @@ pub mod change_command {
     use crate::event_wire;
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
+    use crate::family::FamilyIdDto;
     use crate::file::FileStoreRef;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
@@ -496,9 +497,6 @@ pub mod change_command {
         },
         Preview {
             preview: Option<String>,
-        },
-        Version {
-            version: Option<String>,
         },
         Remote {
             remote: Option<String>,
@@ -707,9 +705,6 @@ pub mod change_command {
         Image {
             image: Option<String>,
         },
-        Variant {
-            variant: Option<String>,
-        },
         Stock {
             stock: Option<i64>,
         },
@@ -728,6 +723,15 @@ pub mod change_command {
         },
         Updated {
             updated: Option<String>,
+        },
+        AddFamilyRef {
+            family_id: FamilyIdDto,
+        },
+        RemoveFamilyRef {
+            family_id: FamilyIdDto,
+        },
+        SetFamilies {
+            families: Vec<FamilyIdDto>,
         },
         ChangePortCommands {
             port_id: PortIdDto,
@@ -837,12 +841,19 @@ pub mod change_command {
         Description { description: Option<String> },
         Icon { icon: Option<String> },
         Image { image: Option<String> },
-        Variant { variant: Option<String> },
-        View { view: Option<String> },
         Location { location: Option<LocationIdDto> },
         Unit { unit: Option<String> },
         Created { created: Option<String> },
         Updated { updated: Option<String> },
+        AddFamilyRef {
+            family_id: FamilyIdDto,
+        },
+        RemoveFamilyRef {
+            family_id: FamilyIdDto,
+        },
+        SetFamilies {
+            families: Vec<FamilyIdDto>,
+        },
         AddPiece { piece: PieceFullDto },
         RemovePiece { piece_id: PieceIdDto },
         ChangePieceCommands { piece_id: PieceIdDto, commands: Vec<ChangePieceCommand> },
@@ -1315,7 +1326,6 @@ pub mod change_command {
                 | ChangeKitCommand::Icon { .. }
                 | ChangeKitCommand::Image { .. }
                 | ChangeKitCommand::Preview { .. }
-                | ChangeKitCommand::Version { .. }
                 | ChangeKitCommand::Remote { .. }
                 | ChangeKitCommand::Homepage { .. }
                 | ChangeKitCommand::License { .. }
@@ -1390,11 +1400,6 @@ pub mod change_command {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.preview.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_preview(preview.clone()).map_err(se)?;
                     Ok(if old == *preview { vec![] } else { vec![ChangeKitCommand::Preview { preview: old }] })
-                }
-                ChangeKitCommand::Version { version } => {
-                    let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.version.clone() };
-                    kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_version(version.clone()).map_err(se)?;
-                    Ok(if old == *version { vec![] } else { vec![ChangeKitCommand::Version { version: old }] })
                 }
                 ChangeKitCommand::Remote { remote } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.remote.clone() };
@@ -1729,7 +1734,6 @@ pub mod change_command {
                     | (ChangeKitCommand::Icon { .. }, Some(ChangeKitCommand::Icon { .. }))
                     | (ChangeKitCommand::Image { .. }, Some(ChangeKitCommand::Image { .. }))
                     | (ChangeKitCommand::Preview { .. }, Some(ChangeKitCommand::Preview { .. }))
-                    | (ChangeKitCommand::Version { .. }, Some(ChangeKitCommand::Version { .. }))
                     | (ChangeKitCommand::Remote { .. }, Some(ChangeKitCommand::Remote { .. }))
                     | (ChangeKitCommand::Homepage { .. }, Some(ChangeKitCommand::Homepage { .. }))
                     | (ChangeKitCommand::License { .. }, Some(ChangeKitCommand::License { .. }))
@@ -1802,14 +1806,6 @@ pub mod change_command {
                     }
                     Ok(vec![ChangeTypeCommand::Image { image: old }])
                 }
-                ChangeTypeCommand::Variant { variant } => {
-                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.variant.clone();
-                    t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_variant(variant.clone()).map_err(se)?;
-                    if old == *variant {
-                        return Ok(vec![]);
-                    }
-                    Ok(vec![ChangeTypeCommand::Variant { variant: old }])
-                }
                 ChangeTypeCommand::Stock { stock } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.stock;
                     t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_stock(*stock).map_err(se)?;
@@ -1857,6 +1853,62 @@ pub mod change_command {
                         return Ok(vec![]);
                     }
                     Ok(vec![ChangeTypeCommand::Updated { updated: old }])
+                }
+                ChangeTypeCommand::AddFamilyRef { family_id } => {
+                    let pref = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .families
+                        .iter()
+                        .find(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Family", id: family_id.id.clone() })?;
+                    let mut tw = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                    if tw.families.iter().any(|w| w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false)) {
+                        return Ok(vec![]);
+                    }
+                    tw.families.push(std::sync::Arc::downgrade(&pref));
+                    tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
+                    tw.invalidate_hash();
+                    drop(tw);
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveFamilyRef { family_id: family_id.clone() }])
+                }
+                ChangeTypeCommand::RemoveFamilyRef { family_id } => {
+                    let mut tw = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                    let before_len = tw.families.len();
+                    tw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
+                    if tw.families.len() == before_len {
+                        return Err(SemioError::NotFound { kind: "Family", id: family_id.id.clone() });
+                    }
+                    tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
+                    tw.invalidate_hash();
+                    drop(tw);
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddFamilyRef { family_id: family_id.clone() }])
+                }
+                ChangeTypeCommand::SetFamilies { families } => {
+                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_full_dto().families;
+                    let mut new_weaks = Vec::new();
+                    for fid in families {
+                        let pref = kit
+                            .read()
+                            .map_err(|_| SemioError::LockPoisoned("kit"))?
+                            .families
+                            .iter()
+                            .find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false))
+                            .cloned()
+                            .ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
+                        new_weaks.push(std::sync::Arc::downgrade(&pref));
+                    }
+                    {
+                        let mut tw = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        tw.families = new_weaks;
+                        tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
+                        tw.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::SetFamilies { families: old }])
                 }
                 ChangeTypeCommand::ChangePortCommands { port_id, commands } => {
                     let pref = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
@@ -2139,23 +2191,64 @@ pub mod change_command {
                         Ok(vec![ChangeDesignCommand::Image { image: old }])
                     }
                 }
-                ChangeDesignCommand::Variant { variant } => {
-                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.variant.clone();
-                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_variant(variant.clone()).map_err(se)?;
-                    if old == *variant {
-                        Ok(vec![])
-                    } else {
-                        Ok(vec![ChangeDesignCommand::Variant { variant: old }])
+                ChangeDesignCommand::AddFamilyRef { family_id } => {
+                    let pref = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .families
+                        .iter()
+                        .find(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Family", id: family_id.id.clone() })?;
+                    let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
+                    if dw.families.iter().any(|w| w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false)) {
+                        return Ok(vec![]);
                     }
+                    dw.families.push(std::sync::Arc::downgrade(&pref));
+                    dw.emit_ev(crate::events::KitEvent::Design { design_id: dw.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families) });
+                    dw.invalidate_hash_local();
+                    drop(dw);
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveFamilyRef { family_id: family_id.clone() }])
                 }
-                ChangeDesignCommand::View { view } => {
-                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.view.clone();
-                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_view(view.clone()).map_err(se)?;
-                    if old == *view {
-                        Ok(vec![])
-                    } else {
-                        Ok(vec![ChangeDesignCommand::View { view: old }])
+                ChangeDesignCommand::RemoveFamilyRef { family_id } => {
+                    let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
+                    let before_len = dw.families.len();
+                    dw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
+                    if dw.families.len() == before_len {
+                        return Err(SemioError::NotFound { kind: "Family", id: family_id.id.clone() });
                     }
+                    dw.emit_ev(crate::events::KitEvent::Design { design_id: dw.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families) });
+                    dw.invalidate_hash_local();
+                    drop(dw);
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddFamilyRef { family_id: family_id.clone() }])
+                }
+                ChangeDesignCommand::SetFamilies { families } => {
+                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_full_dto().families;
+                    let mut new_weaks = Vec::new();
+                    for fid in families {
+                        let pref = kit
+                            .read()
+                            .map_err(|_| SemioError::LockPoisoned("kit"))?
+                            .families
+                            .iter()
+                            .find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false))
+                            .cloned()
+                            .ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
+                        new_weaks.push(std::sync::Arc::downgrade(&pref));
+                    }
+                    {
+                        let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
+                        dw.families = new_weaks;
+                        dw.emit_ev(crate::events::KitEvent::Design { design_id: dw.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families) });
+                        dw.invalidate_hash_local();
+                    }
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::SetFamilies { families: old }])
                 }
                 ChangeDesignCommand::Location { location } => {
                     let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.location.clone();
@@ -3377,7 +3470,6 @@ pub mod kit_checkpoint {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
-    use crate::hash::HashWriter;
     use crate::id::Id;
     use crate::kit::{KitFullDto, KitStore};
     use crate::kit_change::KitChange;
@@ -3403,13 +3495,13 @@ pub mod kit_checkpoint {
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct KitCheckpoint {
+        /// Content-addressed checkpoint id (blake3 over parent + serialized changes).
         pub id: Id,
         pub parent: Option<Id>,
         pub changes: Vec<KitChange>,
         pub message: Option<String>,
         pub time: Option<String>,
         pub authors: Vec<Id>,
-        pub hash: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub release: Option<MaterializedKit>,
     }
@@ -3430,28 +3522,20 @@ pub mod kit_checkpoint {
     }
 
     impl KitCheckpoint {
-        /// Build a new checkpoint object with a content-addressed hash.
+        /// Build a new checkpoint object with a content-addressed id (blake3).
         pub fn new(parent: Option<Id>, changes: Vec<KitChange>, message: Option<String>) -> Self {
-            let id = Id::new_v7();
-            let hash = Self::compute_hash(parent.as_ref(), &id, &changes);
-            Self { id, parent, changes, message, time: None, authors: Vec::new(), hash, release: None }
+            let id = Self::compute_id(parent.as_ref(), &changes);
+            Self { id, parent, changes, message, time: None, authors: Vec::new(), release: None }
         }
 
-        /// Content-addressed hash of this checkpoint.
-        pub fn compute_hash(parent: Option<&Id>, new_id: &Id, changes: &[KitChange]) -> String {
-            let mut w = HashWriter::new();
-            w.tag("kit_cp");
-            match parent {
-                Some(p) => {
-                    w.str(p.as_str());
-                }
-                None => {
-                    w.str("");
-                }
-            }
-            w.str(new_id.as_str());
-            w.str(&changes.iter().map(|c| serde_json::to_string(c).unwrap_or_default()).collect::<Vec<_>>().join("\n"));
-            w.finalize()
+        /// Content-addressed checkpoint id from parent checkpoint id + change list.
+        pub fn compute_id(parent: Option<&Id>, changes: &[KitChange]) -> Id {
+            let payload = serde_json::json!({
+                "parent": parent.map(|p| p.as_str()),
+                "changes": changes,
+            });
+            let s = serde_json::to_string(&payload).unwrap_or_default();
+            crate::id::Id::from_blake3_canonical(&s)
         }
 
         /// Walk `self -> root` via `parent` links in `map`, returning ids from root to leaf.
@@ -5979,6 +6063,7 @@ pub mod design {
     use crate::connector::ConnectorStoreRef;
     use crate::error::SemioError;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::family::{FamilyIdDto, FamilyStoreRef, FamilyStoreWeak};
     use crate::geom::{Coordinate, Plane};
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
@@ -6006,10 +6091,9 @@ pub mod design {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
-        pub variant: Option<String>,
-        pub view: Option<String>,
         pub location: Option<LocationIdDto>,
         pub unit: Option<String>,
+        pub families: Vec<FamilyStoreWeak>,
         pub pieces: Vec<PieceStoreRef>,
         pub connections: Vec<ConnectionStoreRef>,
         pub layers: Vec<LayerStoreRef>,
@@ -6045,10 +6129,6 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub view: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -6071,10 +6151,6 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub view: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -6084,6 +6160,8 @@ pub mod design {
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub kit: Option<crate::kit::KitIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub pieces: Vec<PieceShallowDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6119,10 +6197,6 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub view: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -6132,6 +6206,8 @@ pub mod design {
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub kit: Option<crate::kit::KitIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub pieces: Vec<PieceFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6267,10 +6343,9 @@ pub mod design {
                 description: None,
                 icon: None,
                 image: None,
-                variant: None,
-                view: None,
                 location: None,
                 unit: None,
+                families: Vec::new(),
                 pieces: Vec::new(),
                 connections: Vec::new(),
                 layers: Vec::new(),
@@ -6298,10 +6373,9 @@ pub mod design {
                 description: None,
                 icon: None,
                 image: None,
-                variant: None,
-                view: None,
                 location: None,
                 unit: None,
+                families: Vec::new(),
                 pieces: Vec::new(),
                 connections: Vec::new(),
                 layers: Vec::new(),
@@ -6402,8 +6476,6 @@ pub mod design {
             self.description = d.description;
             self.icon = d.icon;
             self.image = d.image;
-            self.variant = d.variant;
-            self.view = d.view;
             self.location = d.location;
             self.unit = d.unit;
             self.created = d.created;
@@ -6470,7 +6542,7 @@ pub mod design {
             }
         }
 
-        fn bubble_to_kit(&self) {
+        pub(crate) fn bubble_to_kit(&self) {
             if let Some(k) = self.parent_kit.upgrade() {
                 if let Ok(k) = k.read() {
                     k.invalidate_hash();
@@ -6534,32 +6606,6 @@ pub mod design {
             }
             self.image = v;
             self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Image) });
-            self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            self.invalidate_flatten();
-            self.bubble_to_kit();
-            Ok(())
-        }
-
-        pub fn set_variant(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.variant == v {
-                return Ok(());
-            }
-            self.variant = v;
-            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Variant) });
-            self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            self.invalidate_flatten();
-            self.bubble_to_kit();
-            Ok(())
-        }
-
-        pub fn set_view(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.view == v {
-                return Ok(());
-            }
-            self.view = v;
-            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::View) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -6787,7 +6833,14 @@ pub mod design {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("design").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.variant.as_deref()).opt_str(self.view.as_deref()).opt_str(self.unit.as_deref());
+            w.tag("design").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.unit.as_deref());
+            for fam in &self.families {
+                if let Some(f) = fam.upgrade() {
+                    if let Ok(fr) = f.read() {
+                        w.str(fr.id.as_str());
+                    }
+                }
+            }
             for p in &self.pieces {
                 if let Ok(p) = p.read() {
                     p.hash_into(w);
@@ -7380,11 +7433,25 @@ pub mod design {
             if let Some(i) = &diff.image {
                 self.set_image(i.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
-            if let Some(v) = &diff.variant {
-                self.set_variant(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            }
-            if let Some(v) = &diff.view {
-                self.set_view(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            if let Some(fd) = &diff.families {
+                if !fd.is_empty() {
+                    let kit = self.parent_kit.upgrade().ok_or_else(|| SemioError::InvalidOperation("design has no parent kit for family refs".into()))?;
+                    let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    for id in &fd.removed {
+                        self.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).unwrap_or(false));
+                    }
+                    for id in &fd.added {
+                        let pref = kr.families.iter().find(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Family", id: id.id.clone() })?;
+                        if !self.families.iter().any(|w| w.upgrade().map(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).unwrap_or(false)) {
+                            self.families.push(std::sync::Arc::downgrade(&pref));
+                        }
+                    }
+                    self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families) });
+                    self.hash_cache.invalidate();
+                    self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
+                    self.invalidate_flatten();
+                    self.bubble_to_kit();
+                }
             }
             if let Some(v) = &diff.location {
                 self.set_location(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -7839,8 +7906,6 @@ pub mod design {
                 description: self.description.clone(),
                 icon: self.icon.clone(),
                 image: self.image.clone(),
-                variant: self.variant.clone(),
-                view: self.view.clone(),
                 location: self.location.clone(),
                 unit: self.unit.clone(),
                 created: self.created.clone(),
@@ -7857,13 +7922,12 @@ pub mod design {
                 description: m.description,
                 icon: m.icon,
                 image: m.image,
-                variant: m.variant,
-                view: m.view,
                 location: m.location,
                 unit: m.unit,
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
                 pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect(),
@@ -7886,13 +7950,12 @@ pub mod design {
                 description: m.description,
                 icon: m.icon,
                 image: m.image,
-                variant: m.variant,
-                view: m.view,
                 location: m.location,
                 unit: m.unit,
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
                 pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect(),
@@ -7909,20 +7972,19 @@ pub mod design {
 
         /// Rebuild design graph from DTO (pieces, connections with [`SideStore`] ends, nested leaves).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct designs in host code.
-        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>) -> DesignStoreRef {
+        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
             let DesignFullDto {
                 id,
                 name,
                 description,
                 icon,
                 image,
-                variant,
-                view,
                 location,
                 unit,
                 created,
                 updated,
                 kit,
+                families,
                 pieces: piece_dtos,
                 connections: connection_dtos,
                 layers: layer_dtos,
@@ -7939,7 +8001,9 @@ pub mod design {
             let design = Arc::new(RwLock::new(DesignStore::empty_shell(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
-                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, variant, view, location, unit, created, updated, kit });
+                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, location, unit, created, updated, kit });
+                let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
+                dw.families = family_weaks;
             }
 
             let dw = Arc::downgrade(&design);
@@ -9180,7 +9244,6 @@ pub mod diff {
         pub description: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         pub image: Option<Option<String>>,
-        pub variant: Option<Option<String>>,
         pub stock: Option<Option<i64>>,
         #[serde(rename = "typeVirtual", default)]
         pub type_virtual: Option<Option<bool>>,
@@ -9214,7 +9277,6 @@ pub mod diff {
                 && self.description.is_none()
                 && self.icon.is_none()
                 && self.image.is_none()
-                && self.variant.is_none()
                 && self.stock.is_none()
                 && self.type_virtual.is_none()
                 && self.unit.is_none()
@@ -9237,7 +9299,6 @@ pub mod diff {
                 description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
                 icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
                 image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
-                variant: merge_opt_nested(&self.variant, &b.variant, |_, y| y.clone()),
                 stock: merge_opt_nested(&self.stock, &b.stock, |_, y| y.clone()),
                 type_virtual: merge_opt_nested(&self.type_virtual, &b.type_virtual, |_, y| y.clone()),
                 unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
@@ -9428,8 +9489,8 @@ pub mod diff {
         pub description: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         pub image: Option<Option<String>>,
-        pub variant: Option<Option<String>>,
-        pub view: Option<Option<String>>,
+        #[serde(default)]
+        pub families: Option<FamilyIdsDiff>,
         pub location: Option<Option<LocationIdDto>>,
         pub unit: Option<Option<String>>,
         pub created: Option<Option<String>>,
@@ -9465,8 +9526,7 @@ pub mod diff {
                 && self.description.is_none()
                 && self.icon.is_none()
                 && self.image.is_none()
-                && self.variant.is_none()
-                && self.view.is_none()
+                && self.families.as_ref().map_or(true, |x| x.is_empty())
                 && self.location.is_none()
                 && self.unit.is_none()
                 && self.created.is_none()
@@ -9491,8 +9551,7 @@ pub mod diff {
                 description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
                 icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
                 image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
-                variant: merge_opt_nested(&self.variant, &b.variant, |_, y| y.clone()),
-                view: merge_opt_nested(&self.view, &b.view, |_, y| y.clone()),
+                families: merge_opt_nested(&self.families, &b.families, |x, y| x.merge(y)),
                 location: merge_opt_nested(&self.location, &b.location, |_, y| y.clone()),
                 unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
                 created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
@@ -9532,11 +9591,8 @@ pub mod diff {
             if before.image != after.image {
                 d.image = Some(after.image.clone());
             }
-            if before.variant != after.variant {
-                d.variant = Some(after.variant.clone());
-            }
-            if before.view != after.view {
-                d.view = Some(after.view.clone());
+            if let Some(fd) = family_ids_between(&before.families, &after.families) {
+                d.families = Some(fd);
             }
             if before.location != after.location {
                 d.location = Some(after.location.clone());
@@ -10225,9 +10281,6 @@ pub mod diff {
         if b.image != a.image {
             d.image = Some(a.image.clone());
         }
-        if b.variant != a.variant {
-            d.variant = Some(a.variant.clone());
-        }
         if b.stock != a.stock {
             d.stock = Some(a.stock);
         }
@@ -10775,9 +10828,6 @@ pub mod diff {
         if let Some(v) = &d.image {
             fd.image = v.clone();
         }
-        if let Some(v) = &d.variant {
-            fd.variant = v.clone();
-        }
         if let Some(v) = &d.stock {
             fd.stock = *v;
         }
@@ -10893,7 +10943,6 @@ pub mod kit_diff {
         pub icon: Option<Option<String>>,
         pub image: Option<Option<String>>,
         pub preview: Option<Option<String>>,
-        pub version: Option<Option<String>>,
         pub remote: Option<Option<String>>,
         pub homepage: Option<Option<String>>,
         pub license: Option<Option<String>>,
@@ -10934,7 +10983,6 @@ pub mod kit_diff {
                 && self.icon.is_none()
                 && self.image.is_none()
                 && self.preview.is_none()
-                && self.version.is_none()
                 && self.remote.is_none()
                 && self.homepage.is_none()
                 && self.license.is_none()
@@ -10960,7 +11008,6 @@ pub mod kit_diff {
                 icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
                 image: merge_opt_nested(&self.image, &b.image, |_, y| y.clone()),
                 preview: merge_opt_nested(&self.preview, &b.preview, |_, y| y.clone()),
-                version: merge_opt_nested(&self.version, &b.version, |_, y| y.clone()),
                 remote: merge_opt_nested(&self.remote, &b.remote, |_, y| y.clone()),
                 homepage: merge_opt_nested(&self.homepage, &b.homepage, |_, y| y.clone()),
                 license: merge_opt_nested(&self.license, &b.license, |_, y| y.clone()),
@@ -11031,9 +11078,6 @@ pub mod kit_diff {
             }
             if before.preview != after.preview {
                 d.preview = Some(after.preview.clone());
-            }
-            if before.version != after.version {
-                d.version = Some(after.version.clone());
             }
             if before.remote != after.remote {
                 d.remote = Some(after.remote.clone());
@@ -11601,11 +11645,11 @@ pub mod events {
     event_field_enum!(ConceptField { Name, Description, Order });
     event_field_enum!(ConnectionField { Gap, Shift, Rise, Rotation, Turn, Tilt, U, V, Description });
     event_field_enum!(ConnectorField { Code, Description, Port });
-    event_field_enum!(DesignField { Name, Description, Icon, Image, Variant, View, Location, Unit, Created, Updated });
+    event_field_enum!(DesignField { Name, Description, Icon, Image, Families, Location, Unit, Created, Updated });
     event_field_enum!(FileField { Url, Mime, Size, Hash, Description, Created, Updated });
     event_field_enum!(FolderField { Path, Description });
     event_field_enum!(GroupField { Name, Description, Color, Icon, Pieces });
-    event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Version, Remote, Homepage, License, Uri, Created, Updated });
+    event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Remote, Homepage, License, Uri, Created, Updated });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
     event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
     event_field_enum!(PortField { Id, Name, Description, Icon, Family, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
@@ -11615,7 +11659,7 @@ pub mod events {
     event_field_enum!(SideField { Piece, Port, DesignPiece });
     event_field_enum!(StatField { Key, Value, Unit, Definition, Description });
     event_field_enum!(TagField { Name, Order });
-    event_field_enum!(TypeField { Name, Description, Icon, Image, Variant, Stock, Virtual, Unit, Location, Created, Updated });
+    event_field_enum!(TypeField { Name, Description, Icon, Image, Families, Stock, Virtual, Unit, Location, Created, Updated });
 
     macro_rules! scoped_event_enum {
         ($name:ident, $field:ident) => {
@@ -13404,6 +13448,11 @@ pub mod id {
             Self(uuid::Uuid::now_v7().to_string())
         }
 
+        /// Content-addressed id from canonical JSON (e.g. checkpoint parent + changes).
+        pub fn from_blake3_canonical(canonical: &str) -> Self {
+            Self(hex::encode(blake3::hash(canonical.as_bytes()).as_bytes()))
+        }
+
         /// Borrow the underlying string slice.
         pub fn as_str(&self) -> &str {
             &self.0
@@ -13721,7 +13770,6 @@ pub mod kit {
         pub icon: Option<String>,
         pub image: Option<String>,
         pub preview: Option<String>,
-        pub version: Option<String>,
         pub remote: Option<String>,
         pub homepage: Option<String>,
         pub license: Option<String>,
@@ -13781,8 +13829,6 @@ pub mod kit {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub preview: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub remote: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub homepage: Option<String>,
@@ -13808,8 +13854,6 @@ pub mod kit {
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub remote: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -13856,8 +13900,6 @@ pub mod kit {
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub remote: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -13938,7 +13980,6 @@ pub mod kit {
                 icon: None,
                 image: None,
                 preview: None,
-                version: None,
                 remote: None,
                 homepage: None,
                 license: None,
@@ -14066,17 +14107,6 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn set_version(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.version == v {
-                return Ok(());
-            }
-            self.version = v;
-            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Version));
-            self.invalidate_hash();
-            self.invalidate_validation();
-            Ok(())
-        }
-
         pub fn set_remote(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.remote == v {
                 return Ok(());
@@ -14162,7 +14192,7 @@ pub mod kit {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("kit").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.version.as_deref()).opt_str(self.license.as_deref());
+            w.tag("kit").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.license.as_deref());
             for t in &self.types {
                 if let Ok(t) = t.read() {
                     t.hash_into(w);
@@ -14321,10 +14351,6 @@ pub mod kit {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             g.set_image(v)
                         }
-                        "version" => {
-                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_version(v)
-                        }
                         "homepage" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             g.set_homepage(v)
@@ -14408,7 +14434,6 @@ pub mod kit {
                         "description" => Ok(serde_json::to_value(&g.description).unwrap()),
                         "icon" => Ok(serde_json::to_value(&g.icon).unwrap()),
                         "image" => Ok(serde_json::to_value(&g.image).unwrap()),
-                        "version" => Ok(serde_json::to_value(&g.version).unwrap()),
                         "homepage" => Ok(serde_json::to_value(&g.homepage).unwrap()),
                         "license" => Ok(serde_json::to_value(&g.license).unwrap()),
                         _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
@@ -14780,7 +14805,6 @@ pub mod kit {
                 icon: None,
                 image: None,
                 preview: None,
-                version: None,
                 remote: None,
                 homepage: None,
                 license: None,
@@ -14823,7 +14847,6 @@ pub mod kit {
                 icon: d.icon,
                 image: d.image,
                 preview: d.preview,
-                version: d.version,
                 remote: d.remote,
                 homepage: d.homepage,
                 license: d.license,
@@ -14907,7 +14930,6 @@ pub mod kit {
                 icon,
                 image,
                 preview,
-                version,
                 remote,
                 homepage,
                 license,
@@ -14946,7 +14968,6 @@ pub mod kit {
                 icon: icon.clone(),
                 image: image.clone(),
                 preview: preview.clone(),
-                version: version.clone(),
                 remote: remote.clone(),
                 homepage: homepage.clone(),
                 license: license.clone(),
@@ -15100,7 +15121,7 @@ pub mod kit {
             let design_refs: Vec<DesignStoreRef> = designs
                 .into_iter()
                 .map(|ddto| {
-                    let design = DesignStore::hydrate_from_full_dto(ddto, &type_index);
+                    let design = DesignStore::hydrate_from_full_dto(ddto, &type_index, &family_by_id);
                     if let Ok(mut dw) = design.write() {
                         dw.parent_kit = Arc::downgrade(&kit);
                     }
@@ -15147,7 +15168,6 @@ pub mod kit {
                 icon: self.icon.clone(),
                 image: self.image.clone(),
                 preview: self.preview.clone(),
-                version: self.version.clone(),
                 remote: self.remote.clone(),
                 homepage: self.homepage.clone(),
                 license: self.license.clone(),
@@ -15166,7 +15186,6 @@ pub mod kit {
                 icon: m.icon,
                 image: m.image,
                 preview: m.preview,
-                version: m.version,
                 remote: m.remote,
                 homepage: m.homepage,
                 license: m.license,
@@ -15195,7 +15214,6 @@ pub mod kit {
                 icon: m.icon,
                 image: m.image,
                 preview: m.preview,
-                version: m.version,
                 remote: m.remote,
                 homepage: m.homepage,
                 license: m.license,
@@ -15306,9 +15324,6 @@ pub mod kit {
                 }
                 if let Some(p) = &diff.preview {
                     g.set_preview(p.clone())?;
-                }
-                if let Some(v) = &diff.version {
-                    g.set_version(v.clone())?;
                 }
                 if let Some(r) = &diff.remote {
                     g.set_remote(r.clone())?;
@@ -15587,7 +15602,8 @@ pub mod kit {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
-            let design = DesignStore::hydrate_from_full_dto(dto, &idx);
+            let family_by_id: HashMap<Id, FamilyStoreRef> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
+            let design = DesignStore::hydrate_from_full_dto(dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
@@ -19439,7 +19455,6 @@ pub mod typ {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
-        pub variant: Option<String>,
         pub stock: Option<i64>,
         pub virtual_: Option<bool>,
         pub unit: Option<String>,
@@ -19476,8 +19491,6 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
         pub virtual_: Option<bool>,
@@ -19501,8 +19514,6 @@ pub mod typ {
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
@@ -19546,8 +19557,6 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub variant: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
         pub virtual_: Option<bool>,
@@ -19587,7 +19596,6 @@ pub mod typ {
                 description: None,
                 icon: None,
                 image: None,
-                variant: None,
                 stock: None,
                 virtual_: None,
                 unit: None,
@@ -19610,7 +19618,7 @@ pub mod typ {
         }
 
         #[inline]
-        fn emit_ev(&self, ev: KitEvent) {
+        pub(crate) fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
         }
 
@@ -19685,17 +19693,6 @@ pub mod typ {
             }
             self.image = v;
             self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Image) });
-            self.invalidate_hash();
-            self.invalidate_validation();
-            Ok(())
-        }
-
-        pub fn set_variant(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.variant == v {
-                return Ok(());
-            }
-            self.variant = v;
-            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Variant) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -19778,7 +19775,7 @@ pub mod typ {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("type").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.variant.as_deref()).opt_str(self.unit.as_deref());
+            w.tag("type").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.unit.as_deref());
             for fam in &self.families {
                 if let Some(f) = fam.upgrade() {
                     if let Ok(fr) = f.read() {
@@ -19857,7 +19854,6 @@ pub mod typ {
                 description: None,
                 icon: None,
                 image: None,
-                variant: None,
                 stock: None,
                 virtual_: None,
                 unit: None,
@@ -19886,7 +19882,6 @@ pub mod typ {
                 description: d.description,
                 icon: d.icon,
                 image: d.image,
-                variant: d.variant,
                 stock: d.stock,
                 virtual_: d.virtual_,
                 unit: d.unit,
@@ -19911,7 +19906,7 @@ pub mod typ {
         /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
         pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
-            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
+            let TypeFullDto { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
 
@@ -19921,7 +19916,6 @@ pub mod typ {
                 description: description.clone(),
                 icon: icon.clone(),
                 image: image.clone(),
-                variant: variant.clone(),
                 stock,
                 virtual_,
                 unit: unit.clone(),
@@ -20018,7 +20012,6 @@ pub mod typ {
                 description: self.description.clone(),
                 icon: self.icon.clone(),
                 image: self.image.clone(),
-                variant: self.variant.clone(),
                 stock: self.stock,
                 virtual_: self.virtual_,
                 unit: self.unit.clone(),
@@ -20036,7 +20029,6 @@ pub mod typ {
                 description: m.description,
                 icon: m.icon,
                 image: m.image,
-                variant: m.variant,
                 stock: m.stock,
                 virtual_: m.virtual_,
                 unit: m.unit,
@@ -20063,7 +20055,6 @@ pub mod typ {
                 description: m.description,
                 icon: m.icon,
                 image: m.image,
-                variant: m.variant,
                 stock: m.stock,
                 virtual_: m.virtual_,
                 unit: m.unit,
@@ -20136,15 +20127,6 @@ mod async_kit {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_preview(v)?;
-                Ok(())
-            })();
-            ready(r).await
-        }
-
-        pub async fn set_version_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
-            let r = (|| {
-                let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_version(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -20323,7 +20305,7 @@ pub mod io {
         use crate::typ::TypeFullDto;
 
         const SCHEMA_SQL: &str = include_str!("../sqlite/schema.sql");
-        const SCHEMA_VERSION: &str = "2026-04-23-rs-kit-location-refs";
+        const SCHEMA_VERSION: &str = "2026-04-23-kit-families-sqlite";
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
@@ -20336,6 +20318,7 @@ pub mod io {
             representation: Option<&'a Id>,
             piece: Option<&'a Id>,
             connection: Option<&'a Id>,
+            family: Option<&'a Id>,
         }
 
         fn id_ref(value: Option<&Id>) -> Option<&str> {
@@ -20437,11 +20420,14 @@ pub mod io {
                 DELETE FROM \"group\";
                 DELETE FROM piece;
                 DELETE FROM layer;
+                DELETE FROM design_family;
                 DELETE FROM design;
                 DELETE FROM representation;
                 DELETE FROM connector;
                 DELETE FROM port_compatible_family;
                 DELETE FROM port;
+                DELETE FROM type_family;
+                DELETE FROM family;
                 DELETE FROM \"type\";
                 DELETE FROM file;
                 DELETE FROM folder;
@@ -20528,8 +20514,8 @@ pub mod io {
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
                     kit_id, type_id, design_id, piece_id, port_id,
-                    connector_id, representation_id, connection_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                    connector_id, representation_id, connection_id, family_id
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                 params![
                     attribute.id.as_str(),
                     ordinal as i64,
@@ -20544,6 +20530,7 @@ pub mod io {
                     id_ref(scope.connector),
                     id_ref(scope.representation),
                     id_ref(scope.connection),
+                    id_ref(scope.family),
                 ],
             )?;
             Ok(())
@@ -20582,18 +20569,56 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(tx: &Transaction<'_>, type_id: &Id, port: &PortFullDto, ordinal: usize) -> Result<()> {
+        fn insert_port(tx: &Transaction<'_>, kit_id: &Id, parent_family_id: Option<&Id>, port: &PortFullDto, ordinal: usize) -> Result<()> {
             let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
             let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
             tx.execute(
                 "INSERT INTO port (
-                    id, ordinal, family, mandatory, t, description,
-                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                params![port.id.as_str(), ordinal as i64, port.family, opt_bool_to_int(port.mandatory), port.t, port.description, point_x, point_y, point_z, dir_x, dir_y, dir_z, type_id.as_str()],
+                    id, ordinal, name, icon, family, mandatory, t, description,
+                    point_x, point_y, point_z, direction_x, direction_y, direction_z,
+                    kit_id, parent_family_id
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+                params![
+                    port.id.as_str(),
+                    ordinal as i64,
+                    port.name.as_str(),
+                    port.icon,
+                    port.family,
+                    opt_bool_to_int(port.mandatory),
+                    port.t,
+                    port.description,
+                    point_x,
+                    point_y,
+                    point_z,
+                    dir_x,
+                    dir_y,
+                    dir_z,
+                    kit_id.as_str(),
+                    parent_family_id.map(Id::as_str),
+                ],
             )?;
             for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
                 tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family])?;
+            }
+            for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+            }
+            for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+            }
+            Ok(())
+        }
+
+        fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFullDto, ordinal: usize) -> Result<()> {
+            tx.execute(
+                "INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()],
+            )?;
+            for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
+            }
+            for (port_ordinal, port) in fam.ports.iter().enumerate() {
+                insert_port(tx, kit_id, Some(&fam.id), port, port_ordinal)?;
             }
             Ok(())
         }
@@ -20602,11 +20627,17 @@ pub mod io {
             let location_id = typ.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO \"type\" (
-                    id, ordinal, name, description, icon, image, variant,
+                    id, ordinal, name, description, icon, image,
                     stock, virtual, unit, location_id, created_at, updated_at, kit_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
-                params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.variant, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_id, typ.created, typ.updated, kit_id.as_str(),],
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_id, typ.created, typ.updated, kit_id.as_str(),],
             )?;
+            for (family_ordinal, family_ref) in typ.families.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?1, ?2, ?3)",
+                    params![typ.id.as_str(), family_ref.id.as_str(), family_ordinal as i64],
+                )?;
+            }
             for (connector_ordinal, connector) in typ.connectors.iter().enumerate() {
                 insert_connector(tx, &typ.id, connector, connector_ordinal)?;
             }
@@ -20771,16 +20802,22 @@ pub mod io {
             let location_id = design.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO design (
-                    id, ordinal, name, description, icon, image, variant, view,
+                    id, ordinal, name, description, icon, image,
                     location_id,
                     unit, created_at, updated_at, kit_id
                  ) VALUES (
-                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8,
-                    ?9,
-                    ?10, ?11, ?12, ?13
+                    ?1, ?2, ?3, ?4, ?5, ?6,
+                    ?7,
+                    ?8, ?9, ?10, ?11
                  )",
-                params![design.id.as_str(), ordinal as i64, design.name, design.description, design.icon, design.image, design.variant, design.view, location_id, design.unit, design.created, design.updated, kit_id.as_str(),],
+                params![design.id.as_str(), ordinal as i64, design.name, design.description, design.icon, design.image, location_id, design.unit, design.created, design.updated, kit_id.as_str(),],
             )?;
+            for (family_ordinal, family_ref) in design.families.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?1, ?2, ?3)",
+                    params![design.id.as_str(), family_ref.id.as_str(), family_ordinal as i64],
+                )?;
+            }
             for (layer_ordinal, layer) in design.layers.iter().enumerate() {
                 insert_layer(tx, &design.id, layer, layer_ordinal)?;
             }
@@ -20901,14 +20938,22 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_ports(conn: &SqlConnection, type_id: &Id) -> Result<Vec<PortFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, family, mandatory, t, description,
-                        point_x, point_y, point_z, direction_x, direction_y, direction_z
-                 FROM port WHERE type_id = ?1 ORDER BY ordinal",
-            )?;
-            let mut rows = stmt.query([type_id.as_str()])?;
+        fn load_ports_for_parent(conn: &SqlConnection, kit_id: &Id, parent_family_id: Option<&Id>) -> Result<Vec<PortFullDto>> {
             let mut values = Vec::new();
+            let sql = if parent_family_id.is_none() {
+                "SELECT id, name, icon, family, mandatory, t, description,
+                        point_x, point_y, point_z, direction_x, direction_y, direction_z
+                 FROM port WHERE kit_id = ?1 AND parent_family_id IS NULL ORDER BY ordinal"
+            } else {
+                "SELECT id, name, icon, family, mandatory, t, description,
+                        point_x, point_y, point_z, direction_x, direction_y, direction_z
+                 FROM port WHERE kit_id = ?1 AND parent_family_id = ?2 ORDER BY ordinal"
+            };
+            let mut stmt = conn.prepare(sql)?;
+            let mut rows = match parent_family_id {
+                None => stmt.query([kit_id.as_str()])?,
+                Some(fid) => stmt.query(rusqlite::params![kit_id.as_str(), fid.as_str()])?,
+            };
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
                 let mut compatibility_stmt = conn.prepare("SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
@@ -20918,18 +20963,60 @@ pub mod io {
                     compatible_families.push(compatibility_row.get(0)?);
                 }
                 values.push(PortFullDto {
-                    id,
-                    family: row.get(1)?,
+                    id: id.clone(),
+                    name: row.get(1)?,
+                    icon: row.get(2)?,
+                    family: row.get(3)?,
                     compatible_families,
-                    mandatory: opt_int_to_bool(row.get(2)?),
-                    t: row.get(3)?,
-                    description: row.get(4)?,
-                    point: point_from_parts3(row.get(5)?, row.get(6)?, row.get(7)?),
-                    direction: vector_from_parts3(row.get(8)?, row.get(9)?, row.get(10)?),
+                    mandatory: opt_int_to_bool(row.get(4)?),
+                    t: row.get(5)?,
+                    description: row.get(6)?,
+                    point: point_from_parts3(row.get(7)?, row.get(8)?, row.get(9)?),
+                    direction: vector_from_parts3(row.get(10)?, row.get(11)?, row.get(12)?),
+                    qualities: load_qualities_for_scope(conn, "port_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "port_id", &id)?,
                     ..Default::default()
                 });
             }
             Ok(values)
+        }
+
+        fn load_families(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<crate::family::FamilyFullDto>> {
+            let mut stmt = conn.prepare("SELECT id, name, description, icon FROM family WHERE kit_id = ?1 ORDER BY ordinal")?;
+            let mut rows = stmt.query([kit_id.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let id = Id::from(row.get::<_, String>(0)?);
+                values.push(crate::family::FamilyFullDto {
+                    id: id.clone(),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    icon: row.get(3)?,
+                    ports: load_ports_for_parent(conn, kit_id, Some(&id))?,
+                    attributes: load_attributes_for_scope(conn, "family_id", &id)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_type_family_ids(conn: &SqlConnection, type_id: &Id) -> Result<Vec<crate::family::FamilyIdDto>> {
+            let mut stmt = conn.prepare("SELECT family_id FROM type_family WHERE type_id = ?1 ORDER BY ordinal")?;
+            let mut rows = stmt.query([type_id.as_str()])?;
+            let mut out = Vec::new();
+            while let Some(row) = rows.next()? {
+                out.push(crate::family::FamilyIdDto { id: Id::from(row.get::<_, String>(0)?) });
+            }
+            Ok(out)
+        }
+
+        fn load_design_family_ids(conn: &SqlConnection, design_id: &Id) -> Result<Vec<crate::family::FamilyIdDto>> {
+            let mut stmt = conn.prepare("SELECT family_id FROM design_family WHERE design_id = ?1 ORDER BY ordinal")?;
+            let mut rows = stmt.query([design_id.as_str()])?;
+            let mut out = Vec::new();
+            while let Some(row) = rows.next()? {
+                out.push(crate::family::FamilyIdDto { id: Id::from(row.get::<_, String>(0)?) });
+            }
+            Ok(out)
         }
 
         fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
@@ -20973,7 +21060,7 @@ pub mod io {
 
         fn load_types(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<TypeFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, variant, stock, virtual, unit, location_id, created_at, updated_at
+                "SELECT id, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at
                  FROM \"type\" WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
             let mut rows = stmt.query([kit_id.as_str()])?;
@@ -20986,14 +21073,13 @@ pub mod io {
                     description: row.get(2)?,
                     icon: row.get(3)?,
                     image: row.get(4)?,
-                    variant: row.get(5)?,
-                    stock: row.get(6)?,
-                    virtual_: opt_int_to_bool(row.get(7)?),
-                    unit: row.get(8)?,
-                    location: location_dto_from_id_cell(row.get(9)?),
-                    created: row.get(10)?,
-                    updated: row.get(11)?,
-                    families: Vec::new(),
+                    stock: row.get(5)?,
+                    virtual_: opt_int_to_bool(row.get(6)?),
+                    unit: row.get(7)?,
+                    location: location_dto_from_id_cell(row.get(8)?),
+                    created: row.get(9)?,
+                    updated: row.get(10)?,
+                    families: load_type_family_ids(conn, &id)?,
                     connectors: load_connectors(conn, &id)?,
                     representations: load_representations(conn, &id)?,
                     authors: load_authors_for_scope(conn, "type_id", &id)?,
@@ -21135,7 +21221,7 @@ pub mod io {
 
         fn load_designs(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<DesignFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, variant, view,
+                "SELECT id, name, description, icon, image,
                         location_id,
                         unit, created_at, updated_at
                  FROM design WHERE kit_id = ?1 ORDER BY ordinal",
@@ -21150,13 +21236,12 @@ pub mod io {
                     description: row.get(2)?,
                     icon: row.get(3)?,
                     image: row.get(4)?,
-                    variant: row.get(5)?,
-                    view: row.get(6)?,
-                    location: location_dto_from_id_cell(row.get(7)?),
-                    unit: row.get(8)?,
-                    created: row.get(9)?,
-                    updated: row.get(10)?,
+                    location: location_dto_from_id_cell(row.get(5)?),
+                    unit: row.get(6)?,
+                    created: row.get(7)?,
+                    updated: row.get(8)?,
                     kit: Some(crate::kit::KitIdDto { id: kit_id.clone() }),
+                    families: load_design_family_ids(conn, &id)?,
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
                     layers: load_layers(conn, &id)?,
@@ -21198,7 +21283,7 @@ pub mod io {
 
         fn load_kit_dto(conn: &SqlConnection) -> Result<KitFullDto> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, preview, version, remote, homepage, license, uri, created_at, updated_at
+                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
@@ -21211,13 +21296,12 @@ pub mod io {
                 icon: row.get(3)?,
                 image: row.get(4)?,
                 preview: row.get(5)?,
-                version: row.get(6)?,
-                remote: row.get(7)?,
-                homepage: row.get(8)?,
-                license: row.get(9)?,
-                uri: row.get(10)?,
-                created: row.get(11)?,
-                updated: row.get(12)?,
+                remote: row.get(6)?,
+                homepage: row.get(7)?,
+                license: row.get(8)?,
+                uri: row.get(9)?,
+                created: row.get(10)?,
+                updated: row.get(11)?,
                 types: load_types(conn, &id)?,
                 designs: load_designs(conn, &id)?,
                 files: load_files(conn, &id)?,
@@ -21228,8 +21312,8 @@ pub mod io {
                 qualities: load_qualities_for_scope(conn, "kit_id", &id)?,
                 props: load_props_for_scope(conn, "kit_id", &id)?,
                 attributes: load_attributes_for_scope(conn, "kit_id", &id)?,
-                ports: Vec::new(),
-                families: Vec::new(),
+                ports: load_ports_for_parent(conn, &id, None)?,
+                families: load_families(conn, &id)?,
                 locations: Vec::new(),
             })
         }
@@ -21246,10 +21330,10 @@ pub mod io {
                 tx.execute("INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))", params![SCHEMA_VERSION, SCHEMA_ENGINE])?;
                 tx.execute(
                     "INSERT INTO kit (
-                        id, name, description, icon, image, preview, version,
+                        id, name, description, icon, image, preview,
                         remote, homepage, license, uri, created_at, updated_at
-                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.version, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated,],
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated,],
                 )?;
 
                 for (ordinal, folder) in dto.folders.iter().enumerate() {
@@ -21262,13 +21346,14 @@ pub mod io {
                         params![file.id.as_str(), ordinal as i64, file.url, file.mime, file.size, file.hash, file.description, file.created, file.updated, dto.id.as_str(),],
                     )?;
                 }
+                for (ordinal, fam) in dto.families.iter().enumerate() {
+                    insert_family(&tx, &dto.id, fam, ordinal)?;
+                }
                 for (ordinal, typ) in dto.types.iter().enumerate() {
                     insert_type(&tx, &dto.id, typ, ordinal)?;
                 }
-                if let Some(first_type) = dto.types.first() {
-                    for (ordinal, port) in dto.ports.iter().enumerate() {
-                        insert_port(&tx, &first_type.id, port, ordinal)?;
-                    }
+                for (ordinal, port) in dto.ports.iter().enumerate() {
+                    insert_port(&tx, &dto.id, None, port, ordinal)?;
                 }
                 for (ordinal, design) in dto.designs.iter().enumerate() {
                     insert_design(&tx, &dto.id, design, ordinal)?;
@@ -23842,12 +23927,52 @@ mod tests {
             design_meta_test!(design_set_description, crate::events::DesignField::Description, |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
             design_meta_test!(design_set_icon, crate::events::DesignField::Icon, |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
             design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
-            design_meta_test!(design_set_variant, crate::events::DesignField::Variant, |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) });
-            design_meta_test!(design_set_view, crate::events::DesignField::View, |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) });
             design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(LocationIdDto { id: Id::new_v7() })) });
             design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
             design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
             design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
+
+            #[test]
+            fn design_add_family_ref_emits() {
+                use crate::design::DesignFullDto;
+                use crate::diff::{DesignDiff, FamilyIdsDiff};
+                use crate::events::KitEvent;
+                use crate::family::{FamilyFullDto, FamilyIdDto};
+                use crate::kit::{KitFullDto, KitStore};
+                use crate::piece::PieceFullDto;
+                use crate::typ::{TypeFullDto, TypeIdDto};
+
+                let family_id = Id::new_v7();
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_id = Id::new_v7();
+                let kit_id = Id::new_v7();
+                let dto = KitFullDto {
+                    id: kit_id,
+                    name: "kit".into(),
+                    families: vec![FamilyFullDto { id: family_id.clone(), name: "F".into(), ..Default::default() }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFullDto {
+                        id: design_id.clone(),
+                        name: "des".into(),
+                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                };
+                let kit = KitStore::from_full_dto(dto);
+                let mut rx = kit.read().unwrap().subscribe();
+                let diff = DesignDiff {
+                    families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
+                    ..Default::default()
+                };
+                kit.write().unwrap().apply_design_diff(design_id.as_str(), &diff).unwrap();
+                let evs = super::common::drain(&mut rx);
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::Design { event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families), .. }
+                )));
+            }
         }
 
         mod file {
@@ -23931,7 +24056,6 @@ mod tests {
             kit_meta_test!(kit_set_icon, crate::events::KitField::Icon, |k: &mut crate::KitStore| { k.set_icon(Some("ic".into())) });
             kit_meta_test!(kit_set_image, crate::events::KitField::Image, |k: &mut crate::KitStore| { k.set_image(Some("im".into())) });
             kit_meta_test!(kit_set_preview, crate::events::KitField::Preview, |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) });
-            kit_meta_test!(kit_set_version, crate::events::KitField::Version, |k: &mut crate::KitStore| { k.set_version(Some("1".into())) });
             kit_meta_test!(kit_set_remote, crate::events::KitField::Remote, |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) });
             kit_meta_test!(kit_set_homepage, crate::events::KitField::Homepage, |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) });
             kit_meta_test!(kit_set_license, crate::events::KitField::License, |k: &mut crate::KitStore| { k.set_license(Some("l".into())) });
@@ -24318,6 +24442,7 @@ mod tests {
 
         mod type_ {
             use crate::events::{EntityKind, EntityRef};
+            use crate::id::Id;
 
             macro_rules! type_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
@@ -24343,13 +24468,44 @@ mod tests {
             type_meta_test!(type_set_description, crate::events::TypeField::Description, |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) });
             type_meta_test!(type_set_icon, crate::events::TypeField::Icon, |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) });
             type_meta_test!(type_set_image, crate::events::TypeField::Image, |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) });
-            type_meta_test!(type_set_variant, crate::events::TypeField::Variant, |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) });
             type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
             type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
             type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
             type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::location::LocationIdDto { id: crate::id::Id::new_v7() })) });
             type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
             type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
+
+            #[test]
+            fn type_add_family_ref_emits() {
+                use crate::diff::{FamilyIdsDiff, TypeDiff};
+                use crate::events::KitEvent;
+                use crate::family::{FamilyFullDto, FamilyIdDto};
+                use crate::kit::{KitFullDto, KitStore};
+                use crate::typ::TypeFullDto;
+
+                let family_id = Id::new_v7();
+                let type_id = Id::new_v7();
+                let kit_id = Id::new_v7();
+                let dto = KitFullDto {
+                    id: kit_id,
+                    name: "kit".into(),
+                    families: vec![FamilyFullDto { id: family_id.clone(), name: "F".into(), ..Default::default() }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    ..Default::default()
+                };
+                let kit = KitStore::from_full_dto(dto);
+                let mut rx = kit.read().unwrap().subscribe();
+                let fragment = TypeDiff {
+                    families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
+                    ..Default::default()
+                };
+                KitStore::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
+                let evs = super::common::drain(&mut rx);
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::Type { event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families), .. }
+                )));
+            }
         }
     }
 

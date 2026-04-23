@@ -48879,7 +48879,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
     console.log(`[initType] Current URL: ${page.url()}`);
 
-    const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
+    const typesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
     const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[initType] Types toggle visible: ${hasTypesToggle}`);
 
@@ -49882,10 +49882,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       }
 
       console.log("[Kit] Waiting for initial settle before row count");
-      await page.waitForTimeout(8000);
-      const initialKitRowCount = await page.locator("tr[data-row-id]").count().catch(() => 0);
+      const initialKitRowCount = await expect
+        .poll(async () => page.locator("tr[data-row-id]").count().catch(() => 0), {
+          timeout: 30000,
+          intervals: [1000, 2000, 3000, 5000],
+        })
+        .toBeGreaterThan(0)
+        .then(async () => page.locator("tr[data-row-id]").count().catch(() => 0));
       console.log(`[Kit] Initial row count after settle wait: ${initialKitRowCount}`);
-      expect(initialKitRowCount).toBeGreaterThan(0);
 
       await page.waitForTimeout(2000);
       console.log("[Kit] Attempting Tambour row click");

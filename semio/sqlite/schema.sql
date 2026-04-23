@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS kit (
 	icon TEXT,
 	image TEXT,
 	preview TEXT,
-	version TEXT,
 	remote TEXT,
 	homepage TEXT,
 	license TEXT,
@@ -63,7 +62,6 @@ CREATE TABLE IF NOT EXISTS type (
 	description TEXT,
 	icon TEXT,
 	image TEXT,
-	variant TEXT,
 	stock INTEGER,
 	virtual INTEGER,
 	unit TEXT,
@@ -75,9 +73,31 @@ CREATE TABLE IF NOT EXISTS type (
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS family (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	icon TEXT,
+	kit_id TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS type_family (
+	type_id TEXT NOT NULL,
+	family_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	PRIMARY KEY (type_id, family_id),
+	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS port (
 	id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
+	name TEXT NOT NULL DEFAULT '',
+	icon TEXT,
 	family TEXT,
 	mandatory INTEGER,
 	t REAL,
@@ -88,9 +108,11 @@ CREATE TABLE IF NOT EXISTS port (
 	direction_x REAL,
 	direction_y REAL,
 	direction_z REAL,
-	type_id TEXT NOT NULL,
+	kit_id TEXT NOT NULL,
+	parent_family_id TEXT,
 	PRIMARY KEY (id),
-	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (parent_family_id) REFERENCES family (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS port_compatible_family (
@@ -132,8 +154,6 @@ CREATE TABLE IF NOT EXISTS design (
 	description TEXT,
 	icon TEXT,
 	image TEXT,
-	variant TEXT,
-	view TEXT,
 	location_id TEXT,
 	unit TEXT,
 	created_at TEXT,
@@ -141,6 +161,15 @@ CREATE TABLE IF NOT EXISTS design (
 	kit_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS design_family (
+	design_id TEXT NOT NULL,
+	family_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	PRIMARY KEY (design_id, family_id),
+	FOREIGN KEY (design_id) REFERENCES design (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS layer (
@@ -404,6 +433,7 @@ CREATE TABLE IF NOT EXISTS attribute (
 	connector_id TEXT,
 	representation_id TEXT,
 	connection_id TEXT,
+	family_id TEXT,
 	PRIMARY KEY (id),
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
 	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE,
@@ -413,6 +443,7 @@ CREATE TABLE IF NOT EXISTS attribute (
 	FOREIGN KEY (connector_id) REFERENCES connector (id) ON DELETE CASCADE,
 	FOREIGN KEY (representation_id) REFERENCES representation (id) ON DELETE CASCADE,
 	FOREIGN KEY (connection_id) REFERENCES connection (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE,
 	CHECK (
 		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
 		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
@@ -421,14 +452,19 @@ CREATE TABLE IF NOT EXISTS attribute (
 		(CASE WHEN port_id IS NOT NULL THEN 1 ELSE 0 END) +
 		(CASE WHEN connector_id IS NOT NULL THEN 1 ELSE 0 END) +
 		(CASE WHEN representation_id IS NOT NULL THEN 1 ELSE 0 END) +
-		(CASE WHEN connection_id IS NOT NULL THEN 1 ELSE 0 END) = 1
+		(CASE WHEN connection_id IS NOT NULL THEN 1 ELSE 0 END) +
+		(CASE WHEN family_id IS NOT NULL THEN 1 ELSE 0 END) = 1
 	)
 );
 
 CREATE INDEX IF NOT EXISTS idx_folder_kit ON folder (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_file_kit ON file (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_type_kit ON type (kit_id, ordinal);
-CREATE INDEX IF NOT EXISTS idx_port_type ON port (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_kit ON port (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_parent_family ON port (parent_family_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_family_kit ON family (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_type_family_type ON type_family (type_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_design_family_design ON design_family (design_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_connector_type ON connector (type_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_representation_type ON representation (type_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_design_kit ON design (kit_id, ordinal);
@@ -466,3 +502,4 @@ CREATE INDEX IF NOT EXISTS idx_attribute_port ON attribute (port_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_attribute_connector ON attribute (connector_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_attribute_representation ON attribute (representation_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_attribute_connection ON attribute (connection_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_attribute_family ON attribute (family_id, ordinal);

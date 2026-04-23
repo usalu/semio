@@ -14,6 +14,7 @@ thiserror = "2.0.18"
 uuid = { version = "1.20.0", features = ["v7", "serde"] }
 nalgebra = { version = "0.34.1", features = ["serde-serialize"] }
 sha2 = "0.10"
+blake3 = "1.5"
 hex = "0.4"
 async-broadcast = "0.7"
 futures-lite = "2"
