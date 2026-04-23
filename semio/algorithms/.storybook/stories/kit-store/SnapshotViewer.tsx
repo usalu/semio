@@ -78,14 +78,20 @@ export const SnapshotViewer: React.FC<{
         </button>
       </div>
       {tab === "mat" ? (
-        <label className="text-muted-foreground flex items-center gap-1 text-[10px]">
-          at (checkpoint id, empty=initial)
-          <input
-            className="bg-background flex-1 rounded border border-zinc-300 px-1 py-0.5 font-mono dark:border-zinc-600"
-            value={matAt}
-            onChange={(e) => onMatAt(e.target.value)}
-          />
-        </label>
+        <div className="space-y-1">
+          <p className="text-muted-foreground m-0 text-[10px] leading-snug">
+            Read-only: materialized <code className="bg-muted-foreground/10 rounded px-0.5">KitFullDto</code> at the checkpoint (or initial when empty). Does not change the live store.
+            Use <span className="text-foreground font-medium">VCS → Preview @ cp</span> to jump here from a selected checkpoint.
+          </p>
+          <label className="text-muted-foreground flex items-center gap-1 text-[10px]">
+            at (checkpoint id, empty = initial only)
+            <input
+              className="bg-background flex-1 rounded border border-zinc-300 px-1 py-0.5 font-mono dark:border-zinc-600"
+              value={matAt}
+              onChange={(e) => onMatAt(e.target.value)}
+            />
+          </label>
+        </div>
       ) : null}
       {errorText ? (
         <pre className="text-destructive m-0 max-h-24 overflow-auto font-mono text-[10px] wrap-break-word whitespace-pre-wrap">{errorText}</pre>

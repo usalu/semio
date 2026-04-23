@@ -74,6 +74,23 @@ function walkAlternative(item: unknown, on: VcsIdCallbacks): void {
   if (ncp) on.onCpId?.(ncp);
 }
 
+/**
+ * `SessionCommand::newDraft` / `is_valid_draft_base`: on the main line, once `theKitHead` exists, use that
+ * checkpoint (or a chosen cp in the `cp` field). On an alternative, both `alternativeId` and the tip
+ * `checkpointId` are required. `(null,null)` is only valid when the kit has no head yet.
+ */
+function newDraftPayload(cpId: string, altId: string, theKitHead: string | null): { checkpointId: string | null; alternativeId: string | null } | null {
+  const alt = altId.trim() || null;
+  const cp = cpId.trim() || null;
+  if (alt) {
+    if (!cp) return null;
+    return { checkpointId: cp, alternativeId: alt };
+  }
+  if (cp) return { checkpointId: cp, alternativeId: null };
+  if (!theKitHead) return { checkpointId: null, alternativeId: null };
+  return { checkpointId: theKitHead, alternativeId: null };
+}
+
 export const HistoryControls: React.FC<{
   handle: KitStoreHandle | null;
   /** Shown in this pane when `create()` or WASM init failed (in addition to Entity pane). */
@@ -91,7 +108,9 @@ export const HistoryControls: React.FC<{
   onAltId: (s: string) => void;
   msg: string;
   onMsg: (s: string) => void;
-}> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg }) => {
+  /** Pushes checkpoint into Snapshot window `materializeAt` for read-only DTO (empty string = initial). */
+  onInspectCheckpoint?: (checkpointId: string) => void;
+}> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg, onInspectCheckpoint }) => {
   const ex = (label: string, o: object) => {
     if (!handle) {
       onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
@@ -126,6 +145,13 @@ export const HistoryControls: React.FC<{
         <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div>
       ) : null}
       <div className="text-muted-foreground font-medium">VCS (KitStoreCommand)</div>
+      <p className="text-muted-foreground m-0 leading-snug">
+        Pick a checkpoint and optional alt in <span className="text-foreground font-medium">Kit tree</span> (or paste ids). <span className="text-foreground">New draft</span> uses
+        <code className="bg-muted-foreground/10 rounded px-0.5">checkpoint</code> + <code className="bg-muted-foreground/10 rounded px-0.5">alt</code>; on the main line, cp defaults to
+        theKit HEAD. Read-only at any cp: <span className="text-foreground">Preview @ cp</span> → open <span className="text-foreground">Snapshot / theKit</span> →
+        <code className="bg-muted-foreground/10 rounded px-0.5">materializeAt</code>. To commit: use <span className="text-foreground">Close tx</span> first (no open tx), then{" "}
+        <span className="text-foreground">Finalize → cp</span>.
+      </p>
       <div className="grid grid-cols-2 gap-1">
         <B disabled={!canVcs} onClick={() => ex("newSession", { newSession: null })}>
           New session
@@ -139,16 +165,57 @@ export const HistoryControls: React.FC<{
         <B disabled={!canVcs} onClick={() => ex("readKit full", { readKitCommands: { commands: [{ everything: {} }] } })}>
           Read kit everything
         </B>
-        <B onClick={() => ex("newAlt", { newAlternative: { fromCheckpoint: cpId, name: "alt-story" } })} disabled={!canVcs || !cpId.trim()}>
+        <B
+          onClick={() => ex("newAltFromCp", { newAlternative: { fromCheckpoint: cpId.trim(), name: "alt (from cp)" } })}
+          disabled={!canVcs || !cpId.trim()}
+        >
           New alt (from cp)
         </B>
+        <B onClick={() => ex("newAltRoot", { newAlternative: { name: "alt (initial, no cp)" } })} disabled={!canVcs}>
+          New alt (no cp)
+        </B>
         <B
-          onClick={() =>
-            ex("newDraft", { executeSessionCommands: { id: sessionId, commands: [{ newDraft: { checkpointId: null, alternativeId: null } }] } })
-          }
+          onClick={() => {
+            if (!handle || !canVcs || !sessionId.trim()) return;
+            const v = handle.vcsState() as { theKitHead?: string | null };
+            const head = (v && typeof v.theKitHead === "string" ? v.theKitHead : null) as string | null;
+            const base = newDraftPayload(cpId, altId, head);
+            if (base == null) {
+              onLog("newDraft: set checkpoint to the line tip (required when an alternative is set).");
+              return;
+            }
+            ex("newDraft", { executeSessionCommands: { id: sessionId, commands: [{ newDraft: base }] } });
+          }}
           disabled={!canVcs || !sessionId.trim()}
         >
-          New draft
+          New draft (cp + alt)
+        </B>
+        <B
+          onClick={() => {
+            if (!handle || !canVcs) return;
+            const v = handle.vcsState() as { theKitHead?: string | null };
+            const h = v && typeof v.theKitHead === "string" ? v.theKitHead : null;
+            if (h) onCpId(h);
+            else onLog("No theKit head yet — leave checkpoint empty for first draft.");
+          }}
+          disabled={!canVcs}
+        >
+          Set cp = HEAD
+        </B>
+        <B
+          onClick={() => {
+            if (!canVcs || !onInspectCheckpoint) {
+              onLog("Preview: connect onInspectCheckpoint (Storybook) or set checkpoint id.");
+              return;
+            }
+            onInspectCheckpoint(cpId.trim());
+            onLog(
+              `Snapshot window: "materializeAt" → ${cpId.trim() ? `checkpoint ${cpId.trim()}` : "empty = initial"}. Open that tab and click refresh.`,
+            );
+          }}
+          disabled={!canVcs}
+        >
+          Preview @ cp (read-only)
         </B>
         <B
           onClick={() =>
@@ -162,16 +229,157 @@ export const HistoryControls: React.FC<{
         </B>
         <B
           onClick={() =>
+            ex("finalizeTx", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [
+                        { executeTransactionCommands: { id: txId, commands: [{ finalize: null }] } },
+                      ],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Close tx (finalize)
+        </B>
+        <B
+          onClick={() =>
+            ex("abortTx", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [
+                        { executeTransactionCommands: { id: txId, commands: [{ abort: null }] } },
+                      ],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Abort tx (revert)
+        </B>
+        <B
+          onClick={() =>
+            ex("txUndo", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ undo: null }] } }],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Tx undo
+        </B>
+        <B
+          onClick={() =>
+            ex("txRedo", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ redo: null }] } }],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Tx redo
+        </B>
+        <B
+          onClick={() =>
+            ex("txUndoAll", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ undoAll: null }] } }],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Tx undo all
+        </B>
+        <B
+          onClick={() =>
+            ex("txRedoAll", {
+              executeSessionCommands: {
+                id: sessionId,
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [{ executeTransactionCommands: { id: txId, commands: [{ redoAll: null }] } }],
+                    },
+                  },
+                ],
+              },
+            })
+          }
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim() || !txId.trim()}
+        >
+          Tx redo all
+        </B>
+        <B
+          onClick={() =>
             ex("finalize", {
               executeSessionCommands: {
                 id: sessionId,
-                commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ finalizeToKitCheckpoint: { message: msg || "cp" } }] } }],
+                commands: [
+                  {
+                    executeKitDraftCommands: {
+                      id: draftId,
+                      commands: [
+                        {
+                          finalizeToKitCheckpoint: { message: msg.trim() || "checkpoint" },
+                        },
+                      ],
+                    },
+                  },
+                ],
               },
             })
           }
           disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
         >
           Finalize → cp
+        </B>
+        <B
+          onClick={() => ex("abortDraft", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ abort: null }] } }] } })}
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
+        >
+          Discard draft
         </B>
         <B onClick={() => ex("markRel", { executeKitCheckpointCommands: { id: cpId, commands: [{ markAsRelease: null }] } })} disabled={!canVcs || !cpId.trim()}>
           Mark cp release
@@ -223,9 +431,14 @@ export const HistoryControls: React.FC<{
         alt
         <input className="bg-background flex-1 font-mono" value={altId} onChange={(e) => onAltId(e.target.value)} />
       </label>
-      <label className="text-muted-foreground flex items-center gap-1">
-        finalize msg
-        <input className="bg-background flex-1" value={msg} onChange={(e) => onMsg(e.target.value)} />
+      <label className="text-muted-foreground flex flex-col gap-0.5">
+        <span>Message stored on the new checkpoint (Finalize → cp)</span>
+        <input
+          className="bg-background w-full"
+          value={msg}
+          placeholder="e.g. release-42 — required string on the command"
+          onChange={(e) => onMsg(e.target.value)}
+        />
       </label>
     </div>
   );
@@ -528,7 +741,8 @@ const KitTreeAlternatives: React.FC<{
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{alt.name || "(unnamed)"}</div>
               <div className="text-muted-foreground truncate">
-                {alt.checkpoints.length} cp · root {kitTreeShortId(alt.root, 6)}
+                {alt.checkpoints.length} cp · root{" "}
+                {alt.root && alt.root.length > 0 ? kitTreeShortId(alt.root, 6) : "initial"}
               </div>
             </div>
           </button>

@@ -166,6 +166,9 @@ function HistoryWindow() {
         onAltId={s.setAltId}
         msg={s.msg}
         onMsg={s.setMsg}
+        onInspectCheckpoint={(checkpointId) => {
+          s.setMatAt(checkpointId);
+        }}
       />
     </div>
   );

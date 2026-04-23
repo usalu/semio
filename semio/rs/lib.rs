@@ -3521,16 +3521,22 @@ pub mod kit_alternative {
     pub struct KitAlternative {
         pub id: Id,
         pub name: String,
-        /// First checkpoint on the main (or shared) line this line extends from.
-        pub root: Id,
+        /// Main-line fork point; `None` when the line starts from the initial kit (no main-line checkpoint).
+        /// Legacy/alternatives with a fork always have `Some`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub root: Option<Id>,
         /// Ordered checkpoint ids (may share ids with other alternatives).
         pub checkpoints: Vec<Id>,
     }
 
     impl KitAlternative {
-        /// Create a new alternative branching from `from_checkpoint`.
-        pub fn new(name: String, from_checkpoint: Id) -> Self {
-            Self { id: Id::new_v7(), name, root: from_checkpoint.clone(), checkpoints: vec![from_checkpoint] }
+        /// `from_checkpoint: Some(cp)` = fork from that main-line checkpoint. `None` = empty line from initial (no checkpoints in the store yet, or a pure alt line before a first commit).
+        pub fn new(name: String, from_checkpoint: Option<Id>) -> Self {
+            let id = Id::new_v7();
+            match from_checkpoint {
+                Some(cp) => Self { id, name, root: Some(cp.clone()), checkpoints: vec![cp] },
+                None => Self { id, name, root: None, checkpoints: vec![] },
+            }
         }
 
         /// Latest checkpoint id on this alternative (the working tip).
@@ -3543,9 +3549,11 @@ pub mod kit_alternative {
             self.checkpoints.push(cp);
         }
 
-        /// Collapse this alternative to `[root, new_tip]`.
+        /// Collapse this alternative to `[anchor, new_tip]`.
         pub fn collapse_to(&mut self, new_tip: Id) {
-            self.checkpoints = vec![self.root.clone(), new_tip];
+            let anchor = self.root.clone().or_else(|| self.checkpoints.first().cloned()).expect("alt collapse");
+            self.root = Some(anchor.clone());
+            self.checkpoints = vec![anchor, new_tip];
         }
     }
 
@@ -3775,7 +3783,10 @@ pub mod kit_draft {
     pub enum KitDraftCommand {
         ReadKitCommands { commands: Vec<ReadKitCommand> },
         StartTransaction,
-        FinalizeToKitCheckpoint { message: String },
+        FinalizeToKitCheckpoint {
+            #[serde(rename = "message")]
+            message: String,
+        },
         Abort,
         Undo { count: i32 },
         CanUndo { count: i32 },
@@ -3865,9 +3876,19 @@ pub mod kit_session {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum SessionCommand {
-        ReadKitCommands { commands: Vec<ReadKitCommand> },
-        NewDraft { checkpoint_id: Option<Id>, alternative_id: Option<Id> },
-        ExecuteKitDraftCommands { id: Id, commands: Vec<KitDraftCommand> },
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
+        NewDraft {
+            #[serde(rename = "checkpointId")]
+            checkpoint_id: Option<Id>,
+            #[serde(rename = "alternativeId")]
+            alternative_id: Option<Id>,
+        },
+        ExecuteKitDraftCommands {
+            id: Id,
+            commands: Vec<KitDraftCommand>,
+        },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3951,9 +3972,11 @@ pub mod kit_store_command {
         EndSession {
             id: Id,
         },
-        /// Branch: first checkpoint in the new alternative list.
+        /// Branch: first checkpoint in the new alternative list. Omit (or `null`) to start an empty
+        /// alternative from the **initial** kit (no main-line checkpoint, e.g. no commits yet).
         NewAlternative {
-            from_checkpoint: Id,
+            #[serde(rename = "fromCheckpoint", default, skip_serializing_if = "Option::is_none")]
+            from_checkpoint: Option<Id>,
             name: String,
         },
         ExecuteSessionCommands {
@@ -4021,8 +4044,10 @@ pub mod kit_store_command {
                 }
                 KitStoreCommand::NewAlternative { from_checkpoint, name } => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    if !g.checkpoints.contains_key(&from_checkpoint) {
-                        return Err(SemioError::NotFound { kind: "KitCheckpoint", id: from_checkpoint });
+                    if let Some(ref cp) = from_checkpoint {
+                        if !g.checkpoints.contains_key(cp) {
+                            return Err(SemioError::NotFound { kind: "KitCheckpoint", id: cp.clone() });
+                        }
                     }
                     let alt = KitAlternative::new(name, from_checkpoint);
                     let aid = alt.id.clone();
@@ -4403,17 +4428,20 @@ pub mod kit_store_command {
                     Ok(KitAlternativeCommandResult::ReadKitCommands { results })
                 }
                 KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
-                    let (root, before_dto, after_dto) = {
+                    let (parent_link, before_dto, after_dto) = {
                         let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         let alt = g.alternatives.get(aid).ok_or_else(|| SemioError::NotFound { kind: "KitAlternative", id: aid.clone() })?;
                         if alt.checkpoints.is_empty() {
                             return Err(SemioError::InvalidOperation("empty alternative".into()));
                         }
-                        let r = alt.root.clone();
                         let t = alt.tip().cloned().expect("len checked");
-                        let a = g.materialize_at(Some(&r));
+                        let a = if let Some(r) = &alt.root {
+                            g.materialize_at(Some(r))
+                        } else {
+                            g.materialize_at(None)
+                        };
                         let b = g.materialize_at(Some(&t));
-                        (r, a, b)
+                        (alt.root.clone(), a, b)
                     };
                     let ch = KitChange {
                         forward: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: after_dto.clone() }],
@@ -4422,11 +4450,11 @@ pub mod kit_store_command {
                         author: None,
                         time: None,
                     };
-                    let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
+                    let cp = KitCheckpoint::new(parent_link.clone(), vec![ch], Some(message));
                     let new_id = cp.id.clone();
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     g.checkpoints.insert(new_id.clone(), cp);
-                    g.children.entry(Some(root.clone())).or_default().push(new_id.clone());
+                    g.children.entry(parent_link.clone()).or_default().push(new_id.clone());
                     if let Some(alt) = g.alternatives.get_mut(aid) {
                         alt.collapse_to(new_id.clone());
                     }
@@ -6909,7 +6937,14 @@ pub mod design {
             if c.id == r.id {
                 return true;
             }
-            Self::port_lists_compatible_id(&c, &r.id) || Self::port_lists_compatible_id(&r, &c.id)
+            Self::port_lists_compatible_id(&c, &r.id)
+                || Self::port_lists_compatible_id(&r, &c.id)
+                || match (c.family.as_deref(), r.family.as_deref()) {
+                    (Some(candidate_family), Some(required_family)) => {
+                        candidate_family == required_family || c.compatible_families.iter().any(|family| family == required_family) || r.compatible_families.iter().any(|family| family == candidate_family)
+                    }
+                    _ => false,
+                }
         }
 
         fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
@@ -11902,6 +11937,9 @@ pub(crate) mod event_wire {
     fn wire_port(p: &PortStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
+            for q in &g.qualities {
+                wire_quality(q, w);
+            }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
             }
@@ -15014,6 +15052,21 @@ pub mod kit {
                 type_refs.push(t);
             }
 
+            // Connection sides resolve ports with `kit.read().port_by_id` during design hydration; kit-level
+            // and family port lists must be present on [`KitStore`] before [`DesignStore::hydrate_from_full_dto`].
+            {
+                let kw = Arc::downgrade(&kit);
+                if let Ok(mut k) = kit.write() {
+                    k.ports = kit_level_port_refs;
+                    k.families = family_refs;
+                    for fam in &k.families {
+                        if let Ok(mut fa) = fam.write() {
+                            fa.parent_kit = Some(kw.clone());
+                        }
+                    }
+                }
+            }
+
             let design_refs: Vec<DesignStoreRef> = designs
                 .into_iter()
                 .map(|ddto| {
@@ -15041,14 +15094,7 @@ pub mod kit {
                 k.designs = design_refs;
                 k.files = file_refs;
                 k.folders = folder_refs;
-                k.ports = kit_level_port_refs;
-                k.families = family_refs;
                 k.locations = location_refs;
-                for fam in &k.families {
-                    if let Ok(mut fa) = fam.write() {
-                        fa.parent_kit = Some(kw.clone());
-                    }
-                }
                 for loc in &k.locations {
                     if let Ok(mut lw) = loc.write() {
                         lw.parent_kit = Some(kw.clone());
@@ -17817,7 +17863,7 @@ pub mod family {
         pub attributes: Vec<AttributeStore>,
         pub parent_kit: Option<KitStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
-        hash_cache: Cache<String>,
+        pub(crate) hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
@@ -19346,7 +19392,7 @@ pub mod typ {
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::location::LocationIdDto;
-    use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
+    use crate::port::PortStoreRef;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef};
@@ -19757,10 +19803,13 @@ pub mod typ {
         }
 
         pub fn port(&self, id: &str) -> Option<PortStoreRef> {
-            self.families.iter().filter_map(|f| f.upgrade()).find_map(|f| {
-                let fr = f.read().ok()?;
-                fr.ports.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
-            })
+            let id = Id::from(id);
+            if let Some(kit) = self.parent_kit.upgrade() {
+                if let Ok(kr) = kit.read() {
+                    return kr.port_by_id(&id);
+                }
+            }
+            None
         }
 
         pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
@@ -19784,7 +19833,6 @@ pub mod typ {
                 unit: None,
                 location: None,
                 families: Vec::new(),
-                ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
                 authors: Vec::new(),
@@ -19814,7 +19862,6 @@ pub mod typ {
                 unit: d.unit,
                 location: d.location,
                 families: Vec::new(),
-                ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
                 authors: Vec::new(),
@@ -19834,7 +19881,7 @@ pub mod typ {
         /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
         pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
-            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, families, ports, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
+            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
 
@@ -19850,7 +19897,6 @@ pub mod typ {
                 unit: unit.clone(),
                 location,
                 families: Vec::new(),
-                ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
                 authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a)))).collect(),
@@ -20506,6 +20552,22 @@ pub mod io {
             Ok(())
         }
 
+        fn insert_port(tx: &Transaction<'_>, type_id: &Id, port: &PortFullDto, ordinal: usize) -> Result<()> {
+            let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
+            let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
+            tx.execute(
+                "INSERT INTO port (
+                    id, ordinal, family, mandatory, t, description,
+                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                params![port.id.as_str(), ordinal as i64, port.family, opt_bool_to_int(port.mandatory), port.t, port.description, point_x, point_y, point_z, dir_x, dir_y, dir_z, type_id.as_str()],
+            )?;
+            for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
+                tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family])?;
+            }
+            Ok(())
+        }
+
         fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
             let location_id = typ.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
@@ -20805,6 +20867,37 @@ pub mod io {
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(AttributeFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, definition: row.get(3)? });
+            }
+            Ok(values)
+        }
+
+        fn load_ports(conn: &SqlConnection, type_id: &Id) -> Result<Vec<PortFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT id, family, mandatory, t, description,
+                        point_x, point_y, point_z, direction_x, direction_y, direction_z
+                 FROM port WHERE type_id = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([type_id.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let id = Id::from(row.get::<_, String>(0)?);
+                let mut compatibility_stmt = conn.prepare("SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
+                let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
+                let mut compatible_families = Vec::new();
+                while let Some(compatibility_row) = compatibility_rows.next()? {
+                    compatible_families.push(compatibility_row.get(0)?);
+                }
+                values.push(PortFullDto {
+                    id,
+                    family: row.get(1)?,
+                    compatible_families,
+                    mandatory: opt_int_to_bool(row.get(2)?),
+                    t: row.get(3)?,
+                    description: row.get(4)?,
+                    point: point_from_parts3(row.get(5)?, row.get(6)?, row.get(7)?),
+                    direction: vector_from_parts3(row.get(8)?, row.get(9)?, row.get(10)?),
+                    ..Default::default()
+                });
             }
             Ok(values)
         }
@@ -21141,6 +21234,11 @@ pub mod io {
                 }
                 for (ordinal, typ) in dto.types.iter().enumerate() {
                     insert_type(&tx, &dto.id, typ, ordinal)?;
+                }
+                if let Some(first_type) = dto.types.first() {
+                    for (ordinal, port) in dto.ports.iter().enumerate() {
+                        insert_port(&tx, &first_type.id, port, ordinal)?;
+                    }
                 }
                 for (ordinal, design) in dto.designs.iter().enumerate() {
                     insert_design(&tx, &dto.id, design, ordinal)?;
@@ -21760,8 +21858,16 @@ pub mod wasm {
                 })
                 .collect();
             checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut alternatives: Vec<VcsAlternative> =
-                g.alternatives.values().map(|a| VcsAlternative { id: a.id.to_string(), name: a.name.clone(), root: a.root.to_string(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() }).collect();
+            let mut alternatives: Vec<VcsAlternative> = g
+                .alternatives
+                .values()
+                .map(|a| VcsAlternative {
+                    id: a.id.to_string(),
+                    name: a.name.clone(),
+                    root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(),
+                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
+                })
+                .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
             let mut sessions: Vec<VcsSession> = g
                 .sessions
@@ -22305,10 +22411,10 @@ mod tests {
             let kit = KitStore::from_full_dto(KitFullDto {
                 id: kit_id,
                 name: "kit".into(),
+                ports: vec![PortFullDto { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
                 types: vec![TypeFullDto {
                     id: type_id.clone(),
                     name: "typ".into(),
-                    ports: vec![PortFullDto { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
                     connectors: vec![ConnectorFullDto { id: connector_id, code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
                     ..Default::default()
                 }],
@@ -22556,7 +22662,6 @@ mod tests {
         use crate::connection::ConnectionFullDto;
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
-        use crate::geom::{Coordinate, Point, Vector};
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
         use crate::piece::{PieceFullDto, PieceIdDto};
@@ -22633,52 +22738,31 @@ mod tests {
             let piece_candidate_consumed_neighbor = Id::from("piece-candidate-consumed-neighbor");
             let piece_candidate_empty = Id::from("piece-candidate-empty");
 
-            let make_port = |id: Id, family: &str, compatible_families: Vec<&str>| PortFullDto {
-                id,
-                family: Some(family.to_string()),
-                compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
-                point: Some(Point::ZERO),
-                direction: Some(Vector::new(1.0, 0.0, 0.0)),
-                ..Default::default()
+            let make_port = |id: Id, compatible_with: Vec<Id>| {
+                let name = id.as_str().to_string();
+                PortFullDto { id, name, compatible_ports: compatible_with.into_iter().map(|i| PortIdDto { id: i }).collect(), ..Default::default() }
             };
 
             let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto { id: Id::from(id), code: code.to_string(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() };
 
-            let make_type = |id: Id, name: &str, ports: Vec<PortFullDto>, connectors: Vec<ConnectorFullDto>| TypeFullDto { id, name: name.to_string(), ports, connectors, ..Default::default() };
+            let make_type = |id: Id, name: &str, connectors: Vec<ConnectorFullDto>| TypeFullDto { id, name: name.to_string(), connectors, ..Default::default() };
+
+            let kit_ports = vec![make_port(port_l.clone(), vec![]), make_port(port_g.clone(), vec![]), make_port(port_l_compatible.clone(), vec![port_l.clone()])];
 
             let dto = KitFullDto {
                 id: Id::from("synthetic-kit"),
                 name: "synthetic-kit".to_string(),
+                ports: kit_ports,
                 types: vec![
-                    make_type(
-                        selected_external_lg.clone(),
-                        "selected-external-lg",
-                        vec![make_port(port_l.clone(), "L", vec![]), make_port(port_g.clone(), "G", vec![])],
-                        vec![make_connector("selected-external-lg-connector-0", "L", &port_l), make_connector("selected-external-lg-connector-1", "G", &port_g)],
-                    ),
-                    make_type(
-                        selected_isolated_lg.clone(),
-                        "selected-isolated-lg",
-                        vec![make_port(port_l.clone(), "L", vec![]), make_port(port_g.clone(), "G", vec![])],
-                        vec![make_connector("selected-isolated-lg-connector-0", "L", &port_l), make_connector("selected-isolated-lg-connector-1", "G", &port_g)],
-                    ),
-                    make_type(
-                        selected_external_ll.clone(),
-                        "selected-external-ll",
-                        vec![make_port(port_l.clone(), "L", vec![])],
-                        vec![make_connector("selected-external-ll-connector-0", "L0", &port_l), make_connector("selected-external-ll-connector-1", "L1", &port_l)],
-                    ),
-                    make_type(neighbor_l.clone(), "neighbor-l", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("neighbor-l-connector-0", "L", &port_l)]),
-                    make_type(neighbor_g.clone(), "neighbor-g", vec![make_port(port_g.clone(), "G", vec![])], vec![make_connector("neighbor-g-connector-0", "G", &port_g)]),
-                    make_type(candidate_l.clone(), "candidate-l", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("candidate-l-connector-0", "L", &port_l)]),
-                    make_type(
-                        candidate_lg.clone(),
-                        "candidate-lg",
-                        vec![make_port(port_l_compatible.clone(), "L-compatible", vec!["L"]), make_port(port_g.clone(), "G", vec![])],
-                        vec![make_connector("candidate-lg-connector-0", "LC", &port_l_compatible), make_connector("candidate-lg-connector-1", "G", &port_g)],
-                    ),
-                    make_type(candidate_ll.clone(), "candidate-ll", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("candidate-ll-connector-0", "L0", &port_l), make_connector("candidate-ll-connector-1", "L1", &port_l)]),
-                    make_type(connectorless.clone(), "candidate-empty", vec![], vec![]),
+                    make_type(selected_external_lg.clone(), "selected-external-lg", vec![make_connector("selected-external-lg-connector-0", "L", &port_l), make_connector("selected-external-lg-connector-1", "G", &port_g)]),
+                    make_type(selected_isolated_lg.clone(), "selected-isolated-lg", vec![make_connector("selected-isolated-lg-connector-0", "L", &port_l), make_connector("selected-isolated-lg-connector-1", "G", &port_g)]),
+                    make_type(selected_external_ll.clone(), "selected-external-ll", vec![make_connector("selected-external-ll-connector-0", "L0", &port_l), make_connector("selected-external-ll-connector-1", "L1", &port_l)]),
+                    make_type(neighbor_l.clone(), "neighbor-l", vec![make_connector("neighbor-l-connector-0", "L", &port_l)]),
+                    make_type(neighbor_g.clone(), "neighbor-g", vec![make_connector("neighbor-g-connector-0", "G", &port_g)]),
+                    make_type(candidate_l.clone(), "candidate-l", vec![make_connector("candidate-l-connector-0", "L", &port_l)]),
+                    make_type(candidate_lg.clone(), "candidate-lg", vec![make_connector("candidate-lg-connector-0", "LC", &port_l_compatible), make_connector("candidate-lg-connector-1", "G", &port_g)]),
+                    make_type(candidate_ll.clone(), "candidate-ll", vec![make_connector("candidate-ll-connector-0", "L0", &port_l), make_connector("candidate-ll-connector-1", "L1", &port_l)]),
+                    make_type(connectorless.clone(), "candidate-empty", vec![]),
                 ],
                 designs: vec![
                     DesignFullDto {
@@ -22895,6 +22979,31 @@ mod tests {
         }
     }
 
+    /// Metabolism reference kit: deserialise + hydrate must preserve kit-level families and ports nested on families.
+    #[cfg(not(target_arch = "wasm32"))]
+    mod metabolism_kit {
+        use std::path::Path;
+
+        use crate::kit::{KitFullDto, KitStore};
+
+        #[test]
+        fn metabolism_asset_loads_families_and_nested_ports() {
+            let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join("semio").join("metabolism.kit.semio.json");
+            let json = std::fs::read_to_string(&path).expect("read metabolism.kit.semio.json");
+            let dto: KitFullDto = serde_json::from_str(&json).expect("parse KitFullDto");
+            let family_count = dto.families.len();
+            let ports_in_dto: usize = dto.families.iter().map(|f| f.ports.len()).sum();
+            assert_eq!(family_count, 12, "fixture should list 12 families");
+            assert_eq!(ports_in_dto, 18, "fixture should contain 18 ports under families");
+
+            let kit = KitStore::from_full_dto(dto);
+            let kr = kit.read().expect("kit read");
+            assert_eq!(kr.families.len(), 12, "hydrated kit keeps all families");
+            let ports_loaded: usize = kr.families.iter().filter_map(|f| f.read().ok()).map(|f| f.ports.len()).sum();
+            assert_eq!(ports_loaded, 18, "hydrated families retain nested ports");
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     mod io_sqlite {
         use rusqlite::Connection;
@@ -22914,12 +23023,8 @@ mod tests {
             let kit = KitStore::from_full_dto(KitFullDto {
                 id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
-                types: vec![TypeFullDto {
-                    id: type_id.clone(),
-                    name: "Wall".into(),
-                    ports: vec![PortFullDto { id: Id::from("top"), family: Some("stack".into()), compatible_families: vec!["stack".into()], ..Default::default() }],
-                    ..Default::default()
-                }],
+                ports: vec![PortFullDto { id: Id::from("top"), family: Some("stack".into()), compatible_families: vec!["stack".into()], ..Default::default() }],
+                types: vec![TypeFullDto { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
                 designs: vec![DesignFullDto { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFullDto { id: piece_id, r#type: Some(crate::typ::TypeIdDto { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
@@ -23240,10 +23345,10 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
+                    ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
                     types: vec![TypeFullDto {
                         id: type_id.clone(),
                         name: "typ".into(),
-                        ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
                         connectors: vec![ConnectorFullDto { id: conn_id.clone(), code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
@@ -23268,7 +23373,8 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }], ..Default::default() }],
+                    ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
@@ -23530,24 +23636,18 @@ mod tests {
                 let kit = KitStore::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    types: vec![TypeFullDto {
-                        id: tg.clone(),
-                        name: "t".into(),
-                        ports: vec![PortFullDto {
-                            id: pg.clone(),
-                            qualities: vec![QualityFullDto { id: qg.clone(), key: "qk".into(), benchmarks: vec![BenchmarkFullDto { id: bg.clone(), name: "bn".into(), ..Default::default() }], ..Default::default() }],
-                            ..Default::default()
-                        }],
+                    ports: vec![PortFullDto {
+                        id: pg.clone(),
+                        qualities: vec![QualityFullDto { id: qg.clone(), key: "qk".into(), benchmarks: vec![BenchmarkFullDto { id: bg.clone(), name: "bn".into(), ..Default::default() }], ..Default::default() }],
                         ..Default::default()
                     }],
+                    types: vec![TypeFullDto { id: tg.clone(), name: "t".into(), ..Default::default() }],
                     ..Default::default()
                 });
                 let mut rx = kit.read().unwrap().subscribe();
                 let b = {
                     let kr = kit.read().unwrap();
-                    let t = kr.types[0].clone();
-                    let tr = t.read().unwrap();
-                    let p = tr.ports[0].clone();
+                    let p = kr.port_by_id(&pg).expect("port");
                     let pr = p.read().unwrap();
                     let q = pr.qualities[0].clone();
                     let qr = q.read().unwrap();
@@ -24630,7 +24730,7 @@ mod tests {
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
             // Branch from cp_main
-            let alt_id = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp_main.clone(), name: "br".into() }).expect("alt") {
+            let alt_id = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
@@ -24745,11 +24845,11 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let a1 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0.clone(), name: "a1".into() }).expect("a1") {
+            let a1 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let a2 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0, name: "a2".into() }).expect("a2") {
+            let a2 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
@@ -24818,7 +24918,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let alt = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0.clone(), name: "a".into() }).expect("na") {
+            let alt = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
