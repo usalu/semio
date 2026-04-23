@@ -21,7 +21,7 @@ use semio::kit_conflict_registry::ConflictResolution;
 use semio::kit_store::KitStore;
 use semio::kit_store_command::KitStoreCommand;
 use semio::kit_change::KitChangeKind;
-use semio::read_command::ReadKitCommand;
+use semio::read::ReadKitCommand;
 
 type DispatchRes = std::result::Result<Value, (i32, String)>;
 
@@ -523,8 +523,7 @@ fn run_method(
         )
         .map_err(e32000)?;
         let g = k.read().map_err(|_| e32000("lock"))?;
-        let dto = g.to_full_dto();
-        let results = ReadKitCommand::execute_many(&dto, &commands).map_err(e32000)?;
+        let results = ReadKitCommand::execute_many(&*g, &commands).map_err(e32000)?;
         return Ok(serde_json::to_value(&results).map_err(e32000)?);
     }
     if method == "kit.materializeAt" {

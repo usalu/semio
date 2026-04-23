@@ -4,7 +4,7 @@
 
 import * as React from "react";
 
-import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_KIT_PRESETS, READ_KIT_PRESETS } from "./commandSchema";
+import { ALL_CHANGE_KIT_ROOT_KEYS, ALL_READ_KIT_COMMAND_KEYS, CHANGE_KIT_PRESETS, READ_KIT_PRESETS } from "./commandSchema";
 import type { KitStoreHandle } from "./semioWasm";
 
 type Mode = "changeKit" | "readKit" | "execute";
@@ -39,7 +39,9 @@ export const CommandForm: React.FC<{
             {m}
           </button>
         ))}
-        <span className="text-muted-foreground ml-auto text-[10px]">{ALL_CHANGE_KIT_ROOT_KEYS.length} kit keys</span>
+        <span className="text-muted-foreground ml-auto text-[10px]">
+          {ALL_CHANGE_KIT_ROOT_KEYS.length} ch · {ALL_READ_KIT_COMMAND_KEYS.length} read
+        </span>
       </div>
 
       {mode === "changeKit" ? (

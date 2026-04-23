@@ -3,6 +3,7 @@
 // Web Worker entry: loads the semio WASM module (host-configured), hosts [`KitStoreHandle`], exposes RPC via Comlink.
 
 import * as Comlink from "comlink";
+import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
 
 let handle: any = null;
 
@@ -191,9 +192,9 @@ const api = {
     }
   },
 
-  executeRead(cmds: unknown[]) {
+  executeRead(cmds: ReadCommandBatch): ReadCommandBatchResult {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.executeReadKitCommands(cmds);
+    return handle.executeReadKitCommands(cmds) as ReadCommandBatchResult;
   },
 
   vcsState() {

@@ -19,6 +19,7 @@ import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
+import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
 
 // #endregion Ôø®´©ÅImports
 
@@ -19837,7 +19838,7 @@ export interface KitStoreClient {
   dispose(): void;
 
   execute(cmd: unknown): Promise<KitStoreExecuteResult>;
-  executeRead(cmds: unknown[]): Promise<any[]>;
+  executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult>;
   vcsState(): Promise<any>;
   theKitDto(): Promise<any>;
   materializeAt(id: string): Promise<any>;
@@ -20121,7 +20122,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
     }
   }
 
-  async executeRead(cmds: unknown[]): Promise<any[]> {
+  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
     return await withTimeout(Promise.resolve(this.handle.executeReadKitCommands(cmds)), this.timeoutMs, "timeout");
   }
 
@@ -20647,7 +20648,7 @@ export class WorkerKitStoreClient implements KitStoreClient {
     }
   }
 
-  async executeRead(cmds: unknown[]): Promise<any[]> {
+  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
     return await withTimeout(this.api.executeRead(cmds), this.timeoutMs, "timeout");
   }
 
@@ -20957,7 +20958,7 @@ export class InMemoryKitStore implements UndoableKitStore {
     return Promise.reject(new Error("InMemoryKitStore.execute requires a WASM KitStoreHandle-backed client"));
   }
 
-  executeRead(_cmds: unknown[]): Promise<any[]> {
+  executeRead(_cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
     return Promise.reject(new Error("InMemoryKitStore.executeRead requires a WASM KitStoreHandle-backed client"));
   }
 
@@ -28841,3 +28842,7 @@ if (shouldRunJsBenchmarks) {
 }
 
 // #endregion ­ƒÅï´©ÅBenchmarks
+
+// #region Read command types (generated mirror of semio/rs/read_module)
+export * from "./readCommandTypes";
+// #endregion Read command types

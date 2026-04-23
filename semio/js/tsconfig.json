@@ -42,6 +42,6 @@
       "@semio/sketchpad/*": ["../sketchpad/*"]
     }
   },
-  "include": ["index.ts"],
+  "include": ["index.ts", "readCommandTypes.ts", "worker.ts"],
   "exclude": ["node_modules", "_debug_diff.ts", "debug_design.cjs"]
 }

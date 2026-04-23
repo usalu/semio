@@ -32,4 +32,4 @@ bundle:
 
 ## 📛 Entities
 
-- Wire DTOs and command enums are the same [`serde` types as `semio`](../rs/lib.rs) (`KitFullDto`, `KitStoreCommand`, `ChangeKitCommand`, `ReadKitCommand`, …). No second schema.
+- Wire DTOs and command enums are the same [`serde` types as `semio`](../rs/lib.rs) (`KitFullDto`, `KitStoreCommand`, `ChangeKitCommand`, `ReadKitCommand` in [`read` / `read_module.rs`](../rs/read_module.rs), …). **`kit.executeReadKitCommands`** takes `{ cmds: ReadKitCommand[] }` (externally tagged, camelCase keys on each command variant) and returns `ReadKitCommandOutput[]`. No second schema.

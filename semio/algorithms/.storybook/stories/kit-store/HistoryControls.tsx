@@ -159,11 +159,11 @@ export const HistoryControls: React.FC<{
         <B disabled={!canVcs} onClick={() => ex("end", { endSession: { id: sessionId } })}>
           End session
         </B>
-        <B disabled={!canVcs} onClick={() => ex("readKit", { readKitCommands: { commands: [{ name: null }] } })}>
+        <B disabled={!canVcs} onClick={() => ex("readKit", { readKitCommands: { commands: [{ readKitNameCommand: null }] } })}>
           Read kit name
         </B>
-        <B disabled={!canVcs} onClick={() => ex("readKit full", { readKitCommands: { commands: [{ everything: {} }] } })}>
-          Read kit everything
+        <B disabled={!canVcs} onClick={() => ex("readKit full", { readKitCommands: { commands: [{ readKitFullCommand: null }] } })}>
+          Read kit full
         </B>
         <B
           onClick={() => ex("newAltFromCp", { newAlternative: { fromCheckpoint: cpId.trim(), name: "alt (from cp)" } })}

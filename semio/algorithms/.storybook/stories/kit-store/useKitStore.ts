@@ -64,8 +64,10 @@ export function useKitStore(seedKit: unknown) {
   const [changeJson, setChangeJson] = React.useState(
     `{\n  "name": { "name": "Kit (story edit)" }\n}`,
   );
-  const [readJson, setReadJson] = React.useState(`{ "name": null }`);
-  const [executeJson, setExecuteJson] = React.useState(`{ "readKitCommands": { "commands": [ { "name": null } ] } }`);
+  const [readJson, setReadJson] = React.useState(`{ "readKitFullCommand": null }`);
+  const [executeJson, setExecuteJson] = React.useState(
+    `{ "readKitCommands": { "commands": [ { "readKitFullCommand": null } ] } }`,
+  );
 
   const pushEvent = React.useCallback((payload: unknown) => {
     setEvents((prev) => [...prev, { id: nextEvId(), t: Date.now(), payload }]);

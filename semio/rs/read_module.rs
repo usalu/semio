@@ -1,8 +1,7 @@
-//! Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
+// Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
 // Regenerate: `python gen_read_module.py` from semio/rs (optional; hand-edit for tweaks).
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use crate::attribute::{
     AttributeFullDto, AttributeMetadataDto, AttributeShallowDto, AttributeIdDto,
@@ -11,7 +10,7 @@ use crate::author::{AuthorFullDto, AuthorMetadataDto, AuthorShallowDto, AuthorId
 use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkIdDto};
 use crate::concept::{ConceptFullDto, ConceptMetadataDto, ConceptShallowDto, ConceptIdDto};
 use crate::connection::{
-    ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionIdDto, ConnectionStoreRef,
+    ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionIdDto,
 };
 use crate::connector::{
     ConnectorFullDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorIdDto, ConnectorStoreRef,
@@ -42,7 +41,6 @@ use crate::stat::{StatFullDto, StatMetadataDto, StatShallowDto, StatIdDto};
 use crate::tag::{TagFullDto, TagMetadataDto, TagShallowDto, TagIdDto};
 use crate::typ::{TypeFullDto, TypeMetadataDto, TypeShallowDto, TypeIdDto, TypeStoreRef};
 use crate::id::Id;
-use crate::{error::Result, error::SemioError};
 
 /// One row of [`crate::design::DesignStore::flatten_map`].
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -51,10 +49,6 @@ pub struct DesignFlattenMapEntryDto {
     pub piece_id: Id,
     pub plane: Plane,
     pub center: Coordinate,
-}
-
-fn nf<K: AsRef<str>>(kind: &'static str, id: K) -> SemioError {
-    SemioError::NotFound { kind: kind.into(), id: Id::from(id.as_ref()) }
 }
 
 // --- Kit ---
@@ -489,6 +483,8 @@ pub enum ReadConnectionCommand {
     ReadConnectionChildPlaneMatrixCommand,
     ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceIdDto },
     ReadConnectionAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+    ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
+    ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -516,6 +512,8 @@ pub enum ReadConnectionCommandOutput {
     ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
     ReadConnectionFlatSidesForChildCommand { connected: SideFullDto, connecting: SideFullDto },
     ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+    ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
+    ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
 }
 
 // --- Side ---

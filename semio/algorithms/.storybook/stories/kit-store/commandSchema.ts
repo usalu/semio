@@ -1,7 +1,11 @@
 // #region 🧲Header
-// Mirrors semio/rs `change_command` + `read_command` variant names (camelCase JSON).
+// Mirrors semio/rs `change_command` + `read` (`read_module.rs`) variant names (camelCase JSON).
 // Used for dropdown presets; "raw JSON" allows any nested command list.
 // #endregion
+
+import { ALL_READ_KIT_COMMAND_KEYS } from "@semio/js";
+
+export { ALL_READ_KIT_COMMAND_KEYS };
 
 /** One JSON object for a single `ChangeKitCommand` (serde **externally tagged**, camelCase variant keys). */
 export interface ChangeKitPreset {
@@ -164,19 +168,28 @@ export const CHANGE_TYPE_COMMAND_KEYS = [
 ] as const;
 
 export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
-  { id: "rk-everything", label: "Read: everything {}", json: j({ everything: {} }) },
-  { id: "rk-name", label: "Read: name", json: j({ name: null }) },
-  { id: "rk-types", label: "Read: types", json: j({ types: null }) },
-  { id: "rk-designs", label: "Read: designs", json: j({ designs: null }) },
-  { id: "rk-desc", label: "Read: description", json: j({ description: null }) },
-  { id: "rk-files", label: "Read: files (stub → Other)", json: j({ files: null }) },
+  { id: "rk-full", label: "Read: readKitFullCommand", json: j({ readKitFullCommand: null }) },
+  { id: "rk-name", label: "Read: readKitNameCommand", json: j({ readKitNameCommand: null }) },
+  { id: "rk-types", label: "Read: readKitTypesFullCommand", json: j({ readKitTypesFullCommand: null }) },
+  { id: "rk-designs", label: "Read: readKitDesignsFullCommand", json: j({ readKitDesignsFullCommand: null }) },
+  { id: "rk-desc", label: "Read: readKitDescriptionCommand", json: j({ readKitDescriptionCommand: null }) },
   {
-    id: "rk-type-everything",
-    label: "Read: type everything",
+    id: "rk-type-nested",
+    label: "Read: readKitTypeCommands (name)",
     json: j({
-      readTypeCommands: {
+      readKitTypeCommands: {
         id: { id: "PLACEHOLDER_TYPE_ID" },
-        commands: [{ everything: null }],
+        commands: [{ readTypeNameCommand: null }],
+      },
+    }),
+  },
+  {
+    id: "rk-computed",
+    label: "Read: readKitDesignCommands (flattenMap)",
+    json: j({
+      readKitDesignCommands: {
+        id: { id: "PLACEHOLDER_DESIGN_ID" },
+        commands: [{ readDesignFlattenMapCommand: null }],
       },
     }),
   },
@@ -186,5 +199,5 @@ export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
 export const KIT_STORE_COVERAGE_ROWS: readonly { group: string; key: string }[] = [
   { group: "ChangeKit (root)", key: "replaceKitFromFullDto + all ALL_CHANGE_KIT_ROOT_KEYS" },
   { group: "ChangeType", key: "see CHANGE_TYPE_COMMAND_KEYS" },
-  { group: "ReadKit", key: "everything, name, description, types, designs, files, readTypeCommands, readDesignCommands" },
+  { group: "ReadKit", key: "see ALL_READ_KIT_COMMAND_KEYS (generated from semio/rs/read_module.rs)" },
 ];

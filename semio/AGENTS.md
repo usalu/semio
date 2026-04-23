@@ -16,6 +16,12 @@ emoji: 👤
 
 ## 🛠️ Mechanisms
 
+### Kit graph read commands
+
+- **Rust**: `semio::read` assembles [`read_module.rs`](rs/read_module.rs) + [`read_impl.rs`](rs/read_impl.rs) — exhaustive `Read*Command` / `Read*CommandOutput` enums, execution on the **live** `KitGraph`, no `Other` / `#[serde(other)]` escapes.
+- **TypeScript**: [`readCommandTypes.ts`](js/readCommandTypes.ts) (run [`js/gen_read_command_types.py`](js/gen_read_command_types.py) when `read_module.rs` changes) — `KitStoreClient.executeRead` is `ReadCommandBatch` → `ReadCommandBatchResult`.
+- **Wire**: wasm `executeReadKitCommands` and `semio-store` `kit.executeReadKitCommands` use the same JSON (externally tagged, camelCase).
+
 ### SQL
 
 ```mermaid

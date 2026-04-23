@@ -7,37 +7,37 @@ todos:
    status: completed
  - id: rs-read-mod
    content: Replace `pub mod read_command` in `semio/rs/lib.rs` with a new `pub mod read` containing one ReadXCommand + ReadXCommandOutput pair per entity, no Other variants, all serde camelCase.
-   status: in_progress
+   status: completed
  - id: rs-execute
    content: Implement execute impls for every Read command against the live KitGraph (PieceStoreRef, TypeStoreRef, DesignStoreRef, ...), wiring computed props (flatCenter, flatPlane, path, parentPiece, parentConnection, parentDesign, alternatives, flattenMap, etc.).
-   status: pending
+   status: completed
  - id: rs-narrow-dtos
    content: Add FixedPieceOutputDto + ConnectedPieceOutputDto (and their fixed/connected ReadPiece variants), plus any additional narrow InputDto/OutputDto discovered during implementation.
-   status: pending
+   status: completed
  - id: rs-wasm
    content: Rewire `executeReadKitCommands` in `pub mod wasm` to execute against the live KitGraph, typed over the new commands.
-   status: pending
+   status: completed
  - id: rs-kit-store-cmd
    content: Update `KitStoreCommand::ReadKitCommands` and all VCS command paths to use the new `ReadKitCommand` enum.
-   status: pending
+   status: completed
  - id: rs-tests
    content: Rewrite Rust tests in `vcs_command_tests` and `wasm_handle_tests` against the new variants; add coverage for every computed-property command.
-   status: pending
+   status: completed
  - id: store-jsonrpc
    content: Update `semio/store/jsonrpc.rs` `kit.executeReadKitCommands` serde types to the new enums; keep method name.
-   status: pending
+   status: completed
  - id: js-mirror
    content: Hand-author exhaustive TS mirror of ReadKitCommand/Output trees in `semio/js/index.ts` and `worker.ts`; type `KitStoreClient.executeRead` statically.
-   status: pending
+   status: completed
  - id: algorithms-storybook
    content: Regenerate `commandSchema.ts`, `CommandForm.tsx`, `HistoryControls.tsx`, `useKitStore.ts`, `KitStore.stories.tsx` presets/suggestions against the new schema.
-   status: pending
+   status: completed
  - id: docs
    content: Update `semio/rs/AGENTS.md`, `semio/js/AGENTS.md`, `semio/store/AGENTS.md`, and `semio/AGENTS.md` glossary to describe the new read command surface; remove references to the old `Other`-based shape.
-   status: pending
+   status: completed
  - id: delete-legacy
    content: Delete the old `pub mod read_command` block, all `#[serde(other)]` escapes, old tests/presets, and any `any`/`unknown[]` typings on the TS side that referred to the legacy shape.
-   status: pending
+   status: completed
 isProject: false
 ---
 
