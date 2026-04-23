@@ -2,9 +2,11 @@
 // semio-algorithms: snapshot() vs theKitDto() vs materializeAt
 // #endregion
 
+import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
 
 import type { KitStoreHandle } from "./semioWasm";
+import { useRjvTheme } from "./useKitStore";
 
 type Tab = "live" | "theKit" | "mat" | "vcs";
 
@@ -14,28 +16,36 @@ export const SnapshotViewer: React.FC<{
   onMatAt: (s: string) => void;
 }> = ({ handle, matAt, onMatAt }) => {
   const [tab, setTab] = React.useState<Tab>("live");
-  const [json, setJson] = React.useState<string>("{}");
+  const [value, setValue] = React.useState<unknown>({});
+  const [errorText, setErrorText] = React.useState<string | null>(null);
+  const theme = useRjvTheme();
 
-  React.useEffect(() => {
+  const load = React.useCallback(() => {
     if (!handle) {
-      setJson("{}");
+      setValue({});
+      setErrorText(null);
       return;
     }
     try {
-      if (tab === "live") {
-        setJson(JSON.stringify(handle.snapshot(), null, 2));
-      } else if (tab === "theKit") {
-        setJson(JSON.stringify(handle.theKitDto(), null, 2));
-      } else if (tab === "mat") {
+      if (tab === "live") setValue(handle.snapshot());
+      else if (tab === "theKit") setValue(handle.theKitDto());
+      else if (tab === "mat") {
         const at = matAt.trim();
-        setJson(JSON.stringify(handle.materializeAt(at.length ? at : null), null, 2));
-      } else {
-        setJson(JSON.stringify(handle.vcsState(), null, 2));
-      }
+        setValue(handle.materializeAt(at.length ? at : null));
+      } else setValue(handle.vcsState());
+      setErrorText(null);
     } catch (e) {
-      setJson(String(e));
+      setErrorText(e instanceof Error ? e.message : String(e));
+      setValue({});
     }
   }, [handle, tab, matAt]);
+
+  React.useEffect(() => {
+    load();
+  }, [load]);
+
+  const srcObject = value && typeof value === "object" ? (value as object) : { value };
+  const rootName = value && typeof value === "object" ? false : "value";
 
   return (
     <div className="text-foreground flex h-full min-h-0 flex-col gap-1 p-2 text-xs">
@@ -62,16 +72,7 @@ export const SnapshotViewer: React.FC<{
         <button
           type="button"
           className="ml-auto border border-zinc-300 px-1.5 py-0.5 text-[10px] dark:border-zinc-600"
-          onClick={() => {
-            if (handle) {
-              if (tab === "live") setJson(JSON.stringify(handle.snapshot(), null, 2));
-              else if (tab === "theKit") setJson(JSON.stringify(handle.theKitDto(), null, 2));
-              else if (tab === "mat") {
-                const at = matAt.trim();
-                setJson(JSON.stringify(handle.materializeAt(at.length ? at : null), null, 2));
-              } else setJson(JSON.stringify(handle.vcsState(), null, 2));
-            }
-          }}
+          onClick={load}
         >
           refresh
         </button>
@@ -86,7 +87,23 @@ export const SnapshotViewer: React.FC<{
           />
         </label>
       ) : null}
-      <pre className="m-0 min-h-0 flex-1 overflow-auto rounded border border-zinc-200 bg-zinc-50 p-1 font-mono text-[9px] dark:border-zinc-800 dark:bg-zinc-950">{json}</pre>
+      {errorText ? (
+        <pre className="text-destructive m-0 max-h-24 overflow-auto font-mono text-[10px] wrap-break-word whitespace-pre-wrap">{errorText}</pre>
+      ) : null}
+      <div className="m-0 min-h-0 flex-1 overflow-auto rounded border border-zinc-200 bg-zinc-50 p-1 dark:border-zinc-800 dark:bg-zinc-950">
+        <ReactJson
+          src={srcObject}
+          name={rootName as false | string}
+          theme={theme}
+          iconStyle="triangle"
+          indentWidth={2}
+          collapsed={2}
+          displayDataTypes={false}
+          displayObjectSize={false}
+          enableClipboard
+          style={{ background: "transparent", fontSize: "9px" }}
+        />
+      </div>
     </div>
   );
 };

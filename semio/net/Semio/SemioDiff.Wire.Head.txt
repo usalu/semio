@@ -1,0 +1,25 @@
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
+using Semio.Store;
+using Formatting = Newtonsoft.Json.Formatting;
+
+namespace Semio;
+
+/// <summary>Kit diff validation, <see cref="AreKitsEqual"/> (via <c>semio-store</c>), and canonical <see cref="KitDiff"/> JSON comparison.</summary>
+public static class SemioDiff
+{
+    public static DesignChange GetDesignChange(Design before, Design after, string? author = null, DateTime? time = null)
+    {
+        var forward = Design.GetDesignDiff(before, after) ?? new DesignDiff();
+        var backward = Design.GetDesignDiff(after, before) ?? new DesignDiff();
+        return new DesignChange { Forward = forward, Backward = backward, Author = author, Time = time, Before = before, After = after };
+    }
+
+    public static bool AreKitsEqual(Kit a, Kit b) => StoreKitIO.KitsEqual(a, b);
+

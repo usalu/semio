@@ -1,0 +1,452 @@
+    public static bool AreKitsEqual(Kit a, Kit b)
+    {
+        const double Tolerance = 1e-5f;
+        List<T> NormalizeArray<T>(List<T>? arr) => arr ?? new List<T>();
+        string? NormalizeValue(string? value) => string.IsNullOrEmpty(value) ? null : value;
+        bool? NormalizeBoolean(bool? value) => value == true ? true : null;
+        bool FloatEqual(double valA, double valB) => Math.Abs(valA - valB) < Tolerance;
+        bool NullableFloatEqual(double? valA, double? valB)
+        {
+            if (valA == null && valB == null) return true;
+            if (valA == null || valB == null) return false;
+            return Math.Abs(valA.Value - valB.Value) < Tolerance;
+        }
+
+        bool AreAttributesEqual(List<Attribute>? arrA, List<Attribute>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var attrA in listA)
+            {
+                var attrB = listB.FirstOrDefault(x => x.Id == attrA.Id);
+                if (attrB == null) return false;
+                if (attrA.Key != attrB.Key) return false;
+                if (NormalizeValue(attrA.Value) != NormalizeValue(attrB.Value)) return false;
+                if (NormalizeValue(attrA.Definition) != NormalizeValue(attrB.Definition)) return false;
+            }
+            return true;
+        }
+
+        bool ArePropsEqual(List<Prop>? arrA, List<Prop>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var propA in listA)
+            {
+                var propB = listB.FirstOrDefault(x => x.Id == propA.Id);
+                if (propB == null) return false;
+                if (propA.Quality?.Id != propB.Quality?.Id) return false;
+                if (propA.Value != propB.Value) return false;
+                if (NormalizeValue(propA.Unit) != NormalizeValue(propB.Unit)) return false;
+                if (!AreAttributesEqual(propA.Attributes, propB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConnectorsEqual(List<Connector>? arrA, List<Connector>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var connA in listA)
+            {
+                var connB = listB.FirstOrDefault(x => x.Id == connA.Id);
+                if (connB == null) return false;
+                if (NormalizeValue(connA.Name) != NormalizeValue(connB.Name)) return false;
+                if (!NullableFloatEqual(connA.Point?.X, connB.Point?.X)) return false;
+                if (!NullableFloatEqual(connA.Point?.Y, connB.Point?.Y)) return false;
+                if (!NullableFloatEqual(connA.Point?.Z, connB.Point?.Z)) return false;
+                if (!NullableFloatEqual(connA.Direction?.X, connB.Direction?.X)) return false;
+                if (!NullableFloatEqual(connA.Direction?.Y, connB.Direction?.Y)) return false;
+                if (!NullableFloatEqual(connA.Direction?.Z, connB.Direction?.Z)) return false;
+                if (!FloatEqual(connA.T, connB.T)) return false;
+                if (NormalizeBoolean(connA.Mandatory) != NormalizeBoolean(connB.Mandatory)) return false;
+                if (connA.Port?.Id != connB.Port?.Id) return false;
+                if (!ArePropsEqual(connA.Props, connB.Props)) return false;
+                if (!AreAttributesEqual(connA.Attributes, connB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreRepresentationsEqual(List<Representation>? arrA, List<Representation>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var representationA in listA)
+            {
+                var representationB = listB.FirstOrDefault(x => x.Id == representationA.Id);
+                if (representationB == null) return false;
+                if (NormalizeValue(representationA.Name) != NormalizeValue(representationB.Name)) return false;
+                if (representationA.File?.Id != representationB.File?.Id) return false;
+                var tagsA = NormalizeArray(representationA.Tags).Select(t => t.Id).OrderBy(g => g).ToList();
+                var tagsB = NormalizeArray(representationB.Tags).Select(t => t.Id).OrderBy(g => g).ToList();
+                if (!tagsA.SequenceEqual(tagsB)) return false;
+                if (!AreAttributesEqual(representationA.Attributes, representationB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreTypesEqual(List<Type>? arrA, List<Type>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var typeA in listA)
+            {
+                var typeB = listB.FirstOrDefault(t =>
+                {
+                    if (t.Id != typeA.Id) return false;
+                    if (t.Parent == null && typeA.Parent == null) return true;
+                    if (t.Parent == null || typeA.Parent == null) return false;
+                    return t.Parent.Id == typeA.Parent.Id;
+                });
+                if (typeB == null) return false;
+                if (typeA.Name != typeB.Name) return false;
+                if (NormalizeValue(typeA.Description) != NormalizeValue(typeB.Description)) return false;
+                if (NormalizeValue(typeA.Icon) != NormalizeValue(typeB.Icon)) return false;
+                if (NormalizeValue(typeA.Image) != NormalizeValue(typeB.Image)) return false;
+                if (NormalizeValue(typeA.Folder) != NormalizeValue(typeB.Folder)) return false;
+                if (NormalizeValue(typeA.Unit) != NormalizeValue(typeB.Unit)) return false;
+                if (typeA.Stock != typeB.Stock) return false;
+                if (NormalizeBoolean(typeA.IsAbstract) != NormalizeBoolean(typeB.IsAbstract)) return false;
+                if (NormalizeBoolean(typeA.Virtual) != NormalizeBoolean(typeB.Virtual)) return false;
+                if (typeA.Location?.Id != typeB.Location?.Id) return false;
+                var conceptsA = NormalizeArray(typeA.Concepts).Select(c => c.Id).OrderBy(g => g).ToList();
+                var conceptsB = NormalizeArray(typeB.Concepts).Select(c => c.Id).OrderBy(g => g).ToList();
+                if (!conceptsA.SequenceEqual(conceptsB)) return false;
+                var authorsA = NormalizeArray(typeA.Authors).Select(a => a.Id).OrderBy(g => g).ToList();
+                var authorsB = NormalizeArray(typeB.Authors).Select(a => a.Id).OrderBy(g => g).ToList();
+                if (!authorsA.SequenceEqual(authorsB)) return false;
+                if (!ArePropsEqual(typeA.Props, typeB.Props)) return false;
+                if (!AreRepresentationsEqual(typeA.Representations, typeB.Representations)) return false;
+                if (!AreConnectorsEqual(typeA.Connectors, typeB.Connectors)) return false;
+                if (!AreAttributesEqual(typeA.Attributes, typeB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool ArePiecesEqual(List<Piece>? arrA, List<Piece>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var pieceA in listA)
+            {
+                var pieceB = listB.FirstOrDefault(x => x.Id == pieceA.Id);
+                if (pieceB == null) return false;
+                if (NormalizeValue(pieceA.Name) != NormalizeValue(pieceB.Name)) return false;
+                if (pieceA.Type?.Id != pieceB.Type?.Id) return false;
+                if (pieceA.Design?.Id != pieceB.Design?.Id) return false;
+                if (pieceA.Plane != null && pieceB.Plane != null)
+                {
+                    if (!NullableFloatEqual(pieceA.Plane.Origin?.X, pieceB.Plane.Origin?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.Origin?.Y, pieceB.Plane.Origin?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.Origin?.Z, pieceB.Plane.Origin?.Z)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.XAxis?.X, pieceB.Plane.XAxis?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.XAxis?.Y, pieceB.Plane.XAxis?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.XAxis?.Z, pieceB.Plane.XAxis?.Z)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.YAxis?.X, pieceB.Plane.YAxis?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.YAxis?.Y, pieceB.Plane.YAxis?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.Plane.YAxis?.Z, pieceB.Plane.YAxis?.Z)) return false;
+                }
+                else if (pieceA.Plane != null || pieceB.Plane != null)
+                {
+                    return false;
+                }
+                if (pieceA.Center != null && pieceB.Center != null)
+                {
+                    if (!NullableFloatEqual(pieceA.Center.U, pieceB.Center.U)) return false;
+                    if (!NullableFloatEqual(pieceA.Center.V, pieceB.Center.V)) return false;
+                }
+                else if (pieceA.Center != null || pieceB.Center != null)
+                {
+                    return false;
+                }
+                if (!NullableFloatEqual(pieceA.Scale, pieceB.Scale)) return false;
+                if (pieceA.MirrorPlane != null && pieceB.MirrorPlane != null)
+                {
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.Origin?.X, pieceB.MirrorPlane.Origin?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.Origin?.Y, pieceB.MirrorPlane.Origin?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.Origin?.Z, pieceB.MirrorPlane.Origin?.Z)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.XAxis?.X, pieceB.MirrorPlane.XAxis?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.XAxis?.Y, pieceB.MirrorPlane.XAxis?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.XAxis?.Z, pieceB.MirrorPlane.XAxis?.Z)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.YAxis?.X, pieceB.MirrorPlane.YAxis?.X)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.YAxis?.Y, pieceB.MirrorPlane.YAxis?.Y)) return false;
+                    if (!NullableFloatEqual(pieceA.MirrorPlane.YAxis?.Z, pieceB.MirrorPlane.YAxis?.Z)) return false;
+                }
+                else if (pieceA.MirrorPlane != null || pieceB.MirrorPlane != null)
+                {
+                    return false;
+                }
+                if (NormalizeBoolean(pieceA.IsHidden) != NormalizeBoolean(pieceB.IsHidden)) return false;
+                if (NormalizeBoolean(pieceA.IsLocked) != NormalizeBoolean(pieceB.IsLocked)) return false;
+                if (NormalizeValue(pieceA.Color) != NormalizeValue(pieceB.Color)) return false;
+                if (NormalizeValue(pieceA.Description) != NormalizeValue(pieceB.Description)) return false;
+                if (!ArePropsEqual(pieceA.Props, pieceB.Props)) return false;
+                if (!AreAttributesEqual(pieceA.Attributes, pieceB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConnectionsEqual(List<Connection>? arrA, List<Connection>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var connA in listA)
+            {
+                var connB = listB.FirstOrDefault(x => x.Id == connA.Id);
+                if (connB == null) return false;
+                if (connA.Connected?.Piece?.Id != connB.Connected?.Piece?.Id) return false;
+                if (connA.Connected?.DesignPiece?.Id != connB.Connected?.DesignPiece?.Id) return false;
+                if (connA.Connected?.Connector?.Id != connB.Connected?.Connector?.Id) return false;
+                if (connA.Connecting?.Piece?.Id != connB.Connecting?.Piece?.Id) return false;
+                if (connA.Connecting?.DesignPiece?.Id != connB.Connecting?.DesignPiece?.Id) return false;
+                if (connA.Connecting?.Connector?.Id != connB.Connecting?.Connector?.Id) return false;
+                if (!FloatEqual(connA.Gap, connB.Gap)) return false;
+                if (!FloatEqual(connA.Shift, connB.Shift)) return false;
+                if (!FloatEqual(connA.Rise, connB.Rise)) return false;
+                if (!FloatEqual(connA.Rotation, connB.Rotation)) return false;
+                if (!FloatEqual(connA.Turn, connB.Turn)) return false;
+                if (!FloatEqual(connA.Tilt, connB.Tilt)) return false;
+                if (!NullableFloatEqual(connA.U, connB.U)) return false;
+                if (!NullableFloatEqual(connA.V, connB.V)) return false;
+                if (NormalizeValue(connA.Description) != NormalizeValue(connB.Description)) return false;
+                if (!AreAttributesEqual(connA.Attributes, connB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreDesignsEqual(List<Design>? arrA, List<Design>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var designA in listA)
+            {
+                var designB = listB.FirstOrDefault(d =>
+                {
+                    if (d.Id != designA.Id) return false;
+                    if (d.Parent == null && designA.Parent == null) return true;
+                    if (d.Parent == null || designA.Parent == null) return false;
+                    return d.Parent.Id == designA.Parent.Id;
+                });
+                if (designB == null) return false;
+                if (designA.Name != designB.Name) return false;
+                if (NormalizeValue(designA.Description) != NormalizeValue(designB.Description)) return false;
+                if (NormalizeValue(designA.Icon) != NormalizeValue(designB.Icon)) return false;
+                if (NormalizeValue(designA.Image) != NormalizeValue(designB.Image)) return false;
+                var conceptsA = NormalizeArray(designA.Concepts).Select(c => c.Id).OrderBy(g => g).ToList();
+                var conceptsB = NormalizeArray(designB.Concepts).Select(c => c.Id).OrderBy(g => g).ToList();
+                if (!conceptsA.SequenceEqual(conceptsB)) return false;
+                if (!ArePiecesEqual(designA.Pieces, designB.Pieces)) return false;
+                if (!AreConnectionsEqual(designA.Connections, designB.Connections)) return false;
+                if (!AreAttributesEqual(designA.Attributes, designB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool ArePortsEqual(List<Port>? arrA, List<Port>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var portA in listA)
+            {
+                var portB = listB.FirstOrDefault(x => x.Id == portA.Id);
+                if (portB == null) return false;
+                if (portA.Name != portB.Name) return false;
+                if (NormalizeValue(portA.Description) != NormalizeValue(portB.Description)) return false;
+                if (!AreAttributesEqual(portA.Attributes, portB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreQualitiesEqual(List<Quality>? arrA, List<Quality>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var qualA in listA)
+            {
+                var qualB = listB.FirstOrDefault(x => x.Id == qualA.Id);
+                if (qualB == null) return false;
+                if (qualA.Key != qualB.Key) return false;
+                if (qualA.Name != qualB.Name) return false;
+                if (!AreAttributesEqual(qualA.Attributes, qualB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreFilesEqual(List<File>? arrA, List<File>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var fileA in listA)
+            {
+                var fileB = listB.FirstOrDefault(x => x.Id == fileA.Id);
+                if (fileB == null) return false;
+                if (fileA.Name != fileB.Name) return false;
+            }
+            return true;
+        }
+
+        bool AreFoldersEqual(List<Folder>? arrA, List<Folder>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var folderA in listA)
+            {
+                var folderB = listB.FirstOrDefault(x => x.Id == folderA.Id);
+                if (folderB == null) return false;
+                if (folderA.Name != folderB.Name) return false;
+                if (!AreAttributesEqual(folderA.Attributes, folderB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreAuthorsEqual(List<Author>? arrA, List<Author>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var authorA in listA)
+            {
+                var authorB = listB.FirstOrDefault(x => x.Id == authorA.Id);
+                if (authorB == null) return false;
+                if (authorA.Name != authorB.Name) return false;
+                if (NormalizeValue(authorA.Email) != NormalizeValue(authorB.Email)) return false;
+                if (!AreAttributesEqual(authorA.Attributes, authorB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConceptsEqual(List<Concept>? arrA, List<Concept>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var conceptA in listA)
+            {
+                var conceptB = listB.FirstOrDefault(x => x.Id == conceptA.Id);
+                if (conceptB == null) return false;
+                if (conceptA.Name != conceptB.Name) return false;
+                if (NormalizeValue(conceptA.Description) != NormalizeValue(conceptB.Description)) return false;
+                if (NormalizeValue(conceptA.Icon) != NormalizeValue(conceptB.Icon)) return false;
+            }
+            return true;
+        }
+
+        bool AreTagsEqual(List<Tag>? arrA, List<Tag>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var tagA in listA)
+            {
+                var tagB = listB.FirstOrDefault(x => x.Id == tagA.Id);
+                if (tagB == null) return false;
+                if (tagA.Name != tagB.Name) return false;
+                if (NormalizeValue(tagA.Description) != NormalizeValue(tagB.Description)) return false;
+                if (NormalizeValue(tagA.Icon) != NormalizeValue(tagB.Icon)) return false;
+            }
+            return true;
+        }
+
+        if (a.Id != b.Id) return false;
+        if (a.Name != b.Name) return false;
+        if (NormalizeValue(a.Version) != NormalizeValue(b.Version)) return false;
+        if (NormalizeValue(a.Description) != NormalizeValue(b.Description)) return false;
+        if (NormalizeValue(a.Icon) != NormalizeValue(b.Icon)) return false;
+        if (NormalizeValue(a.Image) != NormalizeValue(b.Image)) return false;
+        if (NormalizeValue(a.Preview) != NormalizeValue(b.Preview)) return false;
+        if (NormalizeValue(a.Remote) != NormalizeValue(b.Remote)) return false;
+        if (NormalizeValue(a.Homepage) != NormalizeValue(b.Homepage)) return false;
+        if (NormalizeValue(a.License) != NormalizeValue(b.License)) return false;
+
+        if (!AreConceptsEqual(a.Concepts, b.Concepts)) return false;
+        if (!AreTagsEqual(a.Tags, b.Tags)) return false;
+        if (!AreTypesEqual(a.Types, b.Types)) return false;
+        if (!AreDesignsEqual(a.Designs, b.Designs)) return false;
+        if (!ArePortsEqual(a.Ports, b.Ports)) return false;
+        if (!AreQualitiesEqual(a.Qualities, b.Qualities)) return false;
+        if (!AreFilesEqual(a.Files, b.Files)) return false;
+        if (!AreFoldersEqual(a.Folders, b.Folders)) return false;
+        if (!AreAuthorsEqual(a.Authors, b.Authors)) return false;
+        if (!AreAttributesEqual(a.Attributes, b.Attributes)) return false;
+
+        return true;
+    }
+
+    public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)
+    {
+        var jsonA = Utility.Serialize(a);
+        var jsonB = Utility.Serialize(b);
+        if (jsonA == jsonB) return true;
+        var tokenA = CanonicalizeToken(JToken.Parse(jsonA));
+        var tokenB = CanonicalizeToken(JToken.Parse(jsonB));
+        return JToken.DeepEquals(tokenA ?? JValue.CreateNull(), tokenB ?? JValue.CreateNull());
+    }
+
+    private static readonly HashSet<string> DefaultZeroKeys = new() { "x", "y", "z", "u", "v", "gap", "shift", "rise", "rotation", "turn", "tilt", "t" };
+    private static readonly HashSet<string> DefaultFalseKeys = new() { "mandatory", "isHidden", "isLocked", "isAbstract", "virtual" };
+
+    private static string? GetComparableId(JToken? token)
+    {
+        if (token == null || token.Type != JTokenType.Object) return null;
+        var obj = (JObject)token;
+        return (string?)(obj["id"]
+            ?? (obj["type"] as JObject)?["id"]
+            ?? (obj["design"] as JObject)?["id"]
+            ?? (obj["piece"] as JObject)?["id"]
+            ?? (obj["connection"] as JObject)?["id"]
+            ?? (obj["representation"] as JObject)?["id"]
+            ?? (obj["port"] as JObject)?["id"]
+            ?? (obj["connector"] as JObject)?["id"]
+            ?? (obj["prop"] as JObject)?["id"]
+            ?? (obj["attribute"] as JObject)?["id"]);
+    }
+
+    private static JToken? CanonicalizeToken(JToken? token, string key = "")
+    {
+        if (token == null || token.Type == JTokenType.Null) return null;
+        switch (token.Type)
+        {
+            case JTokenType.String:
+                var s = token.Value<string>();
+                return string.IsNullOrEmpty(s) ? null : token;
+            case JTokenType.Integer:
+            case JTokenType.Float:
+                var n = token.Value<double>();
+                return DefaultZeroKeys.Contains(key) && n == 0 ? null : token;
+            case JTokenType.Boolean:
+                var b = token.Value<bool>();
+                return DefaultFalseKeys.Contains(key) && !b ? null : token;
+            case JTokenType.Array:
+                var items = token.Children()
+                    .Select(c => CanonicalizeToken(c, key))
+                    .Where(c => c != null)
+                    .OrderBy(c => GetComparableId(c) ?? c!.ToString(Formatting.None))
+                    .ToList();
+                return items.Count > 0 ? new JArray(items) : null;
+            case JTokenType.Object:
+                var result = new JObject();
+                foreach (var prop in ((JObject)token).Properties().OrderBy(p => p.Name))
+                {
+                    var val = CanonicalizeToken(prop.Value, prop.Name);
+                    if (val != null) result[prop.Name] = val;
+                }
+                return result.Count > 0 ? result : null;
+            default:
+                return token;
+        }
+    }
+}
+
+#endregion ❄️SemioDiff

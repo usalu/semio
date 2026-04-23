@@ -1,0 +1,10 @@
+{
+  "title": "Replace JSON Windows With RJV In Algorithms",
+  "emoji": "🧑‍🎨",
+  "status": "open",
+  "description": "Replace all JSON-rendering windows in semio/algorithms (Kit/Store story and any other) with @microlink/react-json-view. Install the package: npm i @microlink/react-json-view. Swap plain \u0026lt;pre\u0026gt;+JSON.stringify displays in the algorithm story windows (DiffViewer, SnapshotViewer, EventsFeed) with react-json-view for collapsible, readable, theme-aware JSON rendering.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪4d034153c54a423182e2f6deb45105bb"
+  ]
+}

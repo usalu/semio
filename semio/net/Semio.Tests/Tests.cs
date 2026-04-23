@@ -219,8 +219,6 @@ public class Tests
             }
             finally
             {
-                SqliteRuntime.EnsureInitialized();
-                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
                 if (Directory.Exists(folderPath)) Directory.Delete(folderPath, true);
             }
         }
@@ -388,58 +386,23 @@ public class Tests
             }
         }
 
-        public class Sqlite
+        public class FolderRoundtrip
         {
             [Fact]
-            public void Metabolism_Kit_Sqlite_Kit()
+            public void Metabolism_Kit_Export_Import_Matches_Json()
             {
                 var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
-
-                var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
+                var tempDir = Path.Combine(Path.GetTempPath(), "semio_folder_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 try
                 {
-                    KitSqlite.SaveKit(tempDir, kit);
-                    var loadedKit = KitSqlite.LoadKit(tempDir);
-
-                    Assert.Equal(kit.Id, loadedKit.Id);
-                    Assert.Equal(kit.Name, loadedKit.Name);
-                    Assert.Equal(kit.Version, loadedKit.Version);
-                    Assert.Equal(kit.Description, loadedKit.Description);
-                    Assert.Equal(kit.Qualities?.Count ?? 0, loadedKit.Qualities?.Count ?? 0);
-                    Assert.Equal(kit.Ports?.Count ?? 0, loadedKit.Ports?.Count ?? 0);
-                    Assert.Equal(kit.Tags?.Count ?? 0, loadedKit.Tags?.Count ?? 0);
-                    Assert.Equal(kit.Concepts?.Count ?? 0, loadedKit.Concepts?.Count ?? 0);
-                    Assert.Equal(kit.Files?.Count ?? 0, loadedKit.Files?.Count ?? 0);
-                    Assert.Equal(kit.Folders?.Count ?? 0, loadedKit.Folders?.Count ?? 0);
-                    Assert.Equal(kit.Authors?.Count ?? 0, loadedKit.Authors?.Count ?? 0);
-                    Assert.Equal(kit.Types?.Count ?? 0, loadedKit.Types?.Count ?? 0);
-                    Assert.Equal(kit.Designs?.Count ?? 0, loadedKit.Designs?.Count ?? 0);
-
-                    foreach (var type in kit.Types ?? new List<Type>())
-                    {
-                        var loadedType = loadedKit.Types?.FirstOrDefault(t => t.Id == type.Id);
-                        Assert.NotNull(loadedType);
-                        Assert.Equal(type.Name, loadedType.Name);
-                        Assert.Equal(type.Connectors?.Count ?? 0, loadedType.Connectors?.Count ?? 0);
-                    }
-
-                    foreach (var design in kit.Designs ?? new List<Design>())
-                    {
-                        var loadedDesign = loadedKit.Designs?.FirstOrDefault(d => d.Id == design.Id);
-                        Assert.NotNull(loadedDesign);
-                        Assert.Equal(design.Name, loadedDesign.Name);
-                        Assert.Equal(design.Pieces?.Count ?? 0, loadedDesign.Pieces?.Count ?? 0);
-                        Assert.Equal(design.Connections?.Count ?? 0, loadedDesign.Connections?.Count ?? 0);
-                    }
+                    LocalKit.ExportLocalKit(kit, tempDir);
+                    var loaded = LocalKit.ImportLocalKit(tempDir);
+                    Assert.True(SemioDiff.AreKitsEqual(kit, loaded.Kit));
                 }
                 finally
                 {
-                    // On Windows, SQLite connection pooling may hold file handles open.
-                    // Clear the pool before trying to delete the directory.
-                    SqliteRuntime.EnsureInitialized();
-                    Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
-                    Directory.Delete(tempDir, true);
+                    if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
                 }
             }
         }
@@ -769,25 +732,12 @@ public class Tests
             var kitDiffInverted = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
             var kitDiffed = Tests.LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
 
-            var change = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-            var forwardJson = Utility.Serialize(change.Forward);
-            var expectedForwardJson = Utility.Serialize(kitDiff);
-            Console.WriteLine($"[DEBUG] Forward: {forwardJson}");
-            Console.WriteLine($"[DEBUG] Expected: {expectedForwardJson}");
-            Assert.True(SemioDiff.AreKitDiffsEqual(change.Forward, kitDiff), "GetKitChange: forward diff doesn't match expected diff");
-
-            var backwardJson = Utility.Serialize(change.Backward);
-            var expectedBackwardJson = Utility.Serialize(kitDiffInverted);
-            Console.WriteLine($"[DEBUG] Backward: {backwardJson}");
-            Console.WriteLine($"[DEBUG] Expected Inverted: {expectedBackwardJson}");
-            Assert.True(SemioDiff.AreKitDiffsEqual(change.Backward, kitDiffInverted), "GetKitChange: backward diff doesn't match expected inverse diff");
-
             var appliedForward = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
-            SemioDiff.ApplyKitDiff(appliedForward, change.Forward);
+            KitInPlaceDiff.ApplyKitDiff(appliedForward, kitDiff);
             Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
 
             var appliedInverse = Utility.Deserialize<Kit>(Utility.Serialize(kitDiffed))!;
-            SemioDiff.ApplyKitDiff(appliedInverse, change.Backward);
+            KitInPlaceDiff.ApplyKitDiff(appliedInverse, kitDiffInverted);
             Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
     }

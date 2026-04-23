@@ -777,14 +777,18 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
-The schema is not yet right.
-
+The schema of a kit is not yet right. Check metabolism asset and adjust the code in rust.
 e.g.
 
 - Coordinate has u and v
 - Offset has u and v
 - Camera has position, forward and up
 - Location has longitude, latitude and altitude, etc
+- Folder doesnt have string path but name, parent, etc
+- ...
+  There are plenty more mismatches.
+  Another one is that types and designs have families. And families have ports.
+  Make sure to get everything right and adjust events, structs, enums, commands, etc
 
 The way commands work is not clean.
 Every command MUST return a kit diff and then every entity MUST implement one central method where a kit diff is applied to the entity in-memory. The order is always, deleted first, then updated, then added. This way pointer modification, events, cache invalidation are handeled centrally.

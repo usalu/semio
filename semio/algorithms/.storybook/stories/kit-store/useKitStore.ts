@@ -8,6 +8,29 @@ import { ensureSemioWasm, KitStoreHandle } from "./semioWasm";
 
 import type { LoggedEvent } from "./EventsFeed";
 
+// #region 🎨 RJV Theme
+// Tracks the `dark` class on <html> and maps it to a base-16 theme name
+// consumed by `@microlink/react-json-view` so JSON viewers track Storybook theme toggles.
+export type RjvThemeName = "rjv-default" | "monokai";
+
+export function useRjvTheme(): RjvThemeName {
+  const [isDark, setIsDark] = React.useState<boolean>(() => {
+    if (typeof document === "undefined") return false;
+    return document.documentElement.classList.contains("dark");
+  });
+  React.useEffect(() => {
+    if (typeof document === "undefined") return;
+    const el = document.documentElement;
+    const update = () => setIsDark(el.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return isDark ? "monokai" : "rjv-default";
+}
+// #endregion 🎨 RJV Theme
+
 let evSeq = 0;
 function nextEvId() {
   evSeq += 1;
@@ -74,7 +97,7 @@ export function useKitStore(seedKit: unknown) {
     })();
     return () => {
       cancelled = true;
-      setHandle((prev) => {
+      setHandle((prev: KitStoreHandle | null) => {
         try {
           prev?.free();
         } catch {

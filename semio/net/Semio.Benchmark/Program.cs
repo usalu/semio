@@ -181,9 +181,8 @@ class Program
         kitOriginal.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
         var kitDiffed = LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
-        var metabolismChange = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-        var diffForward = metabolismChange.Forward;
-        var diffInverse = metabolismChange.Backward;
+        var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
+        var diffInverse = LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
 
         Bench("Roundtrip/Metabolism", () =>
         {
@@ -194,9 +193,11 @@ class Program
 
         Bench("Diff/Metabolism", () =>
         {
-            var k2 = SemioDiff.ApplyKitDiff(kitOriginal, diffForward);
+            var k2 = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
+            KitInPlaceDiff.ApplyKitDiff(k2, diffForward);
             if (!SemioDiff.AreKitsEqual(k2, kitDiffed)) throw new Exception("Diff/Metabolism forward output does not match test expectation");
-            var restored = SemioDiff.ApplyKitDiff(k2, diffInverse);
+            var restored = Utility.Deserialize<Kit>(Utility.Serialize(k2))!;
+            KitInPlaceDiff.ApplyKitDiff(restored, diffInverse);
             if (!SemioDiff.AreKitsEqual(restored, kitOriginal)) throw new Exception("Diff/Metabolism inverse output does not match test expectation");
         });
 

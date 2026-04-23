@@ -2,7 +2,10 @@
 // semio-algorithms: Kit / Store story — event log from KitStoreHandle.subscribe
 // #endregion
 
+import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
+
+import { useRjvTheme } from "./useKitStore";
 
 export interface LoggedEvent {
   readonly id: string;
@@ -20,6 +23,7 @@ export const EventsFeed: React.FC<{
 }> = ({ events, onClear, filter, onFilterChange }) => {
   const f = filter.trim().toLowerCase();
   const rows = f ? events.filter((e) => JSON.stringify(e.payload).toLowerCase().includes(f)) : events;
+  const theme = useRjvTheme();
 
   return (
     <div className="text-foreground flex h-full min-h-0 flex-col gap-2 border-t border-zinc-200 p-2 text-xs dark:border-zinc-800">
@@ -47,7 +51,9 @@ export const EventsFeed: React.FC<{
             <div className="text-muted-foreground">
               {fmtTime(e.t)} {eventKind(e.payload)}
             </div>
-            <pre className="m-0 max-h-24 overflow-auto wrap-break-word whitespace-pre-wrap">{stringify(e.payload)}</pre>
+            <div className="m-0 max-h-24 overflow-auto">
+              <RjvPayload payload={e.payload} theme={theme} />
+            </div>
           </li>
         ))}
         {rows.length === 0 ? <li className="text-muted-foreground">(no events)</li> : null}
@@ -56,13 +62,28 @@ export const EventsFeed: React.FC<{
   );
 };
 
-function stringify(p: unknown): string {
-  try {
-    return JSON.stringify(p, null, 0);
-  } catch {
-    return String(p);
-  }
-}
+// #region 🔖 RjvPayload
+// Renders a single event payload with @microlink/react-json-view.
+// Non-object payloads are wrapped into `{ value: ... }` because rjv requires an object root.
+const RjvPayload: React.FC<{ payload: unknown; theme: "rjv-default" | "monokai" }> = ({ payload, theme }) => {
+  const src = payload && typeof payload === "object" ? (payload as object) : { value: payload };
+  const name = payload && typeof payload === "object" ? false : "value";
+  return (
+    <ReactJson
+      src={src}
+      name={name as false | string}
+      theme={theme}
+      iconStyle="triangle"
+      indentWidth={2}
+      collapsed={1}
+      displayDataTypes={false}
+      displayObjectSize={false}
+      enableClipboard={false}
+      style={{ background: "transparent", fontSize: "10px" }}
+    />
+  );
+};
+// #endregion 🔖 RjvPayload
 
 function isErr(p: unknown): boolean {
   if (p == null) return false;
