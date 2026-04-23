@@ -98,7 +98,6 @@ CREATE TABLE IF NOT EXISTS port (
 	ordinal INTEGER NOT NULL,
 	name TEXT NOT NULL DEFAULT '',
 	icon TEXT,
-	family TEXT,
 	mandatory INTEGER,
 	t REAL,
 	description TEXT,
@@ -118,20 +117,30 @@ CREATE TABLE IF NOT EXISTS port (
 CREATE TABLE IF NOT EXISTS port_compatible_family (
 	port_id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
-	family TEXT NOT NULL,
+	family_id TEXT NOT NULL,
 	PRIMARY KEY (port_id, ordinal),
-	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS port_compatible_port (
+	port_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	compatible_port_id TEXT NOT NULL,
+	PRIMARY KEY (port_id, ordinal),
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
+	FOREIGN KEY (compatible_port_id) REFERENCES port (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS connector (
 	id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
-	code TEXT NOT NULL,
+	name TEXT NOT NULL,
 	description TEXT,
-	port_id TEXT,
+	port_id TEXT NOT NULL,
 	type_id TEXT NOT NULL,
 	PRIMARY KEY (id),
-	FOREIGN KEY (port_id) REFERENCES port (id),
+	FOREIGN KEY (port_id) REFERENCES port (id) ON DELETE CASCADE,
 	FOREIGN KEY (type_id) REFERENCES type (id) ON DELETE CASCADE
 );
 
@@ -444,7 +453,7 @@ CREATE TABLE IF NOT EXISTS attribute (
 	FOREIGN KEY (representation_id) REFERENCES representation (id) ON DELETE CASCADE,
 	FOREIGN KEY (connection_id) REFERENCES connection (id) ON DELETE CASCADE,
 	FOREIGN KEY (family_id) REFERENCES family (id) ON DELETE CASCADE,
-	CHECK (
+		CHECK (
 		(CASE WHEN kit_id IS NOT NULL THEN 1 ELSE 0 END) +
 		(CASE WHEN type_id IS NOT NULL THEN 1 ELSE 0 END) +
 		(CASE WHEN design_id IS NOT NULL THEN 1 ELSE 0 END) +
@@ -457,11 +466,116 @@ CREATE TABLE IF NOT EXISTS attribute (
 	)
 );
 
+-- #region Version control (kit → alternatives → checkpoints → kit_change; session → draft → transaction)
+CREATE TABLE IF NOT EXISTS kit_change (
+	id TEXT NOT NULL,
+	kind TEXT NOT NULL,
+	forward_json TEXT NOT NULL,
+	inverse_json TEXT NOT NULL,
+	author_id TEXT,
+	time TEXT,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS checkpoint (
+	id TEXT NOT NULL,
+	kit_id TEXT NOT NULL,
+	parent_checkpoint_id TEXT,
+	change_id TEXT NOT NULL,
+	message TEXT,
+	time TEXT,
+	is_release INTEGER NOT NULL DEFAULT 0,
+	materialized_kit_hash TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
+	FOREIGN KEY (change_id) REFERENCES kit_change (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS materialized_kit (
+	checkpoint_id TEXT NOT NULL,
+	kit_json TEXT NOT NULL,
+	PRIMARY KEY (checkpoint_id),
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS alternative (
+	id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	kit_id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	description TEXT,
+	branch_from_checkpoint_id TEXT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS alternative_checkpoint (
+	alternative_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	checkpoint_id TEXT NOT NULL,
+	PRIMARY KEY (alternative_id, ordinal),
+	FOREIGN KEY (alternative_id) REFERENCES alternative (id) ON DELETE CASCADE,
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS session (
+	id TEXT NOT NULL,
+	kit_id TEXT NOT NULL,
+	client_id TEXT NOT NULL,
+	opened_at TEXT NOT NULL,
+	last_seen_at TEXT NOT NULL,
+	PRIMARY KEY (id),
+	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS draft (
+	id TEXT NOT NULL,
+	session_id TEXT NOT NULL,
+	checkpoint_id TEXT NOT NULL,
+	alternative_id TEXT,
+	cursor INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (session_id) REFERENCES session (id) ON DELETE CASCADE,
+	FOREIGN KEY (checkpoint_id) REFERENCES checkpoint (id) ON DELETE CASCADE,
+	FOREIGN KEY (alternative_id) REFERENCES alternative (id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS transaction (
+	id TEXT NOT NULL,
+	draft_id TEXT NOT NULL,
+	time TEXT NOT NULL,
+	committed INTEGER NOT NULL DEFAULT 0,
+	PRIMARY KEY (id),
+	FOREIGN KEY (draft_id) REFERENCES draft (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS transaction_forward_command (
+	transaction_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	command_json TEXT NOT NULL,
+	PRIMARY KEY (transaction_id, ordinal),
+	FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS transaction_inverse_command (
+	transaction_id TEXT NOT NULL,
+	ordinal INTEGER NOT NULL,
+	command_json TEXT NOT NULL,
+	PRIMARY KEY (transaction_id, ordinal),
+	FOREIGN KEY (transaction_id) REFERENCES transaction (id) ON DELETE CASCADE
+);
+-- #endregion Version control
+
 CREATE INDEX IF NOT EXISTS idx_folder_kit ON folder (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_file_kit ON file (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_type_kit ON type (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_kit ON port (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_port_parent_family ON port (parent_family_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_port_compat_port ON port_compatible_port (compatible_port_id);
+CREATE INDEX IF NOT EXISTS idx_port_compat_family ON port_compatible_family (family_id);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_kit ON checkpoint (kit_id);
+CREATE INDEX IF NOT EXISTS idx_alternative_kit ON alternative (kit_id, ordinal);
+CREATE INDEX IF NOT EXISTS idx_session_kit ON session (kit_id);
 CREATE INDEX IF NOT EXISTS idx_family_kit ON family (kit_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_type_family_type ON type_family (type_id, ordinal);
 CREATE INDEX IF NOT EXISTS idx_design_family_design ON design_family (design_id, ordinal);

@@ -1,0 +1,99 @@
+{
+  "id": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+  "uri": "repo://session/7b8822f9-47ea-4612-af64-d889aa79cf3c",
+  "client": "copilot-chat",
+  "second": "2026-04-23T11:07:28Z",
+  "checkpoint": "c6df12a809a690b71382e97bf03b0ff05edc3a41",
+  "contributor": "unknown",
+  "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "c6df12a809a690b71382e97bf03b0ff05edc3a41",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-23T11:07:28Z",
+        "session": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T11:07:24.591Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl",
+          "source": "new",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "c6df12a809a690b71382e97bf03b0ff05edc3a41",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.started",
+        "second": "2026-04-23T11:07:38Z",
+        "session": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T11:07:24.591Z",
+          "hook_event_name": "SessionStart",
+          "session_id": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl",
+          "source": "new",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "c6df12a809a690b71382e97bf03b0ff05edc3a41",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-23T11:07:42Z",
+        "session": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T11:07:40.702Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl",
+          "prompt": "semio/graphql:\r\n\r\nThe schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.\r\ne.g. interactions dont exists anymore.",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "c6df12a809a690b71382e97bf03b0ff05edc3a41",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-23T11:07:48Z",
+        "session": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-23T11:07:40.702Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "7b8822f9-47ea-4612-af64-d889aa79cf3c",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\7b8822f9-47ea-4612-af64-d889aa79cf3c.jsonl",
+          "prompt": "semio/graphql:\r\n\r\nThe schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.\r\ne.g. interactions dont exists anymore.",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

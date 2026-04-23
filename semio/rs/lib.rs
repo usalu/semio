@@ -804,6 +804,7 @@ pub mod change_command {
         Description { description: Option<String> },
         Icon { icon: Option<String> },
         CompatiblePorts { ports: Vec<PortIdDto> },
+        CompatibleFamilies { families: Vec<crate::family::FamilyIdDto> },
         AddPortAttribute { attribute: AttributeFullDto },
         RemovePortAttribute { id: AttributeIdDto },
     }
@@ -3249,6 +3250,15 @@ pub mod change_command {
                         Ok(vec![])
                     } else {
                         Ok(vec![ChangePortCommand::CompatiblePorts { ports: old_dto }])
+                    }
+                }
+                ChangePortCommand::CompatibleFamilies { families } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_families.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_families(families.clone()).map_err(se)?;
+                    if old == *families {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangePortCommand::CompatibleFamilies { families: old }])
                     }
                 }
                 ChangePortCommand::AddPortAttribute { attribute } => {
@@ -6980,6 +6990,10 @@ pub mod design {
             port.compatible_ports.iter().filter_map(|w| w.upgrade()).any(|p| p.read().map(|r| r.id == *other_id).unwrap_or(false))
         }
 
+        fn port_parent_family_id(port: &crate::port::PortStore) -> Option<Id> {
+            port.parent_family.upgrade().and_then(|f| f.read().ok().map(|r| r.id.clone()))
+        }
+
         fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
             let Ok(c) = candidate_port.read() else {
                 return false;
@@ -6990,14 +7004,17 @@ pub mod design {
             if c.id == r.id {
                 return true;
             }
-            Self::port_lists_compatible_id(&c, &r.id)
-                || Self::port_lists_compatible_id(&r, &c.id)
-                || match (c.family.as_deref(), r.family.as_deref()) {
-                    (Some(candidate_family), Some(required_family)) => {
-                        candidate_family == required_family || c.compatible_families.iter().any(|family| family == required_family) || r.compatible_families.iter().any(|family| family == candidate_family)
-                    }
-                    _ => false,
+            if Self::port_lists_compatible_id(&c, &r.id) || Self::port_lists_compatible_id(&r, &c.id) {
+                return true;
+            }
+            match (Self::port_parent_family_id(&c), Self::port_parent_family_id(&r)) {
+                (Some(cid), Some(rid)) => {
+                    cid == rid
+                        || c.compatible_families.iter().any(|f| f.id == rid)
+                        || r.compatible_families.iter().any(|f| f.id == cid)
                 }
+                _ => false,
+            }
         }
 
         fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
@@ -9016,13 +9033,21 @@ pub mod diff {
         pub icon: Option<Option<String>>,
         #[serde(rename = "compatiblePorts", default)]
         pub compatible_ports: Option<Vec<PortIdDto>>,
+        #[serde(rename = "compatibleFamilies", default)]
+        pub compatible_families: Option<Vec<crate::family::FamilyIdDto>>,
         #[serde(default)]
         pub attributes: Option<AttributesDiff>,
     }
 
     impl PortDiff {
         pub fn is_empty(&self) -> bool {
-            self.id.is_none() && self.name.is_none() && self.description.is_none() && self.icon.is_none() && self.compatible_ports.is_none() && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+            self.id.is_none()
+                && self.name.is_none()
+                && self.description.is_none()
+                && self.icon.is_none()
+                && self.compatible_ports.is_none()
+                && self.compatible_families.is_none()
+                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
         }
         pub fn merge(&self, b: &Self) -> Self {
             Self {
@@ -9031,6 +9056,7 @@ pub mod diff {
                 description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
                 icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
                 compatible_ports: merge_opt(&self.compatible_ports, &b.compatible_ports),
+                compatible_families: merge_opt(&self.compatible_families, &b.compatible_families),
                 attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
             }
         }
@@ -10398,6 +10424,9 @@ pub mod diff {
         if b.compatible_ports != a.compatible_ports {
             d.compatible_ports = Some(a.compatible_ports.clone());
         }
+        if b.compatible_families != a.compatible_families {
+            d.compatible_families = Some(a.compatible_families.clone());
+        }
         let at = attributes_between(&b.attributes, &a.attributes);
         if !at.is_empty() {
             d.attributes = Some(at);
@@ -10730,6 +10759,9 @@ pub mod diff {
         }
         if let Some(v) = &d.compatible_ports {
             fd.compatible_ports = v.clone();
+        }
+        if let Some(v) = &d.compatible_families {
+            fd.compatible_families = v.clone();
         }
         if let Some(a) = &d.attributes {
             merge_attributes_coll_into_vec(&mut fd.attributes, a);
@@ -11656,7 +11688,7 @@ pub mod events {
     event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Remote, Homepage, License, Uri, Created, Updated });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
     event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
-    event_field_enum!(PortField { Id, Name, Description, Icon, Family, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
+    event_field_enum!(PortField { Id, Name, Description, Icon, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
     event_field_enum!(PropField { Key, Value, Unit, Description });
     event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
     event_field_enum!(RepresentationField { Url, Description, File });
@@ -17546,7 +17578,7 @@ pub mod port {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::FamilyStoreWeak;
+    use crate::family::{FamilyIdDto, FamilyStoreWeak};
     use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -17555,15 +17587,14 @@ pub mod port {
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
 
-    /// Kit/family-scoped port (canonical: `name`, `compatiblePorts` id refs). See `hash_port` in `semio/py/main.py`.
+    /// Kit/family-scoped port (canonical: `name`, `compatiblePorts` / `compatibleFamilies` id refs). See `hash_port` in `semio/py/main.py`.
     #[derive(Debug)]
     pub struct PortStore {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
-        pub family: Option<String>,
-        pub compatible_families: Vec<String>,
+        pub compatible_families: Vec<FamilyIdDto>,
         pub mandatory: Option<bool>,
         pub t: Option<f64>,
         pub point: Option<Point>,
@@ -17600,10 +17631,8 @@ pub mod port {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub family: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<String>,
+        pub compatible_families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17629,10 +17658,8 @@ pub mod port {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub family: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<String>,
+        pub compatible_families: Vec<FamilyIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17656,7 +17683,6 @@ pub mod port {
                 name: String::new(),
                 description: None,
                 icon: None,
-                family: None,
                 compatible_families: Vec::new(),
                 mandatory: None,
                 t: None,
@@ -17697,7 +17723,6 @@ pub mod port {
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
-            s.family = d.family;
             s.compatible_families = d.compatible_families;
             s.mandatory = d.mandatory;
             s.t = d.t;
@@ -17710,7 +17735,6 @@ pub mod port {
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
-            s.family = d.family;
             s.compatible_families = d.compatible_families;
             s.mandatory = d.mandatory;
             s.t = d.t;
@@ -17738,7 +17762,6 @@ pub mod port {
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
-                family: self.family.clone(),
                 compatible_families: self.compatible_families.clone(),
                 mandatory: self.mandatory,
                 t: self.t,
@@ -17758,7 +17781,6 @@ pub mod port {
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
-                family: self.family.clone(),
                 compatible_families: self.compatible_families.clone(),
                 mandatory: self.mandatory,
                 t: self.t,
@@ -17810,12 +17832,12 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_family(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.family == v {
+        pub fn set_compatible_families(&mut self, v: Vec<FamilyIdDto>) -> crate::error::SetResult {
+            if self.compatible_families == v {
                 return Ok(());
             }
-            self.family = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family) });
+            self.compatible_families = v;
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies) });
             self.invalidate_hash();
             Ok(())
         }
@@ -17847,9 +17869,8 @@ pub mod port {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("port");
-            w.opt_str(self.family.as_deref());
             for family in &self.compatible_families {
-                w.str(family);
+                w.str(family.id.as_str());
             }
             if let Some(v) = self.mandatory {
                 w.bool(v);
@@ -20293,7 +20314,7 @@ pub mod io {
         use crate::connection::ConnectionFullDto;
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
-        use crate::error::Result;
+        use crate::error::{Result, SemioError};
         use crate::file::{FileFullDto, FileIdDto};
         use crate::folder::FolderFullDto;
         use crate::geom::{Coordinate, Plane, Point, Vector};
@@ -20313,7 +20334,7 @@ pub mod io {
         use crate::typ::TypeFullDto;
 
         const SCHEMA_SQL: &str = include_str!("../sqlite/schema.sql");
-        const SCHEMA_VERSION: &str = "2026-04-23-kit-families-sqlite";
+        const SCHEMA_VERSION: &str = "2026-04-23-kit-vcs-port-compat-sqlite";
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
@@ -20415,7 +20436,17 @@ pub mod io {
         fn clear_schema(tx: &Transaction<'_>) -> Result<()> {
             tx.execute("DROP TABLE IF EXISTS semio_kit_snapshot", [])?;
             tx.execute_batch(
-                "DELETE FROM attribute;
+                "DELETE FROM transaction_forward_command;
+                DELETE FROM transaction_inverse_command;
+                DELETE FROM transaction;
+                DELETE FROM draft;
+                DELETE FROM session;
+                DELETE FROM alternative_checkpoint;
+                DELETE FROM materialized_kit;
+                DELETE FROM checkpoint;
+                DELETE FROM alternative;
+                DELETE FROM kit_change;
+                DELETE FROM attribute;
                 DELETE FROM prop;
                 DELETE FROM benchmark;
                 DELETE FROM quality;
@@ -20432,6 +20463,7 @@ pub mod io {
                 DELETE FROM design;
                 DELETE FROM representation;
                 DELETE FROM connector;
+                DELETE FROM port_compatible_port;
                 DELETE FROM port_compatible_family;
                 DELETE FROM port;
                 DELETE FROM type_family;
@@ -20545,10 +20577,11 @@ pub mod io {
         }
 
         fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFullDto, ordinal: usize) -> Result<()> {
+            let port_id = connector.port.as_ref().ok_or_else(|| SemioError::InvalidOperation("connector.port is required for SQLite persistence".into()))?;
             tx.execute(
-                "INSERT INTO connector (id, ordinal, code, description, port_id, type_id)
+                "INSERT INTO connector (id, ordinal, name, description, port_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![connector.id.as_str(), ordinal as i64, connector.code, connector.description, connector.port.as_ref().map(|port| port.id.as_str()), type_id.as_str(),],
+                params![connector.id.as_str(), ordinal as i64, connector.code, connector.description, port_id.id.as_str(), type_id.as_str(),],
             )?;
             for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
                 insert_quality(tx, quality, quality_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
@@ -20582,16 +20615,15 @@ pub mod io {
             let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
             tx.execute(
                 "INSERT INTO port (
-                    id, ordinal, name, icon, family, mandatory, t, description,
+                    id, ordinal, name, icon, mandatory, t, description,
                     point_x, point_y, point_z, direction_x, direction_y, direction_z,
                     kit_id, parent_family_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
                 params![
                     port.id.as_str(),
                     ordinal as i64,
                     port.name.as_str(),
                     port.icon,
-                    port.family,
                     opt_bool_to_int(port.mandatory),
                     port.t,
                     port.description,
@@ -20606,7 +20638,16 @@ pub mod io {
                 ],
             )?;
             for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
-                tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family])?;
+                tx.execute(
+                    "INSERT INTO port_compatible_family (port_id, ordinal, family_id) VALUES (?1, ?2, ?3)",
+                    params![port.id.as_str(), compatible_ordinal as i64, family.id.as_str()],
+                )?;
+            }
+            for (cp_ordinal, pid) in port.compatible_ports.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?1, ?2, ?3)",
+                    params![port.id.as_str(), cp_ordinal as i64, pid.id.as_str()],
+                )?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
                 insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
@@ -20949,11 +20990,11 @@ pub mod io {
         fn load_ports_for_parent(conn: &SqlConnection, kit_id: &Id, parent_family_id: Option<&Id>) -> Result<Vec<PortFullDto>> {
             let mut values = Vec::new();
             let sql = if parent_family_id.is_none() {
-                "SELECT id, name, icon, family, mandatory, t, description,
+                "SELECT id, name, icon, mandatory, t, description,
                         point_x, point_y, point_z, direction_x, direction_y, direction_z
                  FROM port WHERE kit_id = ?1 AND parent_family_id IS NULL ORDER BY ordinal"
             } else {
-                "SELECT id, name, icon, family, mandatory, t, description,
+                "SELECT id, name, icon, mandatory, t, description,
                         point_x, point_y, point_z, direction_x, direction_y, direction_z
                  FROM port WHERE kit_id = ?1 AND parent_family_id = ?2 ORDER BY ordinal"
             };
@@ -20964,23 +21005,29 @@ pub mod io {
             };
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                let mut compatibility_stmt = conn.prepare("SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
+                let mut compatibility_stmt = conn.prepare("SELECT family_id FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
                 let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
                 let mut compatible_families = Vec::new();
                 while let Some(compatibility_row) = compatibility_rows.next()? {
-                    compatible_families.push(compatibility_row.get(0)?);
+                    compatible_families.push(crate::family::FamilyIdDto { id: Id::from(compatibility_row.get::<_, String>(0)?) });
+                }
+                let mut cp_stmt = conn.prepare("SELECT compatible_port_id FROM port_compatible_port WHERE port_id = ?1 ORDER BY ordinal")?;
+                let mut cp_rows = cp_stmt.query([id.as_str()])?;
+                let mut compatible_ports = Vec::new();
+                while let Some(cp_row) = cp_rows.next()? {
+                    compatible_ports.push(PortIdDto { id: Id::from(cp_row.get::<_, String>(0)?) });
                 }
                 values.push(PortFullDto {
                     id: id.clone(),
                     name: row.get(1)?,
                     icon: row.get(2)?,
-                    family: row.get(3)?,
                     compatible_families,
-                    mandatory: opt_int_to_bool(row.get(4)?),
-                    t: row.get(5)?,
-                    description: row.get(6)?,
-                    point: point_from_parts3(row.get(7)?, row.get(8)?, row.get(9)?),
-                    direction: vector_from_parts3(row.get(10)?, row.get(11)?, row.get(12)?),
+                    mandatory: opt_int_to_bool(row.get(3)?),
+                    t: row.get(4)?,
+                    description: row.get(5)?,
+                    point: point_from_parts3(row.get(6)?, row.get(7)?, row.get(8)?),
+                    direction: vector_from_parts3(row.get(9)?, row.get(10)?, row.get(11)?),
+                    compatible_ports,
                     qualities: load_qualities_for_scope(conn, "port_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "port_id", &id)?,
                     ..Default::default()
@@ -21028,17 +21075,17 @@ pub mod io {
         }
 
         fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
-            let mut stmt = conn.prepare("SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal")?;
+            let mut stmt = conn.prepare("SELECT id, name, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                let port_id: Option<String> = row.get(3)?;
+                let port_id: String = row.get(3)?;
                 values.push(ConnectorFullDto {
                     id: id.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: port_id.map(|value| PortIdDto { id: Id::from(value) }),
+                    port: Some(PortIdDto { id: Id::from(port_id) }),
                     qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
                 });
@@ -23146,7 +23193,7 @@ mod tests {
             let kit = KitStore::from_full_dto(KitFullDto {
                 id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
-                ports: vec![PortFullDto { id: Id::from("top"), family: Some("stack".into()), compatible_families: vec!["stack".into()], ..Default::default() }],
+                ports: vec![PortFullDto { id: Id::from("top"), ..Default::default() }],
                 types: vec![TypeFullDto { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
                 designs: vec![DesignFullDto { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFullDto { id: piece_id, r#type: Some(crate::typ::TypeIdDto { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
@@ -24261,9 +24308,10 @@ mod tests {
 
         mod port {
             use crate::events::KitEvent;
+            use crate::id::Id;
 
             #[test]
-            fn port_set_family_emits_field_changed() {
+            fn port_set_compatible_families_emits_field_changed() {
                 let (kit, type_id, port_g) = super::common::kit_with_port();
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
@@ -24272,9 +24320,10 @@ mod tests {
                     let tr = t.read().unwrap();
                     tr.port(port_g.as_str()).unwrap().clone()
                 };
-                p.write().unwrap().set_family(Some("f".into()));
+                let fid = crate::family::FamilyIdDto { id: Id::new_v7() };
+                p.write().unwrap().set_compatible_families(vec![fid]).unwrap();
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::Port { event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Port { event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies), .. })));
             }
         }
 

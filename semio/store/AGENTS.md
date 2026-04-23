@@ -1,10 +1,10 @@
 ---
 technology: semio
 bundle:
-  name: store
-  emoji: 💾
-  description: The store bundle for semio (stdio JSON-RPC sidecar to KitStore).
-  kind: application
+ name: store
+ emoji: 🏪
+ description: The store bundle for semio (stdio JSON-RPC sidecar to KitStore).
+ kind: application
 ---
 
 # 🧾 Specification

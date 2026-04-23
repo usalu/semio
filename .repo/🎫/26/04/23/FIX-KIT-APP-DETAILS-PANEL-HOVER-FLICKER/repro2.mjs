@@ -23,22 +23,22 @@ await page.addInitScript(() => {
     const origError = console.error.bind(console);
     console.error = (...args) => {
         try {
-            const first = args.find((a) => a instanceof Error);
-            if (first) {
-                window.__errs__.push({ kind: "error-arg", msg: first.message, stack: (first.stack || "").slice(0, 1200) });
-            }
-            const text = args.map((a) => (a instanceof Error ? `Err(${a.message})` : typeof a === "string" ? a : JSON.stringify(a))).join(" ");
-            if (text.includes("Reflect.get") || text.includes("non-object")) {
-                window.__errs__.push({ kind: "reflect-get", text: text.slice(0, 2000) });
-            }
+            window.__errs__.push({
+                kind: "console-error",
+                args: args.map((a) => {
+                    if (a instanceof Error) return `Err(${a.message}) STACK: ${(a.stack || "").slice(0, 2500)}`;
+                    if (typeof a === "string") return a.slice(0, 3000);
+                    try { return JSON.stringify(a).slice(0, 2000); } catch { return "[unserializable]"; }
+                }),
+            });
         } catch {}
         origError(...args);
     };
     window.addEventListener("unhandledrejection", (ev) => {
-        window.__errs__.push({ kind: "unhandled", msg: ev.reason?.message ?? String(ev.reason), stack: (ev.reason?.stack || "").slice(0, 1500) });
+        window.__errs__.push({ kind: "unhandled", msg: ev.reason?.message ?? String(ev.reason), stack: (ev.reason?.stack || "").slice(0, 2500) });
     });
     window.addEventListener("error", (ev) => {
-        window.__errs__.push({ kind: "window-err", msg: ev.error?.message ?? ev.message, stack: (ev.error?.stack || "").slice(0, 1500) });
+        window.__errs__.push({ kind: "window-err", msg: ev.error?.message ?? ev.message, stack: (ev.error?.stack || "").slice(0, 2500) });
     });
 });
 

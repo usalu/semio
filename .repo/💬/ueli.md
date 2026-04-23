@@ -26,6 +26,15 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ### 🦀 rs
 
+We want to add support for backbones (persisted out-of-process kit graphs).
+Requirements:
+
+- Keep two kit graphs in-memory (wip and backbone)
+- Both are non-blocking and can be updated all the time
+- Bidirectional communication
+- Synchronization mechanism with first-class conflict resolution support
+  How would you architect this?
+
 ---
 
 Testing every single command of the store in every order is not an option.
@@ -857,6 +866,9 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
+The store is currently an in-memory copy of the history.
+In order to allow for non-blocking working but allow for bidirection flow between the backbone and
+
 The schema of a kit is not yet right. Check metabolism asset and adjust the code in rust.
 e.g.
 
@@ -922,8 +934,10 @@ Alternative is a named list of checkpoints (starting from `the kit` and then mor
 
 Kits MUST be extended with a version-control-like system:
 
-- `kit store` is a complete in-memory graph and offers the api to do everything.
-- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit store` is the in-memory master and offers the api to do everything.
+- `kit graph` is a the complete in-memory graph of a kit and all its history.
+- `wip kit` is the in-memory
+- `kit backbone` a persisted out-of-process kit history.
 - `kit tree` is the tree of all checkpoints.
 - `initial kit` is a kit snapshot.
 - `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
@@ -1156,7 +1170,7 @@ Requirements:
 - All methods are implemented inside the class (not just facade to pure function)
   Here is the target:
 
-### 💾store
+### 🏪store
 
 semio/store:
 
@@ -1166,7 +1180,17 @@ Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
 ### ⭕graphql
 
 semio/graphql:
+
+The schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.
+e.g. interactions dont exists anymore.
+
 Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
+
+### 💾sqlite
+
+semio/sqlite:
+
+The schema is not clean. Dont use any json. Use only normalized tables. The schema MUST match with
 
 ### 🐘postgres
 

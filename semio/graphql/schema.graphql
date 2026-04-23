@@ -351,11 +351,16 @@ type Port {
   hash: Hash!
   id: ID!
   kit: Kit!
+  family: Family
   name: String!
   description: String
   icon: String
-  maxChildren: Int
+  mandatory: Boolean
+  t: Float
+  point: Point
+  direction: Vector
   compatiblePorts: [Port!]!
+  compatibleFamilies: [Family!]!
   attributes: [Attribute!]!
 }
 
@@ -364,8 +369,12 @@ input PortInput {
   name: String!
   description: String
   icon: String
-  maxChildren: Int
+  mandatory: Boolean
+  t: Float
+  point: PointInput
+  direction: VectorInput
   compatiblePortIds: [ID!]
+  compatibleFamilyIds: [ID!]
   attributes: [AttributeInput!]
 }
 
@@ -373,8 +382,12 @@ input PortPatchInput {
   name: String
   description: String
   icon: String
-  maxChildren: Int
+  mandatory: Boolean
+  t: Float
+  point: PointInput
+  direction: VectorInput
   compatiblePortIds: [ID!]
+  compatibleFamilyIds: [ID!]
   attributes: [AttributeInput!]
 }
 
@@ -507,14 +520,10 @@ type Connector {
   hash: Hash!
   id: ID!
   type: Type!
-  name: String
-  t: Float!
-  point: Point!
-  direction: Vector!
+  name: String!
+  portId: ID!
+  port: Port!
   description: String
-  port: Port
-  mandatory: Boolean
-  maxChildren: Int
   props: [Prop!]!
   attributes: [Attribute!]!
   pieces: [Piece!]!
@@ -523,14 +532,9 @@ type Connector {
 
 input ConnectorInput {
   id: ID!
-  name: String
-  t: Float!
-  point: PointInput!
-  direction: VectorInput!
+  name: String!
+  portId: ID!
   description: String
-  portId: ID
-  mandatory: Boolean
-  maxChildren: Int
   props: [PropInput!]
   attributes: [AttributeInput!]
 }
@@ -540,9 +544,7 @@ type Type {
   id: ID!
   kit: Kit!
   name: String!
-  parent: Type
-  children: [Type!]!
-  isAbstract: Boolean
+  families: [Family!]!
   folder: Folder
   representations: [Representation!]!
   connectors: [Connector!]!
@@ -565,9 +567,8 @@ type Type {
 input TypeInput {
   id: ID!
   name: String!
-  parentId: ID
-  isAbstract: Boolean
   folderId: ID
+  familyIds: [ID!]
   representations: [RepresentationInput!]
   connectors: [ConnectorInput!]
   props: [PropInput!]
@@ -587,9 +588,8 @@ input TypeInput {
 
 input TypePatchInput {
   name: String
-  parentId: ID
-  isAbstract: Boolean
   folderId: ID
+  familyIds: [ID!]
   representations: [RepresentationInput!]
   connectors: [ConnectorInput!]
   props: [PropInput!]
@@ -814,9 +814,7 @@ type Design {
   id: ID!
   kit: Kit!
   name: String!
-  parent: Design
-  children: [Design!]!
-  isAbstract: Boolean
+  families: [Family!]!
   folder: Folder
   pieces: [Piece!]!
   connections: [Connection!]!
@@ -842,9 +840,8 @@ type Design {
 input DesignInput {
   id: ID!
   name: String!
-  parentId: ID
-  isAbstract: Boolean
   folderId: ID
+  familyIds: [ID!]
   pieces: [PieceInput!]
   connections: [ConnectionInput!]
   stats: [StatInput!]
@@ -868,9 +865,8 @@ input DesignInput {
 
 input DesignPatchInput {
   name: String
-  parentId: ID
-  isAbstract: Boolean
   folderId: ID
+  familyIds: [ID!]
   stats: [StatInput!]
   props: [PropInput!]
   layers: [LayerInput!]
@@ -894,7 +890,6 @@ type Kit {
   hash: Hash!
   id: ID!
   name: String!
-  release: String
   types: [Type!]!
   designs: [Design!]!
   tags: [Tag!]!
@@ -920,7 +915,6 @@ type Kit {
 input KitInput {
   id: ID!
   name: String!
-  release: String
   types: [TypeInput!]
   designs: [DesignInput!]
   tags: [TagInput!]
@@ -945,7 +939,6 @@ input KitInput {
 
 input KitPatchInput {
   name: String
-  release: String
   remote: String
   homepage: String
   license: String
@@ -3215,20 +3208,20 @@ input DeleteQualityCommandInput {
 
 input CreatePortCommandInput {
   context: KitCommandContextInput!
-  typeId: ID!
+  familyId: ID!
   port: PortInput!
 }
 
 input UpdatePortCommandInput {
   context: KitCommandContextInput!
-  typeId: ID!
+  familyId: ID!
   id: ID!
   patch: PortPatchInput!
 }
 
 input DeletePortCommandInput {
   context: KitCommandContextInput!
-  typeId: ID!
+  familyId: ID!
   id: ID!
 }
 
@@ -3503,10 +3496,45 @@ input ExportKitCommandInput {
 }
 
 """
+Ref to materialize a kit snapshot: main line when alternative/checkpoint omitted; optional session/draft/transaction include uncommitted work.
+"""
+input KitSnapshotRefInput {
+  kitId: ID!
+  alternativeId: ID
+  checkpointId: ID
+  sessionId: ID
+  draftId: ID
+  transactionId: ID
+}
+
+type KitCheckpoint {
+  id: ID!
+  parentCheckpointId: ID
+  message: String
+  time: DateTime
+  isRelease: Boolean!
+}
+
+type KitAlternative {
+  id: ID!
+  name: String!
+  description: String
+  checkpointIds: [ID!]!
+}
+
+"""
 🔎Read the current kit store, history, candidates, conflicts and command catalog.
 """
 type Query {
   kit(id: ID!): Kit
+  """
+  Materialized kit at a VCS ref (see KitSnapshotRefInput). Resolver wiring lives in semio/graphql → store sidecar.
+  """
+  kitSnapshot(ref: KitSnapshotRefInput!): Kit
+  """
+  Ordered alternatives and checkpoints for the kit (persisted VCS model).
+  """
+  kitTree(kitId: ID!): [KitAlternative!]!
   kitStore(id: ID!): KitStore
   kitSession(kitId: ID!, sessionId: ID!): KitSession
   kitTransaction(kitId: ID!, transactionId: ID!): KitTransaction
