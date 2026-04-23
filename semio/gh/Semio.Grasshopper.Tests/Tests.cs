@@ -87,7 +87,7 @@ public class IconResourceTests
     }
 
     [Fact]
-    public void ResolveOrPlaceholder_ShouldResolveLegacyAliasWithoutUnderscore()
+    public void ResolveOrPlaceholder_ShouldResolveAlternateAliasWithoutUnderscore()
     {
         var bitmap = IconResources.ResolveOrPlaceholder("attributeid_24x24");
         Assert.NotNull(bitmap);

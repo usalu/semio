@@ -9909,7 +9909,7 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   return buildKitSnapshot(context.syncKit);
 }
 
-// #endregion 📍Legacy Type Exports
+// #endregion 📍Sketchpad type exports
 
 // #region ❄️Actor Types
 // Type aliases for the sketchpad XState actor references and snapshots.
@@ -56195,7 +56195,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         {
           kits: [
             {
-              kit: { id: kitId, name: "Legacy Local Snapshot", types: [], designs: [] },
+              kit: { id: kitId, name: "E2E local kit", types: [], designs: [] },
               kind: "file",
             },
           ],
@@ -56209,7 +56209,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(folderFactoryCallCount).toBe(0);
-      expect(store.kit(kitId).snapshot().name).toBe("Legacy Local Snapshot");
+      expect(store.kit(kitId).snapshot().name).toBe("E2E local kit");
     });
 
     test("skipBrowserKitSnapshotPersistence keeps localStorage kit snapshots empty (desktop)", async () => {

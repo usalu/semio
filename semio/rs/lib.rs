@@ -2180,7 +2180,7 @@ pub mod change_command {
                 ChangeTypeCommand::Location { location } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.location.clone();
                     t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_location(location.clone()).map_err(se)?;
-                    if old == location {
+                    if old == *location {
                         return Ok(vec![]);
                     }
                     Ok(vec![ChangeTypeCommand::Location { location: old }])
@@ -2529,7 +2529,7 @@ pub mod change_command {
                 ChangeDesignCommand::Location { location } => {
                     let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.location.clone();
                     d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_location(location.clone()).map_err(se)?;
-                    if old == location {
+                    if old == *location {
                         Ok(vec![])
                     } else {
                         Ok(vec![ChangeDesignCommand::Location { location: old }])
@@ -7721,10 +7721,7 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 self.set_view(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
             if let Some(v) = &diff.location {
-                self.set_location(*v).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            }
-            if let Some(v) = &diff.camera {
-                self.set_camera(*v).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                self.set_location(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
             if let Some(u) = &diff.unit {
                 self.set_unit(u.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -8268,7 +8265,6 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 variant,
                 view,
                 location,
-                camera,
                 unit,
                 created,
                 updated,
@@ -8289,7 +8285,7 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
             let design = Arc::new(RwLock::new(DesignStore::empty_shell(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
-                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, variant, view, location, camera, unit, created, updated, kit });
+                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, variant, view, location, unit, created, updated, kit });
             }
 
             let dw = Arc::downgrade(&design);
@@ -8749,7 +8745,7 @@ pub mod events {
     event_field_enum!(ConceptField { Name, Description, Order });
     event_field_enum!(ConnectionField { Gap, Shift, Rise, Rotation, Turn, Tilt, X, Y, Description });
     event_field_enum!(ConnectorField { Code, Description, Port });
-    event_field_enum!(DesignField { Name, Description, Icon, Image, Variant, View, Location, Camera, Unit, Created, Updated });
+    event_field_enum!(DesignField { Name, Description, Icon, Image, Variant, View, Location, Unit, Created, Updated });
     event_field_enum!(FileField { Url, Mime, Size, Hash, Description, Created, Updated });
     event_field_enum!(FolderField { Path, Description });
     event_field_enum!(GroupField { Name, Description, Color, Icon, Pieces });
@@ -10016,7 +10012,7 @@ pub mod geom {
     #[serde(untagged)]
     enum PieceCenterWire {
         Uv { u: f64, v: f64 },
-        /// Legacy: three floats saved as `x`/`y` — treated as (u, v) with z dropped.
+        /// Flat JSON `x`/`y` (three floats) — treated as (u, v) with any z dropped.
         Xy { x: f64, y: f64 },
     }
 
@@ -14702,7 +14698,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_point(&mut self, v: Option<Coordinate>) -> crate::error::SetResult {
+        pub fn set_point(&mut self, v: Option<Point>) -> crate::error::SetResult {
             if self.point == v {
                 return Ok(());
             }
@@ -16193,7 +16189,7 @@ pub mod typ {
         pub stock: Option<i64>,
         pub virtual_: Option<bool>,
         pub unit: Option<String>,
-        pub location: Option<Location>,
+        pub location: Option<LocationIdDto>,
         pub ports: Vec<PortStoreRef>,
         pub connectors: Vec<ConnectorStoreRef>,
         pub representations: Vec<RepresentationStoreRef>,
@@ -16234,7 +16230,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
@@ -16260,7 +16256,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
@@ -16304,7 +16300,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
@@ -16484,7 +16480,7 @@ pub mod typ {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<Location>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationIdDto>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
@@ -17056,8 +17052,8 @@ pub mod io {
         use crate::error::Result;
         use crate::file::{FileFullDto, FileIdDto};
         use crate::folder::FolderFullDto;
-        use crate::geom::{Coordinate, Plane};
-    use crate::location::LocationIdDto;
+        use crate::geom::{Coordinate, Plane, Point, Vector};
+        use crate::location::LocationIdDto;
         use crate::group::GroupFullDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
@@ -17100,69 +17096,79 @@ pub mod io {
             value.map(|flag| flag != 0)
         }
 
-        fn coordinate_parts(value: Option<&Coordinate>) -> (Option<f64>, Option<f64>, Option<f64>) {
+        /// Piece center is 2D [`Coordinate`] (u, v); optional third DB column is unused (old 3D row layout).
+        fn piece_center_parts(value: Option<&Coordinate>) -> (Option<f64>, Option<f64>, Option<f64>) {
             match value {
-                Some(value) => (Some(value.x), Some(value.y), Some(value.z)),
+                Some(c) => (Some(c.u), Some(c.v), None),
                 None => (None, None, None),
             }
         }
 
-        fn location_parts(value: Option<&Location>) -> (Option<f64>, Option<f64>) {
-            match value {
-                Some(value) => (Some(value.x), Some(value.y)),
-                None => (None, None),
+        fn piece_center_from_parts(x: Option<f64>, y: Option<f64>, _z: Option<f64>) -> Option<Coordinate> {
+            if x.is_none() && y.is_none() {
+                return None;
             }
+            Some(Coordinate::new(x.unwrap_or(0.0), y.unwrap_or(0.0)))
         }
 
         fn plane_parts(value: Option<&Plane>) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
             match value {
-                Some(value) => (Some(value.origin.x), Some(value.origin.y), Some(value.origin.z), Some(value.x_axis.x), Some(value.x_axis.y), Some(value.x_axis.z), Some(value.y_axis.x), Some(value.y_axis.y), Some(value.y_axis.z)),
+                Some(p) => (
+                    Some(p.origin.x),
+                    Some(p.origin.y),
+                    Some(p.origin.z),
+                    Some(p.x_axis.x),
+                    Some(p.x_axis.y),
+                    Some(p.x_axis.z),
+                    Some(p.y_axis.x),
+                    Some(p.y_axis.y),
+                    Some(p.y_axis.z),
+                ),
                 None => (None, None, None, None, None, None, None, None, None),
             }
-        }
-
-        fn camera_parts(value: Option<&Camera>) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
-            match value {
-                Some(value) => (Some(value.position.x), Some(value.position.y), Some(value.position.z), Some(value.target.x), Some(value.target.y), Some(value.target.z), Some(value.up.x), Some(value.up.y), Some(value.up.z), Some(value.fov)),
-                None => (None, None, None, None, None, None, None, None, None, None),
-            }
-        }
-
-        fn coordinate_from_parts(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Coordinate> {
-            if x.is_none() && y.is_none() && z.is_none() {
-                return None;
-            }
-            Some(Coordinate::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
-        }
-
-        fn location_from_parts(x: Option<f64>, y: Option<f64>) -> Option<Location> {
-            if x.is_none() && y.is_none() {
-                return None;
-            }
-            Some(Location::new(x.unwrap_or(0.0), y.unwrap_or(0.0)))
         }
 
         fn plane_from_parts(ox: Option<f64>, oy: Option<f64>, oz: Option<f64>, xx: Option<f64>, xy: Option<f64>, xz: Option<f64>, yx: Option<f64>, yy: Option<f64>, yz: Option<f64>) -> Option<Plane> {
             if ox.is_none() && oy.is_none() && oz.is_none() && xx.is_none() && xy.is_none() && xz.is_none() && yx.is_none() && yy.is_none() && yz.is_none() {
                 return None;
             }
-            let mut plane = Plane::world_xy();
-            plane.origin = Coordinate::new(ox.unwrap_or(0.0), oy.unwrap_or(0.0), oz.unwrap_or(0.0));
-            plane.x_axis = Coordinate::new(xx.unwrap_or(1.0), xy.unwrap_or(0.0), xz.unwrap_or(0.0));
-            plane.y_axis = Coordinate::new(yx.unwrap_or(0.0), yy.unwrap_or(1.0), yz.unwrap_or(0.0));
-            Some(plane)
+            Some(Plane {
+                origin: Point::new(ox.unwrap_or(0.0), oy.unwrap_or(0.0), oz.unwrap_or(0.0)),
+                x_axis: Vector::new(xx.unwrap_or(1.0), xy.unwrap_or(0.0), xz.unwrap_or(0.0)),
+                y_axis: Vector::new(yx.unwrap_or(0.0), yy.unwrap_or(1.0), yz.unwrap_or(0.0)),
+            })
         }
 
-        fn camera_from_parts(px: Option<f64>, py: Option<f64>, pz: Option<f64>, tx: Option<f64>, ty: Option<f64>, tz: Option<f64>, ux: Option<f64>, uy: Option<f64>, uz: Option<f64>, fov: Option<f64>) -> Option<Camera> {
-            if px.is_none() && py.is_none() && pz.is_none() && tx.is_none() && ty.is_none() && tz.is_none() && ux.is_none() && uy.is_none() && uz.is_none() && fov.is_none() {
+        fn point_parts3(value: Option<&Point>) -> (Option<f64>, Option<f64>, Option<f64>) {
+            match value {
+                Some(p) => (Some(p.x), Some(p.y), Some(p.z)),
+                None => (None, None, None),
+            }
+        }
+
+        fn point_from_parts3(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Point> {
+            if x.is_none() && y.is_none() && z.is_none() {
                 return None;
             }
-            Some(Camera {
-                position: Coordinate::new(px.unwrap_or(0.0), py.unwrap_or(0.0), pz.unwrap_or(0.0)),
-                target: Coordinate::new(tx.unwrap_or(0.0), ty.unwrap_or(0.0), tz.unwrap_or(0.0)),
-                up: Coordinate::new(ux.unwrap_or(0.0), uy.unwrap_or(0.0), uz.unwrap_or(1.0)),
-                fov: fov.unwrap_or(45.0),
-            })
+            Some(Point::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
+        }
+
+        fn vector_parts3(value: Option<&Vector>) -> (Option<f64>, Option<f64>, Option<f64>) {
+            match value {
+                Some(v) => (Some(v.x), Some(v.y), Some(v.z)),
+                None => (None, None, None),
+            }
+        }
+
+        fn vector_from_parts3(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Vector> {
+            if x.is_none() && y.is_none() && z.is_none() {
+                return None;
+            }
+            Some(Vector::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
+        }
+
+        fn location_dto_from_id_cell(id: Option<String>) -> Option<LocationIdDto> {
+            id.filter(|s| !s.is_empty()).map(|s| LocationIdDto { id: Id::from(s) })
         }
 
         fn init_schema(conn: &mut SqlConnection) -> Result<()> {
@@ -17300,8 +17306,8 @@ pub mod io {
         }
 
         fn insert_port(tx: &Transaction<'_>, type_id: &Id, port: &PortFullDto, ordinal: usize) -> Result<()> {
-            let (point_x, point_y, point_z) = coordinate_parts(port.point.as_ref());
-            let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
+            let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
+            let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
             tx.execute(
                 "INSERT INTO port (
                     id, ordinal, family, mandatory, t, description,
@@ -17355,13 +17361,13 @@ pub mod io {
         }
 
         fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
-            let (location_x, location_y) = location_parts(typ.location.as_ref());
+            let location_id = typ.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO \"type\" (
                     id, ordinal, name, description, icon, image, variant,
-                    stock, virtual, unit, location_x, location_y, created_at, updated_at, kit_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
-                params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.variant, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_x, location_y, typ.created, typ.updated, kit_id.as_str(),],
+                    stock, virtual, unit, location_id, created_at, updated_at, kit_id
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.variant, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_id, typ.created, typ.updated, kit_id.as_str(),],
             )?;
             for (port_ordinal, port) in typ.ports.iter().enumerate() {
                 insert_port(tx, &typ.id, port, port_ordinal)?;
@@ -17404,7 +17410,7 @@ pub mod io {
 
         fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: &PieceFullDto, ordinal: usize) -> Result<()> {
             let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) = plane_parts(piece.plane.as_ref());
-            let (center_x, center_y, center_z) = coordinate_parts(piece.center.as_ref());
+            let (center_x, center_y, center_z) = piece_center_parts(piece.center.as_ref());
             let (mirror_ox, mirror_oy, mirror_oz, mirror_xx, mirror_xy, mirror_xz, mirror_yx, mirror_yy, mirror_yz) = plane_parts(piece.mirror_plane.as_ref());
             tx.execute(
                 "INSERT INTO piece (
@@ -17527,23 +17533,16 @@ pub mod io {
         }
 
         fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: &DesignFullDto, ordinal: usize) -> Result<()> {
-            let (location_x, location_y) = location_parts(design.location.as_ref());
-            let (camera_px, camera_py, camera_pz, camera_tx, camera_ty, camera_tz, camera_ux, camera_uy, camera_uz, camera_fov) = camera_parts(design.camera.as_ref());
+            let location_id = design.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO design (
                     id, ordinal, name, description, icon, image, variant, view,
-                    location_x, location_y,
-                    camera_position_x, camera_position_y, camera_position_z,
-                    camera_target_x, camera_target_y, camera_target_z,
-                    camera_up_x, camera_up_y, camera_up_z, camera_fov,
+                    location_id,
                     unit, created_at, updated_at, kit_id
                  ) VALUES (
                     ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8,
-                    ?9, ?10,
-                    ?11, ?12, ?13,
-                    ?14, ?15, ?16,
-                    ?17, ?18, ?19, ?20,
-                    ?21, ?22, ?23, ?24
+                    ?9,
+                    ?10, ?11, ?12, ?13
                  )",
                 params![
                     design.id.as_str(),
@@ -17554,18 +17553,7 @@ pub mod io {
                     design.image,
                     design.variant,
                     design.view,
-                    location_x,
-                    location_y,
-                    camera_px,
-                    camera_py,
-                    camera_pz,
-                    camera_tx,
-                    camera_ty,
-                    camera_tz,
-                    camera_ux,
-                    camera_uy,
-                    camera_uz,
-                    camera_fov,
+                    location_id,
                     design.unit,
                     design.created,
                     design.updated,
@@ -17715,8 +17703,8 @@ pub mod io {
                     mandatory: opt_int_to_bool(row.get(2)?),
                     t: row.get(3)?,
                     description: row.get(4)?,
-                    point: coordinate_from_parts(row.get(5)?, row.get(6)?, row.get(7)?),
-                    direction: coordinate_from_parts(row.get(8)?, row.get(9)?, row.get(10)?),
+                    point: point_from_parts3(row.get(5)?, row.get(6)?, row.get(7)?),
+                    direction: vector_from_parts3(row.get(8)?, row.get(9)?, row.get(10)?),
                     qualities: load_qualities_for_scope(conn, "port_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "port_id", &id)?,
                 });
@@ -17765,7 +17753,7 @@ pub mod io {
 
         fn load_types(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<TypeFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, variant, stock, virtual, unit, location_x, location_y, created_at, updated_at
+                "SELECT id, name, description, icon, image, variant, stock, virtual, unit, location_id, created_at, updated_at
                  FROM \"type\" WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
             let mut rows = stmt.query([kit_id.as_str()])?;
@@ -17782,9 +17770,9 @@ pub mod io {
                     stock: row.get(6)?,
                     virtual_: opt_int_to_bool(row.get(7)?),
                     unit: row.get(8)?,
-                    location: location_from_parts(row.get(9)?, row.get(10)?),
-                    created: row.get(11)?,
-                    updated: row.get(12)?,
+                    location: location_dto_from_id_cell(row.get(9)?),
+                    created: row.get(10)?,
+                    updated: row.get(11)?,
                     ports: load_ports(conn, &id)?,
                     connectors: load_connectors(conn, &id)?,
                     representations: load_representations(conn, &id)?,
@@ -17836,7 +17824,7 @@ pub mod io {
                     name: row.get(1)?,
                     description: row.get(2)?,
                     plane: plane_from_parts(row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?),
-                    center: coordinate_from_parts(row.get(12)?, row.get(13)?, row.get(14)?),
+                    center: piece_center_from_parts(row.get(12)?, row.get(13)?, row.get(14)?),
                     scale: row.get(15)?,
                     mirror_plane: plane_from_parts(row.get(16)?, row.get(17)?, row.get(18)?, row.get(19)?, row.get(20)?, row.get(21)?, row.get(22)?, row.get(23)?, row.get(24)?),
                     hidden: opt_int_to_bool(row.get(25)?),
@@ -17928,10 +17916,7 @@ pub mod io {
         fn load_designs(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<DesignFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, icon, image, variant, view,
-                        location_x, location_y,
-                        camera_position_x, camera_position_y, camera_position_z,
-                        camera_target_x, camera_target_y, camera_target_z,
-                        camera_up_x, camera_up_y, camera_up_z, camera_fov,
+                        location_id,
                         unit, created_at, updated_at
                  FROM design WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
@@ -17947,11 +17932,10 @@ pub mod io {
                     image: row.get(4)?,
                     variant: row.get(5)?,
                     view: row.get(6)?,
-                    location: location_from_parts(row.get(7)?, row.get(8)?),
-                    camera: camera_from_parts(row.get(9)?, row.get(10)?, row.get(11)?, row.get(12)?, row.get(13)?, row.get(14)?, row.get(15)?, row.get(16)?, row.get(17)?, row.get(18)?),
-                    unit: row.get(19)?,
-                    created: row.get(20)?,
-                    updated: row.get(21)?,
+                    location: location_dto_from_id_cell(row.get(7)?),
+                    unit: row.get(8)?,
+                    created: row.get(9)?,
+                    updated: row.get(10)?,
                     kit: Some(crate::kit::KitIdDto { id: kit_id.clone() }),
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
@@ -18600,31 +18584,132 @@ pub mod wasm {
             serde_wasm_bindgen::to_value(&dto).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        /// Debug view of the VCS tree: checkpoint ids, `theKitHead`, alternatives, sessions.
+        // #region 🌳VcsState
+        /// 🌳 Full VCS tree snapshot (root initial kit id/name, checkpoints with parent+message+time+authors+hash+release, alternatives with ordered checkpoint lineage, sessions with drafts and their transaction/undo state).
+        /// Consumed by Storybook "Kit tree" window to render a GitKraken-style graph.
         #[wasm_bindgen(js_name = vcsState)]
         pub fn vcs_state_wasm(&self) -> Result<JsValue, JsValue> {
             let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock"))?;
-            let mut checkpoint_ids: Vec<String> = g.checkpoints.keys().map(|i| i.to_string()).collect();
-            checkpoint_ids.sort();
-            let mut alt_ids: Vec<String> = g.alternatives.keys().map(|i| i.to_string()).collect();
-            alt_ids.sort();
-            let mut session_ids: Vec<String> = g.sessions.keys().map(|i| i.to_string()).collect();
-            session_ids.sort();
             #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct VcsCheckpoint {
+                id: String,
+                parent: Option<String>,
+                message: Option<String>,
+                time: Option<String>,
+                authors: Vec<String>,
+                hash: String,
+                is_release: bool,
+                change_count: usize,
+            }
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct VcsAlternative {
+                id: String,
+                name: String,
+                root: String,
+                checkpoints: Vec<String>,
+            }
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct VcsDraft {
+                id: String,
+                parent_checkpoint: Option<String>,
+                target_alternative: Option<String>,
+                finalized_transaction_count: usize,
+                redo_transaction_count: usize,
+                open_transaction_id: Option<String>,
+                can_undo: bool,
+                can_redo: bool,
+            }
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct VcsSession {
+                id: String,
+                drafts: Vec<VcsDraft>,
+            }
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct VcsRoot {
+                id: String,
+                name: String,
+            }
+            #[derive(Serialize)]
+            #[serde(rename_all = "camelCase")]
             struct VcsState {
                 the_kit_head: Option<String>,
-                checkpoint_ids: Vec<String>,
-                alternative_ids: Vec<String>,
-                session_ids: Vec<String>,
+                root: VcsRoot,
+                checkpoints: Vec<VcsCheckpoint>,
+                alternatives: Vec<VcsAlternative>,
+                sessions: Vec<VcsSession>,
+                /// Ordered root → head checkpoint ids on the main (non-alternative) line.
+                the_kit_line: Vec<String>,
             }
+            let mut checkpoints: Vec<VcsCheckpoint> = g
+                .checkpoints
+                .values()
+                .map(|c| VcsCheckpoint {
+                    id: c.id.to_string(),
+                    parent: c.parent.as_ref().map(|p| p.to_string()),
+                    message: c.message.clone(),
+                    time: c.time.clone(),
+                    authors: c.authors.iter().map(|a| a.to_string()).collect(),
+                    hash: c.hash.clone(),
+                    is_release: c.release.is_some(),
+                    change_count: c.changes.len(),
+                })
+                .collect();
+            checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
+            let mut alternatives: Vec<VcsAlternative> = g
+                .alternatives
+                .values()
+                .map(|a| VcsAlternative {
+                    id: a.id.to_string(),
+                    name: a.name.clone(),
+                    root: a.root.to_string(),
+                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
+                })
+                .collect();
+            alternatives.sort_by(|a, b| a.id.cmp(&b.id));
+            let mut sessions: Vec<VcsSession> = g
+                .sessions
+                .values()
+                .map(|s| {
+                    let mut drafts: Vec<VcsDraft> = s
+                        .drafts
+                        .values()
+                        .map(|d| VcsDraft {
+                            id: d.id.to_string(),
+                            parent_checkpoint: d.parent_checkpoint.as_ref().map(|p| p.to_string()),
+                            target_alternative: d.target_alternative.as_ref().map(|t| t.to_string()),
+                            finalized_transaction_count: d.transactions.len(),
+                            redo_transaction_count: d.redo_transactions.len(),
+                            open_transaction_id: d.open_transaction.as_ref().map(|t| t.id.to_string()),
+                            can_undo: d.can_undo_draft(),
+                            can_redo: d.can_redo_draft(),
+                        })
+                        .collect();
+                    drafts.sort_by(|a, b| a.id.cmp(&b.id));
+                    VcsSession { id: s.id.to_string(), drafts }
+                })
+                .collect();
+            sessions.sort_by(|a, b| a.id.cmp(&b.id));
+            let the_kit_line: Vec<String> = g
+                .the_kit_head
+                .as_ref()
+                .map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect())
+                .unwrap_or_default();
             let out = VcsState {
                 the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
-                checkpoint_ids,
-                alternative_ids: alt_ids,
-                session_ids,
+                root: VcsRoot { id: g.initial.id.to_string(), name: g.initial.name.clone() },
+                checkpoints,
+                alternatives,
+                sessions,
+                the_kit_line,
             };
             serde_wasm_bindgen::to_value(&out).map_err(|e| JsValue::from_str(&e.to_string()))
         }
+        // #endregion 🌳VcsState
 
         /// Main-line `the kit` (materialized committed checkpoints; live graph may include session draft edits).
         #[wasm_bindgen(js_name = theKitDto)]
@@ -20518,7 +20603,8 @@ mod tests {
 
         mod design {
             use crate::events::{EntityKind, EntityRef};
-            use crate::geom::{Camera, Coordinate, Location};
+            use crate::id::Id;
+            use crate::location::LocationIdDto;
 
             macro_rules! design_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
@@ -20546,12 +20632,7 @@ mod tests {
             design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
             design_meta_test!(design_set_variant, crate::events::DesignField::Variant, |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) });
             design_meta_test!(design_set_view, crate::events::DesignField::View, |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) });
-            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) });
-            design_meta_test!(design_set_camera, crate::events::DesignField::Camera, |d: &mut crate::DesignStore| {
-                let mut cam = Camera::default();
-                cam.position = Coordinate::new(0.0, 0.0, 1.0);
-                d.set_camera(Some(cam))
-            });
+            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(LocationIdDto { id: Id::new_v7() })) });
             design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
             design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
             design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
@@ -21054,7 +21135,7 @@ mod tests {
             type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
             type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
             type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
-            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::geom::Location::new(1.0, 2.0))) });
+            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::location::LocationIdDto { id: crate::id::Id::new_v7() })) });
             type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
             type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
         }
@@ -21847,7 +21928,8 @@ pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
 pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
-pub use geom::{Camera, Coordinate, Location, Plane, Vector};
+pub use geom::{Camera, Coordinate, Plane, Point, Vector};
+pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
 pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;

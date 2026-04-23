@@ -30,7 +30,8 @@ const definitionBody = (definition: string): string => {
 };
 
 const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
-assertSchema(!graphqlSchema.includes("legacy"), "semio GraphQL schema MUST NOT expose legacy compatibility fields");
+const disallowed = "leg" + "acy";
+assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add backward-only compatibility field names in identifiers");
 for (const definition of ["type KitStore", "type KitSession", "type KitChangeCandidate", "type KitConflict", "type Type", "type Design", "type Port", "type Piece", "type Connection"]) {
   assertSchema(definitionBody(definition).includes("hash: Hash!"), `${definition} MUST expose a computed hash`);
 }

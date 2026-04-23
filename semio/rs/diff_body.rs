@@ -11,7 +11,8 @@ use crate::connector::{ConnectorFullDto, ConnectorIdDto};
 use crate::design::DesignFullDto;
 use crate::file::{FileFullDto, FileIdDto};
 use crate::folder::{FolderFullDto, FolderIdDto};
-use crate::geom::{Camera, Coordinate, Location, Plane, Vector};
+use crate::geom::{Coordinate, Plane, Point, Vector};
+use crate::location::LocationIdDto;
 use crate::group::{GroupFullDto, GroupIdDto};
 use crate::id::Id;
 use crate::kit::KitIdDto;
@@ -885,7 +886,7 @@ pub struct PortDiff {
     pub mandatory: Option<Option<bool>>,
     pub t: Option<Option<f64>>,
     pub description: Option<Option<String>>,
-    pub point: Option<Option<Coordinate>>,
+    pub point: Option<Option<Point>>,
     pub direction: Option<Option<Vector>>,
     #[serde(default)]
     pub qualities: Option<QualitiesDiff>,
@@ -1114,7 +1115,7 @@ pub struct TypeDiff {
     #[serde(rename = "typeVirtual", default)]
     pub type_virtual: Option<Option<bool>>,
     pub unit: Option<Option<String>>,
-    pub location: Option<Option<Location>>,
+    pub location: Option<Option<LocationIdDto>>,
     pub created: Option<Option<String>>,
     pub updated: Option<Option<String>>,
     #[serde(default)]
@@ -1359,8 +1360,7 @@ pub struct DesignDiff {
     pub image: Option<Option<String>>,
     pub variant: Option<Option<String>>,
     pub view: Option<Option<String>>,
-    pub location: Option<Option<Location>>,
-    pub camera: Option<Option<Camera>>,
+    pub location: Option<Option<LocationIdDto>>,
     pub unit: Option<Option<String>>,
     pub created: Option<Option<String>>,
     pub updated: Option<Option<String>>,
@@ -1398,7 +1398,6 @@ impl DesignDiff {
             && self.variant.is_none()
             && self.view.is_none()
             && self.location.is_none()
-            && self.camera.is_none()
             && self.unit.is_none()
             && self.created.is_none()
             && self.updated.is_none()
@@ -1425,7 +1424,6 @@ impl DesignDiff {
             variant: merge_opt_nested(&self.variant, &b.variant, |_, y| y.clone()),
             view: merge_opt_nested(&self.view, &b.view, |_, y| y.clone()),
             location: merge_opt_nested(&self.location, &b.location, |_, y| y.clone()),
-            camera: merge_opt_nested(&self.camera, &b.camera, |_, y| y.clone()),
             unit: merge_opt_nested(&self.unit, &b.unit, |_, y| y.clone()),
             created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
             updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
@@ -1472,9 +1470,6 @@ impl DesignDiff {
         }
         if before.location != after.location {
             d.location = Some(after.location);
-        }
-        if before.camera != after.camera {
-            d.camera = Some(after.camera);
         }
         if before.unit != after.unit {
             d.unit = Some(after.unit.clone());

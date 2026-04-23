@@ -1,0 +1,13 @@
+{
+  "title": "Kit Store GitKraken-Style History Window",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Introduce a GitKraken-inspired history window kind in the Kit Store storybook app that visualises the complete kit tree — root (initial kit), checkpoints (chronological vertical column, latest on top), alternatives (left lane, highlighted-on-hover), drafts (stacked bubbles on the current tip), and releases (marked checkpoints). Extend the wasm VCS state endpoint to expose parent/message/time/authors/hash/release for checkpoints, alternative lineages with ordered checkpoint ids, and session→draft trees so the new window can render edges without guesswork. Wire a new KitTreeGraph component into the story layout alongside the existing VCS panel without regressing existing behaviour.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1374"
+  },
+  "goal": "🎯🏃sketchpadapps🎯🏃kitapp",
+  "sessions": [
+    "⚪ea1f879bf93a4ca3bed8a42e37c7e462"
+  ]
+}
