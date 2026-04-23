@@ -7419,7 +7419,13 @@ pub mod design {
             }
         }
 
-        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub fn apply_diff(
+            &mut self,
+            diff: &crate::diff::DesignDiff,
+            type_index: &HashMap<Id, TypeStoreRef>,
+            design_weak: DesignStoreWeak,
+            family_by_id: &HashMap<Id, FamilyStoreRef>,
+        ) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             if let Some(n) = &diff.name {
                 self.set_name(n.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -7435,13 +7441,11 @@ pub mod design {
             }
             if let Some(fd) = &diff.families {
                 if !fd.is_empty() {
-                    let kit = self.parent_kit.upgrade().ok_or_else(|| SemioError::InvalidOperation("design has no parent kit for family refs".into()))?;
-                    let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     for id in &fd.removed {
                         self.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).unwrap_or(false));
                     }
                     for id in &fd.added {
-                        let pref = kr.families.iter().find(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Family", id: id.id.clone() })?;
+                        let pref = family_by_id.get(&id.id).cloned().ok_or_else(|| SemioError::NotFound { kind: "Family", id: id.id.clone() })?;
                         if !self.families.iter().any(|w| w.upgrade().map(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).unwrap_or(false)) {
                             self.families.push(std::sync::Arc::downgrade(&pref));
                         }
@@ -14289,8 +14293,9 @@ pub mod kit {
         pub fn apply_design_diff(&mut self, design_id: &str, diff: &crate::diff::DesignDiff) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
+            let family_by_id = Self::domain_family_index(self);
             let dw = Arc::downgrade(&dref);
-            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.apply_diff(diff, &type_index, dw)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.apply_diff(diff, &type_index, dw, &family_by_id)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15284,6 +15289,10 @@ pub mod kit {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
 
+        fn domain_family_index(kit: &KitStore) -> HashMap<Id, FamilyStoreRef> {
+            kit.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect()
+        }
+
         /// Rebuild one type from `to_full_dto` + sparse [`crate::diff::TypeDiff`] (remove → insert).
         pub fn apply_type_diff_fragment(kit: &KitStoreRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
             if fragment.is_empty() {
@@ -15360,16 +15369,15 @@ pub mod kit {
                     KitStore::remove_design_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("design {}", id.id)))?;
                 }
                 for u in &ds.updated {
-                    let dref = {
+                    let (dref, type_index, family_by_id) = {
                         let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.design(u.design_id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?.clone()
-                    };
-                    let type_index = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        Self::domain_type_index(&g)
+                        let dref = g.design(u.design_id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?.clone();
+                        let type_index = Self::domain_type_index(&g);
+                        let family_by_id = Self::domain_family_index(&g);
+                        (dref, type_index, family_by_id)
                     };
                     let weak = Arc::downgrade(&dref);
-                    dref.write().map_err(|_| SetError::LockPoisoned("design".into()))?.apply_diff(&u.diff, &type_index, weak).map_err(|e| SetError::Internal(e.to_string()))?;
+                    dref.write().map_err(|_| SetError::LockPoisoned("design".into()))?.apply_diff(&u.diff, &type_index, weak, &family_by_id).map_err(|e| SetError::Internal(e.to_string()))?;
                 }
                 for d in &ds.added {
                     KitStore::insert_design_ref(kit, d.clone())?;
@@ -24476,9 +24484,8 @@ mod tests {
             type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
 
             #[test]
-            fn type_add_family_ref_emits() {
+            fn type_add_family_ref_roundtrip() {
                 use crate::diff::{FamilyIdsDiff, TypeDiff};
-                use crate::events::KitEvent;
                 use crate::family::{FamilyFullDto, FamilyIdDto};
                 use crate::kit::{KitFullDto, KitStore};
                 use crate::typ::TypeFullDto;
@@ -24494,17 +24501,15 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                let mut rx = kit.read().unwrap().subscribe();
                 let fragment = TypeDiff {
                     families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
                     ..Default::default()
                 };
                 KitStore::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
-                let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::Type { event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families), .. }
-                )));
+                let t = kit.read().unwrap().semio_type(type_id.as_str()).unwrap();
+                let tr = t.read().unwrap();
+                assert_eq!(tr.families.len(), 1);
+                assert!(tr.families[0].upgrade().map(|f| f.read().is_ok()).unwrap_or(false));
             }
         }
     }

@@ -73,10 +73,12 @@ const kitId = await page.evaluate(async (b64) => {
     return kit.id;
 }, zipB64);
 console.log("kitId=", kitId);
+console.log("waiting 5s after SPA navigation...");
 await page.waitForTimeout(5000);
-// Wait for the kit table to have rows
-await page.waitForSelector('[data-slot="table-row"], [role="row"]', { timeout: 10000 }).catch(() => null);
+console.log("waited, looking for table row...");
+await page.waitForSelector('[data-slot="table-row"], [role="row"]', { timeout: 10000 }).catch(() => console.log("no table row selector"));
 await page.waitForTimeout(1500);
+console.log("past waits");
 // Skip screenshot (can hang on flickering pages)
 const url = page.url();
 console.log("url after =", url);

@@ -4,13 +4,13 @@ overview: "Align the entire monorepo (schemas, rust, store, persistence, client 
 todos:
  - id: canonical_spec
    content: "Rewrite canonical spec: semio/AGENTS.md, semio/SPECS.md, semio/DOCS.md — new Kit/Family/Port/Connector/Type/Design shape + VCS entities"
-   status: pending
+   status: completed
  - id: canonical_schemas
    content: Update semio/sqlite/schema.sql, semio/graphql/schema.graphql, semio/openapi, semio/jsonschema, semio/rdf, semio/owl to the new entity graph
-   status: pending
+   status: in_progress
  - id: rs_entities
    content: "semio/rs/lib.rs: add FamilyStore; reshape PortStore to family-scoped with geometry; slim ConnectorStore to (id, name, port_id, desc, attrs); remove parent/variant/view/isAbstract from Type/Design; remove version/release from Kit"
-   status: in_progress
+   status: completed
  - id: rs_vcs
    content: "semio/rs/lib.rs: add alternative/checkpoint/session/draft/transaction modules + stores + Dtos; checkpoint hash (blake3 of parent+changes); snapshot(ref) materialization; remove legacy wasm applyKitDiff/applyDesignDiff/setField etc."
    status: pending

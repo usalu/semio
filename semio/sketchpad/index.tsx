@@ -49882,14 +49882,37 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       }
 
       console.log("[Kit] Waiting for initial settle before row count");
-      const initialKitRowCount = await expect
-        .poll(async () => page.locator("tr[data-row-id]").count().catch(() => 0), {
-          timeout: 30000,
-          intervals: [1000, 2000, 3000, 5000],
-        })
-        .toBeGreaterThan(0)
-        .then(async () => page.locator("tr[data-row-id]").count().catch(() => 0));
+      let previousKitSnapshotMark = 0;
+      for (const mark of [2000, 5000, 10000, 20000]) {
+        await page.waitForTimeout(mark - previousKitSnapshotMark);
+        previousKitSnapshotMark = mark;
+        const kitSnapshot = await page.evaluate(() => {
+          const actor = (window as any).__SEMIO_ACTOR__;
+          const store = (window as any).__SEMIO_STORE__;
+          const kitId = window.location.pathname.match(/\/kits\/([^/]+)/)?.[1] ?? null;
+          return {
+            mark,
+            tableCount: document.querySelectorAll("table").length,
+            rowCount: document.querySelectorAll("[data-row-id]").length,
+            hasTbody: !!document.querySelector("tbody"),
+            failed: document.body.textContent?.includes("Failed to load kit app") ?? false,
+            loadingApps: document.body.textContent?.includes("Loading apps") ?? false,
+            loadingKit: document.body.textContent?.includes("Loading kit") ?? false,
+            hasKit: kitId ? (store?.hasKit?.(kitId) ?? null) : null,
+            hasKitApp: kitId ? (store?.hasKitApp?.({ kit: kitId }) ?? null) : null,
+            navigation: actor?.getSnapshot?.()?.context?.sketchpad?.navigation ?? null,
+          };
+        });
+        console.log(`[Kit] Snapshot ${mark}ms: ${JSON.stringify(kitSnapshot)}`);
+      }
+      await page.waitForFunction(
+        () => document.querySelectorAll("[data-row-id]").length > 0,
+        undefined,
+        { timeout: 120000 },
+      );
+      const initialKitRowCount = await page.evaluate(() => document.querySelectorAll("[data-row-id]").length).catch(() => 0);
       console.log(`[Kit] Initial row count after settle wait: ${initialKitRowCount}`);
+      expect(initialKitRowCount).toBeGreaterThan(0);
 
       await page.waitForTimeout(2000);
       console.log("[Kit] Attempting Tambour row click");

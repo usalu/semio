@@ -6,6 +6,12 @@ emoji: 👤
 
 ## 🕸️ Systems
 
+### Kit, design, types, families, ports
+
+- **Kit** [`KitFullDto`](rs/lib.rs) has no `version` field; persistence uses `semio/sqlite/schema.sql` without a `kit.version` column.
+- **Family** is first-class on the kit (`families: FamilyFullDto[]`). **Type** and **design** reference families with `families: FamilyIdDto[]` (ordered); SQLite stores junction rows in `type_family` and `design_family`.
+- **Port** DTOs are scoped under a family or at kit root; SQLite stores `port.kit_id` plus optional `parent_family_id` (NULL = kit-level port). Legacy fields **removed** from the normalized schema: `type.variant`, `design.variant`, `design.view`.
+
 ### Kit, Design, Types, Ports
 
 ### Types, Shapes, Connectors
