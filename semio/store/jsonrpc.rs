@@ -449,7 +449,8 @@ fn run_method(
     }
     if method == "conflicts.resolve" {
         let o = p_obj(&params)?;
-        let id = Id::from(take_str(o, "id")?.as_str());
+        let id_s = take_str(o, "id")?;
+        let id = Id::from(id_s.as_str());
         let strategy: ConflictResolution = serde_json::from_value(
             o.get("strategy")
                 .ok_or_else(|| e32602("missing strategy"))?

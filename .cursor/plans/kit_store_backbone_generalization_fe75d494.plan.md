@@ -7,49 +7,49 @@ todos:
    status: completed
  - id: async_deps
    content: Add `async-executor`, `async-channel`, `async-lock` deps to `semio/rs/Cargo.toml` and set up a shared executor thread
-   status: in_progress
+   status: completed
  - id: wip_task
    content: Add `pub mod wip_kit` with async actor wrapping `KitGraph` and routing `KitStoreCommand::execute` via a channel
-   status: pending
+   status: completed
  - id: kit_store_control_plane
    content: Add `pub mod kit_store` with the new `KitStore` struct (wip + optional backbone + coordinator + conflicts), plus event-bus merge
-   status: pending
+   status: completed
  - id: conflict_registry
    content: Add `pub mod kit_conflict_registry` with `ConflictRegistry` + `KitConflict`
-   status: pending
+   status: completed
  - id: coordinator
    content: Add `pub mod kit_coordinator` that owns a synchronizer `KitGraph`, replays wip checkpoints on top of backbone tip, and writes failures to the registry
-   status: pending
+   status: completed
  - id: backbone_trait
    content: Add `pub mod backbone` with `Backbone` trait, `BackboneConfig`, `BackboneEvent`, `ProposeOutcome`, and the stub actor
-   status: pending
+   status: completed
  - id: dev_backbone
    content: Implement `DevBackbone` (JSON file sync) with tempfile-atomic writes and periodic pull
-   status: pending
+   status: completed
  - id: local_backbone
    content: Implement `LocalBackbone` (`.semio/kit.db` + `.semio/files/BLOBHASH.EXT`) including `set_active_checkpoint` file materialization
-   status: pending
+   status: completed
  - id: remote_backbone
    content: Implement `RemoteBackbone` (websocket to semio/hub) with a thin JSON wire envelope, native + wasm cfg-gated
-   status: pending
+   status: completed
  - id: command_routing
    content: Extend `KitStoreCommand` with `AttachBackbone`/`DetachBackbone`/`SetActiveCheckpoint`/`ListConflicts`/`ResolveConflict`/`BackboneStatus`/`SyncNow` variants + results
-   status: pending
+   status: completed
  - id: store_bin_jsonrpc
    content: Update `semio/store/bin.rs` + `semio/store/jsonrpc.rs` to install the new `KitStore`, drive the executor, and add the new method catalog entries
-   status: pending
+   status: completed
  - id: tests_rs
    content: Extend existing `semio/rs/tests/` file with coverage for attach/detach, Dev/Local/Remote backbones, conflict recording, active-checkpoint swap, no-backbone mode
-   status: pending
+   status: completed
  - id: tests_store
    content: Extend `semio/store/tests/rpc.rs` with NDJSON coverage for the new backbone + conflict methods (DevBackbone round-trip)
-   status: pending
+   status: completed
  - id: docs
    content: Update `semio/rs/AGENTS.md`, `semio/store/AGENTS.md`, and the version-control paragraph in `semio/AGENTS.md` + root `AGENTS.md`
-   status: pending
+   status: completed
  - id: cleanup_alias
    content: Remove the transitional `pub use kit_graph::*` once all intra-crate callers reference `KitGraph` directly
-   status: pending
+   status: completed
 isProject: false
 ---
 

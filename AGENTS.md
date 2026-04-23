@@ -62,6 +62,10 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST NOT use general terms that are semio domain specific (design, type, port, prop, stat, model, layer).
   - You MUST use `kind` instead of `type` for naming e.g. `WindowType` → `WindowKind`.
 
+### Semio kit version control
+
+In **`semio/rs`**, the native **`kit_store::KitStore`** (driven by **`semio-store`** JSON-RPC) owns the live **`KitGraph`** (WIP thread), an optional **backbone** (Dev JSON file, Local `.semio` folder, or Remote hub session), and a **coordinator** that replays WIP checkpoints and records **merge conflicts**. Backbones are attached/detached at runtime; wire types are **`kit_backbone_wire`** (serde) so WASM can parse the same command shapes even though backbone I/O is native-only today.
+
 Extend/Change/Refactor the existing test file to cover everything. Do not create any new test files. A single test should always cover one unit and do multiple tests for that unit.  
 Make sure all tests pass.
 

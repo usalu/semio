@@ -202,3 +202,150 @@ fn sidecar_planner_then_execute_field_patch() -> Result<(), Box<dyn std::error::
     assert!(st.success(), "sidecar exit {st:?}");
     Ok(())
 }
+
+#[test]
+fn sidecar_backbone_attach_status_conflicts_sync_detach() -> Result<(), Box<dyn std::error::Error>> {
+    let exe = std::path::Path::new(env!("CARGO_BIN_EXE_semio-store"));
+    let mut child = Command::new(exe)
+        .env("SEMIO_STORE_NO_EVENTS", "1")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    let mut stdin = child.stdin.take().ok_or("no stdin on child")?;
+    let stdout = child.stdout.take().ok_or("no stdout on child")?;
+    let mut reader = BufReader::new(stdout);
+
+    let kid = Id::new_v7();
+    let dto = KitFullDto {
+        id: kid,
+        name: "Bb".to_string(),
+        ..Default::default()
+    };
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "kit.create",
+            "params": { "dto": serde_json::to_value(&dto)? }
+        }))?
+    )?;
+    let _r1 = until_response(&mut reader, 1)?;
+
+    let mut bb_path = std::env::temp_dir();
+    bb_path.push(format!("semio-store-dev-backbone-{}.json", Id::new_v7().as_str()));
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "conflicts.list",
+            "params": {}
+        }))?
+    )?;
+    let r2 = until_response(&mut reader, 2)?;
+    let items = r2
+        .get("listConflicts")
+        .and_then(|x| x.get("items"))
+        .and_then(|x| x.as_array())
+        .ok_or("listConflicts.items")?;
+    assert!(items.is_empty(), "expected no conflicts");
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "backbone.attach",
+            "params": {
+                "config": { "dev": { "path": bb_path.to_string_lossy() } }
+            }
+        }))?
+    )?;
+    let r3 = until_response(&mut reader, 3)?;
+    assert_eq!(
+        r3.get("attachBackbone").and_then(|x| x.get("ok")),
+        Some(&json!(true))
+    );
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 4,
+            "method": "backbone.status",
+            "params": {}
+        }))?
+    )?;
+    let r4 = until_response(&mut reader, 4)?;
+    assert_eq!(
+        r4.get("backboneStatus").and_then(|x| x.get("attached")),
+        Some(&json!(true))
+    );
+    assert_eq!(
+        r4.get("backboneStatus").and_then(|x| x.get("kind")),
+        Some(&json!("dev"))
+    );
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "coordinator.syncNow",
+            "params": {}
+        }))?
+    )?;
+    let r5 = until_response(&mut reader, 5)?;
+    assert_eq!(
+        r5.get("syncNow").and_then(|x| x.get("ok")),
+        Some(&json!(true))
+    );
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "backbone.detach",
+            "params": {}
+        }))?
+    )?;
+    let r6 = until_response(&mut reader, 6)?;
+    assert_eq!(
+        r6.get("detachBackbone").and_then(|x| x.get("ok")),
+        Some(&json!(true))
+    );
+
+    writeln!(
+        stdin,
+        "{}",
+        serde_json::to_string(&json!({
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "backbone.status",
+            "params": {}
+        }))?
+    )?;
+    let r7 = until_response(&mut reader, 7)?;
+    assert_eq!(
+        r7.get("backboneStatus").and_then(|x| x.get("attached")),
+        Some(&json!(false))
+    );
+
+    let _ = std::fs::remove_file(&bb_path);
+
+    drop(stdin);
+    let st = child.wait()?;
+    assert!(st.success(), "sidecar exit {st:?}");
+    Ok(())
+}

@@ -4211,15 +4211,20 @@ pub mod kit_session {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub mod kit_conflict_registry {
-    use std::collections::HashMap;
-    use std::sync::{Arc, Mutex};
-
+/// Serde wire types for backbone configuration and conflict records (native + wasm).
+pub mod kit_backbone_wire {
     use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
     use crate::kit_checkpoint::KitCheckpoint;
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum BackboneConfig {
+        Dev { path: String },
+        Local { folder: String },
+        Remote { url: String, session_id: String },
+    }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -4237,6 +4242,16 @@ pub mod kit_conflict_registry {
         pub reason: String,
         pub created_at: String,
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod kit_conflict_registry {
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+
+    use crate::id::Id;
+
+    pub use crate::kit_backbone_wire::{ConflictResolution, KitConflict};
 
     #[derive(Clone, Debug, Default)]
     pub struct ConflictRegistry {
@@ -4347,13 +4362,7 @@ pub mod backbone {
         Ok(())
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum BackboneConfig {
-        Dev { path: String },
-        Local { folder: String },
-        Remote { url: String, session_id: String },
-    }
+    pub use crate::kit_backbone_wire::BackboneConfig;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -4367,7 +4376,7 @@ pub mod backbone {
     pub struct BackboneStatusDto {
         pub attached: bool,
         pub kind: Option<String>,
-        pub backbone_tip: Option<String>,
+        pub backbone_tip: Option<Id>,
         pub pending_wip_checkpoints: usize,
     }
 
@@ -4615,7 +4624,7 @@ pub mod wip_kit {
         },
         SyncNow,
         Attach {
-            cfg: crate::backbone::BackboneConfig,
+            cfg: crate::kit_backbone_wire::BackboneConfig,
             reply: Sender<crate::error::Result<()>>,
         },
         Detach {
@@ -4687,7 +4696,7 @@ pub mod kit_coordinator {
     use crate::kit_change::KitChange;
     use crate::kit_checkpoint::KitCheckpoint;
     use crate::kit_conflict_registry::{ConflictRegistry, KitConflict};
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::KitGraphRef;
     use crate::wip_kit::{CoordMsg, WipMsg};
 
     fn process_proposal(
@@ -4794,7 +4803,7 @@ pub mod kit_coordinator {
                     let (attached, kind, tip) = match &*g {
                         None => (false, None, None),
                         Some(b) => {
-                            let t = b.pull().ok().and_then(|s| s.the_kit_head.map(|x| x.to_string()));
+                            let t = b.pull().ok().and_then(|s| s.the_kit_head);
                             (true, Some(b.kind_name().to_string()), t)
                         }
                     };
@@ -4861,6 +4870,7 @@ pub mod kit_store {
         pub conflicts: Arc<ConflictRegistry>,
         backbone_slot: Arc<Mutex<Option<crate::backbone::BackboneKind>>>,
         pending: Arc<Mutex<usize>>,
+        _executor: Arc<async_executor::Executor<'static>>,
         _handles: Vec<JoinHandle<()>>,
     }
 
@@ -4893,6 +4903,13 @@ pub mod kit_store {
             let t_coord = std::thread::spawn(move || {
                 crate::kit_coordinator::run(bb, sync_c, pend, conf, wip_t, coord_rx);
             });
+            let executor = Arc::new(async_executor::Executor::new());
+            let ex_run = executor.clone();
+            let t_exec = std::thread::spawn(move || {
+                futures_lite::future::block_on(async move {
+                    let _ = ex_run.run(futures_lite::future::pending::<()>()).await;
+                });
+            });
             Self {
                 graph,
                 wip_tx,
@@ -4900,7 +4917,8 @@ pub mod kit_store {
                 conflicts,
                 backbone_slot,
                 pending,
-                _handles: vec![t_wip, t_coord],
+                _executor: executor,
+                _handles: vec![t_wip, t_coord, t_exec],
             }
         }
 
@@ -4923,7 +4941,6 @@ pub mod kit_store {
 
         /// JSON-RPC / control-plane entry: backbone + conflict commands, plus recursive `Batch`, else wip graph.
         pub fn execute(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
-            use crate::id::Id;
             match cmd {
                 KitStoreCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
@@ -4956,7 +4973,7 @@ pub mod kit_store {
                     Ok(KitStoreCommandResult::BackboneStatus {
                         attached: s.attached,
                         kind: s.kind,
-                        tip: s.backbone_tip.as_ref().map(|t| Id::from(t.as_str())),
+                        tip: s.backbone_tip,
                     })
                 }
                 KitStoreCommand::SyncNow => {
@@ -5113,7 +5130,7 @@ pub mod kit_store_command {
         },
         /// Attach an authoritative backbone (Dev JSON, Local SQLite folder, or Remote hub).
         AttachBackbone {
-            config: crate::backbone::BackboneConfig,
+            config: crate::kit_backbone_wire::BackboneConfig,
         },
         DetachBackbone,
         SetActiveCheckpoint {
@@ -5123,7 +5140,7 @@ pub mod kit_store_command {
         ListConflicts,
         ResolveConflict {
             id: Id,
-            strategy: crate::kit_conflict_registry::ConflictResolution,
+            strategy: crate::kit_backbone_wire::ConflictResolution,
         },
         BackboneStatus,
         SyncNow,
@@ -5147,7 +5164,7 @@ pub mod kit_store_command {
         DetachBackbone { ok: bool },
         SetActiveCheckpoint { ok: bool },
         ListConflicts {
-            items: Vec<crate::kit_conflict_registry::KitConflict>,
+            items: Vec<crate::kit_backbone_wire::KitConflict>,
         },
         ResolveConflict { ok: bool },
         BackboneStatus {
@@ -22444,7 +22461,7 @@ pub mod io {
                     id, ordinal, name, icon, mandatory, t, description,
                     point_x, point_y, point_z, direction_x, direction_y, direction_z,
                     kit_id, parent_family_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                 params![
                     port.id.as_str(),
                     ordinal as i64,
@@ -23697,7 +23714,7 @@ pub mod wasm {
 
     /// 🌐 Stateful [`KitGraphRef`] for web-worker-hosted mutations + event stream.
     #[wasm_bindgen]
-    pub struct KitGraphHandle {
+    pub struct KitStoreHandle {
         inner: KitGraphRef,
     }
 
@@ -24177,6 +24194,58 @@ mod tests {
             let json = kit.read().expect("read").to_json_pretty().expect("to json");
             let kit2 = KitGraph::from_json_str(&json).expect("from json");
             assert_eq!(kit.read().expect("read").hash(), kit2.read().expect("read2").hash(), "hash stable across JSON round-trip");
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    mod kit_backbone_control {
+        use std::fs;
+
+        use tempfile::tempdir;
+
+        use crate::backbone::BackboneSnapshot;
+        use crate::id::Id;
+        use crate::kit_backbone_wire::BackboneConfig;
+        use crate::kit_graph::{KitFullDto, KitGraph};
+        use crate::kit_store::KitStore;
+
+        #[test]
+        fn kit_store_no_backbone_status() {
+            let kid = Id::new_v7();
+            let dto = KitFullDto {
+                id: kid,
+                name: "k".into(),
+                ..Default::default()
+            };
+            let ks = KitStore::from_full_dto(dto);
+            let st = ks.backbone_status().expect("status");
+            assert!(!st.attached);
+            assert!(st.backbone_tip.is_none());
+        }
+
+        #[test]
+        fn dev_backbone_attach_with_snapshot_file() {
+            let dir = tempdir().expect("tmp");
+            let path = dir.path().join("bb.json");
+            let kid = Id::new_v7();
+            let k = KitGraph::from_full_dto(KitFullDto {
+                id: kid,
+                name: "k".into(),
+                ..Default::default()
+            });
+            {
+                let g = k.read().expect("read");
+                let snap = BackboneSnapshot::from_graph(&*g);
+                fs::write(&path, serde_json::to_string_pretty(&snap).expect("json")).expect("write");
+            }
+            let ks = KitStore::from_graph(k);
+            ks.attach_backbone(BackboneConfig::Dev {
+                path: path.to_string_lossy().into(),
+            })
+            .expect("attach");
+            let st = ks.backbone_status().expect("status");
+            assert!(st.attached);
+            assert_eq!(st.kind.as_deref(), Some("dev"));
         }
     }
 
@@ -27195,7 +27264,11 @@ pub use geom::{Camera, Coordinate, Plane, Point, Vector};
 pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
+pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
+pub use kit_graph::KitGraph;
 pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitGraphRef, KitGraphWeak};
+#[cfg(not(target_arch = "wasm32"))]
+pub use kit_conflict_registry::ConflictRegistry;
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_change::{KitChange, KitChangeKind};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};

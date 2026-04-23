@@ -2361,7 +2361,7 @@ $$
 
 - `kit store` is the master process and is full control plane to do everything. It has three concurrent tasks: wip kit, backbone kit stub and kit coordinator. It has a kit conflict registry to manage conflicts between the wip kit and the backbone kit.
 - `wip kit` is an async task that is a replica of the kit graph.
-- `backbone kit stub` an async task kit graph stub to an authorative persisted out-of-process kit graph.
+- `backbone kit stub` an async task kit graph stub to an authorative persisted out-of-process kit graph. **Backbone kinds** (attach at runtime via `semio-store` JSON-RPC `backbone.attach`): **Dev** — single JSON file; **Local** — folder with `.semio/kit.db` (and file blobs); **Remote** — hub session (pull; propose may require owner credentials). Related RPC: `backbone.detach`, `backbone.status`, `backbone.setActiveCheckpoint`, `conflicts.list`, `conflicts.resolve`, `coordinator.syncNow`.
 - `kit graph` is a complete in-memory kit graph (including history, sessions, drafts, transactions, etc)
 - `kit coordinator` is an asnyc task to coordinate the wip kit process and the backbone kit graph process.
 - `kit history` is the complete history of a kit (initial kit, checkpoints, alternatives)

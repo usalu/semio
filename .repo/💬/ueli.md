@@ -871,9 +871,10 @@ semio/rs:
 Generalize the kit store.
 
 Goal:
-We want to add support for backbones. 
+We want to add support for backbones.
 Requirements:
-- Keep two kit graphs in-memory (wip and backbone) 
+
+- Keep two kit graphs in-memory (wip and backbone)
 - Everything is non-blocking (wip can make changes, backbone can make changes, synchronizer syncs, coordinates merges, and writes conflicts into a registry, etc)
 
 Here the new specs:
@@ -881,6 +882,7 @@ Here the new specs:
 - `kit store` is the master process and is full control plane to do everything. It has three concurrent tasks: wip kit, backbone kit stub and kit coordinator. It has a kit conflict registry to manage conflicts between the wip kit and the backbone kit.
 - `wip kit` is an async task that is a replica of the kit graph.
 - `backbone kit stub` an async task kit graph stub to an authorative persisted out-of-process kit graph.
+- `kit backbone` is an authorative single-writer out-of-process kit persitance (dev backbone [fully embedded], local backbone, remote backbone).
 - `kit graph` is a complete in-memory kit graph (including history, sessions, drafts, transactions, etc)
 - `kit coordinator` is an asnyc task to coordinate the wip kit process and the backbone kit graph process.
 - `kit history` is the complete history of a kit (initial kit, checkpoints, alternatives)
@@ -902,14 +904,13 @@ Here the new specs:
 - `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
 
 struct KitStore {
-    wip: WipKit,                  // local fully materialized replica
-    backbone: BackboneKitStub,    // local cache + RPC proxy to remote authority
-    coordinator: KitCoordinator,  // sync, merge, conflict tracking
-    conflicts: ConflictRegistry,
+wip: WipKit, // local fully materialized replica
+backbone: BackboneKitStub, // local cache + RPC proxy to remote authority
+coordinator: KitCoordinator, // sync, merge, conflict tracking
+conflicts: ConflictRegistry,
 }
 
 ---
-
 
 The schema of a kit is not yet right. Check metabolism asset and adjust the code in rust.
 e.g.

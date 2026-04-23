@@ -11,6 +11,25 @@ bundle:
 
 ## 🕸️ Systems
 
+Native **kit control plane** ([`kit_store::KitStore`](lib.rs), driven by `semio-store` JSON-RPC) is made of:
+
+- **WIP** — thread that runs [`KitStoreCommand`](lib.rs) against the live [`KitGraph`](lib.rs) ([`wip_kit`](lib.rs)).
+- **Backbone** — optional authoritative sink: **Dev** (one JSON file), **Local** (`.semio/kit.db` + folder materialization), **Remote** (hub session). Wire config types live in [`kit_backbone_wire`](lib.rs) (shared with wasm serde).
+- **Coordinator** — owns a synchronizer [`KitGraph`](lib.rs), replays WIP proposals, calls the backbone, fills [`ConflictRegistry`](lib.rs) on failure ([`kit_coordinator`](lib.rs)).
+- **Conflict registry** — in-memory [`KitConflict`](lib.rs) map; resolve strategies `dropWip` / `forceOverwriteBackbone`.
+
+```mermaid
+flowchart LR
+  RPC[semio-store] --> KS[KitStore]
+  KS --> WIP[wip]
+  KS --> COORD[coordinator]
+  COORD --> BB[backbone]
+  COORD --> CR[conflicts]
+  WIP --> G[live KitGraph]
+```
+
+Historical path `semio::kit` re-exports [`kit_graph`](lib.rs); prefer `KitGraph` / `kit_store::KitStore` in new code.
+
 ## 🧮 Algorithms
 
 ## 🛠️ Mechanisms
