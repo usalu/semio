@@ -742,7 +742,7 @@ export type KitRegistryEntry = {
 };
 
 export type KitRegistryValue = {
-	open: (id: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore }) => Promise<void>;
+	open: (id: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore; kitClient?: KitStoreClient }) => Promise<void>;
 	close: (id: string) => void;
 	get: (id: string) => KitRegistryEntry | undefined;
 	list: () => string[];
@@ -778,7 +778,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
 				bump();
 				try {
 					const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
-					const kitClient = await createKitStoreClient({ initialKit: store.getSnapshot().kit });
+					const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
 					const unsub = kitClient.subscribe(() => {
 						try {
 							const incoming = kitClient.getDto();
@@ -846,6 +846,10 @@ function useKitRuntime(): KitRuntimeContextValue {
 	const runtime = React.useContext(KitRuntimeContext);
 	if (!runtime) throw new Error("semio/react hooks must be used inside <KitProvider>.");
 	return runtime;
+}
+
+function shouldForceKitClientFallback(): boolean {
+	return (import.meta as any)?.env?.MODE === "test";
 }
 
 /** Like {@link useKitRuntime} but returns `null` outside {@link KitProvider} (no throw). */
@@ -919,7 +923,7 @@ export function KitProvider({
 		if (!st) return;
 		let cancelled = false;
 		let client: KitStoreClient | null = null;
-		void createKitStoreClient({ initialKit: st.getSnapshot().kit }).then((c) => {
+		void createKitStoreClient({ initialKit: st.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }).then((c) => {
 			if (cancelled) {
 				c.dispose();
 				return;
@@ -1161,13 +1165,30 @@ function resolveRustFieldTarget(
 	scope: SchemaScope | null,
 ): { kind: string; id: string; field: string } | null {
 	if (!runtime.kitClient) return null;
+	const kitRustField = (field: string): string | null => {
+		switch (field) {
+			case "name":
+			case "description":
+			case "icon":
+			case "image":
+			case "homepage":
+			case "license":
+				return field;
+			case "release":
+				return "version";
+			default:
+				return null;
+		}
+	};
 	if (typeName === "Piece" && (fieldName === "name" || fieldName === "color")) {
 		const g = idValue ?? scope?.id;
 		if (!g) return null;
 		return { kind: "Piece", id: g, field: fieldName };
 	}
-	if (typeName === "Kit" && fieldName === "name") {
-		return { kind: "Kit", id: runtime.snapshot.kit.id, field: "name" };
+	if (typeName === "Kit") {
+		const field = kitRustField(fieldName);
+		if (!field) return null;
+		return { kind: "Kit", id: runtime.snapshot.kit.id, field };
 	}
 	if (typeName === "Design" && fieldName === "name") {
 		const g = idValue ?? scope?.id;
@@ -5964,6 +5985,10 @@ export function useKitName(idValue?: string): SchemaHookTriad<any> {
 }
 
 export function useKitRelease(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "release", idValue);
+}
+
+export function useKitVersion(idValue?: string): SchemaHookTriad<any> {
 	return useSchemaFieldState("Kit", "release", idValue);
 }
 
@@ -14138,6 +14163,51 @@ if (shouldRunReactEmbeddedTests) {
 	const { act, render, waitFor } = await import("@testing-library/react");
 	const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
 
+	const createTestKitClient = (store: KitStore): KitStoreClient =>
+		({
+			getDto: () => store.getSnapshot().kit.toJSON(),
+			getSnapshot: async () => store.getSnapshot().kit.toJSON(),
+			setField: async (kind: string, id: string, field: string, value: unknown) => {
+				const kit = store.getSnapshot().kit.toJSON();
+				if (kind !== "Kit" || kit.id !== id) return { ok: false, error: { kind: "NotFound", message: `${kind} ${id}` } };
+				if (field === "name" && String(value ?? "").trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
+				const key = field === "version" ? "version" : field;
+				if (value == null) delete kit[key];
+				else kit[key] = value;
+				store.replace(asKitInstance(kit));
+				return { ok: true };
+			},
+			addChild: async () => ({ ok: true }),
+			removeChild: async () => ({ ok: true }),
+			applyDesignDiff: async () => ({ ok: true }),
+			applyKitDiff: async () => ({ ok: true }),
+			clusterPieces: async () => ({ ok: true }),
+			dragPieces: async () => ({ ok: true }),
+			movePieces: async () => ({ ok: true }),
+			fixPieces: async () => ({ ok: true }),
+			flattenDesign: async () => ({ ok: true }),
+			expandDesign: async () => ({ ok: true }),
+			deleteConnection: async () => ({ ok: true }),
+			changePieceType: async () => ({ ok: true }),
+			pasteDesignSelection: async () => ({ ok: true }),
+			createHangingPieces: async () => ({ ok: true }),
+			createConnectedPiece: async () => ({ ok: true }),
+			createFixedPiece: async () => ({ ok: true }),
+			getPiecesMetadata: async () => ({}),
+			getPieces: async () => [],
+			getConnections: async () => [],
+			getDesigns: async () => [],
+			getTypes: async () => [],
+			getAuthors: async () => [],
+			getKitMetadata: async () => store.getSnapshot().kit.toJSON(),
+			undo: async () => ({ ok: true }),
+			redo: async () => ({ ok: true }),
+			canUndo: async () => false,
+			canRedo: async () => false,
+			subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
+			dispose: () => {},
+		}) as KitStoreClient;
+
 	describe("pipeline hooks", () => {
 		it("useKitName rejects empty required name via kit client", async () => {
 			const kit = asKitInstance({
@@ -14156,22 +14226,84 @@ if (shouldRunReactEmbeddedTests) {
 				],
 			});
 			const store = new InMemoryKitStore(kit);
+			const kitClient = createTestKitClient(store);
 			let setName: ((v: any) => Promise<any>) | undefined;
 			let lastStatus: WriteStatus | undefined;
+			let client: KitStoreClient | null = null;
 
 			function Probe() {
 				const triad = useKitName();
 				setName = triad[1];
 				lastStatus = triad[2];
+				client = useKitStoreClient();
 				return null;
 			}
 
-			render(React.createElement(KitProvider, { store }, React.createElement(Probe)));
+			render(React.createElement(KitProvider, { store, kitClient }, React.createElement(Probe)));
 
-			await waitFor(() => expect(setName).toBeDefined());
+			await waitFor(() => {
+				expect(setName).toBeDefined();
+				expect(client).not.toBeNull();
+			});
 			const r = await setName!("");
 			expect(r.ok).toBe(false);
 			await waitFor(() => expect(lastStatus?.kind).toBe("error"));
+		});
+
+		it("kit metadata hooks write through the kit client", async () => {
+			const kit = asKitInstance({
+				id: "k1",
+				name: "K",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+			const store = new InMemoryKitStore(kit);
+			const kitClient = createTestKitClient(store);
+			let setName: ((v: any) => Promise<any>) | undefined;
+			let setRelease: ((v: any) => Promise<any>) | undefined;
+			let setDescription: ((v: any) => Promise<any>) | undefined;
+			let setIcon: ((v: any) => Promise<any>) | undefined;
+			let setImage: ((v: any) => Promise<any>) | undefined;
+			let setHomepage: ((v: any) => Promise<any>) | undefined;
+			let setLicense: ((v: any) => Promise<any>) | undefined;
+			let client: KitStoreClient | null = null;
+
+			function Probe() {
+				setName = useKitName()[1];
+				setRelease = useKitRelease()[1];
+				setDescription = useKitDescription()[1];
+				setIcon = useKitIcon()[1];
+				setImage = useKitImage()[1];
+				setHomepage = useKitHomepage()[1];
+				setLicense = useKitLicense()[1];
+				client = useKitStoreClient();
+				return null;
+			}
+
+			render(React.createElement(KitProvider, { store, kitClient }, React.createElement(Probe)));
+			await waitFor(() => {
+				expect(setLicense).toBeDefined();
+				expect(client).not.toBeNull();
+			});
+
+			expect((await setName!("Renamed Kit")).ok).toBe(true);
+			expect((await setRelease!("1.2.3")).ok).toBe(true);
+			expect((await setDescription!("Updated description")).ok).toBe(true);
+			expect((await setIcon!("spark")).ok).toBe(true);
+			expect((await setImage!("kit.png")).ok).toBe(true);
+			expect((await setHomepage!("https://semio.example")).ok).toBe(true);
+			expect((await setLicense!("LGPL-3.0-or-later")).ok).toBe(true);
+
+			await waitFor(() => {
+				const next = store.getSnapshot().kit.toJSON();
+				expect(next.name).toBe("Renamed Kit");
+				expect(next.version).toBe("1.2.3");
+				expect(next.description).toBe("Updated description");
+				expect(next.icon).toBe("spark");
+				expect(next.image).toBe("kit.png");
+				expect(next.homepage).toBe("https://semio.example");
+				expect(next.license).toBe("LGPL-3.0-or-later");
+			});
 		});
 	});
 
@@ -14184,6 +14316,7 @@ if (shouldRunReactEmbeddedTests) {
 				updatedAt: new Date().toISOString(),
 			});
 			const store = new InMemoryKitStore(kit);
+			const kitClient = createTestKitClient(store);
 			let reg: ReturnType<typeof useKitRegistry> | null = null;
 			function RegProbe() {
 				reg = useKitRegistry();
@@ -14197,7 +14330,7 @@ if (shouldRunReactEmbeddedTests) {
 				),
 			);
 			await waitFor(() => expect(reg).not.toBeNull());
-			await reg!.open("k1", { store });
+			await reg!.open("k1", { store, kitClient });
 			expect(reg!.get("k1")?.refs).toBe(1);
 			await reg!.open("k1", { store });
 			expect(reg!.get("k1")?.refs).toBe(2);

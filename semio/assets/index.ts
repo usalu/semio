@@ -163,7 +163,7 @@ const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "N
 /**
  * nakaginCapsuleTowerFlatDesign holds the data fields for a nakaginCapsuleTowerFlatDesign record.
  **/
-const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.id === nakaginCapsuleTowerDesign?.id);
+const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && (d as any).parent?.id === nakaginCapsuleTowerDesign?.id);
 /**
  * Nakagin Capsule Tower Flat variant piece data with plane and center
  **/

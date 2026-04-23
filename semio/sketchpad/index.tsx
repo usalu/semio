@@ -306,10 +306,15 @@ import {
   useKitConcepts,
   useKitDescription,
   useKitFolders,
+  useKitHomepage,
+  useKitIcon,
+  useKitImage,
+  useKitLicense,
   useKitName,
   useKitPorts,
   useKitQualities,
   useKitRegistrySafe,
+  useKitRelease,
   useKitRuntimeSafe,
   useKitStoredFileUrls as useFileUrls,
   useMoveKitArtifactToFolder,
@@ -15858,92 +15863,99 @@ export const KitSection: FC = () => {
 /**
  **/
 const KitSectionForm: FC = () => {
-  const { t } = useTranslation();
-  try {
-    const [ksKit] = useKitSnapshot();
-    const kit = ksKit?.kit as Kit;
-    if (!kit) {
-      return (
-        <HelperRow propertyAligned>
-          <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notAvailable")}</p>
-        </HelperRow>
-      );
-    }
-    const kitDataSource = useKitAppStore() as any;
-    return (
-      <>
-        <TreeRow>
-          <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => kitDataSource.change({ name: value })} showLabel />
-        </TreeRow>
-        <TreeRow>
-          <Input
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.version"
-            value={kit.version || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.versionPlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ version: value })}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Textarea
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.description"
-            value={kit.description || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ description: value })}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Input
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
-            value={kit.icon || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.iconPlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ icon: value })}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Input
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.image"
-            value={kit.image || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.imagePlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ image: value })}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Input
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
-            value={kit.homepage || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ homepage: value })}
-            showLabel
-          />
-        </TreeRow>
-        <TreeRow>
-          <Input
-            lazy
-            id="semio.sketchpad.app.kit.panel.details.section.kit.license"
-            value={kit.license || ""}
-            placeholder={useLabel("semio.sketchpad.app.kit.licensePlaceholder.label")}
-            onLazyChange={(value) => kitDataSource.change({ license: value })}
-            showLabel
-          />
-        </TreeRow>
-      </>
-    );
-  } catch (error) {
+  const [ksKit] = useKitSnapshot();
+  const kit = ksKit?.kit as Kit | undefined;
+  const [, setName] = useKitName();
+  const [, setVersion] = useKitRelease();
+  const [, setDescription] = useKitDescription();
+  const [, setIcon] = useKitIcon();
+  const [, setImage] = useKitImage();
+  const [, setHomepage] = useKitHomepage();
+  const [, setLicense] = useKitLicense();
+  const notAvailableLabel = useLabel("semio.sketchpad.app.kit.notAvailable");
+  const versionPlaceholder = useLabel("semio.sketchpad.app.kit.versionPlaceholder.label");
+  const descriptionPlaceholder = useLabel("semio.sketchpad.app.kit.descriptionPlaceholder.label");
+  const iconPlaceholder = useLabel("semio.sketchpad.app.kit.iconPlaceholder.label");
+  const imagePlaceholder = useLabel("semio.sketchpad.app.kit.imagePlaceholder.label");
+  const homepagePlaceholder = useLabel("semio.sketchpad.app.kit.homepagePlaceholder.label");
+  const licensePlaceholder = useLabel("semio.sketchpad.app.kit.licensePlaceholder.label");
+  const optionalKitText = useCallback((value: string) => (value.trim() === "" ? null : value), []);
+
+  if (!kit) {
     return (
       <HelperRow propertyAligned>
-        <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.kit.notFound")}</p>
+        <p className="text-sm text-muted-foreground">{notAvailableLabel}</p>
       </HelperRow>
     );
   }
+
+  return (
+    <>
+      <TreeRow>
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => void setName(value)} showLabel />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.version"
+          value={kit.version || ""}
+          placeholder={versionPlaceholder}
+          onLazyChange={(value) => void setVersion(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Textarea
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.description"
+          value={kit.description || ""}
+          placeholder={descriptionPlaceholder}
+          onLazyChange={(value) => void setDescription(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
+          value={kit.icon || ""}
+          placeholder={iconPlaceholder}
+          onLazyChange={(value) => void setIcon(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.image"
+          value={kit.image || ""}
+          placeholder={imagePlaceholder}
+          onLazyChange={(value) => void setImage(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
+          value={kit.homepage || ""}
+          placeholder={homepagePlaceholder}
+          onLazyChange={(value) => void setHomepage(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+      <TreeRow>
+        <Input
+          lazy
+          id="semio.sketchpad.app.kit.panel.details.section.kit.license"
+          value={kit.license || ""}
+          placeholder={licensePlaceholder}
+          onLazyChange={(value) => void setLicense(optionalKitText(value))}
+          showLabel
+        />
+      </TreeRow>
+    </>
+  );
 };
 
 /**
@@ -56285,4 +56297,3 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   });
 }
 //#endregion 📐Tests
-

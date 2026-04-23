@@ -20458,7 +20458,8 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     (globalThis as any).__SEMIO_WASM_SPECIFIER__ ??
     "@semio/rs-wasm";
   const timeoutMs = opts.timeoutMs ?? 60_000;
-  const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
+  const isNodeRuntime = (typeof process !== "undefined" && !!process.versions?.node) || (typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent ?? ""));
+  const useFallback = opts.forceFallback === true || typeof Worker === "undefined" || isNodeRuntime;
 
   const importWasmModule = async (specifier: string) => {
     if (specifier === "@semio/rs-wasm") {
@@ -20469,7 +20470,7 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
 
   const initWasmModule = async (mod: any): Promise<void> => {
     if (typeof mod.default !== "function") return;
-    if (typeof Worker === "undefined") {
+    if (useFallback) {
       try {
         const fs = await import("node:fs/promises");
         const { fileURLToPath } = await import("node:url");

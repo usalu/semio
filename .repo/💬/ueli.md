@@ -624,6 +624,48 @@ There MUST be only one schema, no migrations or legacy api support.
 
 #### schema
 
+---
+
+semio:
+The schema in the repo is not yet consistent.
+semio has been extended by version-control.
+Everything that previously was `kit` is now `kit snapshot`.
+The metabolism asset also shows the new snapshot format.
+
+Here a few things I noticed (incomplete):
+
+- Artifacts (Design and Types) have no parent, no variant, no view but only family
+- A family has ports.
+- Kit Change is not forward kit diff and backward kit diff but forward list of kit change commands and backward list of kit change commands.
+- Kit snapshots have an optional alternative id (if not the snapshot comes from `the kit`),
+- Kits dont have release or version.
+
+Here some specs:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors. Checkpoint ids are a hash that is computed by the changes and the parent hash.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit. They have optional checkpointId (if not then it is the root snapshot), optional sessionId, optional draftId, optional transactionId.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+Requirments:
+
+- All code, assets, test, docs, etc MUST have the same schema and api. No legacy api or backwards compatibility.
+
+---
+
 Introduce a new entity: family
 It replaced the old artifact (type or design) parent mechanism.
 The shift is from artifact inheritance to family composition.
@@ -1193,13 +1235,23 @@ useChildConnectionsIds():ConnectionId[]
 semio/sketchpad:
 
 Recently a big architectural change was started:
-We have rust store implementation with wasm `semio/rs`, `semio/js` which uses the rust web worker, `semio/react` library which reexports the store functionality as hooks and context, and hook consumer client `semio/sketchpad`
+We have rust store implementation with wasm `semio/rs`, and a `semio/js` adapter which uses the rust web worker, `semio/react` library which reexports `semio/js` the store functionality for react (hooks, context, etc), a general and hook consumer client `semio/sketchpad`
 
 Requirements:
 
-- No general kit hooks in semio/sketchpad. kit hooks come exclusively from semio/rs.
-- No domain logic in semio/js. All domain logic is only in semio/rs.
+- No kit hooks in semio/sketchpad.
+- Kit hooks come exclusively from semio/react.
+- No domain logic in semio/sketchpad, semio/js, semio/react. All domain logic is only in semio/rs.
+- No schema differences, all code, assets, tests, etc MUST 100% match, no legacy api or backwards compatibility.
 - Dont remove any functionality from sketchpad tests
+
+Make sure everything works.
+
+Here a tiny example that doesnt work:
+e.g. when editing the name of the kit in the details panel I get:
+Uncaught TypeError: Cannot read properties of null (reading 'change')
+at onLazyChange (index.tsx:15876:139)
+at handleBlur (index.tsx:13080:7)
 
 Finish it and get all playwright tests passing.
 
@@ -7623,8 +7675,13 @@ Steps:
    e.g. `git tag -s -m "🐙ueli🎆26🌙04☀️20🚩" "🐙ueli🎆26🌙04☀️20🚩"`
 2. Push the tag to the remote repository
    e.g. `git push origin 🐙ueli🎆26🌙04☀️20🚩`
-3. Squash all linear changes
-4.
+3. Squash all linear changes. If there are rebase conflicts, discard the changes until the rebase is successful.
+   e.g. `git rebase -s -S -i HEAD~10`
+4. Checkout parent commit before the squashed commit
+5. Compute loc from the parent commit
+   e.g. on Windows: `cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust`
+6. Save the loc locally
+7. Checkout the squashed commit and rename
 
 Introduce a command for renaming.
 Rename all files that are not git ignored.

@@ -14309,6 +14309,30 @@ pub mod kit {
                             let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             g.set_name(s)
                         }
+                        "description" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_description(v)
+                        }
+                        "icon" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_icon(v)
+                        }
+                        "image" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_image(v)
+                        }
+                        "version" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_version(v)
+                        }
+                        "homepage" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_homepage(v)
+                        }
+                        "license" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_license(v)
+                        }
                         _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }
                 }
@@ -14381,6 +14405,12 @@ pub mod kit {
                     }
                     match field {
                         "name" => Ok(serde_json::json!(g.name)),
+                        "description" => Ok(serde_json::to_value(&g.description).unwrap()),
+                        "icon" => Ok(serde_json::to_value(&g.icon).unwrap()),
+                        "image" => Ok(serde_json::to_value(&g.image).unwrap()),
+                        "version" => Ok(serde_json::to_value(&g.version).unwrap()),
+                        "homepage" => Ok(serde_json::to_value(&g.homepage).unwrap()),
+                        "license" => Ok(serde_json::to_value(&g.license).unwrap()),
                         _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }
                 }
