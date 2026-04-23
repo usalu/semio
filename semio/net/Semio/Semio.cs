@@ -15183,7 +15183,7 @@ public class RemoteKit : ISyncKit
 
         if (url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) || contentType.Contains("zip") || contentType.Contains("octet-stream") || (bytes.Length >= 4 && bytes[0] == (byte)'P' && bytes[1] == (byte)'K'))
         {
-            var tempPath = Path.Combine(Path.GetTempPath(), $"semio-remote-{__ID_NEWID__():N}.zip");
+            var tempPath = Path.Combine(Path.GetTempPath(), $"semio-remote-{System.Guid.NewGuid():N}.zip");
             try
             {
                 System.IO.File.WriteAllBytes(tempPath, bytes);

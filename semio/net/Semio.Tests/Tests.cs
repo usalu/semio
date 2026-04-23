@@ -182,7 +182,7 @@ public class Tests
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
-            var path = Path.Combine(Path.GetTempPath(), $"workflow-{__ID_NEWID__():N}.kit.json");
+            var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.kit.json");
             try
             {
                 DevKit.ExportDevKit(kit, path);
@@ -204,7 +204,7 @@ public class Tests
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
-            var folderPath = Path.Combine(Path.GetTempPath(), $"workflow-folder-{__ID_NEWID__():N}");
+            var folderPath = Path.Combine(Path.GetTempPath(), $"workflow-folder-{Guid.NewGuid():N}");
             Directory.CreateDirectory(folderPath);
             try
             {
@@ -230,7 +230,7 @@ public class Tests
         {
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
-            var path = Path.Combine(Path.GetTempPath(), $"workflow-{__ID_NEWID__():N}.zip");
+            var path = Path.Combine(Path.GetTempPath(), $"workflow-{Guid.NewGuid():N}.zip");
             try
             {
                 ArchiveKit.Export(kit, path);
@@ -284,7 +284,7 @@ public class Tests
 
             var kit = CreateWorkflowKit();
             var diff = new KitDiff { Name = "Workflow Kit Edited" };
-            var zipPath = Path.Combine(Path.GetTempPath(), $"workflow-remote-{__ID_NEWID__():N}.zip");
+            var zipPath = Path.Combine(Path.GetTempPath(), $"workflow-remote-{Guid.NewGuid():N}.zip");
             ArchiveKit.Export(kit, zipPath);
             var zipBytes = System.IO.File.ReadAllBytes(zipPath);
             var jsonBytes = Encoding.UTF8.GetBytes(Utility.Serialize(kit));
@@ -395,7 +395,7 @@ public class Tests
             {
                 var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
 
-                var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + __ID_NEWID__().ToString("N"));
+                var tempDir = Path.Combine(Path.GetTempPath(), "semio_sqlite_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 try
                 {

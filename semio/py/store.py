@@ -69,12 +69,19 @@ class StoreClient:
         with self._lock:
             if self._p and self._p.poll() is None:
                 return
+            uenv = {**os.environ, "RUST_LOG": os.environ.get("RUST_LOG", "error")}
+            if os.environ.get("SEMIO_STORE_ENABLE_EVENTS", "").lower() not in (
+                "1",
+                "true",
+                "yes",
+            ):
+                uenv["SEMIO_STORE_NO_EVENTS"] = "1"
             self._p = subprocess.Popen(  # noqa: S603
                 [self._binary],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=sys.stderr,
-                env={**os.environ, "RUST_LOG": os.environ.get("RUST_LOG", "error")},
+                env=uenv,
             )
             if self._p.stdin is None or self._p.stdout is None:
                 raise RuntimeError("subprocess did not get pipes")

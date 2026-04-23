@@ -39,10 +39,10 @@ dev = []
 default-groups = ["test", "dev"]
 
 [tool.hatch.build.targets.sdist]
-include = ["main.py"]
+include = ["main.py", "store.py", "store_test.py"]
 
 [tool.hatch.build.targets.wheel]
-include = ["main.py"]
+include = ["main.py", "store.py", "store_test.py"]
 
 [build-system]
 requires = ["hatchling"]

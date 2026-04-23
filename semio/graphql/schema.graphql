@@ -150,76 +150,104 @@ type Author {
   id: ID!
   name: String!
   email: String!
-  role: String
-  rank: Int
+  attributes: [Attribute!]!
 }
 
 input AuthorInput {
   id: ID!
   name: String!
   email: String!
-  role: String
-  rank: Int
+  attributes: [AttributeInput!]
 }
 
 input AuthorPatchInput {
   name: String
   email: String
-  role: String
-  rank: Int
+  attributes: [AttributeInput!]
 }
 
 type Folder {
   hash: Hash!
   id: ID!
   kit: Kit!
-  path: String!
+  name: String!
+  parent: Folder
+  children: [Folder!]!
   description: String
+  attributes: [Attribute!]!
+  createdAt: DateTime
+  createdBy: Author
+  updatedAt: DateTime
+  updatedBy: Author
 }
 
 input FolderInput {
   id: ID!
-  path: String!
+  name: String!
+  parentId: ID
   description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
 }
 
 input FolderPatchInput {
-  path: String
+  name: String
+  parentId: ID
   description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
 }
 
 type File {
   hash: Hash!
   id: ID!
   kit: Kit!
-  url: String!
-  mime: String
-  size: Int
+  name: String!
+  remote: String
+  folder: Folder
+  size: Float
   contentHash: String
-  description: String
+  blob: String
+  mime: String
   createdAt: DateTime
+  createdBy: Author
   updatedAt: DateTime
+  updatedBy: Author
 }
 
 input FileInput {
   id: ID!
-  url: String!
-  mime: String
-  size: Int
+  name: String!
+  remote: String
+  folderId: ID
+  size: Float
   contentHash: String
-  description: String
+  blob: String
+  mime: String
   createdAt: DateTime
+  createdById: ID
   updatedAt: DateTime
+  updatedById: ID
 }
 
 input FilePatchInput {
-  url: String
-  mime: String
-  size: Int
+  name: String
+  remote: String
+  folderId: ID
+  size: Float
   contentHash: String
-  description: String
+  blob: String
+  mime: String
   createdAt: DateTime
+  createdById: ID
   updatedAt: DateTime
+  updatedById: ID
 }
 
 type Benchmark {
@@ -227,19 +255,23 @@ type Benchmark {
   id: ID!
   quality: Quality
   name: String!
+  icon: String
   min: Float
   minExcluded: Boolean
   max: Float
   maxExcluded: Boolean
+  attributes: [Attribute!]!
 }
 
 input BenchmarkInput {
   id: ID!
   name: String!
+  icon: String
   min: Float
   minExcluded: Boolean
   max: Float
   maxExcluded: Boolean
+  attributes: [AttributeInput!]
 }
 
 type Quality {
@@ -247,69 +279,102 @@ type Quality {
   id: ID!
   kit: Kit!
   key: String!
-  value: String
-  unit: String
-  definition: String
+  name: String!
   description: String
+  uri: String
+  kind: Int
+  folder: Folder
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
   benchmarks: [Benchmark!]!
+  attributes: [Attribute!]!
 }
 
 input QualityInput {
   id: ID!
   key: String!
-  value: String
-  unit: String
-  definition: String
+  name: String!
   description: String
+  uri: String
+  kind: Int
+  folderId: ID
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
   benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
 }
 
 input QualityPatchInput {
   key: String
-  value: String
-  unit: String
-  definition: String
+  name: String
   description: String
+  uri: String
+  kind: Int
+  folderId: ID
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
   benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
 }
 
 type Port {
   hash: Hash!
   id: ID!
-  type: Type!
-  family: String
-  compatibleFamilies: [String!]!
-  mandatory: Boolean
-  t: Float
-  point: Point
-  direction: Vector
+  kit: Kit!
+  name: String!
   description: String
-  qualities: [Quality!]!
+  icon: String
+  maxChildren: Int
+  compatiblePorts: [Port!]!
   attributes: [Attribute!]!
 }
 
 input PortInput {
   id: ID!
-  family: String
-  compatibleFamilies: [String!]
-  mandatory: Boolean
-  t: Float
-  point: PointInput
-  direction: VectorInput
+  name: String!
   description: String
-  qualities: [QualityInput!]
+  icon: String
+  maxChildren: Int
+  compatiblePortIds: [ID!]
   attributes: [AttributeInput!]
 }
 
 input PortPatchInput {
-  family: String
-  compatibleFamilies: [String!]
-  mandatory: Boolean
-  t: Float
-  point: PointInput
-  direction: VectorInput
+  name: String
   description: String
-  qualities: [QualityInput!]
+  icon: String
+  maxChildren: Int
+  compatiblePortIds: [ID!]
   attributes: [AttributeInput!]
 }
 
@@ -317,18 +382,18 @@ type Prop {
   hash: Hash!
   id: ID!
   kit: Kit!
-  key: String!
-  quality: Quality
+  quality: Quality!
   value: String!
   unit: String
+  attributes: [Attribute!]!
 }
 
 input PropInput {
   id: ID!
-  key: String!
-  qualityId: ID
+  qualityId: ID!
   value: String!
   unit: String
+  attributes: [AttributeInput!]
 }
 
 type Tag {
@@ -336,18 +401,24 @@ type Tag {
   id: ID!
   kit: Kit!
   name: String!
-  order: Int
+  description: String
+  icon: String
+  attributes: [Attribute!]!
 }
 
 input TagInput {
   id: ID!
   name: String!
-  order: Int
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
 }
 
 input TagPatchInput {
   name: String
-  order: Int
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
 }
 
 type Concept {
@@ -356,29 +427,68 @@ type Concept {
   kit: Kit!
   name: String!
   description: String
-  order: Int
+  icon: String
+  attributes: [Attribute!]!
 }
 
 input ConceptInput {
   id: ID!
   name: String!
   description: String
-  order: Int
+  icon: String
+  attributes: [AttributeInput!]
 }
 
 input ConceptPatchInput {
   name: String
   description: String
-  order: Int
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+"""
+👪Named connector family grouping ports and shared attributes.
+"""
+type Family {
+  hash: Hash!
+  id: ID!
+  kit: Kit!
+  name: String!
+  description: String
+  icon: String
+  ports: [Port!]!
+  attributes: [Attribute!]!
+}
+
+"""
+👪Input fields for creating or replacing a connector family.
+"""
+input FamilyInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  ports: [PortInput!]
+  attributes: [AttributeInput!]
+}
+
+"""
+👪Patch fields for updating a connector family.
+"""
+input FamilyPatchInput {
+  name: String
+  description: String
+  icon: String
+  ports: [PortInput!]
+  attributes: [AttributeInput!]
 }
 
 type Representation {
   hash: Hash!
   id: ID!
   type: Type!
-  url: String!
+  name: String
   tags: [Tag!]!
-  qualities: [Quality!]!
   file: File
   description: String
   attributes: [Attribute!]!
@@ -386,9 +496,8 @@ type Representation {
 
 input RepresentationInput {
   id: ID!
-  url: String!
+  name: String
   tagIds: [ID!]
-  qualities: [QualityInput!]
   fileId: ID
   description: String
   attributes: [AttributeInput!]
@@ -398,20 +507,31 @@ type Connector {
   hash: Hash!
   id: ID!
   type: Type!
-  code: String!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
   description: String
   port: Port
-  qualities: [Quality!]!
+  mandatory: Boolean
+  maxChildren: Int
+  props: [Prop!]!
   attributes: [Attribute!]!
   pieces: [Piece!]!
+  compatibleConnectors: [Connector!]!
 }
 
 input ConnectorInput {
   id: ID!
-  code: String!
+  name: String
+  t: Float!
+  point: PointInput!
+  direction: VectorInput!
   description: String
   portId: ID
-  qualities: [QualityInput!]
+  mandatory: Boolean
+  maxChildren: Int
+  props: [PropInput!]
   attributes: [AttributeInput!]
 }
 
@@ -420,21 +540,21 @@ type Type {
   id: ID!
   kit: Kit!
   name: String!
-  variant: String
+  parent: Type
+  children: [Type!]!
+  isAbstract: Boolean
+  folder: Folder
+  representations: [Representation!]!
+  connectors: [Connector!]!
+  props: [Prop!]!
   stock: Int
   virtual: Boolean
   unit: String
-  location: Location
   createdAt: DateTime
   updatedAt: DateTime
-  ports: [Port!]!
-  representations: [Representation!]!
-  connectors: [Connector!]!
+  location: Location
   authors: [Author!]!
   concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
   icon: String
   image: String
   description: String
@@ -445,21 +565,20 @@ type Type {
 input TypeInput {
   id: ID!
   name: String!
-  variant: String
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  representations: [RepresentationInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
   stock: Int
   virtual: Boolean
   unit: String
-  location: LocationInput
   createdAt: DateTime
   updatedAt: DateTime
-  ports: [PortInput!]
-  representations: [RepresentationInput!]
-  connectors: [ConnectorInput!]
+  location: LocationInput
   authorIds: [ID!]
   conceptIds: [ID!]
-  tags: [TagInput!]
-  qualities: [QualityInput!]
-  props: [PropInput!]
   icon: String
   image: String
   description: String
@@ -468,21 +587,20 @@ input TypeInput {
 
 input TypePatchInput {
   name: String
-  variant: String
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  representations: [RepresentationInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
   stock: Int
   virtual: Boolean
   unit: String
-  location: LocationInput
   createdAt: DateTime
   updatedAt: DateTime
-  ports: [PortInput!]
-  representations: [RepresentationInput!]
-  connectors: [ConnectorInput!]
+  location: LocationInput
   authorIds: [ID!]
   conceptIds: [ID!]
-  tags: [TagInput!]
-  qualities: [QualityInput!]
-  props: [PropInput!]
   icon: String
   image: String
   description: String
@@ -493,38 +611,35 @@ type Layer {
   hash: Hash!
   id: ID!
   design: Design!
-  name: String!
-  visible: Boolean
-  locked: Boolean
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
   color: String
-  order: Int
   description: String
+  attributes: [Attribute!]!
 }
 
 input LayerInput {
   id: ID!
-  name: String!
-  visible: Boolean
-  locked: Boolean
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
   color: String
-  order: Int
   description: String
+  attributes: [AttributeInput!]
 }
 
 type Side {
   hash: Hash!
-  id: ID!
   connection: Connection!
   piece: Piece!
   designPiece: Piece
-  port: Port
+  connector: Connector
 }
 
 input SideInput {
-  id: ID
   pieceId: ID!
   designPieceId: ID
-  portId: ID
   connectorId: ID
 }
 
@@ -540,14 +655,14 @@ type Connection {
   rotation: Float
   turn: Float
   tilt: Float
-  x: Float
-  y: Float
+  u: Float
+  v: Float
   description: String
   attributes: [Attribute!]!
   childPiece: Piece!
-  childPort: Port
+  childConnector: Connector!
   parentPiece: Piece!
-  parentPort: Port
+  parentConnector: Connector!
 }
 
 input ConnectionInput {
@@ -560,8 +675,8 @@ input ConnectionInput {
   rotation: Float
   turn: Float
   tilt: Float
-  x: Float
-  y: Float
+  u: Float
+  v: Float
   description: String
   attributes: [AttributeInput!]
 }
@@ -575,8 +690,8 @@ input ConnectionPatchInput {
   rotation: Float
   turn: Float
   tilt: Float
-  x: Float
-  y: Float
+  u: Float
+  v: Float
   description: String
   attributes: [AttributeInput!]
 }
@@ -585,18 +700,22 @@ type Stat {
   hash: Hash!
   id: ID!
   design: Design!
-  key: String!
-  value: String!
+  quality: Quality!
   unit: String
-  description: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
 }
 
 input StatInput {
   id: ID!
-  key: String!
-  value: String!
+  qualityId: ID!
   unit: String
-  description: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
 }
 
 enum PieceKind {
@@ -641,7 +760,7 @@ input PieceInput {
   id: ID!
   name: String
   typeId: ID
-  designId: ID
+  designReferenceId: ID
   plane: PlaneInput
   center: CoordinateInput
   scale: Float
@@ -657,7 +776,7 @@ input PieceInput {
 input PiecePatchInput {
   name: String
   typeId: ID
-  designId: ID
+  designReferenceId: ID
   plane: PlaneInput
   center: CoordinateInput
   scale: Float
@@ -695,21 +814,23 @@ type Design {
   id: ID!
   kit: Kit!
   name: String!
-  variant: String
-  view: String
-  unit: String
-  location: Location
-  camera: Camera
+  parent: Design
+  children: [Design!]!
+  isAbstract: Boolean
+  folder: Folder
   pieces: [Piece!]!
   connections: [Connection!]!
+  stats: [Stat!]!
+  props: [Prop!]!
   layers: [Layer!]!
+  activeLayer: Layer
   groups: [Group!]!
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: Location
   authors: [Author!]!
   concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  stats: [Stat!]!
   icon: String
   image: String
   description: String
@@ -721,21 +842,22 @@ type Design {
 input DesignInput {
   id: ID!
   name: String!
-  variant: String
-  view: String
-  unit: String
-  location: LocationInput
-  camera: CameraInput
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
   pieces: [PieceInput!]
   connections: [ConnectionInput!]
+  stats: [StatInput!]
+  props: [PropInput!]
   layers: [LayerInput!]
+  activeLayerId: ID
   groups: [GroupInput!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationInput
   authorIds: [ID!]
   conceptIds: [ID!]
-  tags: [TagInput!]
-  qualities: [QualityInput!]
-  props: [PropInput!]
-  stats: [StatInput!]
   icon: String
   image: String
   description: String
@@ -746,21 +868,20 @@ input DesignInput {
 
 input DesignPatchInput {
   name: String
-  variant: String
-  view: String
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  stats: [StatInput!]
+  props: [PropInput!]
+  layers: [LayerInput!]
+  activeLayerId: ID
+  groups: [GroupInput!]
+  canScale: Boolean
+  canMirror: Boolean
   unit: String
   location: LocationInput
-  camera: CameraInput
-  pieces: [PieceInput!]
-  connections: [ConnectionInput!]
-  layers: [LayerInput!]
-  groups: [GroupInput!]
   authorIds: [ID!]
   conceptIds: [ID!]
-  tags: [TagInput!]
-  qualities: [QualityInput!]
-  props: [PropInput!]
-  stats: [StatInput!]
   icon: String
   image: String
   description: String
@@ -773,17 +894,17 @@ type Kit {
   hash: Hash!
   id: ID!
   name: String!
-  version: String
-  uri: String
+  release: String
   types: [Type!]!
   designs: [Design!]!
   tags: [Tag!]!
   concepts: [Concept!]!
+  families: [Family!]!
+  ports: [Port!]!
   qualities: [Quality!]!
   files: [File!]!
   folders: [Folder!]!
   authors: [Author!]!
-  props: [Prop!]!
   remote: String
   homepage: String
   license: String
@@ -799,17 +920,17 @@ type Kit {
 input KitInput {
   id: ID!
   name: String!
-  version: String
-  uri: String
+  release: String
   types: [TypeInput!]
   designs: [DesignInput!]
   tags: [TagInput!]
   concepts: [ConceptInput!]
+  families: [FamilyInput!]
+  ports: [PortInput!]
   qualities: [QualityInput!]
   files: [FileInput!]
   folders: [FolderInput!]
   authors: [AuthorInput!]
-  props: [PropInput!]
   remote: String
   homepage: String
   license: String
@@ -824,8 +945,7 @@ input KitInput {
 
 input KitPatchInput {
   name: String
-  version: String
-  uri: String
+  release: String
   remote: String
   homepage: String
   license: String
@@ -1065,6 +1185,9 @@ enum KitCommandKind {
   CREATE_PORT
   UPDATE_PORT
   DELETE_PORT
+  CREATE_FAMILY
+  UPDATE_FAMILY
+  DELETE_FAMILY
   CREATE_TAG
   UPDATE_TAG
   DELETE_TAG
@@ -1077,6 +1200,7 @@ enum KitCommandKind {
   CREATE_FOLDER
   UPDATE_FOLDER
   DELETE_FOLDER
+  MOVE_ARTIFACT_TO_FOLDER
   CREATE_PIECE
   CREATE_PIECES
   UPDATE_PIECE
@@ -1923,6 +2047,32 @@ type DeleteFolderKitInteraction implements KitInteraction & ChangeKitInteraction
   createdAt: DateTime!
   forward: KitChange
   backward: KitChange
+  previousFolder: Folder
+}
+
+"""
+🧾Recorded MoveArtifactToFolder command interaction with computed links and change data.
+"""
+type MoveArtifactToFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+  artifactKind: ArtifactKind!
+  artifactId: ID!
+  folder: Folder
   previousFolder: Folder
 }
 
@@ -2801,6 +2951,9 @@ union KitInteractionRecord =
   | CreatePortKitInteraction
   | UpdatePortKitInteraction
   | DeletePortKitInteraction
+  | CreateFamilyKitInteraction
+  | UpdateFamilyKitInteraction
+  | DeleteFamilyKitInteraction
   | CreateTagKitInteraction
   | UpdateTagKitInteraction
   | DeleteTagKitInteraction
@@ -2813,6 +2966,7 @@ union KitInteractionRecord =
   | CreateFolderKitInteraction
   | UpdateFolderKitInteraction
   | DeleteFolderKitInteraction
+  | MoveArtifactToFolderKitInteraction
   | CreatePieceKitInteraction
   | CreatePiecesKitInteraction
   | UpdatePieceKitInteraction
@@ -3142,6 +3296,13 @@ input DeleteFolderCommandInput {
   id: ID!
 }
 
+input MoveArtifactToFolderCommandInput {
+  context: KitCommandContextInput!
+  artifactKind: ArtifactKind!
+  artifactId: ID!
+  folderId: ID
+}
+
 input CreatePieceCommandInput {
   context: KitCommandContextInput!
   designId: ID!
@@ -3398,6 +3559,10 @@ type Mutation {
   updatePort(input: UpdatePortCommandInput!): KitMutationResult!
   deletePort(input: DeletePortCommandInput!): KitMutationResult!
 
+  createFamily(input: CreateFamilyCommandInput!): KitMutationResult!
+  updateFamily(input: UpdateFamilyCommandInput!): KitMutationResult!
+  deleteFamily(input: DeleteFamilyCommandInput!): KitMutationResult!
+
   createTag(input: CreateTagCommandInput!): KitMutationResult!
   updateTag(input: UpdateTagCommandInput!): KitMutationResult!
   deleteTag(input: DeleteTagCommandInput!): KitMutationResult!
@@ -3413,6 +3578,7 @@ type Mutation {
   createFolder(input: CreateFolderCommandInput!): KitMutationResult!
   updateFolder(input: UpdateFolderCommandInput!): KitMutationResult!
   deleteFolder(input: DeleteFolderCommandInput!): KitMutationResult!
+  moveArtifactToFolder(input: MoveArtifactToFolderCommandInput!): KitMutationResult!
 
   createPiece(input: CreatePieceCommandInput!): KitMutationResult!
   createPieces(input: CreatePiecesCommandInput!): KitMutationResult!

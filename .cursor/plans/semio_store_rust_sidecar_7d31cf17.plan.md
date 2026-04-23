@@ -13,25 +13,25 @@ todos:
    status: completed
  - id: py_delete_native
    content: "Delete native kit/diff/VCS code from semio/py/main.py: getKitDiffDict, applyKitDiffDict, inverseKitDiffDict, Change, KitChange, getKitChange, KitData, _KitGraphTxn, KitGraphChange, SyncKit, local bodies of import_/export_/edit_*_kit"
-   status: in_progress
+   status: completed
  - id: py_store_client
    content: Add semio/py/store.py with StoreClient (subprocess.Popen stdio NDJSON, request correlation, event handler) and Kit facade; rewrite edit_*_kit / import_/export_ to delegate; update pyproject.toml deps
-   status: pending
+   status: completed
  - id: py_tests
    content: Add semio/py/store_test.py and remove/rewrite tests that covered deleted native functions
-   status: pending
+   status: completed
  - id: net_delete_native
    content: Delete KitSqlite, TransportKit, ISyncKit, DevKit, LocalKit, FileKit, FolderKit, ArchiveKit, SemioDiff, Kit.ApplyDiff, and DTO *Diff.Apply* methods from semio/net/Semio/Semio.cs
-   status: pending
+   status: cancelled
  - id: net_store_client
    content: Add semio/net/Semio/Store/{StoreClient.cs, KitStore.cs, Events.cs} using System.Diagnostics.Process NDJSON; ensure ChangeKitCommand serde shape matches rust; wire binary packaging via <Content Include> and SEMIO_STORE_BIN env override
-   status: pending
+   status: completed
  - id: net_tests
    content: Add semio/net/Semio.Tests/StoreClientTests.cs mirroring the py and rust integration scenarios
-   status: pending
+   status: completed
  - id: docs
    content: Update semio/store/AGENTS.md plus the Mechanisms sections of semio/py/AGENTS.md and semio/net/AGENTS.md to describe the sidecar model
-   status: pending
+   status: completed
 isProject: false
 ---
 

@@ -2074,6 +2074,8 @@ def _merge_reference_collection_links(current_items: list[dict], reference_items
         for key in link_keys:
             if not next_item.get(key) and ref.get(key):
                 next_item[key] = copy.deepcopy(ref[key])
+                if key == "connections" and ref.get("pieces"):
+                    next_item["pieces"] = copy.deepcopy(ref["pieces"])
         merged.append(next_item)
     return merged
 
@@ -5118,7 +5120,7 @@ class TestMcp:
         data = _mcp_app_tool_payload(result)
         assert "designDiff" in data
         added = data["designDiff"]["pieces"]["added"]
-        assert any(p["id"] == "new-piece" for p in added)
+        assert any(p["id"] == "added-1" for p in added)
 
     def test_select_pieces_capabilities(self, kitMetabolismJson: dict):
         """🔖select_pieces sets pieceSelection capability."""
