@@ -11,14 +11,10 @@
             "id": "98e5dd2c0b43ebdf",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "research/Interviews/interview-sources/00_research/Rotor_Rotor_DC_detailed.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Rotor_Rotor_DC_detailed"
+              "title": "New tab"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "research/Interviews/interview-sources/00_research/Rotor_Rotor_DC_detailed.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Rotor_Rotor_DC_detailed"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "research/Interviews/interview-sources/00_research/Rotor_Rotor_DC_detailed.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Rotor_Rotor_DC_detailed"
+              "title": "Outgoing links"
             }
           },
           {
@@ -156,13 +150,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "research/Interviews/interview-sources/00_research/Rotor_Rotor_DC_detailed.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Rotor_Rotor_DC_detailed"
+              "title": "Outline"
             }
           }
         ]
@@ -185,41 +178,41 @@
   },
   "active": "98e5dd2c0b43ebdf",
   "lastOpenFiles": [
-    "research/Interviews/interview-sources/00_research/04_be-ware-nbl.md",
-    "research/Interviews/interview-sources/00_research/09_CRCLR_House_detailed.md",
-    "research/Interviews/interview-sources/00_research/Rotor_Rotor_DC_detailed.md",
-    "research/Interviews/interview-sources/00_research/PARABASE_detailed.md",
-    "research/Interviews/interview-sources/00_research/12_TULIUM_Museums_Pavilion.md",
-    "research/Interviews/interview-sources/00_research/13_ZUsammenKUNFT_Berlin.md",
-    "research/Interviews/interview-sources/00_research/11_IYHCC_Berlin.md",
-    "research/Interviews/interview-sources/00_research/10_Arup_Reuse.md",
-    "research/Interviews/interview-sources/00_research/08_ZRS_Engineering_detailed.md",
-    "research/tragerksystem/index.md",
-    "research/tragerksystem/Stahl-Skelettbau/index.md",
-    "research/tragerksystem/Ortbeton/index.md",
-    "research/tragerksystem/skeletbauweise/index.md",
-    "research/tragerksystem/Holztragwerk/index.md",
-    "research/tragerksystem/Deckenelemente/Platten/index.md",
-    "research/Interviews/interview-sources/00_research/07_Kunst_Stoffe_Berlin_detailed.md",
-    "research/Interviews/interview-sources/00_research/07_Kunst_Stoffe_Berlin.md",
-    "research/Interviews/interview-sources/00_research/06_Haus_der_Materialisierung_detailed.md",
-    "research/Interviews/interview-sources/00_research/05_BIZH_Reallabor_detailed.md",
-    "research/Interviews/interview-sources/00_research/04_Be_Ware_NBL_detailed.md",
-    "research/Interviews/interview-sources/00_research/03_Madaster_detailed.md",
-    "research/Interviews/interview-sources/01_digital-platforms/madaster.md",
-    "research/Interviews/interview-sources/00_research/03_Madaster.md",
-    "research/Interviews/interview-sources/00_research/02_Concular_detailed.md",
-    "research/Interviews/interview-sources/00_research/01_BIM_Berlin_detailed.md",
-    "research/Interviews/interview-sources/00_research/01_BIM_Berlin.md",
-    "research/Interviews/interview-sources/00_research",
-    "research/Interviews/interview-sources/00_index.md.tmp.49368.1776871608661",
-    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871591021",
-    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871584490",
-    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871575348",
-    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871567686",
-    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871560974",
-    "research/Interviews/interview-sources/05_design/museums-pavilion.md.tmp.49368.1776871553144",
-    "research/Interviews/interview-sources/05_design/museums-pavilion.md.tmp.49368.1776871547436",
-    "research/Interviews/interview-sources/04_engineering/zrs-engineering.md.tmp.49368.1776871541133"
+    "research/berichte/Ueberblick_Entwerfen_mit_Bestand_Kurzfassung.md",
+    "research/berichte/Research_Prompts_Entities_Obsidian.md",
+    "research/berichte/index.md",
+    "research/berichte/11_Rotor_Rotor_DC_detailed.md",
+    "research/berichte/10_PARABASE_detailed.md",
+    "research/berichte/09_CRCLR_House_detailed.md",
+    "research/berichte/08_ZRS_Engineering_detailed.md",
+    "research/berichte/07_Kunst_Stoffe_Berlin_detailed.md",
+    "research/berichte/06_Haus_der_Materialisierung_detailed.md",
+    "research/berichte/05_BIZH_Reallabor_detailed.md",
+    "research/berichte/04_Be_Ware_NBL_detailed.md",
+    "research/berichte/03_Madaster_detailed.md",
+    "research/berichte/02_Concular_detailed.md",
+    "research/berichte/01_BIM_Berlin_detailed.md",
+    "research/interviews/Interviewleitfaden.md",
+    "research/interviews/Interview_ZRS.md",
+    "research/interviews/Interview_Rotor_DC.md",
+    "research/interviews/Interview_Rotor.md",
+    "research/interviews/Interview_PARABASE.md",
+    "research/interviews/Interview_Madaster.md",
+    "research/interviews/Interview_Kunst_Stoffe_Berlin.md",
+    "research/interviews/Interview_Haus_der_Materialisierung.md",
+    "research/interviews/Interview_Concular.md",
+    "research/interviews/Interview_BIZH.md",
+    "research/interviews/Interview_Be_Ware.md",
+    "research/interviews/Interview_BIM_Berlin.md",
+    "research/werkzeuge",
+    "research/orte",
+    "research/standards",
+    "research/dokumente",
+    "research/logistiken",
+    "research/prüfungen",
+    "research/methoden",
+    "research/bauteile",
+    "research/interviews/interview-sources/05_design",
+    "research/interviews/interview-sources/04_engineering"
   ]
 }
