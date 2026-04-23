@@ -12971,7 +12971,19 @@ public static class ZipRoundtrip
         try
         {
             ZipFile.ExtractToDirectory(zipPath, tempDir);
-            result.Kit = StoreKitIO.LoadKitFromFolder(tempDir);
+            var storeBin = StorePaths.ResolveStoreBinary();
+            if (!string.IsNullOrEmpty(storeBin) && System.IO.File.Exists(storeBin))
+            {
+                result.Kit = StoreKitIO.LoadKitFromFolder(tempDir);
+            }
+            else
+            {
+                var onlyJson = Path.Combine(tempDir, "kit.json");
+                if (System.IO.File.Exists(onlyJson))
+                    result.Kit = Utility.Deserialize<Kit>(System.IO.File.ReadAllText(onlyJson))!;
+                else
+                    throw new FileNotFoundException("semio-store binary missing (build with cargo build -p semio-store --release) and the zip has no root kit.json.");
+            }
 
             foreach (var file in Directory.GetFiles(tempDir, "*", SearchOption.AllDirectories))
             {

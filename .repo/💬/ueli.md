@@ -688,6 +688,44 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ### 🧮algorithms
 
 semio algorithms:
+
+---
+
+Kit/Store:
+Introduce a window kind such as gitkraken for the complete history (root, checkpoints, alternatives, drafts)
+
+The best ideas from GitKraken:
+
+- Chronological vertical sorting for checkpoints (latest top), leaves good space for message
+- Left column for alternatives
+
+Notable difference to git:
+
+- Alternatives is not pointer to a commit but a list of checkpoints (highlight the complete line on hover)
+- Everything exists at the same time (unlike git where you need to checkout)
+
+Here the specs:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+---
+
 It is just a clean visualization boad but some things are not right. The output MUST always have the diff applied (not withDiff but just applied). e.g. the output from flattenDesign still has connections in the diagram
 
 All boards are pure proxies to the native implemenations. There MUST be no additional domain logic. E.g. drag is showing the correct piece centers but somehow the connections are missing and the diff is showing the wrong information. You MUST refactor all boards to be 100% clean and just ui for calling the native functions.

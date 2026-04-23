@@ -45,4 +45,16 @@
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="..\..\..\target\release\semio-store.exe" Link="runtimes\win-x64\native\semio-store.exe" Condition="Exists('..\..\..\target\release\semio-store.exe')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\..\..\target\release\semio-store" Link="runtimes\linux-x64\native\semio-store" Condition="Exists('..\..\..\target\release\semio-store')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\..\..\target\release\semio-store.exe" Link="semio-store.exe" Condition="Exists('..\..\..\target\release\semio-store.exe')">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
 </Project>

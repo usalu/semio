@@ -8641,7 +8641,7 @@ export class KitImpl {
     return like instanceof KitImpl ? like : new KitImpl(KitSchema.parse(stripNullsJsonClone(like) as unknown));
   }
 
-  /** Semio world basis ÔåÆ three.js scene root (matches legacy {@link toThreeRotation}). */
+  /** Semio world basis ÔåÆ three.js scene root (same transform as {@link toThreeRotation}). */
   static semioToThreeRootBasis(): THREE.Matrix4 {
     return toThreeRotation();
   }
@@ -14954,7 +14954,7 @@ export const operationErr = <TDiff = unknown>(errors: OperationNote[]): SemioRep
 });
 
 /**
- * Wraps a native/REST payload into {@link DesignOperationResult} (supports legacy `change` key).
+ * Wraps a native/REST payload into {@link DesignOperationResult} (accepts `diff` or alternate `change` for the design payload).
  **/
 export const normalizeDesignFlattenResult = (raw: unknown): DesignOperationResult => {
   if (raw !== null && typeof raw === "object" && "ok" in raw) {

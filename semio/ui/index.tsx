@@ -2487,8 +2487,8 @@ const isBrowserReadableRepresentationUrl = (url: string): boolean => /^(blob:|da
 const getSceneFileSource = (file?: SemioFile): string | undefined => {
   if (!file) return undefined;
   if (typeof file.blob === "string" && file.blob.length > 0 && isBrowserReadableRepresentationUrl(file.blob)) return file.blob.trim();
-  const legacyUrl = typeof (file as SemioFile & { url?: string }).url === "string" ? (file as SemioFile & { url?: string }).url!.trim() : "";
-  if (legacyUrl.length > 0 && isBrowserReadableRepresentationUrl(legacyUrl)) return legacyUrl;
+  const optionalFileUrl = typeof (file as SemioFile & { url?: string }).url === "string" ? (file as SemioFile & { url?: string }).url!.trim() : "";
+  if (optionalFileUrl.length > 0 && isBrowserReadableRepresentationUrl(optionalFileUrl)) return optionalFileUrl;
   if (typeof file.remote === "string" && file.remote.length > 0 && isBrowserReadableRepresentationUrl(file.remote)) return file.remote.trim();
   return undefined;
 };

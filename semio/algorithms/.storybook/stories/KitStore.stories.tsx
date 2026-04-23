@@ -28,7 +28,7 @@ const firstDesignId = seedDesign?.id ?? "";
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "ks-ent", kind: WindowKind.DESIGN_INPUT, label: "Entity ids", component: EntityWindow },
-  { id: "ks-hist", kind: WindowKind.DESIGN_INPUT, label: "VCS + legacy tx", component: HistoryWindow },
+  { id: "ks-hist", kind: WindowKind.DESIGN_INPUT, label: "VCS + history", component: HistoryWindow },
   { id: "ks-cmd", kind: WindowKind.DESIGN_INPUT, label: "Commands (JSON)", component: CommandWindow },
   { id: "ks-diff", kind: WindowKind.DESIGN_INPUT, label: "Last result", component: DiffWindow },
   { id: "ks-snap", kind: WindowKind.DESIGN_INPUT, label: "Snapshot / theKit", component: SnapWindow },
@@ -52,7 +52,7 @@ const DEFAULT_LAYOUT = {
           {
             kind: "stack" as const,
             size: 48,
-            children: [{ kind: "window" as const, windowKindId: "ks-hist", title: "VCS + legacy tx" }],
+            children: [{ kind: "window" as const, windowKindId: "ks-hist", title: "VCS + history" }],
           },
         ],
       },

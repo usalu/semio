@@ -2012,7 +2012,7 @@ export function useMoveToFolder(): {
 export type KitArtifactFolderKind = "type" | "design" | "quality" | "file" | "folder";
 
 /**
- * Move a kit artifact into a folder (or to root) — mirrors legacy sketchpad `semio.kit.moveToFolder` / kitCommands behavior via {@link KitStoreClient.setField}.
+ * Move a kit artifact into a folder (or to root) — same behavior as sketchpad `semio.kit.moveToFolder` / kit commands, implemented with {@link KitStoreClient.setField}.
  */
 export function useMoveKitArtifactToFolder(): {
 	run: (artifactKind: KitArtifactFolderKind, artifactId: string, folderId: string | null) => Promise<SetResult>;

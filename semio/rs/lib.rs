@@ -396,10 +396,10 @@ pub mod change_command {
     use crate::file::FileIdDto;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
-    use crate::geom::Camera;
     use crate::geom::Coordinate;
-    use crate::geom::Location;
     use crate::geom::Plane;
+    use crate::geom::Point;
+    use crate::location::LocationIdDto;
     use crate::group::GroupFullDto;
     use crate::group::GroupIdDto;
     use crate::id::Id;
@@ -785,7 +785,7 @@ pub mod change_command {
             unit: Option<String>,
         },
         Location {
-            location: Option<Location>,
+            location: Option<LocationIdDto>,
         },
         Created {
             created: Option<String>,
@@ -884,7 +884,7 @@ pub mod change_command {
             description: Option<String>,
         },
         Point {
-            point: Option<Coordinate>,
+            point: Option<Point>,
         },
         Direction {
             direction: Option<crate::geom::Vector>,
@@ -983,10 +983,7 @@ pub mod change_command {
             view: Option<String>,
         },
         Location {
-            location: Option<Location>,
-        },
-        Camera {
-            camera: Option<Camera>,
+            location: Option<LocationIdDto>,
         },
         Unit {
             unit: Option<String>,
@@ -2181,9 +2178,9 @@ pub mod change_command {
                     Ok(vec![ChangeTypeCommand::Unit { unit: old }])
                 }
                 ChangeTypeCommand::Location { location } => {
-                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.location;
-                    t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_location(*location).map_err(se)?;
-                    if old == *location {
+                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.location.clone();
+                    t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_location(location.clone()).map_err(se)?;
+                    if old == location {
                         return Ok(vec![]);
                     }
                     Ok(vec![ChangeTypeCommand::Location { location: old }])
@@ -2530,21 +2527,12 @@ pub mod change_command {
                     }
                 }
                 ChangeDesignCommand::Location { location } => {
-                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.location;
-                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_location(*location).map_err(se)?;
-                    if old == *location {
+                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.location.clone();
+                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_location(location.clone()).map_err(se)?;
+                    if old == location {
                         Ok(vec![])
                     } else {
                         Ok(vec![ChangeDesignCommand::Location { location: old }])
-                    }
-                }
-                ChangeDesignCommand::Camera { camera } => {
-                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.camera;
-                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_camera(*camera).map_err(se)?;
-                    if old == *camera {
-                        Ok(vec![])
-                    } else {
-                        Ok(vec![ChangeDesignCommand::Camera { camera: old }])
                     }
                 }
                 ChangeDesignCommand::Unit { unit } => {
@@ -4293,7 +4281,7 @@ pub mod kit_store_command {
         }
 
         /// Replace the live graph from a full DTO while preserving the VCS tree,
-        /// event bus, and legacy undo/transaction state.
+        /// event bus, and in-memory undo/transaction state.
         pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
             KitStore::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
@@ -6358,8 +6346,7 @@ pub mod design {
         pub image: Option<String>,
         pub variant: Option<String>,
         pub view: Option<String>,
-        pub location: Option<Location>,
-        pub camera: Option<Camera>,
+        pub location: Option<LocationIdDto>,
         pub unit: Option<String>,
         pub pieces: Vec<PieceStoreRef>,
         pub connections: Vec<ConnectionStoreRef>,
@@ -6400,9 +6387,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub view: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub camera: Option<Camera>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -6428,9 +6413,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub view: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub camera: Option<Camera>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -6478,9 +6461,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub view: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub camera: Option<Camera>,
+        pub location: Option<LocationIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -6628,7 +6609,6 @@ pub mod design {
                 variant: None,
                 view: None,
                 location: None,
-                camera: None,
                 unit: None,
                 pieces: Vec::new(),
                 connections: Vec::new(),
@@ -6660,7 +6640,6 @@ pub mod design {
                 variant: None,
                 view: None,
                 location: None,
-                camera: None,
                 unit: None,
                 pieces: Vec::new(),
                 connections: Vec::new(),
@@ -6765,7 +6744,6 @@ pub mod design {
             self.variant = d.variant;
             self.view = d.view;
             self.location = d.location;
-            self.camera = d.camera;
             self.unit = d.unit;
             self.created = d.created;
             self.updated = d.updated;
@@ -6928,25 +6906,12 @@ pub mod design {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<Location>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationIdDto>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
             self.location = v;
             self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Location) });
-            self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            self.invalidate_flatten();
-            self.bubble_to_kit();
-            Ok(())
-        }
-
-        pub fn set_camera(&mut self, v: Option<Camera>) -> crate::error::SetResult {
-            if self.camera == v {
-                return Ok(());
-            }
-            self.camera = v;
-            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Camera) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -8225,8 +8190,7 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 image: self.image.clone(),
                 variant: self.variant.clone(),
                 view: self.view.clone(),
-                location: self.location,
-                camera: self.camera,
+                location: self.location.clone(),
                 unit: self.unit.clone(),
                 created: self.created.clone(),
                 updated: self.updated.clone(),
@@ -8245,7 +8209,6 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 variant: m.variant,
                 view: m.view,
                 location: m.location,
-                camera: m.camera,
                 unit: m.unit,
                 created: m.created,
                 updated: m.updated,
@@ -8275,7 +8238,6 @@ fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDi
                 variant: m.variant,
                 view: m.view,
                 location: m.location,
-                camera: m.camera,
                 unit: m.unit,
                 created: m.created,
                 updated: m.updated,
@@ -10079,7 +10041,7 @@ pub mod geom {
             Self { u, v }
         }
 
-        /// Fast path for legacy in-memory / entity [`HashWriter`] (tag-based) — not the Python Merkle.
+        /// Fast path for in-memory / entity [`HashWriter`] (tag-based) — not the Python Merkle.
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.f64(self.u).f64(self.v);
         }
@@ -10125,6 +10087,11 @@ pub mod geom {
             w.string("z");
             w.number(self.z);
             w.digest()
+        }
+
+        /// Translate by a direction vector.
+        pub fn add_vec(&self, v: &Vector) -> Point {
+            Point::new(self.x + v.x, self.y + v.y, self.z + v.z)
         }
     }
 
@@ -14050,26 +14017,22 @@ pub mod piece {
         // #endregion
 
         // #region 🔖PieceMovement
-        fn domain_normalize_coord(v: Coordinate) -> Coordinate {
+        fn domain_normalize_vector(v: Vector) -> Vector {
             let n = v.length();
             if n < 1e-12 {
-                Coordinate::ZERO
+                Vector::default()
             } else {
                 v.scale(1.0 / n)
             }
         }
 
-        fn domain_cross(a: Coordinate, b: Coordinate) -> Coordinate {
-            Coordinate::new(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
-        }
-
-        fn domain_move_translation_world(plane: &Plane, gap: f64, shift: f64, rise: f64) -> Coordinate {
-            let x = Self::domain_normalize_coord(plane.x_axis);
-            let y = Self::domain_normalize_coord(plane.y_axis);
-            let z = Self::domain_cross(x, y);
+        fn domain_move_translation_world(plane: &Plane, gap: f64, shift: f64, rise: f64) -> Vector {
+            let x = Self::domain_normalize_vector(plane.x_axis);
+            let y = Self::domain_normalize_vector(plane.y_axis);
+            let z = x.cross(&y);
             let zn = z.length();
             if zn < 1e-12 {
-                return Coordinate::ZERO;
+                return Vector::default();
             }
             let z = z.scale(1.0 / zn);
             y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
@@ -14260,8 +14223,8 @@ pub mod piece {
                 return Ok(());
             }
 
-            let next = self.pose.center.unwrap_or_default().add(&Coordinate::new(du, dv, 0.0));
-            self.set_center(Some(next))?;
+            let c = self.pose.center.unwrap_or_default();
+            self.set_center(Some(Coordinate::new(c.u + du, c.v + dv)))?;
             self.invalidate_flat_centers_below();
             Ok(())
         }
@@ -14271,7 +14234,7 @@ pub mod piece {
             let base = self.pose.plane.unwrap_or_else(|| self.flat_plane());
             let translation = Self::domain_move_translation_world(&base, gap, shift, rise);
             let mut plane = base;
-            plane.origin = plane.origin.add(&translation);
+            plane.origin = plane.origin.add_vec(&translation);
             self.set_plane(Some(plane))?;
             self.invalidate_flat_planes_below();
             Ok(())
@@ -16206,9 +16169,9 @@ pub mod typ {
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::Location;
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
+    use crate::location::LocationIdDto;
     use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -17110,7 +17073,7 @@ pub mod io {
         use crate::typ::TypeFullDto;
 
         const SCHEMA_SQL: &str = include_str!("../sqlite/schema.sql");
-        const SCHEMA_VERSION: &str = "2026-04-22-rs-kit-v1";
+        const SCHEMA_VERSION: &str = "2026-04-23-rs-kit-location-refs";
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
@@ -19793,7 +19756,7 @@ mod tests {
 
             let conn = Connection::open(&path).expect("open sqlite");
             let snapshot_table_count: i64 = conn.query_row("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'semio_kit_snapshot'", [], |row| row.get(0)).expect("query snapshot table count");
-            assert_eq!(snapshot_table_count, 0, "legacy snapshot table must not exist");
+            assert_eq!(snapshot_table_count, 0, "orphan snapshot table must not exist");
             let port_rows: i64 = conn.query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0)).expect("count port rows");
             assert_eq!(port_rows, 1, "normalized port rows should be persisted");
 

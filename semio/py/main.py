@@ -82,7 +82,7 @@ class _SemioBaseRepresentation(pydantic.BaseModel):
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: typing.Any) -> None:
-        """🧩Publish legacy field aliases after pydantic builds fields."""
+        """🧩Expose representation field metadata after pydantic builds fields."""
         super().__pydantic_init_subclass__(**kwargs)
         cls.representation_fields = cls.model_fields
 

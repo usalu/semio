@@ -9746,11 +9746,11 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
 
 // #endregion 📦Factory
 
-// #region 📍Legacy Type Exports
-// Legacy type exports for backward compatibility with existing consumers.
+// #region 📍Sketchpad type exports
+// Kit machine types, Yjs-backed kit events, and sketchpad/kit selectors (stable public surface).
 
 /**
- * Legacy transaction context interface with typed edits.
+ * Transaction context interface with typed edits.
  **/
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
@@ -9761,7 +9761,7 @@ export interface TransactionContext<TEdit = any> {
 }
 
 /**
- * Legacy kit machine input with sync document and map references.
+ * Kit machine input with sync document and map references.
  **/
 export interface KitMachineInput {
   syncDoc: SyncDoc;
@@ -9771,7 +9771,7 @@ export interface KitMachineInput {
 }
 
 /**
- * Legacy kit context with Sync-backed state and caching.
+ * Kit context with Sync-backed state and caching.
  **/
 export interface KitContext {
   syncDoc: SyncDoc;
@@ -9783,7 +9783,7 @@ export interface KitContext {
 }
 
 /**
- * Legacy kit event union for CRUD and synchronization operations.
+ * Kit event union for CRUD and synchronization operations.
  **/
 export type KitEvent =
   | { type: "CHANGE"; diff: KitDiff }
@@ -9816,35 +9816,35 @@ function buildKitSnapshot(syncKit: SyncMap<any>): Partial<Kit> {
 }
 
 /**
- * Legacy selector returning the sketchpad state snapshot.
+ * Selector: sketchpad state snapshot.
  **/
 export function selectSnapshot(context: SketchpadContext): SketchpadState {
   return context.sketchpad;
 }
 
 /**
- * Legacy selector returning the navigation path.
+ * Selector: navigation path.
  **/
 export function selectNavigation(context: SketchpadContext): string {
   return migratePath(context.sketchpad.navigation || "/");
 }
 
 /**
- * Legacy selector returning the theme.
+ * Selector: theme.
  **/
 export function selectTheme(context: SketchpadContext): Theme {
   return context.sketchpad.theme;
 }
 
 /**
- * Legacy selector returning the language.
+ * Selector: language.
  **/
 export function selectLanguage(context: SketchpadContext): string {
   return context.sketchpad.language || "en";
 }
 
 /**
- * Legacy selector returning the expertise level.
+ * Selector: expertise level.
  **/
 export function selectExpertise(context: SketchpadContext): Expertise {
   return context.sketchpad.expertise ?? Expertise.BEGINNER;
@@ -9857,21 +9857,21 @@ export function selectMode(context: SketchpadContext): Mode {
 }
 
 /**
- * Legacy selector returning the device.
+ * Selector: device.
  **/
 export function selectDevice(context: SketchpadContext): Device {
   return context.sketchpad.device || "desktop";
 }
 
 /**
- * Legacy selector returning whether fullscreen is active.
+ * Selector: fullscreen state.
  **/
 export function selectIsFullscreen(context: SketchpadContext): boolean {
   return context.sketchpad.isFullscreen || false;
 }
 
 /**
- * Legacy selector returning the panel sizes.
+ * Selector: panel sizes.
  **/
 export function selectPanelSizes(context: SketchpadContext): PanelSizes {
   return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
@@ -9886,21 +9886,21 @@ export function selectIsMobile(context: SketchpadContext): boolean {
 }
 
 /**
- * Legacy selector returning the kit id from kit context.
+ * Selector: kit id from kit context.
  **/
 export function selectKitId(context: KitContext): Id {
   return context.syncKit.get("id") as Id;
 }
 
 /**
- * Legacy selector returning the kit name from kit context.
+ * Selector: kit name from kit context.
  **/
 export function selectKitName(context: KitContext): string {
   return context.syncKit.get("name") as string;
 }
 
 /**
- * Legacy selector returning the kit snapshot with optional caching.
+ * Selector: kit snapshot with optional caching.
  **/
 export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   if (!context.dirty && context.cache) {
@@ -15540,29 +15540,29 @@ const MultiWindowApp: FC = () => {
   );
   const windowLayout = useMemo(() => {
     if (!storedWindowLayout) return defaultLayout;
-    const removeLegacySideTabsFromWindowLayout = (layoutNode: any): any => {
+    const stripSettingsAndChatWindowNodes = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
       if (layoutNode.type === "component" && (layoutNode.componentName === "settings" || layoutNode.componentName === "chat")) {
         return null;
       }
       if (layoutNode.root && typeof layoutNode.root === "object") {
-        const root = removeLegacySideTabsFromWindowLayout(layoutNode.root);
+        const root = stripSettingsAndChatWindowNodes(layoutNode.root);
         if (!root) return undefined;
         return { ...layoutNode, root };
       }
       if (Array.isArray(layoutNode.content)) {
-        const content = layoutNode.content.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        const content = layoutNode.content.map((item: any) => stripSettingsAndChatWindowNodes(item)).filter(Boolean);
         if (content.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
         return { ...layoutNode, content };
       }
       if (Array.isArray(layoutNode.contentItems)) {
-        const contentItems = layoutNode.contentItems.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        const contentItems = layoutNode.contentItems.map((item: any) => stripSettingsAndChatWindowNodes(item)).filter(Boolean);
         if (contentItems.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
         return { ...layoutNode, contentItems };
       }
       return layoutNode;
     };
-    const sanitizedLayout = removeLegacySideTabsFromWindowLayout(storedWindowLayout);
+    const sanitizedLayout = stripSettingsAndChatWindowNodes(storedWindowLayout);
 
     const hasWindowKind = (layout: any, windowKind: KitAppWindowKind): boolean => {
       if (!layout) return false;
@@ -37044,29 +37044,29 @@ const DesignWindowApp: FC<AppProps> = () => {
     if (!storedWindowLayout) {
       return defaultLayout;
     }
-    const removeLegacySideTabsFromWindowLayout = (layoutNode: any): any => {
+    const stripSettingsAndChatWindowNodes = (layoutNode: any): any => {
       if (!layoutNode || typeof layoutNode !== "object") return layoutNode;
       if (layoutNode.type === "component" && (layoutNode.componentName === "workbench" || layoutNode.componentName === DesignAppWindowKind.Settings || layoutNode.componentName === DesignAppWindowKind.Chat)) {
         return null;
       }
       if (layoutNode.root && typeof layoutNode.root === "object") {
-        const root = removeLegacySideTabsFromWindowLayout(layoutNode.root);
+        const root = stripSettingsAndChatWindowNodes(layoutNode.root);
         if (!root) return undefined;
         return { ...layoutNode, root };
       }
       if (Array.isArray(layoutNode.content)) {
-        const content = layoutNode.content.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        const content = layoutNode.content.map((item: any) => stripSettingsAndChatWindowNodes(item)).filter(Boolean);
         if (content.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
         return { ...layoutNode, content };
       }
       if (Array.isArray(layoutNode.contentItems)) {
-        const contentItems = layoutNode.contentItems.map((item: any) => removeLegacySideTabsFromWindowLayout(item)).filter(Boolean);
+        const contentItems = layoutNode.contentItems.map((item: any) => stripSettingsAndChatWindowNodes(item)).filter(Boolean);
         if (contentItems.length === 0 && (layoutNode.type === "stack" || layoutNode.type === "row" || layoutNode.type === "column")) return null;
         return { ...layoutNode, contentItems };
       }
       return layoutNode;
     };
-    const sanitizedLayout = removeLegacySideTabsFromWindowLayout(storedWindowLayout);
+    const sanitizedLayout = stripSettingsAndChatWindowNodes(storedWindowLayout);
 
     const hasWindowKind = (layout: any, windowKind: DesignAppWindowKind): boolean => {
       if (!layout) return false;
@@ -49246,7 +49246,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     return isVisible;
   }
 
-  async function expectNoLegacyWindowTabs(page: PlaywrightPage, appName: string): Promise<void> {
+  async function expectNoSettingsOrChatWindowTabs(page: PlaywrightPage, appName: string): Promise<void> {
     const settingsTabs = await page
       .locator(".lm_tab")
       .filter({ hasText: /^settings$/i })
@@ -49255,7 +49255,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       .locator(".lm_tab")
       .filter({ hasText: /^chat$/i })
       .count();
-    console.log(`[${appName}] Legacy window tabs: settings=${settingsTabs}, chat=${chatTabs}`);
+    console.log(`[${appName}] settings/chat window tabs (should be 0): settings=${settingsTabs}, chat=${chatTabs}`);
     expect(settingsTabs).toBe(0);
     expect(chatTabs).toBe(0);
   }
@@ -49590,7 +49590,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await warmSketchpadEntrypoint(page);
       await page.goto("/", { waitUntil: "commit" });
       await page.waitForTimeout(5000);
-      await expectNoLegacyWindowTabs(page, "Home");
+      await expectNoSettingsOrChatWindowTabs(page, "Home");
       await expectClassicNavbarChrome(page, "Home");
 
       // #region 🐙Panel Toggles
@@ -49847,7 +49847,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       expect(errors.filter((e) => e.includes("Import error"))).toHaveLength(0);
 
       await waitForSketchpadSettle(page, "Kit test init");
-      await expectNoLegacyWindowTabs(page, "Kit");
+      await expectNoSettingsOrChatWindowTabs(page, "Kit");
 
       console.log("[Kit] Debug messages from app:");
       messages.filter((m) => m.includes("DEBUG")).forEach((m) => console.log(m));
@@ -50734,7 +50734,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const hasCanvas = await canvas.isVisible({ timeout: 15000 }).catch(() => false);
       console.log(`[Type] Canvas visible: ${hasCanvas}`);
       await page.waitForTimeout(5000);
-      await expectNoLegacyWindowTabs(page, "Type");
+      await expectNoSettingsOrChatWindowTabs(page, "Type");
 
       const navbar = page.locator('[id="semio.sketchpad.navbar"]');
       await expect(navbar).toBeVisible({ timeout: 10000 });
@@ -51080,7 +51080,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(3000);
-      await expectNoLegacyWindowTabs(page, "Design");
+      await expectNoSettingsOrChatWindowTabs(page, "Design");
 
       console.log("[Design Test] Current URL:", page.url());
       const isDesignUrl = page.url().includes("/designs/");
@@ -54682,7 +54682,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     test("Docs", async ({ page }) => {
       const { errors: consoleErrors, messages: consoleMessages } = await initConsole(page);
       await initDocs(page);
-      await expectNoLegacyWindowTabs(page, "Docs");
+      await expectNoSettingsOrChatWindowTabs(page, "Docs");
 
       console.log("[Docs] Browser errors:", consoleErrors.slice(0, 10));
 
@@ -55634,7 +55634,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await page.waitForLoadState("networkidle");
       await page.waitForTimeout(2000);
 
-      await expectNoLegacyWindowTabs(page, "Design Utility Tabs");
+      await expectNoSettingsOrChatWindowTabs(page, "Design Utility Tabs");
       await expectOnlyLeftAndRightPanelTogglesInNavbar(page, "Design Utility Tabs");
 
       // 🗃️Click settings toggle in navbar

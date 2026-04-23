@@ -39,6 +39,7 @@ using Type = Semio.Type;
 using File = Semio.File;
 using SemioRepresentation = Semio.Representation;
 using RhinoRepresentationObjectData = Grasshopper.Rhinoceros.Representation.RepresentationObject;
+using Semio.Store;
 
 #endregion ⌛Imports
 
@@ -9712,7 +9713,7 @@ public class TruncateTextComponent : ScriptingComponent
 #endregion 📌Scripting
 
 #region ⭐Engine
-// Implementations MUST use KitSqlite for direct local kit CRUD operations.
+// Local kit persistence uses semio-store via Semio.Store.StoreKitIO (same as Semio).
 
 public readonly struct Unit
 {
@@ -9799,7 +9800,7 @@ public abstract class KitOperationComponent<TInput, TOutput> : Component
 }
 
 #region ⛑️Persistence
-// Implementations MUST use KitSqlite for local kit persistence.
+// Load/save kits through semio-store (see Semio/Store/StoreKitIO in the net bundle).
 
 public static class KitRuntimeState
 {
@@ -9873,7 +9874,7 @@ public class LoadKitComponent : PersistenceComponent<Unit, Kit>
             GH_ParamAccess.item);
     }
 
-    protected override Kit RunOnKit(string directory, Unit input) => KitSqlite.LoadKit(directory);
+    protected override Kit RunOnKit(string directory, Unit input) => StoreKitIO.LoadKitFromFolder(directory);
 
     protected override void SetOutput(IGH_DataAccess DA, Kit response)
     {
@@ -9917,14 +9918,14 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
 
     protected override Kit RunOnKit(string directory, Kit input)
     {
-        KitSqlite.SaveKit(directory, input);
+        StoreKitIO.SaveKitToFolder(input, directory);
         return input;
     }
 }
 
 public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKitOutput>
 {
-    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Update a static kit with a kit diff and persist it to SQLite.") { }
+    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Apply a kit diff and persist the result to the local kit folder (semio-store).") { }
     protected override string RunDescription => "True to update the kit.";
     protected override string SuccessDescription => "True if the kit was successfully updated. False otherwise.";
     public override __TYPE_ID__ ComponentId => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
@@ -9972,9 +9973,9 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
 
         var baseKit = KitRuntimeState.StaticKit is not null && KitRuntimeState.StaticKitDirectory == directory
             ? KitRuntimeState.StaticKit
-            : KitSqlite.LoadKit(directory);
+            : StoreKitIO.LoadKitFromFolder(directory);
         var updatedKit = Kit.ApplyDiff(baseKit, diff);
-        KitSqlite.SaveKit(directory, updatedKit);
+        StoreKitIO.SaveKitToFolder(updatedKit, directory);
         KitRuntimeState.StaticKit = updatedKit;
         KitRuntimeState.StaticKitDirectory = directory;
         return new UpdateKitOutput(directory, updatedKit);
