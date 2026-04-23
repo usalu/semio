@@ -1,0 +1,10 @@
+{
+  "title": "Implement Kit Vcs Postgres Schema",
+  "emoji": "🐘",
+  "status": "open",
+  "description": "Implement the shared PostgreSQL schema changes for semio kit version-control and normalized metabolism snapshot persistence. Extend repo/postgres/schema.sql with kit, checkpoint, alternative, session, draft, transaction, release, snapshot, and normalized snapshot entity tables aligned with the Rust KitStore VCS model and the metabolism.kit.semio.json fixture. Update repo/postgres/README.md to document the new schema groups and design boundary. Extend an existing test file to assert the schema includes the new tables and key constraints. Do not create new test files.",
+  "goal": "🎯repo",
+  "sessions": [
+    "⚪d59dc3a43a6d43e4adef510979d7eccf"
+  ]
+}

@@ -61,7 +61,9 @@ export function useKitStore(seedKit: unknown) {
   const [msg, setMsg] = React.useState("checkpoint (story)");
 
   const [cmdMode, setCmdMode] = React.useState<"changeKit" | "readKit" | "execute">("changeKit");
-  const [changeJson, setChangeJson] = React.useState(`{ "name": "Kit (story edit)" }`);
+  const [changeJson, setChangeJson] = React.useState(
+    `{\n  "name": { "name": "Kit (story edit)" }\n}`,
+  );
   const [readJson, setReadJson] = React.useState(`{ "name": null }`);
   const [executeJson, setExecuteJson] = React.useState(`{ "readKitCommands": { "commands": [ { "name": null } ] } }`);
 

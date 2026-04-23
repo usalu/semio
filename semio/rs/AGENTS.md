@@ -23,7 +23,7 @@ The library is a single crate root file, [`lib.rs`](lib.rs) (no `src/` tree). It
 parent. Derived data (content-addressable hashes, flatten caches) lives in
 `OnceLock` fields invalidated by the owning entity's setters.
 
-- Primitives: `id`, `hash`, `error`, `report`, `geom` modules in `lib.rs`.
+- Primitives: `id`, `hash`, `error`, `report`, `geom` and `merkle` modules in `lib.rs`. **`geom`**: `Coordinate` is 2D diagram space (**`u` / `v`**, Merkle + JSON canonical); 3D uses **`Point`** and **`Vector`**; **`Plane`** uses `Point` + `Vector` axes; **`Camera`** is view-space (position, forward, up) — not stored on [`DesignStore`](lib.rs) (views live outside the design aggregate). Geographic/named places are kit-level **[`location`](lib.rs)** entities; **type** and **design** reference a location via **`LocationIdDto`** (`{ id }`) only.
 - Value objects: `attribute`, `prop`, `benchmark`, `stat`, `tag`, `concept`, `author`.
 - Kit-scoped entities: `file`, `folder`, `quality`.
 - Type-scoped children: `port`, `connector`, `representation`.
@@ -47,8 +47,11 @@ Kit  ─┬─> Type  ─┬─> Port
       │           └─> Group ──> [Weak<Piece>]
       ├─> File
       ├─> Folder
+      ├─> Location (geographic / named; referenced by id from Type/Design)
       └─> Quality (also referenced from Port/Type/Design)
 ```
+
+Planned / in-flight alignment: **Family**-scoped ports, kit-level **families** / **locations** / **tags** tables (see canonical kit JSON and `semio/py/main.py` hash order). **Connection** in-plane offsets use event fields **`U` / `V`** (not `X` / `Y`) while legacy DTO/SQLite column names may still be `x` / `y` until renamed end-to-end.
 
 Every solid arrow is an `Arc<RwLock<T>>`; every back-reference (drawn from a
 child to its parent) is a `Weak<RwLock<T>>`. IDs appear only on `*Dto`

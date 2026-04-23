@@ -4,13 +4,13 @@ overview: Rewrite the Rust `semio` crate (`semio/rs/lib.rs`, `diff_body.rs`, `ki
 todos:
  - id: geom
    content: "Rewrite `pub mod geom`: Coordinate {u,v}, Vec {u,v}, Point {x,y,z}, Vector {x,y,z}, Plane (origin:Point, xAxis:Vector, yAxis:Vector), Camera (position:Point, forward:Vector, up:Vector). Drop Vector=Coordinate alias. Update hash_into to match py/main.py byte-for-byte."
-   status: in_progress
+   status: completed
  - id: location-mod
    content: Add `pub mod location` with LocationStore, Id/Metadata/Shallow/Full DTOs, setters, hash_into matching hash_location in py/main.py.
-   status: pending
+   status: completed
  - id: family-mod
    content: Add `pub mod family` with FamilyStore (owns ports), DTOs, setters, and hash_into.
-   status: pending
+   status: in_progress
  - id: folder-mod
    content: "Refactor `pub mod folder`: replace path with name, add parent ref, attributes, createdAt/updatedAt/createdBy/updatedBy."
    status: pending
@@ -22,7 +22,7 @@ todos:
    status: pending
  - id: port-mod
    content: "Move `pub mod port` to kit/family scope: drop t/point/direction/mandatory; keep id/name/description/icon/compatiblePorts/attributes; parent becomes Family."
-   status: pending
+   status: in_progress
  - id: connector-mod
    content: "Extend `pub mod connector`: add t, point:Point, direction:Vector, mandatory, maxChildren, props; rename code→name (optional). Drop qualities."
    status: pending
@@ -40,22 +40,22 @@ todos:
    status: pending
  - id: typ-mod
    content: "Refactor `pub mod typ`: drop variant/direct ports/tags/qualities; add parent, folder, families, isAbstract; location becomes a ref."
-   status: pending
+   status: completed
  - id: design-mod
    content: "Refactor `pub mod design`: drop variant/view/camera/tags/qualities; add parent, folder, activeLayer, isAbstract, canScale, canMirror, families; location becomes a ref."
-   status: pending
+   status: completed
  - id: kit-mod
    content: "Refactor `pub mod kit`: drop uri/props; add kit-level ports, tags, families, locations; wire ownership + event bus + validation caches."
    status: pending
  - id: diffs
    content: Rewrite diff_body.rs diffs for folder/file/quality/port/connector/representation/type/design/connection; add FamilyDiff/FamiliesDiff and LocationDiff/LocationsDiff.
-   status: pending
+   status: completed
  - id: kit-diff
    content: "Update kit_diff_body.rs KitDiff: drop uri/props, add tags/ports/families/locations diff collections, adjust merge/is_empty/between."
    status: pending
  - id: events
    content: "Update `pub mod events`: new EntityKind::Family/Location; rewrite Field enums for every changed entity; add Family/Location event scopes; rename X/Y→U/V on ConnectionField."
-   status: pending
+   status: completed
  - id: change-command
    content: "Update `pub mod change_command`: drop Uri/Variant/View/Camera, kit-Type AddPort/RemovePort/tag/quality commands; add kit-level AddFamily/AddLocation/AddPort/AddTag (and Update/Remove); update payloads to new DTOs; extend apply/apply_many/compact."
    status: pending
@@ -67,7 +67,7 @@ todos:
    status: pending
  - id: io-sqlite
    content: "Update SQLite schema + migrations: folders(name, parent_id), files(name, remote, blob, folder_id, content_hash, mime), families/family_ports, locations, kit-level ports/tags; update reader/writer code."
-   status: pending
+   status: completed
  - id: wasm
    content: "Update `pub mod wasm` bindings (~47 #[wasm_bindgen] shims): remove outdated setters (kit.setUri, type.setVariant, design.setCamera, …); add new kit.addFamily/addLocation/addPort/addTag, type.setParent/setFolder/addFamily, design.setActiveLayer/addFamily, etc."
    status: pending
@@ -76,10 +76,10 @@ todos:
    status: pending
  - id: tests
    content: "Fix the 75 inline #[test]s inside lib.rs for renamed fields; extend tests/metabolism_kit.rs to assert deserialised KitStore matches the reference hash."
-   status: pending
+   status: completed
  - id: agents-md
    content: Update semio/rs/AGENTS.md Ownership Graph and Entities section to reflect the new kit-owned children (Family, Location, Tag, Port) and refs.
-   status: pending
+   status: completed
 isProject: false
 ---
 

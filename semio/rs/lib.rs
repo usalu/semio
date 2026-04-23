@@ -5944,7 +5944,7 @@ pub mod connection {
                 return Ok(());
             }
             self.x = v;
-            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::X)));
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::U)));
             self.bubble();
             Ok(())
         }
@@ -5953,7 +5953,7 @@ pub mod connection {
                 return Ok(());
             }
             self.y = v;
-            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Y)));
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::V)));
             self.bubble();
             Ok(())
         }
@@ -8743,7 +8743,7 @@ pub mod events {
     event_field_enum!(AuthorField { Name, Email, Role, Rank });
     event_field_enum!(BenchmarkField { Name, Min, Max, MinExcluded, MaxExcluded });
     event_field_enum!(ConceptField { Name, Description, Order });
-    event_field_enum!(ConnectionField { Gap, Shift, Rise, Rotation, Turn, Tilt, X, Y, Description });
+    event_field_enum!(ConnectionField { Gap, Shift, Rise, Rotation, Turn, Tilt, U, V, Description });
     event_field_enum!(ConnectorField { Code, Description, Port });
     event_field_enum!(DesignField { Name, Description, Icon, Image, Variant, View, Location, Unit, Created, Updated });
     event_field_enum!(FileField { Url, Mime, Size, Hash, Description, Created, Updated });
@@ -8752,7 +8752,7 @@ pub mod events {
     event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Version, Remote, Homepage, License, Uri, Created, Updated });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
     event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
-    event_field_enum!(PortField { Id, Family, CompatibleFamilies, Mandatory, T, Description, Point, Direction });
+    event_field_enum!(PortField { Id, Name, Description, Icon, CompatiblePorts, Attributes });
     event_field_enum!(PropField { Key, Value, Unit, Description });
     event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
     event_field_enum!(RepresentationField { Url, Description, File });
@@ -14412,36 +14412,31 @@ pub mod port {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Point, Vector};
+    use crate::family::FamilyStoreWeak;
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::typ::TypeStoreWeak;
 
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
 
-    /// Connection anchor on a [`crate::typ::TypeStore`].
+    /// Kit/family-scoped port (canonical: `name`, `compatiblePorts` id refs). See `hash_port` in `semio/py/main.py`.
     #[derive(Debug)]
     pub struct PortStore {
         pub id: Id,
-        pub family: Option<String>,
-        pub compatible_families: Vec<String>,
-        pub mandatory: Option<bool>,
-        pub t: Option<f64>,
+        pub name: String,
         pub description: Option<String>,
-        pub point: Option<Point>,
-        pub direction: Option<Vector>,
-        pub qualities: Vec<QualityStoreRef>,
+        pub icon: Option<String>,
+        /// Weak refs to compatible ports (resolved from wire `compatiblePorts` after the full port map exists).
+        pub compatible_ports: Vec<PortStoreWeak>,
         pub attributes: Vec<AttributeStore>,
-        pub parent_type: TypeStoreWeak,
+        pub parent_family: FamilyStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
     pub struct PortIdDto {
         pub id: Id,
     }
@@ -14449,41 +14444,23 @@ pub mod port {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortMetadataDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub family: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mandatory: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub t: Option<f64>,
+        pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Point>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub direction: Option<Vector>,
+        pub icon: Option<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortShallowDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub family: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mandatory: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub t: Option<f64>,
+        pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Point>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub direction: Option<Vector>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
+        pub compatible_ports: Vec<PortIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeShallowDto>,
     }
@@ -14491,22 +14468,14 @@ pub mod port {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortFullDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub family: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mandatory: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub t: Option<f64>,
+        #[serde(default)]
+        pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Point>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub direction: Option<Vector>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
+        pub compatible_ports: Vec<PortIdDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeFullDto>,
     }
@@ -14515,16 +14484,12 @@ pub mod port {
         pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
-                family: None,
-                compatible_families: Vec::new(),
-                mandatory: None,
-                t: None,
+                name: String::new(),
                 description: None,
-                point: None,
-                direction: None,
-                qualities: Vec::new(),
+                icon: None,
+                compatible_ports: Vec::new(),
                 attributes: Vec::new(),
-                parent_type: Weak::new(),
+                parent_family: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }
@@ -14542,16 +14507,12 @@ pub mod port {
         pub fn from_id_dto(d: PortIdDto) -> Self {
             Self {
                 id: d.id,
-                family: None,
-                compatible_families: Vec::new(),
-                mandatory: None,
-                t: None,
+                name: String::new(),
                 description: None,
-                point: None,
-                direction: None,
-                qualities: Vec::new(),
+                icon: None,
+                compatible_ports: Vec::new(),
                 attributes: Vec::new(),
-                parent_type: Weak::new(),
+                parent_family: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }
@@ -14560,31 +14521,25 @@ pub mod port {
         pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
             Self {
                 id: d.id,
-                family: d.family,
-                compatible_families: d.compatible_families,
-                mandatory: d.mandatory,
-                t: d.t,
+                name: d.name,
                 description: d.description,
-                point: d.point,
-                direction: d.direction,
-                qualities: Vec::new(),
+                icon: d.icon,
+                compatible_ports: Vec::new(),
                 attributes: Vec::new(),
-                parent_type: Weak::new(),
+                parent_family: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }
         }
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, family: d.family, compatible_families: d.compatible_families, mandatory: d.mandatory, t: d.t, description: d.description, point: d.point, direction: d.direction });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
+            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, family: d.family, compatible_families: d.compatible_families, mandatory: d.mandatory, t: d.t, description: d.description, point: d.point, direction: d.direction });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
+            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
         }
@@ -14596,44 +14551,43 @@ pub mod port {
         pub fn to_metadata_dto(&self) -> PortMetadataDto {
             PortMetadataDto {
                 id: self.id.clone(),
-                family: self.family.clone(),
-                compatible_families: self.compatible_families.clone(),
-                mandatory: self.mandatory,
-                t: self.t,
+                name: self.name.clone(),
                 description: self.description.clone(),
-                point: self.point,
-                direction: self.direction,
+                icon: self.icon.clone(),
             }
         }
 
+        /// Serialised `compatiblePorts`: ids in wire order; when graph is not wired, emit stored ids from [`PortFullDto`] load is not kept — use `to_full_dto` after hydration only for round-trip.
         pub fn to_shallow_dto(&self) -> PortShallowDto {
             let m = self.to_metadata_dto();
+            let compatible_ports: Vec<PortIdDto> = self
+                .compatible_ports
+                .iter()
+                .filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() })))
+                .collect();
             PortShallowDto {
                 id: m.id,
-                family: m.family,
-                compatible_families: m.compatible_families,
-                mandatory: m.mandatory,
-                t: m.t,
+                name: m.name,
                 description: m.description,
-                point: m.point,
-                direction: m.direction,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                icon: m.icon,
+                compatible_ports,
                 attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
             }
         }
 
         pub fn to_full_dto(&self) -> PortFullDto {
             let m = self.to_metadata_dto();
+            let compatible_ports: Vec<PortIdDto> = self
+                .compatible_ports
+                .iter()
+                .filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() })))
+                .collect();
             PortFullDto {
                 id: m.id,
-                family: m.family,
-                compatible_families: m.compatible_families,
-                mandatory: m.mandatory,
-                t: m.t,
+                name: m.name,
                 description: m.description,
-                point: m.point,
-                direction: m.direction,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                icon: m.icon,
+                compatible_ports,
                 attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
             }
         }
@@ -14648,42 +14602,12 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_family(&mut self, v: Option<String>) -> crate::error::SetResult {
-            if self.family == v {
+        pub fn set_name(&mut self, v: String) -> crate::error::SetResult {
+            if self.name == v {
                 return Ok(());
             }
-            self.family = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family) });
-            self.invalidate_hash();
-            Ok(())
-        }
-
-        pub fn set_compatible_families(&mut self, v: Vec<String>) -> crate::error::SetResult {
-            if self.compatible_families == v {
-                return Ok(());
-            }
-            self.compatible_families = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies) });
-            self.invalidate_hash();
-            Ok(())
-        }
-
-        pub fn set_mandatory(&mut self, v: Option<bool>) -> crate::error::SetResult {
-            if self.mandatory == v {
-                return Ok(());
-            }
-            self.mandatory = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Mandatory) });
-            self.invalidate_hash();
-            Ok(())
-        }
-
-        pub fn set_t(&mut self, v: Option<f64>) -> crate::error::SetResult {
-            if self.t == v {
-                return Ok(());
-            }
-            self.t = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::T) });
+            self.name = v;
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Name) });
             self.invalidate_hash();
             Ok(())
         }
@@ -14698,22 +14622,12 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_point(&mut self, v: Option<Point>) -> crate::error::SetResult {
-            if self.point == v {
+        pub fn set_icon(&mut self, v: Option<String>) -> crate::error::SetResult {
+            if self.icon == v {
                 return Ok(());
             }
-            self.point = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Point) });
-            self.invalidate_hash();
-            Ok(())
-        }
-
-        pub fn set_direction(&mut self, v: Option<Vector>) -> crate::error::SetResult {
-            if self.direction == v {
-                return Ok(());
-            }
-            self.direction = v;
-            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Direction) });
+            self.icon = v;
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Icon) });
             self.invalidate_hash();
             Ok(())
         }
@@ -14721,9 +14635,9 @@ pub mod port {
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(t) = self.parent_type.upgrade() {
-                if let Ok(tr) = t.read() {
-                    tr.invalidate_hash();
+            if let Some(f) = self.parent_family.upgrade() {
+                if let Ok(fr) = f.read() {
+                    fr.invalidate_hash();
                 }
             }
         }
@@ -14739,31 +14653,187 @@ pub mod port {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("port").str(self.id.as_str()).opt_str(self.family.as_deref());
-            for f in &self.compatible_families {
-                w.str(f);
-            }
-            w.opt_bool(self.mandatory).opt_f64(self.t);
-            if let Some(p) = &self.point {
-                p.hash_into(w);
-            }
-            if let Some(d) = &self.direction {
-                d.hash_into(w);
-            }
-            for q in &self.qualities {
-                if let Ok(q) = q.read() {
-                    q.hash_into(w);
-                }
-            }
+            w.tag("port");
             for a in &self.attributes {
                 a.hash_into(w);
             }
+            for cp in &self.compatible_ports {
+                if let Some(p) = cp.upgrade() {
+                    if let Ok(r) = p.read() {
+                        w.str(r.id.as_str());
+                    }
+                }
+            }
+            w.opt_str(self.description.as_deref());
+            w.str(self.id.as_str());
+            w.opt_str(self.icon.as_deref());
+            w.str(self.name.as_str());
         }
     }
 
     impl Default for PortStore {
         fn default() -> Self {
             Self::new()
+        }
+    }
+}
+
+/// A named family of compatible [`crate::port::PortStore`]s at kit scope. See `metabolism.kit.semio.json` `families`.
+pub mod family {
+    use serde::{Deserialize, Serialize};
+    use std::sync::{Arc, RwLock, Weak};
+
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
+    use crate::kit::KitStoreWeak;
+    use crate::port::{PortStore, PortStoreRef};
+
+    pub type FamilyStoreRef = Arc<RwLock<FamilyStore>>;
+    pub type FamilyStoreWeak = Weak<RwLock<FamilyStore>>;
+
+    #[derive(Debug)]
+    pub struct FamilyStore {
+        pub id: Id,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub ports: Vec<PortStoreRef>,
+        pub attributes: Vec<AttributeStoreRef>,
+        pub parent_kit: Option<KitStoreWeak>,
+        pub(crate) event_bus: Weak<EventBus>,
+        hash_cache: Cache<String>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+    pub struct FamilyIdDto {
+        pub id: Id,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct FamilyMetadataDto {
+        pub id: Id,
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct FamilyShallowDto {
+        pub id: Id,
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeShallowDto>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct FamilyFullDto {
+        pub id: Id,
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub ports: Vec<crate::port::PortFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeFullDto>,
+    }
+
+    impl FamilyStore {
+        pub fn new(name: impl Into<String>) -> Self {
+            Self {
+                id: Id::new_v7(),
+                name: name.into(),
+                description: None,
+                icon: None,
+                ports: Vec::new(),
+                attributes: Vec::new(),
+                parent_kit: None,
+                event_bus: Weak::new(),
+                hash_cache: Cache::default(),
+            }
+        }
+
+        fn entity_ref(&self) -> EntityRef {
+            EntityRef::new(EntityKind::Family, self.id.clone())
+        }
+
+        fn emit_ev(&self, ev: KitEvent) {
+            emit_weak(&self.event_bus, ev);
+        }
+
+        pub fn to_id_dto(&self) -> FamilyIdDto {
+            FamilyIdDto { id: self.id.clone() }
+        }
+
+        pub fn to_metadata_dto(&self) -> FamilyMetadataDto {
+            FamilyMetadataDto {
+                id: self.id.clone(),
+                name: self.name.clone(),
+                description: self.description.clone(),
+                icon: self.icon.clone(),
+            }
+        }
+
+        pub fn to_shallow_dto(&self) -> FamilyShallowDto {
+            let m = self.to_metadata_dto();
+            FamilyShallowDto { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect() }
+        }
+
+        pub fn to_full_dto(&self) -> FamilyFullDto {
+            let m = self.to_metadata_dto();
+            FamilyFullDto {
+                id: m.id,
+                name: m.name,
+                description: m.description,
+                icon: m.icon,
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            }
+        }
+
+        pub fn invalidate_hash(&self) {
+            self.hash_cache.invalidate();
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
+            if let Some(k) = self.parent_kit.as_ref().and_then(|w| w.upgrade()) {
+                if let Ok(kr) = k.read() {
+                    kr.invalidate_hash();
+                }
+            }
+        }
+
+        pub fn hash(&self) -> String {
+            self.hash_cache
+                .get_or_init(|| {
+                    let mut w = HashWriter::new();
+                    self.hash_into(&mut w);
+                    w.finalize()
+                })
+                .clone()
+        }
+
+        pub fn hash_into(&self, w: &mut HashWriter) {
+            w.tag("family");
+            w.str(self.id.as_str());
+            w.str(self.name.as_str());
+            w.opt_str(self.description.as_deref());
+            w.opt_str(self.icon.as_deref());
+            for p in &self.ports {
+                if let Ok(pr) = p.read() {
+                    pr.hash_into(w);
+                }
+            }
+            for a in &self.attributes {
+                a.hash_into(w);
+            }
         }
     }
 }
@@ -16768,7 +16838,7 @@ pub mod typ {
                 stock: self.stock,
                 virtual_: self.virtual_,
                 unit: self.unit.clone(),
-                location: self.location,
+                location: self.location.clone(),
                 created: self.created.clone(),
                 updated: self.updated.clone(),
             }
@@ -19232,7 +19302,7 @@ mod tests {
                 types: vec![TypeFullDto {
                     id: type_id.clone(),
                     name: "typ".into(),
-                    ports: vec![PortFullDto { id: port_id.clone(), point: Some(Coordinate::ZERO), direction: Some(Coordinate::new(0.0, 0.0, 1.0)), ..Default::default() }],
+                    ports: vec![PortFullDto { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
                     connectors: vec![ConnectorFullDto { id: connector_id, code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
                     ..Default::default()
                 }],
@@ -19240,7 +19310,7 @@ mod tests {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceFullDto { id: root_id.clone(), plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0, 0.0)), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: root_id.clone(), plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                         PieceFullDto { id: middle_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                         PieceFullDto { id: leaf_id.clone(), plane: leaf_plane, r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                     ],
@@ -19275,7 +19345,7 @@ mod tests {
 
         #[test]
         fn connected_piece_flat_plane_prefers_explicit_plane() {
-            let explicit_plane = Plane { origin: Coordinate::new(42.0, -3.0, 7.0), x_axis: Coordinate::new(0.0, 1.0, 0.0), y_axis: Coordinate::new(-1.0, 0.0, 0.0) };
+            let explicit_plane = Plane { origin: Point::new(42.0, -3.0, 7.0), x_axis: Vector::new(0.0, 1.0, 0.0), y_axis: Vector::new(-1.0, 0.0, 0.0) };
             let (kit, design_id, _, _, leaf_id) = kit_with_flatten_chain(Some(explicit_plane));
             let leaf = {
                 let kit_read = kit.read().expect("kit read");
@@ -19377,8 +19447,8 @@ mod tests {
             middle.write().expect("middle write").drag(2.0, 3.0).expect("drag middle");
 
             let after = leaf.read().expect("leaf read after").flat_center();
-            assert!((after.x - (before.x + 2.0)).abs() < 1e-9);
-            assert!((after.y - (before.y + 3.0)).abs() < 1e-9);
+            assert!((after.u - (before.u + 2.0)).abs() < 1e-9);
+            assert!((after.v - (before.v + 3.0)).abs() < 1e-9);
         }
 
         #[test]
@@ -19480,7 +19550,7 @@ mod tests {
         use crate::connection::ConnectionFullDto;
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
-        use crate::geom::{Coordinate, Vector};
+        use crate::geom::{Coordinate, Point, Vector};
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
         use crate::piece::{PieceFullDto, PieceIdDto};
@@ -19561,7 +19631,7 @@ mod tests {
                 id,
                 family: Some(family.to_string()),
                 compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
-                point: Some(Coordinate::ZERO),
+                point: Some(Point::ZERO),
                 direction: Some(Vector::new(1.0, 0.0, 0.0)),
                 ..Default::default()
             };
@@ -20806,7 +20876,7 @@ mod tests {
             }
 
             piece_pose_test!(piece_set_plane, crate::events::PieceField::Plane, |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) });
-            piece_pose_test!(piece_set_center, crate::events::PieceField::Center, |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) });
+            piece_pose_test!(piece_set_center, crate::events::PieceField::Center, |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0))) });
             piece_geom_test!(piece_set_mirror_plane, crate::events::PieceField::MirrorPlane, |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) });
             piece_geom_test!(piece_set_scale, crate::events::PieceField::Scale, |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) });
             piece_geom_test!(piece_set_hidden, crate::events::PieceField::Hidden, |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) });

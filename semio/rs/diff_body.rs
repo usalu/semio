@@ -1469,7 +1469,7 @@ impl DesignDiff {
             d.view = Some(after.view.clone());
         }
         if before.location != after.location {
-            d.location = Some(after.location);
+            d.location = Some(after.location.clone());
         }
         if before.unit != after.unit {
             d.unit = Some(after.unit.clone());
@@ -2168,7 +2168,7 @@ pub fn type_full_delta(b: &TypeFullDto, a: &TypeFullDto) -> TypeDiff {
         d.unit = Some(a.unit.clone());
     }
     if b.location != a.location {
-        d.location = Some(a.location);
+        d.location = Some(a.location.clone());
     }
     if b.created != a.created {
         d.created = Some(a.created.clone());
@@ -2719,7 +2719,7 @@ pub fn merge_type_diff_into_full(fd: &mut TypeFullDto, d: &TypeDiff) {
         fd.unit = v.clone();
     }
     if let Some(v) = &d.location {
-        fd.location = *v;
+        fd.location = v.clone();
     }
     if let Some(v) = &d.created {
         fd.created = v.clone();

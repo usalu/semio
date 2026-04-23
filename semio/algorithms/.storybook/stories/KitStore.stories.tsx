@@ -16,7 +16,7 @@ import { applyEntityPlaceholders, EntityPicker } from "./kit-store/EntityPicker"
 import { KIT_STORE_COVERAGE_ROWS, ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS } from "./kit-store/commandSchema";
 import { DiffViewer } from "./kit-store/DiffViewer";
 import { EventsFeed } from "./kit-store/EventsFeed";
-import { HistoryControls } from "./kit-store/HistoryControls";
+import { HistoryControls, KitTreeGraph } from "./kit-store/HistoryControls";
 import { SnapshotViewer } from "./kit-store/SnapshotViewer";
 import { useKitStore } from "./kit-store/useKitStore";
 
@@ -29,6 +29,7 @@ const firstDesignId = seedDesign?.id ?? "";
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "ks-ent", kind: WindowKind.DESIGN_INPUT, label: "Entity ids", component: EntityWindow },
   { id: "ks-hist", kind: WindowKind.DESIGN_INPUT, label: "VCS + history", component: HistoryWindow },
+  { id: "ks-tree", kind: WindowKind.DESIGN_INPUT, label: "Kit tree", component: KitTreeWindow },
   { id: "ks-cmd", kind: WindowKind.DESIGN_INPUT, label: "Commands (JSON)", component: CommandWindow },
   { id: "ks-diff", kind: WindowKind.DESIGN_INPUT, label: "Last result", component: DiffWindow },
   { id: "ks-snap", kind: WindowKind.DESIGN_INPUT, label: "Snapshot / theKit", component: SnapWindow },
@@ -40,25 +41,30 @@ const DEFAULT_LAYOUT = {
     kind: "row" as const,
     children: [
       {
-        // Two separate stacks so Entity + VCS are visible at once (a single stack = tabbed panes; VCS was hidden behind the default "Entity ids" tab).
         kind: "column" as const,
-        size: 30,
+        size: 26,
         children: [
           {
             kind: "stack" as const,
-            size: 52,
+            size: 40,
             children: [{ kind: "window" as const, windowKindId: "ks-ent", title: "Entity ids" }],
           },
           {
             kind: "stack" as const,
-            size: 48,
+            size: 60,
             children: [{ kind: "window" as const, windowKindId: "ks-hist", title: "VCS + history" }],
           },
         ],
       },
       {
+        // 🌳 GitKraken-style kit tree sits next to VCS controls so committing + visualising share screen space.
+        kind: "stack" as const,
+        size: 24,
+        children: [{ kind: "window" as const, windowKindId: "ks-tree", title: "Kit tree" }],
+      },
+      {
         kind: "column" as const,
-        size: 38,
+        size: 26,
         children: [
           {
             kind: "stack" as const,
@@ -74,7 +80,7 @@ const DEFAULT_LAYOUT = {
       },
       {
         kind: "column" as const,
-        size: 32,
+        size: 24,
         children: [
           {
             kind: "stack" as const,
@@ -160,6 +166,31 @@ function HistoryWindow() {
         onAltId={s.setAltId}
         msg={s.msg}
         onMsg={s.setMsg}
+      />
+    </div>
+  );
+}
+
+function KitTreeWindow() {
+  const s = useKitFrame();
+  const selection = React.useMemo(
+    () => ({
+      onCheckpointSelect: s.setCpId,
+      onAlternativeSelect: s.setAltId,
+      onSessionSelect: s.setSessionId,
+      onDraftSelect: s.setDraftId,
+    }),
+    [s.setCpId, s.setAltId, s.setSessionId, s.setDraftId],
+  );
+  return (
+    <div className="h-full min-h-0">
+      <KitTreeGraph
+        handle={s.handle}
+        selection={selection}
+        selectedCheckpointId={s.cpId}
+        selectedAlternativeId={s.altId}
+        selectedSessionId={s.sessionId}
+        selectedDraftId={s.draftId}
       />
     </div>
   );

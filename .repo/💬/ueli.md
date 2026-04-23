@@ -7624,6 +7624,7 @@ Steps:
 2. Push the tag to the remote repository
    e.g. `git push origin 🐙ueli🎆26🌙04☀️20🚩`
 3. Squash all linear changes
+4.
 
 Introduce a command for renaming.
 Rename all files that are not git ignored.

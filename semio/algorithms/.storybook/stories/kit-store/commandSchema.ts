@@ -3,7 +3,7 @@
 // Used for dropdown presets; "raw JSON" allows any nested command list.
 // #endregion
 
-/** One JSON object for a single `ChangeKitCommand` (serde externally-tagged, camelCase). */
+/** One JSON object for a single `ChangeKitCommand` (serde **externally tagged**, camelCase variant keys). */
 export interface ChangeKitPreset {
   readonly id: string;
   readonly label: string;
@@ -24,18 +24,26 @@ function j(obj: unknown): string {
 
 /** Presets for common **root** `ChangeKitCommand` variants. Replace PLACEHOLDER_* before run. */
 export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
-  { id: "ck-name", label: "Kit: name", json: j({ name: "Kit name (story)" }) },
-  { id: "ck-desc", label: "Kit: description", json: j({ description: "story description" }) },
-  { id: "ck-icon", label: "Kit: icon", json: j({ icon: "icon-url" }) },
-  { id: "ck-version", label: "Kit: version", json: j({ version: "0.0.0-story" }) },
-  { id: "ck-fromKitDiff", label: "Kit: fromKitDiff (empty diff)", json: j({ fromKitDiff: { diff: { types: {}, designs: {}, files: {}, folders: {}, authors: {}, concepts: {}, tags: {}, qualities: {} } } }) },
+  { id: "ck-name", label: "Kit: name", json: j({ name: { name: "Kit name (story)" } }) },
+  { id: "ck-desc", label: "Kit: description", json: j({ description: { description: "story description" } }) },
+  { id: "ck-icon", label: "Kit: icon", json: j({ icon: { icon: "icon-url" } }) },
+  { id: "ck-version", label: "Kit: version", json: j({ version: { version: "0.0.0-story" } }) },
+  {
+    id: "ck-replaceKit",
+    label: "Kit: replaceKitFromFullDto (placeholder — replace `dto` with a full `KitFullDto` JSON)",
+    json: j({
+      replaceKitFromFullDto: {
+        dto: { id: "PLACEHOLDER_KIT_ID", name: "replaced" },
+      },
+    }),
+  },
   {
     id: "ck-changeType-name",
     label: "Nested: changeTypeCommands (name)",
     json: j({
       changeTypeCommands: {
         typeId: { id: "PLACEHOLDER_TYPE_ID" },
-        commands: [{ name: "Renamed type" }],
+        commands: [{ name: { name: "Renamed type" } }],
       },
     }),
   },
@@ -45,7 +53,7 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
     json: j({
       changeDesignCommands: {
         designId: { id: "PLACEHOLDER_DESIGN_ID" },
-        commands: [{ name: "Renamed design" }],
+        commands: [{ name: { name: "Renamed design" } }],
       },
     }),
   },
@@ -55,7 +63,7 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
     json: j({
       changeFileCommands: {
         fileId: { id: "PLACEHOLDER_FILE_ID" },
-        commands: [{ url: "https://example.com/file" }],
+        commands: [{ url: { url: "https://example.com/file" } }],
       },
     }),
   },
@@ -65,7 +73,7 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
     json: j({
       changeFolderCommands: {
         folderId: { id: "PLACEHOLDER_FOLDER_ID" },
-        commands: [{ path: "/story/folder" }],
+        commands: [{ path: { path: "/story/folder" } }],
       },
     }),
   },
@@ -77,7 +85,7 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
  * Use with raw JSON editor; invalid / unwired variants surface as `InvalidOperation` in the UI.
  */
 export const ALL_CHANGE_KIT_ROOT_KEYS = [
-  "fromKitDiff",
+  "replaceKitFromFullDto",
   "name",
   "description",
   "icon",
@@ -176,7 +184,7 @@ export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
 
 /** Rows for the on-screen coverage checklist (mirrors `ALL_CHANGE_KIT_ROOT_KEYS` + nested groups). */
 export const KIT_STORE_COVERAGE_ROWS: readonly { group: string; key: string }[] = [
-  { group: "ChangeKit (root)", key: "fromKitDiff + all ALL_CHANGE_KIT_ROOT_KEYS" },
+  { group: "ChangeKit (root)", key: "replaceKitFromFullDto + all ALL_CHANGE_KIT_ROOT_KEYS" },
   { group: "ChangeType", key: "see CHANGE_TYPE_COMMAND_KEYS" },
   { group: "ReadKit", key: "everything, name, description, types, designs, files, readTypeCommands, readDesignCommands" },
 ];
