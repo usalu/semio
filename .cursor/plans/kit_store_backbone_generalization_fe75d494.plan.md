@@ -4,10 +4,10 @@ overview: "Split the current blocking `KitStore` into a three-task async control
 todos:
  - id: rename_kitgraph
    content: Rename current `KitStore` → `KitGraph` in `pub mod kit` (→ `pub mod kit_graph`); keep transitional `pub use` alias so the crate still compiles
-   status: in_progress
+   status: completed
  - id: async_deps
    content: Add `async-executor`, `async-channel`, `async-lock` deps to `semio/rs/Cargo.toml` and set up a shared executor thread
-   status: pending
+   status: in_progress
  - id: wip_task
    content: Add `pub mod wip_kit` with async actor wrapping `KitGraph` and routing `KitStoreCommand::execute` via a channel
    status: pending

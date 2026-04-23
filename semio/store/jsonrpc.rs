@@ -13,9 +13,12 @@ use semio::change_command::ChangeKitCommand;
 use semio::error::SemioError;
 use semio::geom::Plane;
 use semio::id::Id;
-use semio::kit::KitStore;
-use semio::kit::KitStoreRef;
+use semio::backbone::BackboneConfig;
 use semio::kit::KitFullDto;
+use semio::kit::KitGraph;
+use semio::kit::KitGraphRef;
+use semio::kit_conflict_registry::ConflictResolution;
+use semio::kit_store::KitStore;
 use semio::kit_store_command::KitStoreCommand;
 use semio::kit_change::KitChangeKind;
 use semio::read_command::ReadKitCommand;
@@ -68,11 +71,12 @@ fn settle_v(r: semio::error::SetResult) -> Value {
 static EVENTS_BUILT: std::sync::Once = std::sync::Once::new();
 
 fn install_k(
-    store: &OnceLock<KitStoreRef>,
-    kit: KitStoreRef,
+    store: &OnceLock<KitStore>,
+    kit: KitGraphRef,
     out: &Sender<String>,
 ) -> std::result::Result<(), SemioError> {
-    store.set(kit.clone()).map_err(|_| {
+    let ks = KitStore::from_graph(kit);
+    store.set(ks).map_err(|_| {
         SemioError::InvalidOperation("kit already created (one kit per process)".to_string())
     })?;
     // When `SEMIO_STORE_NO_EVENTS=1` (or `true` / `yes`), do not start the event thread. Integration
@@ -82,14 +86,18 @@ fn install_k(
         Ok("1" | "true" | "yes")
     );
     if !skip_events {
+        let g = store
+            .get()
+            .expect("just set")
+            .graph();
         EVENTS_BUILT.call_once(|| {
-            start_event_thread(kit, out.clone());
+            start_event_thread(g, out.clone());
         });
     }
     Ok(())
 }
 
-fn start_event_thread(kit: KitStoreRef, out: Sender<String>) {
+fn start_event_thread(kit: KitGraphRef, out: Sender<String>) {
     std::thread::spawn(move || {
         let mut rx = match kit.read() {
             Ok(g) => g.subscribe(),
@@ -106,13 +114,14 @@ fn start_event_thread(kit: KitStoreRef, out: Sender<String>) {
     });
 }
 
-fn get_store_ref(store: &OnceLock<KitStoreRef>) -> std::result::Result<KitStoreRef, SemioError> {
-    store
-        .get()
-        .cloned()
-        .ok_or_else(|| {
-            SemioError::InvalidOperation("no kit: call kit.create or io.import* first".to_string())
-        })
+fn get_kit_store(store: &OnceLock<KitStore>) -> std::result::Result<&KitStore, SemioError> {
+    store.get().ok_or_else(|| {
+        SemioError::InvalidOperation("no kit: call kit.create or io.import* first".to_string())
+    })
+}
+
+fn graph_for(store: &OnceLock<KitStore>) -> std::result::Result<KitGraphRef, SemioError> {
+    Ok(get_kit_store(store)?.graph())
 }
 
 // ----------------------------------------------------------------------------- params
@@ -171,7 +180,7 @@ fn take_i32(obj: &Value, k: &str) -> std::result::Result<i32, E> {
 
 // ----------------------------------------------------------------------------- public entry
 
-pub fn handle_line(line: &str, store: &OnceLock<KitStoreRef>, out: &Sender<String>) {
+pub fn handle_line(line: &str, store: &OnceLock<KitStore>, out: &Sender<String>) {
     let v: Value = match serde_json::from_str(line) {
         Ok(v) => v,
         Err(e) => {
@@ -220,7 +229,7 @@ pub fn handle_line(line: &str, store: &OnceLock<KitStoreRef>, out: &Sender<Strin
 fn run_method(
     method: &str,
     params: &Option<Value>,
-    store: &OnceLock<KitStoreRef>,
+    store: &OnceLock<KitStore>,
     out: &Sender<String>,
 ) -> DispatchRes {
     if method == "server.shutdown" {
@@ -247,7 +256,7 @@ fn run_method(
     if method == "kit.fromJson" {
         let o = p_obj(&params)?;
         let s = take_str(o, "json")?;
-        let k = KitStore::from_json_str(&s).map_err(e32000)?;
+        let k = KitGraph::from_json_str(&s).map_err(e32000)?;
         let g = k.read().map_err(|_| e32000("lock poisoned".to_string()))?;
         return Ok(serde_json::to_value(&g.to_full_dto()).map_err(e32000)?);
     }
@@ -259,7 +268,7 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let k = KitStore::from_full_dto(dto);
+        let k = KitGraph::from_full_dto(dto);
         let json = k
             .read()
             .map_err(|_| e32000("lock poisoned"))?
@@ -275,7 +284,7 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let k = KitStore::from_full_dto(dto);
+        let k = KitGraph::from_full_dto(dto);
         let g = k.read().map_err(|_| e32000("lock poisoned"))?;
         return Ok(serde_json::to_value(&g.validate()).map_err(e32000)?);
     }
@@ -293,8 +302,8 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let ka = KitStore::from_full_dto(a);
-        let kb = KitStore::from_full_dto(b);
+        let ka = KitGraph::from_full_dto(a);
+        let kb = KitGraph::from_full_dto(b);
         let ga = ka.read().map_err(|_| e32000("lock a".to_string()))?;
         let gb = kb.read().map_err(|_| e32000("lock b".to_string()))?;
         return Ok(json!(ga.are_equal(&gb)));
@@ -308,7 +317,7 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let k = KitStore::from_full_dto(kit_d);
+        let k = KitGraph::from_full_dto(kit_d);
         let g = k.read().map_err(|_| e32000("lock poisoned"))?;
         let rep = g
             .flatten_design(&design_id)
@@ -324,21 +333,21 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let k = KitStore::from_full_dto(dto);
+        let k = KitGraph::from_full_dto(dto);
         install_k(store, k, out).map_err(e32000)?;
         return Ok(json!(null));
     }
     if method == "io.importFromFile" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = KitStore::load_json_file(Path::new(&p)).map_err(e32000)?;
+        let k = KitGraph::load_json_file(Path::new(&p)).map_err(e32000)?;
         install_k(store, k, out).map_err(e32000)?;
         return Ok(json!(null));
     }
     if method == "io.exportToFile" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = get_store_ref(store).map_err(e32000)?;
+        let k = graph_for(store).map_err(e32000)?;
         k.read()
             .map_err(|_| e32000("lock"))?
             .save_json_file(Path::new(&p))
@@ -348,14 +357,14 @@ fn run_method(
     if method == "io.importFromFolder" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = KitStore::load_local_folder(Path::new(&p)).map_err(e32000)?;
+        let k = KitGraph::load_local_folder(Path::new(&p)).map_err(e32000)?;
         install_k(store, k, out).map_err(e32000)?;
         return Ok(json!(null));
     }
     if method == "io.exportToFolder" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = get_store_ref(store).map_err(e32000)?;
+        let k = graph_for(store).map_err(e32000)?;
         k.read()
             .map_err(|_| e32000("lock"))?
             .save_local_folder(Path::new(&p))
@@ -365,14 +374,14 @@ fn run_method(
     if method == "io.importFromZip" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = KitStore::load_zip(Path::new(&p)).map_err(e32000)?;
+        let k = KitGraph::load_zip(Path::new(&p)).map_err(e32000)?;
         install_k(store, k, out).map_err(e32000)?;
         return Ok(json!(null));
     }
     if method == "io.exportToZip" {
         let o = p_obj(&params)?;
         let p = take_str(o, "path")?;
-        let k = get_store_ref(store).map_err(e32000)?;
+        let k = graph_for(store).map_err(e32000)?;
         k.read()
             .map_err(|_| e32000("lock"))?
             .save_zip(Path::new(&p))
@@ -383,12 +392,83 @@ fn run_method(
         let o = p_obj(&params)?;
         let hub_url = take_str(o, "hubUrl")?;
         let session_id = take_str(o, "sessionId")?;
-        let k = KitStore::load_remote_session(&hub_url, &session_id).map_err(e32000)?;
+        let k = KitGraph::load_remote_session(&hub_url, &session_id).map_err(e32000)?;
         install_k(store, k, out).map_err(e32000)?;
         return Ok(json!(null));
     }
 
-    let k = get_store_ref(store).map_err(e32000)?;
+    if method == "backbone.attach" {
+        let o = p_obj(&params)?;
+        let config: BackboneConfig = serde_json::from_value(
+            o.get("config")
+                .ok_or_else(|| e32602("missing config"))?
+                .clone(),
+        )
+        .map_err(e32000)?;
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks
+            .execute(KitStoreCommand::AttachBackbone { config })
+            .map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "backbone.detach" {
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks.execute(KitStoreCommand::DetachBackbone).map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "backbone.status" {
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks.execute(KitStoreCommand::BackboneStatus).map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "backbone.setActiveCheckpoint" {
+        let o = p_obj(&params)?;
+        let id = match o.get("id") {
+            None | Some(Value::Null) => None,
+            Some(v) => {
+                let s = v
+                    .as_str()
+                    .ok_or_else(|| e32602("id must be string or null"))?;
+                if s.is_empty() {
+                    None
+                } else {
+                    Some(Id::from(s))
+                }
+            }
+        };
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks
+            .execute(KitStoreCommand::SetActiveCheckpoint { id })
+            .map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "conflicts.list" {
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks.execute(KitStoreCommand::ListConflicts).map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "conflicts.resolve" {
+        let o = p_obj(&params)?;
+        let id = Id::from(take_str(o, "id")?.as_str());
+        let strategy: ConflictResolution = serde_json::from_value(
+            o.get("strategy")
+                .ok_or_else(|| e32602("missing strategy"))?
+                .clone(),
+        )
+        .map_err(e32000)?;
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks
+            .execute(KitStoreCommand::ResolveConflict { id, strategy })
+            .map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+    if method == "coordinator.syncNow" {
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks.execute(KitStoreCommand::SyncNow).map_err(e32000)?;
+        return Ok(serde_json::to_value(&r).map_err(e32000)?);
+    }
+
+    let k = graph_for(store).map_err(e32000)?;
 
     if method == "kit.snapshot" {
         let g = k.read().map_err(|_| e32000("lock"))?;
@@ -406,7 +486,8 @@ fn run_method(
         } else {
             serde_json::from_value(c.clone()).map_err(e32000)?
         };
-        let r = KitStore::execute_vcs(&k, cmd).map_err(e32000)?;
+        let ks = get_kit_store(store).map_err(e32000)?;
+        let r = ks.execute(cmd).map_err(e32000)?;
         return Ok(serde_json::to_value(&r).map_err(e32000)?);
     }
     if method == "kit.executeChangeKitCommands" {
@@ -419,8 +500,8 @@ fn run_method(
         .map_err(e32000)?;
         let kind = ChangeKitCommand::batch_kind(&cmds);
         let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
-        KitStore::with_undo(&k, || {
-            let (_d, inv) = ChangeKitCommand::apply_many(&k, &cmds).map_err(KitStore::map_semio_err)?;
+        KitGraph::with_undo(&k, || {
+            let (_d, inv) = ChangeKitCommand::apply_many(&k, &cmds).map_err(KitGraph::map_semio_err)?;
             inverse_out = inv;
             Ok(())
         })
@@ -505,8 +586,8 @@ fn run_method(
         let kind = take_str(o, "kind")?;
         let id = take_str(o, "id")?;
         let field = take_str(o, "field")?;
-        let ek = KitStore::parse_entity_kind(&kind).map_err(e32000)?;
-        let v = KitStore::get_field_rpc(&k, ek, &id, &field).map_err(e32000)?;
+        let ek = KitGraph::parse_entity_kind(&kind).map_err(e32000)?;
+        let v = KitGraph::get_field_rpc(&k, ek, &id, &field).map_err(e32000)?;
         return Ok(serde_json::to_value(&v).map_err(e32000)?);
     }
     if method == "kit.changeKitCommandsForFieldPatch" {
@@ -518,8 +599,8 @@ fn run_method(
             .get("value")
             .ok_or_else(|| e32602("missing value"))?
             .clone();
-        let ek = KitStore::parse_entity_kind(&kind).map_err(e32000)?;
-        let cmds = KitStore::change_kit_commands_for_field_patch(&k, ek, &id, &field, val).map_err(|e| e32000(e.to_string()))?;
+        let ek = KitGraph::parse_entity_kind(&kind).map_err(e32000)?;
+        let cmds = KitGraph::change_kit_commands_for_field_patch(&k, ek, &id, &field, val).map_err(|e| e32000(e.to_string()))?;
         return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
     if method == "kit.changeKitCommandsForAddChild" {
@@ -531,9 +612,9 @@ fn run_method(
             .get("dto")
             .ok_or_else(|| e32602("missing dto"))?
             .clone();
-        let pk = KitStore::parse_entity_kind(&parent_kind).map_err(e32000)?;
-        let ck = KitStore::parse_entity_kind(&child_kind).map_err(e32000)?;
-        let cmds = KitStore::change_kit_commands_for_add_child(&k, pk, &parent_id, ck, dto).map_err(|e| e32000(e.to_string()))?;
+        let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(e32000)?;
+        let ck = KitGraph::parse_entity_kind(&child_kind).map_err(e32000)?;
+        let cmds = KitGraph::change_kit_commands_for_add_child(&k, pk, &parent_id, ck, dto).map_err(|e| e32000(e.to_string()))?;
         return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
     if method == "kit.changeKitCommandsForRemoveChild" {
@@ -542,9 +623,9 @@ fn run_method(
         let parent_id = take_str(o, "parentId")?;
         let child_kind = take_str(o, "childKind")?;
         let child_id = take_str(o, "childId")?;
-        let pk = KitStore::parse_entity_kind(&parent_kind).map_err(e32000)?;
-        let ck = KitStore::parse_entity_kind(&child_kind).map_err(e32000)?;
-        let cmds = KitStore::change_kit_commands_for_remove_child(&k, pk, &parent_id, ck, &child_id).map_err(|e| e32000(e.to_string()))?;
+        let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(e32000)?;
+        let ck = KitGraph::parse_entity_kind(&child_kind).map_err(e32000)?;
+        let cmds = KitGraph::change_kit_commands_for_remove_child(&k, pk, &parent_id, ck, &child_id).map_err(|e| e32000(e.to_string()))?;
         return Ok(serde_json::to_value(&cmds).map_err(e32000)?);
     }
 
@@ -564,7 +645,7 @@ fn run_method(
             .and_then(|v| v.as_str())
             .ok_or_else(|| e32602("clusterName"))?
             .to_string();
-        let r = KitStore::cluster_pieces(&k, &design_id, ids, cluster_name);
+        let r = KitGraph::cluster_pieces(&k, &design_id, ids, cluster_name);
         return Ok(settle_v(r));
     }
     if method == "design.dragPieces" {
@@ -579,7 +660,7 @@ fn run_method(
         .map_err(e32000)?;
         let du = take_f64(o, "du")?;
         let dv = take_f64(o, "dv")?;
-        let r = KitStore::drag_pieces(&k, &design_id, ids, du, dv);
+        let r = KitGraph::drag_pieces(&k, &design_id, ids, du, dv);
         return Ok(settle_v(r));
     }
     if method == "design.movePieces" {
@@ -595,7 +676,7 @@ fn run_method(
         let gap = take_f64(o, "gap")?;
         let shift = take_f64(o, "shift")?;
         let rise = take_f64(o, "rise")?;
-        let r = KitStore::move_pieces(&k, &design_id, ids, gap, shift, rise);
+        let r = KitGraph::move_pieces(&k, &design_id, ids, gap, shift, rise);
         return Ok(settle_v(r));
     }
     if method == "design.fixPieces" {
@@ -608,27 +689,27 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let r = KitStore::fix_pieces(&k, &design_id, ids);
+        let r = KitGraph::fix_pieces(&k, &design_id, ids);
         return Ok(settle_v(r));
     }
     if method == "design.flattenDesign" {
         let o = p_obj(&params)?;
         let design_id = take_str(o, "designId")?;
-        let r = KitStore::flatten_design_apply(&k, &design_id);
+        let r = KitGraph::flatten_design_apply(&k, &design_id);
         return Ok(settle_v(r));
     }
     if method == "design.expandDesign" {
         let o = p_obj(&params)?;
         let p = take_str(o, "parentDesignId")?;
         let n = take_str(o, "nestedDesignId")?;
-        let r = KitStore::expand_nested_design(&k, &p, &n);
+        let r = KitGraph::expand_nested_design(&k, &p, &n);
         return Ok(settle_v(r));
     }
     if method == "design.deleteConnection" {
         let o = p_obj(&params)?;
         let d = take_str(o, "designId")?;
         let c = take_str(o, "connectionId")?;
-        let r = KitStore::delete_connection_in_design(&k, &d, &c);
+        let r = KitGraph::delete_connection_in_design(&k, &d, &c);
         return Ok(settle_v(r));
     }
     if method == "design.changePieceType" {
@@ -636,7 +717,7 @@ fn run_method(
         let d = take_str(o, "designId")?;
         let p = take_str(o, "pieceId")?;
         let t = take_str(o, "newTypeId")?;
-        let r = KitStore::change_piece_type(&k, &d, &p, &t);
+        let r = KitGraph::change_piece_type(&k, &d, &p, &t);
         return Ok(settle_v(r));
     }
     if method == "design.pasteDesignSelection" {
@@ -659,7 +740,7 @@ fn run_method(
             )
             .map_err(e32000)?)
         };
-        let r = KitStore::paste_design_selection(&k, &d, sel, pl);
+        let r = KitGraph::paste_design_selection(&k, &d, sel, pl);
         return Ok(settle_v(r));
     }
     if method == "design.createHangingPieces" {
@@ -678,7 +759,7 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let r = KitStore::create_hanging_pieces(&k, &d, tgs, pl);
+        let r = KitGraph::create_hanging_pieces(&k, &d, tgs, pl);
         return Ok(settle_v(r));
     }
     if method == "design.createConnectedPiece" {
@@ -688,7 +769,7 @@ fn run_method(
         let pport = take_str(o, "parentPort")?;
         let ct = take_str(o, "childType")?;
         let cport = take_str(o, "childPort")?;
-        let r = KitStore::create_connected_piece(&k, &d, &pp, &pport, &ct, &cport);
+        let r = KitGraph::create_connected_piece(&k, &d, &pp, &pport, &ct, &cport);
         return Ok(settle_v(r));
     }
     if method == "design.createFixedPiece" {
@@ -701,21 +782,21 @@ fn run_method(
                 .clone(),
         )
         .map_err(e32000)?;
-        let r = KitStore::create_fixed_piece(&k, &d, &t, pl);
+        let r = KitGraph::create_fixed_piece(&k, &d, &t, pl);
         return Ok(settle_v(r));
     }
 
     if method == "vcs.undo" {
-        return Ok(settle_v(KitStore::undo(&k)));
+        return Ok(settle_v(KitGraph::undo(&k)));
     }
     if method == "vcs.redo" {
-        return Ok(settle_v(KitStore::redo(&k)));
+        return Ok(settle_v(KitGraph::redo(&k)));
     }
     if method == "vcs.canUndo" {
-        return Ok(json!(KitStore::can_undo(&k)));
+        return Ok(json!(KitGraph::can_undo(&k)));
     }
     if method == "vcs.canRedo" {
-        return Ok(json!(KitStore::can_redo(&k)));
+        return Ok(json!(KitGraph::can_redo(&k)));
     }
     if method == "query.piecesMetadata" {
         let o = p_obj(&params)?;

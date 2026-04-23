@@ -18,6 +18,9 @@ blake3 = "1.5"
 hex = "0.4"
 async-broadcast = "0.7"
 futures-lite = "2"
+async-channel = "2"
+async-executor = "1.13"
+async-lock = "3"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = "0.3"

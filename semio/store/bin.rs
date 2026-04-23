@@ -7,7 +7,7 @@ use std::sync::mpsc;
 use std::sync::OnceLock;
 use std::thread;
 
-use semio::kit::KitStoreRef;
+use semio::kit_store::KitStore;
 
 fn main() {
     let _ = tracing_subscriber::fmt()
@@ -34,7 +34,7 @@ fn main() {
         }
     });
 
-    let store: OnceLock<KitStoreRef> = OnceLock::new();
+    let store: OnceLock<KitStore> = OnceLock::new();
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
         let line = match line {
