@@ -10,6 +10,26 @@ import { useRjvTheme } from "./useKitStore";
 
 type Tab = "live" | "theKit" | "mat" | "vcs";
 
+//#region 🧮Snapshot value helpers
+function cloneSnapshotValue<T>(value: T): T {
+  try {
+    return typeof structuredClone === "function" ? structuredClone(value) : (JSON.parse(JSON.stringify(value)) as T);
+  } catch {
+    return value;
+  }
+}
+
+function readHandleValue(handle: KitStoreHandle, tab: Tab, matAt: string): unknown {
+  if (tab === "live") return cloneSnapshotValue(handle.snapshot());
+  if (tab === "theKit") return cloneSnapshotValue(handle.theKitDto());
+  if (tab === "mat") {
+    const at = matAt.trim();
+    return cloneSnapshotValue(handle.materializeAt(at.length ? at : null));
+  }
+  return cloneSnapshotValue(handle.vcsState());
+}
+//#endregion 🧮Snapshot value helpers
+
 export const SnapshotViewer: React.FC<{
   handle: KitStoreHandle | null;
   matAt: string;
@@ -27,12 +47,7 @@ export const SnapshotViewer: React.FC<{
       return;
     }
     try {
-      if (tab === "live") setValue(handle.snapshot());
-      else if (tab === "theKit") setValue(handle.theKitDto());
-      else if (tab === "mat") {
-        const at = matAt.trim();
-        setValue(handle.materializeAt(at.length ? at : null));
-      } else setValue(handle.vcsState());
+      setValue(readHandleValue(handle, tab, matAt));
       setErrorText(null);
     } catch (e) {
       setErrorText(e instanceof Error ? e.message : String(e));
@@ -113,3 +128,52 @@ export const SnapshotViewer: React.FC<{
     </div>
   );
 };
+
+const snapshotViewerVitest = (
+  import.meta as ImportMeta & {
+    vitest?: {
+      describe: typeof import("vitest").describe;
+      expect: typeof import("vitest").expect;
+      it: typeof import("vitest").it;
+    };
+  }
+).vitest;
+
+if (snapshotViewerVitest) {
+  const { describe, expect, it } = snapshotViewerVitest;
+
+  describe("SnapshotViewer helpers", () => {
+    it("clones loaded values so refreshes always hand React a fresh state reference", () => {
+      const live = { kit: { name: "Step2" } };
+
+      const first = cloneSnapshotValue(live);
+      live.kit.name = "Step1";
+      const second = cloneSnapshotValue(live);
+
+      expect(first).toEqual({ kit: { name: "Step2" } });
+      expect(second).toEqual({ kit: { name: "Step1" } });
+      expect(first).not.toBe(live);
+      expect(second).not.toBe(live);
+      expect((first as { kit: { name: string } }).kit).not.toBe(live.kit);
+      expect((second as { kit: { name: string } }).kit).not.toBe(live.kit);
+    });
+
+    it("reads live snapshots through a detached clone", () => {
+      const live = { kit: { name: "Step2" } };
+      const handle = {
+        snapshot: () => live,
+        theKitDto: () => ({ source: "theKit" }),
+        materializeAt: (at: string | null) => ({ at }),
+        vcsState: () => ({ head: "cp-1" }),
+      } as unknown as KitStoreHandle;
+
+      const first = readHandleValue(handle, "live", "");
+      live.kit.name = "Step1";
+      const second = readHandleValue(handle, "live", "");
+
+      expect(first).toEqual({ kit: { name: "Step2" } });
+      expect(second).toEqual({ kit: { name: "Step1" } });
+      expect(second).not.toBe(live);
+    });
+  });
+}

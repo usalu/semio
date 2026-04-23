@@ -917,6 +917,72 @@ export interface KitStoreClient {
 
 semio/rs:
 
+semio/rs:
+The current commands are semantically abreviated, not clean (e.g. remove others), not complete (plenty of properties are missing, both stored and computed properties). Absolutely everything MUST be readable by a ready command. It works similar to graphql (just as a reference, dont leak graphql into the code).
+
+e.g. Here some snippets.
+
+```rs
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommand {
+        ReadTypeFullCommand,
+        ReadTypeMetadataCommand,
+        ReadTypeShallowCommand,
+        ReadTypeIdCommand,
+        ReadTypeNameCommand,
+        ReadTypeDescriptionCommand,
+        ReadTypeIconCommand,
+        ...
+        ReadTypeConnectorsCommand,
+        ReadTypeRepresentationsCommand,
+        ReadTypeFamiliesCommand,
+        ReadTypeFamilyCommands{
+            id: FamilyIdDto,
+            commands: Vec<ReadFamilyCommand>,
+        },
+        ReadConnectorCommands {
+            id: ConnectorIdDto,
+            commands: Vec<ReadConnectorCommand>,
+        },
+        ReadRepresentationCommands {
+            id: RepresentationIdDto,
+            commands: Vec<ReadRepresentationCommand>,
+        },
+        ReadPortCommands {
+            id: PortIdDto,
+            commands: Vec<ReadPortCommand>,
+        }
+    }
+  ...
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommand {
+        ReadPieceFullCommand,
+        ReadPieceShallowCommand,
+        ReadPieceMetadataCommand,
+        ReadPieceIdCommand,
+        ReadPieceNameCommand,
+        ReadPieceDescriptionCommand,
+        ReadPieceTypeCommand { commands: Vec<ReadTypeCommand> },
+        ReadPiecePoseCommand { commands: Vec<ReadPoseCommand> },
+        ReadPieceCenterCommand { commands: Vec<ReadCenterCommand> },
+        ReadPieceFlatCenterCommand { commands: Vec<ReadCenterCommand> },
+        ReadPiecePlaneCommand { commands: Vec<ReadPlaneCommand> },
+        ReadPieceFlatPlaneCommand { commands: Vec<ReadPlaneCommand> },
+        ReadPieceParentPieceCommand { commands: Vec<ReadPieceCommand> },
+        ReadPieceParentConnectionCommand { commands: Vec<ReadConnectionCommand> },
+        ReadPieceParentDesignCommand { commands: Vec<ReadDesignCommand> },
+        ReadPiecePropsCommand { },
+        ReadPieceAttributesCommand { },
+        ...
+    }
+```
+
+You MUST fully implement all commands and have everything statically types. Use the same api for downstream clients (such as semio/js, semio/react, semio/algorithms)
+
+semio is greenfield.Dont keep any smelly legacy api or backwards compatiblity. All code, assets, tests, docs MUST be 100% aligned.
+
 ---
 
 Generalize the kit store.

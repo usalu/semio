@@ -1,11 +1,4 @@
-//! semio: purely object-oriented, pointer-first in-memory graph.
-//!
-//! Every aggregate owns its children through `Arc<RwLock<T>>`; children hold
-//! `Weak<RwLock<T>>` back-references to their parents. Content-addressable
-//! hashes are computed lazily through interior-mutable `Cache` on each entity.
-//! IDs exist only as stable identity at serialization boundaries and in
-//! DTO resolvers; the in-memory graph walks pointers.
-
+//! semio rust implementation
 #![allow(clippy::new_without_default)]
 
 pub mod read_command {
@@ -36,7 +29,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectorCommand {
-        Everything,
+        Full,
         Name,
         #[serde(other)]
         Other,
@@ -45,7 +38,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectorCommandResult {
-        Everything { dto: ConnectorFullDto },
+        Full { dto: ConnectorFullDto },
         Name { name: String },
         Other,
     }
@@ -53,7 +46,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadRepresentationCommand {
-        Everything,
+        Full,
         Name,
         #[serde(other)]
         Other,
@@ -62,7 +55,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadRepresentationCommandResult {
-        Everything { dto: RepresentationFullDto },
+        Full { dto: RepresentationFullDto },
         Name { name: String },
         Other,
     }
@@ -70,7 +63,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPortCommand {
-        Everything,
+        Full,
         Name,
         #[serde(other)]
         Other,
@@ -79,7 +72,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPortCommandResult {
-        Everything { dto: PortFullDto },
+        Full { dto: PortFullDto },
         Name { name: String },
         Other,
     }
@@ -87,7 +80,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPieceCommand {
-        Everything,
+        Full,
         Name,
         #[serde(other)]
         Other,
@@ -96,7 +89,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPieceCommandResult {
-        Everything { dto: PieceFullDto },
+        Full { dto: PieceFullDto },
         Name { name: String },
         Other,
     }
@@ -104,7 +97,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectionCommand {
-        Everything,
+        Full,
         #[serde(other)]
         Other,
     }
@@ -112,14 +105,14 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectionCommandResult {
-        Everything { dto: ConnectionFullDto },
+        Full { dto: ConnectionFullDto },
         Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadTypeCommand {
-        Everything,
+        Full,
         Name,
         Connectors,
         Representations,
@@ -142,7 +135,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadTypeCommandResult {
-        Everything { dto: TypeFullDto },
+        Full { dto: TypeFullDto },
         Name { name: String },
         Connectors { list: Vec<ConnectorFullDto> },
         Representations { list: Vec<RepresentationFullDto> },
@@ -155,7 +148,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadDesignCommand {
-        Everything,
+        Full,
         Name,
         ReadPieceCommands {
             id: PieceIdDto,
@@ -172,7 +165,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadDesignCommandResult {
-        Everything { dto: DesignFullDto },
+        Full { dto: DesignFullDto },
         Name { name: String },
         ReadPieceCommands { results: Vec<ReadPieceCommandResult> },
         ReadConnectionCommands { results: Vec<ReadConnectionCommandResult> },
@@ -182,8 +175,8 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommand {
-        /// Use empty object `{}` in JSON (camelCase `everything`) so the WASM/JSON spec shape works.
-        Everything {},
+        /// Use empty object `{}` in JSON (camelCase `full`) so the WASM/JSON spec shape works.
+        Full {},
         Name,
         Description,
         Types,
@@ -204,7 +197,7 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommandResult {
-        Everything { dto: KitFullDto },
+        Full { dto: KitFullDto },
         Name { name: String },
         Description { description: Option<String> },
         Types { list: Vec<TypeFullDto> },
@@ -219,7 +212,7 @@ pub mod read_command {
     impl ReadConnectorCommand {
         pub fn execute(&self, c: &ConnectorFullDto) -> ReadConnectorCommandResult {
             match self {
-                ReadConnectorCommand::Everything => ReadConnectorCommandResult::Everything { dto: c.clone() },
+                ReadConnectorCommand::Full => ReadConnectorCommandResult::Full { dto: c.clone() },
                 ReadConnectorCommand::Name => ReadConnectorCommandResult::Name { name: c.code.clone() },
                 ReadConnectorCommand::Other => ReadConnectorCommandResult::Other,
             }
@@ -229,7 +222,7 @@ pub mod read_command {
     impl ReadRepresentationCommand {
         pub fn execute(&self, r: &RepresentationFullDto) -> ReadRepresentationCommandResult {
             match self {
-                ReadRepresentationCommand::Everything => ReadRepresentationCommandResult::Everything { dto: r.clone() },
+                ReadRepresentationCommand::Full => ReadRepresentationCommandResult::Full { dto: r.clone() },
                 ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name { name: r.description.clone().unwrap_or_else(|| r.url.clone()) },
                 ReadRepresentationCommand::Other => ReadRepresentationCommandResult::Other,
             }
@@ -239,7 +232,7 @@ pub mod read_command {
     impl ReadPortCommand {
         pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
             match self {
-                ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
+                ReadPortCommand::Full => ReadPortCommandResult::Full { dto: p.clone() },
                 ReadPortCommand::Name => ReadPortCommandResult::Name { name: p.name.clone() },
                 ReadPortCommand::Other => ReadPortCommandResult::Other,
             }
@@ -249,7 +242,7 @@ pub mod read_command {
     impl ReadPieceCommand {
         pub fn execute(&self, p: &PieceFullDto) -> ReadPieceCommandResult {
             match self {
-                ReadPieceCommand::Everything => ReadPieceCommandResult::Everything { dto: p.clone() },
+                ReadPieceCommand::Full => ReadPieceCommandResult::Full { dto: p.clone() },
                 ReadPieceCommand::Name => ReadPieceCommandResult::Name { name: p.name.clone().unwrap_or_default() },
                 ReadPieceCommand::Other => ReadPieceCommandResult::Other,
             }
@@ -259,7 +252,7 @@ pub mod read_command {
     impl ReadConnectionCommand {
         pub fn execute(&self, c: &ConnectionFullDto) -> ReadConnectionCommandResult {
             match self {
-                ReadConnectionCommand::Everything => ReadConnectionCommandResult::Everything { dto: c.clone() },
+                ReadConnectionCommand::Full => ReadConnectionCommandResult::Full { dto: c.clone() },
                 ReadConnectionCommand::Other => ReadConnectionCommandResult::Other,
             }
         }
@@ -268,7 +261,7 @@ pub mod read_command {
     impl ReadTypeCommand {
         pub fn execute(&self, t: &TypeFullDto, kit: &KitFullDto) -> Result<ReadTypeCommandResult> {
             match self {
-                ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
+                ReadTypeCommand::Full => Ok(ReadTypeCommandResult::Full { dto: t.clone() }),
                 ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name { name: t.name.clone() }),
                 ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors { list: t.connectors.clone() }),
                 ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations { list: t.representations.clone() }),
@@ -292,7 +285,7 @@ pub mod read_command {
     impl ReadDesignCommand {
         pub fn execute(&self, d: &DesignFullDto) -> Result<ReadDesignCommandResult> {
             match self {
-                ReadDesignCommand::Everything => Ok(ReadDesignCommandResult::Everything { dto: d.clone() }),
+                ReadDesignCommand::Full => Ok(ReadDesignCommandResult::Full { dto: d.clone() }),
                 ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name { name: d.name.clone() }),
                 ReadDesignCommand::ReadPieceCommands { id, commands } => {
                     let p = d.pieces.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: id.id.clone() })?;
@@ -311,7 +304,7 @@ pub mod read_command {
         /// Execute this read command against a materialized kit DTO.
         pub fn execute(&self, kit: &KitFullDto) -> Result<ReadKitCommandResult> {
             match self {
-                ReadKitCommand::Everything {} => Ok(ReadKitCommandResult::Everything { dto: kit.clone() }),
+                ReadKitCommand::Full {} => Ok(ReadKitCommandResult::Full { dto: kit.clone() }),
                 ReadKitCommand::Name => Ok(ReadKitCommandResult::Name { name: kit.name.clone() }),
                 ReadKitCommand::Description => Ok(ReadKitCommandResult::Description { description: kit.description.clone() }),
                 ReadKitCommand::Types => Ok(ReadKitCommandResult::Types { list: kit.types.clone() }),
@@ -26608,7 +26601,7 @@ mod tests {
         #[test]
         fn kit_store_command_json_batch_roundtrip() {
             let v = serde_json::json!([{
-                "readKitCommands": { "commands": [{ "everything": {} }] }
+                "readKitCommands": { "commands": [{ "full": {} }] }
             }]);
             let cmds: Vec<KitStoreCommand> = serde_json::from_value(v).expect("de");
             assert!(matches!(&cmds[0], KitStoreCommand::ReadKitCommands { .. }));
@@ -27010,6 +27003,96 @@ mod tests {
         }
 
         #[test]
+        fn tx_undo_updates_live_snapshot_after_multiple_changes() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
+                },
+                _ => panic!(),
+            };
+            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] }).expect("st") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
+                        _ => panic!(),
+                    },
+                    _ => panic!(),
+                },
+                _ => panic!(),
+            };
+
+            let change_name = |name: &str| TransactionCommand::ChangeKitCommands {
+                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                    type_id: TypeIdDto { id: tid.clone() },
+                    commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }],
+                }],
+            };
+
+            let run_tx = |command: TransactionCommand| {
+                KitGraph::execute_vcs(
+                    &k,
+                    KitStoreCommand::ExecuteSessionCommands {
+                        id: sid.clone(),
+                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                            id: did.clone(),
+                            commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx.clone(), commands: vec![command] }],
+                        }],
+                    },
+                )
+                .expect("tx cmd")
+            };
+
+            run_tx(change_name("Step1"));
+            run_tx(change_name("Step2"));
+
+            let live_before_undo = {
+                let g = k.read().expect("g before undo");
+                g.to_full_dto()
+            };
+            assert_eq!(read_type_name(&live_before_undo, &tid), "Step2");
+
+            run_tx(TransactionCommand::Undo);
+
+            let live_after_undo = {
+                let g = k.read().expect("g after undo");
+                g.to_full_dto()
+            };
+            assert_eq!(read_type_name(&live_after_undo, &tid), "Step1");
+
+            let can_redo = match KitGraph::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx, commands: vec![TransactionCommand::CanRedo] }],
+                    }],
+                },
+            )
+            .expect("can redo")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results } => match &results[0] {
+                            crate::kit_transaction::TransactionCommandResult::CanRedo { can } => *can,
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    },
+                    _ => panic!(),
+                },
+                _ => panic!(),
+            };
+            assert!(can_redo);
+        }
+
+        #[test]
         fn unify_alternative_replaces_list_with_root_and_new() {
             let (k, tid) = make_kit_with_type();
             let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
@@ -27211,17 +27294,17 @@ mod tests {
         fn read_command_tree_returns_nested_results() {
             let (k, tid) = make_kit_with_type();
             let dto = k.read().expect("g").to_full_dto();
-            let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::Everything, ReadTypeCommand::Name] };
+            let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::Full, ReadTypeCommand::Name] };
             let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
-                    assert!(matches!(&results[0], ReadTypeCommandResult::Everything { .. }));
+                    assert!(matches!(&results[0], ReadTypeCommandResult::Full { .. }));
                     assert!(matches!(&results[1], ReadTypeCommandResult::Name { .. }));
                 }
                 _ => panic!(),
             }
-            let r2 = ReadKitCommand::Everything {}.execute(&dto).expect("r2");
-            assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Everything { .. }));
+            let r2 = ReadKitCommand::Full {}.execute(&dto).expect("r2");
+            assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Full { .. }));
         }
     }
 }
