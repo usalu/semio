@@ -4,16 +4,16 @@ overview: Add a new `semio/store` rust binary bundle that wraps `semio::KitStore
 todos:
  - id: new_store_bundle
    content: Add semio/store Cargo binary bundle (Cargo.toml, bin.rs, package.json, AGENTS.md, README.md) with NDJSON JSON-RPC 2.0 server wrapping KitStoreHandle. Register in root Cargo.toml workspace members.
-   status: in_progress
+   status: completed
  - id: store_method_catalog
    content: Implement every KitStoreHandle method on the RPC surface (lifecycle, kit.execute / executeChangeKitCommands / executeReadKitCommands, materializeAt, vcsState, field/child, design.* helpers, vcs.* tx, query.*, static semio/kit/design utilities) and the event-forwarder thread emitting `event` notifications from KitStore::subscribe
-   status: pending
+   status: completed
  - id: store_integration_tests
    content: Add semio/store/tests/rpc.rs integration tests that spawn the binary and exercise create/snapshot, executeChangeKitCommands, undo/redo, event notification
-   status: pending
+   status: completed
  - id: py_delete_native
    content: "Delete native kit/diff/VCS code from semio/py/main.py: getKitDiffDict, applyKitDiffDict, inverseKitDiffDict, Change, KitChange, getKitChange, KitData, _KitGraphTxn, KitGraphChange, SyncKit, local bodies of import_/export_/edit_*_kit"
-   status: pending
+   status: in_progress
  - id: py_store_client
    content: Add semio/py/store.py with StoreClient (subprocess.Popen stdio NDJSON, request correlation, event handler) and Kit facade; rewrite edit_*_kit / import_/export_ to delegate; update pyproject.toml deps
    status: pending

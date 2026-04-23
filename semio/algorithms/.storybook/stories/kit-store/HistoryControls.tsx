@@ -1,5 +1,5 @@
 // #region 🧲Header
-// VCS via `KitStoreCommand` + legacy `beginTx` / `commitTx` on `KitStoreHandle`
+// VCS: `KitStoreCommand` via `KitStoreHandle.execute` (JSON camelCase per serde on command results).
 // #endregion
 
 import * as React from "react";
@@ -16,18 +16,13 @@ export interface VcsIdCallbacks {
   readonly onAltId?: IdCallback;
 }
 
-/** String field from an object, preferring camelCase then serde/Rust `snake_case` wire names. */
-function pickStr(obj: unknown, ...keys: string[]): string | undefined {
+function strField(obj: unknown, key: string): string | undefined {
   if (obj == null || typeof obj !== "object") return;
-  const o = obj as Record<string, unknown>;
-  for (const k of keys) {
-    const v = o[k];
-    if (typeof v === "string" && v.length > 0) return v;
-  }
-  return;
+  const v = (obj as Record<string, unknown>)[key];
+  return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
-/** Best-effort extraction of ids from `KitStoreCommand` result JSON (camelCase and/or Rust serde snake_case). */
+/** Extract ids from `KitStoreCommand` result objects (`#[serde(rename_all = "camelCase")]` on Rust enums). */
 export function applyKitStoreCommandResultIds(r: unknown, on: VcsIdCallbacks): void {
   if (r == null || typeof r !== "object") return;
   const o = r as Record<string, unknown>;
@@ -40,42 +35,40 @@ export function applyKitStoreCommandResultIds(r: unknown, on: VcsIdCallbacks): v
   const a = idOf(o.newAlternative);
   if (a) on.onAltId?.(a);
 
-  const sess = (o.executeSessionCommands ?? o.execute_session_commands) as { results?: unknown[] } | undefined;
+  const sess = o.executeSessionCommands as { results?: unknown[] } | undefined;
   if (sess?.results) for (const item of sess.results) walkSession(item, on);
 
-  const alt = (o.executeKitAlternativeCommands ?? o.execute_kit_alternative_commands) as { results?: unknown[] } | undefined;
+  const alt = o.executeKitAlternativeCommands as { results?: unknown[] } | undefined;
   if (alt?.results) for (const item of alt.results) walkAlternative(item, on);
 }
 
 function walkSession(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const nd = it.newDraft ?? it.new_draft;
-  const draftId = pickStr(nd, "draftId", "draft_id");
+  const draftId = strField(it.newDraft, "draftId");
   if (draftId) on.onDraftId?.(draftId);
 
-  const ekd = (it.executeKitDraftCommands ?? it.execute_kit_draft_commands) as { results?: unknown[] } | undefined;
+  const ekd = it.executeKitDraftCommands as { results?: unknown[] } | undefined;
   if (ekd?.results) for (const d of ekd.results) walkDraft(d, on);
 }
 
 function walkDraft(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const st = it.startTransaction ?? it.start_transaction;
-  const tx = pickStr(st, "transactionId", "transaction_id");
+  const st = it.startTransaction;
+  const tx = strField(st, "transactionId");
   if (tx) on.onTxId?.(tx);
-  const fin = it.finalizeToKitCheckpoint ?? it.finalize_to_kit_checkpoint;
-  const cp = pickStr(fin, "checkpointId", "checkpoint_id");
+  const fin = it.finalizeToKitCheckpoint;
+  const cp = strField(fin, "checkpointId");
   if (cp) on.onCpId?.(cp);
   void it.executeTransactionCommands;
-  void it.execute_transaction_commands;
 }
 
 function walkAlternative(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const u = it.unifyKitCheckpointsToSingleKitCheckpoint ?? it.unify_kit_checkpoints_to_single_kit_checkpoint;
-  const ncp = pickStr(u, "newCheckpointId", "new_checkpoint_id");
+  const u = it.unifyKitCheckpointsToSingleKitCheckpoint;
+  const ncp = strField(u, "newCheckpointId");
   if (ncp) on.onCpId?.(ncp);
 }
 
@@ -232,14 +225,6 @@ export const HistoryControls: React.FC<{
         finalize msg
         <input className="bg-background flex-1" value={msg} onChange={(e) => onMsg(e.target.value)} />
       </label>
-      <div className="text-muted-foreground font-medium">Legacy tx (KitStoreHandle)</div>
-      <div className="grid grid-cols-3 gap-1">
-        <B2 h={handle} onLog={onLog} fn="begin" />
-        <B2 h={handle} onLog={onLog} fn="commit" />
-        <B2 h={handle} onLog={onLog} fn="abort" />
-        <B2 h={handle} onLog={onLog} fn="undo" />
-        <B2 h={handle} onLog={onLog} fn="redo" />
-      </div>
     </div>
   );
 };
@@ -247,29 +232,5 @@ export const HistoryControls: React.FC<{
 const B: React.FC<{ onClick: () => void; disabled?: boolean; children: React.ReactNode }> = ({ onClick, disabled, children }) => (
   <button type="button" disabled={disabled} className="rounded border border-zinc-300 px-1 py-0.5 text-left text-[10px] disabled:opacity-50 dark:border-zinc-600" onClick={onClick}>
     {children}
-  </button>
-);
-
-const B2: React.FC<{ h: KitStoreHandle | null; onLog: (m: string) => void; fn: "begin" | "commit" | "abort" | "undo" | "redo" }> = ({ h, onLog, fn }) => (
-  <button
-    type="button"
-    disabled={!h}
-    className="rounded border border-zinc-300 px-1 py-0.5 disabled:opacity-50 dark:border-zinc-600"
-    onClick={() => {
-      if (!h) return;
-      void (async () => {
-        try {
-          if (fn === "begin") onLog("begin: " + JSON.stringify(await h.beginTx()));
-          if (fn === "commit") onLog("commit: " + JSON.stringify(await h.commitTx()));
-          if (fn === "abort") onLog("abort: " + JSON.stringify(await h.abortTx()));
-          if (fn === "undo") onLog("undo: " + JSON.stringify(await h.undo()));
-          if (fn === "redo") onLog("redo: " + JSON.stringify(await h.redo()));
-        } catch (e) {
-          onLog(String(e));
-        }
-      })();
-    }}
-  >
-    {fn}
   </button>
 );

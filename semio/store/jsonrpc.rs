@@ -75,9 +75,17 @@ fn install_k(
     store.set(kit.clone()).map_err(|_| {
         SemioError::InvalidOperation("kit already created (one kit per process)".to_string())
     })?;
-    EVENTS_BUILT.call_once(|| {
-        start_event_thread(kit, out.clone());
-    });
+    // When `SEMIO_STORE_NO_EVENTS=1` (or `true` / `yes`), do not start the event thread. Integration
+    // tests and small stdout pipes can deadlock if the client does not drain `event` lines.
+    let skip_events = matches!(
+        std::env::var("SEMIO_STORE_NO_EVENTS").as_deref(),
+        Ok("1" | "true" | "yes")
+    );
+    if !skip_events {
+        EVENTS_BUILT.call_once(|| {
+            start_event_thread(kit, out.clone());
+        });
+    }
     Ok(())
 }
 

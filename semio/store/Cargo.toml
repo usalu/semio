@@ -22,5 +22,3 @@ tracing-subscriber = { version = "0.3.19", default-features = false, features = 
   "std",
 ] }
 
-[dev-dependencies]
-scopeguard = "1.2"

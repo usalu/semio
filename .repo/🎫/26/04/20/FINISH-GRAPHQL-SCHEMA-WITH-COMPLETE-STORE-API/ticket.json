@@ -1,6 +1,6 @@
 {
   "title": "Finish Graphql Schema With Complete Store Api",
-  "status": "closed",
+  "status": "open",
   "description": "Finish the semio/graphql/schema.graphql. Complete all commands from KitCommandKind by adding a dedicated KitCommandInput and ChangeKitInteraction type for each. Keep the existing diff-based design (KitDiff with hash + last pointer, ChangeKitInteraction forward/backward). Use sketchpad index.tsx as a reference for the complete store API (sessions, operations, selections, candidates, conflicts). Add hash and entity links (kit, parent, children, etc.) to every type. Name things semantically. Extend Query, Mutation, and Subscription to expose the full store.",
   "summary": "Completed the semio GraphQL store API surface by promoting the store-oriented SDL, adding family coverage, computed hashes, entity links, dedicated interaction records, full store query/mutation/subscription coverage, and removal of legacy compatibility fields. Added the OpenAPI GraphQL store endpoint and request/response envelopes. Extended the existing engine test runner to validate the GraphQL SDL and OpenAPI GraphQL contract. Fixed existing engine regressions surfaced by the test run: folder kit relationship hydration, mutating diff application rollback, diagram connection line extraction, and stateful design metadata reconstruction. Verified with `npm --workspace @semio/engine test` (179 passed; resource warnings only).",
   "github": {
@@ -8,6 +8,7 @@
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪b50d1320c3d64a4dbeefa7bbb927bcc3"
+    "⚪b50d1320c3d64a4dbeefa7bbb927bcc3",
+    "⚪ab6d5400efdf49bea6d778b97e327572"
   ]
 }

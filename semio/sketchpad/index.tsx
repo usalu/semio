@@ -313,7 +313,6 @@ import {
   useKitRuntimeSafe,
   useKitStoredFileUrls as useFileUrls,
   useMoveKitArtifactToFolder,
-  useTransaction,
   useUpdateDesign,
   useUpdateType,
 } from "@semio/react";
@@ -38480,23 +38479,16 @@ interface TransactionCallbacks {
 
 /**
  * Returns a transaction object with start, finalize, and abort methods.
- *MUST return stub methods until XState transaction events are implemented.
+ * Stub until type-app VCS / XState is wired; graph-level `beginTx`/`commitTx` is removed.
  **/
 export function useTypeAppTransaction(_id?: TypeAppId): TransactionCallbacks {
-  const { begin, commit, abort: abortTx } = useTransaction();
   return useMemo(
     () => ({
-      start: () => {
-        void begin();
-      },
-      finalize: () => {
-        void commit();
-      },
-      abort: () => {
-        void abortTx();
-      },
+      start: () => {},
+      finalize: () => {},
+      abort: () => {},
     }),
-    [begin, commit, abortTx],
+    [],
   );
 }
 

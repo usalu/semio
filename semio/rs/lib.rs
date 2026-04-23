@@ -3938,7 +3938,10 @@ pub mod kit_alternative {
     #[serde(rename_all = "camelCase")]
     pub enum KitAlternativeCommandResult {
         ReadKitCommands { results: Vec<crate::read_command::ReadKitCommandResult> },
-        UnifyKitCheckpointsToSingleKitCheckpoint { new_checkpoint_id: Id },
+        UnifyKitCheckpointsToSingleKitCheckpoint {
+            #[serde(rename = "newCheckpointId")]
+            new_checkpoint_id: Id,
+        },
         Nothing,
     }
 }
@@ -4161,8 +4164,14 @@ pub mod kit_draft {
     #[serde(rename_all = "camelCase")]
     pub enum KitDraftCommandResult {
         ReadKitCommands { results: Vec<ReadKitCommandResult> },
-        StartTransaction { transaction_id: Id },
-        FinalizeToKitCheckpoint { checkpoint_id: Id },
+        StartTransaction {
+            #[serde(rename = "transactionId")]
+            transaction_id: Id,
+        },
+        FinalizeToKitCheckpoint {
+            #[serde(rename = "checkpointId")]
+            checkpoint_id: Id,
+        },
         Abort { ok: bool },
         Undo { ok: bool },
         CanUndo { can: bool },
@@ -4227,7 +4236,11 @@ pub mod kit_session {
     #[serde(rename_all = "camelCase")]
     pub enum SessionCommandResult {
         ReadKitCommands { results: Vec<ReadKitCommandResult> },
-        NewDraft { draft_id: Id },
+        /// Field name on the wire is `draftId` (struct-variant fields are not covered by the enum’s `rename_all`).
+        NewDraft {
+            #[serde(rename = "draftId")]
+            draft_id: Id,
+        },
         ExecuteKitDraftCommands { results: Vec<KitDraftCommandResult> },
         Nothing,
     }

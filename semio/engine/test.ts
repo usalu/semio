@@ -9,10 +9,12 @@
 
 // #region 📷Test Runner
 import { execFileSync, execSync } from "child_process";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
 const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(__dirname, ".venv") };
+const python = process.platform === "win32" ? join(__dirname, ".venv", "Scripts", "python.exe") : join(__dirname, ".venv", "bin", "python");
+const pythonCommand = existsSync(python) ? python : "python";
 
 // #region 🔗SchemaValidation
 
@@ -20,25 +22,36 @@ const assertSchema = (condition: boolean, message: string): void => {
   if (!condition) throw new Error(message);
 };
 
+const definitionBody = (definition: string): string => {
+  const escapedDefinition = definition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = graphqlSchema.match(new RegExp(`${escapedDefinition}\\s*\\{([\\s\\S]*?)\\n\\}`));
+  assertSchema(Boolean(match), `${definition} MUST exist`);
+  return match![1];
+};
+
 const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
 assertSchema(!graphqlSchema.includes("legacy"), "semio GraphQL schema MUST NOT expose legacy compatibility fields");
-for (const definition of ["type KitStore", "type KitSession", "type KitChangeCandidate", "type KitConflict", "type Family", "type Type", "type Design", "type Piece", "type Connection"]) {
-  const escapedDefinition = definition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  assertSchema(new RegExp(`${escapedDefinition}\\s*\\{[\\s\\S]*?\\n  hash: Hash!`).test(graphqlSchema), `${definition} MUST expose a computed hash`);
+for (const definition of ["type KitStore", "type KitSession", "type KitChangeCandidate", "type KitConflict", "type Type", "type Design", "type Port", "type Piece", "type Connection"]) {
+  assertSchema(definitionBody(definition).includes("hash: Hash!"), `${definition} MUST expose a computed hash`);
 }
+assertSchema(!/\bFamily\b/.test(graphqlSchema), "semio GraphQL schema MUST NOT expose Family because semio/rs has no Family DTO");
+const kitBody = definitionBody("type Kit");
+assertSchema(!/\n  (families|ports):/.test(kitBody), "Kit MUST NOT expose kit-level families or ports");
+assertSchema(kitBody.includes("version: String") && kitBody.includes("uri: String") && kitBody.includes("props: [Prop!]!"), "Kit MUST expose Rust KitFullDto version, uri, and props fields");
+const typeBody = definitionBody("type Type");
+assertSchema(typeBody.includes("ports: [Port!]!"), "Type MUST own ports to match semio/rs TypeFullDto");
+assertSchema(!typeBody.includes("parent:"), "Type MUST NOT expose removed parent links");
+assertSchema(!definitionBody("type Design").includes("parent:"), "Design MUST NOT expose removed parent links");
+const coordinateBody = definitionBody("type Coordinate");
+assertSchema(coordinateBody.includes("x: Float!") && coordinateBody.includes("y: Float!") && coordinateBody.includes("z: Float!"), "Coordinate MUST be the Rust 3D coordinate shape");
 assertSchema(graphqlSchema.includes("union KitInteractionRecord"), "semio GraphQL schema MUST expose dedicated kit interaction records");
 assertSchema(graphqlSchema.includes("replacementTypeCandidates"), "semio GraphQL schema MUST expose computed replacement type candidates");
 
-execFileSync(
-  "uv",
-  [
-    "run",
-    "python",
-    "-c",
-    "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))",
-  ],
-  { cwd: __dirname, env, stdio: "inherit" },
-);
+execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
+  cwd: __dirname,
+  env,
+  stdio: "inherit",
+});
 
 const openapiSchema = JSON.parse(readFileSync(join(__dirname, "..", "openapi", "schema.json"), "utf8"));
 assertSchema(Boolean(openapiSchema.paths?.["/api/graphql"]?.post), "semio OpenAPI schema MUST expose the GraphQL store endpoint");
@@ -47,7 +60,7 @@ assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreResponse), "
 
 // #endregion 🔗SchemaValidation
 
-execSync("uv run pytest --cov --cov-config=pyproject.toml --cov-report html", {
+execFileSync(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html"], {
   cwd: __dirname,
   env,
   stdio: "inherit",

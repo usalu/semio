@@ -1,0 +1,140 @@
+//! Integration: spawn `semio-store`, speak NDJSON JSON-RPC 2.0.
+//! Uses `CARGO_BIN_EXE_semio-store` (stable since Rust 1.64).
+
+use std::io::Write as _;
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
+
+use semio::change_command::ChangeKitCommand;
+use semio::id::Id;
+use semio::kit::KitFullDto;
+use serde_json::{json, Value};
+
+fn read_json_line(
+    r: &mut impl BufRead,
+    is_event: &mut bool,
+) -> std::io::Result<Value> {
+    let mut line = String::new();
+    r.read_line(&mut line)?;
+    if line.is_empty() {
+        return Ok(Value::Null);
+    }
+    let v: Value = serde_json::from_str(line.trim())
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    *is_event = v.get("method").and_then(|m| m.as_str()) == Some("event");
+    Ok(v)
+}
+
+fn until_response(
+    r: &mut impl BufRead,
+    id: i64,
+) -> Result<Value, Box<dyn std::error::Error>> {
+    loop {
+        let mut is_event = false;
+        let v = read_json_line(r, &mut is_event).map_err(|e| e.to_string())?;
+        if v.is_null() {
+            return Err("eof".into());
+        }
+        if is_event {
+            continue;
+        }
+        if v.get("id") == Some(&json!(id)) {
+            if let Some(e) = v.get("error") {
+                return Err(format!("jsonrpc error: {e}").into());
+            }
+            return v
+                .get("result")
+                .cloned()
+                .ok_or_else(|| "missing result".to_string().into());
+        }
+    }
+}
+
+#[test]
+fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::error::Error>> {
+    let exe = std::path::Path::new(env!("CARGO_BIN_EXE_semio-store"));
+    let mut child = Command::new(exe)
+        .env("SEMIO_STORE_NO_EVENTS", "1")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()?;
+
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or("no stdin on child")?;
+    let stdout = child.stdout.take().ok_or("no stdout on child")?;
+    let mut reader = BufReader::new(stdout);
+
+    let kid = Id::new_v7();
+    let dto = KitFullDto {
+        id: kid,
+        name: "A".to_string(),
+        ..Default::default()
+    };
+    let req1 = json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "kit.create",
+        "params": { "dto": serde_json::to_value(&dto)? }
+    });
+    writeln!(stdin, "{}", serde_json::to_string(&req1)?)?;
+    let r1 = until_response(&mut reader, 1)?;
+    if !r1.is_null() {
+        return Err("expected null result for kit.create".into());
+    }
+
+    let cmds = vec![ChangeKitCommand::Name {
+        name: "Renamed".to_string(),
+    }];
+    let cmds_v = serde_json::to_value(&cmds)?;
+    let req2 = json!({
+        "jsonrpc": "2.0",
+        "id": 2,
+        "method": "kit.executeChangeKitCommands",
+        "params": { "cmds": cmds_v }
+    });
+    writeln!(stdin, "{}", serde_json::to_string(&req2)?)?;
+    let r2 = until_response(&mut reader, 2)?;
+    assert_eq!(
+        r2.get("kind").and_then(|v| v.as_str()),
+        Some("setKitMetadata")
+    );
+    let inv = r2
+        .get("inverse")
+        .cloned()
+        .ok_or("missing inverse")?;
+
+    writeln!(stdin, r#"{{"jsonrpc":"2.0","id":3,"method":"kit.snapshot","params":{{}}}}"#)?;
+    let snap = until_response(&mut reader, 3)?;
+    let name = snap
+        .get("name")
+        .and_then(|n| n.as_str())
+        .ok_or("snapshot.name")?;
+    assert_eq!(name, "Renamed");
+
+    // Apply the returned inverse commands (in forward order) to restore the original name.
+    let inv_v = inv;
+    let req4 = json!({
+        "jsonrpc": "2.0",
+        "id": 4,
+        "method": "kit.executeChangeKitCommands",
+        "params": { "cmds": inv_v }
+    });
+    writeln!(stdin, "{}", serde_json::to_string(&req4)?)?;
+    let _r4 = until_response(&mut reader, 4)?;
+
+    writeln!(stdin, r#"{{"jsonrpc":"2.0","id":5,"method":"kit.snapshot","params":{{}}}}"#)?;
+    let snap5 = until_response(&mut reader, 5)?;
+    let name2 = snap5
+        .get("name")
+        .and_then(|n| n.as_str())
+        .ok_or("snapshot2.name")?;
+    assert_eq!(name2, "A");
+
+    drop(stdin);
+    let st = child.wait()?;
+    assert!(st.success(), "sidecar should exit 0 on stdin EOF, got {st:?}");
+    Ok(())
+}
