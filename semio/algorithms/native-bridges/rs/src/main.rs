@@ -5,7 +5,7 @@ mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 } // 🧲Header
 
-use semio::{DesignStoreRef, Id, KitFullDto, KitStore, KitStoreRef, SemioReport};
+use semio::{DesignStoreRef, Id, KitFullDto, KitGraph, KitGraphRef, SemioReport};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
@@ -43,10 +43,10 @@ fn main() {
             return;
         }
     };
-    let kit_ref: KitStoreRef = KitStore::from_full_dto(req.kit);
+    let kit_ref: KitGraphRef = KitGraph::from_full_dto(req.kit);
     match req.op.as_str() {
         "flatten" => {
-            let report = match futures_lite::future::block_on(semio::KitStore::flatten_design_async(
+            let report = match futures_lite::future::block_on(semio::KitGraph::flatten_design_async(
                 &kit_ref,
                 &req.design_id,
             )) {
@@ -62,6 +62,16 @@ fn main() {
             }
         }
         "delete" => {
+            let piece_ids: Vec<Id> = req.piece_ids.into_iter().map(Id::from).collect();
+            let connection_ids: Vec<String> = req.connection_ids.into_iter().collect();
+            for cid in &connection_ids {
+                if let Err(e) =
+                    KitGraph::delete_connection_in_design(&kit_ref, &req.design_id, cid.as_str())
+                {
+                    write_err(format!("delete connection {cid}: {e:?}"));
+                    return;
+                }
+            }
             let design_ref: DesignStoreRef = {
                 let guard = match kit_ref.read() {
                     Ok(g) => g,
@@ -78,11 +88,11 @@ fn main() {
                     }
                 }
             };
-            let piece_ids: Vec<Id> = req.piece_ids.into_iter().map(Id::from).collect();
-            let connection_ids: Vec<Id> =
-                req.connection_ids.into_iter().map(Id::from).collect();
             let report = match design_ref.write() {
-                Ok(mut d) => d.delete_change(&piece_ids, &connection_ids),
+                Ok(mut d) => {
+                    let removed = d.delete_pieces(&piece_ids);
+                    SemioReport::ok(serde_json::json!({ "removedPieces": removed }))
+                }
                 Err(_) => SemioReport::err("design lock poisoned"),
             };
             match serde_json::to_value(&report) {

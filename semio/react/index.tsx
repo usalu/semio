@@ -32,9 +32,22 @@ import {
 	Piece,
 	executeKitCommand,
 	getStoredKitFileUrls,
+	type KitStoreExecuteResult,
+	type KitStoreWireBackboneConfig,
+	type KitStoreWireBackboneStatus,
+	type KitStoreWireConflictResolution,
+	type KitStoreWireKitConflict,
 } from "@semio/js";
 
 // #endregion ⚛️Imports
+
+export type {
+	KitStoreExecuteResult,
+	KitStoreWireBackboneConfig,
+	KitStoreWireBackboneStatus,
+	KitStoreWireConflictResolution,
+	KitStoreWireKitConflict,
+} from "@semio/js";
 
 // #region ⚛️Types
 
@@ -1245,6 +1258,279 @@ export function useKitSync(): { status: "idle" | "loading" | "saving" | "error";
 			lastError: { kind: "Internal", message: s.error instanceof Error ? s.error.message : String(s.error ?? "") },
 		};
 	return { status: "idle" };
+}
+
+function kitCtlSetError(e: unknown): SetError {
+	return { kind: "Internal", message: e instanceof Error ? e.message : String(e) };
+}
+
+/** Polls {@link KitStoreClient.backboneStatus} when a WASM client is mounted (e.g. coordinator / semio-store parity in the browser). */
+export function useBackboneStatus(pollMs: number = 5000): {
+	status: KitStoreWireBackboneStatus | null;
+	pending: boolean;
+	lastError?: SetError;
+	refresh: () => Promise<void>;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [status, setStatus] = React.useState<KitStoreWireBackboneStatus | null>(null);
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const refresh = React.useCallback(async () => {
+		if (!client?.backboneStatus) return;
+		setPending(true);
+		setLastError(undefined);
+		try {
+			const s = await client.backboneStatus();
+			setStatus(s);
+		} catch (e) {
+			const err = kitCtlSetError(e);
+			setLastError(err);
+			runtime.pushSetRejection(err);
+		} finally {
+			setPending(false);
+		}
+	}, [client, runtime.pushSetRejection]);
+
+	React.useEffect(() => {
+		void refresh();
+	}, [refresh]);
+
+	React.useEffect(() => {
+		if (!client || pollMs <= 0) return;
+		const t = setInterval(() => {
+			void refresh();
+		}, pollMs);
+		return () => clearInterval(t);
+	}, [client, pollMs, refresh]);
+
+	return { status, pending, lastError, refresh };
+}
+
+export function useAttachBackbone(): {
+	attach: (cfg: KitStoreWireBackboneConfig) => Promise<SetResult>;
+	detach: () => Promise<SetResult>;
+	pending: boolean;
+	lastError?: SetError;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const attach = React.useCallback(
+		async (cfg: KitStoreWireBackboneConfig) => {
+			if (!client?.attachBackbone || !client?.detachBackbone) {
+				const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
+				setLastError(err);
+				runtime.pushSetRejection(err);
+				return { ok: false, error: err } as const;
+			}
+			setPending(true);
+			setLastError(undefined);
+			try {
+				const r = await client.attachBackbone(cfg);
+				if (!r.ok) {
+					setLastError(r.error);
+					runtime.pushSetRejection(r.error);
+				}
+				return r;
+			} catch (e) {
+				const err = kitCtlSetError(e);
+				setLastError(err);
+				runtime.pushSetRejection(err);
+				return { ok: false, error: err } as const;
+			} finally {
+				setPending(false);
+			}
+		},
+		[client, runtime.pushSetRejection],
+	);
+
+	const detach = React.useCallback(async () => {
+		if (!client?.detachBackbone) {
+			const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		}
+		setPending(true);
+		setLastError(undefined);
+		try {
+			const r = await client.detachBackbone();
+			if (!r.ok) {
+				setLastError(r.error);
+				runtime.pushSetRejection(r.error);
+			}
+			return r;
+		} catch (e) {
+			const err = kitCtlSetError(e);
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		} finally {
+			setPending(false);
+		}
+	}, [client, runtime.pushSetRejection]);
+
+	return { attach, detach, pending, lastError };
+}
+
+export function useDetachBackbone(): {
+	detach: () => Promise<SetResult>;
+	pending: boolean;
+	lastError?: SetError;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const detach = React.useCallback(async () => {
+		if (!client?.detachBackbone) {
+			const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		}
+		setPending(true);
+		setLastError(undefined);
+		try {
+			const r = await client.detachBackbone();
+			if (!r.ok) {
+				setLastError(r.error);
+				runtime.pushSetRejection(r.error);
+			}
+			return r;
+		} catch (e) {
+			const err = kitCtlSetError(e);
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		} finally {
+			setPending(false);
+		}
+	}, [client, runtime.pushSetRejection]);
+
+	return { detach, pending, lastError };
+}
+
+export function useListConflicts(): {
+	conflicts: KitStoreWireKitConflict[];
+	refresh: () => Promise<void>;
+	pending: boolean;
+	lastError?: SetError;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [conflicts, setConflicts] = React.useState<KitStoreWireKitConflict[]>([]);
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const refresh = React.useCallback(async () => {
+		if (!client?.listConflicts) return;
+		setPending(true);
+		setLastError(undefined);
+		try {
+			const rows = await client.listConflicts();
+			setConflicts(rows);
+		} catch (e) {
+			const err = kitCtlSetError(e);
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			setConflicts([]);
+		} finally {
+			setPending(false);
+		}
+	}, [client, runtime.pushSetRejection]);
+
+	React.useEffect(() => {
+		void refresh();
+	}, [refresh]);
+
+	return { conflicts, refresh, pending, lastError };
+}
+
+export function useResolveConflict(): {
+	resolve: (id: string, strategy: KitStoreWireConflictResolution) => Promise<SetResult>;
+	pending: boolean;
+	lastError?: SetError;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const resolve = React.useCallback(
+		async (id: string, strategy: KitStoreWireConflictResolution) => {
+			if (!client?.resolveConflict) {
+				const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
+				setLastError(err);
+				runtime.pushSetRejection(err);
+				return { ok: false, error: err } as const;
+			}
+			setPending(true);
+			setLastError(undefined);
+			try {
+				const r = await client.resolveConflict(id, strategy);
+				if (!r.ok) {
+					setLastError(r.error);
+					runtime.pushSetRejection(r.error);
+				}
+				return r;
+			} catch (e) {
+				const err = kitCtlSetError(e);
+				setLastError(err);
+				runtime.pushSetRejection(err);
+				return { ok: false, error: err } as const;
+			} finally {
+				setPending(false);
+			}
+		},
+		[client, runtime.pushSetRejection],
+	);
+
+	return { resolve, pending, lastError };
+}
+
+export function useSyncNow(): {
+	sync: () => Promise<SetResult>;
+	pending: boolean;
+	lastError?: SetError;
+} {
+	const runtime = useKitRuntime();
+	const client = runtime.kitClient;
+	const [pending, setPending] = React.useState(false);
+	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
+
+	const sync = React.useCallback(async () => {
+		if (!client?.syncNow) {
+			const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		}
+		setPending(true);
+		setLastError(undefined);
+		try {
+			const r = await client.syncNow();
+			if (!r.ok) {
+				setLastError(r.error);
+				runtime.pushSetRejection(r.error);
+			}
+			return r;
+		} catch (e) {
+			const err = kitCtlSetError(e);
+			setLastError(err);
+			runtime.pushSetRejection(err);
+			return { ok: false, error: err } as const;
+		} finally {
+			setPending(false);
+		}
+	}, [client, runtime.pushSetRejection]);
+
+	return { sync, pending, lastError };
 }
 
 export function useWriteIndicator(status: WriteStatus): {

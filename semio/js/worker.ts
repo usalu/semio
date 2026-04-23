@@ -181,6 +181,65 @@ const api = {
     const proxy = Comlink.proxy(cb);
     handle.subscribe(proxy);
   },
+
+  async execute(cmd: unknown) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    try {
+      return { ok: true, result: handle.execute(cmd) };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
+  },
+
+  executeRead(cmds: unknown[]) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.executeReadKitCommands(cmds);
+  },
+
+  vcsState() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.vcsState();
+  },
+
+  theKitDto() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.theKitDto();
+  },
+
+  materializeAt(at: unknown) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.materializeAt(at);
+  },
+
+  attachBackbone(config: unknown) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return settle(Promise.resolve(handle.execute({ attachBackbone: { config } })));
+  },
+
+  detachBackbone() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return settle(Promise.resolve(handle.execute({ detachBackbone: null })));
+  },
+
+  backboneStatus() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.execute({ backboneStatus: null });
+  },
+
+  listConflicts() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return handle.execute({ listConflicts: null });
+  },
+
+  resolveConflict(conflictId: string, resolution: unknown) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return settle(Promise.resolve(handle.execute({ resolveConflict: { id: conflictId, strategy: resolution } })));
+  },
+
+  syncNow() {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return settle(Promise.resolve(handle.execute({ syncNow: null })));
+  },
 };
 
 Comlink.expose(api);

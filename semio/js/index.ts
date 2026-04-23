@@ -19697,7 +19697,8 @@ export type SetErrorKind =
   | "Disposed"
   | "Timeout"
   | "LockPoisoned"
-  | "Internal";
+  | "Internal"
+  | "NotSupported";
 
 export type SetError = {
   kind: SetErrorKind;
@@ -19707,6 +19708,67 @@ export type SetError = {
 };
 
 export type SetResult = { ok: true } | { ok: false; error: SetError };
+
+/** Result of [`KitStoreHandle.execute`] / [`KitStoreCommand`] (success payload is the serde `KitStoreCommandResult`). */
+export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: SetError };
+
+/**
+ * JSON shape for [`semio::kit_backbone_wire::BackboneConfig`] (externally tagged, camelCase variant keys).
+ * Pass as `config` inside `{ attachBackbone: { config } }`.
+ */
+export type KitStoreWireBackboneConfig =
+  | { dev: { path: string } }
+  | { local: { folder: string } }
+  | { remote: { url: string; sessionId: string } };
+
+/** JSON shape for [`semio::kit_backbone_wire::ConflictResolution`] (unit variants use `null` payload like `newSession`). */
+export type KitStoreWireConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
+
+/** Payload inside `KitStoreCommandResult::BackboneStatus` (`tip` is checkpoint id when present). */
+export type KitStoreWireBackboneStatus = {
+  attached: boolean;
+  kind?: string | null;
+  tip?: string | null;
+};
+
+/** Row from `KitStoreCommandResult::ListConflicts` (`items` entry). */
+export type KitStoreWireKitConflict = {
+  id: string;
+  wipCheckpoint: unknown;
+  backboneTip?: string | null;
+  reason: string;
+  createdAt: string;
+};
+
+function parseKitStoreBackboneStatusResult(raw: unknown): KitStoreWireBackboneStatus {
+  if (raw == null || typeof raw !== "object") throw new Error("backboneStatus: unexpected result");
+  const o = raw as Record<string, unknown>;
+  const inner = o.backboneStatus as Record<string, unknown> | undefined;
+  if (!inner || typeof inner !== "object") throw new Error("backboneStatus: missing backboneStatus field");
+  return {
+    attached: Boolean(inner.attached),
+    kind: inner.kind != null ? String(inner.kind) : null,
+    tip: inner.tip != null && inner.tip !== "" ? String(inner.tip) : null,
+  };
+}
+
+function parseKitStoreListConflictsResult(raw: unknown): KitStoreWireKitConflict[] {
+  if (raw == null || typeof raw !== "object") throw new Error("listConflicts: unexpected result");
+  const o = raw as Record<string, unknown>;
+  const inner = o.listConflicts as { items?: unknown[] } | undefined;
+  if (!inner || !Array.isArray(inner.items)) throw new Error("listConflicts: missing listConflicts.items");
+  return inner.items.map((row) => {
+    if (row == null || typeof row !== "object") throw new Error("listConflicts: invalid row");
+    const r = row as Record<string, unknown>;
+    return {
+      id: String(r.id ?? ""),
+      wipCheckpoint: r.wipCheckpoint,
+      backboneTip: r.backboneTip != null ? String(r.backboneTip) : null,
+      reason: String(r.reason ?? ""),
+      createdAt: String(r.createdAt ?? ""),
+    };
+  });
+}
 
 export type WriteStatus =
   | { kind: "idle"; pending: 0; lastError?: undefined }
@@ -19773,6 +19835,18 @@ export interface KitStoreClient {
   canRedo(): Promise<boolean>;
   subscribe(cb: (ev: any) => void): () => void;
   dispose(): void;
+
+  execute(cmd: unknown): Promise<KitStoreExecuteResult>;
+  executeRead(cmds: unknown[]): Promise<any[]>;
+  vcsState(): Promise<any>;
+  theKitDto(): Promise<any>;
+  materializeAt(id: string): Promise<any>;
+  attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
+  detachBackbone(): Promise<SetResult>;
+  backboneStatus(): Promise<KitStoreWireBackboneStatus>;
+  listConflicts(): Promise<KitStoreWireKitConflict[]>;
+  resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
+  syncNow(): Promise<SetResult>;
 }
 
 export type CreateKitStoreClientOptions = {
@@ -20036,6 +20110,92 @@ export class FallbackKitStoreClient implements KitStoreClient {
   async getKitMetadata() {
     const raw = await withTimeout(Promise.resolve(this.handle.getKitMetadata()), this.timeoutMs, "timeout");
     return this.unwrapQuery(raw);
+  }
+
+  async execute(cmd: unknown): Promise<KitStoreExecuteResult> {
+    try {
+      const result = await withTimeout(Promise.resolve(this.handle.execute(cmd)), this.timeoutMs, "timeout");
+      return { ok: true, result };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
+  }
+
+  async executeRead(cmds: unknown[]): Promise<any[]> {
+    return await withTimeout(Promise.resolve(this.handle.executeReadKitCommands(cmds)), this.timeoutMs, "timeout");
+  }
+
+  async vcsState(): Promise<any> {
+    return await withTimeout(Promise.resolve(this.handle.vcsState()), this.timeoutMs, "timeout");
+  }
+
+  async theKitDto(): Promise<any> {
+    return await withTimeout(Promise.resolve(this.handle.theKitDto()), this.timeoutMs, "timeout");
+  }
+
+  async materializeAt(id: string): Promise<any> {
+    const at = id.trim() === "" ? undefined : id;
+    return await withTimeout(Promise.resolve(this.handle.materializeAt(at)), this.timeoutMs, "timeout");
+  }
+
+  async attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+    const r = await this.execute({ attachBackbone: { config: cfg } });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.attachBackbone as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      await this.getSnapshot();
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "attachBackbone: unexpected result" } };
+  }
+
+  async detachBackbone(): Promise<SetResult> {
+    const r = await this.execute({ detachBackbone: null });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.detachBackbone as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      await this.getSnapshot();
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } };
+  }
+
+  async backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+    const r = await this.execute({ backboneStatus: null });
+    if (!r.ok) throw new Error(r.error.message);
+    return parseKitStoreBackboneStatusResult(r.result);
+  }
+
+  async listConflicts(): Promise<KitStoreWireKitConflict[]> {
+    const r = await this.execute({ listConflicts: null });
+    if (!r.ok) throw new Error(r.error.message);
+    return parseKitStoreListConflictsResult(r.result);
+  }
+
+  async resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+    const r = await this.execute({ resolveConflict: { id, strategy } });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.resolveConflict as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      await this.getSnapshot();
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "resolveConflict: unexpected result" } };
+  }
+
+  async syncNow(): Promise<SetResult> {
+    const r = await this.execute({ syncNow: null });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.syncNow as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      await this.getSnapshot();
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "syncNow: unexpected result" } };
   }
 }
 
@@ -20478,6 +20638,107 @@ export class WorkerKitStoreClient implements KitStoreClient {
     const raw = await withTimeout(this.api.getKitMetadata(), this.timeoutMs, "timeout");
     return this.unwrapQuery(raw);
   }
+
+  async execute(cmd: unknown): Promise<KitStoreExecuteResult> {
+    try {
+      return await withTimeout(this.api.execute(cmd), this.timeoutMs, "timeout");
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async executeRead(cmds: unknown[]): Promise<any[]> {
+    return await withTimeout(this.api.executeRead(cmds), this.timeoutMs, "timeout");
+  }
+
+  async vcsState(): Promise<any> {
+    return await withTimeout(this.api.vcsState(), this.timeoutMs, "timeout");
+  }
+
+  async theKitDto(): Promise<any> {
+    return await withTimeout(this.api.theKitDto(), this.timeoutMs, "timeout");
+  }
+
+  async materializeAt(id: string): Promise<any> {
+    const at = id.trim() === "" ? undefined : id;
+    return await withTimeout(this.api.materializeAt(at), this.timeoutMs, "timeout");
+  }
+
+  async attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+    const r = await this.execute({ attachBackbone: { config: cfg } });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.attachBackbone as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      try {
+        this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+      } catch {
+        /* ignore */
+      }
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "attachBackbone: unexpected result" } };
+  }
+
+  async detachBackbone(): Promise<SetResult> {
+    const r = await this.execute({ detachBackbone: null });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.detachBackbone as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      try {
+        this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+      } catch {
+        /* ignore */
+      }
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } };
+  }
+
+  async backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+    const r = await this.execute({ backboneStatus: null });
+    if (!r.ok) throw new Error(r.error.message);
+    return parseKitStoreBackboneStatusResult(r.result);
+  }
+
+  async listConflicts(): Promise<KitStoreWireKitConflict[]> {
+    const r = await this.execute({ listConflicts: null });
+    if (!r.ok) throw new Error(r.error.message);
+    return parseKitStoreListConflictsResult(r.result);
+  }
+
+  async resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+    const r = await this.execute({ resolveConflict: { id, strategy } });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.resolveConflict as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      try {
+        this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+      } catch {
+        /* ignore */
+      }
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "resolveConflict: unexpected result" } };
+  }
+
+  async syncNow(): Promise<SetResult> {
+    const r = await this.execute({ syncNow: null });
+    if (!r.ok) return r;
+    const o = r.result as Record<string, unknown>;
+    const inner = o.syncNow as { ok?: boolean } | undefined;
+    if (inner?.ok === true) {
+      try {
+        this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+      } catch {
+        /* ignore */
+      }
+      return { ok: true } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "syncNow: unexpected result" } };
+  }
 }
 
 /** Hosts should map this import to the wasm-bindgen JS glue (see sketchpad Vite config). */
@@ -20690,6 +20951,62 @@ export class InMemoryKitStore implements UndoableKitStore {
     this.undoStack.push(change);
     this.dirty = true;
     this.notify();
+  }
+
+  execute(_cmd: unknown): Promise<KitStoreExecuteResult> {
+    return Promise.reject(new Error("InMemoryKitStore.execute requires a WASM KitStoreHandle-backed client"));
+  }
+
+  executeRead(_cmds: unknown[]): Promise<any[]> {
+    return Promise.reject(new Error("InMemoryKitStore.executeRead requires a WASM KitStoreHandle-backed client"));
+  }
+
+  vcsState(): Promise<any> {
+    return Promise.reject(new Error("InMemoryKitStore.vcsState requires a WASM KitStoreHandle-backed client"));
+  }
+
+  theKitDto(): Promise<any> {
+    return Promise.reject(new Error("InMemoryKitStore.theKitDto requires a WASM KitStoreHandle-backed client"));
+  }
+
+  materializeAt(_id: string): Promise<any> {
+    return Promise.reject(new Error("InMemoryKitStore.materializeAt requires a WASM KitStoreHandle-backed client"));
+  }
+
+  attachBackbone(_cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+    return Promise.resolve({
+      ok: false,
+      error: { kind: "NotSupported", message: "InMemoryKitStore has no kit control plane / backbone" },
+    });
+  }
+
+  detachBackbone(): Promise<SetResult> {
+    return Promise.resolve({
+      ok: false,
+      error: { kind: "NotSupported", message: "InMemoryKitStore has no kit control plane / backbone" },
+    });
+  }
+
+  backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+    return Promise.reject(new Error("InMemoryKitStore.backboneStatus requires a WASM KitStoreHandle-backed client"));
+  }
+
+  listConflicts(): Promise<KitStoreWireKitConflict[]> {
+    return Promise.reject(new Error("InMemoryKitStore.listConflicts requires a WASM KitStoreHandle-backed client"));
+  }
+
+  resolveConflict(_id: string, _strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+    return Promise.resolve({
+      ok: false,
+      error: { kind: "NotSupported", message: "InMemoryKitStore has no kit control plane / conflicts registry" },
+    });
+  }
+
+  syncNow(): Promise<SetResult> {
+    return Promise.resolve({
+      ok: false,
+      error: { kind: "NotSupported", message: "InMemoryKitStore has no coordinator / sync" },
+    });
   }
 
   private notify(): void {
@@ -23572,6 +23889,24 @@ if (shouldRunEmbeddedJsTests) {
       const c = client.setField("Piece", "p1", "name", "Z");
       await Promise.all([a, b, c]);
       expect(["X", "Y", "Z"]).toContain(client.getDto().designs[0].pieces[0].name);
+      client.dispose();
+    });
+
+    it("fallback: vcsState works; backbone commands fail on plain KitGraph WASM handle", async () => {
+      const initialKit = asKitInstance({
+        id: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        designs: [],
+      });
+      const client = await createKitStoreClient({ initialKit, forceFallback: true });
+      const vcs = await client.vcsState();
+      expect(vcs && typeof vcs === "object").toBe(true);
+      await expect(client.backboneStatus()).rejects.toThrow(/backbone|control plane|InvalidOperation/i);
+      const attach = await client.attachBackbone({ dev: { path: "C:\\tmp\\noop-kit.json" } });
+      expect(attach.ok).toBe(false);
+      if (!attach.ok) expect(attach.error.message).toMatch(/backbone|control plane|InvalidOperation/i);
       client.dispose();
     });
   });

@@ -27,5 +27,6 @@ bundle:
 
 - **AlgorithmApp Shell**: Standardized golden-layout configuration that wires context state to specialized windows (VecInput, PiecesSelectionInput, etc.).
 - **Language Provider**: Storybook global decorator that injects the selected implementation language into the algorithm context.
+- **Native Rust bridge** ([`native-bridges/rs`](native-bridges/rs)): stdin JSON ops against the **`semio`** crate use **`KitGraph` / `KitGraphRef`** (in-memory graph); `flatten` calls **`KitGraph::flatten_design_async`**. This matches the split where **`KitStore`** names the async control plane in `semio-store`, not the graph handle.
 
 ## 📛 Entities
