@@ -334,12 +334,6 @@
         "TypeId": {
             "description": "\ud83d\udd16Identity fields for uniquely identifying a type.",
             "properties": {
-                "variant": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
                 "name": {
                     "maxLength": 64,
                     "title": "Name",
@@ -350,6 +344,19 @@
                 "name"
             ],
             "title": "TypeId",
+            "type": "object"
+        },
+        "FamilyId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
             "type": "object"
         },
         "Vector": {
@@ -406,6 +413,13 @@
                 }
             ],
             "default": null
+        },
+        "families": {
+            "items": {
+                "$ref": "#/$defs/FamilyId"
+            },
+            "title": "Families",
+            "type": "array"
         },
         "pieces": {
             "items": {

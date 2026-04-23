@@ -1247,46 +1247,20 @@
                         "title": "Id",
                         "default": ""
                     },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name",
+                        "default": ""
+                    },
                     "description": {
                         "type": "string",
                         "maxLength": 512,
                         "title": "Description",
                         "default": ""
                     },
-                    "is_mandatory": {
-                        "type": "boolean",
-                        "title": "Is Mandatory",
-                        "default": false
-                    },
-                    "maxChildren": {
-                        "type": "integer",
-                        "minimum": 0.0,
-                        "title": "Maxchildren",
-                        "default": 1
-                    },
                     "port": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Port",
-                        "default": ""
-                    },
-                    "compatiblePorts": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "title": "Compatibleports"
-                    },
-                    "point": {
-                        "$ref": "#/components/schemas/Point"
-                    },
-                    "direction": {
-                        "$ref": "#/components/schemas/Vector"
-                    },
-                    "t": {
-                        "type": "number",
-                        "title": "T",
-                        "default": 0.0
+                        "$ref": "#/components/schemas/PortId"
                     },
                     "attributes": {
                         "items": {
@@ -1298,8 +1272,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "point",
-                    "direction"
+                    "port"
                 ],
                 "title": "ConnectorContext",
                 "description": "Context fields for understanding a connector by an LLM."
@@ -1317,6 +1290,340 @@
                 "title": "ConnectorId",
                 "description": "\ud83d\udd16Identity fields for uniquely identifying a connector."
             },
+            "PortId": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "type": "object",
+                "title": "PortId",
+                "description": "Reference to a port by id."
+            },
+            "FamilyId": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "type": "object",
+                "title": "FamilyId",
+                "description": "Reference to a kit family by id."
+            },
+            "PortInput": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "default": ""
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "icon": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Icon"
+                    },
+                    "mandatory": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mandatory"
+                    },
+                    "t": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "T"
+                    },
+                    "point": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PointInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "direction": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/VectorInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "compatiblePorts": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortId"
+                        },
+                        "type": "array",
+                        "title": "CompatiblePorts"
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "CompatibleFamilies"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "type": "object",
+                "title": "PortInput",
+                "description": "Input fields for a family-owned port."
+            },
+            "FamilyInput": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortInput"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/AttributeInput"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "title": "FamilyInput",
+                "description": "Input fields for a kit family."
+            },
+            "Port": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "default": ""
+                    },
+                    "description": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Description"
+                    },
+                    "icon": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Icon"
+                    },
+                    "mandatory": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Mandatory"
+                    },
+                    "t": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "T"
+                    },
+                    "point": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Point"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "direction": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Vector"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "compatiblePorts": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortId"
+                        },
+                        "type": "array",
+                        "title": "CompatiblePorts"
+                    },
+                    "compatibleFamilies": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "CompatibleFamilies"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "required": [
+                    "id"
+                ],
+                "type": "object",
+                "title": "Port",
+                "description": "Family-scoped or kit-level port."
+            },
+            "Family": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "maxLength": 128,
+                        "title": "Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name"
+                    },
+                    "description": {
+                        "type": "string",
+                        "maxLength": 512,
+                        "title": "Description",
+                        "default": ""
+                    },
+                    "icon": {
+                        "type": "string",
+                        "maxLength": 1024,
+                        "title": "Icon",
+                        "default": ""
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/Port"
+                        },
+                        "type": "array",
+                        "title": "Ports"
+                    },
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/Attribute"
+                        },
+                        "type": "array",
+                        "title": "Attributes"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object",
+                "title": "Family",
+                "description": "Kit-level connector family."
+            },
             "ConnectorInput": {
                 "properties": {
                     "id_": {
@@ -1325,46 +1632,26 @@
                         "title": "Id",
                         "default": ""
                     },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name",
+                        "default": ""
+                    },
+                    "code": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Code",
+                        "default": ""
+                    },
                     "description": {
                         "type": "string",
                         "maxLength": 512,
                         "title": "Description",
                         "default": ""
                     },
-                    "is_mandatory": {
-                        "type": "boolean",
-                        "title": "Is Mandatory",
-                        "default": false
-                    },
-                    "maxChildren": {
-                        "type": "integer",
-                        "minimum": 0.0,
-                        "title": "Maxchildren",
-                        "default": 1
-                    },
                     "port": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Port",
-                        "default": ""
-                    },
-                    "compatiblePorts": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "title": "Compatibleports"
-                    },
-                    "t": {
-                        "type": "number",
-                        "title": "T",
-                        "default": 0.0
-                    },
-                    "point": {
-                        "$ref": "#/components/schemas/PointInput"
-                    },
-                    "direction": {
-                        "$ref": "#/components/schemas/VectorInput"
+                        "$ref": "#/components/schemas/PortId"
                     },
                     "attributes": {
                         "items": {
@@ -1376,8 +1663,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "point",
-                    "direction"
+                    "port"
                 ],
                 "title": "ConnectorInput",
                 "description": "Input fields for creating or updating a connector."
@@ -1390,46 +1676,26 @@
                         "title": "Id",
                         "default": ""
                     },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Name",
+                        "default": ""
+                    },
+                    "code": {
+                        "type": "string",
+                        "maxLength": 256,
+                        "title": "Code",
+                        "default": ""
+                    },
                     "description": {
                         "type": "string",
                         "maxLength": 512,
                         "title": "Description",
                         "default": ""
                     },
-                    "is_mandatory": {
-                        "type": "boolean",
-                        "title": "Is Mandatory",
-                        "default": false
-                    },
-                    "maxChildren": {
-                        "type": "integer",
-                        "minimum": 0.0,
-                        "title": "Maxchildren",
-                        "default": 1
-                    },
                     "port": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Port",
-                        "default": ""
-                    },
-                    "compatiblePorts": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "title": "Compatibleports"
-                    },
-                    "point": {
-                        "$ref": "#/components/schemas/Point"
-                    },
-                    "direction": {
-                        "$ref": "#/components/schemas/Vector"
-                    },
-                    "t": {
-                        "type": "number",
-                        "title": "T",
-                        "default": 0.0
+                        "$ref": "#/components/schemas/PortId"
                     },
                     "attributes": {
                         "items": {
@@ -1441,8 +1707,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "point",
-                    "direction"
+                    "port"
                 ],
                 "title": "Connector",
                 "description": "Output fields returned when fetching a connector."
@@ -1533,6 +1798,13 @@
                             }
                         ]
                     },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
+                    },
                     "pieces": {
                         "items": {
                             "$ref": "#/components/schemas/PieceContext-Input"
@@ -1597,6 +1869,13 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "pieces": {
                         "items": {
@@ -1680,27 +1959,12 @@
                         "title": "Unit",
                         "default": ""
                     },
-                    "parent": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Parent"
-                    },
-                    "is_abstract": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Is Abstract"
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "folder": {
                         "anyOf": [
@@ -1825,27 +2089,12 @@
                         "format": "date-time",
                         "title": "Updated"
                     },
-                    "parent": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Parent"
-                    },
-                    "is_abstract": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Is Abstract"
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "folder": {
                         "anyOf": [
@@ -2206,12 +2455,6 @@
                         "title": "Preview",
                         "default": ""
                     },
-                    "version": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Version",
-                        "default": ""
-                    },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
@@ -2229,6 +2472,20 @@
                         "maxLength": 1024,
                         "title": "License",
                         "default": ""
+                    },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyInput"
+                        },
+                        "type": "array",
+                        "title": "Families"
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/PortInput"
+                        },
+                        "type": "array",
+                        "title": "Ports"
                     },
                     "types": {
                         "items": {
@@ -2309,12 +2566,6 @@
                         "title": "Preview",
                         "default": ""
                     },
-                    "version": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Version",
-                        "default": ""
-                    },
                     "remote": {
                         "type": "string",
                         "maxLength": 1024,
@@ -2342,6 +2593,20 @@
                         "type": "string",
                         "format": "date-time",
                         "title": "Updated"
+                    },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/Family"
+                        },
+                        "type": "array",
+                        "title": "Families"
+                    },
+                    "ports": {
+                        "items": {
+                            "$ref": "#/components/schemas/Port"
+                        },
+                        "type": "array",
+                        "title": "Ports"
                     },
                     "types": {
                         "items": {
@@ -3379,12 +3644,6 @@
                         "title": "Description",
                         "default": ""
                     },
-                    "variant": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Variant",
-                        "default": ""
-                    },
                     "stock": {
                         "type": "integer",
                         "title": "Stock",
@@ -3410,6 +3669,13 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "connectors": {
                         "items": {
@@ -3453,12 +3719,6 @@
                         "title": "Description",
                         "default": ""
                     },
-                    "variant": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Variant",
-                        "default": ""
-                    },
                     "stock": {
                         "type": "integer",
                         "title": "Stock",
@@ -3484,6 +3744,13 @@
                                 "type": "null"
                             }
                         ]
+                    },
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "connectors": {
                         "items": {
@@ -3516,12 +3783,6 @@
             },
             "TypeId": {
                 "properties": {
-                    "variant": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Variant",
-                        "default": ""
-                    },
                     "name": {
                         "type": "string",
                         "maxLength": 64,
@@ -3576,27 +3837,12 @@
                         "title": "Unit",
                         "default": ""
                     },
-                    "parent": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Parent"
-                    },
-                    "is_abstract": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Is Abstract"
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "folder": {
                         "anyOf": [
@@ -3720,27 +3966,12 @@
                         "format": "date-time",
                         "title": "Updated"
                     },
-                    "parent": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Parent"
-                    },
-                    "is_abstract": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ],
-                        "title": "Is Abstract"
+                    "families": {
+                        "items": {
+                            "$ref": "#/components/schemas/FamilyId"
+                        },
+                        "type": "array",
+                        "title": "Families"
                     },
                     "folder": {
                         "anyOf": [

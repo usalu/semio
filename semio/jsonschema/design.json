@@ -384,12 +384,6 @@
         "TypeId": {
             "description": "\ud83d\udd16Identity fields for uniquely identifying a type.",
             "properties": {
-                "variant": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
                 "name": {
                     "maxLength": 64,
                     "title": "Name",
@@ -400,6 +394,20 @@
                 "name"
             ],
             "title": "TypeId",
+            "type": "object"
+        },
+        "FamilyId": {
+            "description": "Reference to a kit family by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
             "type": "object"
         },
         "Vector": {
@@ -468,29 +476,12 @@
             "title": "Updated",
             "type": "string"
         },
-        "parent": {
-            "anyOf": [
-                {
-                    "type": "string"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "title": "Parent"
-        },
-        "is_abstract": {
-            "anyOf": [
-                {
-                    "type": "boolean"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "title": "Is Abstract"
+        "families": {
+            "items": {
+                "$ref": "#/$defs/FamilyId"
+            },
+            "title": "Families",
+            "type": "array"
         },
         "folder": {
             "anyOf": [

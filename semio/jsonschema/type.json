@@ -27,13 +27,53 @@
             "title": "Attribute",
             "type": "object"
         },
+        "FamilyId": {
+            "description": "Reference to a kit family by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
+            "type": "object"
+        },
+        "PortId": {
+            "description": "Port reference by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "PortId",
+            "type": "object"
+        },
         "Connector": {
-            "description": "Output fields returned when fetching a connector.",
+            "description": "Type-owned connector referencing a port (geometry on Port).",
             "properties": {
                 "id_": {
                     "default": "",
                     "maxLength": 128,
                     "title": "Id",
+                    "type": "string"
+                },
+                "name": {
+                    "default": "",
+                    "maxLength": 256,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "code": {
+                    "default": "",
+                    "maxLength": 256,
+                    "title": "Code",
                     "type": "string"
                 },
                 "description": {
@@ -42,40 +82,8 @@
                     "title": "Description",
                     "type": "string"
                 },
-                "is_mandatory": {
-                    "default": false,
-                    "title": "Is Mandatory",
-                    "type": "boolean"
-                },
-                "maxChildren": {
-                    "default": 1,
-                    "minimum": 0,
-                    "title": "Maxchildren",
-                    "type": "integer"
-                },
                 "port": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Port",
-                    "type": "string"
-                },
-                "compatiblePorts": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "title": "Compatibleports",
-                    "type": "array"
-                },
-                "point": {
-                    "$ref": "#/$defs/Point"
-                },
-                "direction": {
-                    "$ref": "#/$defs/Vector"
-                },
-                "t": {
-                    "default": 0.0,
-                    "title": "T",
-                    "type": "number"
+                    "$ref": "#/$defs/PortId"
                 },
                 "attributes": {
                     "items": {
@@ -86,8 +94,7 @@
                 }
             },
             "required": [
-                "point",
-                "direction"
+                "port"
             ],
             "title": "Connector",
             "type": "object"
@@ -321,29 +328,12 @@
             "title": "Updated",
             "type": "string"
         },
-        "parent": {
-            "anyOf": [
-                {
-                    "type": "string"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "title": "Parent"
-        },
-        "is_abstract": {
-            "anyOf": [
-                {
-                    "type": "boolean"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null,
-            "title": "Is Abstract"
+        "families": {
+            "items": {
+                "$ref": "#/$defs/FamilyId"
+            },
+            "title": "Families",
+            "type": "array"
         },
         "folder": {
             "anyOf": [

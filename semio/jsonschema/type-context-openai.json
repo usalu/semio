@@ -8,9 +8,20 @@
     "description": {
       "type": "string"
     },
-    "variant": {
-      "type": "string",
-      "description": "The optional variant of the type. No variant means the default variant."
+    "families": {
+      "type": "array",
+      "description": "Ids of connector families this type references.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
     },
     "connectors": {
       "type": "array",

@@ -7,7 +7,7 @@ todos:
    status: completed
  - id: canonical_schemas
    content: Update semio/sqlite/schema.sql, semio/graphql/schema.graphql, semio/openapi, semio/jsonschema, semio/rdf, semio/owl to the new entity graph
-   status: in_progress
+   status: completed
  - id: rs_entities
    content: "semio/rs/lib.rs: add FamilyStore; reshape PortStore to family-scoped with geometry; slim ConnectorStore to (id, name, port_id, desc, attrs); remove parent/variant/view/isAbstract from Type/Design; remove version/release from Kit"
    status: completed

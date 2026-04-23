@@ -934,11 +934,13 @@ Alternative is a named list of checkpoints (starting from `the kit` and then mor
 
 Kits MUST be extended with a version-control-like system:
 
-- `kit store` is the in-memory master and offers the api to do everything.
-- `kit graph` is a the complete in-memory graph of a kit and all its history.
-- `wip kit` is the in-memory
-- `kit backbone` a persisted out-of-process kit history.
-- `kit tree` is the tree of all checkpoints.
+- `kit store` is the master and offers the api to do everything.
+- `kit replica` is a complete copy of the kit graph, files
+- `wip kit` is the in-memory kit replica.
+- `backbone kit stub` a the in-memory kit replica stub to an authorative persisted out-of-process kit.
+- `kit graph` is the complete kit graph (including history, sessions, drafts, transactions, etc)
+- `kit history`
+- `kit checkpoint tree` is the tree of all checkpoints.
 - `initial kit` is a kit snapshot.
 - `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
 - `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
