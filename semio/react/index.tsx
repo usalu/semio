@@ -10,6 +10,7 @@
 import * as React from "react";
 import type { ReactNode, SetStateAction } from "react";
 import {
+	type Kit,
 	asKitInstance,
 	Coordinate,
 	createFolderKitStore,
@@ -18,6 +19,7 @@ import {
 	createSessionKitStore,
 	Design,
 	getIncludedDesigns,
+	getKitPorts,
 	id,
 	InMemoryKitStore,
 	KitImpl,
@@ -30,8 +32,20 @@ import {
 	type WriteStatus,
 	Plane,
 	Piece,
+	createKitFileObjectUrl,
 	executeKitCommand,
+	fetchReadableKitFileBlob,
+	getExistingKitFileProvider,
+	getKitFileProvider,
+	getKitFileStoragePath,
+	getOrCreateKitFileState,
+	getReadableKitFileUrl,
 	getStoredKitFileUrls,
+	isBrowserReadableFileUrl,
+	type KitFileState,
+	type KitFolderAdapter,
+	type KitJsonFileAdapter,
+	type KitBinaryStore,
 	type KitStoreExecuteResult,
 	type KitStoreWireBackboneConfig,
 	type KitStoreWireBackboneStatus,
@@ -42,6 +56,8 @@ import {
 // #endregion ⚛️Imports
 
 export type {
+	KitFileState,
+	KitBinaryStore,
 	KitStoreExecuteResult,
 	KitStoreWireBackboneConfig,
 	KitStoreWireBackboneStatus,
@@ -125,9 +141,24 @@ export type KitRuntimeContextValue = {
 	canWrite: boolean;
 	/** Active kit id: {@link KitProvider} `kitId` when set, otherwise `snapshot.kit.id`. */
 	kitId?: string;
+	/** Optional backbone for persistence hints when not using {@link KitRegistryProvider}. */
+	providerBackbone?: KitProviderBackbone;
 	kitClient: KitStoreClient | null;
 	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
 	setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
+};
+
+/** @emoji 📌Persistence metadata for an open kit in the registry. */
+export type KitPersistenceInfo = { kind: "temporary" | "file" | "folder" | "remote"; path?: string; url?: string };
+
+/** @emoji 📌Desktop / webview: inject folder/file/session kit store creation (shell owns I/O). */
+export type SketchpadKitStoreFactory = (kit: Kit) => KitStore | Promise<KitStore>;
+
+export type SketchpadKitKindAvailability = {
+	temporary: boolean;
+	file: boolean;
+	folder: boolean;
+	remote: boolean;
 };
 
 // #endregion ⚛️Types
@@ -406,7 +437,7 @@ function findLiveEntity(kit: KitImpl, typeName: string, id?: string): any {
 	if (typeName === "Connection") return findLiveConnection(kit, id)?.connection;
 	if (typeName === "Type") return kit.findType(id);
 	if (typeName === "Design") return kit.findDesign(id);
-	if (typeName === "Port") return kit.ports?.find((entry) => entry.id === id);
+	if (typeName === "Port") return getKitPorts(kit).find((entry) => entry.id === id);
 	if (typeName === "Quality") return kit.qualities?.find((entry) => entry.id === id);
 	if (typeName === "File") return kit.files?.find((entry) => entry.id === id);
 	if (typeName === "Folder") return kit.folders?.find((entry) => entry.id === id);
@@ -739,6 +770,24 @@ async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined
 	});
 }
 
+/** @emoji 📌Derives file/folder/remote/temporary from backbone or store constructor. */
+function inferPersistenceFromInit(init: { backbone?: KitProviderBackbone; store?: KitStore }): KitPersistenceInfo {
+	const b = init.backbone;
+	if (b && "kind" in b) {
+		if (b.kind === "memory" || b.kind === undefined) return { kind: "temporary" };
+		if (b.kind === "dev") return { kind: "file", path: b.filePath };
+		if (b.kind === "local") return { kind: "folder", path: b.folderPath };
+		if (b.kind === "remote") return { kind: "remote", url: b.serverUrl };
+	}
+	if (init.store) {
+		const n = String((init.store as any).constructor?.name ?? "");
+		if (n === "FolderKitStore") return { kind: "folder" };
+		if (n === "JsonFileKitStore") return { kind: "file" };
+		if (n.includes("Session") || n.includes("Remote")) return { kind: "remote" };
+	}
+	return { kind: "temporary" };
+}
+
 // #endregion ⚛️Utilities
 
 // #region ⚛️Context
@@ -752,10 +801,23 @@ export type KitRegistryEntry = {
 	store: KitStore;
 	kitClient: KitStoreClient;
 	refs: number;
+	/** @emoji 📌How this kit is persisted; derived at {@link KitRegistryValue.open} time. */
+	persistence: KitPersistenceInfo;
 };
 
 export type KitRegistryValue = {
+	activeKitId: string | undefined;
+	setActiveKit: (id: string | undefined) => void;
+	/** @emoji 📌Open or bump refcount for a kit. */
 	open: (id: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore; kitClient?: KitStoreClient }) => Promise<void>;
+	/** @emoji 📌In-memory kit; returns new id. */
+	openTemporary: (initialKit?: KitLike) => Promise<string>;
+	/** @emoji 📌Json-file store from adapter. */
+	openJsonFile: (kitId: string, adapter: KitJsonFileAdapter) => Promise<void>;
+	/** @emoji 📌Folder store from adapter. */
+	openFolder: (kitId: string, adapter: KitFolderAdapter, initialKit?: any) => Promise<void>;
+	/** @emoji 📌Remote / session store. */
+	openRemote: (kitId: string, config: RemoteBackboneConfig) => Promise<void>;
 	close: (id: string) => void;
 	get: (id: string) => KitRegistryEntry | undefined;
 	list: () => string[];
@@ -767,77 +829,130 @@ type RegistryRow = {
 	kitClient: KitStoreClient;
 	refs: number;
 	unsub: () => void;
+	persistence: KitPersistenceInfo;
 };
 
 const KitRegistryContext = React.createContext<KitRegistryValue | null>(null);
+
+/** @internal For {@link SketchpadStore} and other non-hook callers. Cleared on {@link KitRegistryProvider} unmount. */
+let _semioKitRegistryBridge: KitRegistryValue | null = null;
+export function getKitRegistryBridge(): KitRegistryValue | null {
+	return _semioKitRegistryBridge;
+}
 
 export function KitRegistryProvider({ children }: { children: ReactNode }): React.ReactElement {
 	const rowsRef = React.useRef(new Map<string, RegistryRow>());
 	const loadingRef = React.useRef(new Set<string>());
 	const errRef = React.useRef(new Map<string, Error>());
 	const [, bump] = React.useReducer((x: number) => x + 1, 0);
+	const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
+
+	const open = React.useCallback(
+		async (kitId: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore; kitClient?: KitStoreClient }) => {
+			const cur = rowsRef.current.get(kitId);
+			if (cur) {
+				cur.refs += 1;
+				bump();
+				return;
+			}
+			loadingRef.current.add(kitId);
+			errRef.current.delete(kitId);
+			bump();
+			try {
+				const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
+				const persistence = init.store
+					? inferPersistenceFromInit({ backbone: init.backbone, store: init.store })
+					: inferPersistenceFromInit({ backbone: init.backbone, store });
+				const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
+				const unsub = kitClient.subscribe(() => {
+					try {
+						const incoming = kitClient.getDto();
+						const curJson = store.getSnapshot().kit.toJSON();
+						if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
+						store.replace(asKitInstance(incoming));
+					} catch {
+						store.replace(asKitInstance(kitClient.getDto()));
+					}
+				});
+				rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
+			} catch (e) {
+				errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
+			} finally {
+				loadingRef.current.delete(kitId);
+				bump();
+			}
+		},
+		[bump],
+	);
+
+	const close = React.useCallback(
+		(kitId: string) => {
+			const row = rowsRef.current.get(kitId);
+			if (!row) return;
+			row.refs -= 1;
+			if (row.refs <= 0) {
+				row.unsub();
+				row.kitClient.dispose();
+				rowsRef.current.delete(kitId);
+				setActiveKitId((cur) => (cur === kitId ? undefined : cur));
+			}
+			bump();
+		},
+		[bump],
+	);
 
 	const value = React.useMemo<KitRegistryValue>(
 		() => ({
-			async open(id, init) {
-				const cur = rowsRef.current.get(id);
-				if (cur) {
-					cur.refs += 1;
-					bump();
-					return;
-				}
-				loadingRef.current.add(id);
-				errRef.current.delete(id);
-				bump();
-				try {
-					const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
-					const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
-					const unsub = kitClient.subscribe(() => {
-						try {
-							const incoming = kitClient.getDto();
-							const curJson = store.getSnapshot().kit.toJSON();
-							if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
-							store.replace(asKitInstance(incoming));
-						} catch {
-							store.replace(asKitInstance(kitClient.getDto()));
-						}
-					});
-					rowsRef.current.set(id, { store, kitClient, refs: 1, unsub });
-				} catch (e) {
-					errRef.current.set(id, e instanceof Error ? e : new Error(String(e)));
-				} finally {
-					loadingRef.current.delete(id);
-					bump();
-				}
+			get activeKitId() {
+				return activeKitId;
 			},
-			close(id) {
-				const row = rowsRef.current.get(id);
-				if (!row) return;
-				row.refs -= 1;
-				if (row.refs <= 0) {
-					row.unsub();
-					row.kitClient.dispose();
-					rowsRef.current.delete(id);
-				}
-				bump();
+			setActiveKit: (i) => {
+				setActiveKitId(i);
 			},
-			get(id) {
-				const row = rowsRef.current.get(id);
+			open,
+			async openTemporary(initialKit) {
+				const k = id();
+				await open(k, { backbone: { kind: "memory", initialKit }, initialKit });
+				return k;
+			},
+			async openJsonFile(kitId, adapter) {
+				const store = await createJsonFileKitStore(adapter);
+				const filePath = String((adapter as any).filePath ?? (adapter as any).path ?? "browser-adapter");
+				await open(kitId, { store, backbone: { kind: "dev", filePath } });
+			},
+			async openFolder(kitId, adapter, initialKit) {
+				const store = await createFolderKitStore(adapter, initialKit);
+				const folderPath = String((adapter as any).folderPath ?? (adapter as any).path ?? ".");
+				await open(kitId, { store, backbone: { kind: "local", folderPath } });
+			},
+			async openRemote(kitId, config) {
+				await open(kitId, { backbone: config });
+			},
+			close,
+			get(kitId) {
+				const row = rowsRef.current.get(kitId);
 				if (!row) return undefined;
-				return { store: row.store, kitClient: row.kitClient, refs: row.refs };
+				return { store: row.store, kitClient: row.kitClient, refs: row.refs, persistence: row.persistence };
 			},
 			list() {
 				return Array.from(rowsRef.current.keys());
 			},
-			status(id) {
-				if (loadingRef.current.has(id)) return "loading";
-				if (errRef.current.has(id)) return "error";
-				if (rowsRef.current.has(id)) return "ready";
+			status(kitId) {
+				if (loadingRef.current.has(kitId)) return "loading";
+				if (errRef.current.has(kitId)) return "error";
+				if (rowsRef.current.has(kitId)) return "ready";
 				return "idle";
 			},
 		}),
-		[],
+		[activeKitId, open, close, bump],
 	);
+
+	_semioKitRegistryBridge = value;
+	React.useLayoutEffect(() => {
+		return () => {
+			_semioKitRegistryBridge = null;
+		};
+	}, []);
 
 	return React.createElement(KitRegistryContext.Provider, { value }, children);
 }
@@ -1051,10 +1166,11 @@ export function KitProvider({
 		pushSetRejection,
 		canWrite: !snapshot.sync.readonly,
 		kitId: activeKitId,
+		providerBackbone: backbone,
 		kitClient,
 		setFieldValue,
 		setObjectValue,
-	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, kitClient, setFieldValue, setObjectValue]);
+	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, setFieldValue, setObjectValue]);
 
 	return React.createElement(KitRuntimeContext.Provider, { value }, children);
 }
@@ -3148,7 +3264,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Sche
 		if (!design) return [];
 		const designs = kit.designs ?? [];
 		const types = kit.types ?? [];
-		const ports = kit.ports ?? [];
+		const ports = getKitPorts(kit);
 		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).types;
 	}, [runtime.state.kit, designId, pieceIds]);
 	return [value, noopAsyncSet, metaStatus] as const;
@@ -3164,7 +3280,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Sc
 		if (!design) return [];
 		const designs = kit.designs ?? [];
 		const types = kit.types ?? [];
-		const ports = kit.ports ?? [];
+		const ports = getKitPorts(kit);
 		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).designs;
 	}, [runtime.state.kit, designId, pieceIds]);
 	return [value, noopAsyncSet, metaStatus] as const;
@@ -3215,6 +3331,290 @@ export function useKitStoredFileUrls(): Map<string, string> {
 	}, [kitStore]);
 	return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
+
+/** @emoji 📌Alias for {@link useKitStoredFileUrls} (sketchpad compatibility). */
+export const useFileUrls = useKitStoredFileUrls;
+
+/**
+ * @emoji 📌Readable URL for a kit file (provider, embedded, or remote) — thin wrapper over `@semio/js` kit file helpers.
+ */
+export function useKitFileUrl(fileId: string | undefined): SchemaHookTriad<string | null> {
+	const [kitStore] = useKitStore();
+	const subscribe = React.useCallback(
+		(callback: () => void) => {
+			if (!kitStore) return () => {};
+			return kitStore.subscribe(callback);
+		},
+		[kitStore],
+	);
+	const getSnapshot = React.useCallback(() => {
+		if (!kitStore || !fileId) return null;
+		const kit = kitStore.getSnapshot().kit;
+		const fileState = getOrCreateKitFileState(kitStore);
+		const file = kit.files?.find((f: { id: string }) => f.id === fileId);
+		if (!file) return null;
+		const readableUrl = getReadableKitFileUrl(fileState, file);
+		if (readableUrl) return readableUrl;
+		const provider = getExistingKitFileProvider(kitStore);
+		if (!provider) {
+			return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
+		}
+		const storagePath = getKitFileStoragePath(kit, file);
+		const providerUrl = provider.getUrl(kit.id, file.id, storagePath);
+		if (!providerUrl) {
+			return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
+		}
+		fileState.providerUrls.set(fileId, providerUrl);
+		if (isBrowserReadableFileUrl(providerUrl)) return providerUrl;
+		return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
+	}, [kitStore, fileId]);
+	const url = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+	return [url, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
+}
+
+/**
+ * @emoji 📌Resolves a blob: / object URL for a file (IndexedDB, binary store, provider, or fetch).
+ */
+export function useKitFileBlobUrl(fileId: string | undefined): {
+	url: string | null;
+	loading: boolean;
+	error?: SetError;
+	refresh: () => Promise<void>;
+} {
+	const [kitStore] = useKitStore();
+	const [url, setUrl] = React.useState<string | null>(null);
+	const [loading, setLoading] = React.useState(false);
+	const [error, setError] = React.useState<SetError | undefined>(undefined);
+	const run = React.useCallback(async () => {
+		if (!kitStore || !fileId) {
+			setUrl(null);
+			return;
+		}
+		setLoading(true);
+		setError(undefined);
+		try {
+			const fileState = getOrCreateKitFileState(kitStore);
+			const cached = fileState.objectUrls.get(fileId);
+			if (cached) {
+				setUrl(cached);
+				return;
+			}
+			const pending = fileState.pendingBlobDownloads.get(fileId);
+			if (pending) {
+				const u = await pending;
+				setUrl(u);
+				return;
+			}
+			const p = (async () => {
+				const kit = kitStore.getSnapshot().kit;
+				const file = kit.files?.find((f: { id: string }) => f.id === fileId);
+				if (!file) return null;
+				const cachedBlob = fileState.blobs.get(fileId);
+				if (cachedBlob) {
+					return createKitFileObjectUrl(kitStore, fileId, cachedBlob);
+				}
+				const binary = kitStore as KitBinaryStore;
+				if (typeof binary.readFile === "function") {
+					const storagePath = getKitFileStoragePath(kit, file);
+					const blob = await binary.readFile(storagePath);
+					if (blob) {
+						fileState.blobs.set(fileId, blob);
+						return createKitFileObjectUrl(kitStore, fileId, blob);
+					}
+				}
+				const provider = await getKitFileProvider(kitStore, kit.id);
+				if (provider) {
+					const storagePath = getKitFileStoragePath(kit, file);
+					const blob = await provider.download(kit.id, file.id, storagePath);
+					fileState.blobs.set(fileId, blob);
+					const providerUrl = provider.getUrl(kit.id, file.id, storagePath);
+					if (providerUrl) fileState.providerUrls.set(fileId, providerUrl);
+					return createKitFileObjectUrl(kitStore, fileId, blob);
+				}
+				const readableUrl = getReadableKitFileUrl(fileState, file);
+				if (readableUrl) {
+					const blob = await fetchReadableKitFileBlob(readableUrl);
+					if (blob) {
+						fileState.blobs.set(fileId, blob);
+						return createKitFileObjectUrl(kitStore, fileId, blob);
+					}
+				}
+				return null;
+			})();
+			fileState.pendingBlobDownloads.set(fileId, p);
+			const resolved = await p;
+			fileState.pendingBlobDownloads.delete(fileId);
+			setUrl(resolved);
+		} catch (e) {
+			setError({ kind: "Internal" as const, message: String(e) });
+			setUrl(null);
+		} finally {
+			setLoading(false);
+		}
+	}, [kitStore, fileId]);
+	React.useEffect(() => {
+		void run();
+	}, [run]);
+	React.useEffect(() => {
+		if (!kitStore) return () => {};
+		return kitStore.subscribe(() => {
+			void run();
+		});
+	}, [kitStore, run]);
+	return { url, loading, error, refresh: run };
+}
+
+/**
+ * @emoji 📌Embeds a dropped blob as data URL on the kit file record (`JsonFileKitStore` / compatible).
+ */
+export function useEmbedKitFile(): { run: (fileId: string, blob: Blob) => Promise<SetResult>; status: WriteStatus } {
+	const [kitStore] = useKitStore();
+	const [pending, setPending] = React.useState(0);
+	const run = React.useCallback(
+		async (fileId: string, blob: Blob) => {
+			if (!kitStore) return { ok: false, error: { kind: "NotFound" as const, message: "no kit store" } };
+			const embed = (kitStore as any).embedFileBlob;
+			if (typeof embed !== "function") {
+				return { ok: false, error: { kind: "NotSupported" as const, message: "embedFileBlob" } };
+			}
+			setPending((n) => n + 1);
+			try {
+				await embed.call(kitStore, fileId, blob);
+				return { ok: true } as const;
+			} catch (e) {
+				return { ok: false, error: { kind: "Internal" as const, message: String(e) } };
+			} finally {
+				setPending((n) => n - 1);
+			}
+		},
+		[kitStore],
+	);
+	const st: WriteStatus = pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+	return { run, status: st };
+}
+
+/**
+ * @emoji 📌Binary sidecar I/O on folder-backed or compatible stores.
+ */
+export function useKitBinary(): {
+	read: (path: string) => Promise<Blob | null>;
+	write: (path: string, blob: Blob) => Promise<void>;
+	delete: (path: string) => Promise<void>;
+	mkdir: (path: string) => Promise<void>;
+	move: (from: string, to: string) => Promise<void>;
+} {
+	const [kitStore] = useKitStore();
+	return React.useMemo(() => {
+		const bs = kitStore as KitBinaryStore;
+		if (!kitStore) {
+			return {
+				read: async () => null,
+				write: async () => {},
+				delete: async () => {},
+				mkdir: async () => {},
+				move: async () => {},
+			};
+		}
+		return {
+			read: (path: string) => (typeof bs.readFile === "function" ? bs.readFile(path) : Promise.resolve(null)),
+			write: (path: string, blob: Blob) => (typeof bs.writeFile === "function" ? bs.writeFile(path, blob) : Promise.resolve()),
+			delete: (path: string) => (typeof bs.deleteFile === "function" ? bs.deleteFile(path) : Promise.resolve()),
+			mkdir: (path: string) => (typeof bs.createDirectory === "function" ? bs.createDirectory(path) : Promise.resolve()),
+			move: (from: string, to: string) => (typeof bs.moveEntry === "function" ? bs.moveEntry(from, to) : Promise.resolve()),
+		};
+	}, [kitStore]);
+}
+
+/**
+ * @emoji 📌Live `KitFileState` (provider URLs, blobs, object URLs) for the current `KitStore`.
+ */
+export function useKitFileState(): SchemaHookTriad<KitFileState> {
+	const [kitStore] = useKitStore();
+	const subscribe = React.useCallback(
+		(cb: () => void) => {
+			if (!kitStore) return () => {};
+			return kitStore.subscribe(cb);
+		},
+		[kitStore],
+	);
+	const snap = React.useCallback(() => {
+		if (!kitStore) {
+			return null as unknown as KitFileState;
+		}
+		return getOrCreateKitFileState(kitStore);
+	}, [kitStore]);
+	const state = React.useSyncExternalStore(subscribe, snap, snap);
+	return [state, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
+}
+
+/**
+ * @emoji 📌File / folder / remote / temporary kind for the current kit (registry or backbone).
+ */
+export function useKitPersistenceKind(): SchemaHookTriad<KitPersistenceInfo["kind"]> {
+	const registry = useKitRegistrySafe();
+	const activeFromRegistry = registry?.activeKitId;
+	const fromKit = useActiveKitId();
+	const active = activeFromRegistry ?? fromKit;
+	const runtime = useKitRuntimeSafe();
+	const pkind = React.useMemo(() => {
+		if (registry && active) {
+			const ent = registry.get(active);
+			if (ent) return ent.persistence.kind;
+		}
+		if (runtime?.providerBackbone) {
+			return inferPersistenceFromInit({ backbone: runtime.providerBackbone, store: runtime.store }).kind;
+		}
+		if (runtime?.store) {
+			return inferPersistenceFromInit({ store: runtime.store }).kind;
+		}
+		return "temporary" as const;
+	}, [registry, active, runtime]);
+	return [pkind, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
+}
+
+/**
+ * @emoji 📌Path/url metadata for the current kit’s persistence.
+ */
+export function useKitPersistenceSource(): SchemaHookTriad<KitPersistenceInfo | undefined> {
+	const registry = useKitRegistrySafe();
+	const active = registry?.activeKitId ?? useActiveKitId();
+	const runtime = useKitRuntimeSafe();
+	const v = React.useMemo(() => {
+		if (registry && active) {
+			return registry.get(active)?.persistence;
+		}
+		if (runtime?.providerBackbone) {
+			return inferPersistenceFromInit({ backbone: runtime.providerBackbone, store: runtime.store });
+		}
+		if (runtime?.store) {
+			return inferPersistenceFromInit({ store: runtime.store });
+		}
+		return { kind: "temporary" as const };
+	}, [registry, active, runtime]);
+	return [v, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
+}
+
+/** @emoji 📌Listed kit ids in the registry (empty if no provider). */
+export function useOpenKitGuids(): string[] {
+	const r = useKitRegistrySafe();
+	if (!r) return [];
+	return r.list();
+}
+
+/** @emoji 📌Active kit: registry selection first, else current {@link KitProvider} id. */
+export function useActiveKitGuid(): string | undefined {
+	const r = useKitRegistrySafe();
+	const fromProvider = useActiveKitId();
+	return r?.activeKitId ?? fromProvider;
+}
+
+/** @emoji 📌Alias hooks for explicit "by id" call sites. */
+export const useAuthorById = useAuthor;
+export const useQualityById = useQuality;
+export const useTypeById = useType;
+export const useConnectionById = useConnection;
+export const usePieceById = usePiece;
+export const useDesignById = useDesign;
 
 /**
  * `executeKitCommand` bundle with a fixed `getOrigin` (kit browser / shell).

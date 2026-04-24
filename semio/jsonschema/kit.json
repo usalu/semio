@@ -1206,13 +1206,6 @@
             "title": "Families",
             "type": "array"
         },
-        "ports": {
-            "items": {
-                "$ref": "#/$defs/Port"
-            },
-            "title": "Ports",
-            "type": "array"
-        },
         "folders": {
             "items": {
                 "$ref": "#/$defs/Folder"

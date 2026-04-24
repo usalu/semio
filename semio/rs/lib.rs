@@ -279,7 +279,7 @@ pub mod change_command {
             design_id: DesignIdDto,
             commands: Vec<ChangeDesignCommand>,
         },
-        /// Ports attached directly to the kit (not under a [`FamilyStore`]).
+        /// Flattened port index for family-owned ports.
         ChangeKitPortCommands {
             port_id: PortIdDto,
             commands: Vec<ChangePortCommand>,
@@ -1398,7 +1398,7 @@ pub mod change_command {
                     {
                         let pr = pref.read().map_err(|_| SemioError::LockPoisoned("port"))?;
                         if pr.parent_family.upgrade().is_some() {
-                            return Err(SemioError::InvalidOperation("ChangeKitPortCommands applies only to kit-level ports".into()));
+                            return Err(SemioError::InvalidOperation("ChangeKitPortCommands is invalid because ports must belong to a family".into()));
                         }
                     }
                     let mut inv = Vec::new();
@@ -14625,7 +14625,7 @@ pub mod kit_graph {
         pub qualities: Vec<QualityStoreRef>,
         pub props: Vec<PropStoreRef>,
         pub attributes: Vec<AttributeStoreRef>,
-        /// Ports attached directly to the kit (rare; most ports live on [`FamilyStore`].
+        /// Flattened port index for family-owned ports.
         pub ports: Vec<PortStoreRef>,
         pub families: Vec<FamilyStoreRef>,
         pub locations: Vec<LocationStoreRef>,
@@ -14780,7 +14780,7 @@ pub mod kit_graph {
     }
 
     impl KitFullDto {
-        /// Resolve a port id from kit-level list or from any nested `families[*].ports`.
+        /// Resolve a port id from nested `families[*].ports`.
         pub fn find_port_dto(&self, id: &Id) -> Option<&PortFullDto> {
             for p in &self.ports {
                 if &p.id == id {
@@ -16460,7 +16460,7 @@ pub mod kit_graph {
             }
         }
 
-        /// Resolve a port anywhere on the kit (kit-level list or nested under families).
+        /// Resolve a port anywhere on the kit through its families.
         pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
             for p in &self.ports {
                 if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
@@ -19256,7 +19256,7 @@ pub mod port {
             Ok(())
         }
 
-        /// Resolve [`PortIdDto`] list to weak refs using the kit’s global port table (families + kit-level ports).
+        /// Resolve [`PortIdDto`] list to weak refs using the kit’s family-owned port table.
         pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit_graph::KitGraph) {
             self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
         }

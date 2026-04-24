@@ -53,6 +53,7 @@ import {
   getDesignDiff,
   getExistingKitFileProvider,
   getIncludedDesigns,
+  getKitPorts,
   getKitFileProvider,
   getKitFileStoragePath,
   getOrCreateKitFileState,
@@ -98,6 +99,7 @@ import {
   Vector,
 } from "@semio/js";
 import {
+  getKitRegistryBridge,
   KitProvider,
   KitRegistryProvider,
   useActiveKitId,
@@ -118,6 +120,8 @@ import {
   useKitRegistrySafe,
   useKitRelease,
   useKitRuntimeSafe,
+  useKitFileBlobUrl,
+  useKitFileUrl,
   useMoveKitArtifactToFolder,
   useUpdateDesign,
   useUpdateType,
@@ -1935,8 +1939,6 @@ export interface ToolGroupProps {
 
 // FocusItem is re-exported from elements.tsx as UIFindItem.
 export type { UIFindItem as FocusItem } from "@semio/ui";
-export { QualityEntityStore as QualityStore };
-
 // #endregion ⚡Focus
 
 // #region 🎮Footer
@@ -6998,245 +7000,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 
 // #endregion 🖲️File Provider
 
-// #region 🔑Entity Store Wrappers
-// Compatibility wrappers for entity-level access backed by KitStore snapshots.
-
-export class DesignEntityStore {
-  constructor(
-    private kitStore: KitStore,
-    private designId: string,
-  ) {}
-  snapshot(): Design {
-    const kit = this.kitStore.getSnapshot().kit;
-    return kit.designs?.find((d) => d.id === this.designId) ?? ({ id: this.designId, pieces: [], connections: [] } as Design);
-  }
-}
-
-export class QualityEntityStore {
-  constructor(
-    private kitStore: KitStore,
-    private qualityId: string,
-  ) {}
-  snapshot(): Quality | undefined {
-    const kit = this.kitStore.getSnapshot().kit;
-    return kit.qualities?.find((q) => q.id === this.qualityId);
-  }
-}
-
-export class CollaborativeKitStore {
-  private _kitStore: KitStore;
-  constructor(kitStore: KitStore) {
-    this._kitStore = kitStore;
-  }
-  get store(): KitStore {
-    return this._kitStore;
-  }
-  get isLocallyPersisted(): boolean {
-    const kind = (this._kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
-    return kind === "file" || kind === "folder";
-  }
-  get isRemotelySynced(): boolean {
-    const kind = (this._kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
-    return kind === "remote";
-  }
-  get kitKind(): KitKind {
-    return ((this._kitStore as any).__semioKitPersistenceKind as KitKind | undefined) ?? "temporary";
-  }
-  snapshot(): Kit {
-    return this._kitStore.getSnapshot().kit;
-  }
-  design(id: string): DesignEntityStore {
-    return new DesignEntityStore(this._kitStore, id);
-  }
-  quality(id: string): QualityEntityStore {
-    return new QualityEntityStore(this._kitStore, id);
-  }
-  get fileUrls(): Map<string, string> {
-    return getStoredKitFileUrls(this._kitStore);
-  }
-  change(partial: Partial<Kit>): void {
-    const current = this._kitStore.getSnapshot().kit;
-    const diff: any = {};
-    for (const [key, value] of Object.entries(partial)) {
-      if (value !== (current as any)[key]) {
-        diff[key] = value;
-      }
-    }
-    this._kitStore.apply(diff);
-  }
-  apply(diff: any, meta?: any): void {
-    this._kitStore.apply(diff, meta);
-  }
-  // Forwards to JsonFileKitStore.embedFileBlob so uploadKitFileToProvider can
-  // embed dropped blobs without unwrapping the wrapper. No-op when the inner
-  // store does not implement embedding (folder/remote/temporary kits).
-  async embedFileBlob(fileId: string, blob: Blob): Promise<void> {
-    const inner = this._kitStore as { embedFileBlob?: (g: string, b: Blob) => Promise<void> };
-    if (typeof inner.embedFileBlob === "function") {
-      await inner.embedFileBlob(fileId, blob);
-    }
-  }
-  async readFile(path: string): Promise<Blob | null> {
-    const inner = this._kitStore as KitBinaryStore;
-    if (typeof inner.readFile !== "function") {
-      return null;
-    }
-    return inner.readFile(path);
-  }
-  async writeFile(path: string, blob: Blob): Promise<void> {
-    const inner = this._kitStore as KitBinaryStore;
-    if (typeof inner.writeFile !== "function") {
-      return;
-    }
-    await inner.writeFile(path, blob);
-  }
-  async deleteFile(path: string): Promise<void> {
-    const inner = this._kitStore as KitBinaryStore;
-    if (typeof inner.deleteFile !== "function") {
-      return;
-    }
-    await inner.deleteFile(path);
-  }
-  async createDirectory(path: string): Promise<void> {
-    const inner = this._kitStore as KitBinaryStore;
-    if (typeof inner.createDirectory !== "function") {
-      return;
-    }
-    await inner.createDirectory(path);
-  }
-  async moveEntry(fromPath: string, toPath: string): Promise<void> {
-    const inner = this._kitStore as KitBinaryStore;
-    if (typeof inner.moveEntry !== "function") {
-      return;
-    }
-    await inner.moveEntry(fromPath, toPath);
-  }
-  getFileUrl(id: string): string | null {
-    const kit = this._kitStore.getSnapshot().kit;
-    const fileState = getOrCreateKitFileState(this._kitStore);
-    const file = kit.files?.find((existingFile) => existingFile.id === id);
-    if (!file) {
-      return null;
-    }
-
-    const readableUrl = getReadableKitFileUrl(fileState, file);
-    if (readableUrl) {
-      return readableUrl;
-    }
-
-    const provider = getExistingKitFileProvider(this._kitStore);
-    if (!provider) {
-      return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
-    }
-
-    const storagePath = getKitFileStoragePath(kit, file);
-    const providerUrl = provider.getUrl(kit.id, file.id, storagePath);
-    if (!providerUrl) {
-      return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
-    }
-
-    fileState.providerUrls.set(id, providerUrl);
-    if (isBrowserReadableFileUrl(providerUrl)) {
-      return providerUrl;
-    }
-
-    return file.remote && isBrowserReadableFileUrl(file.remote) ? file.remote : null;
-  }
-  async getFileBlobUrl(id: string): Promise<string | null> {
-    const fileState = getOrCreateKitFileState(this._kitStore);
-    const cachedBlobUrl = fileState.objectUrls.get(id);
-    if (cachedBlobUrl) {
-      return cachedBlobUrl;
-    }
-
-    const pending = fileState.pendingBlobDownloads.get(id);
-    if (pending) {
-      return pending;
-    }
-
-    const downloadPromise = this._downloadFileBlobUrl(id, fileState);
-    fileState.pendingBlobDownloads.set(id, downloadPromise);
-    try {
-      return await downloadPromise;
-    } finally {
-      fileState.pendingBlobDownloads.delete(id);
-    }
-  }
-  private async _downloadFileBlobUrl(id: string, fileState: KitFileState): Promise<string | null> {
-    const kit = this._kitStore.getSnapshot().kit;
-
-    const cachedBlob = fileState.blobs.get(id);
-    if (cachedBlob) {
-      console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): using cached blob`);
-      return createKitFileObjectUrl(this._kitStore, id, cachedBlob);
-    }
-
-    const file = kit.files?.find((existingFile) => existingFile.id === id);
-    if (!file) {
-      console.warn(`[DEBUG] _downloadFileBlobUrl(${id}): file not found in kit`);
-      return null;
-    }
-
-    const storagePath = getKitFileStoragePath(kit, file);
-    const binaryStore = this._kitStore as KitBinaryStore;
-    if (typeof binaryStore.readFile === "function") {
-      try {
-        const blob = await binaryStore.readFile(storagePath);
-        if (blob) {
-          console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): loaded from binary store, size=${blob.size}`);
-          fileState.blobs.set(id, blob);
-          return createKitFileObjectUrl(this._kitStore, id, blob);
-        }
-      } catch (error) {
-        console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): binary store read failed:`, error);
-      }
-    }
-
-    const provider = await getKitFileProvider(this._kitStore, kit.id);
-    if (provider) {
-      try {
-        const blob = await provider.download(kit.id, file.id, storagePath);
-        console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): loaded from provider, size=${blob.size}`);
-        fileState.blobs.set(id, blob);
-        const providerUrl = provider.getUrl(kit.id, file.id, storagePath);
-        if (providerUrl) {
-          fileState.providerUrls.set(id, providerUrl);
-        }
-        return createKitFileObjectUrl(this._kitStore, id, blob);
-      } catch (error) {
-        console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): provider download failed:`, error);
-      }
-    } else {
-      console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): no provider available`);
-    }
-
-    const readableUrl = getReadableKitFileUrl(fileState, file);
-    if (readableUrl) {
-      console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): trying readable URL: ${readableUrl}`);
-      const blob = await fetchReadableKitFileBlob(readableUrl);
-      if (blob) {
-        console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): fetched from readable URL, size=${blob.size}`);
-        fileState.blobs.set(id, blob);
-        return createKitFileObjectUrl(this._kitStore, id, blob);
-      }
-    }
-
-    const fallbackUrl = this.getFileUrl(id);
-    console.debug(`[DEBUG] _downloadFileBlobUrl(${id}): all methods exhausted, fallback URL: ${fallbackUrl}`);
-    return fallbackUrl;
-  }
-  subscribe(listener: () => void): () => void {
-    return this._kitStore.subscribe(listener);
-  }
-  getSnapshot(): KitStoreSnapshot {
-    return this._kitStore.getSnapshot();
-  }
-  /** Kit command dispatch via {@link executeKitCommand} from `@semio/js`; used by tests and imperative callers. */
-  execute<T = KitCommandResult>(command: string, origin?: string, ...args: any[]): Promise<T> {
-    return executeKitCommand(this._kitStore, command, origin, ...args) as Promise<T>;
-  }
-}
-// #endregion 🔑Entity Store Wrappers
+// Kit file/url access: use @semio/react `useKitFileUrl`, `useKitFileBlobUrl`, `useEmbedKitFile`, `useKitBinary`.
 
 type RootHostElement = HTMLElement & { __semioReactRoot__?: Root };
 
@@ -7255,14 +7019,7 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
   }
 };
 
-export type SketchpadKitStoreFactory = (kit: Kit) => KitStore | Promise<KitStore>;
-
-export interface SketchpadKitKindAvailability {
-  temporary: boolean;
-  file: boolean;
-  folder: boolean;
-  remote: boolean;
-}
+export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 
 // #region 🥈Entity Hooks
 // Storage-agnostic entity scope providers and hooks.
@@ -7614,34 +7371,19 @@ type KitScope = { id: string };
 export const KitScopeContext = createContext<KitScope | null>(null);
 
 /**
- * Registers the sketchpad kit's inner {@link KitStore} with {@link KitRegistryProvider}
- * and wraps children with {@link KitProvider} so `@semio/react` command/query hooks work.
+ * Wraps children with {@link KitProvider} so `@semio/react` command/query hooks work.
+ * The kit is already registered in {@link KitRegistryProvider} from {@link SketchpadStore.registerKitStore}.
  */
 function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode }): React.ReactElement {
   const { kitId, children } = props;
   const sketchpadStore = useSketchpadStore();
   const registry = useKitRegistrySafe();
-  const [, bump] = useReducer((x: number) => x + 1, 0);
-
-  useEffect(() => {
-    if (!registry || !sketchpadStore.hasKit(kitId)) return;
-    const innerStore = sketchpadStore.kit(kitId).store;
-    let cancelled = false;
-    void (async () => {
-      await registry.open(kitId, { store: innerStore });
-      if (!cancelled) bump();
-    })();
-    return () => {
-      cancelled = true;
-      registry.close(kitId);
-    };
-  }, [sketchpadStore, kitId, registry]);
 
   if (!sketchpadStore.hasKit(kitId)) {
     return React.createElement(React.Fragment, null, children);
   }
 
-  const innerStore = sketchpadStore.kit(kitId).store;
+  const innerStore = sketchpadStore.kit(kitId);
   if (registry) {
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
@@ -7683,18 +7425,6 @@ function useSketchpadKitId(explicit?: Id): string | undefined {
   if (bridged?.id) return bridged.id;
   if (active != null && active !== "") return active;
   return undefined;
-}
-
-/**
- * {@link KitStore} from the nearest {@link KitProvider} / {@link useKitRuntimeSafe} when the active runtime kit matches.
- */
-function useKitStoreFromProvider(explicitKitId?: string): KitStore | null {
-  const runtime = useKitRuntimeSafe();
-  if (!runtime) return null;
-  const effectiveKitId = useSketchpadKitId(explicitKitId as Id);
-  if (!effectiveKitId) return null;
-  if (runtime.kitId !== effectiveKitId) return null;
-  return runtime.store;
 }
 
 // #endregion ⏱️Kit
@@ -10583,7 +10313,7 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       const types = kit.types?.map((t: Type) => t.id);
       const designs = kit.designs?.map((d: Design) => d.id);
       const qualities = kit.qualities?.map((q: Quality) => q.name);
-      const ports = kit.ports?.map((p: Port) => p.id);
+      const ports = getKitPorts(kit).map((p: Port) => p.id);
       const files = kit.files?.map((f: SemioFile) => f.name);
       const folders = kit.folders?.map((f: Folder) => f.id);
       const authors = kit.authors?.map((a: Author) => a.name);
@@ -11795,7 +11525,7 @@ const KitCreateActions: FC = () => {
         break;
       }
       case "ports": {
-        const existingNames = (kit.ports || []).map((p: Port) => p.name);
+        const existingNames = getKitPorts(kit).map((p: Port) => p.name);
         const uniqueName = generateUniqueName(defaultPortName || "", existingNames);
         const newPort: Port = {
           id: id(),
@@ -12101,7 +11831,7 @@ const AppContent: FC = () => {
   const kitDesigns = useMemo(() => (kit?.designs ?? []).filter(Boolean), [kit?.designs]);
   const kitTypes = useMemo(() => (kit?.types ?? []).filter(Boolean), [kit?.types]);
   const kitQualities = useMemo(() => (kit?.qualities ?? []).filter(Boolean), [kit?.qualities]);
-  const kitPorts = useMemo(() => (kit?.ports ?? []).filter(Boolean), [kit?.ports]);
+  const kitPorts = useMemo(() => getKitPorts(kit).filter(Boolean), [kit?.families]);
   const kitFiles = useMemo(() => (kit?.files ?? []).filter(Boolean), [kit?.files]);
   const kitFolders = useMemo(() => (kit?.folders ?? []).filter(Boolean), [kit?.folders]);
   const kitAuthors = useMemo(() => (kit?.authors ?? []).filter(Boolean), [kit?.authors]);
@@ -13356,7 +13086,7 @@ const AppContent: FC = () => {
         break;
       }
       case "ports": {
-        const existingNames = (kit.ports || []).map((i: Port) => i.name);
+        const existingNames = getKitPorts(kit).map((i: Port) => i.name);
         const uniqueName = generateUniqueName(defaultPortName || "", existingNames);
         const newPort: Port = {
           id: id(),
@@ -14475,7 +14205,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
         items = (kit.qualities ?? []).filter(Boolean).map((q) => ({ id: q.id, name: q.name, icon: q.icon }));
         break;
       case "port":
-        items = (kit.ports ?? []).filter(Boolean).map((i) => ({ id: i.id, name: i.name, icon: i.icon }));
+        items = getKitPorts(kit).filter(Boolean).map((i) => ({ id: i.id, name: i.name, icon: i.icon }));
         break;
       case "file":
         items = (kit.files ?? []).filter(Boolean).map((f) => ({ id: f.id, name: f.name, icon: getFileIcon(f.name), parentId: f.folder?.id }));
@@ -14597,7 +14327,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
     }
   }
 
-  const portGroups = createPortGroupMap(kit.ports ?? []);
+  const portGroups = createPortGroupMap(getKitPorts(kit));
   const groupToTypes = new Map<string, Set<string>>();
   for (const [portId, typeIds] of portToTypes) {
     const groupRoot = portGroups.get(portId) ?? portId;
@@ -14679,7 +14409,7 @@ const buildSelectionKit = (kit: Kit, selection: KitAppSelection): Kit => {
   }
   const types = (kit.types ?? []).filter((t) => allTypeIds.has(t.id));
   const designs = (kit.designs ?? []).filter((d) => allDesignIds.has(d.id));
-  const ports = (kit.ports ?? []).filter((p) => selectedPortIds.has(p.id));
+  const ports = getKitPorts(kit).filter((p) => selectedPortIds.has(p.id));
   const tags = (kit.tags ?? []).filter((t) => selectedTagIds.has(t.id));
   const files = (kit.files ?? []).filter((f) => selectedFileIds.has(f.id));
   const folders = (kit.folders ?? []).filter((f) => selectedFolderIds.has(f.id));
@@ -14852,7 +14582,7 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    (kit.ports ?? []).filter(Boolean).forEach((i) => {
+    getKitPorts(kit).filter(Boolean).forEach((i) => {
       if ((!searchLower || i.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("ports"))) {
         ids.add(i.id);
       }
@@ -18071,7 +17801,11 @@ export class SketchpadStore {
   private readonly remote: RemoteProviders | undefined;
   private readonly syncDoc: SyncDoc;
   private readonly syncSketchpad: SyncSketchpad;
-  private readonly kits: Map<string, KitStore>;
+  /**
+   * Kits not yet in {@link getKitRegistryBridge} (e.g. tests, or while {@link registerKitStore} is awaiting `open`).
+   * Normal path: registry is source of truth after `open` resolves; this map is cleared for that id.
+   */
+  private readonly headlessKitStores: Map<string, KitStore>;
   private readonly syncKits: SyncKitMetadatas;
   private homeStore?: HomeStoreInstance;
   private readonly syncKitApps: SyncKitApps;
@@ -18088,7 +17822,6 @@ export class SketchpadStore {
   private kitShallowsCache?: KitShallow[];
   private kitShallowsVersion: number = 0;
   private kitShallowsCacheVersion: number = -1;
-  private readonly collaborativeKitStoreCache: Map<string, CollaborativeKitStore> = new Map();
   private readonly kitCreatedSubscribers: Set<() => void>;
   private readonly kitDeletedSubscribers: Set<() => void>;
   private readonly kitAppCreatedSubscribers: Set<() => void>;
@@ -18132,7 +17865,7 @@ export class SketchpadStore {
     this.remoteKitStoreFactory = remoteKitStoreFactory;
     this.skipBrowserKitSnapshotPersistence = Boolean(skipBrowserKitSnapshotPersistence);
     this.syncDoc = createSyncDocFactory()();
-    this.kits = new Map();
+    this.headlessKitStores = new Map();
     this.kitApps = new Map();
     this.typeApps = new Map();
     this.qualityApps = new Map();
@@ -18276,9 +18009,11 @@ export class SketchpadStore {
     if (this.injectedKitStore) {
       const kitSnapshot = this.injectedKitStore.getSnapshot();
       const kit = kitSnapshot.kit;
-      if (!this.kits.has(kit.id)) {
+      if (!this.hasKit(kit.id)) {
         const inferredKitKind = this.inferKitPersistenceKind(this.injectedKitStore);
-        this.registerKitStore(this.injectedKitStore, inferredKitKind);
+        void (async () => {
+          await this.registerKitStore(this.injectedKitStore!, inferredKitKind);
+        })();
       }
     }
   }
@@ -18306,7 +18041,15 @@ export class SketchpadStore {
       clearSketchpadKitSnapshotsInBrowserStorage(this.id);
       return;
     }
-    const persistedKits: InitialStateKit[] = Array.from(this.kits.values()).map((kitStore) => {
+    const reg = getKitRegistryBridge();
+    const kitIds = new Set<string>(this.headlessKitStores.keys());
+    if (reg) {
+      for (const k of reg.list()) {
+        kitIds.add(k);
+      }
+    }
+    const persistedKits: InitialStateKit[] = Array.from(kitIds, (kid) => {
+      const kitStore = this.kitStore(kid);
       const kit = kitStore.getSnapshot().kit;
       const persistenceKind = (kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
       return {
@@ -18427,9 +18170,9 @@ export class SketchpadStore {
     return createMemoryFileProvider();
   };
 
-  private registerKitStore = (kitStore: KitStore, kind: KitKind, source?: InitialStateKit["source"]) => {
+  private registerKitStore = async (kitStore: KitStore, kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
     const registeredKit = kitStore.getSnapshot().kit;
-    if (this.kits.has(registeredKit.id)) {
+    if (this.hasKit(registeredKit.id)) {
       return;
     }
     (kitStore as any).__semioKitPersistenceKind = kind;
@@ -18437,7 +18180,17 @@ export class SketchpadStore {
       (kitStore as any).__semioKitPersistenceSource = source;
     }
     getOrCreateKitFileState(kitStore).providerFactory = this.resolveKitFileProviderFactory(kind);
-    this.kits.set(registeredKit.id, kitStore);
+    const kid = registeredKit.id;
+    this.headlessKitStores.set(kid, kitStore);
+    const reg = getKitRegistryBridge();
+    if (reg) {
+      try {
+        await reg.open(kid, { store: kitStore });
+        this.headlessKitStores.delete(kid);
+      } catch (e) {
+        console.error(`[sketchpad] KitRegistry open failed for ${kid}; keeping local handle`, e);
+      }
+    }
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleAutoSave = () => {
@@ -18543,7 +18296,7 @@ export class SketchpadStore {
 
   createKit = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<Id> => {
     const createdKitStore = await this.createBackedKitStore(kit, kind, source, interactive);
-    this.registerKitStore(createdKitStore.kitStore, createdKitStore.kind, createdKitStore.source);
+    await this.registerKitStore(createdKitStore.kitStore, createdKitStore.kind, createdKitStore.source);
     return createdKitStore.kitStore.getSnapshot().kit.id;
   };
 
@@ -18554,14 +18307,14 @@ export class SketchpadStore {
         const factory = this.folderKitStoreFactory;
         if (!factory) throw new Error("Folder kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        this.registerKitStore(kitStore, "folder", this.getKitPersistenceSource(kitStore));
+        await this.registerKitStore(kitStore, "folder", this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.id;
       }
       case "file": {
         const factory = this.fileKitStoreFactory;
         if (!factory) throw new Error("File kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        this.registerKitStore(kitStore, "file", this.getKitPersistenceSource(kitStore));
+        await this.registerKitStore(kitStore, "file", this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.id;
       }
       case "remote": {
@@ -18569,7 +18322,7 @@ export class SketchpadStore {
         if (!factory) throw new Error("Remote kit store not available in this environment");
         const remoteKit: Kit = { ...dummyKit, name: serverUrl ?? "" };
         const kitStore = await factory(remoteKit);
-        this.registerKitStore(kitStore, "remote", this.getKitPersistenceSource(kitStore) ?? { kind: "remote", url: serverUrl ?? "" });
+        await this.registerKitStore(kitStore, "remote", this.getKitPersistenceSource(kitStore) ?? { kind: "remote", url: serverUrl ?? "" });
         return kitStore.getSnapshot().kit.id;
       }
       default:
@@ -18604,7 +18357,12 @@ export class SketchpadStore {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               };
-              const loadKitStore = this.kits.get(kitId);
+              let loadKitStore: KitStore;
+              try {
+                loadKitStore = this.kitStore(kitId);
+              } catch {
+                return;
+              }
               if (loadKitStore) await executeKitCommand(loadKitStore, "semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
             }),
           );
@@ -18693,20 +18451,20 @@ export class SketchpadStore {
   }
 
   deleteKit = (id: Id) => {
-    const kitStore = this.kits.get(id);
-    if (kitStore) {
-      this.syncDoc.transact(() => {
-        const index = this.syncKits.toArray().findIndex((kitMeta) => kitMeta.get("id") === id);
-        if (index !== -1) {
-          this.syncKits.delete(index, 1);
-        }
-      });
-      this.kits.delete(id);
-      this.collaborativeKitStoreCache.delete(id);
-      this.kitShallowsVersion++;
-      this.schedulePersistKitsToStorage();
-      this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
+    if (!this.hasKit(id)) {
+      return;
     }
+    this.syncDoc.transact(() => {
+      const index = this.syncKits.toArray().findIndex((kitMeta) => kitMeta.get("id") === id);
+      if (index !== -1) {
+        this.syncKits.delete(index, 1);
+      }
+    });
+    this.headlessKitStores.delete(id);
+    getKitRegistryBridge()?.close(id);
+    this.kitShallowsVersion++;
+    this.schedulePersistKitsToStorage();
+    this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
   };
 
   deleteKitApp = (kit: Id) => {
@@ -18844,8 +18602,8 @@ export class SketchpadStore {
     if (command === "semio.sketchpad.importKit") {
       const Id = rest[0] as Id;
       const url = rest[1] as string;
-      const kitStore = this.kits.get(Id);
-      if (kitStore) {
+      if (this.hasKit(Id)) {
+        const kitStore = this.kitStore(Id);
         await executeKitCommand(kitStore, "semio.kit.import", origin, url);
       }
       return {} as T;
@@ -18886,8 +18644,15 @@ export class SketchpadStore {
         if (activeKitId && this.hasKit(activeKitId)) {
           serializedState = this.kit(activeKitId).getSnapshot().kit;
         } else {
-          const firstKit = this.kits.values().next();
-          serializedState = firstKit.done ? {} : firstKit.value.getSnapshot().kit;
+          const reg = getKitRegistryBridge();
+          const kitIds = new Set<string>(this.headlessKitStores.keys());
+          if (reg) {
+            for (const k of reg.list()) {
+              kitIds.add(k);
+            }
+          }
+          const firstId = kitIds.values().next().value as string | undefined;
+          serializedState = firstId ? this.kitStore(firstId).getSnapshot().kit : {};
         }
       }
       const stateJson = JSON.stringify(serializedState, null, 2);
@@ -18951,7 +18716,15 @@ export class SketchpadStore {
   dumpState(): CompleteState {
     const sketchpad = this.snapshot();
 
-    const kits = Array.from(this.kits.entries()).map(([id, kitStore]) => {
+    const reg = getKitRegistryBridge();
+    const kitIdSet = new Set<string>(this.headlessKitStores.keys());
+    if (reg) {
+      for (const k of reg.list()) {
+        kitIdSet.add(k);
+      }
+    }
+    const kits = Array.from(kitIdSet, (id) => {
+      const kitStore = this.kitStore(id);
       const persistenceKind = (kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
       return {
         id,
@@ -19001,7 +18774,13 @@ export class SketchpadStore {
 
   loadState(state: CompleteState): void {
     this.syncDoc.transact(() => {
-      this.kits.clear();
+      const reg = getKitRegistryBridge();
+      if (reg) {
+        for (const kid of [...reg.list()]) {
+          reg.close(kid);
+        }
+      }
+      this.headlessKitStores.clear();
       this.kitApps.clear();
       this.typeApps.clear();
       this.qualityApps.clear();
@@ -19086,35 +18865,42 @@ export class SketchpadStore {
   }
 
   hasKit(id: string): boolean {
-    return this.kits.has(id);
+    const reg = getKitRegistryBridge();
+    if (reg?.get(id)) {
+      return true;
+    }
+    return this.headlessKitStores.has(id);
   }
 
-  kit(id: string): CollaborativeKitStore {
-    const kitStore = this.kits.get(id);
-    if (!kitStore) {
-      throw new Error(`Kit with id ${id} not found`);
-    }
-    let cached = this.collaborativeKitStoreCache.get(id);
-    if (!cached || cached.store !== kitStore) {
-      cached = new CollaborativeKitStore(kitStore);
-      this.collaborativeKitStoreCache.set(id, cached);
-    }
-    return cached;
+  kit(id: string): KitStore {
+    return this.kitStore(id);
   }
 
   kitStore(id: string): KitStore {
-    const kitStore = this.kits.get(id);
-    if (!kitStore) {
-      throw new Error(`Kit with id ${id} not found`);
+    const reg = getKitRegistryBridge();
+    const fromReg = reg?.get(id)?.store;
+    if (fromReg) {
+      return fromReg;
     }
-    return kitStore;
+    const fromHead = this.headlessKitStores.get(id);
+    if (fromHead) {
+      return fromHead;
+    }
+    throw new Error(`Kit with id ${id} not found`);
   }
 
   kitShallows(): KitShallow[] {
     if (this.kitShallowsCache && this.kitShallowsCacheVersion === this.kitShallowsVersion) {
       return this.kitShallowsCache;
     }
-    this.kitShallowsCache = Array.from(this.kits.values()).map((k) => k.getSnapshot().kit as KitShallow);
+    const reg = getKitRegistryBridge();
+    const kitIds = new Set<string>(this.headlessKitStores.keys());
+    if (reg) {
+      for (const k of reg.list()) {
+        kitIds.add(k);
+      }
+    }
+    this.kitShallowsCache = Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallow);
     this.kitShallowsCacheVersion = this.kitShallowsVersion;
     return this.kitShallowsCache;
   }
@@ -19300,7 +19086,7 @@ export class SketchpadStore {
       const kitId = kitMetadata.get("id") as string;
       const kind = (kitMetadata.get("kind") as KitKind) ?? ((kitMetadata.get("local") as boolean) ? "file" : "temporary");
 
-      if (this.kits.has(kitId)) continue;
+      if (this.hasKit(kitId)) continue;
 
       if ((kind === "file" || kind === "folder") && this.persistenceFactory) {
         try {
@@ -19367,12 +19153,7 @@ export class SketchpadStore {
           persistence.destroy();
 
           const kitStore = new InMemoryKitStore(kit as Kit);
-          this.kits.set(kit.id as string, kitStore);
-          kitStore.subscribe(() => {
-            this.kitShallowsVersion++;
-          });
-          this.kitShallowsVersion++;
-          this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
+          await this.registerKitStore(kitStore, kind, undefined);
         } catch (error) {}
       } else {
         this.syncDoc.transact(() => {
@@ -19451,10 +19232,7 @@ function getDefaultSketchpadScopeId(): string {
 }
 // #endregion 🌧️Sketchpad Scope Id
 
-/**
- * React context provider initializing and scoping the sketchpad store and actor.
- **/
-export const SketchpadScopeProvider = (props: {
+type SketchpadScopeProviderProps = {
   id?: string;
   store?: SketchpadStore;
   kitStore?: KitStore;
@@ -19468,7 +19246,83 @@ export const SketchpadScopeProvider = (props: {
   initialState?: ExtendedInitialState;
   importKitUrls?: string[];
   children: React.ReactNode;
-}) => {
+};
+
+/**
+ * Mounts {@link SketchpadStore} only after {@link KitRegistryProvider} is active (see {@link getKitRegistryBridge}).
+ */
+const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId: string; hydratedInitialState: ExtendedInitialState | undefined; configsReady: boolean }> = (props) => {
+  const {
+    scopeId: id,
+    hydratedInitialState: initialState,
+    configsReady,
+    children,
+    importKitUrls,
+    store: storeProp,
+    remote,
+    persistenceFactory,
+    kitStore: kitStoreProp,
+    temporaryKitStoreFactory,
+    folderKitStoreFactory,
+    fileKitStoreFactory,
+    remoteKitStoreFactory,
+    desktop,
+  } = props;
+
+  if (!stores.has(id)) {
+    const store =
+      storeProp ??
+      new SketchpadStore(id, remote, initialState, persistenceFactory, kitStoreProp, temporaryKitStoreFactory, folderKitStoreFactory, fileKitStoreFactory, remoteKitStoreFactory, Boolean(desktop));
+    stores.set(id, store);
+
+    const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(initialState)) });
+    actor.start();
+    actors.set(id, actor);
+    store.setActor(actor);
+
+    if (typeof window !== "undefined") {
+      (window as any).__SEMIO_STORE__ = store;
+      (window as any).__SEMIO_ACTOR__ = actor;
+      (window as any).__piecesMetadata = piecesMetadata;
+    }
+  }
+
+  const actor = actors.get(id) ?? null;
+  const store = stores.get(id) ?? null;
+
+  useEffect(() => {
+    if (!configsReady || !store || !importKitUrls || importKitUrls.length === 0) return;
+
+    const doImportKits = async () => {
+      for (const url of importKitUrls) {
+        try {
+          const { kit } = await importKit(url);
+
+          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
+        } catch (error) {
+          console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
+        }
+      }
+    };
+
+    doImportKits();
+  }, [configsReady, importKitUrls, store]);
+
+  if (!actor || !store) {
+    return <SketchpadStartupFallback />;
+  }
+
+  return React.createElement(
+    SketchpadScopeContext.Provider,
+    { value: { id, remote: props.remote, desktop: props.desktop } },
+    React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? children : React.createElement(SketchpadStartupFallback)),
+  );
+};
+
+/**
+ * React context provider initializing and scoping the sketchpad store and actor.
+ **/
+export const SketchpadScopeProvider: FC<SketchpadScopeProviderProps> = (props) => {
   const id = useMemo(() => props.id || getDefaultSketchpadScopeId(), [props.id]);
   const [initialState, setInitialState] = useState<ExtendedInitialState | undefined>(props.initialState);
   const [persistedKitsReady, setPersistedKitsReady] = useState(false);
@@ -19513,53 +19367,19 @@ export const SketchpadScopeProvider = (props: {
     };
   }, [id, props.initialState, props.kitStore, props.desktop]);
 
-  if (persistedKitsReady && !stores.has(id)) {
-    const store =
-      props.store ??
-      new SketchpadStore(id, props?.remote, initialState, props?.persistenceFactory, props?.kitStore, props?.temporaryKitStoreFactory, props?.folderKitStoreFactory, props?.fileKitStoreFactory, props?.remoteKitStoreFactory, Boolean(props.desktop));
-    stores.set(id, store);
-
-    const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(initialState)) });
-    actor.start();
-    actors.set(id, actor);
-    store.setActor(actor);
-
-    if (typeof window !== "undefined") {
-      (window as any).__SEMIO_STORE__ = store;
-      (window as any).__SEMIO_ACTOR__ = actor;
-      (window as any).__piecesMetadata = piecesMetadata;
-    }
-  }
-
-  const actor = persistedKitsReady ? (actors.get(id) ?? null) : null;
-  const store = persistedKitsReady ? (stores.get(id) ?? null) : null;
-
-  useEffect(() => {
-    if (!configsReady || !store || !props.importKitUrls || props.importKitUrls.length === 0) return;
-
-    const doImportKits = async () => {
-      for (const url of props.importKitUrls!) {
-        try {
-          const { kit } = await importKit(url);
-
-          await store.execute("semio.sketchpad.createKit", "semio.sketchpad.importKitUrls", kit, false, false);
-        } catch (error) {
-          console.error(`[Sketchpad] Failed to auto-import kit from ${url}:`, error);
-        }
-      }
-    };
-
-    doImportKits();
-  }, [configsReady, props.importKitUrls, store]);
-
-  if (!persistedKitsReady || !actor || !store) {
+  if (!persistedKitsReady) {
     return <SketchpadStartupFallback />;
   }
 
   return React.createElement(
-    SketchpadScopeContext.Provider,
-    { value: { id, remote: props.remote, desktop: props.desktop } },
-    React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? props.children : React.createElement(SketchpadStartupFallback)),
+    KitRegistryProvider,
+    null,
+    React.createElement(SketchpadScopeWithKitRegistry, {
+      ...props,
+      scopeId: id,
+      hydratedInitialState: initialState,
+      configsReady,
+    }),
   );
 };
 
@@ -20536,7 +20356,10 @@ export function useKits(): KitShallow[] {
  * Hook returning kit command dispatchers for a specific kit by id.
  **/
 function useKitCommandsById(kitId?: string) {
-  const kitStore = useKitStoreFromProvider(kitId);
+  const runtime = useKitRuntimeSafe();
+  const effectiveKitId = useSketchpadKitId(kitId as Id);
+  const kitStore =
+    runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
   return useKitCommandDispatchersWithOrigin(kitStore);
 }
 
@@ -25178,7 +25001,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
   }
 
-  kit(): CollaborativeKitStore {
+  kit(): KitStore {
     return this.parent.kit(this.syncMap.get("kit") as string);
   }
 
@@ -27516,12 +27339,18 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     });
   }
 
-  kit(): CollaborativeKitStore {
+  kit(): KitStore {
     return this.parentStore.kit(this.kitId);
   }
 
-  design(): DesignEntityStore {
-    return this.kit().design(this.designId);
+  design(): { snapshot: () => Design } {
+    const self = this;
+    return {
+      snapshot() {
+        const k = self.kit().getSnapshot().kit;
+        return k.designs?.find((d) => d.id === self.designId) ?? ({ id: self.designId, pieces: [], connections: [] } as Design);
+      },
+    };
   }
 
   protected getSelection(): DesignAppSelection {
@@ -32951,9 +32780,9 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
   const kit = ks0?.kit as Kit | undefined;
   const selectedPortId = useContext(SelectedConnectorPortContext);
   const connectorPortId = getConnectorPortId(connector);
-  const groupTone = getPortTone(connectorPortId, kit?.ports ?? []);
+  const groupTone = getPortTone(connectorPortId, getKitPorts(kit));
   const neutralTone = getToneForKey(DEFAULT_PORT_ID);
-  const compatibilityState = getPortCompatibilityState(connectorPortId, selectedPortId, kit?.ports ?? []);
+  const compatibilityState = getPortCompatibilityState(connectorPortId, selectedPortId, getKitPorts(kit));
   const [hoverPort] = useDesignAppHoverPort();
 
   const isHovered = useDesignAppIsPortHovered(undefined, pieceId, connector.id ?? "");
@@ -35630,7 +35459,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             if (p2 && conn.connecting?.connector?.id) usedPorts.add(`${p2}::${conn.connecting.connector.id}`);
           }
           const portMap = new Map<string, Port>();
-          for (const port of kit?.ports ?? []) portMap.set(port.id, port);
+          for (const port of getKitPorts(kit)) portMap.set(port.id, port);
           const connectorCache = new Map<string, Map<string, Connector>>();
           const getConnector = (type: Type, connectorId: string): Connector | undefined => {
             let map = connectorCache.get(type.id);
@@ -36180,10 +36009,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
   const typeConcepts = type?.concepts;
   const [files] = useKitFiles();
-  const kitStoreRaw = useKitStoreFromProvider();
-  const kitStore = useMemo(() => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null), [kitStoreRaw]);
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const prevRepresentationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -36191,10 +36017,10 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
     console.log("[DEBUG] [PieceMesh] piece.id:", piece.id, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.id, type?.name, "representations:", type?.representations?.length, "files:", (files as any[])?.length);
   }, [piece.id, piece.type, type, files]);
 
-  const { representationUrl, fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
+  const { fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
     if (!type?.representations || type.representations.length === 0) {
       console.log("[DEBUG] [PieceMesh] No representations for type:", type?.id, type?.name, "type object:", type);
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
+      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
     }
 
     const tagsForType = selectedRepresentationTags[type.id] ?? [];
@@ -36217,26 +36043,22 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
     }
 
     if (!representation) {
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representation-found" };
+      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representation-found" };
     }
 
-    const fileId = typeof representation.file === "string" ? representation.file : representation.file?.id;
-    const file = (files ?? []).find((f) => f.id === fileId);
+    const fileId0 = typeof representation.file === "string" ? representation.file : representation.file?.id;
+    const file = (files ?? []).find((f) => f.id === fileId0);
     if (!file) {
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: representation.id, selectionReason: "file-not-found" };
+      return { fileExtension: "", fileId: null, representationId: representation.id, selectionReason: "file-not-found" };
     }
 
     const ext = file.name?.split(".").pop() || "";
-    if (!kitStore) {
-      return { representationUrl: null, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-    }
-    const url = kitStore.getFileUrl(file.id);
-    if (!url) {
-      return { representationUrl: null, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-    }
+    return { fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
+  }, [type, typeConcepts, files, selectedRepresentationTags]);
 
-    return { representationUrl: url, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-  }, [type, typeConcepts, files, kitStore, selectedRepresentationTags]);
+  const [readableUrl] = useKitFileUrl(fileId ?? undefined);
+  const { url: blobUrl } = useKitFileBlobUrl(fileId ?? undefined);
+  const renderUrl = blobUrl ?? readableUrl;
 
   useEffect(() => {
     if (representationId && representationId !== prevRepresentationIdRef.current) {
@@ -36250,41 +36072,6 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
       console.warn("[PieceMesh] File not found in kit for representation:", representationId);
     }
   }, [representationId, selectionReason, type]);
-
-  useEffect(() => {
-    setBlobUrl(representationUrl ?? null);
-    if (!fileId || !kitStore) {
-      return;
-    }
-    let cancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | undefined;
-    let retryCount = 0;
-    const maxRetries = 3;
-    const load = async () => {
-      try {
-        const url = await kitStore.getFileBlobUrl(fileId);
-        if (!cancelled && url) {
-          setBlobUrl(url);
-        } else if (!cancelled && !url && retryCount < maxRetries) {
-          retryCount++;
-          console.debug(`[DEBUG] [PieceMesh] No URL for file ${fileId}, retry ${retryCount}/${maxRetries}`);
-          retryTimer = setTimeout(load, 1000 * retryCount);
-        } else if (!cancelled && !url) {
-          console.warn("[PieceMesh] No URL available for file after retries:", fileId);
-        }
-      } catch (error) {
-        console.error("[PieceMesh] Failed to get blob URL:", error);
-      }
-    };
-    load();
-
-    return () => {
-      cancelled = true;
-      if (retryTimer) clearTimeout(retryTimer);
-    };
-  }, [fileId, kitStore, representationUrl]);
-
-  const renderUrl = blobUrl ?? representationUrl;
 
   if (!renderUrl) {
     return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
@@ -39289,8 +39076,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const typeId = useType(selectTypeMeshId) as string | undefined;
 
   const [files] = useKitFiles();
-  const kitStoreRaw = useKitStoreFromProvider();
-  const kitDataSource = useMemo(() => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null), [kitStoreRaw]);
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
@@ -39301,11 +39086,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const prevRepresentationIdRef = useRef<string | null>(null);
 
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-
-  const { representationUrl, fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
+  const { fileExtension, fileId, representationId, selectionReason } = useMemo(() => {
     if (!typeRepresentations || typeRepresentations.length === 0) {
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
+      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representations" };
     }
 
     let representation: Representation | undefined;
@@ -39330,27 +39113,22 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     }
 
     if (!representation) {
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representation-found" };
+      return { fileExtension: "", fileId: null, representationId: null, selectionReason: "no-representation-found" };
     }
 
-    const fileId = typeof representation.file === "string" ? representation.file : representation.file?.id;
-    const file = (files ?? []).find((f) => f.id === fileId);
+    const fileId0 = typeof representation.file === "string" ? representation.file : representation.file?.id;
+    const file = (files ?? []).find((f) => f.id === fileId0);
     if (!file) {
-      return { representationUrl: null, fileExtension: "", fileId: null, representationId: representation.id, selectionReason: "file-not-found" };
+      return { fileExtension: "", fileId: null, representationId: representation.id, selectionReason: "file-not-found" };
     }
 
     const ext = file.name?.split(".").pop() || "";
+    return { fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
+  }, [typeRepresentations, typeConcepts, files, selectedRepresentationId, selectedRepresentationTags]);
 
-    if (!kitDataSource) {
-      return { representationUrl: null, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-    }
-    const url = kitDataSource.getFileUrl(file.id);
-    if (url) {
-      return { representationUrl: url, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-    }
-
-    return { representationUrl: null, fileExtension: ext, fileId: file.id, representationId: representation.id, selectionReason: reason };
-  }, [typeRepresentations, typeConcepts, files, kitDataSource, selectedRepresentationId, selectedRepresentationTags]);
+  const [readableUrl] = useKitFileUrl(fileId ?? undefined);
+  const { url: blobUrl } = useKitFileBlobUrl(fileId ?? undefined);
+  const renderUrlPreview = blobUrl ?? readableUrl;
 
   useEffect(() => {
     if (representationId && representationId !== prevRepresentationIdRef.current) {
@@ -39364,41 +39142,6 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
       console.warn("[TypeMesh] File not found in kit for representation:", representationId);
     }
   }, [representationId, selectionReason, typeId, typeRepresentations]);
-
-  useEffect(() => {
-    setBlobUrl(representationUrl ?? null);
-    if (!fileId || !kitDataSource) {
-      return;
-    }
-
-    let cancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | undefined;
-    let retryCount = 0;
-    const maxRetries = 3;
-
-    const load = async () => {
-      try {
-        const url = await kitDataSource.getFileBlobUrl(fileId);
-        if (!cancelled && url) {
-          setBlobUrl(url);
-        } else if (!cancelled && !url && retryCount < maxRetries) {
-          retryCount++;
-          console.debug(`[DEBUG] [TypeMesh] No URL for file ${fileId}, retry ${retryCount}/${maxRetries}`);
-          retryTimer = setTimeout(load, 1000 * retryCount);
-        } else if (!cancelled && !url) {
-          console.warn("[TypeMesh] No URL available for file after retries:", fileId);
-        }
-      } catch (error) {
-        console.error("[TypeMesh] Failed to get blob URL:", error);
-      }
-    };
-    load();
-
-    return () => {
-      cancelled = true;
-      if (retryTimer) clearTimeout(retryTimer);
-    };
-  }, [fileId, kitDataSource, representationUrl]);
 
   const resolveMeshIntersection = useCallback(
     (clientX: number, clientY: number) => {
@@ -39482,7 +39225,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
-  const renderUrl = blobUrl ?? representationUrl;
+  const renderUrl = renderUrlPreview;
 
   if (!renderUrl) {
     return null;
@@ -42320,11 +42063,17 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     });
   }
 
-  quality(): QualityStore | undefined {
-    return this.parentStore.kit(this.Id.kit).quality(this.Id.quality);
+  quality(): { snapshot: () => Quality | undefined } {
+    const self = this;
+    return {
+      snapshot() {
+        const k = self.kit().getSnapshot().kit;
+        return k.qualities?.find((q) => q.id === self.Id.quality);
+      },
+    };
   }
 
-  kit(): CollaborativeKitStore {
+  kit(): KitStore {
     return this.parentStore.kit(this.Id.kit);
   }
 
@@ -46311,7 +46060,7 @@ const HomeToolbarExport: FC = () => {
   const handleExportArchive = useCallback(() => {
     for (const kitId of selectedKits) {
       if (store.hasKit(kitId)) {
-        store.kit(kitId).execute("semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
+        executeKitCommand(store.kit(kitId), "semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
       }
     }
   }, [selectedKits, store]);
@@ -50546,7 +50295,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
                 types: kit.types?.length || 0,
                 designs: kit.designs?.length || 0,
                 qualities: kit.qualities?.length || 0,
-                ports: kit.ports?.length || 0,
+                ports: getKitPorts(kit).length || 0,
                 tags: kit.tags?.length || 0,
                 concepts: kit.concepts?.length || 0,
                 files: visibleFileCount,
@@ -55981,11 +55730,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         name: "Wrapped Folder Sync Kit",
         folders: [{ id: "existing-folder", name: "Existing Folder" } as Folder],
       });
-      const store = new CollaborativeKitStore(rawStore);
       const droppedBlob = new Blob(["hello"], { type: "text/plain" });
 
-      await executeKitCommand(store as unknown as KitStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { id: "dropped-file", name: "hello.txt", folder: { id: "existing-folder" } } as SemioFile, droppedBlob);
-      await executeKitCommand(store as unknown as KitStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "existing-folder" } } as Folder);
+      await executeKitCommand(rawStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { id: "dropped-file", name: "hello.txt", folder: { id: "existing-folder" } } as SemioFile, droppedBlob);
+      await executeKitCommand(rawStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "existing-folder" } } as Folder);
 
       expect(adapter.operations).toEqual(["write:Existing Folder/hello.txt:5", "mkdir:Existing Folder/Child Folder"]);
     });

@@ -13,7 +13,7 @@
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
-import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
+import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import { InMemoryKitStore } from "@semio/js";
 import { createRoot, type Root } from "react-dom/client";

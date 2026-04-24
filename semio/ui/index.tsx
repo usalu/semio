@@ -32,6 +32,7 @@ import {
   type MoveVector,
   type Piece,
   type Plane,
+  getKitPorts,
   type Port as SemioPort,
   type File as SemioFile,
   type Vector as SemioVector,
@@ -86,7 +87,7 @@ export * from "@elements/ui/elements";
 // #endregion 🗃️Exports
 
 // #region ⏱️Kit
-// Specs: Kit provides a kit-scoped artifact picker (designs, kinds, kit-level ports, type connectors)
+// Specs: Kit provides a kit-scoped artifact picker (designs, kinds, family-owned ports, type connectors)
 // with the standard Semio UI controllable-state pattern: partial/full controlled/uncontrolled for
 // both available data and selection. It supports partial/full select via per-group enable flags.
 // Summary: Kit hierarchy browser with composed Semio viewers, browse history, metadata, and open action.
@@ -138,7 +139,7 @@ export interface KitData {
   license?: string;
   designs?: KitDesignData[];
   types?: KitKindData[];
-  /** Kit-level ports ({@link Port} entities). */
+  /** Family-owned ports flattened for artifact browsing. */
   ports?: KitPortArtifact[];
   /** Flattened connectors from kinds ({@link Connector} on {@link SemioKind}). */
   connectors?: KitConnectorArtifact[];
@@ -225,7 +226,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     image: t.image,
     parent: t.parent ? { id: t.parent.id } : undefined,
   }));
-  const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) => ({
+  const ports: KitPortArtifact[] = getKitPorts(kit).map((p: SemioPort) => ({
     id: p.id,
     name: p.name,
     description: p.description,
@@ -5966,12 +5967,12 @@ if ((import.meta as any).vitest) {
       expect(data.connectors).toEqual([]);
     });
 
-    it("maps kit-level ports separately from type connectors", () => {
+    it("flattens family-owned ports separately from type connectors", () => {
       const data = buildKitDataFromKit({
         id: "kit-id",
         name: "Kit",
         version: "1",
-        ports: [{ id: "port-entity", name: "P1", description: "d" }],
+        families: [{ id: "family-1", name: "Family", ports: [{ id: "port-entity", name: "P1", description: "d" }] }],
         types: [
           {
             id: "kind-id",

@@ -479,7 +479,7 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <constrainedElement xmi:idref="cls_Port"/>
           <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Port_PortNameUniqueInKit_spec">
             <language>OCL</language>
-            <body>self.kit.ports-&gt;isUnique(name)</body>
+            <body>self.kit.families.ports-&gt;flatten()-&gt;isUnique(name)</body>
           </specification>
         </ownedRule>
       </packagedElement>
@@ -636,14 +636,14 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <constrainedElement xmi:idref="cls_Connector"/>
           <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_PortBelongsToOwningKit_spec">
             <language>OCL</language>
-            <body>self.port.oclIsUndefined() or self.typeOwner.kit.ports-&gt;includes(self.port)</body>
+            <body>self.port.oclIsUndefined() or self.typeOwner.kit.families.ports-&gt;flatten()-&gt;includes(self.port)</body>
           </specification>
         </ownedRule>
         <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_CompatiblePortsBelongToOwningKit" name="CompatiblePortsBelongToOwningKit">
           <constrainedElement xmi:idref="cls_Connector"/>
           <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_CompatiblePortsBelongToOwningKit_spec">
             <language>OCL</language>
-            <body>self.compatiblePorts-&gt;forAll(p | self.typeOwner.kit.ports-&gt;includes(p))</body>
+            <body>self.compatiblePorts-&gt;forAll(p | self.typeOwner.kit.families.ports-&gt;flatten()-&gt;includes(p))</body>
           </specification>
         </ownedRule>
         <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Connector_CompatiblePortsDistinct" name="CompatiblePortsDistinct">

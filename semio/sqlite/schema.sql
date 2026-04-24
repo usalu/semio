@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS port (
 	direction_y REAL,
 	direction_z REAL,
 	kit_id TEXT NOT NULL,
-	parent_family_id TEXT,
+	parent_family_id TEXT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (kit_id) REFERENCES kit (id) ON DELETE CASCADE,
 	FOREIGN KEY (parent_family_id) REFERENCES family (id) ON DELETE CASCADE

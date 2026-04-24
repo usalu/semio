@@ -20,7 +20,6 @@
     "@semio/js": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "sql.js": "^1.13.0",
     "three": "^0.182.0"
   },
   "devDependencies": {
@@ -32,7 +31,6 @@
     "@types/node": "^25.0.8",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
-    "@types/sql.js": "^1.4.9",
     "@vitejs/plugin-react": "^5.1.2",
     "cross-env": "^10.1.0",
     "playwright": "^1.56.1",

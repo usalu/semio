@@ -22,7 +22,7 @@ import {
   type KitFolderAdapter,
   type KitJsonFileAdapter,
 } from "@semio/js";
-import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
+import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import "./globals.css";
 

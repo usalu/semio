@@ -2921,6 +2921,11 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
   return iface1Compatible.some((c) => c.id === iface2.id) || iface2Compatible.some((c) => c.id === iface1.id);
 };
 
+export const getKitPorts = (kit: { families?: Array<{ ports?: Port[] }> } | undefined | null): Port[] => (kit?.families ?? []).flatMap((family) => family.ports ?? []);
+
+export const findKitPortFamily = (kit: { families?: Array<{ id: string; ports?: Array<{ id: string }> }> } | undefined | null, portId: string): { id: string; ports?: Array<{ id: string }> } | undefined =>
+  (kit?.families ?? []).find((family) => (family.ports ?? []).some((port) => port.id === portId));
+
 // #endregion ÔÜôPort
 
 // #region ´┐¢Family
@@ -23290,7 +23295,7 @@ if (shouldRunEmbeddedJsTests) {
     const syntheticKit = SyntheticFindReplaceableKit as any;
 
     it("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", () => {
-      const ports = (syntheticKit.families ?? syntheticKit.ports ?? []).flatMap((f: any) => f.ports ?? [f]) as Port[];
+      const ports = getKitPorts(syntheticKit as unknown as KitImpl);
       const types = syntheticKit.types as Type[];
       const syntheticRootDesignId = (findReplCases.syntheticCases as Array<{ designId: string }>)?.[0]?.designId;
       expect(syntheticRootDesignId).toBeDefined();
@@ -23427,7 +23432,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === multiCase.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = getKitPorts(kit);
       const designs = kit.designs ?? [];
 
       const pieceIds = (multiCase.pieceNames as string[]).map((n) => design.pieces!.find((p) => p.name === n)!.id);
@@ -23442,7 +23447,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === emptyCase.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = getKitPorts(kit);
       const designs = kit.designs ?? [];
 
       const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: [] });
@@ -26827,6 +26832,19 @@ const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
         props: entry.props ?? [],
       }))
     : [];
+  const families = Array.isArray(rawKit?.families)
+    ? rawKit.families.map((entry: any) => ({
+        id: entry.id,
+        name: entry.name,
+        description: entry.description,
+        icon: entry.icon,
+        ports: (entry.ports ?? []).map((port: any) => ({
+          ...port,
+          compatiblePorts: (port.compatiblePorts ?? []).map(mapIdRef),
+        })),
+        attributes: entry.attributes ?? [],
+      }))
+    : [];
 
   return {
     id: kitId,
@@ -26842,7 +26860,7 @@ const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
     authors: rawKit?.authors ?? [],
     tags: rawKit?.tags ?? [],
     concepts: rawKit?.concepts ?? [],
-    ports: rawKit?.ports ?? [],
+    families,
     qualities: rawKit?.qualities ?? [],
     files: rawKit?.files ?? [],
     folders: rawKit?.folders ?? [],
@@ -26878,6 +26896,34 @@ const removeNestedDesignEntity = <T extends { id: string }>(designs: any[] | und
     [collectionKey]: (design[collectionKey] ?? []).filter((entry: T) => entry.id !== entityId),
   }));
 };
+
+const getPortFamilyIdFromPayload = (value: Record<string, any> | undefined): string | undefined => {
+  if (!value) return undefined;
+  if (typeof value.family_id === "string") return value.family_id;
+  if (typeof value.familyId === "string") return value.familyId;
+  if (typeof value.parent_family_id === "string") return value.parent_family_id;
+  if (typeof value.parentFamilyId === "string") return value.parentFamilyId;
+  if (value.family && typeof value.family === "object" && typeof value.family.id === "string") return value.family.id;
+  return undefined;
+};
+
+const appendPortToFamily = (families: any[] | undefined, familyId: string | undefined, port: Record<string, any>): any[] => {
+  if (!familyId) return families ?? [];
+  return (families ?? []).map((family) => (family.id === familyId ? { ...family, ports: [...(family.ports ?? []), port] } : family));
+};
+
+const updatePortInFamilies = (families: any[] | undefined, entityId: string, changedFields: Record<string, any>): any[] => {
+  const targetFamilyId = getPortFamilyIdFromPayload(changedFields);
+  const existingPort = getKitPorts({ families }).find((entry) => entry.id === entityId);
+  const mergedPort = existingPort ? { ...existingPort, ...changedFields } : { id: entityId, ...changedFields };
+  const sourceFamily = findKitPortFamily({ families }, entityId);
+  const familyId = targetFamilyId ?? sourceFamily?.id;
+  const withoutPort = (families ?? []).map((family) => ({ ...family, ports: (family.ports ?? []).filter((entry: { id: string }) => entry.id !== entityId) }));
+  return appendPortToFamily(withoutPort, familyId, mergedPort);
+};
+
+const removePortFromFamilies = (families: any[] | undefined, entityId: string): any[] =>
+  (families ?? []).map((family) => ({ ...family, ports: (family.ports ?? []).filter((entry: { id: string }) => entry.id !== entityId) }));
 
 /**
  * Server-backed kit store with undo/redo and real-time sync.
@@ -27107,9 +27153,11 @@ export class SessionKitStore implements UndoableKitStore {
       case "concept":
         this.kit = { ...this.kit, concepts: [...(this.kit.concepts ?? []), entity as any] };
         break;
-      case "port":
-        this.kit = { ...this.kit, ports: [...(this.kit.ports ?? []), entity as any] };
+      case "port": {
+        const familyId = getPortFamilyIdFromPayload(snapshot);
+        this.kit = { ...this.kit, families: appendPortToFamily(this.kit.families, familyId, entity as any) };
         break;
+      }
       case "quality":
         this.kit = { ...this.kit, qualities: [...(this.kit.qualities ?? []), entity as any] };
         break;
@@ -27162,7 +27210,7 @@ export class SessionKitStore implements UndoableKitStore {
         this.kit = { ...this.kit, concepts: updateInArray(this.kit.concepts, entityId, changedFields) };
         break;
       case "port":
-        this.kit = { ...this.kit, ports: updateInArray(this.kit.ports, entityId, changedFields) };
+        this.kit = { ...this.kit, families: updatePortInFamilies(this.kit.families, entityId, changedFields) };
         break;
       case "quality":
         this.kit = { ...this.kit, qualities: updateInArray(this.kit.qualities, entityId, changedFields) };
@@ -27207,7 +27255,7 @@ export class SessionKitStore implements UndoableKitStore {
         this.kit = { ...this.kit, concepts: removeFromArray(this.kit.concepts, entityId) };
         break;
       case "port":
-        this.kit = { ...this.kit, ports: removeFromArray(this.kit.ports, entityId) };
+        this.kit = { ...this.kit, families: removePortFromFamilies(this.kit.families, entityId) };
         break;
       case "quality":
         this.kit = { ...this.kit, qualities: removeFromArray(this.kit.qualities, entityId) };
