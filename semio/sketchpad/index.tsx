@@ -154,7 +154,7 @@ import {
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useType as useTypeFromKit,
-  useTypes as useTypesFromKit,
+  useRpcTypes as useTypesFromKit,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,

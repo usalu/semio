@@ -50,6 +50,15 @@ import {
 	type KitStoreWireBackboneStatus,
 	type KitStoreWireConflictResolution,
 	type KitStoreWireKitConflict,
+	type DesignMeta,
+	type DesignShallow,
+	type Type,
+	type TypeMeta,
+	type TypeShallow,
+	toDesignMeta,
+	toDesignShallow,
+	toTypeMeta,
+	toTypeShallow,
 } from "@semio/js";
 
 // #endregion ⚛️Imports
@@ -3185,14 +3194,132 @@ export function useConnections(designId?: string): HookTriad<any[]> {
 	return useRpcConnections(designId);
 }
 
-/** Alias for {@link useRpcDesigns}. */
-export function useDesigns(): HookTriad<any[]> {
-	return useRpcDesigns();
+
+/** Merged read/write status for collection hooks (see {@link useTypes}). */
+function mergeWriteStatuses(...statuses: WriteStatus[]): WriteStatus {
+	const readonly_ = statuses.some((s) => s.kind === "readonly");
+	if (readonly_) {
+		return { kind: "readonly", pending: 0 };
+	}
+	let pending = 0;
+	for (const s of statuses) {
+		if (s.kind === "pending") {
+			pending += s.pending;
+		}
+	}
+	if (pending > 0) {
+		return { kind: "pending", pending };
+	}
+	const err = statuses.find((s) => s.kind === "error");
+	if (err && err.kind === "error") {
+		return err;
+	}
+	return { kind: "idle", pending: 0 };
 }
 
-/** Alias for {@link useRpcTypes}. */
-export function useTypes(): HookTriad<any[]> {
-	return useRpcTypes();
+/**
+ * Full kit `types` collection: full + shallow DTOs, metadata, ids, CRUD, and combined status.
+ * Prefer this over ad-hoc {@link useRpcTypes} + separate create/delete hooks in app code.
+ */
+export type UseTypesResult = {
+	types: any[];
+	shallowTypes: TypeShallow[];
+	typesMetadata: TypeMeta[];
+	typeIds: string[];
+	createType: (dto: unknown) => Promise<SetResult>;
+	deleteType: (typeId: string) => Promise<SetResult>;
+	status: WriteStatus;
+};
+
+export function useTypes(): UseTypesResult {
+	const [types, , rpcStatus] = useRpcTypes();
+	const { run: createType, status: createStatus } = useCreateType();
+	const { run: deleteType, status: deleteStatus } = useDeleteType();
+
+	const shallowTypes = React.useMemo(() => {
+		if (!Array.isArray(types)) {
+			return [];
+		}
+		return types.map((t) => toTypeShallow(t as Type));
+	}, [types]);
+
+	const typesMetadata = React.useMemo(() => {
+		if (!Array.isArray(types)) {
+			return [];
+		}
+		return types.map((t) => toTypeMeta(t as Type));
+	}, [types]);
+
+	const typeIds = React.useMemo(() => {
+		if (!Array.isArray(types)) {
+			return [];
+		}
+		return types.map((t) => t?.id).filter((x): x is string => typeof x === "string");
+	}, [types]);
+
+	const status = React.useMemo(() => mergeWriteStatuses(rpcStatus, createStatus, deleteStatus), [rpcStatus, createStatus, deleteStatus]);
+
+	return {
+		types: Array.isArray(types) ? types : [],
+		shallowTypes,
+		typesMetadata,
+		typeIds,
+		createType,
+		deleteType,
+		status,
+	};
+}
+
+/**
+ * Full kit `designs` collection: full + shallow DTOs, metadata, ids, CRUD, and combined status.
+ */
+export type UseDesignsResult = {
+	designs: any[];
+	shallowDesigns: DesignShallow[];
+	designsMetadata: DesignMeta[];
+	designIds: string[];
+	createDesign: (dto: unknown) => Promise<SetResult>;
+	deleteDesign: (designId: string) => Promise<SetResult>;
+	status: WriteStatus;
+};
+
+export function useDesigns(): UseDesignsResult {
+	const [designs, , rpcStatus] = useRpcDesigns();
+	const { run: createDesign, status: createStatus } = useCreateDesign();
+	const { run: deleteDesign, status: deleteStatus } = useDeleteDesign();
+
+	const shallowDesigns = React.useMemo(() => {
+		if (!Array.isArray(designs)) {
+			return [];
+		}
+		return designs.map((d) => toDesignShallow(d as Design));
+	}, [designs]);
+
+	const designsMetadata = React.useMemo(() => {
+		if (!Array.isArray(designs)) {
+			return [];
+		}
+		return designs.map((d) => toDesignMeta(d as Design));
+	}, [designs]);
+
+	const designIds = React.useMemo(() => {
+		if (!Array.isArray(designs)) {
+			return [];
+		}
+		return designs.map((d) => d?.id).filter((x): x is string => typeof x === "string");
+	}, [designs]);
+
+	const status = React.useMemo(() => mergeWriteStatuses(rpcStatus, createStatus, deleteStatus), [rpcStatus, createStatus, deleteStatus]);
+
+	return {
+		designs: Array.isArray(designs) ? designs : [],
+		shallowDesigns,
+		designsMetadata,
+		designIds,
+		createDesign,
+		deleteDesign,
+		status,
+	};
 }
 
 /** Alias for {@link useRpcAuthors}. */
