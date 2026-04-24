@@ -1420,6 +1420,30 @@ useChildConnectionsIds():ConnectionId[]
 
 semio/sketchpad:
 
+---
+
+Remove all stores for kit data completly.
+Only import semio/react hooks for kit data.
+Requirements:
+
+- No domain logic and caching in semio/js, semio/react, semio/ui, semio/sketchpad. Domain logic and caching MUST be in semio/rs.
+- semio/js wraps semio/rs into a nice store and uses #[wasm_bindgen(js_name = execute)]
+- semio/ract exports the store as clean components. No direct interaction with command-style of semio/rs
+- No kit hook definitions, no kit stores and no kit state management regarding in semio/sketchpad.
+- No direction execution of commands in semio/react. No command semantics.
+
+e.g.
+semio/rs uses impl PieceStore uses `self.computed_flat_plane()`
+semio/rs exports `ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand`
+semio/js uses directly the ReadPieceFlatPlaneCommand command from semio/rs
+semio/js exports `class PieceStore` with `flatPlane()`
+semio/react exports usePieceFlatPlane and PieceContext
+semio/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
+
+This pattern MUST be used for everything.
+
+---
+
 Recently a big architectural change was started:
 We have rust store implementation with wasm `semio/rs`, and a `semio/js` adapter which uses the rust web worker, `semio/react` library which reexports `semio/js` the store functionality for react (hooks, context, etc), a general and hook consumer client `semio/sketchpad`
 

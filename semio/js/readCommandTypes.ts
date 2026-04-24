@@ -131,6 +131,9 @@ export type ReadDesignCommand =
   | { readonly readDesignStatsFullCommand: null }
   | { readonly readDesignStatsShallowCommand: null }
   | { readonly readDesignFlattenMapCommand: null }
+  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignsCommand: null }
+  | { readonly readDesignQualitySumCommand: { readonly qualityId: IdDto } }
   | { readonly readDesignFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
   | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
   | { readonly readDesignConnectionCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConnectionCommand> } }
@@ -232,6 +235,7 @@ export type ReadKitCommand =
   | { readonly readKitPropsShallowCommand: null }
   | { readonly readKitAttributesFullCommand: null }
   | { readonly readKitAttributesShallowCommand: null }
+  | { readonly readKitColoredConnectorsCommand: null }
   | { readonly readKitTypeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } }
   | { readonly readKitDesignCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadDesignCommand> } }
   | { readonly readKitFileCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFileCommand> } }
@@ -428,6 +432,7 @@ export type ReadTypeCommand =
   | { readonly readTypeAttributesShallowCommand: null }
   | { readonly readTypePortsFullCommand: null }
   | { readonly readTypeConnectorForPortIdCommand: { readonly portId: IdDto } }
+  | { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } }
   | { readonly readTypeFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
   | { readonly readTypeConnectorCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConnectorCommand> } }
   | { readonly readTypeRepresentationCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadRepresentationCommand> } }
@@ -557,6 +562,9 @@ export type ReadDesignCommandOutput =
   | { readonly readDesignStatsFullCommand: { readonly stats: ReadonlyArray<unknown> } }
   | { readonly readDesignStatsShallowCommand: { readonly stats: ReadonlyArray<unknown> } }
   | { readonly readDesignFlattenMapCommand: { readonly entries: ReadonlyArray<unknown> } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly groups: ReadonlyArray<ReadonlyArray<IdDto>> } }
+  | { readonly readDesignIncludedDesignsCommand: { readonly designs: ReadonlyArray<unknown> } }
+  | { readonly readDesignQualitySumCommand: { readonly sum: number } }
   | { readonly readDesignFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
   | { readonly readDesignPieceCommands: { readonly results: ReadonlyArray<ReadPieceCommandOutput> } }
   | { readonly readDesignConnectionCommands: { readonly results: ReadonlyArray<ReadConnectionCommandOutput> } }
@@ -658,6 +666,7 @@ export type ReadKitCommandOutput =
   | { readonly readKitPropsShallowCommand: { readonly props: ReadonlyArray<unknown> } }
   | { readonly readKitAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
   | { readonly readKitAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readKitColoredConnectorsCommand: { readonly rows: ReadonlyArray<unknown> } }
   | { readonly readKitTypeCommands: { readonly results: ReadonlyArray<ReadTypeCommandOutput> } }
   | { readonly readKitDesignCommands: { readonly results: ReadonlyArray<ReadDesignCommandOutput> } }
   | { readonly readKitFileCommands: { readonly results: ReadonlyArray<ReadFileCommandOutput> } }
@@ -854,6 +863,7 @@ export type ReadTypeCommandOutput =
   | { readonly readTypeAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
   | { readonly readTypePortsFullCommand: { readonly ports: ReadonlyArray<unknown> } }
   | { readonly readTypeConnectorForPortIdCommand: { readonly connector: (unknown | null | undefined) } }
+  | { readonly readTypeBestRepresentationCommand: { readonly representation: (unknown | null | undefined) } }
   | { readonly readTypeFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
   | { readonly readTypeConnectorCommands: { readonly results: ReadonlyArray<ReadConnectorCommandOutput> } }
   | { readonly readTypeRepresentationCommands: { readonly results: ReadonlyArray<ReadRepresentationCommandOutput> } }
@@ -866,7 +876,7 @@ export type ReadTypeCommandOutput =
   | { readonly readTypeAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
 
 /** Externally-tagged `ReadKitCommand` JSON keys (camelCase). */
-export const ALL_READ_KIT_COMMAND_KEYS = ['readKitFullCommand', 'readKitShallowCommand', 'readKitMetadataCommand', 'readKitIdCommand', 'readKitNameCommand', 'readKitDescriptionCommand', 'readKitIconCommand', 'readKitImageCommand', 'readKitPreviewCommand', 'readKitRemoteCommand', 'readKitHomepageCommand', 'readKitLicenseCommand', 'readKitUriCommand', 'readKitCreatedCommand', 'readKitUpdatedCommand', 'readKitTypesFullCommand', 'readKitTypesShallowCommand', 'readKitDesignsFullCommand', 'readKitDesignsShallowCommand', 'readKitFilesFullCommand', 'readKitFilesShallowCommand', 'readKitFoldersFullCommand', 'readKitFoldersShallowCommand', 'readKitLocationsFullCommand', 'readKitLocationsShallowCommand', 'readKitFamiliesFullCommand', 'readKitFamiliesShallowCommand', 'readKitPortsFullCommand', 'readKitAuthorsFullCommand', 'readKitAuthorsShallowCommand', 'readKitConceptsFullCommand', 'readKitConceptsShallowCommand', 'readKitTagsFullCommand', 'readKitTagsShallowCommand', 'readKitQualitiesFullCommand', 'readKitQualitiesShallowCommand', 'readKitPropsFullCommand', 'readKitPropsShallowCommand', 'readKitAttributesFullCommand', 'readKitAttributesShallowCommand', 'readKitTypeCommands', 'readKitDesignCommands', 'readKitFileCommands', 'readKitFolderCommands', 'readKitLocationCommands', 'readKitFamilyCommands', 'readKitPortCommands', 'readKitAuthorCommands', 'readKitConceptCommands', 'readKitTagCommands', 'readKitQualityCommands', 'readKitPropCommands', 'readKitAttributeCommands'] as const;
+export const ALL_READ_KIT_COMMAND_KEYS = ['readKitFullCommand', 'readKitShallowCommand', 'readKitMetadataCommand', 'readKitIdCommand', 'readKitNameCommand', 'readKitDescriptionCommand', 'readKitIconCommand', 'readKitImageCommand', 'readKitPreviewCommand', 'readKitRemoteCommand', 'readKitHomepageCommand', 'readKitLicenseCommand', 'readKitUriCommand', 'readKitCreatedCommand', 'readKitUpdatedCommand', 'readKitTypesFullCommand', 'readKitTypesShallowCommand', 'readKitDesignsFullCommand', 'readKitDesignsShallowCommand', 'readKitFilesFullCommand', 'readKitFilesShallowCommand', 'readKitFoldersFullCommand', 'readKitFoldersShallowCommand', 'readKitLocationsFullCommand', 'readKitLocationsShallowCommand', 'readKitFamiliesFullCommand', 'readKitFamiliesShallowCommand', 'readKitPortsFullCommand', 'readKitAuthorsFullCommand', 'readKitAuthorsShallowCommand', 'readKitConceptsFullCommand', 'readKitConceptsShallowCommand', 'readKitTagsFullCommand', 'readKitTagsShallowCommand', 'readKitQualitiesFullCommand', 'readKitQualitiesShallowCommand', 'readKitPropsFullCommand', 'readKitPropsShallowCommand', 'readKitAttributesFullCommand', 'readKitAttributesShallowCommand', 'readKitColoredConnectorsCommand', 'readKitTypeCommands', 'readKitDesignCommands', 'readKitFileCommands', 'readKitFolderCommands', 'readKitLocationCommands', 'readKitFamilyCommands', 'readKitPortCommands', 'readKitAuthorCommands', 'readKitConceptCommands', 'readKitTagCommands', 'readKitQualityCommands', 'readKitPropCommands', 'readKitAttributeCommands'] as const;
 export type AllReadKitCommandKey = (typeof ALL_READ_KIT_COMMAND_KEYS)[number];
 
 export type ReadRootCommand = ReadKitCommand;

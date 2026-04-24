@@ -10,7 +10,7 @@ todos:
    status: completed
  - id: strip_sketchpad_store
    content: "Strip SketchpadStore: remove kits map, kitApps/typeApps/qualityApps/designApps maps, syncKits/syncKitApps, persistKitsToStorage, createKit/openKit/kit/hasKit/kitStore, createBackedKitStore, kit factory params, injectedKitStore, loadKitFilesFromPublic, persistence kind helpers, collaborativeKitStoreCache."
-   status: pending
+   status: completed
  - id: split_app_stores
    content: "Split KitAppStoreImpl, DesignStore, QualityAppStore, DocsAppStore: drop KitDiffAppStore/PlainKitDiffAppStore base, remove kit-data fields/methods, keep only UI selection/tools/hover/panel slices."
    status: pending
@@ -19,10 +19,10 @@ todos:
    status: pending
  - id: delete_sync_helpers
    content: Delete sync helpers (useSync, useSyncOptional, useSyncDeep, useSyncField, useSyncFields, useSyncNestedArrayItemMembership, useSyncSelectionItemMembership, usePath, useDerived, useSyncWithState) and DerivedStore class once no kit store consumes them.
-   status: pending
+   status: completed
  - id: purge_imports
    content: Remove every kit-data import from @semio/js in sketchpad's import block; keep only pure value types (Kit, Design, Piece, Type, Connection, Author, Quality, etc.).
-   status: pending
+   status: completed
  - id: rewire_callsites
    content: "Rewire ~540 call sites: useKitStoreFromProvider→useKitStoreClient, new CollaborativeKitStore→file/blob hooks directly, commands.updatePiece/updateConnection/addConnection→@semio/react write hooks with useDraft, store.execute('semio.designApp.*')→actor.send or @semio/react hook."
    status: pending

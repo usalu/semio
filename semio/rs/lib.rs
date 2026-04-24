@@ -23,7 +23,7 @@ use crate::connector::{
     ConnectorFullDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorIdDto, ConnectorStoreRef,
 };
 use crate::design::{
-    DesignFullDto, DesignMetadataDto, DesignShallowDto, DesignIdDto, DesignStoreRef,
+    DesignFullDto, DesignMetadataDto, DesignShallowDto, DesignIdDto, DesignStore, DesignStoreRef,
 };
 use crate::family::{FamilyFullDto, FamilyMetadataDto, FamilyShallowDto, FamilyIdDto, FamilyStoreRef};
 use crate::file::{FileFullDto, FileMetadataDto, FileShallowDto, FileIdDto};
@@ -56,6 +56,33 @@ pub struct DesignFlattenMapEntryDto {
     pub piece_id: Id,
     pub plane: Plane,
     pub center: Coordinate,
+}
+
+/// Included child design stub referenced from connections (port of [`getIncludedDesigns`](DesignStore::included_design_infos) in JS).
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct IncludedDesignInfoDto {
+    pub id: Id,
+    #[serde(rename = "designId")]
+    pub design_id: Id,
+    /// `"connected"` or `"fixed"`.
+    #[serde(rename = "type")]
+    pub type_: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub center: Option<Coordinate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plane: Option<Plane>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub external_connections: Vec<ConnectionFullDto>,
+}
+
+/// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct KitColoredConnectorRowDto {
+    pub type_id: TypeIdDto,
+    pub connector_id: crate::connector::ConnectorIdDto,
+    pub color: String,
 }
 
 // --- Kit ---
@@ -103,6 +130,8 @@ pub enum ReadKitCommand {
     ReadKitPropsShallowCommand,
     ReadKitAttributesFullCommand,
     ReadKitAttributesShallowCommand,
+    /// Per-connector UI colors derived from port id (see JS `colorPortsForTypes` / `getColorForText`).
+    ReadKitColoredConnectorsCommand,
     ReadKitTypeCommands { id: TypeIdDto, commands: Vec<ReadTypeCommand> },
     ReadKitDesignCommands { id: DesignIdDto, commands: Vec<ReadDesignCommand> },
     ReadKitFileCommands { id: FileIdDto, commands: Vec<ReadFileCommand> },
@@ -161,6 +190,7 @@ pub enum ReadKitCommandOutput {
     ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
     ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
     ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorRowDto> },
     ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
     ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
     ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -215,6 +245,10 @@ pub enum ReadTypeCommand {
     /// All ports on families referenced by this type (see [`TypeStore::port`] for single-id resolution).
     ReadTypePortsFullCommand,
     ReadTypeConnectorForPortIdCommand { port_id: PortIdDto },
+    /// Tag ids to score representations (Jaccard + filter; see JS `selectBestRepresentation` / `findRepresentation`).
+    ReadTypeBestRepresentationCommand {
+        tag_ids: Vec<Id>,
+    },
     ReadTypeFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
     ReadTypeConnectorCommands { id: ConnectorIdDto, commands: Vec<ReadConnectorCommand> },
     ReadTypeRepresentationCommands { id: RepresentationIdDto, commands: Vec<ReadRepresentationCommand> },
@@ -263,6 +297,9 @@ pub enum ReadTypeCommandOutput {
     ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
     ReadTypePortsFullCommand { ports: Vec<PortFullDto> },
     ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFullDto> },
+    ReadTypeBestRepresentationCommand {
+        representation: Option<RepresentationFullDto>,
+    },
     ReadTypeFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
     ReadTypeConnectorCommands { results: Vec<ReadConnectorCommandOutput> },
     ReadTypeRepresentationCommands { results: Vec<ReadRepresentationCommandOutput> },
@@ -317,6 +354,12 @@ pub enum ReadDesignCommand {
     ReadDesignStatsFullCommand,
     ReadDesignStatsShallowCommand,
     ReadDesignFlattenMapCommand,
+    /// Connected component groups among `selection` (see JS `getClusterableGroups`).
+    ReadDesignClusterableGroupsCommand { selection: Vec<PieceIdDto> },
+    /// Child design stubs linked via connection sides (`designPiece` wire), with incident connections.
+    ReadDesignIncludedDesignsCommand,
+    /// Sum of numeric props for `qualityId` over pieces (piece prop overrides type prop). See JS `sumQualityInDesign`.
+    ReadDesignQualitySumCommand { quality_id: QualityIdDto },
     ReadDesignFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
     ReadDesignPieceCommands { id: PieceIdDto, commands: Vec<ReadPieceCommand> },
     ReadDesignConnectionCommands { id: ConnectionIdDto, commands: Vec<ReadConnectionCommand> },
@@ -371,6 +414,9 @@ pub enum ReadDesignCommandOutput {
     ReadDesignStatsFullCommand { stats: Vec<StatFullDto> },
     ReadDesignStatsShallowCommand { stats: Vec<StatShallowDto> },
     ReadDesignFlattenMapCommand { entries: Vec<DesignFlattenMapEntryDto> },
+    ReadDesignClusterableGroupsCommand { groups: Vec<Vec<PieceIdDto>> },
+    ReadDesignIncludedDesignsCommand { designs: Vec<IncludedDesignInfoDto> },
+    ReadDesignQualitySumCommand { sum: f64 },
     ReadDesignFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
     ReadDesignPieceCommands { results: Vec<ReadPieceCommandOutput> },
     ReadDesignConnectionCommands { results: Vec<ReadConnectionCommandOutput> },
@@ -1773,6 +1819,9 @@ impl ReadTypeCommand {
             ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand {
                 connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full_dto())),
             },
+            ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand {
+                representation: r.best_representation_for_tag_ids(&tag_ids),
+            },
             ReadTypeCommand::ReadTypeFamilyCommands { id, commands } => {
                 let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
                 let mut results = Vec::with_capacity(commands.len());
@@ -1857,6 +1906,234 @@ impl ReadTypeCommand {
     }
 }
 
+// --- design-domain reads (port of previous JS: getClusterableGroups, getIncludedDesigns, sumQualityInDesign) —
+
+/// Stable CSS `color-mix` string for a port/connector id (see JS `getColorForText`).
+fn color_string_for_id_text(text: &str) -> String {
+    if text.is_empty() {
+        return "var(--foreground)".to_string();
+    }
+    let mut hash: i32 = 0;
+    for c in text.chars() {
+        hash = (hash << 5).wrapping_sub(hash).wrapping_add(c as i32);
+    }
+    const VARI: [[&str; 4]; 6] = [
+        [
+            "color-mix(in srgb, var(--accent) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--accent) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--accent) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--accent) 45%, var(--foreground) 55%)",
+        ],
+        [
+            "color-mix(in srgb, var(--accent-secondary) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--accent-secondary) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--accent-secondary) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--accent-secondary) 45%, var(--foreground) 55%)",
+        ],
+        [
+            "color-mix(in srgb, var(--accent-tertiary) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--accent-tertiary) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--accent-tertiary) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--accent-tertiary) 45%, var(--foreground) 55%)",
+        ],
+        [
+            "color-mix(in srgb, var(--status-success) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--status-success) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--status-success) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--status-success) 45%, var(--foreground) 55%)",
+        ],
+        [
+            "color-mix(in srgb, var(--status-warning) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--status-warning) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--status-warning) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--status-warning) 45%, var(--foreground) 55%)",
+        ],
+        [
+            "color-mix(in srgb, var(--status-info) 85%, var(--base) 15%)",
+            "color-mix(in srgb, var(--status-info) 70%, var(--base) 30%)",
+            "color-mix(in srgb, var(--status-info) 60%, var(--foreground) 40%)",
+            "color-mix(in srgb, var(--status-info) 45%, var(--foreground) 55%)",
+        ],
+    ];
+    let h = hash.unsigned_abs() as usize;
+    let i = h % VARI.len();
+    let j = (h / VARI.len()) % VARI[i].len();
+    VARI[i][j].to_string()
+}
+
+fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
+    let mut out: Vec<KitColoredConnectorRowDto> = Vec::new();
+    for t in &g.types {
+        let Ok(tr) = t.read() else { continue };
+        let tid = TypeIdDto { id: tr.id.clone() };
+        for c in &tr.connectors {
+            let Ok(co) = c.read() else { continue };
+            let dto = co.to_full_dto();
+            let key = dto
+                .port
+                .as_ref()
+                .map(|p| p.id.as_str().to_string())
+                .unwrap_or_else(|| co.id.as_str().to_string());
+            out.push(KitColoredConnectorRowDto {
+                type_id: tid.clone(),
+                connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() },
+                color: color_string_for_id_text(&key),
+            });
+        }
+    }
+    out
+}
+
+fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
+    use std::collections::{HashMap, HashSet};
+    if selected.len() < 2 {
+        return vec![];
+    }
+    let mut adjacency: HashMap<Id, HashSet<Id>> = HashMap::new();
+    for conn in &d.connections {
+        let Ok(cr) = conn.read() else { continue };
+        let Ok(s0) = cr.connected.read() else { continue };
+        let Ok(s1) = cr.connecting.read() else { continue };
+        let a = s0.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
+        let b = s1.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
+        let (Some(a), Some(b)) = (a, b) else { continue };
+        adjacency.entry(a.clone()).or_default().insert(b.clone());
+        adjacency.entry(b).or_default().insert(a);
+    }
+    let piece_id_set: HashSet<Id> = d
+        .pieces
+        .iter()
+        .filter_map(|p| p.read().ok().map(|pr| pr.id.clone()))
+        .collect();
+    let selected_set: HashSet<Id> = selected.iter().cloned().collect();
+    let mut visited: HashSet<Id> = HashSet::new();
+    let mut groups: Vec<Vec<Id>> = vec![];
+    for start in selected {
+        if visited.contains(start) {
+            continue;
+        }
+        let mut g = vec![];
+        let mut stack = vec![start.clone()];
+        visited.insert(start.clone());
+        while let Some(cur) = stack.pop() {
+            g.push(cur.clone());
+            for nb in adjacency.get(&cur).into_iter().flatten() {
+                if selected_set.contains(nb) && !visited.contains(nb) {
+                    visited.insert(nb.clone());
+                    stack.push(nb.clone());
+                }
+            }
+        }
+        groups.push(g);
+    }
+    let has_design_nodes = selected.iter().any(|id| !piece_id_set.contains(id));
+    let has_multiple = groups.len() > 1;
+    let has_large = groups.iter().any(|g| g.len() > 1);
+    if has_design_nodes || has_multiple || has_large {
+        return vec![selected.to_vec()];
+    }
+    vec![]
+}
+
+fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
+    use std::collections::HashSet;
+    let mut design_ids: HashSet<Id> = HashSet::new();
+    for conn in &d.connections {
+        let Ok(cr) = conn.read() else { continue };
+        let Ok(s0) = cr.connected.read() else { continue };
+        let Ok(s1) = cr.connecting.read() else { continue };
+        if let Some(dp) = s0
+            .to_metadata_dto()
+            .design_piece
+        {
+            design_ids.insert(dp.id);
+        }
+        if let Some(dp) = s1.to_metadata_dto().design_piece {
+            design_ids.insert(dp.id);
+        }
+    }
+    let mut out: Vec<IncludedDesignInfoDto> = vec![];
+    for design_id in design_ids {
+        let ex: Vec<ConnectionFullDto> = d
+            .connections
+            .iter()
+            .filter_map(|c| c.read().ok().map(|cr| cr.to_full_dto()))
+            .filter(|c| {
+                c.connected
+                    .design_piece
+                    .as_ref()
+                    .is_some_and(|p| p.id == design_id)
+                    || c.connecting
+                        .design_piece
+                        .as_ref()
+                        .is_some_and(|p| p.id == design_id)
+            })
+            .collect();
+        out.push(IncludedDesignInfoDto {
+            id: design_id.clone(),
+            design_id: design_id.clone(),
+            type_: "connected".to_string(),
+            center: None,
+            plane: None,
+            external_connections: ex,
+        });
+    }
+    out
+}
+
+fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
+    use std::collections::HashMap;
+    let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g
+        .types
+        .iter()
+        .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
+        .collect();
+    let mut sum: f64 = 0.0;
+    for pref in &d.pieces {
+        let Ok(pr) = pref.read() else { continue };
+        let mut from_piece = false;
+        for prop in &pr.props {
+            if let Ok(p) = prop.read() {
+                let df = p.to_full_dto();
+                if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
+                    if let Ok(v) = df.value.parse::<f64>() {
+                        sum += v;
+                    }
+                    from_piece = true;
+                    break;
+                }
+            }
+        }
+        if from_piece {
+            continue;
+        }
+        let tid = pr
+            .type_ref
+            .as_ref()
+            .and_then(|w| w.upgrade())
+            .and_then(|t| t.read().ok().map(|r| r.id.clone()))
+            .or_else(|| pr.to_full_dto().r#type.map(|t| t.id));
+        if let Some(tid) = tid {
+            if let Some(t) = types_by_id.get(&tid) {
+                if let Ok(tr) = t.read() {
+                    for prop in &tr.props {
+                        if let Ok(p) = prop.read() {
+                            let df = p.to_full_dto();
+                            if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
+                                if let Ok(v) = df.value.parse::<f64>() {
+                                    sum += v;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    sum
+}
+
 impl ReadDesignCommand {
     pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
         let o = d.read().map_err(|_| lp("design"))?;
@@ -1902,6 +2179,22 @@ impl ReadDesignCommand {
                 let entries: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
                 ReadDesignCommandOutput::ReadDesignFlattenMapCommand { entries }
             }
+            ReadDesignCommand::ReadDesignClusterableGroupsCommand { selection } => {
+                let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
+                let groups: Vec<Vec<PieceIdDto>> = design_clusterable_groups(&*o, &ids)
+                    .into_iter()
+                    .map(|g| g.into_iter().map(|id| PieceIdDto { id }).collect())
+                    .collect();
+                ReadDesignCommandOutput::ReadDesignClusterableGroupsCommand { groups }
+            }
+            ReadDesignCommand::ReadDesignIncludedDesignsCommand => {
+                ReadDesignCommandOutput::ReadDesignIncludedDesignsCommand {
+                    designs: design_included_infos(&*o),
+                }
+            }
+            ReadDesignCommand::ReadDesignQualitySumCommand { quality_id } => ReadDesignCommandOutput::ReadDesignQualitySumCommand {
+                sum: design_sum_quality(&*o, g, &quality_id.id),
+            },
             ReadDesignCommand::ReadDesignFamilyCommands { id, commands } => {
                 let f = o
                     .families
@@ -2062,6 +2355,9 @@ impl ReadKitCommand {
             ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
             ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
             ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitColoredConnectorsCommand => ReadKitCommandOutput::ReadKitColoredConnectorsCommand {
+                rows: kit_colored_connector_rows(g),
+            },
             ReadKitCommand::ReadKitTypeCommands { id, commands } => {
                 let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
                 let mut results = Vec::with_capacity(commands.len());
@@ -21667,6 +21963,8 @@ pub mod prop {
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
+        /// Catalog link when the wire DTO used `quality: { id }` instead of a stable `key` (see [`PropFullDto::quality`]).
+        pub quality: Option<crate::quality::QualityIdDto>,
         pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
@@ -21715,7 +22013,7 @@ pub mod prop {
 
     impl PropStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self { id, key: String::new(), value: String::new(), unit: None, parent_kit: None, parent_design: None, parent_type: None, parent_piece: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id, key: String::new(), value: String::new(), unit: None, quality: None, parent_kit: None, parent_design: None, parent_type: None, parent_piece: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -21732,6 +22030,7 @@ pub mod prop {
             self.key = d.key;
             self.value = d.value;
             self.unit = d.unit;
+            self.quality = d.quality.clone();
             self.hash_cache.invalidate();
         }
 
@@ -21827,7 +22126,7 @@ pub mod prop {
 
         pub fn to_full_dto(&self) -> PropFullDto {
             let m = self.to_metadata_dto();
-            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: None }
+            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: self.quality.clone() }
         }
 
         pub fn invalidate_hash(&self) {
@@ -23454,6 +23753,52 @@ pub mod typ {
 
         pub fn representation(&self, id: &str) -> Option<RepresentationStoreRef> {
             self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
+        }
+
+        /// Best representation for `tagIds` (JS `selectBestRepresentation` / `findRepresentation` using Jaccard on tag id sets).
+        pub fn best_representation_for_tag_ids(&self, tag_ids: &[Id]) -> Option<RepresentationFullDto> {
+            if self.representations.is_empty() {
+                return None;
+            }
+            if tag_ids.is_empty() {
+                for r in &self.representations {
+                    if let Ok(rep) = r.read() {
+                        if rep.tags.is_empty() {
+                            return Some(rep.to_full_dto());
+                        }
+                    }
+                }
+                return self.representations.first().and_then(|r| r.read().ok().map(|r| r.to_full_dto()));
+            }
+            let mut best_j: f64 = -1.0;
+            let mut best_i: Option<usize> = None;
+            for (i, r) in self.representations.iter().enumerate() {
+                let Ok(rep) = r.read() else { continue };
+                let dto = rep.to_full_dto();
+                let rtags: Vec<Id> = dto.tags.iter().map(|t| t.id.clone()).collect();
+                if !tag_ids.iter().all(|tid| rtags.contains(tid)) {
+                    continue;
+                }
+                let j = Self::jaccard(tag_ids, &rtags);
+                if j > best_j + f64::EPSILON {
+                    best_j = j;
+                    best_i = Some(i);
+                }
+            }
+            best_i.and_then(|i| self.representations.get(i).and_then(|r| r.read().ok().map(|r| r.to_full_dto())))
+        }
+
+        fn jaccard(a: &[Id], b: &[Id]) -> f64 {
+            use std::collections::HashSet;
+            let sa: HashSet<_> = a.iter().collect();
+            let sb: HashSet<_> = b.iter().collect();
+            let i = sa.intersection(&sb).count();
+            let u = sa.union(&sb).count();
+            if u == 0 {
+                0.0
+            } else {
+                i as f64 / u as f64
+            }
         }
 
         pub fn from_id_dto(d: TypeIdDto) -> Self {

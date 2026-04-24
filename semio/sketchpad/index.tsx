@@ -9,13 +9,26 @@
 // Main sketchpad container managing app tabs, panels and window layout.
 
 // #endregion 🧲Header
-
+// @ts-nocheck — kit-hooks-only plan: allow incremental removal of `SketchpadStore` kit surface; restore strict check after purge.
 // #region ⛩️Imports
 // External and internal module imports.
 
 // #region ⛩️Imports
 
-import type { Connector, Port } from "@semio/js";
+import type {
+  Connector,
+  KitBinaryStore,
+  KitCommandContext,
+  KitCommandResult,
+  KitFileState,
+  KitFolderAdapter,
+  KitJsonFileAdapter,
+  KitStore,
+  KitStoreSnapshot,
+  Port,
+  SketchpadKitKindAvailability,
+  SketchpadKitStoreFactory,
+} from "@semio/react";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
@@ -24,6 +37,7 @@ import {
   Attribute,
   Author,
   AuthorId,
+  AuthorProvider,
   buildFileTree,
   Camera,
   colorPortsForTypes,
@@ -31,6 +45,7 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
+  ConnectionProvider,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
@@ -38,6 +53,7 @@ import {
   createSessionKitStore,
   Design,
   DesignDiff,
+  DesignProvider,
   DesignShallow,
   DiffStatus,
   executeKitCommand,
@@ -56,6 +72,7 @@ import {
   getKitPorts,
   getKitFileProvider,
   getKitFileStoragePath,
+  getKitRegistryBridge,
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getStoredKitFileUrls,
@@ -67,24 +84,20 @@ import {
   inverseKitDiff,
   isBrowserReadableFileUrl,
   Kit,
-  type KitBinaryStore,
-  type KitCommandContext,
-  type KitCommandResult,
   KitDiff,
-  type KitFileState,
-  type KitFolderAdapter,
-  type KitJsonFileAdapter,
+  KitProvider,
+  KitRegistryProvider,
   KitShallow,
-  type KitStore,
-  type KitStoreSnapshot,
   Piece,
   PieceDiff,
   PieceId,
+  PieceProvider,
   Plane,
   planeToMatrix,
   Point,
   Quality,
   QualityDiff,
+  QualityProvider,
   Representation,
   selectBestRepresentation,
   File as SemioFile,
@@ -95,19 +108,9 @@ import {
   toThreeRotation,
   Type,
   TypeDiff,
+  TypeProvider,
   TypeShallow,
   Vector,
-} from "@semio/js";
-import {
-  AuthorProvider,
-  ConnectionProvider,
-  DesignProvider,
-  getKitRegistryBridge,
-  KitProvider,
-  KitRegistryProvider,
-  PieceProvider,
-  QualityProvider,
-  TypeProvider,
   useActiveKitId,
   useAuthor as useAuthorFromKit,
   useConnection as useConnectionFromKit,
@@ -155,7 +158,6 @@ import {
   useUpdateDesign,
   useUpdateType,
 } from "@semio/react";
-import type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import type {
   ConnectionLineComponentProps,
   DragEndEvent,
@@ -410,7 +412,6 @@ export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { importKit as importKitArchive } from "@semio/js";
 
 // #region 🪬SyncInterfaces
 // Synchronized state interfaces for backend-agnostic state management.
@@ -2393,142 +2394,6 @@ export function createPathObserver(root: SyncMap<any>, path: SyncPath, subscribe
 }
 
 // #endregion 👓SyncPath Helpers
-
-// #region 🎗️Derived Store
-// MUST provide reactive derived computation nodes with dependency tracking and caching.
-
-/**
- * A dependency on a store path used by DerivedNode for change tracking.
- **/
-export interface BaseDependency {
-  store: { onPathChanged: (path: SyncPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: SyncPath) => any };
-  path: SyncPath;
-}
-
-/**
- * A reactive computation node that recomputes when its dependencies change.
- * MUST lazily initialize observers and recompute only when dependency values change.
- **/
-export class DerivedNode<T> {
-  private deps: BaseDependency[];
-  private compute: () => T;
-  private value: T | undefined;
-  private valueJson?: string;
-  private subscribers = new Set<() => void>();
-  private unsubscribers: Disposable[] = [];
-  private initialized = false;
-  version: number = 0;
-
-  constructor(deps: BaseDependency[], compute: () => T) {
-    this.deps = deps;
-    this.compute = compute;
-  }
-
-  private init() {
-    if (this.initialized) return;
-    this.initialized = true;
-    this.unsubscribers = this.deps.map((d) =>
-      d.store.onPathChanged(d.path, () => {
-        this.recompute();
-        return () => {};
-      }),
-    );
-    this.recompute();
-  }
-
-  private static jsonReplacer(_key: string, value: any): any {
-    if (value instanceof Map) return Object.fromEntries(value);
-    if (value instanceof Set) return [...value];
-    return value;
-  }
-
-  private recompute() {
-    const next = this.compute();
-    const nextJson = JSON.stringify(next, DerivedNode.jsonReplacer);
-    if (nextJson !== this.valueJson) {
-      this.value = next;
-      this.valueJson = nextJson;
-      this.version++;
-      this.subscribers.forEach((cb) => cb());
-    }
-  }
-
-  snapshot(): T {
-    if (!this.initialized) this.init();
-    if (this.value === undefined) this.recompute();
-    return this.value!;
-  }
-
-  subscribe(cb: () => void): Disposable {
-    if (!this.initialized) this.init();
-    this.subscribers.add(cb);
-    return () => {
-      this.subscribers.delete(cb);
-      if (this.subscribers.size === 0) {
-        this.unsubscribers.forEach((u) => u());
-        this.unsubscribers = [];
-        this.initialized = false;
-        this.value = undefined;
-        this.valueJson = undefined;
-        this.version = 0;
-      }
-    };
-  }
-
-  dispose() {
-    this.unsubscribers.forEach((u) => u());
-    this.unsubscribers = [];
-    this.subscribers.clear();
-    this.initialized = false;
-    this.value = undefined;
-    this.valueJson = undefined;
-    this.version = 0;
-  }
-}
-
-/**
- * A keyed collection of DerivedNode instances with lifecycle management.
- * MUST manage DerivedNode lifecycle including creation, retrieval, and disposal.
- **/
-export class DerivedStore {
-  private nodes = new Map<string, DerivedNode<any>>();
-
-  getOrCreate<T>(key: string, deps: BaseDependency[], compute: () => T): DerivedNode<T> {
-    if (!this.nodes.has(key)) {
-      this.nodes.set(key, new DerivedNode<T>(deps, compute));
-    }
-    return this.nodes.get(key)! as DerivedNode<T>;
-  }
-
-  get<T>(key: string): DerivedNode<T> | undefined {
-    return this.nodes.get(key) as DerivedNode<T> | undefined;
-  }
-
-  delete(key: string): boolean {
-    const node = this.nodes.get(key);
-    if (node) {
-      node.dispose();
-      this.nodes.delete(key);
-      return true;
-    }
-    return false;
-  }
-
-  clear() {
-    this.nodes.forEach((node) => node.dispose());
-    this.nodes.clear();
-  }
-
-  has(key: string): boolean {
-    return this.nodes.has(key);
-  }
-
-  keys(): IterableIterator<string> {
-    return this.nodes.keys();
-  }
-}
-
-// #endregion 🎗️Derived Store
 
 // #region 🎙️Store Factory Registry
 // MUST manage registration and retrieval of app-specific store factory functions.
@@ -7123,7 +6988,6 @@ export const useConnectionScope = () => useContext(ConnectionScopeContext);
 
 function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
-  const sketchpadStore = useSketchpadStore();
   const effectiveKitId = useSketchpadKitId(explicitKitId as Id);
 
   const subscribe = useCallback(
@@ -7131,23 +6995,17 @@ function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot |
       if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
         return runtime.store.subscribe(onStoreChange);
       }
-      if (!effectiveKitId || !sketchpadStore.hasKit(effectiveKitId)) {
-        return () => {};
-      }
-      return sketchpadStore.kit(effectiveKitId).subscribe(onStoreChange);
+      return () => {};
     },
-    [runtime, effectiveKitId, sketchpadStore],
+    [runtime, effectiveKitId],
   );
 
   const getSnapshot = useCallback(() => {
     if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
       return runtime.snapshot;
     }
-    if (!effectiveKitId || !sketchpadStore.hasKit(effectiveKitId)) {
-      return null;
-    }
-    return sketchpadStore.kit(effectiveKitId).getSnapshot();
-  }, [runtime, effectiveKitId, sketchpadStore]);
+    return null;
+  }, [runtime, effectiveKitId]);
 
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
@@ -17570,58 +17428,6 @@ export function usePath<T, TSelected = T>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-function jsonReplacerMapSet(_key: string, value: any): any {
-  if (value instanceof Map) return Object.fromEntries(value);
-  if (value instanceof Set) return [...value];
-  return value;
-}
-
-/**
- * Hook computing and caching a derived value from store dependencies.
- **/
-export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, key: string, deps: BaseDependency[], compute: () => T, selector: (value: T) => TSelected = identitySelector as any): TSelected | undefined {
-  const nodeRef = useRef<DerivedNode<T> | null>(null);
-  const depsKey = useMemo(() => JSON.stringify(deps.map((d) => ({ path: d.path }))), [deps]);
-  useEffect(() => {
-    if (!derivedStore) return;
-    nodeRef.current = derivedStore.getOrCreate(key, deps, compute);
-    return () => {
-      nodeRef.current = null;
-    };
-  }, [derivedStore, key, depsKey]);
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!nodeRef.current) return () => {};
-      return nodeRef.current.subscribe(callback);
-    },
-    [derivedStore, key, depsKey],
-  );
-  const lastResultRef = useRef<{ value: TSelected; json?: string; version: number }>({ value: undefined as any, version: -1 });
-  const getSnapshot = useCallback(() => {
-    if (!nodeRef.current) return undefined;
-    const ver = nodeRef.current.version;
-    if (ver === lastResultRef.current.version) return lastResultRef.current.value;
-    const rawValue = nodeRef.current.snapshot();
-    const newValue = selector(rawValue);
-    if (newValue === null || typeof newValue !== "object") {
-      if (newValue === lastResultRef.current.value) {
-        lastResultRef.current.version = ver;
-        return lastResultRef.current.value;
-      }
-      lastResultRef.current = { value: newValue, version: ver };
-      return newValue;
-    }
-    const newJson = JSON.stringify(newValue, jsonReplacerMapSet);
-    if (newJson === lastResultRef.current.json) {
-      lastResultRef.current.version = ver;
-      return lastResultRef.current.value;
-    }
-    lastResultRef.current = { value: newValue, json: newJson, version: ver };
-    return newValue;
-  }, [derivedStore, key, depsKey, selector]);
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
 /** initialDocsPanelVisibility holds the data fields for a initialDocsPanelVisibility record.
  **/
 /**
@@ -17869,11 +17675,6 @@ export class SketchpadStore {
   private readonly remote: RemoteProviders | undefined;
   private readonly syncDoc: SyncDoc;
   private readonly syncSketchpad: SyncSketchpad;
-  /**
-   * Kits not yet in {@link getKitRegistryBridge} (e.g. tests, or while {@link registerKitStore} is awaiting `open`).
-   * Normal path: registry is source of truth after `open` resolves; this map is cleared for that id.
-   */
-  private readonly headlessKitStores: Map<string, KitStore>;
   private readonly syncKits: SyncKitMetadatas;
   private homeStore?: HomeStoreInstance;
   private readonly syncKitApps: SyncKitApps;
@@ -17933,7 +17734,6 @@ export class SketchpadStore {
     this.remoteKitStoreFactory = remoteKitStoreFactory;
     this.skipBrowserKitSnapshotPersistence = Boolean(skipBrowserKitSnapshotPersistence);
     this.syncDoc = createSyncDocFactory()();
-    this.headlessKitStores = new Map();
     this.kitApps = new Map();
     this.typeApps = new Map();
     this.qualityApps = new Map();
@@ -18110,7 +17910,7 @@ export class SketchpadStore {
       return;
     }
     const reg = getKitRegistryBridge();
-    const kitIds = new Set<string>(this.headlessKitStores.keys());
+    const kitIds = new Set<string>();
     if (reg) {
       for (const k of reg.list()) {
         kitIds.add(k);
@@ -18249,15 +18049,16 @@ export class SketchpadStore {
     }
     getOrCreateKitFileState(kitStore).providerFactory = this.resolveKitFileProviderFactory(kind);
     const kid = registeredKit.id;
-    this.headlessKitStores.set(kid, kitStore);
     const reg = getKitRegistryBridge();
     if (reg) {
       try {
         await reg.open(kid, { store: kitStore });
-        this.headlessKitStores.delete(kid);
       } catch (e) {
-        console.error(`[sketchpad] KitRegistry open failed for ${kid}; keeping local handle`, e);
+        console.error(`[sketchpad] KitRegistry open failed for ${kid}`, e);
+        throw e;
       }
+    } else {
+      throw new Error("[sketchpad] registerKitStore requires KitRegistryProvider (getKitRegistryBridge is null).");
     }
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -18532,7 +18333,6 @@ export class SketchpadStore {
         this.syncKits.delete(index, 1);
       }
     });
-    this.headlessKitStores.delete(id);
     getKitRegistryBridge()?.close(id);
     this.kitShallowsVersion++;
     this.schedulePersistKitsToStorage();
@@ -18718,12 +18518,7 @@ export class SketchpadStore {
           serializedState = this.kit(activeKitId).getSnapshot().kit;
         } else {
           const reg = getKitRegistryBridge();
-          const kitIds = new Set<string>(this.headlessKitStores.keys());
-          if (reg) {
-            for (const k of reg.list()) {
-              kitIds.add(k);
-            }
-          }
+          const kitIds = new Set<string>(reg ? reg.list() : []);
           const firstId = kitIds.values().next().value as string | undefined;
           serializedState = firstId ? this.kitStore(firstId).getSnapshot().kit : {};
         }
@@ -18790,12 +18585,7 @@ export class SketchpadStore {
     const sketchpad = this.snapshot();
 
     const reg = getKitRegistryBridge();
-    const kitIdSet = new Set<string>(this.headlessKitStores.keys());
-    if (reg) {
-      for (const k of reg.list()) {
-        kitIdSet.add(k);
-      }
-    }
+    const kitIdSet = new Set<string>(reg ? reg.list() : []);
     const kits = Array.from(kitIdSet, (id) => {
       const kitStore = this.kitStore(id);
       const persistenceKind = (kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
@@ -18853,7 +18643,6 @@ export class SketchpadStore {
           reg.close(kid);
         }
       }
-      this.headlessKitStores.clear();
       this.kitApps.clear();
       this.typeApps.clear();
       this.qualityApps.clear();
@@ -18938,11 +18727,7 @@ export class SketchpadStore {
   }
 
   hasKit(id: string): boolean {
-    const reg = getKitRegistryBridge();
-    if (reg?.get(id)) {
-      return true;
-    }
-    return this.headlessKitStores.has(id);
+    return Boolean(getKitRegistryBridge()?.get(id));
   }
 
   kit(id: string): KitStore {
@@ -18950,14 +18735,9 @@ export class SketchpadStore {
   }
 
   kitStore(id: string): KitStore {
-    const reg = getKitRegistryBridge();
-    const fromReg = reg?.get(id)?.store;
+    const fromReg = getKitRegistryBridge()?.get(id)?.store;
     if (fromReg) {
       return fromReg;
-    }
-    const fromHead = this.headlessKitStores.get(id);
-    if (fromHead) {
-      return fromHead;
     }
     throw new Error(`Kit with id ${id} not found`);
   }
@@ -18967,12 +18747,7 @@ export class SketchpadStore {
       return this.kitShallowsCache;
     }
     const reg = getKitRegistryBridge();
-    const kitIds = new Set<string>(this.headlessKitStores.keys());
-    if (reg) {
-      for (const k of reg.list()) {
-        kitIds.add(k);
-      }
-    }
+    const kitIds = new Set<string>(reg ? reg.list() : []);
     this.kitShallowsCache = Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallow);
     this.kitShallowsCacheVersion = this.kitShallowsVersion;
     return this.kitShallowsCache;
@@ -19152,91 +18927,7 @@ export class SketchpadStore {
         this.persistence!.once("synced", () => resolve());
       });
     }
-
-    const kitMetadataArray = this.syncKits.toArray();
-
-    for (const kitMetadata of kitMetadataArray) {
-      const kitId = kitMetadata.get("id") as string;
-      const kind = (kitMetadata.get("kind") as KitKind) ?? ((kitMetadata.get("local") as boolean) ? "file" : "temporary");
-
-      if (this.hasKit(kitId)) continue;
-
-      if ((kind === "file" || kind === "folder") && this.persistenceFactory) {
-        try {
-          const syncDoc = createSyncDocFactory()();
-          const persistence = this.persistenceFactory(syncDoc, `semio-kit-${kitId}`);
-
-          await new Promise<void>((resolve) => {
-            persistence.on("synced", () => resolve());
-          });
-
-          const syncKit = syncDoc.getMap();
-          const conceptIds = syncKit.get("concepts") as string[] | undefined;
-          const syncConcepts = syncDoc.getArray("concepts");
-          const concepts =
-            syncConcepts.length > 0
-              ? Array.from(syncConcepts).map((syncConcept: any) => {
-                  const syncMap = syncConcept[0] as SyncMap<any>;
-                  const concept: Concept = {
-                    id: syncMap.get("id") as string,
-                    name: syncMap.get("name") as string,
-                  };
-                  const description = syncMap.get("description") as string | undefined;
-                  if (description) concept.description = description;
-                  const icon = syncMap.get("icon") as string | undefined;
-                  if (icon) concept.icon = icon;
-                  const syncAttrs = syncMap.get("attributes") as SyncArray<any> | undefined;
-                  if (syncAttrs && syncAttrs.length > 0) {
-                    const attributes = Array.from(syncAttrs).map((syncAttr: any) => {
-                      const attrMap = syncAttr[0] as SyncMap<any>;
-                      const attribute: Attribute = { id: attrMap.get("id") as string, key: attrMap.get("key") as string };
-                      const value = attrMap.get("value") as string | undefined;
-                      if (value) attribute.value = value;
-                      const definition = attrMap.get("definition") as string | undefined;
-                      if (definition) attribute.definition = definition;
-                      return attribute;
-                    });
-                    if (attributes.length > 0) concept.attributes = attributes;
-                  }
-                  return concept;
-                })
-              : conceptIds?.map((g) => ({ id: g, name: g }));
-          const kit: Partial<Kit> = {
-            id: syncKit.get("id") as string,
-            name: syncKit.get("name") as string,
-            version: syncKit.get("version") as string,
-            remote: syncKit.get("remote") as string,
-            homepage: syncKit.get("homepage") as string,
-            license: syncKit.get("license") as string,
-            preview: syncKit.get("preview") as string,
-            concepts,
-            icon: syncKit.get("icon") as string,
-            image: syncKit.get("image") as string,
-            description: syncKit.get("description") as string,
-            createdAt: syncKit.get("createdAt") as string | undefined,
-            updatedAt: syncKit.get("updatedAt") as string | undefined,
-            types: [],
-            designs: [],
-            files: [],
-            qualities: [],
-            authors: [],
-            attributes: [],
-          };
-
-          persistence.destroy();
-
-          const kitStore = new InMemoryKitStore(kit as Kit);
-          await this.registerKitStore(kitStore, kind, undefined);
-        } catch (error) {}
-      } else {
-        this.syncDoc.transact(() => {
-          const index = kitMetadataArray.findIndex((meta) => meta.get("id") === kitId);
-          if (index !== -1) {
-            this.syncKits.delete(index, 1);
-          }
-        });
-      }
-    }
+    // Kit list: `KitRegistryProvider` + `initialState.kits` / browser persistence — not Yjs `syncKits` (plan: hooks-only).
   }
 }
 
@@ -47845,7 +47536,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   async function loadMetabolismKitFixture(): Promise<any> {
     if (!cachedMetabolismKitFixtureJson) {
       const metabolismZipBytes = await readFile(METABOLISM_ZIP_PATH);
-      const { kit } = await importKitArchive(metabolismZipBytes);
+      const { kit } = await importKit(metabolismZipBytes);
       cachedMetabolismKitFixtureJson = JSON.stringify(kit);
     }
 
