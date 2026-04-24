@@ -133,6 +133,8 @@ export type ReadDesignCommand =
   | { readonly readDesignFlattenMapCommand: null }
   | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<IdDto> } }
   | { readonly readDesignIncludedDesignsCommand: null }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignIdsCommand: null }
   | { readonly readDesignQualitySumCommand: { readonly qualityId: IdDto } }
   | { readonly readDesignFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
   | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
@@ -300,6 +302,7 @@ export type ReadPieceCommand =
   | { readonly readPiecePathCommand: null }
   | { readonly readPieceParentPieceIdCommand: null }
   | { readonly readPieceParentConnectionIdCommand: null }
+  | { readonly readPieceParentConnectionFullCommand: null }
   | { readonly readPieceParentDesignIdCommand: null }
   | { readonly readPieceFixedCommand: null }
   | { readonly readPieceConnectedCommand: null }
@@ -564,6 +567,13 @@ export type ReadDesignCommandOutput =
   | { readonly readDesignFlattenMapCommand: { readonly entries: ReadonlyArray<unknown> } }
   | { readonly readDesignClusterableGroupsCommand: { readonly groups: ReadonlyArray<ReadonlyArray<IdDto>> } }
   | { readonly readDesignIncludedDesignsCommand: { readonly designs: ReadonlyArray<unknown> } }
+  | {
+      readonly readDesignReplaceableCatalogCommand: {
+        readonly types: ReadonlyArray<IdDto>;
+        readonly designs: ReadonlyArray<IdDto>;
+      };
+    }
+  | { readonly readDesignIncludedDesignIdsCommand: { readonly designIds: ReadonlyArray<IdDto> } }
   | { readonly readDesignQualitySumCommand: { readonly sum: number } }
   | { readonly readDesignFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
   | { readonly readDesignPieceCommands: { readonly results: ReadonlyArray<ReadPieceCommandOutput> } }
@@ -731,6 +741,7 @@ export type ReadPieceCommandOutput =
   | { readonly readPiecePathCommand: { readonly path: ReadonlyArray<IdDto> } }
   | { readonly readPieceParentPieceIdCommand: { readonly parentPiece: (IdDto | null | undefined) } }
   | { readonly readPieceParentConnectionIdCommand: { readonly parentConnection: (IdDto | null | undefined) } }
+  | { readonly readPieceParentConnectionFullCommand: { readonly connection: unknown } }
   | { readonly readPieceParentDesignIdCommand: { readonly parentDesign: IdDto } }
   | { readonly readPieceFixedCommand: { readonly fixed: unknown } }
   | { readonly readPieceConnectedCommand: { readonly connected: unknown } }

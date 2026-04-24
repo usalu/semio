@@ -16,6 +16,7 @@
 // #region ⛩️Imports
 
 import type {
+  Connector,
   KitBinaryStore,
   KitCommandContext,
   KitCommandResult,
@@ -24,8 +25,10 @@ import type {
   KitJsonFileAdapter,
   KitStore,
   KitStoreSnapshot,
-} from "@semio/js";
-import type { Connector, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+  Port,
+  SketchpadKitKindAvailability,
+  SketchpadKitStoreFactory,
+} from "@semio/react";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
@@ -101,8 +104,6 @@ import {
   TypeDiff,
   TypeShallow,
   Vector,
-} from "@semio/js";
-import {
   AuthorScope,
   ConnectionScope,
   DesignScope,
@@ -47390,7 +47391,7 @@ async function boot() {
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
         const parsed = JSON.parse(json);
-        const { KitSchema } = require("@semio/js");
+        const { KitSchema } = require("@semio/react");
         const kit = KitSchema.parse(parsed);
         kitStore!.applyExternalUpdate(kit);
       } catch {
@@ -47556,7 +47557,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
    **/
   async function ensureMetabolismFolderKitDbFile(): Promise<void> {
     const fs = await import(/* @vite-ignore */ "node" + ":fs");
-    const { getSqlJs, kitToSqlite } = await import("@semio/js");
+    const { getSqlJs, kitToSqlite } = await import("@semio/react");
     const semioDir = path.join(METABOLISM_DIR_PATH, ".semio");
     const dbPath = path.join(semioDir, "kit.db");
     fs.mkdirSync(semioDir, { recursive: true });

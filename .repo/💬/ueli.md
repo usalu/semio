@@ -1432,6 +1432,8 @@ Requirements:
 - No kit hook definitions, no kit stores and no kit state management regarding in semio/sketchpad.
 - No direction execution of commands in semio/react. No command semantics.
 - No diff based mutation in semio/js, semio/react, semio/sketchpad. Mutations are only over commands.
+- You MUST use `useSyncExternalStore` in semio/react which updates when semio/rs sends the exact event. You MUST NOT do any filtering/computation/caching in semio/react and you MUST NOT use `useMemo`.
+- You MUST export single hooks for everything in semio/react.
 
 e.g.
 semio/rs uses impl PieceStore uses `self.computed_flat_plane()`
@@ -1440,6 +1442,12 @@ semio/js uses directly the ReadPieceFlatPlaneCommand command from semio/rs
 semio/js exports `class PieceStore` with `flatPlane()`
 semio/react exports usePieceFlatPlane and PieceContext
 semio/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
+
+useTypesIds()
+useTypesMetadata()
+useShallowType()
+useCreateType()
+useDeleteType()
 
 This pattern MUST be used for everything.
 

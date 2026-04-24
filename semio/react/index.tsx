@@ -3440,12 +3440,40 @@ export function useParentPieceId(designId?: string, pieceId?: string): HookTriad
 }
 
 export function usePieceParentConnection(designId?: string, pieceId?: string): HookTriad<any | undefined> {
-	const [conns, , st] = useRpcConnections(designId);
-	const value = React.useMemo(() => {
-		if (!pieceId || !Array.isArray(conns)) return undefined;
-		return conns.find((c: any) => c?.connecting?.piece?.id === pieceId);
-	}, [conns, pieceId]);
-	return [value, noopAsyncSet, st] as const;
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any | undefined>(undefined);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient || !designId || !pieceId) {
+			setValue(undefined);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const v = await new LiveKitRoot(runtime.kitClient).piece(designId, pieceId).readParentConnectionFull();
+				if (!cancelled) setValue(v ?? undefined);
+			} catch {
+				if (!cancelled) setValue(undefined);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient, designId, pieceId]);
+	const status: WriteStatus =
+		!designId || !pieceId || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
 }
 
 export function useIncludedDesigns(designId?: string): HookTriad<any[]> {
@@ -3655,40 +3683,119 @@ export function useKitColoredConnectors(): HookTriad<ReadonlyArray<unknown>> {
 
 export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookTriad<string[]> {
 	const runtime = useKitRuntime();
-	const [, , metaStatus] = usePiecesMetadataMap(designId);
-	const value = React.useMemo(() => {
-		if (!designId || !pieceIds?.length || !runtime.state?.kit) return [];
-		const kit = runtime.state.kit;
-		const design = kit.designs?.find((d: any) => d.id === designId);
-		if (!design) return [];
-		const designs = kit.designs ?? [];
-		const types = kit.types ?? [];
-		const ports = getKitPorts(kit);
-		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).types;
-	}, [runtime.state.kit, designId, pieceIds]);
-	return [value, noopAsyncSet, metaStatus] as const;
+	const pieceKey = pieceIds?.join("\u0000") ?? "";
+	const [value, setValue] = React.useState<string[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		const sel = pieceIds ?? [];
+		if (!runtime.kitClient || !designId || !sel.length) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readReplaceableCatalog(sel);
+				if (!cancelled) setValue(v.types);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- stable key for selection contents
+	}, [runtime.kitClient, designId, pieceKey]);
+	const status: WriteStatus =
+		!designId || !pieceIds?.length || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
 }
 
 export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookTriad<string[]> {
 	const runtime = useKitRuntime();
-	const [, , metaStatus] = usePiecesMetadataMap(designId);
-	const value = React.useMemo(() => {
-		if (!designId || !pieceIds?.length || !runtime.state?.kit) return [];
-		const kit = runtime.state.kit;
-		const design = kit.designs?.find((d: any) => d.id === designId);
-		if (!design) return [];
-		const designs = kit.designs ?? [];
-		const types = kit.types ?? [];
-		const ports = getKitPorts(kit);
-		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).designs;
-	}, [runtime.state.kit, designId, pieceIds]);
-	return [value, noopAsyncSet, metaStatus] as const;
+	const pieceKey = pieceIds?.join("\u0000") ?? "";
+	const [value, setValue] = React.useState<string[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		const sel = pieceIds ?? [];
+		if (!runtime.kitClient || !designId || !sel.length) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readReplaceableCatalog(sel);
+				if (!cancelled) setValue(v.designs);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [runtime.kitClient, designId, pieceKey]);
+	const status: WriteStatus =
+		!designId || !pieceIds?.length || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
 }
 
 export function useExplodeableDesignNodes(designId?: string): HookTriad<string[]> {
-	const [included, , st] = useIncludedDesigns(designId);
-	const value = React.useMemo(() => (included ?? []).map((x: any) => x.id).filter(Boolean), [included]);
-	return [value, noopAsyncSet, st] as const;
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<string[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient || !designId) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readIncludedDesignIds();
+				if (!cancelled) setValue(v);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient, designId]);
+	const status: WriteStatus =
+		!designId || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
 }
 
 // #endregion 🎛️KitStoreClient command hooks
@@ -4096,8 +4203,19 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 /** Re-exports for hosts (e.g. sketchpad) that must not import kit domain from `@semio/js` directly. */
 export type {
+	AuthorId,
+	ConnectionDiff,
+	ConnectionId,
 	Connector,
+	DesignDiff,
+	DesignShallow,
+	PieceDiff,
+	PieceId,
 	Port,
+	QualityDiff,
+	TypeDiff,
+	TypeShallow,
+	KitShallow,
 	KitBinaryStore,
 	KitCommandContext,
 	KitCommandResult,
@@ -4106,6 +4224,8 @@ export type {
 	KitJsonFileAdapter,
 	KitStore,
 	KitStoreSnapshot,
+	Id,
+	KitDiff,
 } from "@semio/js";
 export {
 	applyKitDiff,
@@ -4114,23 +4234,21 @@ export {
 	areSameConnection,
 	Attribute,
 	Author,
-	AuthorId,
 	buildFileTree,
 	Camera,
 	colorPortsForTypes,
 	Concept,
 	Connection,
-	ConnectionDiff,
-	ConnectionId,
 	Coordinate,
 	createFolderKitStore,
 	createJsonFileKitStore,
+	createKitCommandEngine,
+	createKitCommandEngineExplicitOrigin,
 	createKitFileObjectUrl,
 	createSessionKitStore,
 	Design,
-	DesignDiff,
-	DesignShallow,
 	DiffStatus,
+	executeSemioKitCommand,
 	fetchReadableKitFileBlob,
 	findDesignInKit,
 	findPieceInDesign,
@@ -4139,6 +4257,7 @@ export {
 	flattenFileTree,
 	Folder,
 	generateUniqueName,
+	getSqlJs,
 	getClusterableGroups,
 	getDesignDiff,
 	getExistingKitFileProvider,
@@ -4150,23 +4269,19 @@ export {
 	getReadableKitFileUrl,
 	getStoredKitFileUrls,
 	ICON_WIDTH,
-	Id,
 	id,
 	importKit,
 	InMemoryKitStore,
 	inverseKitDiff,
+	kitToSqlite,
 	isBrowserReadableFileUrl,
 	Kit,
-	KitDiff,
-	KitShallow,
+	KitSchema,
 	Piece,
-	PieceDiff,
-	PieceId,
 	Plane,
 	planeToMatrix,
 	Point,
 	Quality,
-	QualityDiff,
 	Representation,
 	selectBestRepresentation,
 	File as SemioFile,
@@ -4176,8 +4291,6 @@ export {
 	toSemioRotation,
 	toThreeRotation,
 	Type,
-	TypeDiff,
-	TypeShallow,
 	Vector,
 } from "@semio/js";
 

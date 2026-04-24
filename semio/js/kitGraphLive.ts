@@ -120,6 +120,14 @@ export class LivePieceView {
     }
     return out.readPieceFlatCenterCommand.flatCenter;
   }
+
+  async readParentConnectionFull(): Promise<unknown | null | undefined> {
+    const out = await this.read({ readPieceParentConnectionFullCommand: null });
+    if (!("readPieceParentConnectionFullCommand" in out) || out.readPieceParentConnectionFullCommand == null) {
+      throw new Error("readPieceParentConnectionFullCommand: missing output");
+    }
+    return out.readPieceParentConnectionFullCommand.connection;
+  }
 }
 
 /** `executeRead` for design-scoped fields (e.g. clusterable groups, quality sum). */
@@ -159,6 +167,28 @@ export class LiveDesignView {
       throw new Error("readDesignQualitySumCommand: missing output");
     }
     return out.readDesignQualitySumCommand.sum;
+  }
+
+  async readReplaceableCatalog(selection: ReadonlyArray<string>): Promise<{ types: string[]; designs: string[] }> {
+    const out = await this.read({
+      readDesignReplaceableCatalogCommand: { selection: selection.map(idDto) },
+    });
+    if (!("readDesignReplaceableCatalogCommand" in out) || out.readDesignReplaceableCatalogCommand == null) {
+      throw new Error("readDesignReplaceableCatalogCommand: missing output");
+    }
+    const row = out.readDesignReplaceableCatalogCommand;
+    return {
+      types: row.types.map((t) => t.id),
+      designs: row.designs.map((d) => d.id),
+    };
+  }
+
+  async readIncludedDesignIds(): Promise<string[]> {
+    const out = await this.read({ readDesignIncludedDesignIdsCommand: null });
+    if (!("readDesignIncludedDesignIdsCommand" in out) || out.readDesignIncludedDesignIdsCommand == null) {
+      throw new Error("readDesignIncludedDesignIdsCommand: missing output");
+    }
+    return out.readDesignIncludedDesignIdsCommand.designIds.map((d) => d.id);
   }
 }
 

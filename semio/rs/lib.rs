@@ -360,6 +360,10 @@ pub enum ReadDesignCommand {
     ReadDesignIncludedDesignsCommand,
     /// Sum of numeric props for `qualityId` over pieces (piece prop overrides type prop). See JS `sumQualityInDesign`.
     ReadDesignQualitySumCommand { quality_id: QualityIdDto },
+    /// Replacement kind/design ids for `selection` (see [`DesignStore::replaceable_catalog_candidates`]).
+    ReadDesignReplaceableCatalogCommand { selection: Vec<PieceIdDto> },
+    /// Design ids referenced as `designPiece` on connection sides (explode / include list).
+    ReadDesignIncludedDesignIdsCommand,
     ReadDesignFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
     ReadDesignPieceCommands { id: PieceIdDto, commands: Vec<ReadPieceCommand> },
     ReadDesignConnectionCommands { id: ConnectionIdDto, commands: Vec<ReadConnectionCommand> },
@@ -417,6 +421,14 @@ pub enum ReadDesignCommandOutput {
     ReadDesignClusterableGroupsCommand { groups: Vec<Vec<PieceIdDto>> },
     ReadDesignIncludedDesignsCommand { designs: Vec<IncludedDesignInfoDto> },
     ReadDesignQualitySumCommand { sum: f64 },
+    ReadDesignReplaceableCatalogCommand {
+        types: Vec<crate::typ::TypeIdDto>,
+        designs: Vec<crate::design::DesignIdDto>,
+    },
+    ReadDesignIncludedDesignIdsCommand {
+        #[serde(rename = "designIds")]
+        design_ids: Vec<crate::design::DesignIdDto>,
+    },
     ReadDesignFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
     ReadDesignPieceCommands { results: Vec<ReadPieceCommandOutput> },
     ReadDesignConnectionCommands { results: Vec<ReadConnectionCommandOutput> },
@@ -461,6 +473,7 @@ pub enum ReadPieceCommand {
     ReadPiecePathCommand,
     ReadPieceParentPieceIdCommand,
     ReadPieceParentConnectionIdCommand,
+    ReadPieceParentConnectionFullCommand,
     ReadPieceParentDesignIdCommand,
     ReadPieceFixedCommand,
     ReadPieceConnectedCommand,
@@ -499,6 +512,7 @@ pub enum ReadPieceCommandOutput {
     ReadPiecePathCommand { path: Vec<PieceIdDto> },
     ReadPieceParentPieceIdCommand { parent_piece: Option<PieceIdDto> },
     ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionIdDto> },
+    ReadPieceParentConnectionFullCommand { connection: Option<crate::connection::ConnectionFullDto> },
     ReadPieceParentDesignIdCommand { parent_design: DesignIdDto },
     ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
     ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
@@ -1714,6 +1728,13 @@ impl ReadPieceCommand {
             ReadPieceCommand::ReadPieceParentConnectionIdCommand => ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand {
                 parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_id_dto())),
             },
+            ReadPieceCommand::ReadPieceParentConnectionFullCommand => ReadPieceCommandOutput::ReadPieceParentConnectionFullCommand {
+                connection: o
+                    .parent_connection
+                    .as_ref()
+                    .and_then(|w| w.upgrade())
+                    .and_then(|c| c.read().ok().map(|c| c.to_full_dto())),
+            },
             ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
                 parent_design: o
                     .parent_design
@@ -2081,6 +2102,13 @@ fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
     out
 }
 
+fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
+    design_included_infos(d)
+        .into_iter()
+        .map(|i| crate::design::DesignIdDto { id: i.design_id })
+        .collect()
+}
+
 fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
     use std::collections::HashMap;
     let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g
@@ -2194,6 +2222,21 @@ impl ReadDesignCommand {
             }
             ReadDesignCommand::ReadDesignQualitySumCommand { quality_id } => ReadDesignCommandOutput::ReadDesignQualitySumCommand {
                 sum: design_sum_quality(&*o, g, &quality_id.id),
+            },
+            ReadDesignCommand::ReadDesignReplaceableCatalogCommand { selection } => {
+                let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
+                let alts = o.replaceable_catalog_candidates(&ids);
+                ReadDesignCommandOutput::ReadDesignReplaceableCatalogCommand {
+                    types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeIdDto { id: r.id.clone() })).collect(),
+                    designs: alts
+                        .designs
+                        .iter()
+                        .filter_map(|d| d.read().ok().map(|r| crate::design::DesignIdDto { id: r.id.clone() }))
+                        .collect(),
+                }
+            }
+            ReadDesignCommand::ReadDesignIncludedDesignIdsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignIdsCommand {
+                design_ids: design_included_design_ids(&*o),
             },
             ReadDesignCommand::ReadDesignFamilyCommands { id, commands } => {
                 let f = o

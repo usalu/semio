@@ -1,99 +1,221 @@
-"""
-GraphQL-native control surface for the dual-channel WASM actor.
 
-Design constraints:
-- Query exposes exactly one root read entrypoint: `kitStore(input: ...)`.
-- Mutation exposes exactly two write entrypoints:
-  - `change(...)` for kit-content mutations.
-  - `execute(...)` for non-kit-changing control-plane / workflow commands.
-- Subscription carries typed outbound worker events.
-- No JSON escape hatches.
-- Polymorphic command inputs use `@oneOf` input objects.
-"""
+directive @oneOf on INPUT_OBJECT
+
+scalar DateTime
+scalar Cursor
+scalar Long
+
 schema {
   query: Query
   mutation: Mutation
   subscription: Subscription
 }
 
-"""
-Input-object sum type.
-Exactly one field must be provided.
-"""
-directive @oneOf on INPUT_OBJECT
-
-scalar DateTime
-
-# =========================
-# Root operations
-# =========================
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: Cursor
+  endCursor: Cursor
+}
 
 type Query {
-  """
-  Single synchronous read entrypoint.
-  Omit `input.scope` to read the live working store.
-  """
   kitStore(input: KitStoreQueryInput!): KitStore!
 }
 
 type Mutation {
-  """
-  Enqueue one or more kit-content changes.
-  These mutate the kit graph, either directly or within a transaction context.
-  """
-  change(input: ChangeInput!): CommandReceipt!
-
-  """
-  Enqueue one or more non-kit-changing commands.
-  This is the control surface for sessions, drafts, transactions,
-  checkpoint / alternative operations, backbone control, conflicts, and sync.
-  """
-  execute(input: ExecuteInput!): CommandReceipt!
+  change(input: ChangeInput!): ChangePayload!
+  execute(input: ExecuteInput!): ExecutePayload!
 }
 
 type Subscription {
-  """
-  Long-lived outbound event stream from the WASM actor.
-  """
   eventStream(input: EventStreamInput): StoreEvent!
 }
 
-# =========================
-# Query root model
-# =========================
+input EntityIdInput {
+  id: ID!
+}
+
+input NameSelectorInput {
+  name: String!
+}
+
+input KeySelectorInput {
+  key: String!
+}
+
+input PathSelectorInput {
+  path: String!
+}
+
+input UrlSelectorInput {
+  url: String!
+}
+
+input TypeSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input DesignSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input PieceSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input ConnectionSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input SideSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input PortSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input ConnectorSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input RepresentationSelectorInput @oneOf {
+  byId: EntityIdInput
+  byUrl: UrlSelectorInput
+}
+
+input FamilySelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input FileSelectorInput @oneOf {
+  byId: EntityIdInput
+  byUrl: UrlSelectorInput
+}
+
+input FolderSelectorInput @oneOf {
+  byId: EntityIdInput
+  byPath: PathSelectorInput
+}
+
+input LocationSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input AuthorSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input ConceptSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input TagSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input QualitySelectorInput @oneOf {
+  byId: EntityIdInput
+  byKey: KeySelectorInput
+}
+
+input PropSelectorInput @oneOf {
+  byId: EntityIdInput
+  byKey: KeySelectorInput
+}
+
+input AttributeSelectorInput @oneOf {
+  byId: EntityIdInput
+  byKey: KeySelectorInput
+}
+
+input LayerSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input GroupSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input StatSelectorInput @oneOf {
+  byId: EntityIdInput
+  byKey: KeySelectorInput
+}
+
+input BenchmarkSelectorInput @oneOf {
+  byId: EntityIdInput
+  byKey: KeySelectorInput
+}
+
+input SessionSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input DraftSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input TransactionSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input CheckpointSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
+input AlternativeSelectorInput @oneOf {
+  byId: EntityIdInput
+  byName: NameSelectorInput
+}
+
+input ConflictSelectorInput @oneOf {
+  byId: EntityIdInput
+}
+
 
 input KitStoreQueryInput {
-  """
-  Materialize the returned `kit` field against a specific historical or workflow context.
-  Omit for the live working kit.
-  """
   scope: KitStoreScopeInput
 }
 
 input KitStoreScopeInput @oneOf {
-  atCheckpoint: AtCheckpointScopeInput
-  atAlternativeTip: AtAlternativeTipScopeInput
-  atDraft: AtDraftScopeInput
-  atTransaction: AtTransactionScopeInput
+  live: LiveScopeInput
+  atCheckpoint: CheckpointScopeInput
+  atAlternativeTip: AlternativeScopeInput
+  atDraft: DraftScopeInput
+  atTransaction: TransactionScopeInput
 }
 
-input AtCheckpointScopeInput {
-  checkpointId: ID!
+input LiveScopeInput {
+  current: Boolean! = true
 }
 
-input AtAlternativeTipScopeInput {
-  alternativeId: ID!
+input CheckpointScopeInput {
+  checkpoint: CheckpointSelectorInput!
 }
 
-input AtDraftScopeInput {
-  sessionId: ID!
-  draftId: ID!
+input AlternativeScopeInput {
+  alternative: AlternativeSelectorInput!
 }
 
-input AtTransactionScopeInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
+input DraftScopeInput {
+  session: SessionSelectorInput!
+  draft: DraftSelectorInput!
+}
+
+input TransactionScopeInput {
+  session: SessionSelectorInput!
+  draft: DraftSelectorInput!
+  transaction: TransactionSelectorInput!
 }
 
 enum KitStoreViewKind {
@@ -106,62 +228,75 @@ enum KitStoreViewKind {
 
 type KitStoreView {
   kind: KitStoreViewKind!
-  checkpointId: ID
-  alternativeId: ID
-  sessionId: ID
-  draftId: ID
-  transactionId: ID
+  checkpoint: Checkpoint
+  alternative: Alternative
+  session: Session
+  draft: Draft
+  transaction: Transaction
 }
 
 type KitStore {
   view: KitStoreView!
   kit: Kit!
-  activeCheckpointId: ID
+  activeCheckpoint: Checkpoint
   backbone: BackboneStatus!
-  conflicts: [KitConflict!]!
-  checkpoints: [Checkpoint!]!
-  checkpoint(id: ID!): Checkpoint
-  alternatives: [Alternative!]!
-  alternative(id: ID!): Alternative
-  sessions: [Session!]!
-  session(id: ID!): Session
+
+  conflicts(first: Int, after: Cursor, last: Int, before: Cursor): KitConflictConnection!
+  conflict(input: ConflictSelectorInput!): KitConflict
+
+  checkpoints(first: Int, after: Cursor, last: Int, before: Cursor): CheckpointConnection!
+  checkpoint(input: CheckpointSelectorInput!): Checkpoint
+
+  alternatives(first: Int, after: Cursor, last: Int, before: Cursor): AlternativeConnection!
+  alternative(input: AlternativeSelectorInput!): Alternative
+
+  sessions(first: Int, after: Cursor, last: Int, before: Cursor): SessionConnection!
+  session(input: SessionSelectorInput!): Session
 }
 
-# =========================
-# Mutation envelopes
-# =========================
-
 input ChangeInput {
-  requestId: ID
+  clientMutationId: String
+  requestToken: String
   target: ChangeTargetInput
   commands: [KitChangeCommandInput!]!
 }
 
-"""
-If omitted, changes apply directly to the live working kit.
-When provided, changes are scoped to a workflow context.
-"""
-input ChangeTargetInput {
-  sessionId: ID
-  draftId: ID
-  transactionId: ID
+input ChangeTargetInput @oneOf {
+  live: LiveScopeInput
+  draft: DraftScopeInput
+  transaction: TransactionScopeInput
 }
 
 input ExecuteInput {
-  requestId: ID
+  clientMutationId: String
+  requestToken: String
   commands: [ExecuteCommandInput!]!
+}
+
+type CommandTarget {
+  live: Boolean!
+  session: Session
+  draft: Draft
+  transaction: Transaction
 }
 
 type CommandReceipt {
   accepted: Boolean!
-  requestId: ID
-  commandIds: [ID!]!
+  requestToken: String
+  commandTokens: [String!]!
   queuedAt: DateTime!
+  target: CommandTarget
 }
 
-# =========================
-# Subscriptions
-# =========================
+type ChangePayload {
+  clientMutationId: String
+  receipt: CommandReceipt!
+}
+
+type ExecutePayload {
+  clientMutationId: String
+  receipt: CommandReceipt!
+}
 
 enum StoreEventKind {
   CHANGE
@@ -186,36 +321,48 @@ enum EventPhase {
   FAILED
 }
 
-input EventStreamInput {
-  requestId: ID
-  commandId: ID
-  kinds: [StoreEventKind!]
-  phases: [EventPhase!]
-  entityKind: EntityKind
-  entityId: ID
-  sessionId: ID
-  draftId: ID
-  transactionId: ID
-  checkpointId: ID
-  alternativeId: ID
+input EventSubjectSelectorInput @oneOf {
+  type: TypeSelectorInput
+  design: DesignSelectorInput
+  piece: PieceSelectorInput
+  connection: ConnectionSelectorInput
+  port: PortSelectorInput
+  connector: ConnectorSelectorInput
+  representation: RepresentationSelectorInput
+  family: FamilySelectorInput
+  file: FileSelectorInput
+  folder: FolderSelectorInput
+  location: LocationSelectorInput
+  author: AuthorSelectorInput
+  concept: ConceptSelectorInput
+  tag: TagSelectorInput
+  quality: QualitySelectorInput
+  prop: PropSelectorInput
+  attribute: AttributeSelectorInput
+  layer: LayerSelectorInput
+  group: GroupSelectorInput
+  stat: StatSelectorInput
+  benchmark: BenchmarkSelectorInput
+  session: SessionSelectorInput
+  draft: DraftSelectorInput
+  transaction: TransactionSelectorInput
+  checkpoint: CheckpointSelectorInput
+  alternative: AlternativeSelectorInput
+  conflict: ConflictSelectorInput
 }
 
-type StoreEvent {
-  id: ID!
-  requestId: ID
-  commandId: ID
-  kind: StoreEventKind!
-  phase: EventPhase!
-  entity: EntityRef
-  sessionId: ID
-  draftId: ID
-  transactionId: ID
-  checkpointId: ID
-  alternativeId: ID
-  conflictId: ID
-  message: String
-  error: UserError
-  at: DateTime!
+input EventStreamInput {
+  requestToken: String
+  commandToken: String
+  kinds: [StoreEventKind!]
+  phases: [EventPhase!]
+  subject: EventSubjectSelectorInput
+  session: SessionSelectorInput
+  draft: DraftSelectorInput
+  transaction: TransactionSelectorInput
+  checkpoint: CheckpointSelectorInput
+  alternative: AlternativeSelectorInput
+  conflict: ConflictSelectorInput
 }
 
 type UserError {
@@ -223,10 +370,6 @@ type UserError {
   message: String!
   recoverable: Boolean!
 }
-
-# =========================
-# Domain enums / refs
-# =========================
 
 enum EntityKind {
   KIT
@@ -260,11 +403,6 @@ enum EntityKind {
   CONFLICT
 }
 
-type EntityRef {
-  kind: EntityKind!
-  id: ID!
-}
-
 enum TransactionState {
   OPEN
   FINALIZED
@@ -293,72 +431,70 @@ enum ConflictResolution {
   FORCE_OVERWRITE_BACKBONE
 }
 
-# =========================
-# Store / workflow entities
-# =========================
+enum BackboneKind {
+  DEV
+  LOCAL
+  REMOTE
+}
 
 type BackboneStatus {
   attached: Boolean!
-  kind: String
-  tip: ID
+  kind: BackboneKind
+  tip: Checkpoint
 }
 
 type KitConflict {
-  id: ID!
   wipCheckpoint: Checkpoint!
-  backboneTip: ID
+  backboneTip: Checkpoint
   reason: String!
   createdAt: DateTime!
 }
 
 type Session {
-  id: ID!
-  drafts: [Draft!]!
-  draft(id: ID!): Draft
+  drafts(first: Int, after: Cursor, last: Int, before: Cursor): DraftConnection!
+  draft(input: DraftSelectorInput!): Draft
 }
 
 type Draft {
-  id: ID!
   parentCheckpoint: Checkpoint
   targetAlternative: Alternative
   before: Kit!
-  transactions: [Transaction!]!
-  redoTransactions: [Transaction!]!
+  transactions(first: Int, after: Cursor, last: Int, before: Cursor): TransactionConnection!
+  redoTransactions(first: Int, after: Cursor, last: Int, before: Cursor): TransactionConnection!
   openTransaction: Transaction
   canUndo: Boolean!
   canRedo: Boolean!
 }
 
 type Transaction {
-  id: ID!
   state: TransactionState!
-  changes: [ChangeRecord!]!
-  redoChanges: [ChangeRecord!]!
+  changes(first: Int, after: Cursor, last: Int, before: Cursor): ChangeRecordConnection!
+  redoChanges(first: Int, after: Cursor, last: Int, before: Cursor): ChangeRecordConnection!
   canUndo: Boolean!
   canRedo: Boolean!
 }
 
 type Checkpoint {
-  id: ID!
   parent: Checkpoint
-  children: [Checkpoint!]!
+  children(first: Int, after: Cursor, last: Int, before: Cursor): CheckpointConnection!
   message: String
   time: DateTime
-  authors: [Author!]!
-  changes: [ChangeRecord!]!
+  authors(first: Int, after: Cursor, last: Int, before: Cursor): AuthorConnection!
+  changes(first: Int, after: Cursor, last: Int, before: Cursor): ChangeRecordConnection!
   release: MaterializedKit
 }
 
 type Alternative {
-  id: ID!
   name: String!
   root: Checkpoint
-  checkpoints: [Checkpoint!]!
+  checkpoints(first: Int, after: Cursor, last: Int, before: Cursor): CheckpointConnection!
   tip: Checkpoint
 }
 
 type MaterializedKit {
-  kit: Kit!
+  initial: Kit!
+  changes(first: Int, after: Cursor, last: Int, before: Cursor): ChangeRecordConnection!
+  computed: Kit
 }
 
 type ChangeRecord {
@@ -370,12 +506,7 @@ type ChangeRecord {
   inverseCount: Int!
 }
 
-# =========================
-# Core kit graph
-# =========================
-
 type Kit {
-  id: ID!
   name: String!
   description: String
   icon: String
@@ -387,36 +518,35 @@ type Kit {
   uri: String
   created: DateTime
   updated: DateTime
-  types: [Type!]!
-  type(id: ID!): Type
-  designs: [Design!]!
-  design(id: ID!): Design
-  files: [File!]!
-  file(id: ID!): File
-  folders: [Folder!]!
-  folder(id: ID!): Folder
-  authors: [Author!]!
-  author(id: ID!): Author
-  concepts: [Concept!]!
-  concept(id: ID!): Concept
-  tags: [Tag!]!
-  tag(id: ID!): Tag
-  qualities: [Quality!]!
-  quality(id: ID!): Quality
-  props: [Prop!]!
-  prop(id: ID!): Prop
-  attributes: [Attribute!]!
-  attribute(id: ID!): Attribute
-  ports: [Port!]!
-  port(id: ID!): Port
-  families: [Family!]!
-  family(id: ID!): Family
-  locations: [Location!]!
-  location(id: ID!): Location
+  types(first: Int, after: Cursor, last: Int, before: Cursor): TypeConnection!
+  type(input: TypeSelectorInput!): Type
+  designs(first: Int, after: Cursor, last: Int, before: Cursor): DesignConnection!
+  design(input: DesignSelectorInput!): Design
+  files(first: Int, after: Cursor, last: Int, before: Cursor): FileConnection!
+  file(input: FileSelectorInput!): File
+  folders(first: Int, after: Cursor, last: Int, before: Cursor): FolderConnection!
+  folder(input: FolderSelectorInput!): Folder
+  authors(first: Int, after: Cursor, last: Int, before: Cursor): AuthorConnection!
+  author(input: AuthorSelectorInput!): Author
+  concepts(first: Int, after: Cursor, last: Int, before: Cursor): ConceptConnection!
+  concept(input: ConceptSelectorInput!): Concept
+  tags(first: Int, after: Cursor, last: Int, before: Cursor): TagConnection!
+  tag(input: TagSelectorInput!): Tag
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  quality(input: QualitySelectorInput!): Quality
+  props(first: Int, after: Cursor, last: Int, before: Cursor): PropConnection!
+  prop(input: PropSelectorInput!): Prop
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
+  attribute(input: AttributeSelectorInput!): Attribute
+  ports(first: Int, after: Cursor, last: Int, before: Cursor): PortConnection!
+  port(input: PortSelectorInput!): Port
+  families(first: Int, after: Cursor, last: Int, before: Cursor): FamilyConnection!
+  family(input: FamilySelectorInput!): Family
+  locations(first: Int, after: Cursor, last: Int, before: Cursor): LocationConnection!
+  location(input: LocationSelectorInput!): Location
 }
 
 type Type {
-  id: ID!
   name: String!
   description: String
   icon: String
@@ -427,22 +557,21 @@ type Type {
   location: Location
   created: DateTime
   updated: DateTime
-  families: [Family!]!
-  connectors: [Connector!]!
-  connector(id: ID!): Connector
-  representations: [Representation!]!
-  representation(id: ID!): Representation
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  ports: [Port!]!
+  families(first: Int, after: Cursor, last: Int, before: Cursor): FamilyConnection!
+  connectors(first: Int, after: Cursor, last: Int, before: Cursor): ConnectorConnection!
+  connector(input: ConnectorSelectorInput!): Connector
+  representations(first: Int, after: Cursor, last: Int, before: Cursor): RepresentationConnection!
+  representation(input: RepresentationSelectorInput!): Representation
+  authors(first: Int, after: Cursor, last: Int, before: Cursor): AuthorConnection!
+  concepts(first: Int, after: Cursor, last: Int, before: Cursor): ConceptConnection!
+  tags(first: Int, after: Cursor, last: Int, before: Cursor): TagConnection!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  props(first: Int, after: Cursor, last: Int, before: Cursor): PropConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
+  ports(first: Int, after: Cursor, last: Int, before: Cursor): PortConnection!
 }
 
 type Design {
-  id: ID!
   name: String!
   description: String
   icon: String
@@ -452,27 +581,26 @@ type Design {
   created: DateTime
   updated: DateTime
   kit: Kit
-  families: [Family!]!
-  pieces: [Piece!]!
-  piece(id: ID!): Piece
-  connections: [Connection!]!
-  connection(id: ID!): Connection
-  layers: [Layer!]!
-  layer(id: ID!): Layer
-  groups: [Group!]!
-  group(id: ID!): Group
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
-  stat(id: ID!): Stat
+  families(first: Int, after: Cursor, last: Int, before: Cursor): FamilyConnection!
+  pieces(first: Int, after: Cursor, last: Int, before: Cursor): PieceConnection!
+  piece(input: PieceSelectorInput!): Piece
+  connections(first: Int, after: Cursor, last: Int, before: Cursor): ConnectionConnection!
+  connection(input: ConnectionSelectorInput!): Connection
+  layers(first: Int, after: Cursor, last: Int, before: Cursor): LayerConnection!
+  layer(input: LayerSelectorInput!): Layer
+  groups(first: Int, after: Cursor, last: Int, before: Cursor): GroupConnection!
+  group(input: GroupSelectorInput!): Group
+  stats(first: Int, after: Cursor, last: Int, before: Cursor): StatConnection!
+  stat(input: StatSelectorInput!): Stat
+  authors(first: Int, after: Cursor, last: Int, before: Cursor): AuthorConnection!
+  concepts(first: Int, after: Cursor, last: Int, before: Cursor): ConceptConnection!
+  tags(first: Int, after: Cursor, last: Int, before: Cursor): TagConnection!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  props(first: Int, after: Cursor, last: Int, before: Cursor): PropConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
 }
 
 type Piece {
-  id: ID!
   name: String
   description: String
   plane: Plane
@@ -484,94 +612,85 @@ type Piece {
   color: String
   type: Type
   design: Design
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  flatPlane: Plane
-  flatCenter: Coordinate
-  flatPose: Pose
-  path: [Piece!]!
-  parentPiece: Piece
-  parentConnection: Connection
-  parentDesign: Design
-  fixed: FixedPiece
-  connected: ConnectedPiece
+  props(first: Int, after: Cursor, last: Int, before: Cursor): PropConnection!
+  prop(input: PropSelectorInput!): Prop
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
+  attribute(input: AttributeSelectorInput!): Attribute
+  fixedPoses: [FixedPiece!]!
+  externalConnections(first: Int, after: Cursor, last: Int, before: Cursor): ConnectionConnection!
   alternatives: PieceAlternatives!
-  alternativeTypes: [Type!]!
-  alternativeDesigns: [Design!]!
+  layers(first: Int, after: Cursor, last: Int, before: Cursor): LayerConnection!
+  groups(first: Int, after: Cursor, last: Int, before: Cursor): GroupConnection!
 }
 
 type Connection {
-  id: ID!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
+  name: String
   description: String
-  attributes: [Attribute!]!
+  from: Side!
+  to: Side!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
 }
 
 type Side {
-  id: ID!
-  piece: Piece!
+  name: String
+  piece: Piece
   port: Port
-  designPiece: Piece
   connector: Connector
+  point: Point
+  direction: Vector
 }
 
 type Port {
-  id: ID!
   name: String!
   description: String
   icon: String
-  compatibleFamilies: [Family!]!
+  color: String
+  side: String
+  unit: String
+  location: Location
+  families(first: Int, after: Cursor, last: Int, before: Cursor): FamilyConnection!
+  connectors(first: Int, after: Cursor, last: Int, before: Cursor): ConnectorConnection!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
+}
+
+type Connector {
+  name: String!
+  description: String
+  color: String
   mandatory: Boolean
   t: Float
   point: Point
   direction: Vector
-  compatiblePorts: [Port!]!
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
-}
-
-type Connector {
-  id: ID!
-  code: String!
-  description: String
-  port: Port
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+  compatibleFamilies(first: Int, after: Cursor, last: Int, before: Cursor): FamilyConnection!
+  compatiblePorts(first: Int, after: Cursor, last: Int, before: Cursor): PortConnection!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
 }
 
 type Representation {
-  id: ID!
   url: String!
   description: String
   file: File
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+  tags(first: Int, after: Cursor, last: Int, before: Cursor): TagConnection!
+  qualities(first: Int, after: Cursor, last: Int, before: Cursor): QualityConnection!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
 }
 
 type Family {
-  id: ID!
   name: String!
   description: String
+  color: String
   icon: String
-  ports: [Port!]!
-  attributes: [Attribute!]!
+  types(first: Int, after: Cursor, last: Int, before: Cursor): TypeConnection!
+  ports(first: Int, after: Cursor, last: Int, before: Cursor): PortConnection!
 }
 
 type File {
-  id: ID!
   url: String!
   mime: String
-  size: Int
+  size: Long
   hash: String
   description: String
   created: DateTime
@@ -579,52 +698,47 @@ type File {
 }
 
 type Folder {
-  id: ID!
   path: String!
   description: String
 }
 
 type Location {
-  id: ID!
   longitude: Float!
   latitude: Float!
   altitude: Float
-  attributes: [Attribute!]!
+  attributes(first: Int, after: Cursor, last: Int, before: Cursor): AttributeConnection!
 }
 
 type Author {
-  id: ID!
   name: String!
-  email: String!
+  email: String
+  homepage: String
   role: String
-  rank: Int
 }
 
 type Concept {
-  id: ID!
   name: String!
   description: String
-  order: Int
+  order: Long
 }
 
 type Tag {
-  id: ID!
   name: String!
-  order: Int
+  color: String
+  description: String
 }
 
 type Quality {
-  id: ID!
   key: String!
   value: String
   unit: String
   definition: String
   description: String
-  benchmarks: [Benchmark!]!
+  benchmarks(first: Int, after: Cursor, last: Int, before: Cursor): BenchmarkConnection!
+  benchmark(input: BenchmarkSelectorInput!): Benchmark
 }
 
 type Prop {
-  id: ID!
   key: String!
   value: String!
   unit: String
@@ -632,46 +746,40 @@ type Prop {
 }
 
 type Attribute {
-  id: ID!
   key: String!
   value: String!
-  definition: String
+  unit: String
 }
 
 type Layer {
-  id: ID!
   name: String!
   description: String
   color: String
-  order: Int
+  order: Long
   visible: Boolean
   locked: Boolean
 }
 
 type Group {
-  id: ID!
   name: String!
   description: String
   color: String
   icon: String
-  pieces: [Piece!]!
+  pieces(first: Int, after: Cursor, last: Int, before: Cursor): PieceConnection!
 }
 
 type Stat {
-  id: ID!
   key: String!
-  value: String!
+  value: Float
   unit: String
-  description: String
+  benchmark: Benchmark
 }
 
 type Benchmark {
-  id: ID!
-  name: String!
-  min: Float
-  max: Float
-  minExcluded: Boolean
-  maxExcluded: Boolean
+  key: String!
+  value: Float
+  unit: String
+  description: String
 }
 
 type FixedPiece {
@@ -681,14 +789,12 @@ type FixedPiece {
 
 type ConnectedPiece {
   piece: Piece!
-  parentPiece: Piece!
-  parentConnection: Connection!
-  flatPose: Pose!
+  connection: Connection!
 }
 
 type PieceAlternatives {
-  types: [Type!]!
-  designs: [Design!]!
+  types(first: Int, after: Cursor, last: Int, before: Cursor): TypeConnection!
+  designs(first: Int, after: Cursor, last: Int, before: Cursor): DesignConnection!
 }
 
 type Pose {
@@ -697,14 +803,14 @@ type Pose {
 }
 
 type Coordinate {
-  u: Float!
-  v: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type Plane {
   origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
+  normal: Vector!
 }
 
 type Point {
@@ -719,289 +825,398 @@ type Vector {
   z: Float!
 }
 
-# =========================
-# Entity inputs
-# =========================
+union StoreEventSubject = Kit | Type | Design | Piece | Connection | Side | Port | Connector | Representation | Family | File | Folder | Location | Author | Concept | Tag | Quality | Prop | Attribute | Layer | Group | Stat | Benchmark | Session | Draft | Transaction | Checkpoint | Alternative | KitConflict
 
-input KitInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  preview: String
-  remote: String
-  homepage: String
-  license: String
-  uri: String
-  created: DateTime
-  updated: DateTime
-  types: [TypeInput!]! = []
-  designs: [DesignInput!]! = []
-  files: [FileInput!]! = []
-  folders: [FolderInput!]! = []
-  authors: [AuthorInput!]! = []
-  concepts: [ConceptInput!]! = []
-  tags: [TagInput!]! = []
-  qualities: [QualityInput!]! = []
-  props: [PropInput!]! = []
-  attributes: [AttributeInput!]! = []
-  ports: [PortInput!]! = []
-  families: [FamilyInput!]! = []
-  locations: [LocationInput!]! = []
+type StoreEventScope {
+  session: Session
+  draft: Draft
+  transaction: Transaction
+  checkpoint: Checkpoint
+  alternative: Alternative
+  conflict: KitConflict
 }
 
-input TypeInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  stock: Int
-  virtual: Boolean
-  unit: String
-  locationId: ID
-  created: DateTime
-  updated: DateTime
-  familyIds: [ID!]! = []
-  connectors: [ConnectorInput!]! = []
-  representations: [RepresentationInput!]! = []
-  authors: [AuthorInput!]! = []
-  concepts: [ConceptInput!]! = []
-  tags: [TagInput!]! = []
-  qualities: [QualityInput!]! = []
-  props: [PropInput!]! = []
-  attributes: [AttributeInput!]! = []
+type StoreEvent {
+  receipt: CommandReceipt
+  kind: StoreEventKind!
+  phase: EventPhase!
+  subjectKind: EntityKind
+  subject: StoreEventSubject
+  scope: StoreEventScope
+  message: String
+  error: UserError
+  at: DateTime!
 }
 
-input DesignInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  locationId: ID
-  unit: String
-  created: DateTime
-  updated: DateTime
-  familyIds: [ID!]! = []
-  pieces: [PieceInput!]! = []
-  connections: [ConnectionInput!]! = []
-  layers: [LayerInput!]! = []
-  groups: [GroupInput!]! = []
-  authors: [AuthorInput!]! = []
-  concepts: [ConceptInput!]! = []
-  tags: [TagInput!]! = []
-  qualities: [QualityInput!]! = []
-  props: [PropInput!]! = []
-  attributes: [AttributeInput!]! = []
-  stats: [StatInput!]! = []
+
+type KitConflictEdge {
+  cursor: Cursor!
+  node: KitConflict!
 }
 
-input PieceInput {
-  id: ID!
-  name: String
-  description: String
-  plane: PlaneInput
-  center: CoordinateInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  hidden: Boolean
-  locked: Boolean
-  color: String
-  typeId: ID
-  props: [PropInput!]! = []
-  attributes: [AttributeInput!]! = []
+type KitConflictConnection {
+  edges: [KitConflictEdge!]!
+  nodes: [KitConflict!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input ConnectionInput {
-  id: ID!
-  connected: SideInput!
-  connecting: SideInput!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeInput!]! = []
+
+type CheckpointEdge {
+  cursor: Cursor!
+  node: Checkpoint!
 }
 
-input SideInput {
-  id: ID!
-  pieceId: ID!
-  portId: ID
-  designPieceId: ID
-  connectorId: ID
+type CheckpointConnection {
+  edges: [CheckpointEdge!]!
+  nodes: [Checkpoint!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input PortInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  compatibleFamilyIds: [ID!]! = []
-  mandatory: Boolean
-  t: Float
-  point: PointInput
-  direction: VectorInput
-  compatiblePortIds: [ID!]! = []
-  qualities: [QualityInput!]! = []
-  attributes: [AttributeInput!]! = []
+
+type AlternativeEdge {
+  cursor: Cursor!
+  node: Alternative!
 }
 
-input ConnectorInput {
-  id: ID!
-  code: String!
-  description: String
-  portId: ID
-  qualities: [QualityInput!]! = []
-  attributes: [AttributeInput!]! = []
+type AlternativeConnection {
+  edges: [AlternativeEdge!]!
+  nodes: [Alternative!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input RepresentationInput {
-  id: ID!
-  url: String!
-  description: String
-  fileId: ID
-  tags: [TagInput!]! = []
-  qualities: [QualityInput!]! = []
-  attributes: [AttributeInput!]! = []
+
+type SessionEdge {
+  cursor: Cursor!
+  node: Session!
 }
 
-input FamilyInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  ports: [PortInput!]! = []
-  attributes: [AttributeInput!]! = []
+type SessionConnection {
+  edges: [SessionEdge!]!
+  nodes: [Session!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input FileInput {
-  id: ID!
-  url: String!
-  mime: String
-  size: Int
-  hash: String
-  description: String
-  created: DateTime
-  updated: DateTime
+
+type DraftEdge {
+  cursor: Cursor!
+  node: Draft!
 }
 
-input FolderInput {
-  id: ID!
-  path: String!
-  description: String
+type DraftConnection {
+  edges: [DraftEdge!]!
+  nodes: [Draft!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input LocationInput {
-  id: ID!
-  longitude: Float!
-  latitude: Float!
-  altitude: Float
-  attributes: [AttributeInput!]! = []
+
+type TransactionEdge {
+  cursor: Cursor!
+  node: Transaction!
 }
 
-input AuthorInput {
-  id: ID!
-  name: String!
-  email: String!
-  role: String
-  rank: Int
+type TransactionConnection {
+  edges: [TransactionEdge!]!
+  nodes: [Transaction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input ConceptInput {
-  id: ID!
-  name: String!
-  description: String
-  order: Int
+
+type ChangeRecordEdge {
+  cursor: Cursor!
+  node: ChangeRecord!
 }
 
-input TagInput {
-  id: ID!
-  name: String!
-  order: Int
+type ChangeRecordConnection {
+  edges: [ChangeRecordEdge!]!
+  nodes: [ChangeRecord!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input QualityInput {
-  id: ID!
-  key: String!
-  value: String
-  unit: String
-  definition: String
-  description: String
-  benchmarks: [BenchmarkInput!]! = []
+
+type TypeEdge {
+  cursor: Cursor!
+  node: Type!
 }
 
-input PropInput {
-  id: ID!
-  key: String!
-  value: String!
-  unit: String
-  qualityId: ID
+type TypeConnection {
+  edges: [TypeEdge!]!
+  nodes: [Type!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input AttributeInput {
-  id: ID!
-  key: String!
-  value: String!
-  definition: String
+
+type DesignEdge {
+  cursor: Cursor!
+  node: Design!
 }
 
-input LayerInput {
-  id: ID!
-  name: String!
-  description: String
-  color: String
-  order: Int
-  visible: Boolean
-  locked: Boolean
+type DesignConnection {
+  edges: [DesignEdge!]!
+  nodes: [Design!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input GroupInput {
-  id: ID!
-  name: String!
-  description: String
-  color: String
-  icon: String
-  pieceIds: [ID!]! = []
+
+type PieceEdge {
+  cursor: Cursor!
+  node: Piece!
 }
 
-input StatInput {
-  id: ID!
-  key: String!
-  value: String!
-  unit: String
-  description: String
+type PieceConnection {
+  edges: [PieceEdge!]!
+  nodes: [Piece!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
 
-input BenchmarkInput {
-  id: ID!
-  name: String!
-  min: Float
-  max: Float
-  minExcluded: Boolean
-  maxExcluded: Boolean
+
+type ConnectionEdge {
+  cursor: Cursor!
+  node: Connection!
 }
 
-input PoseInput {
-  plane: PlaneInput!
-  center: CoordinateInput!
+type ConnectionConnection {
+  edges: [ConnectionEdge!]!
+  nodes: [Connection!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
 }
+
+
+type PortEdge {
+  cursor: Cursor!
+  node: Port!
+}
+
+type PortConnection {
+  edges: [PortEdge!]!
+  nodes: [Port!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type ConnectorEdge {
+  cursor: Cursor!
+  node: Connector!
+}
+
+type ConnectorConnection {
+  edges: [ConnectorEdge!]!
+  nodes: [Connector!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type RepresentationEdge {
+  cursor: Cursor!
+  node: Representation!
+}
+
+type RepresentationConnection {
+  edges: [RepresentationEdge!]!
+  nodes: [Representation!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type FamilyEdge {
+  cursor: Cursor!
+  node: Family!
+}
+
+type FamilyConnection {
+  edges: [FamilyEdge!]!
+  nodes: [Family!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type FileEdge {
+  cursor: Cursor!
+  node: File!
+}
+
+type FileConnection {
+  edges: [FileEdge!]!
+  nodes: [File!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type FolderEdge {
+  cursor: Cursor!
+  node: Folder!
+}
+
+type FolderConnection {
+  edges: [FolderEdge!]!
+  nodes: [Folder!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type LocationEdge {
+  cursor: Cursor!
+  node: Location!
+}
+
+type LocationConnection {
+  edges: [LocationEdge!]!
+  nodes: [Location!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type AuthorEdge {
+  cursor: Cursor!
+  node: Author!
+}
+
+type AuthorConnection {
+  edges: [AuthorEdge!]!
+  nodes: [Author!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type ConceptEdge {
+  cursor: Cursor!
+  node: Concept!
+}
+
+type ConceptConnection {
+  edges: [ConceptEdge!]!
+  nodes: [Concept!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type TagEdge {
+  cursor: Cursor!
+  node: Tag!
+}
+
+type TagConnection {
+  edges: [TagEdge!]!
+  nodes: [Tag!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type QualityEdge {
+  cursor: Cursor!
+  node: Quality!
+}
+
+type QualityConnection {
+  edges: [QualityEdge!]!
+  nodes: [Quality!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type PropEdge {
+  cursor: Cursor!
+  node: Prop!
+}
+
+type PropConnection {
+  edges: [PropEdge!]!
+  nodes: [Prop!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type AttributeEdge {
+  cursor: Cursor!
+  node: Attribute!
+}
+
+type AttributeConnection {
+  edges: [AttributeEdge!]!
+  nodes: [Attribute!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type LayerEdge {
+  cursor: Cursor!
+  node: Layer!
+}
+
+type LayerConnection {
+  edges: [LayerEdge!]!
+  nodes: [Layer!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type GroupEdge {
+  cursor: Cursor!
+  node: Group!
+}
+
+type GroupConnection {
+  edges: [GroupEdge!]!
+  nodes: [Group!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type StatEdge {
+  cursor: Cursor!
+  node: Stat!
+}
+
+type StatConnection {
+  edges: [StatEdge!]!
+  nodes: [Stat!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+
+type BenchmarkEdge {
+  cursor: Cursor!
+  node: Benchmark!
+}
+
+type BenchmarkConnection {
+  edges: [BenchmarkEdge!]!
+  nodes: [Benchmark!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
 
 input CoordinateInput {
-  u: Float!
-  v: Float!
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 input PointInput {
@@ -1016,12 +1231,27 @@ input VectorInput {
   z: Float!
 }
 
-# =========================
-# Patch inputs
-# =========================
+input PlaneInput {
+  origin: PointInput!
+  normal: VectorInput!
+}
 
-input KitPatchInput {
+input PoseInput {
+  plane: PlaneInput!
+  center: CoordinateInput!
+}
+
+input SideInput {
   name: String
+  piece: PieceSelectorInput
+  port: PortSelectorInput
+  connector: ConnectorSelectorInput
+  point: PointInput
+  direction: VectorInput
+}
+
+input KitInput {
+  name: String!
   description: String
   icon: String
   image: String
@@ -1034,6 +1264,199 @@ input KitPatchInput {
   updated: DateTime
 }
 
+input TypeInput {
+  name: String!
+  description: String
+  icon: String
+  image: String
+  stock: Int
+  virtual: Boolean
+  unit: String
+  location: LocationInput
+}
+
+input DesignInput {
+  name: String!
+  description: String
+  icon: String
+  image: String
+  location: LocationInput
+  unit: String
+}
+
+input PieceInput {
+  name: String
+  description: String
+  plane: PlaneInput
+  center: CoordinateInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  hidden: Boolean
+  locked: Boolean
+  color: String
+  type: TypeSelectorInput
+  design: DesignSelectorInput
+}
+
+input ConnectionInput {
+  name: String
+  description: String
+  from: SideInput!
+  to: SideInput!
+}
+
+input PortInput {
+  name: String!
+  description: String
+  icon: String
+  color: String
+  side: String
+  unit: String
+  location: LocationInput
+}
+
+input ConnectorInput {
+  name: String!
+  description: String
+  color: String
+  mandatory: Boolean
+  t: Float
+  point: PointInput
+  direction: VectorInput
+  compatibleFamilies: [FamilySelectorInput!]
+  compatiblePorts: [PortSelectorInput!]
+}
+
+input RepresentationInput {
+  url: String!
+  description: String
+  file: FileSelectorInput
+  tags: [TagSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  attributes: [AttributeSelectorInput!]
+}
+
+input FamilyInput {
+  name: String!
+  description: String
+  color: String
+  icon: String
+}
+
+input FileInput {
+  url: String!
+  mime: String
+  size: Long
+  hash: String
+  description: String
+  created: DateTime
+  updated: DateTime
+}
+
+input FolderInput {
+  path: String!
+  description: String
+}
+
+input LocationInput {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+  attributes: [AttributeSelectorInput!]
+}
+
+input AuthorInput {
+  name: String!
+  email: String
+  homepage: String
+  role: String
+}
+
+input ConceptInput {
+  name: String!
+  description: String
+  order: Long
+}
+
+input TagInput {
+  name: String!
+  color: String
+  description: String
+}
+
+input QualityInput {
+  key: String!
+  value: String
+  unit: String
+  definition: String
+  description: String
+}
+
+input PropInput {
+  key: String!
+  value: String!
+  unit: String
+  quality: QualitySelectorInput
+}
+
+input AttributeInput {
+  key: String!
+  value: String!
+  unit: String
+}
+
+input LayerInput {
+  name: String!
+  description: String
+  color: String
+  order: Long
+  visible: Boolean
+  locked: Boolean
+}
+
+input GroupInput {
+  name: String!
+  description: String
+  color: String
+  icon: String
+  pieces: [PieceSelectorInput!]
+}
+
+input StatInput {
+  key: String!
+  value: Float
+  unit: String
+  benchmark: BenchmarkSelectorInput
+}
+
+input BenchmarkInput {
+  key: String!
+  value: Float
+  unit: String
+  description: String
+}
+
+input KitPatchInput {
+  name: String
+  description: String
+  icon: String
+  image: String
+  preview: String
+  remote: String
+  homepage: String
+  license: String
+  uri: String
+  authors: [AuthorSelectorInput!]
+  concepts: [ConceptSelectorInput!]
+  tags: [TagSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  props: [PropSelectorInput!]
+  attributes: [AttributeSelectorInput!]
+  ports: [PortSelectorInput!]
+  families: [FamilySelectorInput!]
+  locations: [LocationSelectorInput!]
+}
+
 input TypePatchInput {
   name: String
   description: String
@@ -1042,10 +1465,15 @@ input TypePatchInput {
   stock: Int
   virtual: Boolean
   unit: String
-  locationId: ID
-  created: DateTime
-  updated: DateTime
-  familyIds: [ID!]
+  location: LocationInput
+  families: [FamilySelectorInput!]
+  authors: [AuthorSelectorInput!]
+  concepts: [ConceptSelectorInput!]
+  tags: [TagSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  props: [PropSelectorInput!]
+  attributes: [AttributeSelectorInput!]
+  ports: [PortSelectorInput!]
 }
 
 input DesignPatchInput {
@@ -1053,123 +1481,15 @@ input DesignPatchInput {
   description: String
   icon: String
   image: String
-  locationId: ID
+  location: LocationInput
   unit: String
-  created: DateTime
-  updated: DateTime
-  familyIds: [ID!]
-}
-
-input FilePatchInput {
-  url: String
-  mime: String
-  size: Int
-  hash: String
-  description: String
-  created: DateTime
-  updated: DateTime
-}
-
-input FolderPatchInput {
-  path: String
-  description: String
-}
-
-input AuthorPatchInput {
-  name: String
-  email: String
-  role: String
-  rank: Int
-}
-
-input ConceptPatchInput {
-  name: String
-  description: String
-  order: Int
-}
-
-input TagPatchInput {
-  name: String
-  order: Int
-}
-
-input QualityPatchInput {
-  key: String
-  value: String
-  unit: String
-  definition: String
-  description: String
-}
-
-input BenchmarkPatchInput {
-  name: String
-  min: Float
-  max: Float
-  minExcluded: Boolean
-  maxExcluded: Boolean
-}
-
-input FamilyPatchInput {
-  name: String
-  description: String
-  icon: String
-}
-
-input PortPatchInput {
-  id: ID
-  name: String
-  description: String
-  icon: String
-  compatiblePortIds: [ID!]
-  compatibleFamilyIds: [ID!]
-}
-
-input ConnectorPatchInput {
-  code: String
-  description: String
-  portId: ID
-}
-
-input RepresentationPatchInput {
-  url: String
-  description: String
-  fileId: ID
-}
-
-input LayerPatchInput {
-  name: String
-  description: String
-  color: String
-  order: Int
-  visible: Boolean
-  locked: Boolean
-}
-
-input GroupPatchInput {
-  name: String
-  description: String
-  color: String
-  icon: String
-  pieceIds: [ID!]
-}
-
-input StatPatchInput {
-  key: String
-  value: String
-  unit: String
-  description: String
-}
-
-input ConnectionPatchInput {
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
+  families: [FamilySelectorInput!]
+  authors: [AuthorSelectorInput!]
+  concepts: [ConceptSelectorInput!]
+  tags: [TagSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  props: [PropSelectorInput!]
+  attributes: [AttributeSelectorInput!]
 }
 
 input PiecePatchInput {
@@ -1182,67 +1502,298 @@ input PiecePatchInput {
   hidden: Boolean
   locked: Boolean
   color: String
-  typeId: ID
+  type: TypeSelectorInput
+  design: DesignSelectorInput
+  props: [PropSelectorInput!]
+  attributes: [AttributeSelectorInput!]
+  layers: [LayerSelectorInput!]
+  groups: [GroupSelectorInput!]
+}
+
+input ConnectionPatchInput {
+  name: String
+  description: String
+  from: SideInput
+  to: SideInput
+  qualities: [QualitySelectorInput!]
+  attributes: [AttributeSelectorInput!]
+}
+
+input PortPatchInput {
+  name: String
+  description: String
+  icon: String
+  color: String
+  side: String
+  unit: String
+  location: LocationInput
+  families: [FamilySelectorInput!]
+  connectors: [ConnectorSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  attributes: [AttributeSelectorInput!]
+}
+
+input ConnectorPatchInput {
+  name: String
+  description: String
+  color: String
+  mandatory: Boolean
+  t: Float
+  point: PointInput
+  direction: VectorInput
+  compatibleFamilies: [FamilySelectorInput!]
+  compatiblePorts: [PortSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  attributes: [AttributeSelectorInput!]
+}
+
+input RepresentationPatchInput {
+  url: String
+  description: String
+  file: FileSelectorInput
+  tags: [TagSelectorInput!]
+  qualities: [QualitySelectorInput!]
+  attributes: [AttributeSelectorInput!]
+}
+
+input FamilyPatchInput {
+  name: String
+  description: String
+  color: String
+  icon: String
+  types: [TypeSelectorInput!]
+  ports: [PortSelectorInput!]
+}
+
+input FilePatchInput {
+  url: String
+  mime: String
+  size: Long
+  hash: String
+  description: String
+  created: DateTime
+  updated: DateTime
+}
+
+input FolderPatchInput {
+  path: String
+  description: String
+}
+
+input LocationPatchInput {
+  longitude: Float
+  latitude: Float
+  altitude: Float
+  attributes: [AttributeSelectorInput!]
+}
+
+input AuthorPatchInput {
+  name: String
+  email: String
+  homepage: String
+  role: String
+}
+
+input ConceptPatchInput {
+  name: String
+  description: String
+  order: Long
+}
+
+input TagPatchInput {
+  name: String
+  color: String
+  description: String
+}
+
+input QualityPatchInput {
+  key: String
+  value: String
+  unit: String
+  definition: String
+  description: String
+  benchmarks: [BenchmarkSelectorInput!]
 }
 
 input PropPatchInput {
   key: String
   value: String
   unit: String
+  quality: QualitySelectorInput
 }
 
 input AttributePatchInput {
   key: String
   value: String
-  definition: String
+  unit: String
 }
 
-# =========================
-# Change commands
-# =========================
+input LayerPatchInput {
+  name: String
+  description: String
+  color: String
+  order: Long
+  visible: Boolean
+  locked: Boolean
+}
+
+input GroupPatchInput {
+  name: String
+  description: String
+  color: String
+  icon: String
+  pieces: [PieceSelectorInput!]
+}
+
+input StatPatchInput {
+  key: String
+  value: Float
+  unit: String
+  benchmark: BenchmarkSelectorInput
+}
+
+input BenchmarkPatchInput {
+  key: String
+  value: Float
+  unit: String
+  description: String
+}
 
 input KitChangeCommandInput @oneOf {
-  kit: KitRootChangeInput
-  type: TypeChangeInput
-  design: DesignChangeInput
-  file: FileChangeInput
-  folder: FolderChangeInput
-  author: AuthorChangeInput
-  concept: ConceptChangeInput
-  tag: TagChangeInput
-  quality: KitQualityChangeInput
-  prop: KitPropChangeInput
-  attribute: KitAttributeChangeInput
-  family: FamilyChangeInput
-  port: PortChangeInput
+
+  patchKit: PatchKitCommandInput
+
+  replaceKit: ReplaceKitCommandInput
+
+  addType: AddTypeCommandInput
+
+  removeType: RemoveTypeCommandInput
+
+  updateType: UpdateTypeCommandInput
+
+  addDesign: AddDesignCommandInput
+
+  removeDesign: RemoveDesignCommandInput
+
+  updateDesign: UpdateDesignCommandInput
+
+  addFile: AddFileCommandInput
+
+  removeFile: RemoveFileCommandInput
+
+  updateFile: UpdateFileCommandInput
+
+  addFolder: AddFolderCommandInput
+
+  removeFolder: RemoveFolderCommandInput
+
+  updateFolder: UpdateFolderCommandInput
+
+  addAuthor: AddAuthorCommandInput
+
+  removeAuthor: RemoveAuthorCommandInput
+
+  updateAuthor: UpdateAuthorCommandInput
+
+  addConcept: AddConceptCommandInput
+
+  removeConcept: RemoveConceptCommandInput
+
+  updateConcept: UpdateConceptCommandInput
+
+  addTag: AddTagCommandInput
+
+  removeTag: RemoveTagCommandInput
+
+  updateTag: UpdateTagCommandInput
+
+  addQuality: AddQualityCommandInput
+
+  removeQuality: RemoveQualityCommandInput
+
+  updateQuality: UpdateQualityCommandInput
+
+  addKitProp: AddKitPropCommandInput
+
+  removeKitProp: RemoveKitPropCommandInput
+
+  updateKitProp: UpdateKitPropCommandInput
+
+  addKitAttribute: AddKitAttributeCommandInput
+
+  removeKitAttribute: RemoveKitAttributeCommandInput
+
+  updateKitAttribute: UpdateKitAttributeCommandInput
+
+  addFamily: AddFamilyCommandInput
+
+  removeFamily: RemoveFamilyCommandInput
+
+  updateFamily: UpdateFamilyCommandInput
+
+  addPort: AddPortCommandInput
+
+  removePort: RemovePortCommandInput
+
+  updatePort: UpdatePortCommandInput
+
+  addLocation: AddLocationCommandInput
+
+  removeLocation: RemoveLocationCommandInput
+
+  updateLocation: UpdateLocationCommandInput
+
+  addConnector: AddConnectorCommandInput
+
+  removeConnector: RemoveConnectorCommandInput
+
+  updateConnector: UpdateConnectorCommandInput
+
+  addRepresentation: AddRepresentationCommandInput
+
+  removeRepresentation: RemoveRepresentationCommandInput
+
+  updateRepresentation: UpdateRepresentationCommandInput
+
+  addPiece: AddPieceCommandInput
+
+  removePiece: RemovePieceCommandInput
+
+  updatePiece: UpdatePieceCommandInput
+
+  addConnection: AddConnectionCommandInput
+
+  removeConnection: RemoveConnectionCommandInput
+
+  updateConnection: UpdateConnectionCommandInput
+
+  addLayer: AddLayerCommandInput
+
+  removeLayer: RemoveLayerCommandInput
+
+  updateLayer: UpdateLayerCommandInput
+
+  addGroup: AddGroupCommandInput
+
+  removeGroup: RemoveGroupCommandInput
+
+  updateGroup: UpdateGroupCommandInput
+
+  addStat: AddStatCommandInput
+
+  removeStat: RemoveStatCommandInput
+
+  updateStat: UpdateStatCommandInput
+
+  addBenchmark: AddBenchmarkCommandInput
+
+  removeBenchmark: RemoveBenchmarkCommandInput
+
+  updateBenchmark: UpdateBenchmarkCommandInput
+
 }
 
-input KitRootChangeInput @oneOf {
-  patch: PatchKitCommandInput
-  replace: ReplaceKitCommandInput
-  addType: AddTypeCommandInput
-  removeType: RemoveTypeCommandInput
-  addDesign: AddDesignCommandInput
-  removeDesign: RemoveDesignCommandInput
-  addFile: AddFileCommandInput
-  removeFile: RemoveFileCommandInput
-  addFolder: AddFolderCommandInput
-  removeFolder: RemoveFolderCommandInput
-  addAuthor: AddAuthorCommandInput
-  removeAuthor: RemoveAuthorCommandInput
-  addConcept: AddConceptCommandInput
-  removeConcept: RemoveConceptCommandInput
-  addTag: AddTagCommandInput
-  removeTag: RemoveTagCommandInput
-  addQuality: AddQualityCommandInput
-  removeQuality: RemoveQualityCommandInput
-  addProp: AddKitPropCommandInput
-  removeProp: RemoveKitPropCommandInput
-  addAttribute: AddKitAttributeCommandInput
-  removeAttribute: RemoveKitAttributeCommandInput
-  addFamily: AddFamilyCommandInput
-  removeFamily: RemoveFamilyCommandInput
-}
+
 
 input PatchKitCommandInput {
   patch: KitPatchInput!
@@ -1252,482 +1803,210 @@ input ReplaceKitCommandInput {
   kit: KitInput!
 }
 
-input AddTypeCommandInput {
-  type: TypeInput!
-}
+input AddTypeCommandInput { type: TypeInput! }
+input RemoveTypeCommandInput { type: TypeSelectorInput! }
+input UpdateTypeCommandInput { type: TypeSelectorInput!, patch: TypePatchInput! }
 
-input RemoveTypeCommandInput {
-  typeId: ID!
-}
+input AddDesignCommandInput { design: DesignInput! }
+input RemoveDesignCommandInput { design: DesignSelectorInput! }
+input UpdateDesignCommandInput { design: DesignSelectorInput!, patch: DesignPatchInput! }
 
-input AddDesignCommandInput {
-  design: DesignInput!
-}
+input AddFileCommandInput { file: FileInput! }
+input RemoveFileCommandInput { file: FileSelectorInput! }
+input UpdateFileCommandInput { file: FileSelectorInput!, patch: FilePatchInput! }
 
-input RemoveDesignCommandInput {
-  designId: ID!
-}
+input AddFolderCommandInput { folder: FolderInput! }
+input RemoveFolderCommandInput { folder: FolderSelectorInput! }
+input UpdateFolderCommandInput { folder: FolderSelectorInput!, patch: FolderPatchInput! }
 
-input AddFileCommandInput {
-  file: FileInput!
-}
+input AddAuthorCommandInput { author: AuthorInput! }
+input RemoveAuthorCommandInput { author: AuthorSelectorInput! }
+input UpdateAuthorCommandInput { author: AuthorSelectorInput!, patch: AuthorPatchInput! }
 
-input RemoveFileCommandInput {
-  fileId: ID!
-}
+input AddConceptCommandInput { concept: ConceptInput! }
+input RemoveConceptCommandInput { concept: ConceptSelectorInput! }
+input UpdateConceptCommandInput { concept: ConceptSelectorInput!, patch: ConceptPatchInput! }
 
-input AddFolderCommandInput {
-  folder: FolderInput!
-}
+input AddTagCommandInput { tag: TagInput! }
+input RemoveTagCommandInput { tag: TagSelectorInput! }
+input UpdateTagCommandInput { tag: TagSelectorInput!, patch: TagPatchInput! }
 
-input RemoveFolderCommandInput {
-  folderId: ID!
-}
+input AddQualityCommandInput { quality: QualityInput! }
+input RemoveQualityCommandInput { quality: QualitySelectorInput! }
+input UpdateQualityCommandInput { quality: QualitySelectorInput!, patch: QualityPatchInput! }
 
-input AddAuthorCommandInput {
-  author: AuthorInput!
-}
+input AddKitPropCommandInput { prop: PropInput! }
+input RemoveKitPropCommandInput { prop: PropSelectorInput! }
+input UpdateKitPropCommandInput { prop: PropSelectorInput!, patch: PropPatchInput! }
 
-input RemoveAuthorCommandInput {
-  authorId: ID!
-}
+input AddKitAttributeCommandInput { attribute: AttributeInput! }
+input RemoveKitAttributeCommandInput { attribute: AttributeSelectorInput! }
+input UpdateKitAttributeCommandInput { attribute: AttributeSelectorInput!, patch: AttributePatchInput! }
 
-input AddConceptCommandInput {
-  concept: ConceptInput!
-}
+input AddFamilyCommandInput { family: FamilyInput! }
+input RemoveFamilyCommandInput { family: FamilySelectorInput! }
+input UpdateFamilyCommandInput { family: FamilySelectorInput!, patch: FamilyPatchInput! }
 
-input RemoveConceptCommandInput {
-  conceptId: ID!
-}
+input AddPortCommandInput { port: PortInput! }
+input RemovePortCommandInput { port: PortSelectorInput! }
+input UpdatePortCommandInput { port: PortSelectorInput!, patch: PortPatchInput! }
 
-input AddTagCommandInput {
-  tag: TagInput!
-}
+input AddLocationCommandInput { location: LocationInput! }
+input RemoveLocationCommandInput { location: LocationSelectorInput! }
+input UpdateLocationCommandInput { location: LocationSelectorInput!, patch: LocationPatchInput! }
 
-input RemoveTagCommandInput {
-  tagId: ID!
-}
+input AddConnectorCommandInput { type: TypeSelectorInput!, connector: ConnectorInput! }
+input RemoveConnectorCommandInput { type: TypeSelectorInput!, connector: ConnectorSelectorInput! }
+input UpdateConnectorCommandInput { type: TypeSelectorInput!, connector: ConnectorSelectorInput!, patch: ConnectorPatchInput! }
 
-input AddQualityCommandInput {
-  quality: QualityInput!
-}
+input AddRepresentationCommandInput { type: TypeSelectorInput!, representation: RepresentationInput! }
+input RemoveRepresentationCommandInput { type: TypeSelectorInput!, representation: RepresentationSelectorInput! }
+input UpdateRepresentationCommandInput { type: TypeSelectorInput!, representation: RepresentationSelectorInput!, patch: RepresentationPatchInput! }
 
-input RemoveQualityCommandInput {
-  qualityId: ID!
-}
+input AddPieceCommandInput { design: DesignSelectorInput!, piece: PieceInput! }
+input RemovePieceCommandInput { design: DesignSelectorInput!, piece: PieceSelectorInput! }
+input UpdatePieceCommandInput { design: DesignSelectorInput!, piece: PieceSelectorInput!, patch: PiecePatchInput! }
 
-input AddKitPropCommandInput {
-  prop: PropInput!
-}
+input AddConnectionCommandInput { design: DesignSelectorInput!, connection: ConnectionInput! }
+input RemoveConnectionCommandInput { design: DesignSelectorInput!, connection: ConnectionSelectorInput! }
+input UpdateConnectionCommandInput { design: DesignSelectorInput!, connection: ConnectionSelectorInput!, patch: ConnectionPatchInput! }
 
-input RemoveKitPropCommandInput {
-  propId: ID!
-}
+input AddLayerCommandInput { design: DesignSelectorInput!, layer: LayerInput! }
+input RemoveLayerCommandInput { design: DesignSelectorInput!, layer: LayerSelectorInput! }
+input UpdateLayerCommandInput { design: DesignSelectorInput!, layer: LayerSelectorInput!, patch: LayerPatchInput! }
 
-input AddKitAttributeCommandInput {
-  attribute: AttributeInput!
-}
+input AddGroupCommandInput { design: DesignSelectorInput!, group: GroupInput! }
+input RemoveGroupCommandInput { design: DesignSelectorInput!, group: GroupSelectorInput! }
+input UpdateGroupCommandInput { design: DesignSelectorInput!, group: GroupSelectorInput!, patch: GroupPatchInput! }
 
-input RemoveKitAttributeCommandInput {
-  attributeId: ID!
-}
+input AddStatCommandInput { design: DesignSelectorInput!, stat: StatInput! }
+input RemoveStatCommandInput { design: DesignSelectorInput!, stat: StatSelectorInput! }
+input UpdateStatCommandInput { design: DesignSelectorInput!, stat: StatSelectorInput!, patch: StatPatchInput! }
 
-input AddFamilyCommandInput {
-  family: FamilyInput!
-}
-
-input RemoveFamilyCommandInput {
-  familyId: ID!
-}
-
-input TypeChangeInput @oneOf {
-  update: UpdateTypeCommandInput
-}
-
-input UpdateTypeCommandInput {
-  id: ID!
-  patch: TypePatchInput
-  updatePorts: [UpdatePortCommandInput!]
-  addConnectors: [ConnectorInput!]
-  removeConnectorIds: [ID!]
-  updateConnectors: [UpdateConnectorCommandInput!]
-  addRepresentations: [RepresentationInput!]
-  removeRepresentationIds: [ID!]
-  updateRepresentations: [UpdateRepresentationCommandInput!]
-  addAuthors: [AuthorInput!]
-  removeAuthorIds: [ID!]
-  addConcepts: [ConceptInput!]
-  removeConceptIds: [ID!]
-  addTags: [TagInput!]
-  removeTagIds: [ID!]
-  addQualities: [QualityInput!]
-  removeQualityIds: [ID!]
-  addProps: [PropInput!]
-  removePropIds: [ID!]
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input DesignChangeInput @oneOf {
-  update: UpdateDesignCommandInput
-}
-
-input UpdateDesignCommandInput {
-  id: ID!
-  patch: DesignPatchInput
-  addPieces: [PieceInput!]
-  removePieceIds: [ID!]
-  updatePieces: [UpdatePieceCommandInput!]
-  addConnections: [ConnectionInput!]
-  removeConnectionIds: [ID!]
-  updateConnections: [UpdateConnectionCommandInput!]
-  addLayers: [LayerInput!]
-  removeLayerIds: [ID!]
-  updateLayers: [UpdateLayerCommandInput!]
-  addGroups: [GroupInput!]
-  removeGroupIds: [ID!]
-  updateGroups: [UpdateGroupCommandInput!]
-  addStats: [StatInput!]
-  removeStatIds: [ID!]
-  updateStats: [UpdateStatCommandInput!]
-  addAuthors: [AuthorInput!]
-  removeAuthorIds: [ID!]
-  addConcepts: [ConceptInput!]
-  removeConceptIds: [ID!]
-  addTags: [TagInput!]
-  removeTagIds: [ID!]
-  addQualities: [QualityInput!]
-  removeQualityIds: [ID!]
-  addProps: [PropInput!]
-  removePropIds: [ID!]
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input FileChangeInput @oneOf {
-  update: UpdateFileCommandInput
-}
-
-input UpdateFileCommandInput {
-  id: ID!
-  patch: FilePatchInput!
-}
-
-input FolderChangeInput @oneOf {
-  update: UpdateFolderCommandInput
-}
-
-input UpdateFolderCommandInput {
-  id: ID!
-  patch: FolderPatchInput!
-}
-
-input AuthorChangeInput @oneOf {
-  update: UpdateAuthorCommandInput
-}
-
-input UpdateAuthorCommandInput {
-  id: ID!
-  patch: AuthorPatchInput!
-}
-
-input ConceptChangeInput @oneOf {
-  update: UpdateConceptCommandInput
-}
-
-input UpdateConceptCommandInput {
-  id: ID!
-  patch: ConceptPatchInput!
-}
-
-input TagChangeInput @oneOf {
-  update: UpdateTagCommandInput
-}
-
-input UpdateTagCommandInput {
-  id: ID!
-  patch: TagPatchInput!
-}
-
-input KitQualityChangeInput @oneOf {
-  update: UpdateQualityCommandInput
-}
-
-input UpdateQualityCommandInput {
-  id: ID!
-  patch: QualityPatchInput
-  addBenchmarks: [BenchmarkInput!]
-  removeBenchmarkIds: [ID!]
-  updateBenchmarks: [UpdateBenchmarkCommandInput!]
-}
-
-input KitPropChangeInput @oneOf {
-  update: UpdateKitPropCommandInput
-}
-
-input UpdateKitPropCommandInput {
-  id: ID!
-  patch: PropPatchInput!
-}
-
-input KitAttributeChangeInput @oneOf {
-  update: UpdateKitAttributeCommandInput
-}
-
-input UpdateKitAttributeCommandInput {
-  id: ID!
-  patch: AttributePatchInput!
-}
-
-input FamilyChangeInput @oneOf {
-  update: UpdateFamilyCommandInput
-}
-
-input UpdateFamilyCommandInput {
-  id: ID!
-  patch: FamilyPatchInput
-  addPorts: [PortInput!]
-  removePortIds: [ID!]
-  updatePorts: [UpdatePortCommandInput!]
-}
-
-input PortChangeInput @oneOf {
-  update: UpdatePortCommandInput
-}
-
-input UpdatePortCommandInput {
-  id: ID!
-  patch: PortPatchInput!
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input UpdateConnectorCommandInput {
-  id: ID!
-  patch: ConnectorPatchInput
-  addQualities: [QualityInput!]
-  removeQualityIds: [ID!]
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input UpdateRepresentationCommandInput {
-  id: ID!
-  patch: RepresentationPatchInput
-  addTags: [TagInput!]
-  removeTagIds: [ID!]
-  addQualities: [QualityInput!]
-  removeQualityIds: [ID!]
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input UpdateLayerCommandInput {
-  id: ID!
-  patch: LayerPatchInput!
-}
-
-input UpdateGroupCommandInput {
-  id: ID!
-  patch: GroupPatchInput!
-}
-
-input UpdateStatCommandInput {
-  id: ID!
-  patch: StatPatchInput!
-}
-
-input UpdateConnectionCommandInput {
-  id: ID!
-  patch: ConnectionPatchInput
-  replaceConnected: SideInput
-  replaceConnecting: SideInput
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-}
-
-input UpdatePieceCommandInput {
-  id: ID!
-  patch: PiecePatchInput
-  addProps: [PropInput!]
-  removePropIds: [ID!]
-  updateProps: [UpdatePropCommandInput!]
-  addAttributes: [AttributeInput!]
-  removeAttributeIds: [ID!]
-  updateAttributes: [UpdateAttributeCommandInput!]
-  fix: Boolean
-}
-
-input UpdatePropCommandInput {
-  id: ID!
-  patch: PropPatchInput!
-}
-
-input UpdateAttributeCommandInput {
-  id: ID!
-  patch: AttributePatchInput!
-}
-
-input UpdateBenchmarkCommandInput {
-  id: ID!
-  patch: BenchmarkPatchInput!
-}
-
-# =========================
-# Execute commands
-# =========================
+input AddBenchmarkCommandInput { quality: QualitySelectorInput!, benchmark: BenchmarkInput! }
+input RemoveBenchmarkCommandInput { quality: QualitySelectorInput!, benchmark: BenchmarkSelectorInput! }
+input UpdateBenchmarkCommandInput { quality: QualitySelectorInput!, benchmark: BenchmarkSelectorInput!, patch: BenchmarkPatchInput! }
 
 input ExecuteCommandInput @oneOf {
-  session: SessionCommandInput
-  draft: DraftCommandInput
-  transaction: TransactionCommandInput
-  checkpoint: CheckpointCommandInput
-  alternative: AlternativeCommandInput
-  backbone: BackboneCommandInput
-  conflict: ConflictCommandInput
-  sync: SyncCommandInput
-}
 
-input SessionCommandInput @oneOf {
-  create: CreateSessionInput
-  end: EndSessionInput
+  createSession: CreateSessionInput
+
+  endSession: EndSessionInput
+
   createDraft: CreateDraftInput
-}
 
-input DraftCommandInput @oneOf {
   startTransaction: StartTransactionInput
-  finalizeToCheckpoint: FinalizeDraftInput
-  abort: AbortDraftInput
-  undo: DraftUndoInput
-  redo: DraftRedoInput
-}
 
-input TransactionCommandInput @oneOf {
-  finalize: FinalizeTransactionInput
-  abort: AbortTransactionInput
-  undo: TransactionUndoInput
-  undoAll: UndoAllTransactionInput
-  redo: TransactionRedoInput
-  redoAll: RedoAllTransactionInput
-}
+  finalizeDraft: FinalizeDraftInput
 
-input CheckpointCommandInput @oneOf {
+  abortDraft: AbortDraftInput
+
+  undoDraft: DraftUndoInput
+
+  redoDraft: DraftRedoInput
+
+  finalizeTransaction: FinalizeTransactionInput
+
+  abortTransaction: AbortTransactionInput
+
+  undoTransaction: TransactionUndoInput
+
+  redoTransaction: TransactionRedoInput
+
   markRelease: MarkReleaseInput
-}
 
-input AlternativeCommandInput @oneOf {
-  create: CreateAlternativeInput
-  unify: UnifyAlternativeInput
+  createAlternative: CreateAlternativeInput
+
+  unifyAlternative: UnifyAlternativeInput
+
   setActiveCheckpoint: SetActiveCheckpointInput
+
+  attachBackbone: AttachBackboneInput
+
+  detachBackbone: DetachBackboneInput
+
+  resolveConflict: ResolveConflictInput
+
+  syncNow: SyncNowInput
+
 }
 
-input BackboneCommandInput @oneOf {
-  attach: AttachBackboneInput
-  detach: DetachBackboneInput
-}
 
-input ConflictCommandInput @oneOf {
-  resolve: ResolveConflictInput
-}
-
-input SyncCommandInput @oneOf {
-  now: SyncNowInput
-}
 
 input CreateSessionInput {
-  clientSessionId: ID
+  open: Boolean! = true
 }
 
 input EndSessionInput {
-  sessionId: ID!
+  session: SessionSelectorInput!
 }
 
 input CreateDraftInput {
-  sessionId: ID!
-  checkpointId: ID
-  alternativeId: ID
+  session: SessionSelectorInput!
+  parentCheckpoint: CheckpointSelectorInput
+  targetAlternative: AlternativeSelectorInput
 }
 
 input StartTransactionInput {
-  sessionId: ID!
-  draftId: ID!
+  draft: DraftScopeInput!
 }
 
 input FinalizeDraftInput {
-  sessionId: ID!
-  draftId: ID!
+  draft: DraftScopeInput!
   message: String!
 }
 
 input AbortDraftInput {
-  sessionId: ID!
-  draftId: ID!
+  draft: DraftScopeInput!
+  discard: Boolean! = true
 }
 
 input DraftUndoInput {
-  sessionId: ID!
-  draftId: ID!
+  draft: DraftScopeInput!
   count: Int! = 1
 }
 
 input DraftRedoInput {
-  sessionId: ID!
-  draftId: ID!
+  draft: DraftScopeInput!
   count: Int! = 1
 }
 
 input FinalizeTransactionInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
+  transaction: TransactionScopeInput!
+  close: Boolean! = true
 }
 
 input AbortTransactionInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
+  transaction: TransactionScopeInput!
+  discard: Boolean! = true
 }
 
 input TransactionUndoInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
-}
-
-input UndoAllTransactionInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
+  transaction: TransactionScopeInput!
+  count: Int! = 1
 }
 
 input TransactionRedoInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
-}
-
-input RedoAllTransactionInput {
-  sessionId: ID!
-  draftId: ID!
-  transactionId: ID!
+  transaction: TransactionScopeInput!
+  count: Int! = 1
 }
 
 input MarkReleaseInput {
-  checkpointId: ID!
+  checkpoint: CheckpointSelectorInput!
 }
 
 input CreateAlternativeInput {
   name: String!
-  fromCheckpointId: ID
+  root: CheckpointSelectorInput
 }
 
 input UnifyAlternativeInput {
-  alternativeId: ID!
-  message: String!
+  alternative: AlternativeSelectorInput!
+  checkpoint: CheckpointSelectorInput!
 }
 
 input SetActiveCheckpointInput {
-  checkpointId: ID
+  checkpoint: CheckpointSelectorInput!
 }
 
 input AttachBackboneInput @oneOf {
@@ -1737,16 +2016,16 @@ input AttachBackboneInput @oneOf {
 }
 
 input DevBackboneInput {
-  path: String!
+  enabled: Boolean! = true
 }
 
 input LocalBackboneInput {
-  folder: String!
+  path: String!
 }
 
 input RemoteBackboneInput {
-  url: String!
-  sessionId: String!
+  uri: String!
+  branch: String
 }
 
 input DetachBackboneInput {
@@ -1754,10 +2033,11 @@ input DetachBackboneInput {
 }
 
 input ResolveConflictInput {
-  conflictId: ID!
+  conflict: ConflictSelectorInput!
   resolution: ConflictResolution!
 }
 
 input SyncNowInput {
   confirm: Boolean! = true
 }
+
