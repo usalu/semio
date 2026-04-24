@@ -104,29 +104,39 @@ import {
   TypeDiff,
   TypeShallow,
   Vector,
-  AuthorScope,
-  ConnectionScope,
-  DesignScope,
+  AuthorScopeProvider,
+  ConnectionScopeProvider,
+  DesignScopeProvider,
   KitScope,
-  PieceScope,
-  QualityScope,
-  TypeScope,
+  PieceScopeProvider,
+  QualityScopeProvider,
+  TypeScopeProvider,
+  schemaScopeForEntityId,
+  SchemaScopeContext,
   useActiveKitId,
-  useAuthor as useAuthorFromKit,
-  useConnection as useConnectionFromKit,
-  useConnections as useKitRpcConnections,
+  useAuthor,
+  useAuthorScope,
+  useConnection,
+  useConnectionScope,
+  useConnections,
+  useConnectionsTriad as useKitRpcConnections,
   useCreateAuthor,
   useCreateDesign,
   useCreateFolder,
   useCreatePort,
   useCreateQuality,
   useCreateType,
-  useDesign as useDesignFromKit,
+  useDesign,
   useDesignClusterableGroups,
   useDesigns as useDesignsFromKit,
+  useDesignScope,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
   useFixedPieceId as useFixedPieceIdFromKit,
   useIncludedDesigns as useIncludedDesignsFromKit,
+  useIsInAuthorScope,
+  useIsInDesignScope,
+  useIsInQualityScope,
+  useIsInTypeScope,
   usePieceFlatCenter,
   usePieceFlatPlane,
   useIsConnectedPiece as useIsConnectedPieceFromKit,
@@ -145,16 +155,20 @@ import {
   useKitStore,
   useParentPieceId as useParentPieceIdFromKit,
   useMoveKitArtifactToFolder,
-  usePiece as usePieceFromKit,
+  usePiece,
   usePieceDepth as usePieceDepthFromKit,
   usePieceParentConnection as usePieceParentConnectionFromKit,
-  usePieces as useKitRpcPieces,
+  usePieces,
+  usePiecesTriad as useKitRpcPieces,
   usePieceMetadata as usePieceMetadataFromKit,
   usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
-  useQuality as useQualityFromKit,
+  usePieceScope,
+  useQuality,
+  useQualityScope,
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
-  useType as useTypeFromKit,
+  useType,
+  useTypeScope,
   useRpcTypes as useTypesFromKit,
   useUpdateAuthor,
   useUpdateDesign,
@@ -6927,73 +6941,36 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
 export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 
 // #region 🥈Entity Hooks
-// Storage-agnostic entity scope providers; data via `@semio/react` schema / RPC hooks.
+// Sketchpad kit snapshot helpers; entity scopes and entity reads live in `@semio/react`.
 
-// ✍️#region 🎭Author Scope
-type AuthorScope = { id: string };
-const AuthorScopeContext = createContext<AuthorScope | null>(null);
-export const AuthorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(AuthorScope, { id: props.id, children: React.createElement(AuthorScopeContext.Provider, { value }, props.children as any) });
-};
-const useAuthorScope = () => useContext(AuthorScopeContext);
-// #endregion 🎭Author Scope
+export {
+  AuthorScopeProvider,
+  ConnectionScopeProvider,
+  DesignScopeProvider,
+  PieceScopeProvider,
+  QualityScopeProvider,
+  TypeScopeProvider,
+  useAuthor,
+  useAuthorScope,
+  useConnection,
+  useConnectionScope,
+  useConnections,
+  useDesign,
+  useDesignScope,
+  useIsInAuthorScope,
+  useIsInDesignScope,
+  useIsInQualityScope,
+  useIsInTypeScope,
+  usePiece,
+  usePieceScope,
+  usePieces,
+  useQuality,
+  useQualityScope,
+  useType,
+  useTypeScope,
+} from "@semio/react";
 
-// 🔭#region 🏂Type Scope
-type TypeScope = { id: string };
-const TypeScopeContext = createContext<TypeScope | null>(null);
-export const TypeScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(TypeScope, { id: props.id, children: React.createElement(TypeScopeContext.Provider, { value }, props.children as any) });
-};
-export const useTypeScope = () => useContext(TypeScopeContext);
-export const useIsInTypeScope = () => useTypeScope() !== null;
-// #endregion 🏂Type Scope
-
-// 🔭#region 🎼Quality Scope
-type QualityScope = { id: string };
-const QualityScopeContext = createContext<QualityScope | null>(null);
-export const QualityScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(QualityScope, { id: props.id, children: React.createElement(QualityScopeContext.Provider, { value }, props.children as any) });
-};
-export const useQualityScope = () => useContext(QualityScopeContext);
-export const useIsInQualityScope = () => useQualityScope() !== null;
-// #endregion 🎼Quality Scope
-
-// 🔭#region 🎀Design Scope
-type ActiveDesign = { id: string };
-export const DesignScopeContext = createContext<ActiveDesign | null>(null);
-export const DesignScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(DesignScope, { id: props.id, children: React.createElement(DesignScopeContext.Provider, { value }, props.children as any) });
-};
-export const useDesignScope = () => useContext(DesignScopeContext);
-export const useIsInDesignScope = () => useDesignScope() !== null;
-// #endregion 🎀Design Scope
-
-// 🔭#region 🖲️Piece Scope
-type ActivePiece = { id: string };
-const PieceScopeContext = createContext<ActivePiece | null>(null);
-export const PieceScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(PieceScope, { id: props.id, children: React.createElement(PieceScopeContext.Provider, { value }, props.children as any) });
-};
-export const usePieceScope = () => useContext(PieceScopeContext);
-// #endregion 🖲️Piece Scope
-
-// 🔌#region 🎛️Connection Scope
-type ActiveConnection = { id: string };
-const ConnectionScopeContext = createContext<ActiveConnection | null>(null);
-export const ConnectionScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(ConnectionScope, { id: props.id, children: React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any) });
-};
-export const useConnectionScope = () => useContext(ConnectionScopeContext);
-// #endregion 🎛️Connection Scope
-
-// #region ⏰Entity Data Hooks
-// Entity reads delegate to `@semio/react` triad hooks; `*ScopeProvider` composes React `*Provider` + sketchpad scope id for R3F bridge.
+// #region ⏰Kit snapshot helpers
 
 function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
@@ -7043,70 +7020,7 @@ function useKitTags(explicitKitId?: string): HookResult<Tag[] | undefined> {
   return readonlyHookResult(snapshot?.kit?.tags);
 }
 
-export function useAuthor<T>(selector?: (author: Author) => T, id?: Id, deep: boolean = false): T | Author | null {
-  const authorScope = useAuthorScope();
-  const authorId = authorScope?.id ?? id;
-  const [obj] = useAuthorFromKit(authorId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Author) : (obj as any);
-}
-
-export function useType<T>(selector?: (type: Type) => T, id?: Id, deep: boolean = false): T | Type | null {
-  const typeScope = useTypeScope();
-  const typeId = typeScope?.id ?? id;
-  const [obj] = useTypeFromKit(typeId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Type) : (obj as any);
-}
-
-export function useQuality<T>(selector?: (quality: Quality) => T, id?: Id, deep: boolean = false): T | Quality | null {
-  const qualityScope = useQualityScope();
-  const qualityId = qualityScope?.id ?? id;
-  const [obj] = useQualityFromKit(qualityId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Quality) : (obj as any);
-}
-
-export function useDesign<T = Design>(selector?: (design: Design) => T, deep?: boolean, id?: string): T | Design | null {
-  const designScope = useDesignScope();
-  const designId = designScope?.id ?? id;
-  const [obj] = useDesignFromKit(designId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Design) : (obj as any);
-}
-
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: Id, deep: boolean = false): T | Piece | null {
-  const pieceScope = usePieceScope();
-  const pieceId = pieceScope?.id ?? id;
-  const [obj] = usePieceFromKit(pieceId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Piece) : (obj as any);
-}
-
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: Id, deep: boolean = false): T | Connection | null {
-  const connectionScope = useConnectionScope();
-  const connectionId = connectionScope?.id ?? id;
-  const [obj] = useConnectionFromKit(connectionId);
-  if (obj == null) return null;
-  return selector ? selector(obj as Connection) : (obj as any);
-}
-
-const EMPTY_PIECES: Piece[] = [];
-const EMPTY_CONNECTIONS: Connection[] = [];
-
-export function usePieces(): Piece[] {
-  const designScope = useDesignScope();
-  const [arr] = useKitRpcPieces(designScope?.id);
-  return Array.isArray(arr) ? (arr as Piece[]) : EMPTY_PIECES;
-}
-
-export function useConnections(): Connection[] {
-  const designScope = useDesignScope();
-  const [arr] = useKitRpcConnections(designScope?.id);
-  return Array.isArray(arr) ? (arr as Connection[]) : EMPTY_CONNECTIONS;
-}
-
-// #endregion ⏰Entity Data Hooks
+// #endregion ⏰Kit snapshot helpers
 
 // #region 🎆Piece Derived Hooks
 
@@ -36173,7 +36087,7 @@ const RepresentationDesign: FC = () => {
  * This bridge reads context values in the DOM tree and re-provides them inside R3F.
  **/
 const SceneContextBridge: FC<{
-  designScope: React.ContextType<typeof DesignScopeContext>;
+  designScope: { id: string } | null;
   kitScope: React.ContextType<typeof KitScopeContext>;
   sketchpadScope: React.ContextType<typeof SketchpadScopeContext>;
   sketchpadActor: React.ContextType<typeof SketchpadActorContext>;
@@ -36189,7 +36103,7 @@ const SceneContextBridge: FC<{
     <SketchpadScopeContext.Provider value={sketchpadScope}>
       <SketchpadActorContext.Provider value={sketchpadActor}>
         <KitScopeContext.Provider value={kitScope}>
-          <DesignScopeContext.Provider value={designScope}>
+          <SchemaScopeContext.Provider value={designScope?.id ? schemaScopeForEntityId("Design", designScope.id) : null}>
             <DesignAppScopeContext.Provider value={designAppScope}>
               <DesignAppActorContext.Provider value={designAppActor}>
                 <DesignFilterContext.Provider value={designFilterState}>
@@ -36201,7 +36115,7 @@ const SceneContextBridge: FC<{
                 </DesignFilterContext.Provider>
               </DesignAppActorContext.Provider>
             </DesignAppScopeContext.Provider>
-          </DesignScopeContext.Provider>
+          </SchemaScopeContext.Provider>
         </KitScopeContext.Provider>
       </SketchpadActorContext.Provider>
     </SketchpadScopeContext.Provider>

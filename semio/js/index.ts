@@ -20,6 +20,12 @@ import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
+import {
+  kitGraphqlExecuteRead,
+  kitGraphqlExecuteStoreCommand,
+  kitGraphqlSubscribeLoop,
+  type KitGraphqlHandle,
+} from "./kitGraphLive";
 
 // #endregion Ôø®´©ÅImports
 
@@ -19889,11 +19895,18 @@ export class FallbackKitStoreClient implements KitStoreClient {
   private cached: any;
   private timeoutMs: number;
   private subscribed = false;
+  private gqlUnsub: (() => void) | undefined;
 
   constructor(handle: any, cachedDto: any, timeoutMs: number) {
     this.handle = handle;
     this.cached = cachedDto;
     this.timeoutMs = timeoutMs;
+  }
+
+  private gql(): KitGraphqlHandle {
+    return {
+      execute: (requestJson: string, onMessage: (line: string) => void) => this.handle.execute(requestJson, onMessage),
+    };
   }
 
   getDto() {
@@ -19913,20 +19926,23 @@ export class FallbackKitStoreClient implements KitStoreClient {
     this.listeners.add(cb);
     if (!this.subscribed) {
       this.subscribed = true;
-      void Promise.resolve(
-        this.handle.subscribe((ev: any) => {
-          for (const listener of this.listeners) {
-            try {
-              listener(ev);
-            } catch {
-              /* ignore */
-            }
+      this.gqlUnsub = kitGraphqlSubscribeLoop(this.gql(), (ev: any) => {
+        for (const listener of this.listeners) {
+          try {
+            listener(ev);
+          } catch {
+            /* ignore */
           }
-        }),
-      );
+        }
+      });
     }
     return () => {
       this.listeners.delete(cb);
+      if (this.listeners.size === 0) {
+        this.gqlUnsub?.();
+        this.gqlUnsub = undefined;
+        this.subscribed = false;
+      }
     };
   }
 
@@ -20120,7 +20136,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async execute(cmd: unknown): Promise<KitStoreExecuteResult> {
     try {
-      const result = await withTimeout(Promise.resolve(this.handle.execute(cmd)), this.timeoutMs, "timeout");
+      const result = await withTimeout(kitGraphqlExecuteStoreCommand(this.gql(), cmd), this.timeoutMs, "timeout");
       return { ok: true, result };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
@@ -20128,7 +20144,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
-    return await withTimeout(Promise.resolve(this.handle.executeReadKitCommands(cmds)), this.timeoutMs, "timeout");
+    return await withTimeout(kitGraphqlExecuteRead(this.gql(), cmds), this.timeoutMs, "timeout");
   }
 
   async vcsState(): Promise<any> {
@@ -20774,10 +20790,12 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
         const wasmPath = fileURLToPath(new URL("../rs/pkg/semio_bg.wasm", import.meta.url));
         const wasmBytes = await fs.readFile(wasmPath);
         await mod.default(wasmBytes);
+        if (typeof mod.boot === "function") mod.boot();
         return;
       } catch {}
     }
     await mod.default();
+    if (typeof mod.boot === "function") mod.boot();
   };
 
   if (useFallback) {

@@ -799,7 +799,8 @@ function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: 
 // #region ⚛️Context
 
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
-const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
+/** @emoji 📌 Current {@link SchemaScope} from nearest entity scope provider (TypeScope, DesignScope, …). */
+export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 
 // #region KitRegistry
 
@@ -1238,6 +1239,14 @@ export function AuthorScope({ id: idValue, children }: EntityScopeProps): React.
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
+/** @emoji 📌 App-route aliases matching sketchpad `*ScopeProvider` names; same components as entity scopes. */
+export const AuthorScopeProvider = AuthorScope;
+export const TypeScopeProvider = TypeScope;
+export const QualityScopeProvider = QualityScope;
+export const DesignScopeProvider = DesignScope;
+export const PieceScopeProvider = PieceScope;
+export const ConnectionScopeProvider = ConnectionScope;
+
 export function TagScope({ id: idValue, children }: EntityScopeProps): React.ReactElement {
 	const scope = useEntityScope("Tag", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
@@ -1296,6 +1305,56 @@ export function AttributeScope({ id: idValue, children }: EntityScopeProps): Rea
 /** Read the current {@link SchemaScope} from the nearest entity {@link TypeScope} (or sibling). */
 export function useSchemaScope(): SchemaScope | null {
 	return React.useContext(SchemaScopeContext);
+}
+
+/** @emoji 📌 Minimal {@link SchemaScope} when only entity id is known (e.g. R3F context bridge). */
+export function schemaScopeForEntityId(typeName: string, entityId: string): SchemaScope {
+	return { typeName, id: entityId, path: [] };
+}
+
+function useEntityScopeId(typeName: string): { id: string } | null {
+	const s = useSchemaScope();
+	return s?.typeName === typeName && s.id ? { id: s.id } : null;
+}
+
+export function useAuthorScope(): { id: string } | null {
+	return useEntityScopeId("Author");
+}
+
+export function useIsInAuthorScope(): boolean {
+	return useAuthorScope() != null;
+}
+
+export function useTypeScope(): { id: string } | null {
+	return useEntityScopeId("Type");
+}
+
+export function useIsInTypeScope(): boolean {
+	return useTypeScope() != null;
+}
+
+export function useQualityScope(): { id: string } | null {
+	return useEntityScopeId("Quality");
+}
+
+export function useIsInQualityScope(): boolean {
+	return useQualityScope() != null;
+}
+
+export function useDesignScope(): { id: string } | null {
+	return useEntityScopeId("Design");
+}
+
+export function useIsInDesignScope(): boolean {
+	return useDesignScope() != null;
+}
+
+export function usePieceScope(): { id: string } | null {
+	return useEntityScopeId("Piece");
+}
+
+export function useConnectionScope(): { id: string } | null {
+	return useEntityScopeId("Connection");
 }
 
 // #endregion ⚛️Context
@@ -3185,13 +3244,30 @@ export function useRpcAuthors(): HookTriad<any[]> {
 }
 
 /** Alias for {@link useRpcPieces}. */
-export function usePieces(designId?: string): HookTriad<any[]> {
+export function usePiecesTriad(designId?: string): HookTriad<any[]> {
 	return useRpcPieces(designId);
 }
 
 /** Alias for {@link useRpcConnections}. */
-export function useConnections(designId?: string): HookTriad<any[]> {
+export function useConnectionsTriad(designId?: string): HookTriad<any[]> {
 	return useRpcConnections(designId);
+}
+
+const EMPTY_SCOPED_PIECES: any[] = [];
+const EMPTY_SCOPED_CONNECTIONS: any[] = [];
+
+/** @emoji 📌 Piece rows for the active {@link DesignScope} (sketchpad-style, no HookTriad). */
+export function usePieces(): any[] {
+	const designId = useDesignScope()?.id;
+	const [arr] = usePiecesTriad(designId);
+	return Array.isArray(arr) ? arr : EMPTY_SCOPED_PIECES;
+}
+
+/** @emoji 📌 Connection rows for the active {@link DesignScope} (sketchpad-style, no HookTriad). */
+export function useConnections(): any[] {
+	const designId = useDesignScope()?.id;
+	const [arr] = useConnectionsTriad(designId);
+	return Array.isArray(arr) ? arr : EMPTY_SCOPED_CONNECTIONS;
 }
 
 
@@ -4115,12 +4191,12 @@ export function useActiveKitGuid(): string | undefined {
 }
 
 /** @emoji 📌Alias hooks for explicit "by id" call sites. */
-export const useAuthorById = useAuthor;
-export const useQualityById = useQuality;
-export const useTypeById = useType;
-export const useConnectionById = useConnection;
-export const usePieceById = usePiece;
-export const useDesignById = useDesign;
+export const useAuthorById = useAuthorTriad;
+export const useQualityById = useQualityTriad;
+export const useTypeById = useTypeTriad;
+export const useConnectionById = useConnectionTriad;
+export const usePieceById = usePieceTriad;
+export const useDesignById = useDesignTriad;
 
 function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any> {
 	const runtime = useKitRuntime();
@@ -4662,7 +4738,7 @@ export function useLocationInputAttributes(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("LocationInput", "attributes", idValue);
 }
 
-export function useAuthor(idValue?: string): HookTriad<any> {
+export function useAuthorTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Author", idValue);
 }
 
@@ -5090,7 +5166,7 @@ export function useBenchmarkInputAttributes(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("BenchmarkInput", "attributes", idValue);
 }
 
-export function useQuality(idValue?: string): HookTriad<any> {
+export function useQualityTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Quality", idValue);
 }
 
@@ -5930,7 +6006,7 @@ export function useConnectorInputAttributes(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("ConnectorInput", "attributes", idValue);
 }
 
-export function useType(idValue?: string): HookTriad<any> {
+export function useTypeTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Type", idValue);
 }
 
@@ -6306,7 +6382,7 @@ export function useSideInputConnectorId(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("SideInput", "connectorId", idValue);
 }
 
-export function useConnection(idValue?: string): HookTriad<any> {
+export function useConnectionTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Connection", idValue);
 }
 
@@ -6582,7 +6658,7 @@ export function useBlueprintDesign(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("Blueprint", "design", idValue);
 }
 
-export function usePiece(idValue?: string): HookTriad<any> {
+export function usePieceTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Piece", idValue);
 }
 
@@ -6854,8 +6930,56 @@ export function useGroupInputAttributes(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("GroupInput", "attributes", idValue);
 }
 
-export function useDesign(idValue?: string): HookTriad<any> {
+export function useDesignTriad(idValue?: string): HookTriad<any> {
 	return useSchemaObjectState("Design", idValue);
+}
+
+/** @emoji 📌 Scoped entity read: merges {@link useAuthorScope} id with optional explicit id; selector optional. */
+export function useAuthor<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+	const resolvedId = useAuthorScope()?.id ?? idValue;
+	const [obj] = useAuthorTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
+}
+
+/** @emoji 📌 Scoped entity read for {@link TypeScope}. */
+export function useType<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+	const resolvedId = useTypeScope()?.id ?? idValue;
+	const [obj] = useTypeTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
+}
+
+/** @emoji 📌 Scoped entity read for {@link QualityScope}. */
+export function useQuality<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+	const resolvedId = useQualityScope()?.id ?? idValue;
+	const [obj] = useQualityTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
+}
+
+/** @emoji 📌 Scoped entity read for {@link DesignScope}; middle arg kept for sketchpad call shape (unused). */
+export function useDesign<T = unknown>(selector?: (entity: any) => T, _deep?: boolean, idValue?: string): T | any | null {
+	const resolvedId = useDesignScope()?.id ?? idValue;
+	const [obj] = useDesignTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
+}
+
+/** @emoji 📌 Scoped entity read for {@link PieceScope}. */
+export function usePiece<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+	const resolvedId = usePieceScope()?.id ?? idValue;
+	const [obj] = usePieceTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
+}
+
+/** @emoji 📌 Scoped entity read for {@link ConnectionScope}. */
+export function useConnection<T = unknown>(selector?: (entity: any) => T, idValue?: string, _deep?: boolean): T | any | null {
+	const resolvedId = useConnectionScope()?.id ?? idValue;
+	const [obj] = useConnectionTriad(resolvedId);
+	if (obj == null) return null;
+	return selector ? selector(obj) : obj;
 }
 
 export function useDesignHash(idValue?: string): HookTriad<any> {

@@ -4,6 +4,7 @@
 
 import * as React from "react";
 
+import { kitGraphqlExecuteRead, kitGraphqlExecuteStoreCommand, type KitGraphqlHandle } from "@semio/js";
 import { ALL_CHANGE_KIT_ROOT_KEYS, ALL_READ_KIT_COMMAND_KEYS, CHANGE_KIT_PRESETS, READ_KIT_PRESETS } from "./commandSchema";
 import type { KitStoreHandle } from "./semioWasm";
 
@@ -96,27 +97,32 @@ export const CommandForm: React.FC<{
         className="rounded border border-violet-600 bg-violet-100 px-2 py-1 text-[11px] font-medium dark:bg-violet-950"
         disabled={!handle}
         onClick={() => {
-          if (!handle) return;
-          try {
-            if (mode === "changeKit") {
-              const parsed = JSON.parse(changeJson);
-              const arr = Array.isArray(parsed) ? parsed : [parsed];
-              const r = handle.executeChangeKitCommands(arr);
-              onCommandRun({ mode, forward: arr, result: r, log: `executeChangeKitCommands → ${JSON.stringify(r)}` });
-            } else if (mode === "readKit") {
-              const cmds = JSON.parse(readJson);
-              const arr = Array.isArray(cmds) ? cmds : [cmds];
-              const r = handle.executeReadKitCommands(arr);
-              onCommandRun({ mode, forward: arr, result: r, log: `executeReadKitCommands → ${JSON.stringify(r)}` });
-            } else {
-              const raw = JSON.parse(executeJson);
-              const r = handle.execute(raw);
-              onCommandRun({ mode, forward: raw, result: r, log: `execute → ${JSON.stringify(r)}` });
+          void (async () => {
+            if (!handle) return;
+            const gql: KitGraphqlHandle = {
+              execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage),
+            };
+            try {
+              if (mode === "changeKit") {
+                const parsed = JSON.parse(changeJson);
+                const arr = Array.isArray(parsed) ? parsed : [parsed];
+                const r = await handle.executeChangeKitCommands(arr);
+                onCommandRun({ mode, forward: arr, result: r, log: `executeChangeKitCommands → ${JSON.stringify(r)}` });
+              } else if (mode === "readKit") {
+                const cmds = JSON.parse(readJson);
+                const arr = Array.isArray(cmds) ? cmds : [cmds];
+                const r = await kitGraphqlExecuteRead(gql, arr);
+                onCommandRun({ mode, forward: arr, result: r, log: `readKitCommands → ${JSON.stringify(r)}` });
+              } else {
+                const raw = JSON.parse(executeJson);
+                const r = await kitGraphqlExecuteStoreCommand(gql, raw);
+                onCommandRun({ mode, forward: raw, result: r, log: `kitStoreExecute → ${JSON.stringify(r)}` });
+              }
+            } catch (e) {
+              const err = e instanceof Error ? e.message : String(e);
+              onCommandRun({ mode, forward: null, error: err, log: `ERROR: ${err}` });
             }
-          } catch (e) {
-            const err = e instanceof Error ? e.message : String(e);
-            onCommandRun({ mode, forward: null, error: err, log: `ERROR: ${err}` });
-          }
+          })();
         }}
       >
         Run

@@ -1,6 +1,7 @@
 /**
  * `executeRead` facades: wires nested `readKit*Commands` JSON batches so
  * @semio/react hooks can read domain state without duplicating path wiring.
+ * GraphQL: reads go through `kitStore.readKitCommands`; VCS/backbone through `kitStoreExecute`.
  */
 
 import type {
@@ -16,6 +17,80 @@ import type {
   ReadTypeCommand,
   ReadTypeCommandOutput,
 } from "./readCommandTypes";
+
+//#region 🔖KitGraphqlWire
+
+/** WASM [`KitStoreHandle::execute`] shape: streams JSON-stringified GraphQL responses. */
+export type KitGraphqlHandle = {
+  execute(requestJson: string, onMessage: (line: string) => void): Promise<void>;
+};
+
+export async function kitGraphqlRun(
+  handle: KitGraphqlHandle,
+  body: { query: string; variables?: Record<string, unknown>; operationName?: string },
+): Promise<unknown[]> {
+  const out: unknown[] = [];
+  await handle.execute(JSON.stringify(body), (line: string) => {
+    out.push(JSON.parse(line));
+  });
+  return out;
+}
+
+export function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
+  for (const m of msgs) {
+    if (m == null || typeof m !== "object") continue;
+    const r = m as { data?: Record<string, unknown> | null; errors?: readonly { message?: string }[] };
+    if (Array.isArray(r.errors) && r.errors.length > 0) {
+      throw new Error(r.errors[0]?.message ?? "GraphQL error");
+    }
+    if (r.data != null && typeof r.data === "object") {
+      return r.data as Record<string, unknown>;
+    }
+  }
+  throw new Error("kitGraphql: no data in response");
+}
+
+export async function kitGraphqlExecuteRead(handle: KitGraphqlHandle, batch: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+  const q = `query ($batch: JSON!) { kitStore { readKitCommands(batch: $batch) } }`;
+  const msgs = await kitGraphqlRun(handle, { query: q, variables: { batch: [...batch] } });
+  const data = kitGraphqlFirstData(msgs);
+  const store = data.kitStore as Record<string, unknown> | undefined;
+  const inner = store?.readKitCommands;
+  if (!Array.isArray(inner)) throw new Error("readKitCommands: expected array");
+  return inner as ReadCommandBatchResult;
+}
+
+export async function kitGraphqlExecuteStoreCommand(handle: KitGraphqlHandle, cmd: unknown): Promise<unknown> {
+  const q = `mutation ($command: JSON!) { kitStoreExecute(command: $command) }`;
+  const msgs = await kitGraphqlRun(handle, { query: q, variables: { command: cmd } });
+  const data = kitGraphqlFirstData(msgs);
+  if (!("kitStoreExecute" in data)) throw new Error("kitGraphql: missing kitStoreExecute");
+  return data.kitStoreExecute;
+}
+
+/** Fan-out kit events from `subscription { eventStream }`; cancel stops invoking `sink` (underlying stream may continue). */
+export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload: unknown) => void): () => void {
+  let cancelled = false;
+  void handle
+    .execute(JSON.stringify({ query: "subscription { eventStream }" }), (line: string) => {
+      if (cancelled) return;
+      try {
+        const msg = JSON.parse(line) as { data?: { eventStream?: unknown } | null; errors?: unknown[] };
+        if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
+        if (msg.data && "eventStream" in msg.data && msg.data.eventStream !== undefined) {
+          sink(msg.data.eventStream);
+        }
+      } catch {
+        /* ignore */
+      }
+    })
+    .catch(() => {});
+  return () => {
+    cancelled = true;
+  };
+}
+
+//#endregion 🔖KitGraphqlWire
 
 /** Any client exposing `executeRead` (e.g. `KitStoreClient`). */
 export type KitExecuteRead = {

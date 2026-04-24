@@ -3,9 +3,20 @@
 // Web Worker entry: loads the semio WASM module (host-configured), hosts [`KitStoreHandle`], exposes RPC via Comlink.
 
 import * as Comlink from "comlink";
+import { kitGraphqlExecuteRead, kitGraphqlExecuteStoreCommand, kitGraphqlSubscribeLoop, type KitGraphqlHandle } from "./kitGraphLive";
 import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
 
 let handle: any = null;
+const kitEventListeners = new Map<number, (ev: unknown) => void>();
+let nextKitEventListenerId = 0;
+let kitEventGqlStarted = false;
+
+function gqlHandle(): KitGraphqlHandle {
+  if (!handle) throw new Error("KitStoreHandle not initialized");
+  return {
+    execute: (requestJson: string, onMessage: (line: string) => void) => handle.execute(requestJson, onMessage),
+  };
+}
 
 async function importWasmModule(specifier: string) {
   if (specifier === "@semio/rs-wasm") {
@@ -24,16 +35,15 @@ const api = {
     if (typeof mod.default === "function") {
       await mod.default();
     }
+    if (typeof mod.boot === "function") {
+      mod.boot();
+    }
     const { KitStoreHandle } = mod;
     handle = KitStoreHandle.create(dto as any);
   },
   snapshot() {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     return handle.snapshot();
-  },
-  getField(kind: string, id: string, field: string) {
-    if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.getField(kind, id, field);
   },
   setField(kind: string, id: string, field: string, value: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
@@ -180,21 +190,40 @@ const api = {
   subscribe(cb: (ev: unknown) => void) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     const proxy = Comlink.proxy(cb);
-    handle.subscribe(proxy);
+    const id = nextKitEventListenerId++;
+    const forward = (payload: unknown) => {
+      try {
+        proxy(payload);
+      } catch {
+        /* ignore */
+      }
+    };
+    kitEventListeners.set(id, forward);
+    if (!kitEventGqlStarted) {
+      kitEventGqlStarted = true;
+      kitGraphqlSubscribeLoop(gqlHandle(), (payload) => {
+        for (const fn of kitEventListeners.values()) fn(payload);
+      });
+    }
+    return () => {
+      kitEventListeners.delete(id);
+      if (kitEventListeners.size === 0) kitEventGqlStarted = false;
+    };
   },
 
   async execute(cmd: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     try {
-      return { ok: true, result: handle.execute(cmd) };
+      const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), cmd);
+      return { ok: true, result };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
   },
 
-  executeRead(cmds: ReadCommandBatch): ReadCommandBatchResult {
+  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.executeReadKitCommands(cmds) as ReadCommandBatchResult;
+    return await kitGraphqlExecuteRead(gqlHandle(), cmds);
   },
 
   vcsState() {
@@ -214,32 +243,80 @@ const api = {
 
   attachBackbone(config: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.execute({ attachBackbone: { config } })));
+    return settle(
+      (async () => {
+        try {
+          const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), { attachBackbone: { config } });
+          return { ok: true, result };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
 
   detachBackbone() {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.execute({ detachBackbone: null })));
+    return settle(
+      (async () => {
+        try {
+          const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), { detachBackbone: null });
+          return { ok: true, result };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
 
-  backboneStatus() {
+  async backboneStatus() {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.execute({ backboneStatus: null });
+    try {
+      const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), { backboneStatus: null });
+      return { ok: true, result };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
   },
 
-  listConflicts() {
+  async listConflicts() {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.execute({ listConflicts: null });
+    try {
+      const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), { listConflicts: null });
+      return { ok: true, result };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
+    }
   },
 
   resolveConflict(conflictId: string, resolution: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.execute({ resolveConflict: { id: conflictId, strategy: resolution } })));
+    return settle(
+      (async () => {
+        try {
+          const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), {
+            resolveConflict: { id: conflictId, strategy: resolution },
+          });
+          return { ok: true, result };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
 
   syncNow() {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.execute({ syncNow: null })));
+    return settle(
+      (async () => {
+        try {
+          const result = await kitGraphqlExecuteStoreCommand(gqlHandle(), { syncNow: null });
+          return { ok: true, result };
+        } catch (e) {
+          return { ok: false, error: { kind: "Internal", message: String(e) } };
+        }
+      })(),
+    );
   },
 };
 

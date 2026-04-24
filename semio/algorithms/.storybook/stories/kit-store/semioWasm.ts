@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
 
-import initSemio, { generateId, KitStoreHandle } from "@semio/rs-wasm";
+import initSemio, { boot, generateId, KitStoreHandle } from "@semio/rs-wasm";
 
 // Bundle `semio.js` in Storybook, the default `new URL("semio_bg.wasm", import.meta.url)` is often wrong;
 // point at the pkg explicitly so `fetch` loads the file.
@@ -21,6 +21,7 @@ export function ensureSemioWasm(): Promise<void> {
     initPromise = (async () => {
       try {
         await initSemio(semioWasmUrl);
+        boot();
       } catch (e) {
         initPromise = null;
         throw e;
@@ -30,4 +31,4 @@ export function ensureSemioWasm(): Promise<void> {
   return initPromise;
 }
 
-export { generateId, initSemio, KitStoreHandle };
+export { boot, generateId, initSemio, KitStoreHandle };

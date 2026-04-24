@@ -25,7 +25,7 @@ todos:
    status: completed
  - id: react_hooks_thin
    content: "semio/react: rewrite every per-field hook as a 1:1 forwarder to the matching @semio/js entity store; read-only computed hooks return [value, status]; writable hooks return [value, setValue, status]. Rename useFlatPiecePlane -> usePieceFlatPlane, useFlatPieceCenter -> usePieceFlatCenter. Delete useMemo+@semio/js derivations (useIncludedDesigns, useReplacableTypes, useReplacableDesigns, useExplodeableDesignNodes, usePieceParentConnection)."
-   status: pending
+   status: in_progress
  - id: react_no_commands
    content: "semio/react: delete command-semantics exports (useKitCommands, useKitCommandDispatchersWithOrigin, executeKitCommand re-export, useKitScope). Make useKitStoreClient @internal. Replace KitProvider internal indexed-schema + JSON setFieldValue/setObjectValue path with pure kitStoreHandle.subscribe."
    status: pending
@@ -37,7 +37,7 @@ todos:
    status: pending
  - id: sketchpad_delete_hooks
    content: "semio/sketchpad: delete every local kit hook definition (useAuthor, useType, useQuality, useDesign, usePiece, useConnection, usePieces, useConnections, usePiecesMetadataMap, usePieceMetadata, useFlatPiece*, useIsConnectedPiece, usePieceDepth, useFixedPieceId, useParentPieceId, useCurrentPiecePlane, usePieceParentConnection, useIncludedDesigns, useDesignId, usePiecesFromIds, useReplacableTypes, useReplacableDesigns, useDiffedPiece, useClusterableGroups, usePieceWithDiff, useConnectionColor, every per-field piece/connection hook in 16381–16797, useSync*, useDerived, DerivedStore, KitScopeProvider, useKitScope, useIsInKitScope, KitWasmRuntimeBridge, useKits, useDesignStore, useKitAppStore, useKitCommandsById, useResolvedKitStoreSnapshot, useKitSnapshot, useKitTypes/Designs/Files/Tags)."
-   status: pending
+   status: in_progress
  - id: sketchpad_rewire_execute
    content: "semio/sketchpad: convert 78 store.execute('semio.*') sites — UI-state ones become typed sketchpadMachine events, kit-mutation ones become @semio/react hook calls inside entity Scopes. Delete 12 executeKitCommand sites, sketchpadCommands re-export, useKitCommandsById, and dynamic require('@semio/js') / import('@semio/js') at 47386/47552 (replaced by @semio/react import/export hooks)."
    status: pending
@@ -46,7 +46,7 @@ todos:
    status: pending
  - id: package_cleanup
    content: Remove @semio/js from semio/sketchpad/package.json deps, audit semio/react and semio/js dep lists, add eslint rule forbidding @semio/js imports in sketchpad.
-   status: pending
+   status: in_progress
  - id: tests_and_verify
    content: cargo test (rs, incl. wasm module); pnpm -F @semio/js test (per-entity stores); pnpm -F @semio/react test (Scopes + hooks + draft/rollback); pnpm -F @semio/sketchpad test (Playwright — kit boot temporary/file/folder/remote, piece-name edit, undo/redo, file blob, no @semio/js import); desktop smoke on metabolism.zip.
    status: pending
