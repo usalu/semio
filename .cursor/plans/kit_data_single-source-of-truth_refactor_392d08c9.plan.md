@@ -16,13 +16,13 @@ todos:
    status: pending
  - id: js_entity_stores
    content: "semio/js: add per-entity TS store classes (PieceStore, DesignStore, TypeStore, ConnectionStore, AuthorStore, QualityStore, PortStore, RepresentationStore, FileStore, FolderStore, FamilyStore, ConnectorStore, TagStore, ConceptStore, LayerStore, GroupStore, StatStore, PropStore, AttributeStore, KitStore) with pure-forwarder methods calling kitStoreHandle.execute."
-   status: pending
+   status: completed
  - id: js_thin_client
    content: "semio/js: reduce KitStoreClient / FallbackKitStoreClient / WorkerKitStoreClient / worker.ts to execute + executeRead + subscribe + backbone/session, remove every TS-mutation shortcut."
    status: pending
  - id: react_scopes
    content: "semio/react: rename *Provider -> *Scope for every entity (Piece, Type, Design, Connection, Author, Quality, Port, File, Folder, Tag, Concept, Family, Representation, Connector, Benchmark, Layer, Group, Stat, Prop, Attribute, Kit), keep KitRegistryProvider."
-   status: pending
+   status: completed
  - id: react_hooks_thin
    content: "semio/react: rewrite every per-field hook as a 1:1 forwarder to the matching @semio/js entity store; read-only computed hooks return [value, status]; writable hooks return [value, setValue, status]. Rename useFlatPiecePlane -> usePieceFlatPlane, useFlatPieceCenter -> usePieceFlatCenter. Delete useMemo+@semio/js derivations (useIncludedDesigns, useReplacableTypes, useReplacableDesigns, useExplodeableDesignNodes, usePieceParentConnection)."
    status: pending

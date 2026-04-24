@@ -1,3672 +1,463 @@
 """
-Arbitrary structured payloads such as diff previews, clipboard payloads or backend-specific metadata.
+Dual-channel WASM actor schema.
+
+Design rules:
+1. Queries are synchronous, in-memory reads only. They MUST NOT enqueue work.
+2. Mutations validate input and enqueue work on the inbound JS -> WASM bus.
+3. Subscriptions stream results/events from the outbound WASM -> JS bus.
+4. The transport boundary remains the single exported `execute(...)` FFI entrypoint.
+5. Most read payloads stay JSON during migration so command removal does not block on
+   exhaustively typing the full DTO graph on day one.
+"""
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"""
+Arbitrary structured payloads for incremental migration.
+Implement with `async_graphql::Json<serde_json::Value>` or a custom scalar.
 """
 scalar JSON
 
+"""
+RFC 3339 / ISO-8601 timestamp.
+"""
 scalar DateTime
-scalar Color
-scalar Hash
-
-type PageInfo {
-  startCursor: String
-  endCursor: String
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-}
-
-enum ActorKind {
-  USER
-  AGENT
-}
-
-interface Actor {
-  id: ID!
-  name: String
-  email: String
-  color: Color
-}
-
-type User implements Actor {
-  hash: Hash!
-  id: ID!
-  name: String
-  email: String
-  color: Color
-}
-
-type Agent implements Actor {
-  hash: Hash!
-  id: ID!
-  llm: String!
-  name: String
-  email: String
-  color: Color
-}
-
-input SessionActorInput {
-  id: ID!
-  kind: ActorKind!
-  llm: String
-  name: String
-  email: String
-  color: Color
-}
-
-type Coordinate {
-  hash: Hash!
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input CoordinateInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type Point {
-  hash: Hash!
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type Vector {
-  hash: Hash!
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
-}
-
-type Plane {
-  hash: Hash!
-  origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
-}
-
-input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
-}
-
-type Camera {
-  hash: Hash!
-  position: Point!
-  target: Point!
-  up: Vector!
-  fov: Float!
-}
-
-input CameraInput {
-  position: PointInput!
-  target: PointInput!
-  up: VectorInput!
-  fov: Float
-}
-
-type Attribute {
-  hash: Hash!
-  id: ID!
-  key: String!
-  value: String
-  definition: String
-}
-
-input AttributeInput {
-  id: ID!
-  key: String!
-  value: String
-  definition: String
-}
-
-type Location {
-  hash: Hash!
-  x: Float!
-  y: Float!
-}
-
-input LocationInput {
-  x: Float!
-  y: Float!
-}
-
-type Author {
-  hash: Hash!
-  id: ID!
-  name: String!
-  email: String!
-  attributes: [Attribute!]!
-}
-
-input AuthorInput {
-  id: ID!
-  name: String!
-  email: String!
-  attributes: [AttributeInput!]
-}
-
-input AuthorPatchInput {
-  name: String
-  email: String
-  attributes: [AttributeInput!]
-}
-
-type Folder {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  parent: Folder
-  children: [Folder!]!
-  description: String
-  attributes: [Attribute!]!
-  createdAt: DateTime
-  createdBy: Author
-  updatedAt: DateTime
-  updatedBy: Author
-}
-
-input FolderInput {
-  id: ID!
-  name: String!
-  parentId: ID
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  createdById: ID
-  updatedAt: DateTime
-  updatedById: ID
-}
-
-input FolderPatchInput {
-  name: String
-  parentId: ID
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  createdById: ID
-  updatedAt: DateTime
-  updatedById: ID
-}
-
-type File {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  remote: String
-  folder: Folder
-  size: Float
-  contentHash: String
-  blob: String
-  mime: String
-  createdAt: DateTime
-  createdBy: Author
-  updatedAt: DateTime
-  updatedBy: Author
-}
-
-input FileInput {
-  id: ID!
-  name: String!
-  remote: String
-  folderId: ID
-  size: Float
-  contentHash: String
-  blob: String
-  mime: String
-  createdAt: DateTime
-  createdById: ID
-  updatedAt: DateTime
-  updatedById: ID
-}
-
-input FilePatchInput {
-  name: String
-  remote: String
-  folderId: ID
-  size: Float
-  contentHash: String
-  blob: String
-  mime: String
-  createdAt: DateTime
-  createdById: ID
-  updatedAt: DateTime
-  updatedById: ID
-}
-
-type Benchmark {
-  hash: Hash!
-  id: ID!
-  quality: Quality
-  name: String!
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: [Attribute!]!
-}
-
-input BenchmarkInput {
-  id: ID!
-  name: String!
-  icon: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-  attributes: [AttributeInput!]
-}
-
-type Quality {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folder: Folder
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [Benchmark!]!
-  attributes: [Attribute!]!
-}
-
-input QualityInput {
-  id: ID!
-  key: String!
-  name: String!
-  description: String
-  uri: String
-  kind: Int
-  folderId: ID
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [BenchmarkInput!]
-  attributes: [AttributeInput!]
-}
-
-input QualityPatchInput {
-  key: String
-  name: String
-  description: String
-  uri: String
-  kind: Int
-  folderId: ID
-  canScale: Boolean
-  defaultSiUnit: String
-  defaultImperialUnit: String
-  min: Float
-  isMinExcluded: Boolean
-  max: Float
-  isMaxExcluded: Boolean
-  defaultValue: Float
-  formula: String
-  icon: String
-  image: String
-  unit: String
-  benchmarks: [BenchmarkInput!]
-  attributes: [AttributeInput!]
-}
-
-type Port {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  family: Family
-  name: String!
-  description: String
-  icon: String
-  mandatory: Boolean
-  t: Float
-  point: Point
-  direction: Vector
-  compatiblePorts: [Port!]!
-  compatibleFamilies: [Family!]!
-  attributes: [Attribute!]!
-}
-
-input PortInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  mandatory: Boolean
-  t: Float
-  point: PointInput
-  direction: VectorInput
-  compatiblePortIds: [ID!]
-  compatibleFamilyIds: [ID!]
-  attributes: [AttributeInput!]
-}
-
-input PortPatchInput {
-  name: String
-  description: String
-  icon: String
-  mandatory: Boolean
-  t: Float
-  point: PointInput
-  direction: VectorInput
-  compatiblePortIds: [ID!]
-  compatibleFamilyIds: [ID!]
-  attributes: [AttributeInput!]
-}
-
-type Prop {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  quality: Quality!
-  value: String!
-  unit: String
-  attributes: [Attribute!]!
-}
-
-input PropInput {
-  id: ID!
-  qualityId: ID!
-  value: String!
-  unit: String
-  attributes: [AttributeInput!]
-}
-
-type Tag {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]!
-}
-
-input TagInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input TagPatchInput {
-  name: String
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-type Concept {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  description: String
-  icon: String
-  attributes: [Attribute!]!
-}
-
-input ConceptInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
-
-input ConceptPatchInput {
-  name: String
-  description: String
-  icon: String
-  attributes: [AttributeInput!]
-}
 
 """
-👪Named connector family grouping ports and shared attributes.
+Logical entity families observed across the current store and control surface.
 """
-type Family {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  description: String
-  icon: String
-  ports: [Port!]!
-  attributes: [Attribute!]!
-}
-
-"""
-👪Input fields for creating or replacing a connector family.
-"""
-input FamilyInput {
-  id: ID!
-  name: String!
-  description: String
-  icon: String
-  ports: [PortInput!]
-  attributes: [AttributeInput!]
-}
-
-"""
-👪Patch fields for updating a connector family.
-"""
-input FamilyPatchInput {
-  name: String
-  description: String
-  icon: String
-  ports: [PortInput!]
-  attributes: [AttributeInput!]
-}
-
-type Representation {
-  hash: Hash!
-  id: ID!
-  type: Type!
-  name: String
-  tags: [Tag!]!
-  file: File
-  description: String
-  attributes: [Attribute!]!
-}
-
-input RepresentationInput {
-  id: ID!
-  name: String
-  tagIds: [ID!]
-  fileId: ID
-  description: String
-  attributes: [AttributeInput!]
-}
-
-type Connector {
-  hash: Hash!
-  id: ID!
-  type: Type!
-  name: String!
-  portId: ID!
-  port: Port!
-  description: String
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  pieces: [Piece!]!
-  compatibleConnectors: [Connector!]!
-}
-
-input ConnectorInput {
-  id: ID!
-  name: String!
-  portId: ID!
-  description: String
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-type Type {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  families: [Family!]!
-  folder: Folder
-  representations: [Representation!]!
-  connectors: [Connector!]!
-  props: [Prop!]!
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: Location
-  authors: [Author!]!
-  concepts: [Concept!]!
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]!
-  fixedPieces: [Piece!]!
-}
-
-input TypeInput {
-  id: ID!
-  name: String!
-  folderId: ID
-  familyIds: [ID!]
-  representations: [RepresentationInput!]
-  connectors: [ConnectorInput!]
-  props: [PropInput!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationInput
-  authorIds: [ID!]
-  conceptIds: [ID!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input TypePatchInput {
-  name: String
-  folderId: ID
-  familyIds: [ID!]
-  representations: [RepresentationInput!]
-  connectors: [ConnectorInput!]
-  props: [PropInput!]
-  stock: Int
-  virtual: Boolean
-  unit: String
-  createdAt: DateTime
-  updatedAt: DateTime
-  location: LocationInput
-  authorIds: [ID!]
-  conceptIds: [ID!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-type Layer {
-  hash: Hash!
-  id: ID!
-  design: Design!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [Attribute!]!
-}
-
-input LayerInput {
-  id: ID!
-  path: String!
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-type Side {
-  hash: Hash!
-  connection: Connection!
-  piece: Piece!
-  designPiece: Piece
-  connector: Connector
-}
-
-input SideInput {
-  pieceId: ID!
-  designPieceId: ID
-  connectorId: ID
-}
-
-type Connection {
-  hash: Hash!
-  id: ID!
-  design: Design!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [Attribute!]!
-  childPiece: Piece!
-  childConnector: Connector!
-  parentPiece: Piece!
-  parentConnector: Connector!
-}
-
-input ConnectionInput {
-  id: ID!
-  connected: SideInput!
-  connecting: SideInput!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeInput!]
-}
-
-input ConnectionPatchInput {
-  connected: SideInput
-  connecting: SideInput
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [AttributeInput!]
-}
-
-type Stat {
-  hash: Hash!
-  id: ID!
-  design: Design!
-  quality: Quality!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-input StatInput {
-  id: ID!
-  qualityId: ID!
-  unit: String
-  min: Float
-  minExcluded: Boolean
-  max: Float
-  maxExcluded: Boolean
-}
-
-enum PieceKind {
+enum EntityKind {
+  KIT
   TYPE
   DESIGN
+  PIECE
+  CONNECTION
+  SIDE
+  PORT
+  CONNECTOR
+  REPRESENTATION
+  FAMILY
+  FILE
+  FOLDER
+  LOCATION
+  AUTHOR
+  CONCEPT
+  TAG
+  QUALITY
+  PROP
+  ATTRIBUTE
+  LAYER
+  GROUP
+  STAT
+  BENCHMARK
 }
 
-type Blueprint {
-  type: Type
-  design: Design
-}
-
-type Piece {
-  id: ID!
-  hash: Hash!
-  name: String
-  plane: Plane
-  center: Coordinate
-  scale: Float
-  mirrorPlane: Plane
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  kind: PieceKind
-  type: Type
-  design: Design
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  flatPlane: Plane
-  flatCenter: Coordinate
-  parentPiece: Piece
-  parentConnection: Connection
-  childPieces: [Piece!]!
-  childConnections: [Connection!]!
-  alternatives: [Blueprint!]!
-  alternativeTypes: [Type!]!
-  alternativeDesigns: [Design!]!
-}
-
-input PieceInput {
-  id: ID!
-  name: String
-  typeId: ID
-  designReferenceId: ID
-  plane: PlaneInput
-  center: CoordinateInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-input PiecePatchInput {
-  name: String
-  typeId: ID
-  designReferenceId: ID
-  plane: PlaneInput
-  center: CoordinateInput
-  scale: Float
-  mirrorPlane: PlaneInput
-  isHidden: Boolean
-  isLocked: Boolean
-  color: String
-  description: String
-  props: [PropInput!]
-  attributes: [AttributeInput!]
-}
-
-type Group {
-  hash: Hash!
-  id: ID!
-  design: Design!
-  pieces: [Piece!]!
-  color: String
-  name: String
-  description: String
-  attributes: [Attribute!]!
-}
-
-input GroupInput {
-  id: ID!
-  pieceIds: [ID!]!
-  color: String
-  name: String
-  description: String
-  attributes: [AttributeInput!]
-}
-
-type Design {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  name: String!
-  families: [Family!]!
-  folder: Folder
-  pieces: [Piece!]!
-  connections: [Connection!]!
-  stats: [Stat!]!
-  props: [Prop!]!
-  layers: [Layer!]!
-  activeLayer: Layer
-  groups: [Group!]!
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: Location
-  authors: [Author!]!
-  concepts: [Concept!]!
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]!
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input DesignInput {
-  id: ID!
-  name: String!
-  folderId: ID
-  familyIds: [ID!]
-  pieces: [PieceInput!]
-  connections: [ConnectionInput!]
-  stats: [StatInput!]
-  props: [PropInput!]
-  layers: [LayerInput!]
-  activeLayerId: ID
-  groups: [GroupInput!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationInput
-  authorIds: [ID!]
-  conceptIds: [ID!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input DesignPatchInput {
-  name: String
-  folderId: ID
-  familyIds: [ID!]
-  stats: [StatInput!]
-  props: [PropInput!]
-  layers: [LayerInput!]
-  activeLayerId: ID
-  groups: [GroupInput!]
-  canScale: Boolean
-  canMirror: Boolean
-  unit: String
-  location: LocationInput
-  authorIds: [ID!]
-  conceptIds: [ID!]
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-type Kit {
-  hash: Hash!
-  id: ID!
-  name: String!
-  types: [Type!]!
-  designs: [Design!]!
-  tags: [Tag!]!
-  concepts: [Concept!]!
-  families: [Family!]!
-  ports: [Port!]!
-  qualities: [Quality!]!
-  files: [File!]!
-  folders: [Folder!]!
-  authors: [Author!]!
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [Attribute!]!
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input KitInput {
-  id: ID!
-  name: String!
-  types: [TypeInput!]
-  designs: [DesignInput!]
-  tags: [TagInput!]
-  concepts: [ConceptInput!]
-  families: [FamilyInput!]
-  ports: [PortInput!]
-  qualities: [QualityInput!]
-  files: [FileInput!]
-  folders: [FolderInput!]
-  authors: [AuthorInput!]
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-input KitPatchInput {
-  name: String
-  remote: String
-  homepage: String
-  license: String
-  preview: String
-  icon: String
-  image: String
-  description: String
-  attributes: [AttributeInput!]
-  createdAt: DateTime
-  updatedAt: DateTime
-}
-
-enum BackboneKind {
-  LOCAL
-  DEV
-  REMOTE
-}
-
-type KitBackbone {
-  hash: Hash!
-  kind: BackboneKind!
-  endpoint: String
-  authoritative: Boolean!
-  linearHistory: Boolean!
-  connected: Boolean!
-  timeoutSeconds: Int!
-  currentHash: Hash
-  lastInteractionIndex: Int
-  pendingCandidateCount: Int!
-}
-
-type KitClientInfo {
-  hash: Hash!
-  id: ID!
-  name: String
-  version: String
-  platform: String
-}
-
-input KitClientInfoInput {
-  id: ID!
-  name: String
-  version: String
-  platform: String
-}
-
-enum SessionState {
-  ACTIVE
-  WARNING
-  LOCKED
-  DISCONNECTED
-  EXPIRED
-}
-
-enum SessionWarningActionKind {
-  RECONNECT
-  SAVE_CHANGES
-  ACKNOWLEDGE
-}
-
-type SessionWarningAction {
-  hash: Hash!
-  kind: SessionWarningActionKind!
-  label: String!
-}
-
-type KitSessionWarning {
-  hash: Hash!
-  code: String!
-  message: String!
-  actions: [SessionWarningAction!]!
-}
-
-type SessionConnectorSelection {
-  hash: Hash!
-  piece: Piece!
-  designPiece: Piece
-  connector: Connector!
-}
-
-input SessionConnectorSelectionInput {
-  pieceId: ID!
-  designPieceId: ID
-  connectorId: ID!
-}
-
-type KitSessionSelection {
-  hash: Hash!
-  activeDesign: Design
-  pieces: [Piece!]!
-  connections: [Connection!]!
-  connectors: [SessionConnectorSelection!]!
-  representations: [Representation!]!
-  designs: [Design!]!
-  types: [Type!]!
-  replacementTypeCandidates: [Type!]!
-  replacementDesignCandidates: [Design!]!
-  boundaryConnectorCount: Int!
-}
-
-input SessionSelectionInput {
-  activeDesignId: ID
-  pieceIds: [ID!]
-  connectionIds: [ID!]
-  connectorSelections: [SessionConnectorSelectionInput!]
-  representationIds: [ID!]
-  designIds: [ID!]
-  typeIds: [ID!]
-}
-
-type KitSession {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  actor: Actor!
-  client: KitClientInfo!
-  state: SessionState!
-  strictMode: Boolean!
-  timeoutSeconds: Int!
-  startedAt: DateTime!
-  lastSeenAt: DateTime!
-  expiresAt: DateTime!
-  disconnectedAt: DateTime
-  locked: Boolean!
-  canReconnect: Boolean!
-  canSaveLocalChanges: Boolean!
-  warning: KitSessionWarning
-  selection: KitSessionSelection
-  activeTransactions: [KitTransaction!]!
-}
-
-enum ValidationSeverity {
-  ERROR
-  WARNING
+"""
+Outbound event categories emitted by the WASM actor.
+"""
+enum EventKind {
+  COMMAND_ACCEPTED
+  COMMAND_STARTED
+  COMMAND_COMPLETED
+  COMMAND_FAILED
+  STATE_CHANGED
+  SNAPSHOT_CHANGED
+  VCS_STATE_CHANGED
+  CONFLICTS_CHANGED
   INFO
+  WARNING
+  ERROR
 }
 
-type ValidationNote {
-  hash: Hash!
-  severity: ValidationSeverity!
+"""
+Lifecycle state for a single queued mutation.
+"""
+enum EventStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+type ErrorEvent {
   code: String!
-  path: String
+  message: String!
+  details: JSON
+  recoverable: Boolean!
+}
+
+"""
+Canonical outbound message delivered over the long-lived subscription.
+`payload` is intentionally loose so the event contract can stabilize before the
+entire DTO graph is fully retyped in GraphQL.
+"""
+type WasmEvent {
+  id: ID!
+  type: EventKind!
+  status: EventStatus
+  operation: String!
+  clientMutationId: ID
+  entityKind: EntityKind
   entityId: ID
-  message: String!
-}
-
-type KitValidationResult {
-  hash: Hash!
-  ok: Boolean!
-  immutable: Boolean!
-  strict: Boolean!
-  errors: [ValidationNote!]!
-  warnings: [ValidationNote!]!
-  infos: [ValidationNote!]!
-}
-
-enum KitConflictStatus {
-  OPEN
-  RESOLVED
-  DISMISSED
-}
-
-enum KitConflictKind {
-  VALIDATION_ERROR
-  VALIDATION_WARNING
-  AGREEMENT_REJECTED
-  ENTITY_DELETED
-  ENTITY_CHANGED
-  SESSION_TIMEOUT
-  BACKBONE_DISCONNECTED
-  HISTORY_DIVERGED
-}
-
-enum ConflictResolutionKind {
-  ACKNOWLEDGE
-  DISCARD_CANDIDATE
-  RETRY_CANDIDATE
-  RESTORE_ENTITY
-  APPLY_ANYWAY
-  RECONNECT
-  SAVE_LOCAL_COPY
-  MERGE_MANUALLY
-}
-
-type ConflictResolutionOption {
-  hash: Hash!
-  id: ID!
-  kind: ConflictResolutionKind!
-  label: String!
-  description: String
-  patchPreview: JSON
-}
-
-type KitConflict {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  session: KitSession
-  candidate: KitChangeCandidate
-  status: KitConflictStatus!
-  kind: KitConflictKind!
-  title: String!
-  message: String!
-  blocking: Boolean!
-  strict: Boolean!
-  notes: [ValidationNote!]!
-  options: [ConflictResolutionOption!]!
-  createdAt: DateTime!
-  resolvedAt: DateTime
-}
-
-enum KitCommandKind {
-  START_SESSION
-  HEARTBEAT_SESSION
-  END_SESSION
-  RECONNECT_SESSION
-  SET_SESSION_SELECTION
-  BEGIN_TRANSACTION
-  FINALIZE_TRANSACTION
-  ABORT_TRANSACTION
-  UNDO_TRANSACTION
-  REDO_TRANSACTION
-  UNDO_HISTORY
-  REDO_HISTORY
-  CREATE_AUTHOR
-  UPDATE_AUTHOR
-  DELETE_AUTHOR
-  CREATE_TYPE
-  UPDATE_TYPE
-  DELETE_TYPE
-  CREATE_DESIGN
-  UPDATE_DESIGN
-  DELETE_DESIGN
-  CREATE_QUALITY
-  UPDATE_QUALITY
-  DELETE_QUALITY
-  CREATE_PORT
-  UPDATE_PORT
-  DELETE_PORT
-  CREATE_FAMILY
-  UPDATE_FAMILY
-  DELETE_FAMILY
-  CREATE_TAG
-  UPDATE_TAG
-  DELETE_TAG
-  CREATE_CONCEPT
-  UPDATE_CONCEPT
-  DELETE_CONCEPT
-  CREATE_FILE
-  UPDATE_FILE
-  DELETE_FILE
-  CREATE_FOLDER
-  UPDATE_FOLDER
-  DELETE_FOLDER
-  MOVE_ARTIFACT_TO_FOLDER
-  CREATE_PIECE
-  CREATE_PIECES
-  UPDATE_PIECE
-  UPDATE_PIECES
-  DELETE_PIECE
-  DELETE_PIECES
-  CREATE_CONNECTION
-  CREATE_CONNECTIONS
-  UPDATE_CONNECTION
-  UPDATE_CONNECTIONS
-  DELETE_CONNECTION
-  DELETE_CONNECTIONS
-  DELETE_SELECTION
-  FIX_PIECES
-  CLUSTER_PIECES
-  EXPAND_DESIGN_REFERENCE
-  FLATTEN_DESIGN
-  DRAG_PIECES
-  MOVE_PIECES
-  CREATE_FIXED_PIECE
-  CREATE_CONNECTED_PIECE
-  CREATE_HANGING_PIECES
-  CHANGE_PIECE_TYPE
-  CHANGE_PIECES_TYPE
-  PASTE_DESIGN_SELECTION
-  IMPORT_KIT
-  RESET_KIT
-  EXPORT_KIT
-  VOTE_CANDIDATE
-  RESOLVE_CONFLICT
-}
-
-type KitCommandDescriptor {
-  hash: Hash!
-  kind: KitCommandKind!
-  mutatesKit: Boolean!
-  sessionScoped: Boolean!
-  requiresConsensus: Boolean!
-  description: String!
-}
-
-type KitChange {
-  hash: Hash!
-  id: ID!
-  kind: KitCommandKind!
-  summary: String
-  origin: String
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  forward: JSON!
-  backward: JSON!
-  validation: KitValidationResult
-  createdAt: DateTime!
-  appliedAt: DateTime
-}
-
-enum KitCandidateStatus {
-  PENDING
-  AGREEMENT_PENDING
-  ACCEPTED
-  REJECTED
-  TIMED_OUT
-  APPLIED
-  CONFLICTED
-  CANCELLED
-}
-
-enum CandidateVoteState {
-  PENDING
-  AGREED
-  REJECTED
-  TIMED_OUT
-}
-
-type KitCandidateVote {
-  hash: Hash!
-  session: KitSession!
-  state: CandidateVoteState!
-  reason: String
-  respondedAt: DateTime
-  resolutionOptionId: ID
-}
-
-type KitChangeCandidate {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  kind: KitCommandKind!
-  summary: String
-  proposedBy: KitSession!
-  actor: Actor!
-  transaction: KitTransaction
-  status: KitCandidateStatus!
-  requestedFrom: [KitSession!]!
-  votes: [KitCandidateVote!]!
-  validation: KitValidationResult
-  preview: KitChange
-  proposedAt: DateTime!
-  expiresAt: DateTime!
-  decidedAt: DateTime
-}
-
-enum TransactionState {
-  ACTIVE
-  FINALIZED
-  ABORTED
-}
-
-type KitTransaction {
-  hash: Hash!
-  id: ID!
-  kit: Kit!
-  label: String
-  state: TransactionState!
-  startedBy: KitSession!
-  parent: KitTransaction
-  startedAt: DateTime!
-  finalizedAt: DateTime
-  abortedAt: DateTime
-  changes: [KitChange!]!
-  undoStack: [KitChange!]!
-  redoStack: [KitChange!]!
-  canUndo: Boolean!
-  canRedo: Boolean!
-  squashedChange: KitChange
-}
-
-type KitHistoryEntry {
-  hash: Hash!
-  id: ID!
-  index: Int!
-  transaction: KitTransaction
-  commandKinds: [KitCommandKind!]!
-  summary: String
-  squashedChangeCount: Int!
-  change: KitChange!
-  createdAt: DateTime!
-  finalizedAt: DateTime!
-  undoneAt: DateTime
-}
-
-type KitHistoryPage {
-  hash: Hash!
-  nodes: [KitHistoryEntry!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-"""
-🧭Shared fields present on every recorded kit store interaction.
-"""
-interface KitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-}
-
-"""
-🔁Shared fields present on interactions that change kit state.
-"""
-interface ChangeKitInteraction implements KitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded SetSessionSelection command interaction with computed links and change data.
-"""
-type SetSessionSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  mode: SelectionMutationMode!
-  selection: KitSessionSelection
-  previousSelection: KitSessionSelection
-}
-
-"""
-🧾Recorded CreateAuthor command interaction with computed links and change data.
-"""
-type CreateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  author: Author
-}
-
-"""
-🧾Recorded UpdateAuthor command interaction with computed links and change data.
-"""
-type UpdateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  author: Author
-  previousAuthor: Author
-}
-
-"""
-🧾Recorded DeleteAuthor command interaction with computed links and change data.
-"""
-type DeleteAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousAuthor: Author
-}
-
-"""
-🧾Recorded CreateType command interaction with computed links and change data.
-"""
-type CreateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  type: Type
-}
-
-"""
-🧾Recorded UpdateType command interaction with computed links and change data.
-"""
-type UpdateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  type: Type
-  previousType: Type
-}
-
-"""
-🧾Recorded DeleteType command interaction with computed links and change data.
-"""
-type DeleteTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousType: Type
-}
-
-"""
-🧾Recorded CreateDesign command interaction with computed links and change data.
-"""
-type CreateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  design: Design
-}
-
-"""
-🧾Recorded UpdateDesign command interaction with computed links and change data.
-"""
-type UpdateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  design: Design
-  previousDesign: Design
-}
-
-"""
-🧾Recorded DeleteDesign command interaction with computed links and change data.
-"""
-type DeleteDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousDesign: Design
-}
-
-"""
-🧾Recorded CreateQuality command interaction with computed links and change data.
-"""
-type CreateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  quality: Quality
-}
-
-"""
-🧾Recorded UpdateQuality command interaction with computed links and change data.
-"""
-type UpdateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  quality: Quality
-  previousQuality: Quality
-}
-
-"""
-🧾Recorded DeleteQuality command interaction with computed links and change data.
-"""
-type DeleteQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousQuality: Quality
-}
-
-"""
-🧾Recorded CreatePort command interaction with computed links and change data.
-"""
-type CreatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  type: Type
-  port: Port
-}
-
-"""
-🧾Recorded UpdatePort command interaction with computed links and change data.
-"""
-type UpdatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  type: Type
-  port: Port
-  previousPort: Port
-}
-
-"""
-🧾Recorded DeletePort command interaction with computed links and change data.
-"""
-type DeletePortKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  type: Type
-  previousPort: Port
-}
-
-"""
-🧾Recorded CreateTag command interaction with computed links and change data.
-"""
-type CreateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  tag: Tag
-}
-
-"""
-🧾Recorded UpdateTag command interaction with computed links and change data.
-"""
-type UpdateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  tag: Tag
-  previousTag: Tag
-}
-
-"""
-🧾Recorded DeleteTag command interaction with computed links and change data.
-"""
-type DeleteTagKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousTag: Tag
-}
-
-"""
-🧾Recorded CreateConcept command interaction with computed links and change data.
-"""
-type CreateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  concept: Concept
-}
-
-"""
-🧾Recorded UpdateConcept command interaction with computed links and change data.
-"""
-type UpdateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  concept: Concept
-  previousConcept: Concept
-}
-
-"""
-🧾Recorded DeleteConcept command interaction with computed links and change data.
-"""
-type DeleteConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousConcept: Concept
-}
-
-"""
-🧾Recorded CreateFile command interaction with computed links and change data.
-"""
-type CreateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  file: File
-}
-
-"""
-🧾Recorded UpdateFile command interaction with computed links and change data.
-"""
-type UpdateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  file: File
-  previousFile: File
-}
-
-"""
-🧾Recorded DeleteFile command interaction with computed links and change data.
-"""
-type DeleteFileKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousFile: File
-}
-
-"""
-🧾Recorded CreateFolder command interaction with computed links and change data.
-"""
-type CreateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  folder: Folder
-}
-
-"""
-🧾Recorded UpdateFolder command interaction with computed links and change data.
-"""
-type UpdateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  folder: Folder
-  previousFolder: Folder
-}
-
-"""
-🧾Recorded DeleteFolder command interaction with computed links and change data.
-"""
-type DeleteFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  previousFolder: Folder
-}
-
-"""
-🧾Recorded MoveArtifactToFolder command interaction with computed links and change data.
-"""
-type MoveArtifactToFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-  artifactKind: ArtifactKind!
-  artifactId: ID!
-  folder: Folder
-  previousFolder: Folder
-}
-
-"""
-🧾Recorded CreatePiece command interaction with computed links and change data.
-"""
-type CreatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreatePieces command interaction with computed links and change data.
-"""
-type CreatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded UpdatePiece command interaction with computed links and change data.
-"""
-type UpdatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded UpdatePieces command interaction with computed links and change data.
-"""
-type UpdatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DeletePiece command interaction with computed links and change data.
-"""
-type DeletePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DeletePieces command interaction with computed links and change data.
-"""
-type DeletePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreateConnection command interaction with computed links and change data.
-"""
-type CreateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreateConnections command interaction with computed links and change data.
-"""
-type CreateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded UpdateConnection command interaction with computed links and change data.
-"""
-type UpdateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded UpdateConnections command interaction with computed links and change data.
-"""
-type UpdateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DeleteConnection command interaction with computed links and change data.
-"""
-type DeleteConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DeleteConnections command interaction with computed links and change data.
-"""
-type DeleteConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DeleteSelection command interaction with computed links and change data.
-"""
-type DeleteSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded FixPieces command interaction with computed links and change data.
-"""
-type FixPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ClusterPieces command interaction with computed links and change data.
-"""
-type ClusterPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ExpandDesignReference command interaction with computed links and change data.
-"""
-type ExpandDesignReferenceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded FlattenDesign command interaction with computed links and change data.
-"""
-type FlattenDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded DragPieces command interaction with computed links and change data.
-"""
-type DragPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded MovePieces command interaction with computed links and change data.
-"""
-type MovePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreateFixedPiece command interaction with computed links and change data.
-"""
-type CreateFixedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreateConnectedPiece command interaction with computed links and change data.
-"""
-type CreateConnectedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded CreateHangingPieces command interaction with computed links and change data.
-"""
-type CreateHangingPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ChangePieceType command interaction with computed links and change data.
-"""
-type ChangePieceTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ChangePiecesType command interaction with computed links and change data.
-"""
-type ChangePiecesTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded PasteDesignSelection command interaction with computed links and change data.
-"""
-type PasteDesignSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ImportKit command interaction with computed links and change data.
-"""
-type ImportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ResetKit command interaction with computed links and change data.
-"""
-type ResetKitKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ExportKit command interaction with computed links and change data.
-"""
-type ExportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded StartKitSession command interaction with computed links and change data.
-"""
-type StartKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded HeartbeatKitSession command interaction with computed links and change data.
-"""
-type HeartbeatKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded EndKitSession command interaction with computed links and change data.
-"""
-type EndKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ReconnectKitSession command interaction with computed links and change data.
-"""
-type ReconnectKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded BeginKitTransaction command interaction with computed links and change data.
-"""
-type BeginKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded FinalizeKitTransaction command interaction with computed links and change data.
-"""
-type FinalizeKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded AbortKitTransaction command interaction with computed links and change data.
-"""
-type AbortKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded TransactionStep command interaction with computed links and change data.
-"""
-type TransactionStepKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded HistoryStep command interaction with computed links and change data.
-"""
-type HistoryStepKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded VoteOnKitChangeCandidate command interaction with computed links and change data.
-"""
-type VoteOnKitChangeCandidateKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-"""
-🧾Recorded ResolveKitConflict command interaction with computed links and change data.
-"""
-type ResolveKitConflictKitInteraction implements KitInteraction & ChangeKitInteraction {
-  id: ID!
-  hash: Hash!
-  index: Int!
-  kit: Kit!
-  kind: KitCommandKind!
-  actor: Actor
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  conflict: KitConflict
-  summary: String
-  metadata: JSON
-  createdAt: DateTime!
-  forward: KitChange
-  backward: KitChange
-}
-
-union KitInteractionRecord =
-  | SetSessionSelectionKitInteraction
-  | CreateAuthorKitInteraction
-  | UpdateAuthorKitInteraction
-  | DeleteAuthorKitInteraction
-  | CreateTypeKitInteraction
-  | UpdateTypeKitInteraction
-  | DeleteTypeKitInteraction
-  | CreateDesignKitInteraction
-  | UpdateDesignKitInteraction
-  | DeleteDesignKitInteraction
-  | CreateQualityKitInteraction
-  | UpdateQualityKitInteraction
-  | DeleteQualityKitInteraction
-  | CreatePortKitInteraction
-  | UpdatePortKitInteraction
-  | DeletePortKitInteraction
-  | CreateFamilyKitInteraction
-  | UpdateFamilyKitInteraction
-  | DeleteFamilyKitInteraction
-  | CreateTagKitInteraction
-  | UpdateTagKitInteraction
-  | DeleteTagKitInteraction
-  | CreateConceptKitInteraction
-  | UpdateConceptKitInteraction
-  | DeleteConceptKitInteraction
-  | CreateFileKitInteraction
-  | UpdateFileKitInteraction
-  | DeleteFileKitInteraction
-  | CreateFolderKitInteraction
-  | UpdateFolderKitInteraction
-  | DeleteFolderKitInteraction
-  | MoveArtifactToFolderKitInteraction
-  | CreatePieceKitInteraction
-  | CreatePiecesKitInteraction
-  | UpdatePieceKitInteraction
-  | UpdatePiecesKitInteraction
-  | DeletePieceKitInteraction
-  | DeletePiecesKitInteraction
-  | CreateConnectionKitInteraction
-  | CreateConnectionsKitInteraction
-  | UpdateConnectionKitInteraction
-  | UpdateConnectionsKitInteraction
-  | DeleteConnectionKitInteraction
-  | DeleteConnectionsKitInteraction
-  | DeleteSelectionKitInteraction
-  | FixPiecesKitInteraction
-  | ClusterPiecesKitInteraction
-  | ExpandDesignReferenceKitInteraction
-  | FlattenDesignKitInteraction
-  | DragPiecesKitInteraction
-  | MovePiecesKitInteraction
-  | CreateFixedPieceKitInteraction
-  | CreateConnectedPieceKitInteraction
-  | CreateHangingPiecesKitInteraction
-  | ChangePieceTypeKitInteraction
-  | ChangePiecesTypeKitInteraction
-  | PasteDesignSelectionKitInteraction
-  | ImportKitKitInteraction
-  | ResetKitKitInteraction
-  | ExportKitKitInteraction
-  | StartKitSessionKitInteraction
-  | HeartbeatKitSessionKitInteraction
-  | EndKitSessionKitInteraction
-  | ReconnectKitSessionKitInteraction
-  | BeginKitTransactionKitInteraction
-  | FinalizeKitTransactionKitInteraction
-  | AbortKitTransactionKitInteraction
-  | TransactionStepKitInteraction
-  | HistoryStepKitInteraction
-  | VoteOnKitChangeCandidateKitInteraction
-  | ResolveKitConflictKitInteraction
-
-type KitInteractionPage {
-  hash: Hash!
-  nodes: [KitInteractionRecord!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
-
-type KitHistory {
-  hash: Hash!
-  canUndo: Boolean!
-  canRedo: Boolean!
-  totalCount: Int!
-  head: KitHistoryEntry
-  entries(cursor: String, limit: Int): KitHistoryPage!
-}
-
-type KitStore {
-  hash: Hash!
-  kit: Kit!
-  backbone: KitBackbone
-  sessions: [KitSession!]!
-  transactions: [KitTransaction!]!
-  pendingCandidates: [KitChangeCandidate!]!
-  activeConflicts: [KitConflict!]!
-  validation: KitValidationResult!
-  history: KitHistory!
-  blockedByConflict: Boolean!
-  strictMode: Boolean!
-}
-
-enum SelectionMutationMode {
-  REPLACE
-  ADD
-  REMOVE
-  CLEAR
-}
-
-type KitArchiveExport {
-  hash: Hash!
-  fileName: String!
-  url: String!
-  expiresAt: DateTime
-}
-
-type KitMutationResult {
-  hash: Hash!
-  accepted: Boolean!
-  kind: KitCommandKind!
-  summary: String
-  store: KitStore
-  kit: Kit
-  session: KitSession
-  transaction: KitTransaction
-  candidate: KitChangeCandidate
-  change: KitChange
-  historyEntry: KitHistoryEntry
-  conflict: KitConflict
-  validation: KitValidationResult
-  export: KitArchiveExport
-}
-
-input KitCommandContextInput {
-  kitId: ID!
-  sessionId: ID!
-  transactionId: ID
-  origin: String
-  expectedHash: Hash
-  strictMode: Boolean
-}
-
-input StartKitSessionInput {
-  kitId: ID!
-  actor: SessionActorInput!
-  client: KitClientInfoInput!
-  strictMode: Boolean
-}
-
-input HeartbeatKitSessionInput {
-  kitId: ID!
-  sessionId: ID!
-  lastKnownHash: Hash
-}
-
-input EndKitSessionInput {
-  kitId: ID!
-  sessionId: ID!
-}
-
-input ReconnectKitSessionInput {
-  kitId: ID!
-  sessionId: ID!
-  client: KitClientInfoInput
-  lastKnownHash: Hash
-}
-
-input SetSessionSelectionCommandInput {
-  context: KitCommandContextInput!
-  mode: SelectionMutationMode!
-  selection: SessionSelectionInput!
-}
-
-input BeginKitTransactionInput {
-  context: KitCommandContextInput!
-  label: String
-  parentTransactionId: ID
-}
-
-input FinalizeKitTransactionInput {
-  context: KitCommandContextInput!
-  transactionId: ID!
-}
-
-input AbortKitTransactionInput {
-  context: KitCommandContextInput!
-  transactionId: ID!
-}
-
-input TransactionStepInput {
-  context: KitCommandContextInput!
-  transactionId: ID!
-}
-
-input HistoryStepInput {
-  context: KitCommandContextInput!
-  steps: Int
-}
-
-input VoteOnKitChangeCandidateInput {
-  context: KitCommandContextInput!
-  candidateId: ID!
-  state: CandidateVoteState!
-  reason: String
-  resolutionOptionId: ID
-}
-
-input ResolveKitConflictInput {
-  context: KitCommandContextInput!
-  conflictId: ID!
-  optionId: ID!
-  payload: JSON
-}
-
-input CreateAuthorCommandInput {
-  context: KitCommandContextInput!
-  author: AuthorInput!
-}
-
-input UpdateAuthorCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: AuthorPatchInput!
-}
-
-input DeleteAuthorCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateTypeCommandInput {
-  context: KitCommandContextInput!
-  type: TypeInput!
-}
-
-input UpdateTypeCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: TypePatchInput!
-}
-
-input DeleteTypeCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateDesignCommandInput {
-  context: KitCommandContextInput!
-  design: DesignInput!
-}
-
-input UpdateDesignCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: DesignPatchInput!
-}
-
-input DeleteDesignCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateQualityCommandInput {
-  context: KitCommandContextInput!
-  quality: QualityInput!
-}
-
-input UpdateQualityCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: QualityPatchInput!
-}
-
-input DeleteQualityCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreatePortCommandInput {
-  context: KitCommandContextInput!
-  familyId: ID!
-  port: PortInput!
-}
-
-input UpdatePortCommandInput {
-  context: KitCommandContextInput!
-  familyId: ID!
-  id: ID!
-  patch: PortPatchInput!
-}
-
-input DeletePortCommandInput {
-  context: KitCommandContextInput!
-  familyId: ID!
-  id: ID!
-}
-
-input CreateTagCommandInput {
-  context: KitCommandContextInput!
-  tag: TagInput!
-}
-
-input UpdateTagCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: TagPatchInput!
-}
-
-input DeleteTagCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateConceptCommandInput {
-  context: KitCommandContextInput!
-  concept: ConceptInput!
-}
-
-input UpdateConceptCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: ConceptPatchInput!
-}
-
-input DeleteConceptCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateFileCommandInput {
-  context: KitCommandContextInput!
-  file: FileInput!
-}
-
-input UpdateFileCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: FilePatchInput!
-}
-
-input DeleteFileCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input CreateFolderCommandInput {
-  context: KitCommandContextInput!
-  folder: FolderInput!
-}
-
-input UpdateFolderCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-  patch: FolderPatchInput!
-}
-
-input DeleteFolderCommandInput {
-  context: KitCommandContextInput!
-  id: ID!
-}
-
-input MoveArtifactToFolderCommandInput {
-  context: KitCommandContextInput!
-  artifactKind: ArtifactKind!
-  artifactId: ID!
-  folderId: ID
-}
-
-input CreatePieceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  piece: PieceInput!
-}
-
-input CreatePiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieces: [PieceInput!]!
-}
-
-input PieceUpdateInput {
-  id: ID!
-  patch: PiecePatchInput!
-}
-
-input UpdatePieceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  id: ID!
-  patch: PiecePatchInput!
-}
-
-input UpdatePiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  updates: [PieceUpdateInput!]!
-}
-
-input DeletePieceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  id: ID!
-}
-
-input DeletePiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  ids: [ID!]!
-}
-
-input CreateConnectionCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  connection: ConnectionInput!
-}
-
-input CreateConnectionsCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  connections: [ConnectionInput!]!
-}
-
-input ConnectionUpdateInput {
-  id: ID!
-  patch: ConnectionPatchInput!
-}
-
-input UpdateConnectionCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  id: ID!
-  patch: ConnectionPatchInput!
-}
-
-input UpdateConnectionsCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  updates: [ConnectionUpdateInput!]!
-}
-
-input DeleteConnectionCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  id: ID!
-}
-
-input DeleteConnectionsCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  ids: [ID!]!
-}
-
-input DeleteSelectionCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]
-  connectionIds: [ID!]
-}
-
-input FixPiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]
-}
-
-input ClusterPiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]!
-  newDesignName: String
-}
-
-input ExpandDesignReferenceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  referencedDesignId: ID!
-}
-
-input FlattenDesignCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-}
-
-input DragPiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]!
-  offset: CoordinateInput!
-}
-
-input MovePiecesVectorInput {
-  shift: Float
-  gap: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-}
-
-input MovePiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]!
-  vector: MovePiecesVectorInput!
-}
-
-input CreateFixedPieceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  piece: PieceInput!
-}
-
-input CreateConnectedPieceCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  piece: PieceInput!
-  connection: ConnectionInput!
-}
-
-input CreateHangingPiecesCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieces: [PieceInput!]!
-  parentPieceId: ID
-  parentDesignPieceId: ID
-  parentConnectorId: ID
-  connectionTemplate: ConnectionPatchInput
-}
-
-input ChangePieceTypeCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceId: ID!
-  typeId: ID!
-}
-
-input ChangePiecesTypeCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  pieceIds: [ID!]!
-  typeId: ID!
-}
-
-input PasteDesignSelectionCommandInput {
-  context: KitCommandContextInput!
-  designId: ID!
-  payload: JSON!
-  offset: CoordinateInput
-}
-
-input ImportKitCommandInput {
-  context: KitCommandContextInput!
-  sourceUrl: String
-  archiveBase64: String
-}
-
-input ResetKitCommandInput {
-  context: KitCommandContextInput!
-  sourceUrl: String
-  archiveBase64: String
-  kit: KitInput
-}
-
-input ExportKitCommandInput {
-  context: KitCommandContextInput!
-}
-
-"""
-Ref to materialize a kit snapshot: main line when alternative/checkpoint omitted; optional session/draft/transaction include uncommitted work.
-"""
-input KitSnapshotRefInput {
-  kitId: ID!
-  alternativeId: ID
-  checkpointId: ID
+  designId: ID
   sessionId: ID
-  draftId: ID
-  transactionId: ID
+  checkpointId: ID
+  payload: JSON
+  error: ErrorEvent
+  emittedAt: DateTime!
 }
 
-type KitCheckpoint {
-  id: ID!
-  parentCheckpointId: ID
-  message: String
-  time: DateTime
-  isRelease: Boolean!
+type BackboneStatus {
+  attached: Boolean!
+  kind: String
+  tip: ID
 }
 
-type KitAlternative {
-  id: ID!
-  name: String!
-  description: String
-  checkpointIds: [ID!]!
+type CurrentState {
+  snapshot: JSON!
+  vcsState: JSON!
+  canUndo: Boolean!
+  canRedo: Boolean!
 }
 
 """
-🔎Read the current kit store, history, candidates, conflicts and command catalog.
+Immediate reads against live in-memory state.
+No queue, no background execution, no polling.
 """
 type Query {
-  kit(id: ID!): Kit
   """
-  Materialized kit at a VCS ref (see KitSnapshotRefInput). Resolver wiring lives in semio/graphql → store sidecar.
+  Convenience query for initial UI hydration.
   """
-  kitSnapshot(ref: KitSnapshotRefInput!): Kit
+  currentState: CurrentState!
+
   """
-  Ordered alternatives and checkpoints for the kit (persisted VCS model).
+  Live store DTO snapshot (`snapshot()` equivalent).
   """
-  kitTree(kitId: ID!): [KitAlternative!]!
-  kitStore(id: ID!): KitStore
-  kitSession(kitId: ID!, sessionId: ID!): KitSession
-  kitTransaction(kitId: ID!, transactionId: ID!): KitTransaction
-  kitCandidate(kitId: ID!, candidateId: ID!): KitChangeCandidate
-  kitConflict(kitId: ID!, conflictId: ID!): KitConflict
-  kitHistory(kitId: ID!, cursor: String, limit: Int): KitHistoryPage!
-  kitInteractions(kitId: ID!, cursor: String, limit: Int): KitInteractionPage!
-  kitCommandCatalog: [KitCommandDescriptor!]!
+  snapshot: JSON!
+
+  """
+  Materialized kit at a checkpoint; null / omitted checkpoint means initial materialization.
+  """
+  materializedKit(checkpointId: ID): JSON!
+
+  """
+  Full VCS tree snapshot for timeline / graph UI.
+  """
+  vcsState: JSON!
+
+  """
+  Backbone attachment status.
+  """
+  backboneStatus: BackboneStatus!
+
+  """
+  Current unresolved conflicts, if any.
+  """
+  conflicts: [JSON!]!
+
+  """
+  Top-level kit metadata.
+  """
+  kitMetadata: JSON!
+
+  """
+  All designs in the live graph.
+  """
+  designs: [JSON!]!
+
+  """
+  A single design DTO.
+  """
+  design(id: ID!): JSON
+
+  """
+  All types in the live graph.
+  """
+  types: [JSON!]!
+
+  """
+  A single type DTO.
+  """
+  typeById(id: ID!): JSON
+
+  """
+  All authors in the live graph.
+  """
+  authors: [JSON!]!
+
+  """
+  A single author DTO.
+  """
+  author(id: ID!): JSON
+
+  """
+  Piece metadata projection for one design.
+  """
+  piecesMetadata(designId: ID!): [JSON!]!
+
+  """
+  Full piece DTOs for one design.
+  """
+  pieces(designId: ID!): [JSON!]!
+
+  """
+  A single piece DTO within a design.
+  """
+  piece(designId: ID!, id: ID!): JSON
+
+  """
+  Full connection DTOs for one design.
+  """
+  connections(designId: ID!): [JSON!]!
+
+  """
+  A single connection DTO within a design.
+  """
+  connection(designId: ID!, id: ID!): JSON
+
+  """
+  Escape hatch for existing field-centric UI reads during the migration.
+  """
+  field(kind: EntityKind!, id: ID!, field: String!): JSON
+
+  """
+  Expose current undo state without enqueueing work.
+  """
+  canUndo: Boolean!
+
+  """
+  Expose current redo state without enqueueing work.
+  """
+  canRedo: Boolean!
 }
 
 """
-🌱Apply semantic kit store commands through explicit command inputs.
+Every mutation below is fire-and-forget.
+Resolvers validate, serialize a domain work item, push it onto the inbound queue,
+and return `true` when the work item has been accepted for processing.
+Result payloads arrive later on `eventStream`.
 """
 type Mutation {
-  startKitSession(input: StartKitSessionInput!): KitMutationResult!
-  heartbeatKitSession(input: HeartbeatKitSessionInput!): KitMutationResult!
-  endKitSession(input: EndKitSessionInput!): KitMutationResult!
-  reconnectKitSession(input: ReconnectKitSessionInput!): KitMutationResult!
+  # Generic graph edits
+  patchEntityField(input: PatchEntityFieldInput!): Boolean!
+  addChildEntity(input: AddChildEntityInput!): Boolean!
+  removeChildEntity(input: RemoveChildEntityInput!): Boolean!
 
-  setSessionSelection(input: SetSessionSelectionCommandInput!): KitMutationResult!
+  # Design / piece / connection operations
+  clusterPieces(input: ClusterPiecesInput!): Boolean!
+  dragPieces(input: DragPiecesInput!): Boolean!
+  movePieces(input: MovePiecesInput!): Boolean!
+  fixPieces(input: FixPiecesInput!): Boolean!
+  flattenDesign(input: FlattenDesignInput!): Boolean!
+  expandDesign(input: ExpandDesignInput!): Boolean!
+  deleteConnection(input: DeleteConnectionInput!): Boolean!
+  changePieceType(input: ChangePieceTypeInput!): Boolean!
+  pasteDesignSelection(input: PasteDesignSelectionInput!): Boolean!
+  createHangingPieces(input: CreateHangingPiecesInput!): Boolean!
+  createConnectedPiece(input: CreateConnectedPieceInput!): Boolean!
+  createFixedPiece(input: CreateFixedPieceInput!): Boolean!
 
-  beginKitTransaction(input: BeginKitTransactionInput!): KitMutationResult!
-  finalizeKitTransaction(input: FinalizeKitTransactionInput!): KitMutationResult!
-  abortKitTransaction(input: AbortKitTransactionInput!): KitMutationResult!
-  undoKitTransaction(input: TransactionStepInput!): KitMutationResult!
-  redoKitTransaction(input: TransactionStepInput!): KitMutationResult!
-  undoKitHistory(input: HistoryStepInput!): KitMutationResult!
-  redoKitHistory(input: HistoryStepInput!): KitMutationResult!
+  # Undo / redo
+  undo(input: UndoInput): Boolean!
+  redo(input: RedoInput): Boolean!
 
-  voteOnKitChangeCandidate(input: VoteOnKitChangeCandidateInput!): KitMutationResult!
-  resolveKitConflict(input: ResolveKitConflictInput!): KitMutationResult!
-
-  createAuthor(input: CreateAuthorCommandInput!): KitMutationResult!
-  updateAuthor(input: UpdateAuthorCommandInput!): KitMutationResult!
-  deleteAuthor(input: DeleteAuthorCommandInput!): KitMutationResult!
-
-  createType(input: CreateTypeCommandInput!): KitMutationResult!
-  updateType(input: UpdateTypeCommandInput!): KitMutationResult!
-  deleteType(input: DeleteTypeCommandInput!): KitMutationResult!
-
-  createDesign(input: CreateDesignCommandInput!): KitMutationResult!
-  updateDesign(input: UpdateDesignCommandInput!): KitMutationResult!
-  deleteDesign(input: DeleteDesignCommandInput!): KitMutationResult!
-
-  createQuality(input: CreateQualityCommandInput!): KitMutationResult!
-  updateQuality(input: UpdateQualityCommandInput!): KitMutationResult!
-  deleteQuality(input: DeleteQualityCommandInput!): KitMutationResult!
-
-  createPort(input: CreatePortCommandInput!): KitMutationResult!
-  updatePort(input: UpdatePortCommandInput!): KitMutationResult!
-  deletePort(input: DeletePortCommandInput!): KitMutationResult!
-
-  createFamily(input: CreateFamilyCommandInput!): KitMutationResult!
-  updateFamily(input: UpdateFamilyCommandInput!): KitMutationResult!
-  deleteFamily(input: DeleteFamilyCommandInput!): KitMutationResult!
-
-  createTag(input: CreateTagCommandInput!): KitMutationResult!
-  updateTag(input: UpdateTagCommandInput!): KitMutationResult!
-  deleteTag(input: DeleteTagCommandInput!): KitMutationResult!
-
-  createConcept(input: CreateConceptCommandInput!): KitMutationResult!
-  updateConcept(input: UpdateConceptCommandInput!): KitMutationResult!
-  deleteConcept(input: DeleteConceptCommandInput!): KitMutationResult!
-
-  createFile(input: CreateFileCommandInput!): KitMutationResult!
-  updateFile(input: UpdateFileCommandInput!): KitMutationResult!
-  deleteFile(input: DeleteFileCommandInput!): KitMutationResult!
-
-  createFolder(input: CreateFolderCommandInput!): KitMutationResult!
-  updateFolder(input: UpdateFolderCommandInput!): KitMutationResult!
-  deleteFolder(input: DeleteFolderCommandInput!): KitMutationResult!
-  moveArtifactToFolder(input: MoveArtifactToFolderCommandInput!): KitMutationResult!
-
-  createPiece(input: CreatePieceCommandInput!): KitMutationResult!
-  createPieces(input: CreatePiecesCommandInput!): KitMutationResult!
-  updatePiece(input: UpdatePieceCommandInput!): KitMutationResult!
-  updatePieces(input: UpdatePiecesCommandInput!): KitMutationResult!
-  deletePiece(input: DeletePieceCommandInput!): KitMutationResult!
-  deletePieces(input: DeletePiecesCommandInput!): KitMutationResult!
-
-  createConnection(input: CreateConnectionCommandInput!): KitMutationResult!
-  createConnections(input: CreateConnectionsCommandInput!): KitMutationResult!
-  updateConnection(input: UpdateConnectionCommandInput!): KitMutationResult!
-  updateConnections(input: UpdateConnectionsCommandInput!): KitMutationResult!
-  deleteConnection(input: DeleteConnectionCommandInput!): KitMutationResult!
-  deleteConnections(input: DeleteConnectionsCommandInput!): KitMutationResult!
-
-  deleteSelection(input: DeleteSelectionCommandInput!): KitMutationResult!
-  fixPieces(input: FixPiecesCommandInput!): KitMutationResult!
-  clusterPieces(input: ClusterPiecesCommandInput!): KitMutationResult!
-  expandDesignReference(input: ExpandDesignReferenceCommandInput!): KitMutationResult!
-  flattenDesign(input: FlattenDesignCommandInput!): KitMutationResult!
-  dragPieces(input: DragPiecesCommandInput!): KitMutationResult!
-  movePieces(input: MovePiecesCommandInput!): KitMutationResult!
-  createFixedPiece(input: CreateFixedPieceCommandInput!): KitMutationResult!
-  createConnectedPiece(input: CreateConnectedPieceCommandInput!): KitMutationResult!
-  createHangingPieces(input: CreateHangingPiecesCommandInput!): KitMutationResult!
-  changePieceType(input: ChangePieceTypeCommandInput!): KitMutationResult!
-  changePiecesType(input: ChangePiecesTypeCommandInput!): KitMutationResult!
-  pasteDesignSelection(input: PasteDesignSelectionCommandInput!): KitMutationResult!
-
-  importKit(input: ImportKitCommandInput!): KitMutationResult!
-  resetKit(input: ResetKitCommandInput!): KitMutationResult!
-  exportKit(input: ExportKitCommandInput!): KitMutationResult!
-}
-
-enum KitStoreEventKind {
-  STORE_CHANGED
-  INTERACTION_RECORDED
-  CHANGE_CANDIDATE_REQUESTED
-  CHANGE_APPLIED
-  CONFLICT_RAISED
-  SESSION_CHANGED
-  TRANSACTION_CHANGED
-  HISTORY_CHANGED
-}
-
-type KitStoreEvent {
-  hash: Hash!
-  kind: KitStoreEventKind!
-  store: KitStore!
-  interaction: KitInteractionRecord
-  change: KitChange
-  candidate: KitChangeCandidate
-  conflict: KitConflict
-  session: KitSession
-  transaction: KitTransaction
+  # Control-plane / VCS operations
+  newSession(input: NewSessionInput): Boolean!
+  endSession(input: EndSessionInput!): Boolean!
+  newAlternative(input: NewAlternativeInput!): Boolean!
+  setActiveCheckpoint(input: SetActiveCheckpointInput!): Boolean!
+  attachBackbone(input: AttachBackboneInput!): Boolean!
+  detachBackbone(input: DetachBackboneInput): Boolean!
+  resolveConflict(input: ResolveConflictInput!): Boolean!
+  syncNow(input: SyncNowInput): Boolean!
 }
 
 """
-📡Stream semantic kit store events for synchronized UI state.
+Single outbound pipe for actor results, state changes, and async failures.
+JS should open this once during boot and keep it alive for the worker lifetime.
 """
 type Subscription {
-  kitStoreEvents(kitId: ID!, sessionId: ID): KitStoreEvent!
+  eventStream(
+    types: [EventKind!]
+    operation: String
+    entityKind: EntityKind
+    entityId: ID
+    designId: ID
+    sessionId: ID
+    clientMutationId: ID
+  ): WasmEvent!
+}
+
+"""
+Common metadata carried by every mutation input.
+Use `clientMutationId` to correlate a mutation with one or more later events.
+"""
+input PatchEntityFieldInput {
+  clientMutationId: ID
+  kind: EntityKind!
+  id: ID!
+  field: String!
+  value: JSON!
+}
+
+input AddChildEntityInput {
+  clientMutationId: ID
+  parentKind: EntityKind!
+  parentId: ID!
+  childKind: EntityKind!
+  child: JSON!
+}
+
+input RemoveChildEntityInput {
+  clientMutationId: ID
+  parentKind: EntityKind!
+  parentId: ID!
+  childKind: EntityKind!
+  childId: ID!
+}
+
+input ClusterPiecesInput {
+  clientMutationId: ID
+  designId: ID!
+  pieceIds: [ID!]!
+  clusterName: String!
+}
+
+input DragPiecesInput {
+  clientMutationId: ID
+  designId: ID!
+  pieceIds: [ID!]!
+  du: Float!
+  dv: Float!
+}
+
+input MovePiecesInput {
+  clientMutationId: ID
+  designId: ID!
+  pieceIds: [ID!]!
+  gap: Float!
+  shift: Float!
+  rise: Float!
+}
+
+input FixPiecesInput {
+  clientMutationId: ID
+  designId: ID!
+  pieceIds: [ID!]!
+}
+
+input FlattenDesignInput {
+  clientMutationId: ID
+  designId: ID!
+}
+
+input ExpandDesignInput {
+  clientMutationId: ID
+  parentDesignId: ID!
+  nestedDesignId: ID!
+}
+
+input DeleteConnectionInput {
+  clientMutationId: ID
+  designId: ID!
+  connectionId: ID!
+}
+
+input ChangePieceTypeInput {
+  clientMutationId: ID
+  designId: ID!
+  pieceId: ID!
+  newTypeId: ID!
+}
+
+"""
+`selection` and `plane` remain JSON because the existing selection/geometry DTOs are
+substantial and can be typed later without changing the queueing model.
+"""
+input PasteDesignSelectionInput {
+  clientMutationId: ID
+  designId: ID!
+  selection: JSON!
+  plane: JSON
+}
+
+input CreateHangingPiecesInput {
+  clientMutationId: ID
+  designId: ID!
+  typeIds: [ID!]!
+  plane: JSON!
+}
+
+input CreateConnectedPieceInput {
+  clientMutationId: ID
+  designId: ID!
+  parentPieceId: ID!
+  parentPortId: ID!
+  childTypeId: ID!
+  childPortId: ID!
+}
+
+input CreateFixedPieceInput {
+  clientMutationId: ID
+  designId: ID!
+  typeId: ID!
+  plane: JSON!
+}
+
+input UndoInput {
+  clientMutationId: ID
+}
+
+input RedoInput {
+  clientMutationId: ID
+}
+
+input NewSessionInput {
+  clientMutationId: ID
+}
+
+input EndSessionInput {
+  clientMutationId: ID
+  sessionId: ID!
+}
+
+input NewAlternativeInput {
+  clientMutationId: ID
+  name: String!
+  fromCheckpoint: ID
+}
+
+input SetActiveCheckpointInput {
+  clientMutationId: ID
+  checkpointId: ID
+}
+
+"""
+Opaque backbone config payload for the first migration cut.
+This can be split into typed config inputs once the concrete transport variants settle.
+"""
+input AttachBackboneInput {
+  clientMutationId: ID
+  config: JSON!
+}
+
+input DetachBackboneInput {
+  clientMutationId: ID
+}
+
+"""
+`strategy` intentionally stays JSON so the worker can continue using the current
+conflict-resolution structure while the GraphQL contract stabilizes.
+"""
+input ResolveConflictInput {
+  clientMutationId: ID
+  conflictId: ID!
+  strategy: JSON!
+}
+
+input SyncNowInput {
+  clientMutationId: ID
 }

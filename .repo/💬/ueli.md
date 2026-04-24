@@ -1431,6 +1431,7 @@ Requirements:
 - semio/ract exports the store as clean components. No direct interaction with command-style of semio/rs
 - No kit hook definitions, no kit stores and no kit state management regarding in semio/sketchpad.
 - No direction execution of commands in semio/react. No command semantics.
+- No diff based mutation in semio/js, semio/react, semio/sketchpad. Mutations are only over commands.
 
 e.g.
 semio/rs uses impl PieceStore uses `self.computed_flat_plane()`
@@ -1441,6 +1442,8 @@ semio/react exports usePieceFlatPlane and PieceContext
 semio/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
 
 This pattern MUST be used for everything.
+
+semio is a greenfield project. Dont keep any legacy api or backwards compatibility. All code, assets, tests, docs MUST be 100% aligned.
 
 ---
 

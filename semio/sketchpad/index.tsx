@@ -16,7 +16,6 @@
 // #region ⛩️Imports
 
 import type {
-  Connector,
   KitBinaryStore,
   KitCommandContext,
   KitCommandResult,
@@ -25,10 +24,8 @@ import type {
   KitJsonFileAdapter,
   KitStore,
   KitStoreSnapshot,
-  Port,
-  SketchpadKitKindAvailability,
-  SketchpadKitStoreFactory,
-} from "@semio/react";
+} from "@semio/js";
+import type { Connector, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
@@ -37,7 +34,6 @@ import {
   Attribute,
   Author,
   AuthorId,
-  AuthorProvider,
   buildFileTree,
   Camera,
   colorPortsForTypes,
@@ -45,15 +41,15 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
-  ConnectionProvider,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
+  createKitCommandEngine,
+  createKitCommandEngineExplicitOrigin,
   createKitFileObjectUrl,
   createSessionKitStore,
   Design,
   DesignDiff,
-  DesignProvider,
   DesignShallow,
   DiffStatus,
   executeKitCommand,
@@ -65,7 +61,6 @@ import {
   flattenFileTree,
   Folder,
   generateUniqueName,
-  getClusterableGroups,
   getDesignDiff,
   getExistingKitFileProvider,
   getIncludedDesigns,
@@ -85,19 +80,16 @@ import {
   isBrowserReadableFileUrl,
   Kit,
   KitDiff,
-  KitProvider,
   KitRegistryProvider,
   KitShallow,
   Piece,
   PieceDiff,
   PieceId,
-  PieceProvider,
   Plane,
   planeToMatrix,
   Point,
   Quality,
   QualityDiff,
-  QualityProvider,
   Representation,
   selectBestRepresentation,
   File as SemioFile,
@@ -108,9 +100,17 @@ import {
   toThreeRotation,
   Type,
   TypeDiff,
-  TypeProvider,
   TypeShallow,
   Vector,
+} from "@semio/js";
+import {
+  AuthorScope,
+  ConnectionScope,
+  DesignScope,
+  KitScope,
+  PieceScope,
+  QualityScope,
+  TypeScope,
   useActiveKitId,
   useAuthor as useAuthorFromKit,
   useConnection as useConnectionFromKit,
@@ -121,16 +121,15 @@ import {
   useCreateQuality,
   useCreateType,
   useDesign as useDesignFromKit,
+  useDesignClusterableGroups,
   useDesigns as useDesignsFromKit,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
-  useFlatPieceCenter as useFlatPieceCenterFromKit,
   useFixedPieceId as useFixedPieceIdFromKit,
-  useFlatPiecePlane as useFlatPiecePlaneFromKit,
   useIncludedDesigns as useIncludedDesignsFromKit,
+  usePieceFlatCenter,
+  usePieceFlatPlane,
   useIsConnectedPiece as useIsConnectedPieceFromKit,
   useKitStoredFileUrls as useFileUrls,
-  useKitCommandDispatchersWithOrigin,
-  useKitCommands,
   useKitDescription,
   useKitHomepage,
   useKitIcon,
@@ -142,6 +141,7 @@ import {
   useKitRuntimeSafe,
   useKitFileBlobUrl,
   useKitFileUrl,
+  useKitStore,
   useParentPieceId as useParentPieceIdFromKit,
   useMoveKitArtifactToFolder,
   usePiece as usePieceFromKit,
@@ -6925,7 +6925,7 @@ type AuthorScope = { id: string };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
 export const AuthorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(AuthorProvider, { id: props.id, children: React.createElement(AuthorScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(AuthorScope, { id: props.id, children: React.createElement(AuthorScopeContext.Provider, { value }, props.children as any) });
 };
 const useAuthorScope = () => useContext(AuthorScopeContext);
 // #endregion 🎭Author Scope
@@ -6935,7 +6935,7 @@ type TypeScope = { id: string };
 const TypeScopeContext = createContext<TypeScope | null>(null);
 export const TypeScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(TypeProvider, { id: props.id, children: React.createElement(TypeScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(TypeScope, { id: props.id, children: React.createElement(TypeScopeContext.Provider, { value }, props.children as any) });
 };
 export const useTypeScope = () => useContext(TypeScopeContext);
 export const useIsInTypeScope = () => useTypeScope() !== null;
@@ -6946,39 +6946,39 @@ type QualityScope = { id: string };
 const QualityScopeContext = createContext<QualityScope | null>(null);
 export const QualityScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(QualityProvider, { id: props.id, children: React.createElement(QualityScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(QualityScope, { id: props.id, children: React.createElement(QualityScopeContext.Provider, { value }, props.children as any) });
 };
 export const useQualityScope = () => useContext(QualityScopeContext);
 export const useIsInQualityScope = () => useQualityScope() !== null;
 // #endregion 🎼Quality Scope
 
 // 🔭#region 🎀Design Scope
-type DesignScope = { id: string };
-export const DesignScopeContext = createContext<DesignScope | null>(null);
+type ActiveDesign = { id: string };
+export const DesignScopeContext = createContext<ActiveDesign | null>(null);
 export const DesignScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(DesignProvider, { id: props.id, children: React.createElement(DesignScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(DesignScope, { id: props.id, children: React.createElement(DesignScopeContext.Provider, { value }, props.children as any) });
 };
 export const useDesignScope = () => useContext(DesignScopeContext);
 export const useIsInDesignScope = () => useDesignScope() !== null;
 // #endregion 🎀Design Scope
 
 // 🔭#region 🖲️Piece Scope
-type PieceScope = { id: string };
-const PieceScopeContext = createContext<PieceScope | null>(null);
+type ActivePiece = { id: string };
+const PieceScopeContext = createContext<ActivePiece | null>(null);
 export const PieceScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(PieceProvider, { id: props.id, children: React.createElement(PieceScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(PieceScope, { id: props.id, children: React.createElement(PieceScopeContext.Provider, { value }, props.children as any) });
 };
 export const usePieceScope = () => useContext(PieceScopeContext);
 // #endregion 🖲️Piece Scope
 
 // 🔌#region 🎛️Connection Scope
-type ConnectionScope = { id: string };
-const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
+type ActiveConnection = { id: string };
+const ConnectionScopeContext = createContext<ActiveConnection | null>(null);
 export const ConnectionScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(ConnectionProvider, { id: props.id, children: React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any) });
+  return React.createElement(ConnectionScope, { id: props.id, children: React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any) });
 };
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 // #endregion 🎛️Connection Scope
@@ -7135,22 +7135,6 @@ export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
   return meta as PieceMetadata | undefined;
 }
 
-export function useFlatPiecePlane(id?: Id): Plane {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
-  const pieceId = id ?? pieceScope?.id;
-  const [plane] = useFlatPiecePlaneFromKit(designScope?.id, pieceId);
-  return plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
-}
-
-export function useFlatPieceCenter(id?: Id): Coordinate {
-  const designScope = useDesignScope();
-  const pieceScope = usePieceScope();
-  const pieceId = id ?? pieceScope?.id;
-  const [center] = useFlatPieceCenterFromKit(designScope?.id, pieceId);
-  return center ?? { u: 0, v: 0 };
-}
-
 export function useIsConnectedPiece(id?: Id): boolean {
   const designScope = useDesignScope();
   const pieceScope = usePieceScope();
@@ -7250,16 +7234,14 @@ export function useReplacableDesigns(piece: Piece): Design[] {
 // Storage-agnostic kit store hooks using KitStore interface.
 
 /**
- * KitScope holds the data fields for a KitScope record.
- **/
-type KitScope = { id: string };
-/**
- * KitScopeContext holds the data fields for a KitScopeContext record.
- **/
-export const KitScopeContext = createContext<KitScope | null>(null);
+ * Active tab kit id (sketchpad shell context, not the {@link KitScope} component).
+ */
+type ActiveKit = { id: string };
+
+export const KitScopeContext = createContext<ActiveKit | null>(null);
 
 /**
- * Wraps children with {@link KitProvider} so `@semio/react` command/query hooks work.
+ * Wraps children with {@link KitScope} from `@semio/react` so command/query hooks work.
  * The kit is already registered in {@link KitRegistryProvider} from {@link SketchpadStore.registerKitStore}.
  */
 function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode }): React.ReactElement {
@@ -7276,10 +7258,10 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
     const status = registry.status(kitId);
     const entry = registry.get(kitId);
     if (status === "ready" && entry) {
-      return React.createElement(KitProvider, { kitId, store: entry.store, kitClient: entry.kitClient, children });
+      return React.createElement(KitScope, { kitId, store: entry.store, kitClient: entry.kitClient, children });
     }
   }
-  return React.createElement(KitProvider, { store: innerStore, children });
+  return React.createElement(KitScope, { store: innerStore, children });
 }
 
 /**
@@ -7290,9 +7272,9 @@ export const KitScopeProvider = (props: { id: string; children: React.ReactNode 
 };
 /**
  * Resolves the active kit id: R3F {@link SceneContextBridge} re-provides {@link KitScopeContext};
- * the DOM tree uses {@link useActiveKitId} from {@link KitProvider}.
+ * the DOM tree uses {@link useActiveKitId} from {@link KitScope}.
  **/
-export const useKitScope = (): KitScope | null => {
+export const useKitScope = (): ActiveKit | null => {
   const bridged = useContext(KitScopeContext);
   if (bridged) return bridged;
   const g = useActiveKitId();
@@ -16736,18 +16718,23 @@ export function useConnectionDescription(): HookResult<string> {
 }
 
 /**
- * Hook returning clusterable piece groups for the current design.
+ * Clusterable piece groups for the current design (rs-backed via `executeRead`).
+ * Each group is a list of piece id strings.
  **/
 export function useClusterableGroups() {
   const designScope = useDesignScope();
-  const pieces = usePieces();
-  const connections = useConnections();
   const selection = useDesignAppSelection();
+  const [groups] = useDesignClusterableGroups(
+    designScope?.id,
+    selection.pieces ?? []
+  );
   return useMemo(() => {
-    if (!designScope) return [];
-    const design = { id: designScope.id, pieces, connections } as Design;
-    return getClusterableGroups(design, selection.pieces ?? []);
-  }, [designScope?.id, pieces, connections, selection.pieces]);
+    if (!designScope) return [] as string[][];
+    if (!Array.isArray(groups) || groups.length === 0) return [];
+    return groups.map((g) =>
+      (Array.isArray(g) ? g : []).map((p) => (typeof p === "string" ? p : p.id))
+    );
+  }, [designScope, groups]);
 }
 
 /**
@@ -35872,7 +35859,7 @@ const RepresentationPiece: FC<RepresentationPieceProps> = () => {
   const isSelected = useIsPieceSelected();
   const isHovered = useIsPieceTransitiveHovered();
   const status = usePieceStatus();
-  const flatPlane = useFlatPiecePlane();
+  const [flatPlane] = usePieceFlatPlane(useDesignScope()?.id, piece.id);
 
   const [selection, setSelection] = useDesignAppSelection();
   const { hoverPiece, clearHover } = useDesignAppHoverActions();

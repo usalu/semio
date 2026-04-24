@@ -24,4 +24,6 @@ These hooks call into `@semio/js` **`KitStoreClient`** methods that forward to *
 
 Re-exported wire types: `KitStoreWireBackboneConfig`, `KitStoreWireConflictResolution`, `KitStoreWireBackboneStatus`, `KitStoreWireKitConflict`, `KitStoreExecuteResult` (from `@semio/js`).
 
+Per-kit UI is wrapped in **`KitScope`**. The **persistence** shape passed when opening a kit is **`KitBackboneConfig`**. Entity panels use **`DesignScope`**, **`PieceScope`**, **`TypeScope`**, and the other `*Scope` components.
+
 On a plain browser WASM graph (no native control plane), backbone/coordinator commands are expected to fail; use **`useKitStoreClient`**.`vcsState()` for VCS tree UI where appropriate.

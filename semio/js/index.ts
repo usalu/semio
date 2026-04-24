@@ -28719,8 +28719,85 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   return result;
 }
 
-/** @deprecated Prefer {@link executeSemioKitCommand} */
 export const executeKitCommand = executeSemioKitCommand;
+
+/**
+ * Binds {@link executeSemioKitCommand} to a `getOrigin` callback (browser / shell event codes).
+ * Sketchpad and hosts use this until string commands are fully replaced with typed `execute` on {@link KitStoreClient}.
+ */
+export function createKitCommandEngine(kitStore: KitStore, getOrigin: () => string) {
+  const o = getOrigin;
+  return {
+    importKit: (url: string) => executeSemioKitCommand(kitStore, "semio.kit.import", o(), url),
+    exportKit: () => executeSemioKitCommand(kitStore, "semio.kit.export", o()),
+    createAuthor: (author: any) => executeSemioKitCommand(kitStore, "semio.kit.createAuthor", o(), author),
+    updateAuthor: (Id: string, authorDiff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateAuthor", o(), Id, authorDiff),
+    deleteAuthor: (Id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteAuthor", o(), Id),
+    createType: (type: any) => executeSemioKitCommand(kitStore, "semio.kit.createType", o(), type),
+    updateType: (id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateType", o(), id, diff),
+    deleteType: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteType", o(), id),
+    createDesign: (design: any) => executeSemioKitCommand(kitStore, "semio.kit.createDesign", o(), design),
+    updateDesign: (id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateDesign", o(), id, diff),
+    deleteDesign: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteDesign", o(), id),
+    createQuality: (quality: any) => executeSemioKitCommand(kitStore, "semio.kit.createQuality", o(), quality),
+    updateQuality: (id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateQuality", o(), id, diff),
+    deleteQuality: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteQuality", o(), id),
+    createPort: (iface: any) => executeSemioKitCommand(kitStore, "semio.kit.createPort", o(), iface),
+    updatePort: (id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updatePort", o(), id, diff),
+    deletePort: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deletePort", o(), id),
+    createTag: (tag: any) => executeSemioKitCommand(kitStore, "semio.kit.createTag", o(), tag),
+    updateTag: (id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateTag", o(), id, diff),
+    deleteTag: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteTag", o(), id),
+    createConcept: (concept: any) => executeSemioKitCommand(kitStore, "semio.kit.createConcept", o(), concept),
+    deleteConcept: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteConcept", o(), id),
+    addFile: (file: any, blob?: Blob) => executeSemioKitCommand(kitStore, "semio.kit.addFile", o(), file, blob),
+    updateFile: (url: string, fileDiff: any, blob?: Blob) => executeSemioKitCommand(kitStore, "semio.kit.updateFile", o(), url, fileDiff, blob),
+    removeFile: (url: string) => executeSemioKitCommand(kitStore, "semio.kit.removeFile", o(), url),
+    createFolder: (folder: any) => executeSemioKitCommand(kitStore, "semio.kit.createFolder", o(), folder),
+    updateFolder: (id: string, folderDiff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateFolder", o(), id, folderDiff),
+    deleteFolder: (id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteFolder", o(), id),
+    moveToFolder: (artifactKind: string, artifactId: string, folderId: string | null) =>
+      executeSemioKitCommand(kitStore, "semio.kit.moveToFolder", o(), artifactId, artifactKind, folderId),
+    addPiece: (design: string, piece: any) => executeSemioKitCommand(kitStore, "semio.kit.addPiece", o(), design, piece),
+    addPieces: (design: string, pieces: any[]) => executeSemioKitCommand(kitStore, "semio.kit.addPieces", o(), design, pieces),
+    removePiece: (design: string, piece: string) => executeSemioKitCommand(kitStore, "semio.kit.removePiece", o(), design, piece),
+    removePieces: (design: string, pieces: string[]) => executeSemioKitCommand(kitStore, "semio.kit.removePieces", o(), design, pieces),
+    addConnection: (design: string, connection: any) => executeSemioKitCommand(kitStore, "semio.kit.addConnection", o(), design, connection),
+    addConnections: (design: string, connections: any[]) => executeSemioKitCommand(kitStore, "semio.kit.addConnections", o(), design, connections),
+    removeConnection: (design: string, connection: string) => executeSemioKitCommand(kitStore, "semio.kit.removeConnection", o(), design, connection),
+    removeConnections: (design: string, connections: string[]) => executeSemioKitCommand(kitStore, "semio.kit.removeConnections", o(), design, connections),
+    deleteSelected: (design: string, selectedPieces: string[], selectedConnections: string[]) =>
+      executeSemioKitCommand(kitStore, "semio.kit.deleteSelected", o(), design, selectedPieces, selectedConnections),
+  };
+}
+
+export function createKitCommandEngineExplicitOrigin(kitStore: KitStore) {
+  return {
+    importKit: (origin: string, url: string) => executeSemioKitCommand(kitStore, "semio.kit.import", origin, url),
+    exportKit: (origin: string) => executeSemioKitCommand(kitStore, "semio.kit.export", origin),
+    createAuthor: (origin: string, author: any) => executeSemioKitCommand(kitStore, "semio.kit.createAuthor", origin, author),
+    updateAuthor: (origin: string, authorId: string, authorDiff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateAuthor", origin, authorId, authorDiff),
+    deleteAuthor: (origin: string, authorId: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteAuthor", origin, authorId),
+    createType: (origin: string, type: any) => executeSemioKitCommand(kitStore, "semio.kit.createType", origin, type),
+    deleteType: (origin: string, id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteType", origin, id),
+    createDesign: (origin: string, design: any) => executeSemioKitCommand(kitStore, "semio.kit.createDesign", origin, design),
+    updateDesign: (origin: string, id: string, diff: any) => executeSemioKitCommand(kitStore, "semio.kit.updateDesign", origin, id, diff),
+    deleteDesign: (origin: string, id: string) => executeSemioKitCommand(kitStore, "semio.kit.deleteDesign", origin, id),
+    addFile: (origin: string, file: any, blob?: Blob) => executeSemioKitCommand(kitStore, "semio.kit.addFile", origin, file, blob),
+    updateFile: (origin: string, url: string, fileDiff: any, blob?: Blob) => executeSemioKitCommand(kitStore, "semio.kit.updateFile", origin, url, fileDiff, blob),
+    removeFile: (origin: string, url: string) => executeSemioKitCommand(kitStore, "semio.kit.removeFile", origin, url),
+    addPiece: (origin: string, design: string, piece: any) => executeSemioKitCommand(kitStore, "semio.kit.addPiece", origin, design, piece),
+    addPieces: (origin: string, design: string, pieces: any[]) => executeSemioKitCommand(kitStore, "semio.kit.addPieces", origin, design, pieces),
+    removePiece: (origin: string, design: string, piece: string) => executeSemioKitCommand(kitStore, "semio.kit.removePiece", origin, design, piece),
+    removePieces: (origin: string, design: string, pieces: string[]) => executeSemioKitCommand(kitStore, "semio.kit.removePieces", origin, design, pieces),
+    addConnection: (origin: string, design: string, connection: any) => executeSemioKitCommand(kitStore, "semio.kit.addConnection", origin, design, connection),
+    addConnections: (origin: string, design: string, connections: any[]) => executeSemioKitCommand(kitStore, "semio.kit.addConnections", origin, design, connections),
+    removeConnection: (origin: string, design: string, connection: string) => executeSemioKitCommand(kitStore, "semio.kit.removeConnection", origin, design, connection),
+    removeConnections: (origin: string, design: string, connections: string[]) => executeSemioKitCommand(kitStore, "semio.kit.removeConnections", origin, design, connections),
+    deleteSelected: (origin: string, design: string, selectedPieces: string[], selectedConnections: string[]) =>
+      executeSemioKitCommand(kitStore, "semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
+  };
+}
 
 // #endregion Graph kit commands
 
@@ -28894,3 +28971,7 @@ if (shouldRunJsBenchmarks) {
 // #region Read command types (generated mirror of semio/rs/read_module)
 export * from "./readCommandTypes";
 // #endregion Read command types
+
+// #region Live kit graph (executeRead facades for React hooks)
+export * from "./kitGraphLive";
+// #endregion
