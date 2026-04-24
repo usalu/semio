@@ -125,7 +125,7 @@ type IndexedSchemaState = {
 	byType: Map<string, IndexedSchemaReference[]>;
 };
 
-type SchemaScope = {
+export type SchemaScope = {
 	typeName: string;
 	id?: string;
 	path: Array<string | number>;
@@ -1280,6 +1280,11 @@ export function PropProvider({ id: idValue, children }: { id?: string; children:
 export function AttributeProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
 	const scope = useEntityScope("Attribute", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
+}
+
+/** Read the current {@link SchemaScope} from the nearest entity provider (e.g. {@link TypeProvider}). */
+export function useSchemaScope(): SchemaScope | null {
+	return React.useContext(SchemaScopeContext);
 }
 
 // #endregion ⚛️Context
@@ -15038,6 +15043,19 @@ if (shouldRunReactEmbeddedTests) {
 			render(React.createElement(OptProbe));
 			await waitFor(() => expect(opt).not.toBeNull());
 			expect(opt!.dirty).toBe(false);
+		});
+	});
+
+	describe("getKitRegistryBridge", () => {
+		it("is non-null under KitRegistryProvider and null after unmount", async () => {
+			const { unmount } = render(
+				React.createElement(KitRegistryProvider, { children: React.createElement("div", null, "x") }),
+			);
+			const b = getKitRegistryBridge();
+			expect(b).not.toBeNull();
+			expect(typeof b!.list).toBe("function");
+			unmount();
+			await waitFor(() => expect(getKitRegistryBridge()).toBeNull());
 		});
 	});
 

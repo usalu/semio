@@ -5,8 +5,2174 @@
 /// Executed against the **live** [`kit_graph::KitGraph`] (see `ReadKitCommand::execute` / `execute_many`).
 pub mod read {
     #![allow(clippy::result_large_err)]
-    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/read_module.rs"));
-    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/read_impl.rs"));
+// Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
+// Regenerate: `python gen_read_module.py` from semio/rs (optional; hand-edit for tweaks).
+
+use serde::{Deserialize, Serialize};
+
+use crate::attribute::{
+    AttributeFullDto, AttributeMetadataDto, AttributeShallowDto, AttributeIdDto,
+};
+use crate::author::{AuthorFullDto, AuthorMetadataDto, AuthorShallowDto, AuthorIdDto};
+use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkIdDto};
+use crate::concept::{ConceptFullDto, ConceptMetadataDto, ConceptShallowDto, ConceptIdDto};
+use crate::connection::{
+    ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionIdDto,
+};
+use crate::connector::{
+    ConnectorFullDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorIdDto, ConnectorStoreRef,
+};
+use crate::design::{
+    DesignFullDto, DesignMetadataDto, DesignShallowDto, DesignIdDto, DesignStoreRef,
+};
+use crate::family::{FamilyFullDto, FamilyMetadataDto, FamilyShallowDto, FamilyIdDto, FamilyStoreRef};
+use crate::file::{FileFullDto, FileMetadataDto, FileShallowDto, FileIdDto};
+use crate::folder::{FolderFullDto, FolderMetadataDto, FolderShallowDto, FolderIdDto};
+use crate::geom::{Coordinate, Plane};
+use crate::group::{GroupFullDto, GroupMetadataDto, GroupShallowDto, GroupIdDto};
+use crate::kit_graph::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitGraph};
+use crate::layer::{LayerFullDto, LayerMetadataDto, LayerShallowDto, LayerIdDto};
+use crate::location::{LocationFullDto, LocationShallowDto, LocationIdDto, LocationMetadataDto};
+use crate::piece::{
+    FixedPieceOutputDto, PieceAlternativesDto, PieceFullDto, PieceMetadataDto, PieceShallowDto, PieceIdDto,
+    PieceStoreRef, ConnectedPieceOutputDto, PoseFullDto,
+};
+use crate::port::{PortFullDto, PortMetadataDto, PortShallowDto, PortIdDto, PortStoreRef};
+use crate::prop::{PropFullDto, PropShallowDto, PropIdDto};
+use crate::quality::{QualityFullDto, QualityMetadataDto, QualityShallowDto, QualityIdDto};
+use crate::representation::{
+    RepresentationFullDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationIdDto, RepresentationStoreRef,
+};
+use crate::side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStoreRef};
+use crate::stat::{StatFullDto, StatMetadataDto, StatShallowDto, StatIdDto};
+use crate::tag::{TagFullDto, TagMetadataDto, TagShallowDto, TagIdDto};
+use crate::typ::{TypeFullDto, TypeMetadataDto, TypeShallowDto, TypeIdDto, TypeStoreRef};
+use crate::id::Id;
+
+/// One row of [`crate::design::DesignStore::flatten_map`].
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct DesignFlattenMapEntryDto {
+    pub piece_id: Id,
+    pub plane: Plane,
+    pub center: Coordinate,
+}
+
+// --- Kit ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadKitCommand {
+    ReadKitFullCommand,
+    ReadKitShallowCommand,
+    ReadKitMetadataCommand,
+    ReadKitIdCommand,
+    ReadKitNameCommand,
+    ReadKitDescriptionCommand,
+    ReadKitIconCommand,
+    ReadKitImageCommand,
+    ReadKitPreviewCommand,
+    ReadKitRemoteCommand,
+    ReadKitHomepageCommand,
+    ReadKitLicenseCommand,
+    ReadKitUriCommand,
+    ReadKitCreatedCommand,
+    ReadKitUpdatedCommand,
+    ReadKitTypesFullCommand,
+    ReadKitTypesShallowCommand,
+    ReadKitDesignsFullCommand,
+    ReadKitDesignsShallowCommand,
+    ReadKitFilesFullCommand,
+    ReadKitFilesShallowCommand,
+    ReadKitFoldersFullCommand,
+    ReadKitFoldersShallowCommand,
+    ReadKitLocationsFullCommand,
+    ReadKitLocationsShallowCommand,
+    ReadKitFamiliesFullCommand,
+    ReadKitFamiliesShallowCommand,
+    ReadKitPortsFullCommand,
+    ReadKitAuthorsFullCommand,
+    ReadKitAuthorsShallowCommand,
+    ReadKitConceptsFullCommand,
+    ReadKitConceptsShallowCommand,
+    ReadKitTagsFullCommand,
+    ReadKitTagsShallowCommand,
+    ReadKitQualitiesFullCommand,
+    ReadKitQualitiesShallowCommand,
+    ReadKitPropsFullCommand,
+    ReadKitPropsShallowCommand,
+    ReadKitAttributesFullCommand,
+    ReadKitAttributesShallowCommand,
+    ReadKitTypeCommands { id: TypeIdDto, commands: Vec<ReadTypeCommand> },
+    ReadKitDesignCommands { id: DesignIdDto, commands: Vec<ReadDesignCommand> },
+    ReadKitFileCommands { id: FileIdDto, commands: Vec<ReadFileCommand> },
+    ReadKitFolderCommands { id: FolderIdDto, commands: Vec<ReadFolderCommand> },
+    ReadKitLocationCommands { id: LocationIdDto, commands: Vec<ReadLocationCommand> },
+    ReadKitFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
+    ReadKitPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
+    ReadKitAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
+    ReadKitConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
+    ReadKitTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
+    ReadKitQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadKitPropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
+    ReadKitAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadKitCommandOutput {
+    ReadKitFullCommand { kit: KitFullDto },
+    ReadKitShallowCommand { kit: KitShallowDto },
+    ReadKitMetadataCommand { metadata: KitMetadataDto },
+    ReadKitIdCommand { id: KitIdDto },
+    ReadKitNameCommand { name: String },
+    ReadKitDescriptionCommand { description: Option<String> },
+    ReadKitIconCommand { icon: Option<String> },
+    ReadKitImageCommand { image: Option<String> },
+    ReadKitPreviewCommand { preview: Option<String> },
+    ReadKitRemoteCommand { remote: Option<String> },
+    ReadKitHomepageCommand { homepage: Option<String> },
+    ReadKitLicenseCommand { license: Option<String> },
+    ReadKitUriCommand { uri: Option<String> },
+    ReadKitCreatedCommand { created: Option<String> },
+    ReadKitUpdatedCommand { updated: Option<String> },
+    ReadKitTypesFullCommand { types: Vec<TypeFullDto> },
+    ReadKitTypesShallowCommand { types: Vec<TypeShallowDto> },
+    ReadKitDesignsFullCommand { designs: Vec<DesignFullDto> },
+    ReadKitDesignsShallowCommand { designs: Vec<DesignShallowDto> },
+    ReadKitFilesFullCommand { files: Vec<FileFullDto> },
+    ReadKitFilesShallowCommand { files: Vec<FileShallowDto> },
+    ReadKitFoldersFullCommand { folders: Vec<FolderFullDto> },
+    ReadKitFoldersShallowCommand { folders: Vec<FolderShallowDto> },
+    ReadKitLocationsFullCommand { locations: Vec<LocationFullDto> },
+    ReadKitLocationsShallowCommand { locations: Vec<LocationShallowDto> },
+    ReadKitFamiliesFullCommand { families: Vec<FamilyFullDto> },
+    ReadKitFamiliesShallowCommand { families: Vec<FamilyShallowDto> },
+    ReadKitPortsFullCommand { ports: Vec<PortFullDto> },
+    ReadKitAuthorsFullCommand { authors: Vec<AuthorFullDto> },
+    ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
+    ReadKitConceptsFullCommand { concepts: Vec<ConceptFullDto> },
+    ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
+    ReadKitTagsFullCommand { tags: Vec<TagFullDto> },
+    ReadKitTagsShallowCommand { tags: Vec<TagShallowDto> },
+    ReadKitQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadKitPropsFullCommand { props: Vec<PropFullDto> },
+    ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
+    ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
+    ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
+    ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
+    ReadKitFolderCommands { results: Vec<ReadFolderCommandOutput> },
+    ReadKitLocationCommands { results: Vec<ReadLocationCommandOutput> },
+    ReadKitFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
+    ReadKitPortCommands { results: Vec<ReadPortCommandOutput> },
+    ReadKitAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
+    ReadKitConceptCommands { results: Vec<ReadConceptCommandOutput> },
+    ReadKitTagCommands { results: Vec<ReadTagCommandOutput> },
+    ReadKitQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadKitPropCommands { results: Vec<ReadPropCommandOutput> },
+    ReadKitAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Type ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadTypeCommand {
+    ReadTypeFullCommand,
+    ReadTypeShallowCommand,
+    ReadTypeMetadataCommand,
+    ReadTypeIdCommand,
+    ReadTypeNameCommand,
+    ReadTypeDescriptionCommand,
+    ReadTypeIconCommand,
+    ReadTypeImageCommand,
+    ReadTypeStockCommand,
+    ReadTypeVirtualCommand,
+    ReadTypeUnitCommand,
+    ReadTypeLocationCommand,
+    ReadTypeCreatedCommand,
+    ReadTypeUpdatedCommand,
+    ReadTypeFamiliesCommand,
+    ReadTypeConnectorsFullCommand,
+    ReadTypeConnectorsShallowCommand,
+    ReadTypeRepresentationsFullCommand,
+    ReadTypeRepresentationsShallowCommand,
+    ReadTypeAuthorsFullCommand,
+    ReadTypeAuthorsShallowCommand,
+    ReadTypeConceptsFullCommand,
+    ReadTypeConceptsShallowCommand,
+    ReadTypeTagsFullCommand,
+    ReadTypeTagsShallowCommand,
+    ReadTypeQualitiesFullCommand,
+    ReadTypeQualitiesShallowCommand,
+    ReadTypePropsFullCommand,
+    ReadTypePropsShallowCommand,
+    ReadTypeAttributesFullCommand,
+    ReadTypeAttributesShallowCommand,
+    /// All ports on families referenced by this type (see [`TypeStore::port`] for single-id resolution).
+    ReadTypePortsFullCommand,
+    ReadTypeConnectorForPortIdCommand { port_id: PortIdDto },
+    ReadTypeFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
+    ReadTypeConnectorCommands { id: ConnectorIdDto, commands: Vec<ReadConnectorCommand> },
+    ReadTypeRepresentationCommands { id: RepresentationIdDto, commands: Vec<ReadRepresentationCommand> },
+    ReadTypePortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
+    ReadTypeAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
+    ReadTypeConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
+    ReadTypeTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
+    ReadTypeQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadTypePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
+    ReadTypeAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadTypeCommandOutput {
+    ReadTypeFullCommand { dto: TypeFullDto },
+    ReadTypeShallowCommand { dto: TypeShallowDto },
+    ReadTypeMetadataCommand { metadata: TypeMetadataDto },
+    ReadTypeIdCommand { id: TypeIdDto },
+    ReadTypeNameCommand { name: String },
+    ReadTypeDescriptionCommand { description: Option<String> },
+    ReadTypeIconCommand { icon: Option<String> },
+    ReadTypeImageCommand { image: Option<String> },
+    ReadTypeStockCommand { stock: Option<i64> },
+    ReadTypeVirtualCommand { r#virtual: Option<bool> },
+    ReadTypeUnitCommand { unit: Option<String> },
+    ReadTypeLocationCommand { location: Option<crate::location::LocationIdDto> },
+    ReadTypeCreatedCommand { created: Option<String> },
+    ReadTypeUpdatedCommand { updated: Option<String> },
+    ReadTypeFamiliesCommand { families: Vec<FamilyIdDto> },
+    ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFullDto> },
+    ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallowDto> },
+    ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFullDto> },
+    ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallowDto> },
+    ReadTypeAuthorsFullCommand { authors: Vec<AuthorFullDto> },
+    ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
+    ReadTypeConceptsFullCommand { concepts: Vec<ConceptFullDto> },
+    ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
+    ReadTypeTagsFullCommand { tags: Vec<TagFullDto> },
+    ReadTypeTagsShallowCommand { tags: Vec<TagShallowDto> },
+    ReadTypeQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadTypePropsFullCommand { props: Vec<PropFullDto> },
+    ReadTypePropsShallowCommand { props: Vec<PropShallowDto> },
+    ReadTypeAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadTypePortsFullCommand { ports: Vec<PortFullDto> },
+    ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFullDto> },
+    ReadTypeFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
+    ReadTypeConnectorCommands { results: Vec<ReadConnectorCommandOutput> },
+    ReadTypeRepresentationCommands { results: Vec<ReadRepresentationCommandOutput> },
+    ReadTypePortCommands { results: Vec<ReadPortCommandOutput> },
+    ReadTypeAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
+    ReadTypeConceptCommands { results: Vec<ReadConceptCommandOutput> },
+    ReadTypeTagCommands { results: Vec<ReadTagCommandOutput> },
+    ReadTypeQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadTypePropCommands { results: Vec<ReadPropCommandOutput> },
+    ReadTypeAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Design ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadDesignCommand {
+    ReadDesignFullCommand,
+    ReadDesignShallowCommand,
+    ReadDesignMetadataCommand,
+    ReadDesignIdCommand,
+    ReadDesignNameCommand,
+    ReadDesignDescriptionCommand,
+    ReadDesignIconCommand,
+    ReadDesignImageCommand,
+    ReadDesignLocationCommand,
+    ReadDesignUnitCommand,
+    ReadDesignCreatedCommand,
+    ReadDesignUpdatedCommand,
+    ReadDesignKitCommand,
+    ReadDesignFamiliesCommand,
+    ReadDesignPiecesFullCommand,
+    ReadDesignPiecesShallowCommand,
+    ReadDesignConnectionsFullCommand,
+    ReadDesignConnectionsShallowCommand,
+    ReadDesignLayersFullCommand,
+    ReadDesignLayersShallowCommand,
+    ReadDesignGroupsFullCommand,
+    ReadDesignGroupsShallowCommand,
+    ReadDesignAuthorsFullCommand,
+    ReadDesignAuthorsShallowCommand,
+    ReadDesignConceptsFullCommand,
+    ReadDesignConceptsShallowCommand,
+    ReadDesignTagsFullCommand,
+    ReadDesignTagsShallowCommand,
+    ReadDesignQualitiesFullCommand,
+    ReadDesignQualitiesShallowCommand,
+    ReadDesignPropsFullCommand,
+    ReadDesignPropsShallowCommand,
+    ReadDesignAttributesFullCommand,
+    ReadDesignAttributesShallowCommand,
+    ReadDesignStatsFullCommand,
+    ReadDesignStatsShallowCommand,
+    ReadDesignFlattenMapCommand,
+    ReadDesignFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
+    ReadDesignPieceCommands { id: PieceIdDto, commands: Vec<ReadPieceCommand> },
+    ReadDesignConnectionCommands { id: ConnectionIdDto, commands: Vec<ReadConnectionCommand> },
+    ReadDesignLayerCommands { id: LayerIdDto, commands: Vec<ReadLayerCommand> },
+    ReadDesignGroupCommands { id: GroupIdDto, commands: Vec<ReadGroupCommand> },
+    ReadDesignAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
+    ReadDesignConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
+    ReadDesignTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
+    ReadDesignQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadDesignPropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
+    ReadDesignAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+    ReadDesignStatCommands { id: StatIdDto, commands: Vec<ReadStatCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadDesignCommandOutput {
+    ReadDesignFullCommand { dto: DesignFullDto },
+    ReadDesignShallowCommand { dto: DesignShallowDto },
+    ReadDesignMetadataCommand { metadata: DesignMetadataDto },
+    ReadDesignIdCommand { id: DesignIdDto },
+    ReadDesignNameCommand { name: String },
+    ReadDesignDescriptionCommand { description: Option<String> },
+    ReadDesignIconCommand { icon: Option<String> },
+    ReadDesignImageCommand { image: Option<String> },
+    ReadDesignLocationCommand { location: Option<crate::location::LocationIdDto> },
+    ReadDesignUnitCommand { unit: Option<String> },
+    ReadDesignCreatedCommand { created: Option<String> },
+    ReadDesignUpdatedCommand { updated: Option<String> },
+    ReadDesignKitCommand { kit: Option<crate::kit_graph::KitIdDto> },
+    ReadDesignFamiliesCommand { families: Vec<FamilyIdDto> },
+    ReadDesignPiecesFullCommand { pieces: Vec<PieceFullDto> },
+    ReadDesignPiecesShallowCommand { pieces: Vec<PieceShallowDto> },
+    ReadDesignConnectionsFullCommand { connections: Vec<ConnectionFullDto> },
+    ReadDesignConnectionsShallowCommand { connections: Vec<ConnectionShallowDto> },
+    ReadDesignLayersFullCommand { layers: Vec<LayerFullDto> },
+    ReadDesignLayersShallowCommand { layers: Vec<LayerShallowDto> },
+    ReadDesignGroupsFullCommand { groups: Vec<GroupFullDto> },
+    ReadDesignGroupsShallowCommand { groups: Vec<GroupShallowDto> },
+    ReadDesignAuthorsFullCommand { authors: Vec<AuthorFullDto> },
+    ReadDesignAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
+    ReadDesignConceptsFullCommand { concepts: Vec<ConceptFullDto> },
+    ReadDesignConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
+    ReadDesignTagsFullCommand { tags: Vec<TagFullDto> },
+    ReadDesignTagsShallowCommand { tags: Vec<TagShallowDto> },
+    ReadDesignQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadDesignQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadDesignPropsFullCommand { props: Vec<PropFullDto> },
+    ReadDesignPropsShallowCommand { props: Vec<PropShallowDto> },
+    ReadDesignAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadDesignAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadDesignStatsFullCommand { stats: Vec<StatFullDto> },
+    ReadDesignStatsShallowCommand { stats: Vec<StatShallowDto> },
+    ReadDesignFlattenMapCommand { entries: Vec<DesignFlattenMapEntryDto> },
+    ReadDesignFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
+    ReadDesignPieceCommands { results: Vec<ReadPieceCommandOutput> },
+    ReadDesignConnectionCommands { results: Vec<ReadConnectionCommandOutput> },
+    ReadDesignLayerCommands { results: Vec<ReadLayerCommandOutput> },
+    ReadDesignGroupCommands { results: Vec<ReadGroupCommandOutput> },
+    ReadDesignAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
+    ReadDesignConceptCommands { results: Vec<ReadConceptCommandOutput> },
+    ReadDesignTagCommands { results: Vec<ReadTagCommandOutput> },
+    ReadDesignQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadDesignPropCommands { results: Vec<ReadPropCommandOutput> },
+    ReadDesignAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+    ReadDesignStatCommands { results: Vec<ReadStatCommandOutput> },
+}
+
+// --- Piece ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPieceCommand {
+    ReadPieceFullCommand,
+    ReadPieceShallowCommand,
+    ReadPieceMetadataCommand,
+    ReadPieceIdCommand,
+    ReadPieceNameCommand,
+    ReadPieceDescriptionCommand,
+    ReadPiecePlaneCommand,
+    ReadPieceCenterCommand,
+    ReadPieceScaleCommand,
+    ReadPieceMirrorPlaneCommand,
+    ReadPieceHiddenCommand,
+    ReadPieceLockedCommand,
+    ReadPieceColorCommand,
+    ReadPieceTypeCommand,
+    ReadPieceDesignCommand,
+    ReadPiecePropsFullCommand,
+    ReadPiecePropsShallowCommand,
+    ReadPieceAttributesFullCommand,
+    ReadPieceAttributesShallowCommand,
+    ReadPieceFlatPlaneCommand,
+    ReadPieceFlatCenterCommand,
+    ReadPieceFlatPoseCommand,
+    ReadPiecePathCommand,
+    ReadPieceParentPieceIdCommand,
+    ReadPieceParentConnectionIdCommand,
+    ReadPieceParentDesignIdCommand,
+    ReadPieceFixedCommand,
+    ReadPieceConnectedCommand,
+    ReadPieceAlternativesCommand,
+    ReadPieceAlternativeTypesCommand,
+    ReadPieceAlternativeDesignsCommand,
+    ReadPiecePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
+    ReadPieceAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPieceCommandOutput {
+    ReadPieceFullCommand { dto: PieceFullDto },
+    ReadPieceShallowCommand { dto: PieceShallowDto },
+    ReadPieceMetadataCommand { metadata: PieceMetadataDto },
+    ReadPieceIdCommand { id: PieceIdDto },
+    ReadPieceNameCommand { name: Option<String> },
+    ReadPieceDescriptionCommand { description: Option<String> },
+    ReadPiecePlaneCommand { plane: Option<Plane> },
+    ReadPieceCenterCommand { center: Option<Coordinate> },
+    ReadPieceScaleCommand { scale: Option<f64> },
+    ReadPieceMirrorPlaneCommand { mirror_plane: Option<Plane> },
+    ReadPieceHiddenCommand { hidden: Option<bool> },
+    ReadPieceLockedCommand { locked: Option<bool> },
+    ReadPieceColorCommand { color: Option<String> },
+    ReadPieceTypeCommand { r#type: Option<TypeIdDto> },
+    ReadPieceDesignCommand { design: Option<DesignIdDto> },
+    ReadPiecePropsFullCommand { props: Vec<PropFullDto> },
+    ReadPiecePropsShallowCommand { props: Vec<PropShallowDto> },
+    ReadPieceAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadPieceFlatPlaneCommand { flat_plane: Plane },
+    ReadPieceFlatCenterCommand { flat_center: Coordinate },
+    ReadPieceFlatPoseCommand { flat_pose: PoseFullDto },
+    ReadPiecePathCommand { path: Vec<PieceIdDto> },
+    ReadPieceParentPieceIdCommand { parent_piece: Option<PieceIdDto> },
+    ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionIdDto> },
+    ReadPieceParentDesignIdCommand { parent_design: DesignIdDto },
+    ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
+    ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
+    ReadPieceAlternativesCommand { alternatives: PieceAlternativesDto },
+    ReadPieceAlternativeTypesCommand { types: Vec<TypeIdDto> },
+    ReadPieceAlternativeDesignsCommand { designs: Vec<DesignIdDto> },
+    ReadPiecePropCommands { results: Vec<ReadPropCommandOutput> },
+    ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Connection ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConnectionCommand {
+    ReadConnectionFullCommand,
+    ReadConnectionShallowCommand,
+    ReadConnectionMetadataCommand,
+    ReadConnectionIdCommand,
+    ReadConnectionConnectedSideMetadataCommand,
+    ReadConnectionConnectingSideMetadataCommand,
+    ReadConnectionConnectedSideFullCommand,
+    ReadConnectionConnectingSideFullCommand,
+    ReadConnectionGapCommand,
+    ReadConnectionShiftCommand,
+    ReadConnectionRiseCommand,
+    ReadConnectionRotationCommand,
+    ReadConnectionTurnCommand,
+    ReadConnectionTiltCommand,
+    ReadConnectionUCommand,
+    ReadConnectionVCommand,
+    ReadConnectionDescriptionCommand,
+    ReadConnectionAttributesFullCommand,
+    ReadConnectionAttributesShallowCommand,
+    ReadConnectionChildPlaneMatrixCommand,
+    ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceIdDto },
+    ReadConnectionAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+    ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
+    ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConnectionCommandOutput {
+    ReadConnectionFullCommand { dto: ConnectionFullDto },
+    ReadConnectionShallowCommand { dto: ConnectionShallowDto },
+    ReadConnectionMetadataCommand { metadata: ConnectionMetadataDto },
+    ReadConnectionIdCommand { id: ConnectionIdDto },
+    ReadConnectionConnectedSideMetadataCommand { side: SideMetadataDto },
+    ReadConnectionConnectingSideMetadataCommand { side: SideMetadataDto },
+    ReadConnectionConnectedSideFullCommand { side: SideFullDto },
+    ReadConnectionConnectingSideFullCommand { side: SideFullDto },
+    ReadConnectionGapCommand { gap: Option<f64> },
+    ReadConnectionShiftCommand { shift: Option<f64> },
+    ReadConnectionRiseCommand { rise: Option<f64> },
+    ReadConnectionRotationCommand { rotation: Option<f64> },
+    ReadConnectionTurnCommand { turn: Option<f64> },
+    ReadConnectionTiltCommand { tilt: Option<f64> },
+    ReadConnectionUCommand { u: Option<f64> },
+    ReadConnectionVCommand { v: Option<f64> },
+    ReadConnectionDescriptionCommand { description: Option<String> },
+    ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
+    ReadConnectionFlatSidesForChildCommand { connected: SideFullDto, connecting: SideFullDto },
+    ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+    ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
+    ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
+}
+
+// --- Side ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadSideCommand {
+    ReadSideFullCommand,
+    ReadSideShallowCommand,
+    ReadSideMetadataCommand,
+    ReadSideIdCommand,
+    ReadSidePieceIdCommand,
+    ReadSidePortIdCommand,
+    ReadSideDesignPieceIdCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadSideCommandOutput {
+    ReadSideFullCommand { side: SideFullDto },
+    ReadSideShallowCommand { side: SideShallowDto },
+    ReadSideMetadataCommand { side: SideMetadataDto },
+    ReadSideIdCommand { id: SideIdDto },
+    ReadSidePieceIdCommand { piece: PieceIdDto },
+    ReadSidePortIdCommand { port: Option<PortIdDto> },
+    ReadSideDesignPieceIdCommand { design_piece: Option<PieceIdDto> },
+}
+
+// --- Port ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPortCommand {
+    ReadPortFullCommand,
+    ReadPortShallowCommand,
+    ReadPortMetadataCommand,
+    ReadPortIdCommand,
+    ReadPortNameCommand,
+    ReadPortDescriptionCommand,
+    ReadPortIconCommand,
+    ReadPortCompatibleFamiliesCommand,
+    ReadPortMandatoryCommand,
+    ReadPortTCommand,
+    ReadPortPointCommand,
+    ReadPortDirectionCommand,
+    ReadPortCompatiblePortsCommand,
+    ReadPortQualitiesFullCommand,
+    ReadPortQualitiesShallowCommand,
+    ReadPortAttributesFullCommand,
+    ReadPortAttributesShallowCommand,
+    ReadPortQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadPortAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPortCommandOutput {
+    ReadPortFullCommand { port: PortFullDto },
+    ReadPortShallowCommand { port: PortShallowDto },
+    ReadPortMetadataCommand { metadata: PortMetadataDto },
+    ReadPortIdCommand { id: PortIdDto },
+    ReadPortNameCommand { name: String },
+    ReadPortDescriptionCommand { description: Option<String> },
+    ReadPortIconCommand { icon: Option<String> },
+    ReadPortCompatibleFamiliesCommand { families: Vec<FamilyIdDto> },
+    ReadPortMandatoryCommand { mandatory: Option<bool> },
+    ReadPortTCommand { t: Option<f64> },
+    ReadPortPointCommand { point: Option<crate::geom::Point> },
+    ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
+    ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortIdDto> },
+    ReadPortQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadPortAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Connector ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConnectorCommand {
+    ReadConnectorFullCommand,
+    ReadConnectorShallowCommand,
+    ReadConnectorMetadataCommand,
+    ReadConnectorIdCommand,
+    ReadConnectorCodeCommand,
+    ReadConnectorDescriptionCommand,
+    ReadConnectorPortIdCommand,
+    ReadConnectorQualitiesFullCommand,
+    ReadConnectorQualitiesShallowCommand,
+    ReadConnectorAttributesFullCommand,
+    ReadConnectorAttributesShallowCommand,
+    ReadConnectorQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadConnectorAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConnectorCommandOutput {
+    ReadConnectorFullCommand { connector: ConnectorFullDto },
+    ReadConnectorShallowCommand { connector: ConnectorShallowDto },
+    ReadConnectorMetadataCommand { metadata: ConnectorMetadataDto },
+    ReadConnectorIdCommand { id: ConnectorIdDto },
+    ReadConnectorCodeCommand { code: String },
+    ReadConnectorDescriptionCommand { description: Option<String> },
+    ReadConnectorPortIdCommand { port: Option<PortIdDto> },
+    ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Representation ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadRepresentationCommand {
+    ReadRepresentationFullCommand,
+    ReadRepresentationShallowCommand,
+    ReadRepresentationMetadataCommand,
+    ReadRepresentationIdCommand,
+    ReadRepresentationUrlCommand,
+    ReadRepresentationDescriptionCommand,
+    ReadRepresentationFileIdCommand,
+    ReadRepresentationTagsFullCommand,
+    ReadRepresentationTagsShallowCommand,
+    ReadRepresentationQualitiesFullCommand,
+    ReadRepresentationQualitiesShallowCommand,
+    ReadRepresentationAttributesFullCommand,
+    ReadRepresentationAttributesShallowCommand,
+    ReadRepresentationTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
+    ReadRepresentationQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+    ReadRepresentationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadRepresentationCommandOutput {
+    ReadRepresentationFullCommand { representation: RepresentationFullDto },
+    ReadRepresentationShallowCommand { representation: RepresentationShallowDto },
+    ReadRepresentationMetadataCommand { metadata: RepresentationMetadataDto },
+    ReadRepresentationIdCommand { id: RepresentationIdDto },
+    ReadRepresentationUrlCommand { url: String },
+    ReadRepresentationDescriptionCommand { description: Option<String> },
+    ReadRepresentationFileIdCommand { file: Option<crate::file::FileIdDto> },
+    ReadRepresentationTagsFullCommand { tags: Vec<TagFullDto> },
+    ReadRepresentationTagsShallowCommand { tags: Vec<TagShallowDto> },
+    ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+    ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+    ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
+    ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
+    ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Family ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFamilyCommand {
+    ReadFamilyFullCommand,
+    ReadFamilyShallowCommand,
+    ReadFamilyMetadataCommand,
+    ReadFamilyIdCommand,
+    ReadFamilyNameCommand,
+    ReadFamilyDescriptionCommand,
+    ReadFamilyIconCommand,
+    ReadFamilyPortsFullCommand,
+    ReadFamilyPortsShallowCommand,
+    ReadFamilyAttributesFullCommand,
+    ReadFamilyAttributesShallowCommand,
+    ReadFamilyPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
+    ReadFamilyAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFamilyCommandOutput {
+    ReadFamilyFullCommand { family: FamilyFullDto },
+    ReadFamilyShallowCommand { family: FamilyShallowDto },
+    ReadFamilyMetadataCommand { metadata: FamilyMetadataDto },
+    ReadFamilyIdCommand { id: FamilyIdDto },
+    ReadFamilyNameCommand { name: String },
+    ReadFamilyDescriptionCommand { description: Option<String> },
+    ReadFamilyIconCommand { icon: Option<String> },
+    ReadFamilyPortsFullCommand { ports: Vec<PortFullDto> },
+    ReadFamilyPortsShallowCommand { ports: Vec<PortShallowDto> },
+    ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
+    ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- File ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFileCommand {
+    ReadFileFullCommand,
+    ReadFileShallowCommand,
+    ReadFileMetadataCommand,
+    ReadFileIdCommand,
+    ReadFileUrlCommand,
+    ReadFileMimeCommand,
+    ReadFileSizeCommand,
+    ReadFileHashCommand,
+    ReadFileDescriptionCommand,
+    ReadFileCreatedCommand,
+    ReadFileUpdatedCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFileCommandOutput {
+    ReadFileFullCommand { file: FileFullDto },
+    ReadFileShallowCommand { file: FileShallowDto },
+    ReadFileMetadataCommand { metadata: FileMetadataDto },
+    ReadFileIdCommand { id: FileIdDto },
+    ReadFileUrlCommand { url: String },
+    ReadFileMimeCommand { mime: Option<String> },
+    ReadFileSizeCommand { size: Option<i64> },
+    ReadFileHashCommand { hash: Option<String> },
+    ReadFileDescriptionCommand { description: Option<String> },
+    ReadFileCreatedCommand { created: Option<String> },
+    ReadFileUpdatedCommand { updated: Option<String> },
+}
+
+// --- Folder ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFolderCommand {
+    ReadFolderFullCommand,
+    ReadFolderShallowCommand,
+    ReadFolderMetadataCommand,
+    ReadFolderIdCommand,
+    ReadFolderPathCommand,
+    ReadFolderDescriptionCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadFolderCommandOutput {
+    ReadFolderFullCommand { folder: FolderFullDto },
+    ReadFolderShallowCommand { folder: FolderShallowDto },
+    ReadFolderMetadataCommand { metadata: FolderMetadataDto },
+    ReadFolderIdCommand { id: FolderIdDto },
+    ReadFolderPathCommand { path: String },
+    ReadFolderDescriptionCommand { description: Option<String> },
+}
+
+// --- Location ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadLocationCommand {
+    ReadLocationFullCommand,
+    ReadLocationShallowCommand,
+    ReadLocationMetadataCommand,
+    ReadLocationIdCommand,
+    ReadLocationLongitudeCommand,
+    ReadLocationLatitudeCommand,
+    ReadLocationAltitudeCommand,
+    ReadLocationAttributesFullCommand,
+    ReadLocationAttributesShallowCommand,
+    ReadLocationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadLocationCommandOutput {
+    ReadLocationFullCommand { location: LocationFullDto },
+    ReadLocationShallowCommand { location: LocationShallowDto },
+    ReadLocationMetadataCommand { metadata: LocationMetadataDto },
+    ReadLocationIdCommand { id: LocationIdDto },
+    ReadLocationLongitudeCommand { longitude: f64 },
+    ReadLocationLatitudeCommand { latitude: f64 },
+    ReadLocationAltitudeCommand { altitude: Option<f64> },
+    ReadLocationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+    ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+    ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+}
+
+// --- Layer ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadLayerCommand {
+    ReadLayerFullCommand,
+    ReadLayerShallowCommand,
+    ReadLayerMetadataCommand,
+    ReadLayerIdCommand,
+    ReadLayerNameCommand,
+    ReadLayerDescriptionCommand,
+    ReadLayerColorCommand,
+    ReadLayerOrderCommand,
+    ReadLayerVisibleCommand,
+    ReadLayerLockedCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadLayerCommandOutput {
+    ReadLayerFullCommand { layer: LayerFullDto },
+    ReadLayerShallowCommand { layer: LayerShallowDto },
+    ReadLayerMetadataCommand { metadata: LayerMetadataDto },
+    ReadLayerIdCommand { id: LayerIdDto },
+    ReadLayerNameCommand { name: String },
+    ReadLayerDescriptionCommand { description: Option<String> },
+    ReadLayerColorCommand { color: Option<String> },
+    ReadLayerOrderCommand { order: Option<i64> },
+    ReadLayerVisibleCommand { visible: Option<bool> },
+    ReadLayerLockedCommand { locked: Option<bool> },
+}
+
+// --- Group ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadGroupCommand {
+    ReadGroupFullCommand,
+    ReadGroupShallowCommand,
+    ReadGroupMetadataCommand,
+    ReadGroupIdCommand,
+    ReadGroupNameCommand,
+    ReadGroupDescriptionCommand,
+    ReadGroupColorCommand,
+    ReadGroupIconCommand,
+    ReadGroupPiecesCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadGroupCommandOutput {
+    ReadGroupFullCommand { group: GroupFullDto },
+    ReadGroupShallowCommand { group: GroupShallowDto },
+    ReadGroupMetadataCommand { metadata: GroupMetadataDto },
+    ReadGroupIdCommand { id: GroupIdDto },
+    ReadGroupNameCommand { name: String },
+    ReadGroupDescriptionCommand { description: Option<String> },
+    ReadGroupColorCommand { color: Option<String> },
+    ReadGroupIconCommand { icon: Option<String> },
+    ReadGroupPiecesCommand { pieces: Vec<PieceIdDto> },
+}
+
+// --- Author ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadAuthorCommand {
+    ReadAuthorFullCommand,
+    ReadAuthorShallowCommand,
+    ReadAuthorMetadataCommand,
+    ReadAuthorIdCommand,
+    ReadAuthorNameCommand,
+    ReadAuthorEmailCommand,
+    ReadAuthorRoleCommand,
+    ReadAuthorRankCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadAuthorCommandOutput {
+    ReadAuthorFullCommand { author: AuthorFullDto },
+    ReadAuthorShallowCommand { author: AuthorShallowDto },
+    ReadAuthorMetadataCommand { metadata: AuthorMetadataDto },
+    ReadAuthorIdCommand { id: AuthorIdDto },
+    ReadAuthorNameCommand { name: String },
+    ReadAuthorEmailCommand { email: String },
+    ReadAuthorRoleCommand { role: Option<String> },
+    ReadAuthorRankCommand { rank: Option<i64> },
+}
+
+// --- Concept ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConceptCommand {
+    ReadConceptFullCommand,
+    ReadConceptShallowCommand,
+    ReadConceptMetadataCommand,
+    ReadConceptIdCommand,
+    ReadConceptNameCommand,
+    ReadConceptDescriptionCommand,
+    ReadConceptOrderCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadConceptCommandOutput {
+    ReadConceptFullCommand { concept: ConceptFullDto },
+    ReadConceptShallowCommand { concept: ConceptShallowDto },
+    ReadConceptMetadataCommand { metadata: ConceptMetadataDto },
+    ReadConceptIdCommand { id: ConceptIdDto },
+    ReadConceptNameCommand { name: String },
+    ReadConceptDescriptionCommand { description: Option<String> },
+    ReadConceptOrderCommand { order: Option<i64> },
+}
+
+// --- Tag ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadTagCommand {
+    ReadTagFullCommand,
+    ReadTagShallowCommand,
+    ReadTagMetadataCommand,
+    ReadTagIdCommand,
+    ReadTagNameCommand,
+    ReadTagOrderCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadTagCommandOutput {
+    ReadTagFullCommand { tag: TagFullDto },
+    ReadTagShallowCommand { tag: TagShallowDto },
+    ReadTagMetadataCommand { metadata: TagMetadataDto },
+    ReadTagIdCommand { id: TagIdDto },
+    ReadTagNameCommand { name: String },
+    ReadTagOrderCommand { order: Option<i64> },
+}
+
+// --- Quality ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadQualityCommand {
+    ReadQualityFullCommand,
+    ReadQualityShallowCommand,
+    ReadQualityMetadataCommand,
+    ReadQualityIdCommand,
+    ReadQualityKeyCommand,
+    ReadQualityValueCommand,
+    ReadQualityUnitCommand,
+    ReadQualityDefinitionCommand,
+    ReadQualityDescriptionCommand,
+    ReadQualityBenchmarksFullCommand,
+    ReadQualityBenchmarksShallowCommand,
+    ReadQualityBenchmarkCommands { id: BenchmarkIdDto, commands: Vec<ReadBenchmarkCommand> },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadQualityCommandOutput {
+    ReadQualityFullCommand { quality: QualityFullDto },
+    ReadQualityShallowCommand { quality: QualityShallowDto },
+    ReadQualityMetadataCommand { metadata: QualityMetadataDto },
+    ReadQualityIdCommand { id: QualityIdDto },
+    ReadQualityKeyCommand { key: String },
+    ReadQualityValueCommand { value: Option<String> },
+    ReadQualityUnitCommand { unit: Option<String> },
+    ReadQualityDefinitionCommand { definition: Option<String> },
+    ReadQualityDescriptionCommand { description: Option<String> },
+    ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFullDto> },
+    ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallowDto> },
+    ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
+}
+
+// --- Benchmark ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadBenchmarkCommand {
+    ReadBenchmarkFullCommand,
+    ReadBenchmarkShallowCommand,
+    ReadBenchmarkMetadataCommand,
+    ReadBenchmarkIdCommand,
+    ReadBenchmarkNameCommand,
+    ReadBenchmarkMinCommand,
+    ReadBenchmarkMaxCommand,
+    ReadBenchmarkMinExcludedCommand,
+    ReadBenchmarkMaxExcludedCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadBenchmarkCommandOutput {
+    ReadBenchmarkFullCommand { benchmark: BenchmarkFullDto },
+    ReadBenchmarkShallowCommand { benchmark: BenchmarkShallowDto },
+    ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadataDto },
+    ReadBenchmarkIdCommand { id: BenchmarkIdDto },
+    ReadBenchmarkNameCommand { name: String },
+    ReadBenchmarkMinCommand { min: Option<f64> },
+    ReadBenchmarkMaxCommand { max: Option<f64> },
+    ReadBenchmarkMinExcludedCommand { min_excluded: Option<bool> },
+    ReadBenchmarkMaxExcludedCommand { max_excluded: Option<bool> },
+}
+
+// --- Prop ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPropCommand {
+    ReadPropFullCommand,
+    ReadPropShallowCommand,
+    ReadPropIdCommand,
+    ReadPropKeyCommand,
+    ReadPropValueCommand,
+    ReadPropUnitCommand,
+    ReadPropQualityIdCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadPropCommandOutput {
+    ReadPropFullCommand { prop: PropFullDto },
+    ReadPropShallowCommand { prop: PropShallowDto },
+    ReadPropIdCommand { id: PropIdDto },
+    ReadPropKeyCommand { key: String },
+    ReadPropValueCommand { value: String },
+    ReadPropUnitCommand { unit: Option<String> },
+    ReadPropQualityIdCommand { quality: Option<QualityIdDto> },
+}
+
+// --- Attribute ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadAttributeCommand {
+    ReadAttributeFullCommand,
+    ReadAttributeShallowCommand,
+    ReadAttributeMetadataCommand,
+    ReadAttributeIdCommand,
+    ReadAttributeKeyCommand,
+    ReadAttributeValueCommand,
+    ReadAttributeDefinitionCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadAttributeCommandOutput {
+    ReadAttributeFullCommand { attribute: AttributeFullDto },
+    ReadAttributeShallowCommand { attribute: AttributeShallowDto },
+    ReadAttributeMetadataCommand { metadata: AttributeMetadataDto },
+    ReadAttributeIdCommand { id: AttributeIdDto },
+    ReadAttributeKeyCommand { key: String },
+    ReadAttributeValueCommand { value: String },
+    ReadAttributeDefinitionCommand { definition: Option<String> },
+}
+
+// --- Stat ---
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadStatCommand {
+    ReadStatFullCommand,
+    ReadStatShallowCommand,
+    ReadStatMetadataCommand,
+    ReadStatIdCommand,
+    ReadStatKeyCommand,
+    ReadStatValueCommand,
+    ReadStatUnitCommand,
+    ReadStatDescriptionCommand,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReadStatCommandOutput {
+    ReadStatFullCommand { stat: StatFullDto },
+    ReadStatShallowCommand { stat: StatShallowDto },
+    ReadStatMetadataCommand { metadata: StatMetadataDto },
+    ReadStatIdCommand { id: StatIdDto },
+    ReadStatKeyCommand { key: String },
+    ReadStatValueCommand { value: String },
+    ReadStatUnitCommand { unit: Option<String> },
+    ReadStatDescriptionCommand { description: Option<String> },
+}
+
+
+use crate::attribute::AttributeStore;
+use crate::attribute::AttributeStoreRef;
+use crate::typ::TypeStore;
+use crate::tag::TagStore;
+use crate::tag::TagStoreRef;
+use crate::{error::Result, error::SemioError};
+
+// --- helpers ----------------------------------------------------------------
+
+fn lp(s: &'static str) -> SemioError {
+    SemioError::LockPoisoned(s)
+}
+
+fn nf(kind: &'static str, id: &Id) -> SemioError {
+    SemioError::NotFound { kind, id: id.clone() }
+}
+
+fn kit_family(g: &KitGraph, id: &Id) -> Option<crate::family::FamilyStoreRef> {
+    g.families.iter().find(|f| f.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+
+fn kit_location(g: &KitGraph, id: &Id) -> Option<crate::location::LocationStoreRef> {
+    g.locations.iter().find(|l| l.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+
+fn kit_find_author(g: &KitGraph, id: &Id) -> Option<crate::author::AuthorStoreRef> {
+    g.authors.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_find_concept(g: &KitGraph, id: &Id) -> Option<crate::concept::ConceptStoreRef> {
+    g.concepts.iter().find(|c| c.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_find_tag(g: &KitGraph, id: &Id) -> Option<crate::tag::TagStoreRef> {
+    g.tags.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_find_quality(g: &KitGraph, id: &Id) -> Option<crate::quality::QualityStoreRef> {
+    g.qualities.iter().find(|q| q.read().map(|q| q.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_find_prop(g: &KitGraph, id: &Id) -> Option<crate::prop::PropStoreRef> {
+    g.props.iter().find(|p| p.read().map(|p| p.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeStoreRef> {
+    g.attributes.iter().find(|a| a.read().map(|a| a.id == *id).unwrap_or(false)).cloned()
+}
+
+fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
+    g.types.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
+    g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+}
+fn type_all_ports(t: &TypeStore) -> Vec<PortFullDto> {
+    let mut out = Vec::new();
+    for fw in &t.families {
+        let Some(f) = fw.upgrade() else { continue };
+        let Ok(fr) = f.read() else { continue };
+        for p in &fr.ports {
+            if let Ok(pr) = p.read() {
+                out.push(pr.to_full_dto());
+            }
+        }
+    }
+    out
+}
+
+// --- small entity executes ---------------------------------------------------
+
+impl ReadStatCommand {
+    pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
+        let s = s.read().map_err(|_| lp("stat"))?;
+        Ok(match self {
+            ReadStatCommand::ReadStatFullCommand => ReadStatCommandOutput::ReadStatFullCommand { stat: s.to_full_dto() },
+            ReadStatCommand::ReadStatShallowCommand => ReadStatCommandOutput::ReadStatShallowCommand { stat: s.to_shallow_dto() },
+            ReadStatCommand::ReadStatMetadataCommand => ReadStatCommandOutput::ReadStatMetadataCommand { metadata: s.to_metadata_dto() },
+            ReadStatCommand::ReadStatIdCommand => ReadStatCommandOutput::ReadStatIdCommand { id: s.to_id_dto() },
+            ReadStatCommand::ReadStatKeyCommand => ReadStatCommandOutput::ReadStatKeyCommand { key: s.key.clone() },
+            ReadStatCommand::ReadStatValueCommand => ReadStatCommandOutput::ReadStatValueCommand { value: s.value.clone() },
+            ReadStatCommand::ReadStatUnitCommand => ReadStatCommandOutput::ReadStatUnitCommand { unit: s.unit.clone() },
+            ReadStatCommand::ReadStatDescriptionCommand => ReadStatCommandOutput::ReadStatDescriptionCommand { description: s.description.clone() },
+        })
+    }
+}
+
+impl ReadBenchmarkCommand {
+    pub fn execute(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<ReadBenchmarkCommandOutput> {
+        let b = b.read().map_err(|_| lp("benchmark"))?;
+        Ok(match self {
+            ReadBenchmarkCommand::ReadBenchmarkFullCommand => ReadBenchmarkCommandOutput::ReadBenchmarkFullCommand { benchmark: b.to_full_dto() },
+            ReadBenchmarkCommand::ReadBenchmarkShallowCommand => ReadBenchmarkCommandOutput::ReadBenchmarkShallowCommand { benchmark: b.to_shallow_dto() },
+            ReadBenchmarkCommand::ReadBenchmarkMetadataCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMetadataCommand { metadata: b.to_metadata_dto() },
+            ReadBenchmarkCommand::ReadBenchmarkIdCommand => ReadBenchmarkCommandOutput::ReadBenchmarkIdCommand { id: b.to_id_dto() },
+            ReadBenchmarkCommand::ReadBenchmarkNameCommand => ReadBenchmarkCommandOutput::ReadBenchmarkNameCommand { name: b.name.clone() },
+            ReadBenchmarkCommand::ReadBenchmarkMinCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinCommand { min: b.min },
+            ReadBenchmarkCommand::ReadBenchmarkMaxCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxCommand { max: b.max },
+            ReadBenchmarkCommand::ReadBenchmarkMinExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinExcludedCommand { min_excluded: b.min_excluded },
+            ReadBenchmarkCommand::ReadBenchmarkMaxExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxExcludedCommand { max_excluded: b.max_excluded },
+        })
+    }
+}
+
+impl ReadAttributeCommand {
+    pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
+        Ok(match self {
+            ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full_dto() },
+            ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow_dto() },
+            ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata_dto() },
+            ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_id_dto() },
+            ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
+            ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
+            ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
+        })
+    }
+    pub fn execute_ref(&self, a: &AttributeStoreRef) -> Result<ReadAttributeCommandOutput> {
+        let a = a.read().map_err(|_| lp("attribute"))?;
+        self.execute(&*a)
+    }
+}
+
+impl ReadPropCommand {
+    pub fn execute(&self, p: &crate::prop::PropStoreRef) -> Result<ReadPropCommandOutput> {
+        let p = p.read().map_err(|_| lp("prop"))?;
+        Ok(match self {
+            ReadPropCommand::ReadPropFullCommand => ReadPropCommandOutput::ReadPropFullCommand { prop: p.to_full_dto() },
+            ReadPropCommand::ReadPropShallowCommand => ReadPropCommandOutput::ReadPropShallowCommand { prop: p.to_shallow_dto() },
+            ReadPropCommand::ReadPropIdCommand => ReadPropCommandOutput::ReadPropIdCommand { id: p.to_id_dto() },
+            ReadPropCommand::ReadPropKeyCommand => ReadPropCommandOutput::ReadPropKeyCommand { key: p.key.clone() },
+            ReadPropCommand::ReadPropValueCommand => ReadPropCommandOutput::ReadPropValueCommand { value: p.value.clone() },
+            ReadPropCommand::ReadPropUnitCommand => ReadPropCommandOutput::ReadPropUnitCommand { unit: p.unit.clone() },
+            ReadPropCommand::ReadPropQualityIdCommand => ReadPropCommandOutput::ReadPropQualityIdCommand { quality: p.to_full_dto().quality },
+        })
+    }
+}
+
+impl ReadTagCommand {
+    pub fn execute(&self, t: &TagStore) -> Result<ReadTagCommandOutput> {
+        Ok(match self {
+            ReadTagCommand::ReadTagFullCommand => ReadTagCommandOutput::ReadTagFullCommand { tag: t.to_full_dto() },
+            ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow_dto() },
+            ReadTagCommand::ReadTagMetadataCommand => ReadTagCommandOutput::ReadTagMetadataCommand { metadata: t.to_metadata_dto() },
+            ReadTagCommand::ReadTagIdCommand => ReadTagCommandOutput::ReadTagIdCommand { id: t.to_id_dto() },
+            ReadTagCommand::ReadTagNameCommand => ReadTagCommandOutput::ReadTagNameCommand { name: t.name.clone() },
+            ReadTagCommand::ReadTagOrderCommand => ReadTagCommandOutput::ReadTagOrderCommand { order: t.order },
+        })
+    }
+    pub fn execute_ref(&self, t: &TagStoreRef) -> Result<ReadTagCommandOutput> {
+        let t = t.read().map_err(|_| lp("tag"))?;
+        self.execute(&*t)
+    }
+}
+
+
+impl ReadQualityCommand {
+    pub fn execute(&self, q: &crate::quality::QualityStoreRef) -> Result<ReadQualityCommandOutput> {
+        let q = q.read().map_err(|_| lp("quality"))?;
+        Ok(match self {
+            ReadQualityCommand::ReadQualityFullCommand => ReadQualityCommandOutput::ReadQualityFullCommand { quality: q.to_full_dto() },
+            ReadQualityCommand::ReadQualityShallowCommand => ReadQualityCommandOutput::ReadQualityShallowCommand { quality: q.to_shallow_dto() },
+            ReadQualityCommand::ReadQualityMetadataCommand => ReadQualityCommandOutput::ReadQualityMetadataCommand { metadata: q.to_metadata_dto() },
+            ReadQualityCommand::ReadQualityIdCommand => ReadQualityCommandOutput::ReadQualityIdCommand { id: q.to_id_dto() },
+            ReadQualityCommand::ReadQualityKeyCommand => ReadQualityCommandOutput::ReadQualityKeyCommand { key: q.key.clone() },
+            ReadQualityCommand::ReadQualityValueCommand => ReadQualityCommandOutput::ReadQualityValueCommand { value: q.value.clone() },
+            ReadQualityCommand::ReadQualityUnitCommand => ReadQualityCommandOutput::ReadQualityUnitCommand { unit: q.unit.clone() },
+            ReadQualityCommand::ReadQualityDefinitionCommand => ReadQualityCommandOutput::ReadQualityDefinitionCommand { definition: q.definition.clone() },
+            ReadQualityCommand::ReadQualityDescriptionCommand => ReadQualityCommandOutput::ReadQualityDescriptionCommand { description: q.description.clone() },
+            ReadQualityCommand::ReadQualityBenchmarksFullCommand => ReadQualityCommandOutput::ReadQualityBenchmarksFullCommand {
+                benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect(),
+            },
+            ReadQualityCommand::ReadQualityBenchmarksShallowCommand => ReadQualityCommandOutput::ReadQualityBenchmarksShallowCommand {
+                benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_shallow_dto())).collect(),
+            },
+            ReadQualityCommand::ReadQualityBenchmarkCommands { id, commands } => {
+                let b = q.benchmarks.iter().find(|b| b.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Benchmark", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(b)?);
+                }
+                ReadQualityCommandOutput::ReadQualityBenchmarkCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadAuthorCommand {
+    pub fn execute(&self, a: &crate::author::AuthorStoreRef) -> Result<ReadAuthorCommandOutput> {
+        let a = a.read().map_err(|_| lp("author"))?;
+        Ok(match self {
+            ReadAuthorCommand::ReadAuthorFullCommand => ReadAuthorCommandOutput::ReadAuthorFullCommand { author: a.to_full_dto() },
+            ReadAuthorCommand::ReadAuthorShallowCommand => ReadAuthorCommandOutput::ReadAuthorShallowCommand { author: a.to_shallow_dto() },
+            ReadAuthorCommand::ReadAuthorMetadataCommand => ReadAuthorCommandOutput::ReadAuthorMetadataCommand { metadata: a.to_metadata_dto() },
+            ReadAuthorCommand::ReadAuthorIdCommand => ReadAuthorCommandOutput::ReadAuthorIdCommand { id: a.to_id_dto() },
+            ReadAuthorCommand::ReadAuthorNameCommand => ReadAuthorCommandOutput::ReadAuthorNameCommand { name: a.name.clone() },
+            ReadAuthorCommand::ReadAuthorEmailCommand => ReadAuthorCommandOutput::ReadAuthorEmailCommand { email: a.email.clone() },
+            ReadAuthorCommand::ReadAuthorRoleCommand => ReadAuthorCommandOutput::ReadAuthorRoleCommand { role: a.role.clone() },
+            ReadAuthorCommand::ReadAuthorRankCommand => ReadAuthorCommandOutput::ReadAuthorRankCommand { rank: a.rank },
+        })
+    }
+}
+
+impl ReadConceptCommand {
+    pub fn execute(&self, c: &crate::concept::ConceptStoreRef) -> Result<ReadConceptCommandOutput> {
+        let c = c.read().map_err(|_| lp("concept"))?;
+        Ok(match self {
+            ReadConceptCommand::ReadConceptFullCommand => ReadConceptCommandOutput::ReadConceptFullCommand { concept: c.to_full_dto() },
+            ReadConceptCommand::ReadConceptShallowCommand => ReadConceptCommandOutput::ReadConceptShallowCommand { concept: c.to_shallow_dto() },
+            ReadConceptCommand::ReadConceptMetadataCommand => ReadConceptCommandOutput::ReadConceptMetadataCommand { metadata: c.to_metadata_dto() },
+            ReadConceptCommand::ReadConceptIdCommand => ReadConceptCommandOutput::ReadConceptIdCommand { id: c.to_id_dto() },
+            ReadConceptCommand::ReadConceptNameCommand => ReadConceptCommandOutput::ReadConceptNameCommand { name: c.name.clone() },
+            ReadConceptCommand::ReadConceptDescriptionCommand => ReadConceptCommandOutput::ReadConceptDescriptionCommand { description: c.description.clone() },
+            ReadConceptCommand::ReadConceptOrderCommand => ReadConceptCommandOutput::ReadConceptOrderCommand { order: c.order },
+        })
+    }
+}
+
+impl ReadFileCommand {
+    pub fn execute(&self, f: &crate::file::FileStoreRef) -> Result<ReadFileCommandOutput> {
+        let f = f.read().map_err(|_| lp("file"))?;
+        Ok(match self {
+            ReadFileCommand::ReadFileFullCommand => ReadFileCommandOutput::ReadFileFullCommand { file: f.to_full_dto() },
+            ReadFileCommand::ReadFileShallowCommand => ReadFileCommandOutput::ReadFileShallowCommand { file: f.to_shallow_dto() },
+            ReadFileCommand::ReadFileMetadataCommand => ReadFileCommandOutput::ReadFileMetadataCommand { metadata: f.to_metadata_dto() },
+            ReadFileCommand::ReadFileIdCommand => ReadFileCommandOutput::ReadFileIdCommand { id: f.to_id_dto() },
+            ReadFileCommand::ReadFileUrlCommand => ReadFileCommandOutput::ReadFileUrlCommand { url: f.url.clone() },
+            ReadFileCommand::ReadFileMimeCommand => ReadFileCommandOutput::ReadFileMimeCommand { mime: f.mime.clone() },
+            ReadFileCommand::ReadFileSizeCommand => ReadFileCommandOutput::ReadFileSizeCommand { size: f.size },
+            ReadFileCommand::ReadFileHashCommand => ReadFileCommandOutput::ReadFileHashCommand { hash: f.hash.clone() },
+            ReadFileCommand::ReadFileDescriptionCommand => ReadFileCommandOutput::ReadFileDescriptionCommand { description: f.description.clone() },
+            ReadFileCommand::ReadFileCreatedCommand => ReadFileCommandOutput::ReadFileCreatedCommand { created: f.created.clone() },
+            ReadFileCommand::ReadFileUpdatedCommand => ReadFileCommandOutput::ReadFileUpdatedCommand { updated: f.updated.clone() },
+        })
+    }
+}
+
+impl ReadFolderCommand {
+    pub fn execute(&self, f: &crate::folder::FolderStoreRef) -> Result<ReadFolderCommandOutput> {
+        let f = f.read().map_err(|_| lp("folder"))?;
+        Ok(match self {
+            ReadFolderCommand::ReadFolderFullCommand => ReadFolderCommandOutput::ReadFolderFullCommand { folder: f.to_full_dto() },
+            ReadFolderCommand::ReadFolderShallowCommand => ReadFolderCommandOutput::ReadFolderShallowCommand { folder: f.to_shallow_dto() },
+            ReadFolderCommand::ReadFolderMetadataCommand => ReadFolderCommandOutput::ReadFolderMetadataCommand { metadata: f.to_metadata_dto() },
+            ReadFolderCommand::ReadFolderIdCommand => ReadFolderCommandOutput::ReadFolderIdCommand { id: f.to_id_dto() },
+            ReadFolderCommand::ReadFolderPathCommand => ReadFolderCommandOutput::ReadFolderPathCommand { path: f.path.clone() },
+            ReadFolderCommand::ReadFolderDescriptionCommand => ReadFolderCommandOutput::ReadFolderDescriptionCommand { description: f.description.clone() },
+        })
+    }
+}
+
+impl ReadLocationCommand {
+    pub fn execute(&self, l: &crate::location::LocationStoreRef) -> Result<ReadLocationCommandOutput> {
+        let l = l.read().map_err(|_| lp("location"))?;
+        Ok(match self {
+            ReadLocationCommand::ReadLocationFullCommand => ReadLocationCommandOutput::ReadLocationFullCommand { location: l.to_full_dto() },
+            ReadLocationCommand::ReadLocationShallowCommand => ReadLocationCommandOutput::ReadLocationShallowCommand { location: l.to_shallow_dto() },
+            ReadLocationCommand::ReadLocationMetadataCommand => ReadLocationCommandOutput::ReadLocationMetadataCommand { metadata: l.to_metadata_dto() },
+            ReadLocationCommand::ReadLocationIdCommand => ReadLocationCommandOutput::ReadLocationIdCommand { id: l.to_id_dto() },
+            ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
+            ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
+            ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
+            ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand {
+                attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+            },
+            ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand {
+                attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+            },
+            ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
+                let a = l
+                    .attributes
+                    .iter()
+                    .find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false))
+                    .ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadLocationCommandOutput::ReadLocationAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadLayerCommand {
+    pub fn execute(&self, l: &crate::layer::LayerStoreRef) -> Result<ReadLayerCommandOutput> {
+        let l = l.read().map_err(|_| lp("layer"))?;
+        Ok(match self {
+            ReadLayerCommand::ReadLayerFullCommand => ReadLayerCommandOutput::ReadLayerFullCommand { layer: l.to_full_dto() },
+            ReadLayerCommand::ReadLayerShallowCommand => ReadLayerCommandOutput::ReadLayerShallowCommand { layer: l.to_shallow_dto() },
+            ReadLayerCommand::ReadLayerMetadataCommand => ReadLayerCommandOutput::ReadLayerMetadataCommand { metadata: l.to_metadata_dto() },
+            ReadLayerCommand::ReadLayerIdCommand => ReadLayerCommandOutput::ReadLayerIdCommand { id: l.to_id_dto() },
+            ReadLayerCommand::ReadLayerNameCommand => ReadLayerCommandOutput::ReadLayerNameCommand { name: l.name.clone() },
+            ReadLayerCommand::ReadLayerDescriptionCommand => ReadLayerCommandOutput::ReadLayerDescriptionCommand { description: l.description.clone() },
+            ReadLayerCommand::ReadLayerColorCommand => ReadLayerCommandOutput::ReadLayerColorCommand { color: l.color.clone() },
+            ReadLayerCommand::ReadLayerOrderCommand => ReadLayerCommandOutput::ReadLayerOrderCommand { order: l.order },
+            ReadLayerCommand::ReadLayerVisibleCommand => ReadLayerCommandOutput::ReadLayerVisibleCommand { visible: l.visible },
+            ReadLayerCommand::ReadLayerLockedCommand => ReadLayerCommandOutput::ReadLayerLockedCommand { locked: l.locked },
+        })
+    }
+}
+
+impl ReadGroupCommand {
+    pub fn execute(&self, g: &crate::group::GroupStoreRef) -> Result<ReadGroupCommandOutput> {
+        let g = g.read().map_err(|_| lp("group"))?;
+        Ok(match self {
+            ReadGroupCommand::ReadGroupFullCommand => ReadGroupCommandOutput::ReadGroupFullCommand { group: g.to_full_dto() },
+            ReadGroupCommand::ReadGroupShallowCommand => ReadGroupCommandOutput::ReadGroupShallowCommand { group: g.to_shallow_dto() },
+            ReadGroupCommand::ReadGroupMetadataCommand => ReadGroupCommandOutput::ReadGroupMetadataCommand { metadata: g.to_metadata_dto() },
+            ReadGroupCommand::ReadGroupIdCommand => ReadGroupCommandOutput::ReadGroupIdCommand { id: g.to_id_dto() },
+            ReadGroupCommand::ReadGroupNameCommand => ReadGroupCommandOutput::ReadGroupNameCommand { name: g.name.clone() },
+            ReadGroupCommand::ReadGroupDescriptionCommand => ReadGroupCommandOutput::ReadGroupDescriptionCommand { description: g.description.clone() },
+            ReadGroupCommand::ReadGroupColorCommand => ReadGroupCommandOutput::ReadGroupColorCommand { color: g.color.clone() },
+            ReadGroupCommand::ReadGroupIconCommand => ReadGroupCommandOutput::ReadGroupIconCommand { icon: g.icon.clone() },
+            ReadGroupCommand::ReadGroupPiecesCommand => ReadGroupCommandOutput::ReadGroupPiecesCommand { pieces: g.pieces.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
+        })
+    }
+}
+
+impl ReadFamilyCommand {
+    pub fn execute(&self, f: &FamilyStoreRef) -> Result<ReadFamilyCommandOutput> {
+        let f = f.read().map_err(|_| lp("family"))?;
+        Ok(match self {
+            ReadFamilyCommand::ReadFamilyFullCommand => ReadFamilyCommandOutput::ReadFamilyFullCommand { family: f.to_full_dto() },
+            ReadFamilyCommand::ReadFamilyShallowCommand => ReadFamilyCommandOutput::ReadFamilyShallowCommand { family: f.to_shallow_dto() },
+            ReadFamilyCommand::ReadFamilyMetadataCommand => ReadFamilyCommandOutput::ReadFamilyMetadataCommand { metadata: f.to_metadata_dto() },
+            ReadFamilyCommand::ReadFamilyIdCommand => ReadFamilyCommandOutput::ReadFamilyIdCommand { id: f.to_id_dto() },
+            ReadFamilyCommand::ReadFamilyNameCommand => ReadFamilyCommandOutput::ReadFamilyNameCommand { name: f.name.clone() },
+            ReadFamilyCommand::ReadFamilyDescriptionCommand => ReadFamilyCommandOutput::ReadFamilyDescriptionCommand { description: f.description.clone() },
+            ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
+            ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full_dto()).collect() },
+            ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+            ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
+                let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(p)?);
+                }
+                ReadFamilyCommandOutput::ReadFamilyPortCommands { results }
+            }
+            ReadFamilyCommand::ReadFamilyAttributeCommands { id, commands } => {
+                let a = f.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadFamilyCommandOutput::ReadFamilyAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadSideCommand {
+    pub fn execute(&self, s: &SideStoreRef) -> Result<ReadSideCommandOutput> {
+        let s = s.read().map_err(|_| lp("side"))?;
+        Ok(match self {
+            ReadSideCommand::ReadSideFullCommand => ReadSideCommandOutput::ReadSideFullCommand { side: s.to_full_dto() },
+            ReadSideCommand::ReadSideShallowCommand => ReadSideCommandOutput::ReadSideShallowCommand { side: s.to_shallow_dto() },
+            ReadSideCommand::ReadSideMetadataCommand => ReadSideCommandOutput::ReadSideMetadataCommand { side: s.to_metadata_dto() },
+            ReadSideCommand::ReadSideIdCommand => ReadSideCommandOutput::ReadSideIdCommand { id: s.to_id_dto() },
+            ReadSideCommand::ReadSidePieceIdCommand => ReadSideCommandOutput::ReadSidePieceIdCommand { piece: s.to_metadata_dto().piece },
+            ReadSideCommand::ReadSidePortIdCommand => ReadSideCommandOutput::ReadSidePortIdCommand { port: s.to_metadata_dto().port },
+            ReadSideCommand::ReadSideDesignPieceIdCommand => ReadSideCommandOutput::ReadSideDesignPieceIdCommand { design_piece: s.to_metadata_dto().design_piece },
+        })
+    }
+}
+
+impl ReadConnectionCommand {
+    pub fn execute(&self, c: &crate::connection::ConnectionStoreRef) -> Result<ReadConnectionCommandOutput> {
+        let c = c.read().map_err(|_| lp("connection"))?;
+        Ok(match self {
+            ReadConnectionCommand::ReadConnectionFullCommand => ReadConnectionCommandOutput::ReadConnectionFullCommand { dto: c.to_full_dto() },
+            ReadConnectionCommand::ReadConnectionShallowCommand => ReadConnectionCommandOutput::ReadConnectionShallowCommand { dto: c.to_shallow_dto() },
+            ReadConnectionCommand::ReadConnectionMetadataCommand => ReadConnectionCommandOutput::ReadConnectionMetadataCommand { metadata: c.to_metadata_dto() },
+            ReadConnectionCommand::ReadConnectionIdCommand => ReadConnectionCommandOutput::ReadConnectionIdCommand { id: c.to_id_dto() },
+            ReadConnectionCommand::ReadConnectionConnectedSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideMetadataCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_metadata_dto() },
+            ReadConnectionCommand::ReadConnectionConnectingSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideMetadataCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_metadata_dto() },
+            ReadConnectionCommand::ReadConnectionConnectedSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideFullCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_full_dto() },
+            ReadConnectionCommand::ReadConnectionConnectingSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideFullCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_full_dto() },
+            ReadConnectionCommand::ReadConnectionGapCommand => ReadConnectionCommandOutput::ReadConnectionGapCommand { gap: c.gap },
+            ReadConnectionCommand::ReadConnectionShiftCommand => ReadConnectionCommandOutput::ReadConnectionShiftCommand { shift: c.shift },
+            ReadConnectionCommand::ReadConnectionRiseCommand => ReadConnectionCommandOutput::ReadConnectionRiseCommand { rise: c.rise },
+            ReadConnectionCommand::ReadConnectionRotationCommand => ReadConnectionCommandOutput::ReadConnectionRotationCommand { rotation: c.rotation },
+            ReadConnectionCommand::ReadConnectionTurnCommand => ReadConnectionCommandOutput::ReadConnectionTurnCommand { turn: c.turn },
+            ReadConnectionCommand::ReadConnectionTiltCommand => ReadConnectionCommandOutput::ReadConnectionTiltCommand { tilt: c.tilt },
+            ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
+            ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
+            ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
+            ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadConnectionCommand::ReadConnectionAttributesShallowCommand => ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
+            ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
+                let (a, b) = c.flat_side_dtos_for_child(&child_piece_id.id).ok_or_else(|| SemioError::InvalidOperation("no flat sides for child on this connection".into()))?;
+                ReadConnectionCommandOutput::ReadConnectionFlatSidesForChildCommand { connected: a, connecting: b }
+            }
+            ReadConnectionCommand::ReadConnectionAttributeCommands { id, commands } => {
+                let a = c.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for cmd in commands {
+                    results.push(cmd.execute_ref(a)?);
+                }
+                ReadConnectionCommandOutput::ReadConnectionAttributeCommands { results }
+            }
+            ReadConnectionCommand::ReadConnectionConnectedSideCommands { commands } => {
+                let mut results = Vec::with_capacity(commands.len());
+                for cmd in commands {
+                    results.push(cmd.execute(&c.connected)?);
+                }
+                ReadConnectionCommandOutput::ReadConnectionConnectedSideCommands { results }
+            }
+            ReadConnectionCommand::ReadConnectionConnectingSideCommands { commands } => {
+                let mut results = Vec::with_capacity(commands.len());
+                for cmd in commands {
+                    results.push(cmd.execute(&c.connecting)?);
+                }
+                ReadConnectionCommandOutput::ReadConnectionConnectingSideCommands { results }
+            }
+        })
+    }
+}
+
+
+impl ReadPortCommand {
+    pub fn execute(&self, p: &PortStoreRef) -> Result<ReadPortCommandOutput> {
+        let p = p.read().map_err(|_| lp("port"))?;
+        Ok(match self {
+            ReadPortCommand::ReadPortFullCommand => ReadPortCommandOutput::ReadPortFullCommand { port: p.to_full_dto() },
+            ReadPortCommand::ReadPortShallowCommand => ReadPortCommandOutput::ReadPortShallowCommand { port: p.to_shallow_dto() },
+            ReadPortCommand::ReadPortMetadataCommand => ReadPortCommandOutput::ReadPortMetadataCommand { metadata: p.to_metadata_dto() },
+            ReadPortCommand::ReadPortIdCommand => ReadPortCommandOutput::ReadPortIdCommand { id: p.to_id_dto() },
+            ReadPortCommand::ReadPortNameCommand => ReadPortCommandOutput::ReadPortNameCommand { name: p.name.clone() },
+            ReadPortCommand::ReadPortDescriptionCommand => ReadPortCommandOutput::ReadPortDescriptionCommand { description: p.description.clone() },
+            ReadPortCommand::ReadPortIconCommand => ReadPortCommandOutput::ReadPortIconCommand { icon: p.icon.clone() },
+            ReadPortCommand::ReadPortCompatibleFamiliesCommand => ReadPortCommandOutput::ReadPortCompatibleFamiliesCommand { families: p.compatible_families.clone() },
+            ReadPortCommand::ReadPortMandatoryCommand => ReadPortCommandOutput::ReadPortMandatoryCommand { mandatory: p.mandatory },
+            ReadPortCommand::ReadPortTCommand => ReadPortCommandOutput::ReadPortTCommand { t: p.t },
+            ReadPortCommand::ReadPortPointCommand => ReadPortCommandOutput::ReadPortPointCommand { point: p.point },
+            ReadPortCommand::ReadPortDirectionCommand => ReadPortCommandOutput::ReadPortDirectionCommand { direction: p.direction },
+            ReadPortCommand::ReadPortCompatiblePortsCommand => ReadPortCommandOutput::ReadPortCompatiblePortsCommand { compatible_ports: p.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
+            ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full_dto()).collect() },
+            ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+            ReadPortCommand::ReadPortQualityCommands { id, commands } => {
+                let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(q)?);
+                }
+                ReadPortCommandOutput::ReadPortQualityCommands { results }
+            }
+            ReadPortCommand::ReadPortAttributeCommands { id, commands } => {
+                let a = p.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadPortCommandOutput::ReadPortAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadConnectorCommand {
+    pub fn execute(&self, c: &ConnectorStoreRef) -> Result<ReadConnectorCommandOutput> {
+        let c = c.read().map_err(|_| lp("connector"))?;
+        Ok(match self {
+            ReadConnectorCommand::ReadConnectorFullCommand => ReadConnectorCommandOutput::ReadConnectorFullCommand { connector: c.to_full_dto() },
+            ReadConnectorCommand::ReadConnectorShallowCommand => ReadConnectorCommandOutput::ReadConnectorShallowCommand { connector: c.to_shallow_dto() },
+            ReadConnectorCommand::ReadConnectorMetadataCommand => ReadConnectorCommandOutput::ReadConnectorMetadataCommand { metadata: c.to_metadata_dto() },
+            ReadConnectorCommand::ReadConnectorIdCommand => ReadConnectorCommandOutput::ReadConnectorIdCommand { id: c.to_id_dto() },
+            ReadConnectorCommand::ReadConnectorCodeCommand => ReadConnectorCommandOutput::ReadConnectorCodeCommand { code: c.code.clone() },
+            ReadConnectorCommand::ReadConnectorDescriptionCommand => ReadConnectorCommandOutput::ReadConnectorDescriptionCommand { description: c.description.clone() },
+            ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata_dto().port },
+            ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full_dto()).collect() },
+            ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+            ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
+                let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for cmd in commands {
+                    results.push(cmd.execute(q)?);
+                }
+                ReadConnectorCommandOutput::ReadConnectorQualityCommands { results }
+            }
+            ReadConnectorCommand::ReadConnectorAttributeCommands { id, commands } => {
+                let a = c.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for cmd in commands {
+                    results.push(cmd.execute(a)?);
+                }
+                ReadConnectorCommandOutput::ReadConnectorAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadRepresentationCommand {
+    pub fn execute(&self, r: &RepresentationStoreRef) -> Result<ReadRepresentationCommandOutput> {
+        let r = r.read().map_err(|_| lp("representation"))?;
+        Ok(match self {
+            ReadRepresentationCommand::ReadRepresentationFullCommand => ReadRepresentationCommandOutput::ReadRepresentationFullCommand { representation: r.to_full_dto() },
+            ReadRepresentationCommand::ReadRepresentationShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationShallowCommand { representation: r.to_shallow_dto() },
+            ReadRepresentationCommand::ReadRepresentationMetadataCommand => ReadRepresentationCommandOutput::ReadRepresentationMetadataCommand { metadata: r.to_metadata_dto() },
+            ReadRepresentationCommand::ReadRepresentationIdCommand => ReadRepresentationCommandOutput::ReadRepresentationIdCommand { id: r.to_id_dto() },
+            ReadRepresentationCommand::ReadRepresentationUrlCommand => ReadRepresentationCommandOutput::ReadRepresentationUrlCommand { url: r.url.clone() },
+            ReadRepresentationCommand::ReadRepresentationDescriptionCommand => ReadRepresentationCommandOutput::ReadRepresentationDescriptionCommand { description: r.description.clone() },
+            ReadRepresentationCommand::ReadRepresentationFileIdCommand => ReadRepresentationCommandOutput::ReadRepresentationFileIdCommand { file: r.to_metadata_dto().file },
+            ReadRepresentationCommand::ReadRepresentationTagsFullCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsFullCommand { tags: r.tags.iter().map(|t| t.to_full_dto()).collect() },
+            ReadRepresentationCommand::ReadRepresentationTagsShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsShallowCommand { tags: r.tags.iter().map(|t| t.to_shallow_dto()).collect() },
+            ReadRepresentationCommand::ReadRepresentationQualitiesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full_dto()).collect() },
+            ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+            ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
+                let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(t)?);
+                }
+                ReadRepresentationCommandOutput::ReadRepresentationTagCommands { results }
+            }
+            ReadRepresentationCommand::ReadRepresentationQualityCommands { id, commands } => {
+                let q = r.qualities.iter().find(|q| q.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(q)?);
+                }
+                ReadRepresentationCommandOutput::ReadRepresentationQualityCommands { results }
+            }
+            ReadRepresentationCommand::ReadRepresentationAttributeCommands { id, commands } => {
+                let a = r.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadRepresentationCommandOutput::ReadRepresentationAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadPieceCommand {
+    pub fn execute(&self, p: &PieceStoreRef, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
+        let o = p.read().map_err(|_| lp("piece"))?;
+        Ok(match self {
+            ReadPieceCommand::ReadPieceFullCommand => ReadPieceCommandOutput::ReadPieceFullCommand { dto: o.to_full_dto() },
+            ReadPieceCommand::ReadPieceShallowCommand => ReadPieceCommandOutput::ReadPieceShallowCommand { dto: o.to_shallow_dto() },
+            ReadPieceCommand::ReadPieceMetadataCommand => ReadPieceCommandOutput::ReadPieceMetadataCommand { metadata: o.to_metadata_dto() },
+            ReadPieceCommand::ReadPieceIdCommand => ReadPieceCommandOutput::ReadPieceIdCommand { id: o.to_id_dto() },
+            ReadPieceCommand::ReadPieceNameCommand => ReadPieceCommandOutput::ReadPieceNameCommand { name: o.name.clone() },
+            ReadPieceCommand::ReadPieceDescriptionCommand => ReadPieceCommandOutput::ReadPieceDescriptionCommand { description: o.description.clone() },
+            ReadPieceCommand::ReadPiecePlaneCommand => ReadPieceCommandOutput::ReadPiecePlaneCommand { plane: o.pose.plane },
+            ReadPieceCommand::ReadPieceCenterCommand => ReadPieceCommandOutput::ReadPieceCenterCommand { center: o.pose.center },
+            ReadPieceCommand::ReadPieceScaleCommand => ReadPieceCommandOutput::ReadPieceScaleCommand { scale: o.scale },
+            ReadPieceCommand::ReadPieceMirrorPlaneCommand => ReadPieceCommandOutput::ReadPieceMirrorPlaneCommand { mirror_plane: o.mirror_plane },
+            ReadPieceCommand::ReadPieceHiddenCommand => ReadPieceCommandOutput::ReadPieceHiddenCommand { hidden: o.hidden },
+            ReadPieceCommand::ReadPieceLockedCommand => ReadPieceCommandOutput::ReadPieceLockedCommand { locked: o.locked },
+            ReadPieceCommand::ReadPieceColorCommand => ReadPieceCommandOutput::ReadPieceColorCommand { color: o.color.clone() },
+            ReadPieceCommand::ReadPieceTypeCommand => ReadPieceCommandOutput::ReadPieceTypeCommand { r#type: o.to_metadata_dto().r#type },
+            ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata_dto().design },
+            ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
+            ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
+            ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_full_dto() },
+            ReadPieceCommand::ReadPiecePathCommand => ReadPieceCommandOutput::ReadPiecePathCommand { path: o.path() },
+            ReadPieceCommand::ReadPieceParentPieceIdCommand => ReadPieceCommandOutput::ReadPieceParentPieceIdCommand {
+                parent_piece: o.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto())),
+            },
+            ReadPieceCommand::ReadPieceParentConnectionIdCommand => ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand {
+                parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_id_dto())),
+            },
+            ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
+                parent_design: o
+                    .parent_design
+                    .upgrade()
+                    .and_then(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() }))
+                    .ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
+            },
+            ReadPieceCommand::ReadPieceFixedCommand => {
+                if o.parent_piece.is_some() || o.parent_connection.is_some() {
+                    return Err(SemioError::InvalidOperation("ReadPieceFixedCommand requires no parent piece or connection".into()));
+                }
+                ReadPieceCommandOutput::ReadPieceFixedCommand {
+                    fixed: crate::piece::FixedPieceOutputDto { piece: o.to_id_dto(), pose: o.pose_full_dto() },
+                }
+            }
+            ReadPieceCommand::ReadPieceConnectedCommand => {
+                let (pp, pc) = (o.parent_piece.as_ref().and_then(|w| w.upgrade()), o.parent_connection.as_ref().and_then(|w| w.upgrade()));
+                let (Some(pp), Some(pc)) = (pp, pc) else {
+                    return Err(SemioError::InvalidOperation("ReadPieceConnectedCommand requires parent piece and parent connection".into()));
+                };
+                let _pp = pp.read().map_err(|_| lp("piece"))?;
+                let _pc = pc.read().map_err(|_| lp("connection"))?;
+                ReadPieceCommandOutput::ReadPieceConnectedCommand {
+                    connected: crate::piece::ConnectedPieceOutputDto {
+                        piece: o.to_id_dto(),
+                        parent_piece: _pp.to_id_dto(),
+                        parent_connection: _pc.to_id_dto(),
+                        flat_pose: o.flat_pose_full_dto(),
+                    },
+                }
+            }
+            ReadPieceCommand::ReadPieceAlternativesCommand => {
+                let alt = o.alternatives();
+                ReadPieceCommandOutput::ReadPieceAlternativesCommand {
+                    alternatives: crate::piece::PieceAlternativesDto {
+                        types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
+                        designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
+                    },
+                }
+            }
+            ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand {
+                types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
+            },
+            ReadPieceCommand::ReadPieceAlternativeDesignsCommand => ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand {
+                designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
+            },
+            ReadPieceCommand::ReadPiecePropCommands { id, commands } => {
+                let pr = o.props.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(pr)?);
+                }
+                ReadPieceCommandOutput::ReadPiecePropCommands { results }
+            }
+            ReadPieceCommand::ReadPieceAttributeCommands { id, commands } => {
+                let a = o.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadPieceCommandOutput::ReadPieceAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadTypeCommand {
+    pub fn execute(&self, t: &TypeStoreRef, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
+        let r = t.read().map_err(|_| lp("type"))?;
+        Ok(match self {
+            ReadTypeCommand::ReadTypeFullCommand => ReadTypeCommandOutput::ReadTypeFullCommand { dto: r.to_full_dto() },
+            ReadTypeCommand::ReadTypeShallowCommand => ReadTypeCommandOutput::ReadTypeShallowCommand { dto: r.to_shallow_dto() },
+            ReadTypeCommand::ReadTypeMetadataCommand => ReadTypeCommandOutput::ReadTypeMetadataCommand { metadata: r.to_metadata_dto() },
+            ReadTypeCommand::ReadTypeIdCommand => ReadTypeCommandOutput::ReadTypeIdCommand { id: r.to_id_dto() },
+            ReadTypeCommand::ReadTypeNameCommand => ReadTypeCommandOutput::ReadTypeNameCommand { name: r.name.clone() },
+            ReadTypeCommand::ReadTypeDescriptionCommand => ReadTypeCommandOutput::ReadTypeDescriptionCommand { description: r.description.clone() },
+            ReadTypeCommand::ReadTypeIconCommand => ReadTypeCommandOutput::ReadTypeIconCommand { icon: r.icon.clone() },
+            ReadTypeCommand::ReadTypeImageCommand => ReadTypeCommandOutput::ReadTypeImageCommand { image: r.image.clone() },
+            ReadTypeCommand::ReadTypeStockCommand => ReadTypeCommandOutput::ReadTypeStockCommand { stock: r.stock },
+            ReadTypeCommand::ReadTypeVirtualCommand => ReadTypeCommandOutput::ReadTypeVirtualCommand { r#virtual: r.virtual_ },
+            ReadTypeCommand::ReadTypeUnitCommand => ReadTypeCommandOutput::ReadTypeUnitCommand { unit: r.unit.clone() },
+            ReadTypeCommand::ReadTypeLocationCommand => ReadTypeCommandOutput::ReadTypeLocationCommand { location: r.location.clone() },
+            ReadTypeCommand::ReadTypeCreatedCommand => ReadTypeCommandOutput::ReadTypeCreatedCommand { created: r.created.clone() },
+            ReadTypeCommand::ReadTypeUpdatedCommand => ReadTypeCommandOutput::ReadTypeUpdatedCommand { updated: r.updated.clone() },
+            ReadTypeCommand::ReadTypeFamiliesCommand => ReadTypeCommandOutput::ReadTypeFamiliesCommand { families: r.to_full_dto().families },
+            ReadTypeCommand::ReadTypeConnectorsFullCommand => ReadTypeCommandOutput::ReadTypeConnectorsFullCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeConnectorsShallowCommand => ReadTypeCommandOutput::ReadTypeConnectorsShallowCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeRepresentationsFullCommand => ReadTypeCommandOutput::ReadTypeRepresentationsFullCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeRepresentationsShallowCommand => ReadTypeCommandOutput::ReadTypeRepresentationsShallowCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeAuthorsFullCommand => ReadTypeCommandOutput::ReadTypeAuthorsFullCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeAuthorsShallowCommand => ReadTypeCommandOutput::ReadTypeAuthorsShallowCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeConceptsFullCommand => ReadTypeCommandOutput::ReadTypeConceptsFullCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeConceptsShallowCommand => ReadTypeCommandOutput::ReadTypeConceptsShallowCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeTagsFullCommand => ReadTypeCommandOutput::ReadTypeTagsFullCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeTagsShallowCommand => ReadTypeCommandOutput::ReadTypeTagsShallowCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeQualitiesFullCommand => ReadTypeCommandOutput::ReadTypeQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadTypeCommand::ReadTypePortsFullCommand => ReadTypeCommandOutput::ReadTypePortsFullCommand { ports: type_all_ports(&*r) },
+            ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand {
+                connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full_dto())),
+            },
+            ReadTypeCommand::ReadTypeFamilyCommands { id, commands } => {
+                let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&f)?);
+                }
+                ReadTypeCommandOutput::ReadTypeFamilyCommands { results }
+            }
+            ReadTypeCommand::ReadTypeConnectorCommands { id, commands } => {
+                let c = r.connector(id.id.as_str()).ok_or_else(|| nf("Connector", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for x in commands {
+                    results.push(x.execute(&c)?);
+                }
+                ReadTypeCommandOutput::ReadTypeConnectorCommands { results }
+            }
+            ReadTypeCommand::ReadTypeRepresentationCommands { id, commands } => {
+                let x = r.representation(id.id.as_str()).ok_or_else(|| nf("Representation", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&x)?);
+                }
+                ReadTypeCommandOutput::ReadTypeRepresentationCommands { results }
+            }
+            ReadTypeCommand::ReadTypePortCommands { id, commands } => {
+                let p = r.port(id.id.as_str()).ok_or_else(|| nf("Port", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&p)?);
+                }
+                ReadTypeCommandOutput::ReadTypePortCommands { results }
+            }
+            ReadTypeCommand::ReadTypeAuthorCommands { id, commands } => {
+                let a = r.authors.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypeAuthorCommands { results }
+            }
+            ReadTypeCommand::ReadTypeConceptCommands { id, commands } => {
+                let a = r.concepts.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypeConceptCommands { results }
+            }
+            ReadTypeCommand::ReadTypeTagCommands { id, commands } => {
+                let a = r.tags.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypeTagCommands { results }
+            }
+            ReadTypeCommand::ReadTypeQualityCommands { id, commands } => {
+                let a = r.qualities.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypeQualityCommands { results }
+            }
+            ReadTypeCommand::ReadTypePropCommands { id, commands } => {
+                let a = r.props.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypePropCommands { results }
+            }
+            ReadTypeCommand::ReadTypeAttributeCommands { id, commands } => {
+                let a = r.attributes.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadTypeCommandOutput::ReadTypeAttributeCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadDesignCommand {
+    pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
+        let o = d.read().map_err(|_| lp("design"))?;
+        Ok(match self {
+            ReadDesignCommand::ReadDesignFullCommand => ReadDesignCommandOutput::ReadDesignFullCommand { dto: o.to_full_dto() },
+            ReadDesignCommand::ReadDesignShallowCommand => ReadDesignCommandOutput::ReadDesignShallowCommand { dto: o.to_shallow_dto() },
+            ReadDesignCommand::ReadDesignMetadataCommand => ReadDesignCommandOutput::ReadDesignMetadataCommand { metadata: o.to_metadata_dto() },
+            ReadDesignCommand::ReadDesignIdCommand => ReadDesignCommandOutput::ReadDesignIdCommand { id: o.to_id_dto() },
+            ReadDesignCommand::ReadDesignNameCommand => ReadDesignCommandOutput::ReadDesignNameCommand { name: o.name.clone() },
+            ReadDesignCommand::ReadDesignDescriptionCommand => ReadDesignCommandOutput::ReadDesignDescriptionCommand { description: o.description.clone() },
+            ReadDesignCommand::ReadDesignIconCommand => ReadDesignCommandOutput::ReadDesignIconCommand { icon: o.icon.clone() },
+            ReadDesignCommand::ReadDesignImageCommand => ReadDesignCommandOutput::ReadDesignImageCommand { image: o.image.clone() },
+            ReadDesignCommand::ReadDesignLocationCommand => ReadDesignCommandOutput::ReadDesignLocationCommand { location: o.location.clone() },
+            ReadDesignCommand::ReadDesignUnitCommand => ReadDesignCommandOutput::ReadDesignUnitCommand { unit: o.unit.clone() },
+            ReadDesignCommand::ReadDesignCreatedCommand => ReadDesignCommandOutput::ReadDesignCreatedCommand { created: o.created.clone() },
+            ReadDesignCommand::ReadDesignUpdatedCommand => ReadDesignCommandOutput::ReadDesignUpdatedCommand { updated: o.updated.clone() },
+            ReadDesignCommand::ReadDesignKitCommand => ReadDesignCommandOutput::ReadDesignKitCommand { kit: o.to_full_dto().kit },
+            ReadDesignCommand::ReadDesignFamiliesCommand => ReadDesignCommandOutput::ReadDesignFamiliesCommand { families: o.to_full_dto().families },
+            ReadDesignCommand::ReadDesignPiecesFullCommand => ReadDesignCommandOutput::ReadDesignPiecesFullCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignPiecesShallowCommand => ReadDesignCommandOutput::ReadDesignPiecesShallowCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignConnectionsFullCommand => ReadDesignCommandOutput::ReadDesignConnectionsFullCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignConnectionsShallowCommand => ReadDesignCommandOutput::ReadDesignConnectionsShallowCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignLayersFullCommand => ReadDesignCommandOutput::ReadDesignLayersFullCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignLayersShallowCommand => ReadDesignCommandOutput::ReadDesignLayersShallowCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignGroupsFullCommand => ReadDesignCommandOutput::ReadDesignGroupsFullCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignGroupsShallowCommand => ReadDesignCommandOutput::ReadDesignGroupsShallowCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignAuthorsFullCommand => ReadDesignCommandOutput::ReadDesignAuthorsFullCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignAuthorsShallowCommand => ReadDesignCommandOutput::ReadDesignAuthorsShallowCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignConceptsFullCommand => ReadDesignCommandOutput::ReadDesignConceptsFullCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignConceptsShallowCommand => ReadDesignCommandOutput::ReadDesignConceptsShallowCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignTagsFullCommand => ReadDesignCommandOutput::ReadDesignTagsFullCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignTagsShallowCommand => ReadDesignCommandOutput::ReadDesignTagsShallowCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignQualitiesFullCommand => ReadDesignCommandOutput::ReadDesignQualitiesFullCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect() },
+            ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect() },
+            ReadDesignCommand::ReadDesignFlattenMapCommand => {
+                let m = o.flatten_map();
+                let entries: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
+                ReadDesignCommandOutput::ReadDesignFlattenMapCommand { entries }
+            }
+            ReadDesignCommand::ReadDesignFamilyCommands { id, commands } => {
+                let f = o
+                    .families
+                    .iter()
+                    .filter_map(|w| w.upgrade())
+                    .find(|f| f.read().map(|r| r.id == id.id).unwrap_or(false))
+                    .ok_or_else(|| nf("Family", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&f)?);
+                }
+                ReadDesignCommandOutput::ReadDesignFamilyCommands { results }
+            }
+            ReadDesignCommand::ReadDesignPieceCommands { id, commands } => {
+                let p = o.piece(id.id.as_str()).ok_or_else(|| nf("Piece", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&p, g)?);
+                }
+                ReadDesignCommandOutput::ReadDesignPieceCommands { results }
+            }
+            ReadDesignCommand::ReadDesignConnectionCommands { id, commands } => {
+                let c = o.connection(id.id.as_str()).ok_or_else(|| nf("Connection", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for x in commands {
+                    results.push(x.execute(&c)?);
+                }
+                ReadDesignCommandOutput::ReadDesignConnectionCommands { results }
+            }
+            ReadDesignCommand::ReadDesignLayerCommands { id, commands } => {
+                let l = o.layer(id.id.as_str()).ok_or_else(|| nf("Layer", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&l)?);
+                }
+                ReadDesignCommandOutput::ReadDesignLayerCommands { results }
+            }
+            ReadDesignCommand::ReadDesignGroupCommands { id, commands } => {
+                let l = o.group(id.id.as_str()).ok_or_else(|| nf("Group", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&l)?);
+                }
+                ReadDesignCommandOutput::ReadDesignGroupCommands { results }
+            }
+            ReadDesignCommand::ReadDesignAuthorCommands { id, commands } => {
+                let a = o.authors.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignAuthorCommands { results }
+            }
+            ReadDesignCommand::ReadDesignConceptCommands { id, commands } => {
+                let a = o.concepts.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignConceptCommands { results }
+            }
+            ReadDesignCommand::ReadDesignTagCommands { id, commands } => {
+                let a = o.tags.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignTagCommands { results }
+            }
+            ReadDesignCommand::ReadDesignQualityCommands { id, commands } => {
+                let a = o.qualities.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignQualityCommands { results }
+            }
+            ReadDesignCommand::ReadDesignPropCommands { id, commands } => {
+                let a = o.props.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignPropCommands { results }
+            }
+            ReadDesignCommand::ReadDesignAttributeCommands { id, commands } => {
+                let a = o.attributes.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignAttributeCommands { results }
+            }
+            ReadDesignCommand::ReadDesignStatCommands { id, commands } => {
+                let a = o.stats.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Stat", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(a)?);
+                }
+                ReadDesignCommandOutput::ReadDesignStatCommands { results }
+            }
+        })
+    }
+}
+
+impl ReadKitCommand {
+    pub fn execute(&self, g: &KitGraph) -> Result<ReadKitCommandOutput> {
+        Ok(match self {
+            ReadKitCommand::ReadKitFullCommand => ReadKitCommandOutput::ReadKitFullCommand { kit: g.to_full_dto() },
+            ReadKitCommand::ReadKitShallowCommand => ReadKitCommandOutput::ReadKitShallowCommand { kit: g.to_shallow_dto() },
+            ReadKitCommand::ReadKitMetadataCommand => ReadKitCommandOutput::ReadKitMetadataCommand { metadata: g.to_metadata_dto() },
+            ReadKitCommand::ReadKitIdCommand => ReadKitCommandOutput::ReadKitIdCommand { id: g.to_id_dto() },
+            ReadKitCommand::ReadKitNameCommand => ReadKitCommandOutput::ReadKitNameCommand { name: g.name.clone() },
+            ReadKitCommand::ReadKitDescriptionCommand => ReadKitCommandOutput::ReadKitDescriptionCommand { description: g.description.clone() },
+            ReadKitCommand::ReadKitIconCommand => ReadKitCommandOutput::ReadKitIconCommand { icon: g.icon.clone() },
+            ReadKitCommand::ReadKitImageCommand => ReadKitCommandOutput::ReadKitImageCommand { image: g.image.clone() },
+            ReadKitCommand::ReadKitPreviewCommand => ReadKitCommandOutput::ReadKitPreviewCommand { preview: g.preview.clone() },
+            ReadKitCommand::ReadKitRemoteCommand => ReadKitCommandOutput::ReadKitRemoteCommand { remote: g.remote.clone() },
+            ReadKitCommand::ReadKitHomepageCommand => ReadKitCommandOutput::ReadKitHomepageCommand { homepage: g.homepage.clone() },
+            ReadKitCommand::ReadKitLicenseCommand => ReadKitCommandOutput::ReadKitLicenseCommand { license: g.license.clone() },
+            ReadKitCommand::ReadKitUriCommand => ReadKitCommandOutput::ReadKitUriCommand { uri: g.uri.clone() },
+            ReadKitCommand::ReadKitCreatedCommand => ReadKitCommandOutput::ReadKitCreatedCommand { created: g.created.clone() },
+            ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
+            ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitFoldersShallowCommand => ReadKitCommandOutput::ReadKitFoldersShallowCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitLocationsFullCommand => ReadKitCommandOutput::ReadKitLocationsFullCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitLocationsShallowCommand => ReadKitCommandOutput::ReadKitLocationsShallowCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitFamiliesFullCommand => ReadKitCommandOutput::ReadKitFamiliesFullCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitFamiliesShallowCommand => ReadKitCommandOutput::ReadKitFamiliesShallowCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitPortsFullCommand => {
+                let mut ports: Vec<PortFullDto> = g.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect();
+                for f in &g.families {
+                    if let Ok(fr) = f.read() {
+                        for p in &fr.ports {
+                            if let Ok(pr) = p.read() {
+                                ports.push(pr.to_full_dto());
+                            }
+                        }
+                    }
+                }
+                ReadKitCommandOutput::ReadKitPortsFullCommand { ports }
+            }
+            ReadKitCommand::ReadKitAuthorsFullCommand => ReadKitCommandOutput::ReadKitAuthorsFullCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitAuthorsShallowCommand => ReadKitCommandOutput::ReadKitAuthorsShallowCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitConceptsFullCommand => ReadKitCommandOutput::ReadKitConceptsFullCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitConceptsShallowCommand => ReadKitCommandOutput::ReadKitConceptsShallowCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitTagsFullCommand => ReadKitCommandOutput::ReadKitTagsFullCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitTagsShallowCommand => ReadKitCommandOutput::ReadKitTagsShallowCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitQualitiesFullCommand => ReadKitCommandOutput::ReadKitQualitiesFullCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+            ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitTypeCommands { id, commands } => {
+                let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&t, g)?);
+                }
+                ReadKitCommandOutput::ReadKitTypeCommands { results }
+            }
+            ReadKitCommand::ReadKitDesignCommands { id, commands } => {
+                let d = kit_design(g, &id.id).ok_or_else(|| nf("Design", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&d, g)?);
+                }
+                ReadKitCommandOutput::ReadKitDesignCommands { results }
+            }
+            ReadKitCommand::ReadKitFileCommands { id, commands } => {
+                let f = g.file(id.id.as_str()).ok_or_else(|| nf("File", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&f)?);
+                }
+                ReadKitCommandOutput::ReadKitFileCommands { results }
+            }
+            ReadKitCommand::ReadKitFolderCommands { id, commands } => {
+                let f = g.folder(id.id.as_str()).ok_or_else(|| nf("Folder", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&f)?);
+                }
+                ReadKitCommandOutput::ReadKitFolderCommands { results }
+            }
+            ReadKitCommand::ReadKitLocationCommands { id, commands } => {
+                let l = kit_location(g, &id.id).ok_or_else(|| nf("Location", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&l)?);
+                }
+                ReadKitCommandOutput::ReadKitLocationCommands { results }
+            }
+            ReadKitCommand::ReadKitFamilyCommands { id, commands } => {
+                let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&f)?);
+                }
+                ReadKitCommandOutput::ReadKitFamilyCommands { results }
+            }
+            ReadKitCommand::ReadKitPortCommands { id, commands } => {
+                let p = g.port_by_id(&id.id).ok_or_else(|| nf("Port", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&p)?);
+                }
+                ReadKitCommandOutput::ReadKitPortCommands { results }
+            }
+            ReadKitCommand::ReadKitAuthorCommands { id, commands } => {
+                let a = kit_find_author(g, &id.id).ok_or_else(|| nf("Author", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitAuthorCommands { results }
+            }
+            ReadKitCommand::ReadKitConceptCommands { id, commands } => {
+                let a = kit_find_concept(g, &id.id).ok_or_else(|| nf("Concept", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitConceptCommands { results }
+            }
+            ReadKitCommand::ReadKitTagCommands { id, commands } => {
+                let a = kit_find_tag(g, &id.id).ok_or_else(|| nf("Tag", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitTagCommands { results }
+            }
+            ReadKitCommand::ReadKitQualityCommands { id, commands } => {
+                let a = kit_find_quality(g, &id.id).ok_or_else(|| nf("Quality", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitQualityCommands { results }
+            }
+            ReadKitCommand::ReadKitPropCommands { id, commands } => {
+                let a = kit_find_prop(g, &id.id).ok_or_else(|| nf("Prop", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitPropCommands { results }
+            }
+            ReadKitCommand::ReadKitAttributeCommands { id, commands } => {
+                let a = kit_find_attr(g, &id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute_ref(&a)?);
+                }
+                ReadKitCommandOutput::ReadKitAttributeCommands { results }
+            }
+        })
+    }
+
+    pub fn execute_many(g: &KitGraph, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandOutput>> {
+        commands.iter().map(|c| c.execute(g)).collect()
+    }
+}
 }
 pub mod change_command {
     #![allow(clippy::result_large_err)]

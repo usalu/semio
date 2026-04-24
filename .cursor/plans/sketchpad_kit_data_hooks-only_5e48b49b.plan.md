@@ -28,13 +28,13 @@ todos:
    status: in_progress
  - id: machine_kit_lifecycle
    content: Add openKitGuids/activeKitGuid context + ui.openKit.push/close/activate events to sketchpadMachine; invoke fromPromise actors to call kitRegistry.open*; rewrite root provider tree with KitRegistryProvider + per-tab KitProvider.
-   status: pending
+   status: completed
  - id: package_cleanup
    content: Verify sketchpad/package.json deps (@semio/react/ui/js only); drop sql.js if unused; confirm @semio/react has no @semio/sketchpad dep.
    status: completed
  - id: tests_and_verify
    content: Extend existing Playwright (sketchpad) and vitest (react) regions for new hooks, registry kinds, useDraft rollback; run cargo test, pnpm -F @semio/js|react|sketchpad test, desktop smoke on metabolism.zip.
-   status: pending
+   status: in_progress
 isProject: false
 ---
 
