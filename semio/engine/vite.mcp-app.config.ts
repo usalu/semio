@@ -121,6 +121,11 @@ export default defineConfig({
     __SEMIO_JS_RUN_BENCHMARKS__: "false",
     __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
   },
+  resolve: {
+    alias: [
+      { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
+    ],
+  },
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
@@ -133,6 +138,14 @@ export default defineConfig({
     },
   },
   plugins: [meshoptNoopPlugin(), stubHeavyDepsPlugin(), tailwindcss(), mdx(), zodJitlessPlugin(), viteSingleFile()],
+  worker: {
+    format: "es",
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
+  },
   esbuild: {
     jsx: "automatic",
   },

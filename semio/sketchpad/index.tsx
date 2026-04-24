@@ -99,15 +99,32 @@ import {
   Vector,
 } from "@semio/js";
 import {
+  AuthorProvider,
+  ConnectionProvider,
+  DesignProvider,
   getKitRegistryBridge,
   KitProvider,
   KitRegistryProvider,
+  PieceProvider,
+  QualityProvider,
+  TypeProvider,
   useActiveKitId,
+  useAuthor as useAuthorFromKit,
+  useConnection as useConnectionFromKit,
+  useConnections as useKitRpcConnections,
   useCreateDesign,
   useCreateFolder,
   useCreatePort,
   useCreateQuality,
   useCreateType,
+  useDesign as useDesignFromKit,
+  useDesigns as useDesignsFromKit,
+  useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
+  useFlatPieceCenter as useFlatPieceCenterFromKit,
+  useFixedPieceId as useFixedPieceIdFromKit,
+  useFlatPiecePlane as useFlatPiecePlaneFromKit,
+  useIncludedDesigns as useIncludedDesignsFromKit,
+  useIsConnectedPiece as useIsConnectedPieceFromKit,
   useKitStoredFileUrls as useFileUrls,
   useKitCommandDispatchersWithOrigin,
   useKitCommands,
@@ -122,10 +139,23 @@ import {
   useKitRuntimeSafe,
   useKitFileBlobUrl,
   useKitFileUrl,
+  useParentPieceId as useParentPieceIdFromKit,
   useMoveKitArtifactToFolder,
+  usePiece as usePieceFromKit,
+  usePieceDepth as usePieceDepthFromKit,
+  usePieceParentConnection as usePieceParentConnectionFromKit,
+  usePieces as useKitRpcPieces,
+  usePieceMetadata as usePieceMetadataFromKit,
+  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
+  useQuality as useQualityFromKit,
+  useReplacableDesigns as useReplacableDesignIdsFromKit,
+  useReplacableTypes as useReplacableTypeIdsFromKit,
+  useType as useTypeFromKit,
+  useTypes as useTypesFromKit,
   useUpdateDesign,
   useUpdateType,
 } from "@semio/react";
+import type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import type {
   ConnectionLineComponentProps,
   DragEndEvent,
@@ -2014,7 +2044,8 @@ export interface SketchpadMachineContext extends StoreSyncContext {
   hotkeyOverrides?: Record<string, string>;
   activeHotkeySetting?: string;
 
-  kits: Record<Id, AnyActorRef>;
+  openKitGuids: Id[];
+  activeKitGuid: Id | undefined;
 
   homeRef?: AnyActorRef;
 
@@ -7022,15 +7053,14 @@ const clearDomRoot = (element: HTMLElement, root: Root): void => {
 export type { SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 
 // #region 🥈Entity Hooks
-// Storage-agnostic entity scope providers and hooks.
-// All entity data is accessed via KitStore.getSnapshot().kit selectors.
+// Storage-agnostic entity scope providers; data via `@semio/react` schema / RPC hooks.
 
 // ✍️#region 🎭Author Scope
 type AuthorScope = { id: string };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
 export const AuthorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(AuthorProvider, { id: props.id, children: React.createElement(AuthorScopeContext.Provider, { value }, props.children as any) });
 };
 const useAuthorScope = () => useContext(AuthorScopeContext);
 // #endregion 🎭Author Scope
@@ -7040,7 +7070,7 @@ type TypeScope = { id: string };
 const TypeScopeContext = createContext<TypeScope | null>(null);
 export const TypeScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(TypeProvider, { id: props.id, children: React.createElement(TypeScopeContext.Provider, { value }, props.children as any) });
 };
 export const useTypeScope = () => useContext(TypeScopeContext);
 export const useIsInTypeScope = () => useTypeScope() !== null;
@@ -7051,7 +7081,7 @@ type QualityScope = { id: string };
 const QualityScopeContext = createContext<QualityScope | null>(null);
 export const QualityScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(QualityScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(QualityProvider, { id: props.id, children: React.createElement(QualityScopeContext.Provider, { value }, props.children as any) });
 };
 export const useQualityScope = () => useContext(QualityScopeContext);
 export const useIsInQualityScope = () => useQualityScope() !== null;
@@ -7062,7 +7092,7 @@ type DesignScope = { id: string };
 export const DesignScopeContext = createContext<DesignScope | null>(null);
 export const DesignScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(DesignProvider, { id: props.id, children: React.createElement(DesignScopeContext.Provider, { value }, props.children as any) });
 };
 export const useDesignScope = () => useContext(DesignScopeContext);
 export const useIsInDesignScope = () => useDesignScope() !== null;
@@ -7073,7 +7103,7 @@ type PieceScope = { id: string };
 const PieceScopeContext = createContext<PieceScope | null>(null);
 export const PieceScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(PieceProvider, { id: props.id, children: React.createElement(PieceScopeContext.Provider, { value }, props.children as any) });
 };
 export const usePieceScope = () => useContext(PieceScopeContext);
 // #endregion 🖲️Piece Scope
@@ -7083,18 +7113,13 @@ type ConnectionScope = { id: string };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
 export const ConnectionScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(ConnectionProvider, { id: props.id, children: React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any) });
 };
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 // #endregion 🎛️Connection Scope
 
 // #region ⏰Entity Data Hooks
-
-/** Kit snapshot from {@link KitProvider} only — not {@link useSketchpadStore}. */
-function useLocalKitSnapshot(): Kit | null {
-  const runtime = useKitRuntimeSafe();
-  return runtime?.snapshot.kit ?? null;
-}
+// Entity reads delegate to `@semio/react` triad hooks; `*ScopeProvider` composes React `*Provider` + sketchpad scope id for R3F bridge.
 
 function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
@@ -7154,65 +7179,49 @@ function useKitTags(explicitKitId?: string): HookResult<Tag[] | undefined> {
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Id, deep: boolean = false): T | Author | null {
   const authorScope = useAuthorScope();
   const authorId = authorScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !authorId) return null;
-  const author = kit.authors?.find((a) => a.id === authorId) ?? null;
-  if (!author) return null;
-  return selector ? selector(author) : (author as any);
+  const [obj] = useAuthorFromKit(authorId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Author) : (obj as any);
 }
 
 export function useType<T>(selector?: (type: Type) => T, id?: Id, deep: boolean = false): T | Type | null {
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !typeId) return null;
-  const type = kit.types?.find((t) => t.id === typeId) ?? null;
-  if (!type) return null;
-  return selector ? selector(type) : (type as any);
+  const [obj] = useTypeFromKit(typeId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Type) : (obj as any);
 }
 
 export function useQuality<T>(selector?: (quality: Quality) => T, id?: Id, deep: boolean = false): T | Quality | null {
   const qualityScope = useQualityScope();
   const qualityId = qualityScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !qualityId) return null;
-  const quality = kit.qualities?.find((q) => q.id === qualityId) ?? null;
-  if (!quality) return null;
-  return selector ? selector(quality) : (quality as any);
+  const [obj] = useQualityFromKit(qualityId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Quality) : (obj as any);
 }
 
 export function useDesign<T = Design>(selector?: (design: Design) => T, deep?: boolean, id?: string): T | Design | null {
   const designScope = useDesignScope();
   const designId = designScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !designId) return null;
-  const design = kit.designs?.find((d) => d.id === designId) ?? null;
-  if (!design) return null;
-  return selector ? selector(design) : (design as any);
+  const [obj] = useDesignFromKit(designId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Design) : (obj as any);
 }
 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: Id, deep: boolean = false): T | Piece | null {
-  const designScope = useDesignScope();
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !pieceId || !designScope) return null;
-  const design = kit.designs?.find((d) => d.id === designScope.id);
-  const piece = design?.pieces?.find((p) => p.id === pieceId) ?? null;
-  if (!piece) return null;
-  return selector ? selector(piece) : (piece as any);
+  const [obj] = usePieceFromKit(pieceId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Piece) : (obj as any);
 }
 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: Id, deep: boolean = false): T | Connection | null {
-  const designScope = useDesignScope();
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
-  const kit = useLocalKitSnapshot();
-  if (!kit || !connectionId || !designScope) return null;
-  const design = kit.designs?.find((d) => d.id === designScope.id);
-  const connection = design?.connections?.find((c) => c.id === connectionId) ?? null;
-  if (!connection) return null;
-  return selector ? selector(connection) : (connection as any);
+  const [obj] = useConnectionFromKit(connectionId);
+  if (obj == null) return null;
+  return selector ? selector(obj as Connection) : (obj as any);
 }
 
 const EMPTY_PIECES: Piece[] = [];
@@ -7220,18 +7229,14 @@ const EMPTY_CONNECTIONS: Connection[] = [];
 
 export function usePieces(): Piece[] {
   const designScope = useDesignScope();
-  const kit = useLocalKitSnapshot();
-  if (!kit || !designScope) return EMPTY_PIECES;
-  const design = kit.designs?.find((d) => d.id === designScope.id);
-  return design?.pieces ?? EMPTY_PIECES;
+  const [arr] = useKitRpcPieces(designScope?.id);
+  return Array.isArray(arr) ? (arr as Piece[]) : EMPTY_PIECES;
 }
 
 export function useConnections(): Connection[] {
   const designScope = useDesignScope();
-  const kit = useLocalKitSnapshot();
-  if (!kit || !designScope) return EMPTY_CONNECTIONS;
-  const design = kit.designs?.find((d) => d.id === designScope.id);
-  return design?.connections ?? EMPTY_CONNECTIONS;
+  const [arr] = useKitRpcConnections(designScope?.id);
+  return Array.isArray(arr) ? (arr as Connection[]) : EMPTY_CONNECTIONS;
 }
 
 // #endregion ⏰Entity Data Hooks
@@ -7248,63 +7253,76 @@ export type PieceMetadata = {
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const kit = useLocalKitSnapshot();
   const designScope = useDesignScope();
+  const [record] = usePiecesMetadataRecordFromKit(designScope?.id);
   return useMemo(() => {
-    if (!kit || !designScope) return new Map<string, PieceMetadata>();
-    try {
-      const result = kit.piecesMetadataFor(designScope.id);
-      if (!result.ok) {
-        console.error("[PiecesMetadata] piecesMetadata failed:", result.errors);
-        return new Map<string, PieceMetadata>();
+    const m = new Map<string, PieceMetadata>();
+    if (record && typeof record === "object") {
+      for (const [k, v] of Object.entries(record)) {
+        m.set(k, v as PieceMetadata);
       }
-      const metadata = result.diff;
       if (typeof window !== "undefined") {
-        (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);
+        (window as any).__SEMIO_PIECES_METADATA__ = record;
       }
-      return metadata;
-    } catch (error) {
-      console.error("[PiecesMetadata] Failed to compute flattened piece metadata:", error);
-      return new Map<string, PieceMetadata>();
     }
-  }, [kit, designScope]);
+    return m;
+  }, [record]);
 }
 
 export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
+  const designScope = useDesignScope();
   const pieceScope = usePieceScope();
   const resolvedPieceId = pieceId ?? pieceScope?.id;
-  const metadataMap = usePiecesMetadataMap();
-  return resolvedPieceId ? metadataMap.get(resolvedPieceId) : undefined;
+  const [meta] = usePieceMetadataFromKit(designScope?.id, resolvedPieceId);
+  return meta as PieceMetadata | undefined;
 }
 
 export function useFlatPiecePlane(id?: Id): Plane {
-  const meta = usePieceMetadata(id);
-  return meta?.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [plane] = useFlatPiecePlaneFromKit(designScope?.id, pieceId);
+  return plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
 }
 
 export function useFlatPieceCenter(id?: Id): Coordinate {
-  const meta = usePieceMetadata(id);
-  return meta?.center ?? { u: 0, v: 0 };
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [center] = useFlatPieceCenterFromKit(designScope?.id, pieceId);
+  return center ?? { u: 0, v: 0 };
 }
 
 export function useIsConnectedPiece(id?: Id): boolean {
-  const meta = usePieceMetadata(id);
-  return meta?.parentPieceId !== null && meta?.parentPieceId !== undefined;
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [v] = useIsConnectedPieceFromKit(designScope?.id, pieceId);
+  return Boolean(v);
 }
 
 export function usePieceDepth(id?: Id): number {
-  const meta = usePieceMetadata(id);
-  return meta?.depth ?? 0;
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [d] = usePieceDepthFromKit(designScope?.id, pieceId);
+  return typeof d === "number" ? d : 0;
 }
 
 export function useFixedPieceId(id?: Id): string | undefined {
-  const meta = usePieceMetadata(id);
-  return meta?.fixedPieceId;
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [v] = useFixedPieceIdFromKit(designScope?.id, pieceId);
+  return v;
 }
 
 export function useParentPieceId(id?: Id): string | null {
-  const meta = usePieceMetadata(id);
-  return meta?.parentPieceId ?? null;
+  const designScope = useDesignScope();
+  const pieceScope = usePieceScope();
+  const pieceId = id ?? pieceScope?.id;
+  const [v] = useParentPieceIdFromKit(designScope?.id, pieceId);
+  return v ?? null;
 }
 
 export function useCurrentPiecePlane(): Plane {
@@ -7316,11 +7334,11 @@ export function useCurrentPiecePlane(): Plane {
 }
 
 export function usePieceParentConnection(id?: Id): Connection | null {
+  const designScope = useDesignScope();
   const pieceScope = usePieceScope();
   const pieceId = (typeof id === "string" ? id : (pieceScope?.id ?? null)) as string | null;
-  const connections = useConnections();
-  if (!pieceId) return null;
-  return connections.find((c: Connection) => c.connecting.piece.id === pieceId || c.connected.piece.id === pieceId) ?? null;
+  const [c] = usePieceParentConnectionFromKit(designScope?.id, pieceId ?? undefined);
+  return (c as Connection | undefined) ?? null;
 }
 
 // #endregion 🎆Piece Derived Hooks
@@ -7328,8 +7346,9 @@ export function usePieceParentConnection(id?: Id): Connection | null {
 // #region 🎹Design Derived Hooks
 
 export function useIncludedDesigns(): Design[] {
-  const kit = useLocalKitSnapshot();
-  return kit?.designs ?? [];
+  const designId = useDesignScope()?.id;
+  const [included] = useIncludedDesignsFromKit(designId);
+  return Array.isArray(included) ? (included as Design[]) : [];
 }
 
 export function useDesignId(): string | null {
@@ -7343,15 +7362,26 @@ export function usePiecesFromIds(pieceIds: Id[]): Piece[] {
 }
 
 export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]): Type[] {
-  return [];
+  const designId = useDesignScope()?.id;
+  const [replaceTypeIds] = useReplacableTypeIdsFromKit(designId, pieceIds);
+  const [allTypes] = useTypesFromKit();
+  return useMemo(() => {
+    const idSet = new Set((replaceTypeIds ?? []).map(String));
+    const base = ((allTypes ?? []) as Type[]).filter((t) => t && idSet.has(t.id));
+    if (!selectedVariants?.length) return base;
+    return base.filter((t) => (t as any).variant == null || selectedVariants.includes((t as any).variant));
+  }, [replaceTypeIds, allTypes, selectedVariants]);
 }
 
 export function useReplacableDesigns(piece: Piece): Design[] {
-  return [];
-}
-
-export function useExplodeableDesignNodes(designId: Id): any[] {
-  return [];
+  const designId = useDesignScope()?.id;
+  const pieceIds = piece?.id ? [piece.id] : [];
+  const [replaceDesignIds] = useReplacableDesignIdsFromKit(designId, pieceIds);
+  const [allDesigns] = useDesignsFromKit();
+  return useMemo(() => {
+    const idSet = new Set((replaceDesignIds ?? []).map(String));
+    return ((allDesigns ?? []) as Design[]).filter((d) => d && idSet.has(d.id));
+  }, [replaceDesignIds, allDesigns, piece?.id]);
 }
 
 // #endregion 🎹Design Derived Hooks
@@ -7613,7 +7643,10 @@ export interface SketchpadContext {
   /** Navbar, side panels, footer, drag/drop, interaction origin. */
   ui: SketchpadUiState;
 
-  kits: Record<Id, AnyActorRef>;
+  /** Ordered tab list for open kits (mirrors {@link getKitRegistryBridge}().list() after registration). */
+  openKitGuids: Id[];
+  /** UI-focused kit; kept in sync with registry {@link getKitRegistryBridge}().setActiveKit when possible. */
+  activeKitGuid: Id | undefined;
 
   homeApp: HomeAppState;
   kitApps: Record<Id, KitAppState>;
@@ -7778,7 +7811,11 @@ export type SketchpadEvent =
   | { type: "UI.FOOTER.ADD"; item: FooterItem }
   | { type: "UI.FOOTER.REMOVE"; itemId: string }
   | { type: "UI.DRAGDROP.SET_TYPE"; draggedType: Type | null }
-  | { type: "UI.DRAGDROP.SET_DESIGN"; draggedDesign: Design | null };
+  | { type: "UI.DRAGDROP.SET_DESIGN"; draggedDesign: Design | null }
+  /** Kit tab / shell: ordered open kit ids and UI navigation focus (data lives in {@link getKitRegistryBridge}). */
+  | { type: "UI.OPEN_KIT.PUSH"; kitId: Id }
+  | { type: "UI.OPEN_KIT.CLOSE"; kitId: Id }
+  | { type: "UI.OPEN_KIT.ACTIVATE"; kitId: Id };
 
 // #endregion ⚙️Types
 
@@ -8713,6 +8750,29 @@ export const sketchpadMachine = setup({
       if (event.type !== "UI.DRAGDROP.SET_DESIGN") return {};
       return { ui: { ...context.ui, dragDrop: { ...context.ui.dragDrop, activeDesign: event.draggedDesign } } };
     }),
+
+    uiOpenKitPush: assign(({ context, event }) => {
+      if (event.type !== "UI.OPEN_KIT.PUSH") return {};
+      if (context.openKitGuids.includes(event.kitId)) return {};
+      return { openKitGuids: [...context.openKitGuids, event.kitId] };
+    }),
+    uiOpenKitClose: assign(({ context, event }) => {
+      if (event.type !== "UI.OPEN_KIT.CLOSE") return {};
+      const next = context.openKitGuids.filter((k) => k !== event.kitId);
+      let activeKitGuid = context.activeKitGuid;
+      if (activeKitGuid === event.kitId) {
+        activeKitGuid = next.length ? next[next.length - 1] : undefined;
+      }
+      const reg = getKitRegistryBridge();
+      if (reg) reg.setActiveKit(activeKitGuid);
+      return { openKitGuids: next, activeKitGuid };
+    }),
+    uiOpenKitActivate: assign(({ context, event }) => {
+      if (event.type !== "UI.OPEN_KIT.ACTIVATE") return {};
+      const reg = getKitRegistryBridge();
+      if (reg) reg.setActiveKit(event.kitId);
+      return { activeKitGuid: event.kitId };
+    }),
   },
 }).createMachine({
   id: "sketchpad",
@@ -8720,7 +8780,6 @@ export const sketchpadMachine = setup({
   context: ({ input }) => ({
     id: input.id,
     sketchpad: mergeSketchpadState(createDefaultSketchpadState(input.id), input.initialState),
-    kits: {},
     homeApp: {
       panelVisibility: { ...defaultPanelVisibility, toolbar: true },
       selection: undefined,
@@ -8760,6 +8819,8 @@ export const sketchpadMachine = setup({
     backgroundOperations: {},
 
     ui: createDefaultSketchpadUiState(),
+    openKitGuids: [],
+    activeKitGuid: undefined,
   }),
   on: {
     NAVIGATE: {
@@ -8836,6 +8897,9 @@ export const sketchpadMachine = setup({
     "UI.FOOTER.REMOVE": { actions: "uiFooterRemove" },
     "UI.DRAGDROP.SET_TYPE": { actions: "uiDragDropSetType" },
     "UI.DRAGDROP.SET_DESIGN": { actions: "uiDragDropSetDesign" },
+    "UI.OPEN_KIT.PUSH": { actions: "uiOpenKitPush" },
+    "UI.OPEN_KIT.CLOSE": { actions: "uiOpenKitClose" },
+    "UI.OPEN_KIT.ACTIVATE": { actions: "uiOpenKitActivate" },
     "*": { actions: "dispatchAppEvent" },
   },
   states: {
@@ -9259,9 +9323,12 @@ export const selectTutorialCurrentStep = (state: { context: SketchpadContext }) 
 export const selectTutorialSteps = (state: { context: SketchpadContext }) => state.context.tutorial.steps;
 
 /**
- * Selector returning the sketchpad kits map.
+ * Selector returning ordered open kit guids (tab list / shell) from machine context.
  **/
-export const selectSketchpadKits = (state: { context: SketchpadContext }) => state.context.kits;
+export const selectOpenKitGuids = (state: { context: SketchpadContext }) => state.context.openKitGuids;
+
+/** Same as {@link selectOpenKitGuids} (older name). */
+export const selectSketchpadKits = selectOpenKitGuids;
 
 /**
  * Selector returning the sketchpad state.
@@ -9385,6 +9452,7 @@ export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | 
  * Selector extracting the active kit id from the navigation path.
  **/
 export const selectUiActiveKitId = (state: { context: SketchpadContext }) => {
+  if (state.context.activeKitGuid) return state.context.activeKitGuid;
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/kit\/([^/]+)/);
   return match ? match[1] : undefined;
@@ -18215,6 +18283,10 @@ export class SketchpadStore {
 
     this.kitShallowsVersion++;
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
+    if (this.actor) {
+      this.actor.send({ type: "UI.OPEN_KIT.PUSH", kitId: kid } as any);
+      this.actor.send({ type: "UI.OPEN_KIT.ACTIVATE", kitId: kid } as any);
+    }
   };
 
   private createBackedKitStore = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<{ kitStore: KitStore; kind: KitKind; source?: InitialStateKit["source"] }> => {
@@ -18465,6 +18537,7 @@ export class SketchpadStore {
     this.kitShallowsVersion++;
     this.schedulePersistKitsToStorage();
     this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
+    this.actor?.send({ type: "UI.OPEN_KIT.CLOSE", kitId: id } as any);
   };
 
   deleteKitApp = (kit: Id) => {
@@ -32611,10 +32684,19 @@ type ExpandMenuProps = {
 /**
  **/
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
-  const [selection] = useDesignAppSelection();
+  const designScope = useDesignScope();
+  const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope?.id ?? undefined);
   const [ksKit] = useKitSnapshot();
   const kit = ksKit?.kit as Kit;
-  const explodeableDesignNodes = useExplodeableDesignNodes(nodes, selection);
+  const explodeableDesignNodes = useMemo(() => {
+    const idSet = new Set((explodeableIds ?? []).map(String));
+    if (idSet.size === 0) return [] as typeof nodes;
+    return nodes.filter((node) => {
+      const piece = node.data?.piece as Piece | undefined;
+      const sub = (piece as any)?.design?.id;
+      return sub != null && idSet.has(String(sub));
+    });
+  }, [nodes, explodeableIds]);
 
   const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
     const x = node.position.x;

@@ -15059,6 +15059,35 @@ if (shouldRunReactEmbeddedTests) {
 		});
 	});
 
+	describe("useOpenKitGuids + useActiveKitGuid", () => {
+		it("mirrors registry list() and activeKitId after open", async () => {
+			const kit = asKitInstance({
+				id: "k-open",
+				name: "OpenK",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+			const store = new InMemoryKitStore(kit);
+			const kitClient = createTestKitClient(store);
+			let openIds: string[] = [];
+			let active: string | undefined;
+			function Probe() {
+				openIds = useOpenKitGuids();
+				active = useActiveKitGuid();
+				return null;
+			}
+			render(React.createElement(KitRegistryProvider, null, React.createElement(Probe)));
+			const b = getKitRegistryBridge();
+			expect(b).not.toBeNull();
+			await b!.open("k-open", { store, kitClient });
+			b!.setActiveKit("k-open");
+			await waitFor(() => {
+				expect(openIds).toContain("k-open");
+				expect(active).toBe("k-open");
+			});
+		});
+	});
+
 	describe("KitStoreClient stub RPC hooks", () => {
 		it("useClusterPieces forwards failures to useSetErrors", async () => {
 			const kit = asKitInstance({

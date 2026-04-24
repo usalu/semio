@@ -10,7 +10,7 @@ todos:
    status: completed
  - id: strip_sketchpad_store
    content: "Strip SketchpadStore: remove kits map, kitApps/typeApps/qualityApps/designApps maps, syncKits/syncKitApps, persistKitsToStorage, createKit/openKit/kit/hasKit/kitStore, createBackedKitStore, kit factory params, injectedKitStore, loadKitFilesFromPublic, persistence kind helpers, collaborativeKitStoreCache."
-   status: in_progress
+   status: pending
  - id: split_app_stores
    content: "Split KitAppStoreImpl, DesignStore, QualityAppStore, DocsAppStore: drop KitDiffAppStore/PlainKitDiffAppStore base, remove kit-data fields/methods, keep only UI selection/tools/hover/panel slices."
    status: pending
@@ -25,7 +25,7 @@ todos:
    status: pending
  - id: rewire_callsites
    content: "Rewire ~540 call sites: useKitStoreFromProvider→useKitStoreClient, new CollaborativeKitStore→file/blob hooks directly, commands.updatePiece/updateConnection/addConnection→@semio/react write hooks with useDraft, store.execute('semio.designApp.*')→actor.send or @semio/react hook."
-   status: in_progress
+   status: pending
  - id: machine_kit_lifecycle
    content: Add openKitGuids/activeKitGuid context + ui.openKit.push/close/activate events to sketchpadMachine; invoke fromPromise actors to call kitRegistry.open*; rewrite root provider tree with KitRegistryProvider + per-tab KitProvider.
    status: completed
@@ -34,7 +34,7 @@ todos:
    status: completed
  - id: tests_and_verify
    content: Extend existing Playwright (sketchpad) and vitest (react) regions for new hooks, registry kinds, useDraft rollback; run cargo test, pnpm -F @semio/js|react|sketchpad test, desktop smoke on metabolism.zip.
-   status: in_progress
+   status: pending
 isProject: false
 ---
 
