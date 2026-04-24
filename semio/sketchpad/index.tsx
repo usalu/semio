@@ -44,7 +44,6 @@ import {
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
-  createKitCommandEngine,
   createKitCommandEngineExplicitOrigin,
   createKitFileObjectUrl,
   createSessionKitStore,
@@ -52,7 +51,7 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
-  executeKitCommand,
+  executeSemioKitCommand,
   fetchReadableKitFileBlob,
   findDesignInKit,
   findPieceInDesign,
@@ -115,6 +114,7 @@ import {
   useAuthor as useAuthorFromKit,
   useConnection as useConnectionFromKit,
   useConnections as useKitRpcConnections,
+  useCreateAuthor,
   useCreateDesign,
   useCreateFolder,
   useCreatePort,
@@ -155,9 +155,11 @@ import {
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useType as useTypeFromKit,
   useTypes as useTypesFromKit,
+  useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
 } from "@semio/react";
+
 import type {
   ConnectionLineComponentProps,
   DragEndEvent,
@@ -338,6 +340,12 @@ import {
   WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
+
+// `semio.kit.*` string command dispatch: engine in @semio/js; not re-exported from @semio/react.
+function useKitCommandDispatchersWithOrigin(kitStore: KitStore | null) {
+  return useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
+}
+
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import {
@@ -1752,7 +1760,7 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; desktop?: D
 // #endregion 📹Sketchpad State
 
 // #region 💧Commands
-// Sketchpad command context/result; kit graph commands live in @semio/js (KitCommandContext, KitCommandResult, executeKitCommand).
+// Sketchpad command context/result; kit graph commands live in @semio/js (KitCommandContext, KitCommandResult, executeSemioKitCommand).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -11379,7 +11387,11 @@ const KitCreateActions: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [ks0] = useKitSnapshot();
   const kit = ks0?.kit as Kit | undefined;
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runCreateDesign } = useCreateDesign();
+  const { run: runCreateType } = useCreateType();
+  const { run: runCreateQuality } = useCreateQuality();
+  const { run: runCreatePort } = useCreatePort();
+  const { run: runCreateFolder } = useCreateFolder();
   const sketchpadCommands = useSketchpadCommands();
 
   const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
@@ -11399,13 +11411,13 @@ const KitCreateActions: FC = () => {
   };
 
   const handleCreateArtifact = (kind: ArtifactKind) => {
-    if (!kit || !kitCommands) return;
+    if (!kit) return;
     switch (kind) {
       case "designs": {
         const existingNames = (kit.designs || []).map((d: Design) => d.name);
         const uniqueName = generateUniqueName(defaultDesignName || "", existingNames);
         const newDesign: Design = { id: id(), name: uniqueName, pieces: [], connections: [] };
-        kitCommands.createDesign(newDesign);
+        void runCreateDesign(newDesign as unknown);
         sketchpadCommands.navigateToDesign(kit.id, newDesign.id);
         break;
       }
@@ -11413,7 +11425,7 @@ const KitCreateActions: FC = () => {
         const existingNames = (kit.types || []).map((t: Type) => t.name);
         const uniqueName = generateUniqueName(defaultTypeName || "", existingNames);
         const newType: Type = { id: id(), name: uniqueName, connectors: [] };
-        kitCommands.createType(newType);
+        void runCreateType(newType as unknown);
         sketchpadCommands.navigateToType(kit.id, newType.id);
         break;
       }
@@ -11427,7 +11439,7 @@ const KitCreateActions: FC = () => {
           key: uniqueKey,
           name: uniqueName,
         };
-        kitCommands.createQuality(newQuality);
+        void runCreateQuality(newQuality as unknown);
         setKindActive("qualities");
         sketchpadCommands.navigateToQuality(kit.id, newQuality.id);
         break;
@@ -11439,7 +11451,7 @@ const KitCreateActions: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        kitCommands.createPort(newPort);
+        void runCreatePort(newPort as unknown);
         setKindActive("ports");
         break;
       }
@@ -11450,7 +11462,7 @@ const KitCreateActions: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        kitCommands.createFolder(newFolder);
+        void runCreateFolder(newFolder as unknown);
         setKindActive("folders");
         break;
       }
@@ -11678,7 +11690,8 @@ const AppContent: FC = () => {
   const { run: runCreateFolder } = useCreateFolder();
   const { run: runUpdateDesign } = useUpdateDesign();
   const { run: runUpdateType } = useUpdateType();
-  const kitCommands = useKitCommands(useOrigin());
+  const getOrigin = useOrigin();
+  const [kitStore] = useKitStore();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
   const isMobile = useIsMobile();
@@ -13291,7 +13304,9 @@ const AppContent: FC = () => {
       };
 
       try {
-        await kitCommands?.addFile(newFile, file);
+        if (kitStore) {
+          await executeSemioKitCommand(kitStore, "semio.kit.addFile", getOrigin(), newFile, file);
+        }
       } catch (error) {
         console.error(`Failed to add file ${file.name}:`, error);
       }
@@ -15447,7 +15462,8 @@ export const KitToolbarHistory: FC = () => {
 export const KitToolbarReset: FC = () => {
   const [ks0] = useKitSnapshot();
   const kit = ks0?.kit as Kit | undefined;
-  const kitCommands = useKitCommands(useOrigin());
+  const [kitStore] = useKitStore();
+  const getOrigin = useOrigin();
   const resetLabel = useLabel("semio.sketchpad.app.kit.toolbar.reset");
   const remoteUrl = kit?.remote;
   return (
@@ -15458,7 +15474,9 @@ export const KitToolbarReset: FC = () => {
         text={resetLabel}
         disabled={!remoteUrl}
         onClick={() => {
-          if (remoteUrl && kitCommands) kitCommands.importKit(remoteUrl);
+          if (remoteUrl && kitStore) {
+            void executeSemioKitCommand(kitStore, "semio.kit.import", getOrigin(), remoteUrl);
+          }
         }}
       />
     </ToolbarGroup>
@@ -18223,7 +18241,7 @@ export class SketchpadStore {
               } catch {
                 return;
               }
-              if (loadKitStore) await executeKitCommand(loadKitStore, "semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
+              if (loadKitStore) await executeSemioKitCommand(loadKitStore, "semio.kit.addFile", "system.loadKitFiles", file, fileBlob);
             }),
           );
         }
@@ -18464,7 +18482,7 @@ export class SketchpadStore {
       const url = rest[1] as string;
       if (this.hasKit(Id)) {
         const kitStore = this.kitStore(Id);
-        await executeKitCommand(kitStore, "semio.kit.import", origin, url);
+        await executeSemioKitCommand(kitStore, "semio.kit.import", origin, url);
       }
       return {} as T;
     }
@@ -30242,7 +30260,7 @@ const DesignSectionForm: FC = () => {
   const tooltip = useTooltip();
   const location = useLocation();
   const [transaction] = useDesignAppTransaction();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateDesign } = useUpdateDesign();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const pathScope = useMemo(() => {
@@ -30275,8 +30293,7 @@ const DesignSectionForm: FC = () => {
   if (!design) return null;
 
   const updateDesignField = (diff: any) => {
-    if (!kitCommands) return;
-    kitCommands.updateDesign(design.id, diff);
+    void runUpdateDesign(design.id, diff as Record<string, unknown>);
   };
 
   const addLocation = () => {
@@ -30666,7 +30683,7 @@ const PiecesSectionForm: FC = () => {
   const design = useDesign() as Design;
   const [pcKs] = useKitSnapshot();
   const kit = pcKs?.kit as Kit;
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateDesign } = useUpdateDesign();
   const includedDesigns = useIncludedDesigns();
   const includedDesignMap = useMemo(() => new Map(includedDesigns.map((includedDesign) => [includedDesign.id, includedDesign])), [includedDesigns]);
   const metadata = usePiecesMetadataMap();
@@ -31025,7 +31042,7 @@ const PiecesSectionForm: FC = () => {
     if (pieceIds.length === 0) return;
     const diff = kit.fixPiecesInDesignDiff(design.id, pieceIds);
     transaction?.start();
-    kitCommands?.updateDesign(design.id, diff);
+    void runUpdateDesign(design.id, diff as Record<string, unknown>);
     transaction?.finalize();
   };
 
@@ -33862,7 +33879,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const rfStoreApi = useStoreApi();
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
-  const kitCommands = useKitCommands(useOrigin());
   const sketchpadCommands = useSketchpadCommands();
   const [kitTypes] = useKitTypes();
   const [kitDesigns] = useKitDesigns();
@@ -39018,7 +39034,7 @@ const SceneContent: FC = React.memo(() => {
   const typePorts = useType(selectTypePorts) as Connector[] | undefined;
   const typeId = useType(selectTypeId) as string | undefined;
 
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
 
@@ -39061,7 +39077,7 @@ const SceneContent: FC = React.memo(() => {
 
   const handlePortCreate = useCallback(
     (position: THREE.Vector3, normal: THREE.Vector3) => {
-      if (typeId && kitCommands) {
+      if (typeId) {
         const semioPosition = position.clone().applyMatrix4(toSemioRotation());
         const semioNormal = normal.clone().applyMatrix4(toSemioRotation()).normalize();
 
@@ -39081,14 +39097,14 @@ const SceneContent: FC = React.memo(() => {
           mandatory: false,
         };
 
-        kitCommands.updateType(typeId, {
+        void runUpdateType(typeId, {
           connectors: {
             added: [newPort],
           },
-        });
+        } as Record<string, unknown>);
       }
     },
-    [typeId, kitCommands],
+    [typeId, runUpdateType],
   );
 
   const handleClearPreview = useCallback(() => {
@@ -39232,11 +39248,11 @@ export const TypeDetails: FC = () => {
 /**
  **/
 const TypeDetailsForm: FC = () => {
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
 
   const updateTypeField = (diff: any) => {
-    kitCommands?.updateType(type.id, diff);
+    void runUpdateType(type.id, diff as Record<string, unknown>);
   };
 
   return (
@@ -39299,14 +39315,14 @@ const RepresentationsSectionForm: FC = () => {
   const tooltip = useTooltip();
   const [hoverRepresentation] = useTypeAppHoverRepresentation();
   const [clearHover] = useTypeAppClearHover();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
 
   const applyDiff = (diff: any) => {
-    kitCommands?.updateType(type.id, diff);
+    void runUpdateType(type.id, diff as Record<string, unknown>);
   };
 
   const updateRepresentation = (id: string, representationDiff: any) => {
@@ -39467,14 +39483,14 @@ const ConnectorsListSectionForm: FC = () => {
   const tooltip = useTooltip();
   const [hoverPort] = useTypeAppHoverPort();
   const [clearHover] = useTypeAppClearHover();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
   const [selection, setSelection] = useTypeAppSelection();
   const [hover] = useTypeAppHover();
   const [activeTool] = useTypeAppActiveTool();
 
   const applyDiff = (diff: any) => {
-    kitCommands?.updateType(type.id, diff);
+    void runUpdateType(type.id, diff as Record<string, unknown>);
   };
 
   const updatePort = (id: string, connectorDiff: any) => {
@@ -39768,13 +39784,15 @@ export const AuthorsSection: FC = () => {
 /**
  **/
 const AuthorsSectionForm: FC = () => {
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
+  const { run: runCreateAuthor } = useCreateAuthor();
+  const { run: runUpdateAuthor } = useUpdateAuthor();
   const type = useType(undefined, undefined, true) as Type;
   const [auKs] = useKitSnapshot();
   const kit = auKs?.kit as Kit | null;
 
   const updateAuthors = (authors: string[]) => {
-    kitCommands?.updateType(type.id, { authors: authors.map((a) => ({ id: a })) });
+    void runUpdateType(type.id, { authors: authors.map((a) => ({ id: a })) } as Record<string, unknown>);
   };
 
   const hasAuthors = type?.authors && type.authors.length > 0;
@@ -39788,11 +39806,11 @@ const AuthorsSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const newAuthorId = id();
-              kitCommands?.createAuthor({
+              void runCreateAuthor({
                 id: newAuthorId,
                 name: "",
                 email: "",
-              });
+              } as unknown);
               updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
             },
             id: "semio.sketchpad.common.add",
@@ -39840,7 +39858,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.name"
                     value={item.name}
                     onChange={(e) => {
-                      kitCommands?.updateAuthor(item.authorId, { name: e.target.value });
+                      void runUpdateAuthor(item.authorId, { name: e.target.value });
                     }}
                     showLabel
                   />
@@ -39850,7 +39868,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.email"
                     value={item.email}
                     onChange={(e) => {
-                      kitCommands?.updateAuthor(item.authorId, { email: e.target.value });
+                      void runUpdateAuthor(item.authorId, { email: e.target.value });
                     }}
                     showLabel
                   />
@@ -39877,11 +39895,11 @@ export const AttributesSection: FC = () => {
  **/
 const AttributesSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
 
   const applyDiff = (diff: any) => {
-    kitCommands?.updateType(type.id, diff);
+    void runUpdateType(type.id, diff as Record<string, unknown>);
   };
 
   const updateAttribute = (id: string, attributeDiff: any) => {
@@ -40008,7 +40026,7 @@ export const TypeConnectorSection: FC<{ connectorId: Id }> = ({ connectorId }) =
  **/
 const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
   const tooltip = useTooltip();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
 
   const connector = type.connectors?.find((p) => p.id === connectorId);
@@ -40038,11 +40056,11 @@ const TypeConnectorSectionForm: FC<{ connectorId: Id }> = ({ connectorId }) => {
         if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
       }
     }
-    kitCommands?.updateType(type.id, {
+    void runUpdateType(type.id, {
       connectors: {
         updated: [{ connector: { id: id }, diff }],
       },
-    });
+    } as Record<string, unknown>);
   };
 
   return (
@@ -40190,7 +40208,7 @@ export const ConnectorsMultipleSection: FC<{ connectorIds: Id[] }> = ({ connecto
  **/
 const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorIds }) => {
   const tooltip = useTooltip();
-  const kitCommands = useKitCommands(useOrigin());
+  const { run: runUpdateType } = useUpdateType();
   const type = useType(undefined, undefined, true) as Type;
 
   const connectors = type.connectors?.filter((p) => connectorIds.includes(p.id)) || [];
@@ -40225,11 +40243,11 @@ const ConnectorsMultipleSectionForm: FC<{ connectorIds: Id[] }> = ({ connectorId
         if (connectorDiff.direction.y !== undefined) diff.direction.y = connectorDiff.direction.y - connector.direction.y;
         if (connectorDiff.direction.z !== undefined) diff.direction.z = connectorDiff.direction.z - connector.direction.z;
       }
-      kitCommands?.updateType(type.id, {
+      void runUpdateType(type.id, {
         connectors: {
           updated: [{ connector: { id: connector.id }, diff }],
         },
-      });
+      } as Record<string, unknown>);
     });
   };
 
@@ -40707,7 +40725,9 @@ const TypeWindowApp: FC = () => {
   }, [addSection, removeSection, appType, selection]);
 
   const type = useType() as Type | undefined;
-  const kitCommands = useKitCommands(useOrigin());
+  const [kitStore] = useKitStore();
+  const getOrigin = useOrigin();
+  const { run: runUpdateType } = useUpdateType();
   const [setSelectedRepresentation] = useTypeAppSetSelectedRepresentation();
 
   useEffect(() => {
@@ -40719,7 +40739,7 @@ const TypeWindowApp: FC = () => {
       setIsDragOver(false);
 
       const files = event.dataTransfer?.files;
-      if (!files || files.length === 0 || !type || !kitCommands || !setSelectedRepresentation) return;
+      if (!files || files.length === 0 || !type || !kitStore || !setSelectedRepresentation) return;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -40740,13 +40760,13 @@ const TypeWindowApp: FC = () => {
           description: file.name,
         };
 
-        await kitCommands.addFile(newFile, file);
+        await executeSemioKitCommand(kitStore, "semio.kit.addFile", getOrigin(), newFile, file);
 
-        await kitCommands.updateType(type.id, {
+        await runUpdateType(type.id, {
           representations: {
             added: [newRepresentation],
           },
-        });
+        } as Record<string, unknown>);
 
         setSelectedRepresentation(newRepresentationId);
       }
@@ -40778,7 +40798,7 @@ const TypeWindowApp: FC = () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("dragleave", handleDragLeave);
     };
-  }, [appType, type, kitCommands, setSelectedRepresentation]);
+  }, [appType, type, kitStore, getOrigin, runUpdateType, setSelectedRepresentation]);
 
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
   const addSidePanelTab = useAddSidePanelTab();
@@ -45820,7 +45840,7 @@ const HomeToolbarExport: FC = () => {
   const handleExportArchive = useCallback(() => {
     for (const kitId of selectedKits) {
       if (store.hasKit(kitId)) {
-        executeKitCommand(store.kit(kitId), "semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
+        executeSemioKitCommand(store.kit(kitId), "semio.kit.export", "semio.sketchpad.app.home.toolbar.exportArchive");
       }
     }
   }, [selectedKits, store]);
@@ -55422,11 +55442,11 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       ];
 
       for (const { label, store } of stores) {
-        await executeKitCommand(store, "semio.kit.moveToFolder", `test.${label}.type`, "type-a", "type", "folder-b");
-        await executeKitCommand(store, "semio.kit.moveToFolder", `test.${label}.design`, "design-a", "design", "folder-b");
-        await executeKitCommand(store, "semio.kit.moveToFolder", `test.${label}.quality`, "quality-a", "quality", "folder-b");
-        await executeKitCommand(store, "semio.kit.moveToFolder", `test.${label}.file`, "file-a", "file", "folder-b");
-        await executeKitCommand(store, "semio.kit.moveToFolder", `test.${label}.folder`, "folder-c", "folder", "folder-b");
+        await executeSemioKitCommand(store, "semio.kit.moveToFolder", `test.${label}.type`, "type-a", "type", "folder-b");
+        await executeSemioKitCommand(store, "semio.kit.moveToFolder", `test.${label}.design`, "design-a", "design", "folder-b");
+        await executeSemioKitCommand(store, "semio.kit.moveToFolder", `test.${label}.quality`, "quality-a", "quality", "folder-b");
+        await executeSemioKitCommand(store, "semio.kit.moveToFolder", `test.${label}.file`, "file-a", "file", "folder-b");
+        await executeSemioKitCommand(store, "semio.kit.moveToFolder", `test.${label}.folder`, "folder-c", "folder", "folder-b");
 
         const movedKit = store.getSnapshot().kit;
         expect(movedKit.types?.find((entry) => entry.id === "type-a")?.folder).toBe("folder-b");
@@ -55461,8 +55481,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         folders: [{ id: "root-folder", name: "Root Folder" } as Folder],
       });
 
-      await executeKitCommand(store, "semio.kit.createFolder", "test.folderKit.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "root-folder" } } as Folder);
-      await executeKitCommand(store, "semio.kit.updateFolder", "test.folderKit.updateFolder", "root-folder", { name: "Renamed Root" });
+      await executeSemioKitCommand(store, "semio.kit.createFolder", "test.folderKit.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "root-folder" } } as Folder);
+      await executeSemioKitCommand(store, "semio.kit.updateFolder", "test.folderKit.updateFolder", "root-folder", { name: "Renamed Root" });
 
       expect(adapter.operations).toEqual(["mkdir:Root Folder/Child Folder", "move:Root Folder->Renamed Root"]);
     });
@@ -55492,8 +55512,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       });
       const droppedBlob = new Blob(["hello"], { type: "text/plain" });
 
-      await executeKitCommand(rawStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { id: "dropped-file", name: "hello.txt", folder: { id: "existing-folder" } } as SemioFile, droppedBlob);
-      await executeKitCommand(rawStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "existing-folder" } } as Folder);
+      await executeSemioKitCommand(rawStore, "semio.kit.addFile", "test.collaborativeFolder.addFile", { id: "dropped-file", name: "hello.txt", folder: { id: "existing-folder" } } as SemioFile, droppedBlob);
+      await executeSemioKitCommand(rawStore, "semio.kit.createFolder", "test.collaborativeFolder.createFolder", { id: "child-folder", name: "Child Folder", parent: { id: "existing-folder" } } as Folder);
 
       expect(adapter.operations).toEqual(["write:Existing Folder/hello.txt:5", "mkdir:Existing Folder/Child Folder"]);
     });

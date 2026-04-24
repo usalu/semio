@@ -24342,7 +24342,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("addFile diff followed by embedFileBlob embeds the blob on the newly added file", async () => {
-      // Simulates executeKitCommand("semio.kit.addFile", ...) ÔåÆ syncKitFileCommandResult ÔåÆ embedFileBlob.
+      // Simulates executeSemioKitCommand("semio.kit.addFile", ...) ÔåÆ syncKitFileCommandResult ÔåÆ embedFileBlob.
       // Step 1: apply the addFile diff (what kitCommands["semio.kit.addFile"] returns).
       // Step 2: embedFileBlob reads the file from kit.files and applies a second diff setting blob.
       const adapter = makeAdapter(makeKit());
@@ -28718,8 +28718,6 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   await syncKitFileCommandResult(kitStore, context.kit, command, args, result);
   return result;
 }
-
-export const executeKitCommand = executeSemioKitCommand;
 
 /**
  * Binds {@link executeSemioKitCommand} to a `getOrigin` callback (browser / shell event codes).
