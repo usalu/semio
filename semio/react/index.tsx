@@ -23,8 +23,15 @@ import {
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getSemioKitDesignReadStore,
+  getSemioKitLiveReadStore,
   getSemioKitShallowListReadStore,
   getSemioKitViewStore,
+  kitEventAffectsCanUndoRedo,
+  kitEventAffectsDesignQualitySumRead,
+  kitEventAffectsKitColoredConnectorsRead,
+  kitEventAffectsPieceLiveRead,
+  kitEventAffectsReplaceableCatalogRead,
+  kitEventAffectsTypeScopedRead,
   getStoredKitFileUrls,
   id,
   InMemoryKitStore,
@@ -65,7 +72,14 @@ export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinarySt
 export type { SetError, SetResult, WriteStatus };
 export { getSemioKitViewStore, SemioKitViewStore } from "@semio/js";
 export type { KitDesignReadKind, KitShallowListKind, KitStoreReadSnap, KitViewCatalogKey } from "@semio/js";
-export { getSemioKitDesignReadStore, getSemioKitShallowListReadStore, SemioKitDesignReadStore, SemioKitShallowListReadStore } from "@semio/js";
+export {
+  getSemioKitDesignReadStore,
+  getSemioKitLiveReadStore,
+  getSemioKitShallowListReadStore,
+  SemioKitDesignReadStore,
+  SemioKitLiveReadStore,
+  SemioKitShallowListReadStore,
+} from "@semio/js";
 export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
 /** Read-only async-backed value + {@link WriteStatus} (no setter). */
 export type HookRead<T> = readonly [T | undefined, WriteStatus];
@@ -2310,65 +2324,55 @@ export function useRedo(): { run: () => Promise<SetResult>; status: WriteStatus 
 
 export function useCanUndo(): HookTriad<boolean> {
   const runtime = useKitRuntime();
-  const [v, setV] = React.useState(false);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setV(false);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const b = await runtime.kitClient!.canUndo();
-        if (!cancelled) setV(!!b);
-      } catch {
-        if (!cancelled) setV(false);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe("canUndo", () => c.canUndo(), kitEventAffectsCanUndoRedo, onChange);
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: false };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot("canUndo");
   }, [runtime.kitClient]);
-  const st: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const v = snap.data === true;
+  const st: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [v, noopAsyncSet, st] as const;
 }
 
 export function useCanRedo(): HookTriad<boolean> {
   const runtime = useKitRuntime();
-  const [v, setV] = React.useState(false);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setV(false);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const b = await runtime.kitClient!.canRedo();
-        if (!cancelled) setV(!!b);
-      } catch {
-        if (!cancelled) setV(false);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe("canRedo", () => c.canRedo(), kitEventAffectsCanUndoRedo, onChange);
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: false };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot("canRedo");
   }, [runtime.kitClient]);
-  const st: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const v = snap.data === true;
+  const st: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [v, noopAsyncSet, st] as const;
 }
 
@@ -3553,51 +3557,36 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<
  */
 export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
+  const key = `pfp:${designId ?? ""}:${pieceId ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !pieceId) {
-        cellRef.current = { version: cellRef.current.version + 1, value: undefined, pending: 0 };
+        onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .piece(designId, pieceId)
-          .readFlatPlane()
-          .then(
-            (v) => {
-              const cur = cellRef.current;
-              cellRef.current = {
-                version: cur.version + 1,
-                value: v,
-                pending: Math.max(0, cur.pending - 1),
-              };
-              onChange();
-            },
-            () => {
-              const cur = cellRef.current;
-              cellRef.current = {
-                version: cur.version + 1,
-                value: undefined,
-                pending: Math.max(0, cur.pending - 1),
-              };
-              onChange();
-            },
-          );
-      };
-      run();
-      return client.subscribe(run);
+      const c = runtime.kitClient;
+      const d = designId;
+      const p = pieceId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readFlatPlane(),
+        (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
+        onChange,
+      );
     },
-    [runtime.kitClient, designId, pieceId],
+    [runtime.kitClient, designId, pieceId, key],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, pieceId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
+  return [snap.data, status] as const;
 }
 
 /**
@@ -3605,51 +3594,36 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
  */
 export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
+  const key = `pfc:${designId ?? ""}:${pieceId ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !pieceId) {
-        cellRef.current = { version: cellRef.current.version + 1, value: undefined, pending: 0 };
+        onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .piece(designId, pieceId)
-          .readFlatCenter()
-          .then(
-            (v) => {
-              const cur = cellRef.current;
-              cellRef.current = {
-                version: cur.version + 1,
-                value: v,
-                pending: Math.max(0, cur.pending - 1),
-              };
-              onChange();
-            },
-            () => {
-              const cur = cellRef.current;
-              cellRef.current = {
-                version: cur.version + 1,
-                value: undefined,
-                pending: Math.max(0, cur.pending - 1),
-              };
-              onChange();
-            },
-          );
-      };
-      run();
-      return client.subscribe(run);
+      const c = runtime.kitClient;
+      const d = designId;
+      const p = pieceId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readFlatCenter(),
+        (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
+        onChange,
+      );
     },
-    [runtime.kitClient, designId, pieceId],
+    [runtime.kitClient, designId, pieceId, key],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, pieceId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
+  return [snap.data, status] as const;
 }
 
 export function useIsConnectedPiece(designId?: string, pieceId?: string): HookRead<boolean> {
@@ -3678,65 +3652,69 @@ export function useParentPieceId(designId?: string, pieceId?: string): HookRead<
 
 export function usePieceParentConnection(designId?: string, pieceId?: string): HookRead<any | undefined> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any | undefined>(undefined);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId || !pieceId) {
-      setValue(undefined);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).piece(designId, pieceId).readParentConnectionFull();
-        if (!cancelled) setValue(v ?? undefined);
-      } catch {
-        if (!cancelled) setValue(undefined);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `ppc:${designId ?? ""}:${pieceId ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId || !pieceId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-  }, [runtime.kitClient, designId, pieceId]);
-  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
-  return [value, status] as const;
+      const c = runtime.kitClient;
+      const d = designId;
+      const p = pieceId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readParentConnectionFull().then((x) => x ?? undefined),
+        (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, pieceId, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, pieceId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !designId || !pieceId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
+  return [snap.data, status] as const;
 }
 
 export function useIncludedDesigns(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readIncludedDesigns();
-        if (!cancelled) setValue(Array.isArray(v) ? v : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `inc:${designId ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-  }, [runtime.kitClient, designId]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).design(d).readIncludedDesigns().then((v) => (Array.isArray(v) ? v : [])),
+        (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -3746,68 +3724,76 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
 export function useDesignClusterableGroups(designId?: string, selection?: ReadonlyArray<string>): HookRead<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>> {
   const runtime = useKitRuntime();
   const selectionDep = React.useMemo(() => JSON.stringify(selection ?? []), [selection]);
-  const sel = selection ?? [];
-  const [value, setValue] = React.useState<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readClusterableGroups(sel);
-        if (!cancelled) setValue(Array.isArray(v) ? v : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `clu:${designId ?? ""}:${selectionDep}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `selectionDep` is the stable key for `sel` contents
-  }, [runtime.kitClient, designId, selectionDep]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      const s = selection ?? [];
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).design(d).readClusterableGroups(s).then((v) => (Array.isArray(v) ? v : [])),
+        (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, key, selectionDep, selection],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = (Array.isArray(snap.data) ? snap.data : []) as ReadonlyArray<ReadonlyArray<{ readonly id: string }>>;
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** Sum of prop values linked to `qualityId` in the design (`readDesignQualitySumCommand`). */
 export function useDesignQualitySum(designId?: string, qualityId?: string): HookRead<number> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState(0);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId || !qualityId) {
-      setValue(0);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readQualitySum(qualityId);
-        if (!cancelled) setValue(typeof v === "number" && !Number.isNaN(v) ? v : 0);
-      } catch {
-        if (!cancelled) setValue(0);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `dqs:${designId ?? ""}:${qualityId ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId || !qualityId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-  }, [runtime.kitClient, designId, qualityId]);
-  const status: WriteStatus = !designId || !qualityId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      const q = qualityId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () =>
+          new LiveKitRoot(c.kitGraphql())
+            .design(d)
+            .readQualitySum(q)
+            .then((v) => (typeof v === "number" && !Number.isNaN(v) ? v : 0)),
+        (ev) => kitEventAffectsDesignQualitySumRead(ev, d, q),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, qualityId, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !qualityId) return { ...EMPTY_KIT_READ_SNAP, data: 0 };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, qualityId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = typeof snap.data === "number" && !Number.isNaN(snap.data) ? snap.data : 0;
+  const status: WriteStatus = !designId || !qualityId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
@@ -3818,169 +3804,177 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
   const runtime = useKitRuntime();
   const tagDep = React.useMemo(() => JSON.stringify(tagIds ?? []), [tagIds]);
   const tags = tagIds ?? [];
-  const [value, setValue] = React.useState<unknown>(undefined);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !typeId) {
-      setValue(undefined);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).type(typeId).readBestRepresentation(tags);
-        if (!cancelled) setValue(v);
-      } catch {
-        if (!cancelled) setValue(undefined);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `tbr:${typeId ?? ""}:${tagDep}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !typeId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runtime.kitClient, typeId, tagDep]);
-  const status: WriteStatus = !typeId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
-  return [value, status] as const;
+      const c = runtime.kitClient;
+      const t = typeId;
+      const tg = tags;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).type(t).readBestRepresentation(tg),
+        (ev) => kitEventAffectsTypeScopedRead(ev, t),
+        onChange,
+      );
+    },
+    [runtime.kitClient, typeId, key, tagDep, tags],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !typeId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, typeId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !typeId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
+  return [snap.data, status] as const;
 }
 
 /** Colored connector rows for the kit (`readKitColoredConnectorsCommand`). */
 export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<ReadonlyArray<unknown>>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).readColoredConnectors();
-        if (!cancelled) setValue(Array.isArray(v) ? v : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = "kcc";
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).readColoredConnectors().then((v) => (Array.isArray(v) ? v : [])),
+        kitEventAffectsKitColoredConnectorsRead,
+        onChange,
+      );
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient]);
-  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = (Array.isArray(snap.data) ? snap.data : []) as ReadonlyArray<unknown>;
+  const status: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
-  const [value, setValue] = React.useState<string[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    const sel = pieceIds ?? [];
-    if (!runtime.kitClient || !designId || !sel.length) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readReplaceableCatalog(sel);
-        if (!cancelled) setValue(v.types);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `rpt:${designId ?? ""}:${pieceKey}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      const sel = pieceIds ?? [];
+      if (!runtime.kitClient || !designId || !sel.length) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable key for selection contents
-  }, [runtime.kitClient, designId, pieceKey]);
-  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      const s = sel;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).design(d).readReplaceableCatalog(s).then((v) => v.types),
+        (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, key, pieceKey],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key, pieceKey]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
+  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
-  const [value, setValue] = React.useState<string[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    const sel = pieceIds ?? [];
-    if (!runtime.kitClient || !designId || !sel.length) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readReplaceableCatalog(sel);
-        if (!cancelled) setValue(v.designs);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `rpd:${designId ?? ""}:${pieceKey}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      const sel = pieceIds ?? [];
+      if (!runtime.kitClient || !designId || !sel.length) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runtime.kitClient, designId, pieceKey]);
-  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      const s = sel;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).design(d).readReplaceableCatalog(s).then((v) => v.designs),
+        (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, key, pieceKey],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key, pieceKey]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
+  const status: WriteStatus = !designId || !pieceIds?.length || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 export function useExplodeableDesignNodes(designId?: string): HookRead<string[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<string[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readIncludedDesignIds();
-        if (!cancelled) setValue(v);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const key = `exd:${designId ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
-  }, [runtime.kitClient, designId]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+      const c = runtime.kitClient;
+      const d = designId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        () => new LiveKitRoot(c.kitGraphql()).design(d).readIncludedDesignIds().then((v) => (Array.isArray(v) ? v : [])),
+        (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
+        onChange,
+      );
+    },
+    [runtime.kitClient, designId, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = (Array.isArray(snap.data) ? snap.data : []) as string[];
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 

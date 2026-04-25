@@ -1927,6 +1927,166 @@ export class SemioKitShallowListReadStore {
 }
 
 export function getSemioKitShallowListReadStore(client: KitStoreClient) { return SemioKitShallowListReadStore.forClient(client); }
+
+/** @emoji 🧭 canUndo / canRedo: stack changes after graph mutations, not on command `accepted` only. */
+export function kitEventAffectsCanUndoRedo(ev: unknown): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    return (ev as KitCommandLifecycleEvent).semioKitCommand.phase !== "accepted";
+  }
+  return true;
+}
+
+/** @emoji 🧭 Piece-scoped live reads (plane, parent connection) — same design + piece set as {@link kitEventAffectsDesignRead}. */
+export function kitEventAffectsPieceLiveRead(ev: unknown, designId: string, pieceId: string): boolean {
+  const one = new Set<string>();
+  one.add(pieceId);
+  return kitEventAffectsDesignRead(ev, designId, one, new Set());
+}
+
+/** @emoji 🧭 `LiveKitRoot` reads for a single type (best representation, etc.). */
+export function kitEventAffectsTypeScopedRead(ev: unknown, typeId: string): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    const ph = (ev as KitCommandLifecycleEvent).semioKitCommand.phase;
+    if (ph === "accepted") return false;
+    if (ph === "succeeded" || ph === "failed") return true;
+    return false;
+  }
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(e, "Changed")) return true;
+  if (Object.prototype.hasOwnProperty.call(e, "FieldChanged")) return true;
+  const t = e.Type;
+  if (t != null && typeof t === "object") {
+    const id = (t as Record<string, unknown>).type_id ?? (t as Record<string, unknown>).typeId;
+    if (id === typeId) return true;
+  }
+  if (e.Representation != null || e.Tag != null || e.Concept != null) return true;
+  if (e.Type != null) return false;
+  return false;
+}
+
+function qualityPayloadId(obj: unknown): string | undefined {
+  if (obj == null || typeof obj !== "object") return undefined;
+  const o = obj as Record<string, unknown>;
+  const id = o.quality_id ?? o.qualityId;
+  return typeof id === "string" ? id : undefined;
+}
+
+/** @emoji 🧭 Design quality-sum row: design graph or that quality id. */
+export function kitEventAffectsDesignQualitySumRead(ev: unknown, designId: string, qualityId: string): boolean {
+  if (kitEventAffectsDesignRead(ev, designId, new Set(), new Set())) return true;
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  const q = e.Quality ?? e.quality;
+  if (q != null && typeof q === "object" && qualityPayloadId(q) === qualityId) return true;
+  return false;
+}
+
+/** @emoji 🧭 `readKitColoredConnectors` (types/ports/connectors on the kit). */
+export function kitEventAffectsKitColoredConnectorsRead(ev: unknown): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    const ph = (ev as KitCommandLifecycleEvent).semioKitCommand.phase;
+    if (ph === "accepted") return false;
+    if (ph === "succeeded" || ph === "failed") return true;
+    return false;
+  }
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  if (e.Changed != null || e.FieldChanged != null) return true;
+  if (e.Type != null || e.Port != null || e.Connector != null) return true;
+  if (e.Piece != null || e.Connection != null || e.Design != null) return false;
+  return true;
+}
+
+/** @emoji 🧭 Replaceable catalog: design + current selection of piece ids. */
+export function kitEventAffectsReplaceableCatalogRead(ev: unknown, designId: string, selectionPieceIds: ReadonlySet<string>): boolean {
+  return kitEventAffectsDesignRead(ev, designId, selectionPieceIds, new Set());
+}
+
+const liveReadByClient = new WeakMap<KitStoreClient, SemioKitLiveReadStore>();
+
+/**
+ * @emoji 🧭 Keyed async GraphQL-backed reads (LiveKitRoot, canUndo) with per-key `shouldRefresh` on `eventStream`.
+ */
+export class SemioKitLiveReadStore {
+  private readonly entries = new Map<string, { version: number; data: unknown; pending: number; load: () => Promise<unknown>; shouldRefresh: (ev: unknown) => boolean; subs: Set<() => void> }>();
+  private readonly inFlight = new Set<string>();
+  private clientUnsub: (() => void) | undefined;
+  private constructor(private readonly client: KitStoreClient) { }
+
+  static forClient(c: KitStoreClient) {
+    let s = liveReadByClient.get(c);
+    if (!s) { s = new SemioKitLiveReadStore(c); liveReadByClient.set(c, s); }
+    return s;
+  }
+
+  getSnapshot(key: string): KitStoreReadSnap {
+    const e = this.entries.get(key);
+    if (!e) return { version: 0, data: undefined, pending: 0 };
+    return { version: e.version, data: e.data, pending: e.pending };
+  }
+
+  private notify(e: { subs: Set<() => void> }) {
+    for (const l of e.subs) { try { l(); } catch { /* ignore */ } }
+  }
+
+  subscribe(key: string, load: () => Promise<unknown>, shouldRefresh: (ev: unknown) => boolean, onChange: () => void): () => void {
+    this.ensurePipe();
+    let e = this.entries.get(key);
+    if (!e) {
+      e = { version: 0, data: undefined, pending: 0, load, shouldRefresh, subs: new Set() };
+      this.entries.set(key, e);
+    } else {
+      e.load = load;
+      e.shouldRefresh = shouldRefresh;
+    }
+    e.subs.add(onChange);
+    void this.run(key);
+    return () => {
+      const ent = this.entries.get(key);
+      if (!ent) return;
+      ent.subs.delete(onChange);
+      if (ent.subs.size === 0) this.entries.delete(key);
+      if (this.entries.size === 0) {
+        this.clientUnsub?.();
+        this.clientUnsub = undefined;
+      }
+    };
+  }
+
+  private ensurePipe() {
+    if (this.clientUnsub) return;
+    this.clientUnsub = this.client.subscribe((ev: unknown) => {
+      for (const [key, e] of this.entries) {
+        if (e.subs.size === 0) continue;
+        if (!e.shouldRefresh(ev)) continue;
+        void this.run(key);
+      }
+    });
+  }
+
+  private async run(key: string) {
+    if (this.inFlight.has(key)) return;
+    const e = this.entries.get(key);
+    if (!e || e.subs.size === 0) return;
+    this.inFlight.add(key);
+    e.pending += 1;
+    e.version += 1;
+    this.notify(e);
+    try {
+      e.data = await e.load();
+    } catch {
+      e.data = undefined;
+    } finally {
+      e.pending = 0;
+      e.version += 1;
+      this.inFlight.delete(key);
+      this.notify(e);
+    }
+  }
+}
+
+export function getSemioKitLiveReadStore(client: KitStoreClient) { return SemioKitLiveReadStore.forClient(client); }
 //#endregion KitEventParity
 
 //#region KitWorker
@@ -2063,6 +2223,10 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         const unsubS = sstore.subscribe("types", () => { /* coverage */ });
         expect(sstore.getSnapshot("types").version).toBeGreaterThanOrEqual(0);
         unsubS();
+        const lstore = getSemioKitLiveReadStore(client);
+        const unsubL = lstore.subscribe("emb-live", () => Promise.resolve(1), () => true, () => { /* coverage */ });
+        expect(lstore.getSnapshot("emb-live").version).toBeGreaterThanOrEqual(0);
+        unsubL();
         unsubscribe();
         client.dispose();
       });
