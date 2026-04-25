@@ -1,0 +1,10 @@
+{
+  "title": "Add Kit Change Diff Inversion Functions",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "semio/rs: Every kit change command must define a function that returns a kit diff for concrete input parameters. Every kit change command must define a function that returns, for a list of kit change commands with specific input parameters, commands that perform the inverse of the command.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪91beceb44b7540cea45550a72f280a34"
+  ]
+}

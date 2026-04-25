@@ -15903,6 +15903,51 @@ if (shouldRunReactEmbeddedTests) {
   });
 
   describe("KitStoreClient stub RPC hooks", () => {
+    it("records kit command request lifecycle events from the store client", async () => {
+      const kit = asKitInstance({
+        id: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        designs: [{ id: "d1", name: "D", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), pieces: [{ id: "p1", name: "P" }], connections: [] }],
+      });
+      const store = new InMemoryKitStore(kit);
+      const listeners = new Set<(event: any) => void>();
+      const emit = (event: any) => {
+        for (const listener of listeners) listener(event);
+      };
+      const stub: import("@semio/js").KitStoreClient = {
+        ...createTestKitClient(store),
+        subscribe: (cb: (ev: any) => void) => {
+          listeners.add(cb);
+          return () => listeners.delete(cb);
+        },
+        clusterPieces: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          emit({ semioKitCommand: { requestId: "r1", commandKind: "clusterPieces", phase: "accepted" } });
+          emit({ semioKitCommand: { requestId: "r1", commandKind: "clusterPieces", phase: "failed", error: { kind: "InvalidValue", message: "bad cluster" } } });
+          return { ok: false, error: { kind: "InvalidValue", message: "bad cluster" }, requestId: "r1" };
+        },
+      };
+      let events: SchemaPropertyEvent[] = [];
+      let errors: SetError[] = [];
+      function Probe() {
+        const { run } = useClusterPieces();
+        events = useSchemaEvents({ typeName: "KitCommand" });
+        errors = useSetErrors();
+        const ran = React.useRef(false);
+        React.useEffect(() => {
+          if (ran.current) return;
+          ran.current = true;
+          void run("d1", ["p1"], "C");
+        }, [run]);
+        return null;
+      }
+      render(React.createElement(KitScope, { store, kitClient: stub }, React.createElement(Probe)));
+      await waitFor(() => expect(events.some((event) => event.requestId === "r1" && event.phase === "failed")).toBe(true));
+      expect(errors.some((error) => error.message === "bad cluster")).toBe(true);
+    });
+
     it("useClusterPieces forwards failures to useSetErrors", async () => {
       const kit = asKitInstance({
         id: "k1",

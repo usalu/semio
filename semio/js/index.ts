@@ -6670,6 +6670,64 @@ export interface UndoableKitStore extends KitStore {
   redo(): void;
 }
 
+/** 🧱Normalizes plain kit DTOs into the JS [`Kit`] entity wrapper. */
+export function asKitInstance(kit: Kit | KitLike): Kit {
+  return kit instanceof Kit ? kit : Kit.fromPlain(kit as KitFullDto);
+}
+
+/** 🧱Small synchronous kit store used by React tests and in-memory callers. */
+export class InMemoryKitStore implements KitStore {
+  private kit: Kit;
+  private listeners = new Set<() => void>();
+  private sync: KitSyncState = { status: "ready", dirty: false, readonly: false };
+
+  constructor(kit: Kit | KitLike) {
+    this.kit = asKitInstance(kit);
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return { kit: this.kit, sync: this.sync };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(_label: string, run: () => T): T {
+    return run();
+  }
+
+  apply(_diff: unknown, _meta?: { origin?: string }): void {
+    this.emit();
+  }
+
+  replace(next: Kit, _meta?: { origin?: string }): void {
+    this.kit = asKitInstance(next);
+    this.sync = { ...this.sync, dirty: true };
+    this.emit();
+  }
+
+  async save(): Promise<void> {
+    this.sync = { ...this.sync, dirty: false, lastSyncedAt: new Date().toISOString() };
+    this.emit();
+  }
+
+  async reload(): Promise<void> {
+    this.emit();
+  }
+
+  dispose(): void {
+    this.listeners.clear();
+  }
+
+  private emit(): void {
+    for (const listener of this.listeners) listener();
+  }
+}
+
 /**
  * Binary asset storage contract.
  *
@@ -9861,6 +9919,8 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         expect(typeof FallbackKitStoreClient).toBe("function");
         expect(typeof WorkerKitStoreClient).toBe("function");
         expect(typeof KitWorkerApi).toBe("function");
+        expect(typeof InMemoryKitStore).toBe("function");
+        expect(typeof asKitInstance).toBe("function");
       });
 
       it("exports Semio utility class", () => {
@@ -9886,7 +9946,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       it("does NOT export deleted domain logic", async () => {
         const mod = await import("./index.ts") as Record<string, unknown>;
         const denylist = [
-          "KitImpl", "InMemoryKitStore", "KitEntity", "KitEntityIndexes", "KitEntityCaches",
+          "KitImpl", "KitEntity", "KitEntityIndexes", "KitEntityCaches",
           "hashKit", "hashType", "hashDesign", "hashPiece", "hashConnection",
           "computeChildPlane", "flattenPlacementWalkDesignOrderRoots",
           "validateKitGraphDiff", "expandSemanticCommandToDiff",
@@ -10016,10 +10076,16 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
 
         const client = await createKitStoreClient({ initialKit: minimalKit, forceFallback: true });
         expect(client).toBeInstanceOf(FallbackKitStoreClient);
+        const commandEvents: KitCommandLifecycleEvent[] = [];
+        const unsubscribe = client.subscribe((event) => {
+          if (isKitCommandLifecycleEvent(event)) commandEvents.push(event);
+        });
 
-        // setField — may fail depending on WASM command support; verify it returns a SetResult shape
         const setResult = await client.setField("Type", "type-1", "name", "BigWall");
         expect(typeof setResult.ok).toBe("boolean");
+        expect(typeof setResult.requestId).toBe("string");
+        expect(commandEvents.some((event) => event.semioKitCommand.requestId === setResult.requestId && event.semioKitCommand.phase === "accepted")).toBe(true);
+        expect(commandEvents.some((event) => event.semioKitCommand.requestId === setResult.requestId && (event.semioKitCommand.phase === "succeeded" || event.semioKitCommand.phase === "failed"))).toBe(true);
 
         // getTypes
         const types = await client.getTypes();
@@ -10061,6 +10127,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         expect(Array.isArray(readResults)).toBe(true);
         expect(readResults.length).toBe(1);
 
+        unsubscribe();
         client.dispose();
       });
     });

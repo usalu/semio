@@ -5,2546 +5,2639 @@
 /// Executed against the **live** [`kit_graph::KitGraph`] (see `ReadKitCommand::execute` / `execute_many`).
 pub mod read {
     #![allow(clippy::result_large_err)]
-// Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
-// Regenerate: `python gen_read_module.py` from semio/rs (optional; hand-edit for tweaks).
-
-use serde::{Deserialize, Serialize};
-
-use crate::attribute::{
-    AttributeFullDto, AttributeMetadataDto, AttributeShallowDto, AttributeIdDto,
-};
-use crate::author::{AuthorFullDto, AuthorMetadataDto, AuthorShallowDto, AuthorIdDto};
-use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkIdDto};
-use crate::concept::{ConceptFullDto, ConceptMetadataDto, ConceptShallowDto, ConceptIdDto};
-use crate::connection::{
-    ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionIdDto,
-};
-use crate::connector::{
-    ConnectorFullDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorIdDto, ConnectorStoreRef,
-};
-use crate::design::{
-    DesignFullDto, DesignMetadataDto, DesignShallowDto, DesignIdDto, DesignStore, DesignStoreRef,
-};
-use crate::family::{FamilyFullDto, FamilyMetadataDto, FamilyShallowDto, FamilyIdDto, FamilyStoreRef};
-use crate::file::{FileFullDto, FileMetadataDto, FileShallowDto, FileIdDto};
-use crate::folder::{FolderFullDto, FolderMetadataDto, FolderShallowDto, FolderIdDto};
-use crate::geom::{Coordinate, Plane};
-use crate::group::{GroupFullDto, GroupMetadataDto, GroupShallowDto, GroupIdDto};
-use crate::kit_graph::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitGraph};
-use crate::layer::{LayerFullDto, LayerMetadataDto, LayerShallowDto, LayerIdDto};
-use crate::location::{LocationFullDto, LocationShallowDto, LocationIdDto, LocationMetadataDto};
-use crate::piece::{
-    FixedPieceOutputDto, PieceAlternativesDto, PieceFullDto, PieceMetadataDto, PieceShallowDto, PieceIdDto,
-    PieceStoreRef, ConnectedPieceOutputDto, PoseFullDto,
-};
-use crate::port::{PortFullDto, PortMetadataDto, PortShallowDto, PortIdDto, PortStoreRef};
-use crate::prop::{PropFullDto, PropShallowDto, PropIdDto};
-use crate::quality::{QualityFullDto, QualityMetadataDto, QualityShallowDto, QualityIdDto};
-use crate::representation::{
-    RepresentationFullDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationIdDto, RepresentationStoreRef,
-};
-use crate::side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStoreRef};
-use crate::stat::{StatFullDto, StatMetadataDto, StatShallowDto, StatIdDto};
-use crate::tag::{TagFullDto, TagMetadataDto, TagShallowDto, TagIdDto};
-use crate::typ::{TypeFullDto, TypeMetadataDto, TypeShallowDto, TypeIdDto, TypeStoreRef};
-use crate::id::Id;
-
-/// One row of [`crate::design::DesignStore::flatten_map`].
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct DesignFlattenMapEntryDto {
-    pub piece_id: Id,
-    pub plane: Plane,
-    pub center: Coordinate,
-}
-
-/// Included child design stub referenced from connections (port of [`getIncludedDesigns`](DesignStore::included_design_infos) in JS).
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct IncludedDesignInfoDto {
-    pub id: Id,
-    #[serde(rename = "designId")]
-    pub design_id: Id,
-    /// `"connected"` or `"fixed"`.
-    #[serde(rename = "type")]
-    pub type_: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub center: Option<Coordinate>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub plane: Option<Plane>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub external_connections: Vec<ConnectionFullDto>,
-}
-
-/// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "camelCase")]
-pub struct KitColoredConnectorRowDto {
-    pub type_id: TypeIdDto,
-    pub connector_id: crate::connector::ConnectorIdDto,
-    pub color: String,
-}
-
-// --- Kit ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadKitCommand {
-    ReadKitFullCommand,
-    ReadKitShallowCommand,
-    ReadKitMetadataCommand,
-    ReadKitIdCommand,
-    ReadKitNameCommand,
-    ReadKitDescriptionCommand,
-    ReadKitIconCommand,
-    ReadKitImageCommand,
-    ReadKitPreviewCommand,
-    ReadKitRemoteCommand,
-    ReadKitHomepageCommand,
-    ReadKitLicenseCommand,
-    ReadKitUriCommand,
-    ReadKitCreatedCommand,
-    ReadKitUpdatedCommand,
-    ReadKitTypesFullCommand,
-    ReadKitTypesShallowCommand,
-    /// Stable type id list (kit graph order).
-    ReadKitTypeIdsCommand,
-    /// Per-type metadata rows (no full type payload).
-    ReadKitTypesMetadataCommand,
-    ReadKitDesignsFullCommand,
-    ReadKitDesignsShallowCommand,
-    /// Stable design id list (kit graph order).
-    ReadKitDesignIdsCommand,
-    /// Per-design metadata rows (no full design payload).
-    ReadKitDesignsMetadataCommand,
-    ReadKitFilesFullCommand,
-    ReadKitFilesShallowCommand,
-    ReadKitFoldersFullCommand,
-    ReadKitFoldersShallowCommand,
-    ReadKitLocationsFullCommand,
-    ReadKitLocationsShallowCommand,
-    ReadKitFamiliesFullCommand,
-    ReadKitFamiliesShallowCommand,
-    ReadKitPortsFullCommand,
-    ReadKitAuthorsFullCommand,
-    ReadKitAuthorsShallowCommand,
-    ReadKitConceptsFullCommand,
-    ReadKitConceptsShallowCommand,
-    ReadKitTagsFullCommand,
-    ReadKitTagsShallowCommand,
-    ReadKitQualitiesFullCommand,
-    ReadKitQualitiesShallowCommand,
-    ReadKitPropsFullCommand,
-    ReadKitPropsShallowCommand,
-    ReadKitAttributesFullCommand,
-    ReadKitAttributesShallowCommand,
-    /// Per-connector UI colors derived from port id (see JS `colorPortsForTypes` / `getColorForText`).
-    ReadKitColoredConnectorsCommand,
-    ReadKitTypeCommands { id: TypeIdDto, commands: Vec<ReadTypeCommand> },
-    ReadKitDesignCommands { id: DesignIdDto, commands: Vec<ReadDesignCommand> },
-    ReadKitFileCommands { id: FileIdDto, commands: Vec<ReadFileCommand> },
-    ReadKitFolderCommands { id: FolderIdDto, commands: Vec<ReadFolderCommand> },
-    ReadKitLocationCommands { id: LocationIdDto, commands: Vec<ReadLocationCommand> },
-    ReadKitFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
-    ReadKitPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
-    ReadKitAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
-    ReadKitConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
-    ReadKitTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
-    ReadKitQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadKitPropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
-    ReadKitAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadKitCommandOutput {
-    ReadKitFullCommand { kit: KitFullDto },
-    ReadKitShallowCommand { kit: KitShallowDto },
-    ReadKitMetadataCommand { metadata: KitMetadataDto },
-    ReadKitIdCommand { id: KitIdDto },
-    ReadKitNameCommand { name: String },
-    ReadKitDescriptionCommand { description: Option<String> },
-    ReadKitIconCommand { icon: Option<String> },
-    ReadKitImageCommand { image: Option<String> },
-    ReadKitPreviewCommand { preview: Option<String> },
-    ReadKitRemoteCommand { remote: Option<String> },
-    ReadKitHomepageCommand { homepage: Option<String> },
-    ReadKitLicenseCommand { license: Option<String> },
-    ReadKitUriCommand { uri: Option<String> },
-    ReadKitCreatedCommand { created: Option<String> },
-    ReadKitUpdatedCommand { updated: Option<String> },
-    ReadKitTypesFullCommand { types: Vec<TypeFullDto> },
-    ReadKitTypesShallowCommand { types: Vec<TypeShallowDto> },
-    ReadKitTypeIdsCommand { r#type_ids: Vec<TypeIdDto> },
-    ReadKitTypesMetadataCommand { types: Vec<TypeMetadataDto> },
-    ReadKitDesignsFullCommand { designs: Vec<DesignFullDto> },
-    ReadKitDesignsShallowCommand { designs: Vec<DesignShallowDto> },
-    ReadKitDesignIdsCommand { design_ids: Vec<DesignIdDto> },
-    ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadataDto> },
-    ReadKitFilesFullCommand { files: Vec<FileFullDto> },
-    ReadKitFilesShallowCommand { files: Vec<FileShallowDto> },
-    ReadKitFoldersFullCommand { folders: Vec<FolderFullDto> },
-    ReadKitFoldersShallowCommand { folders: Vec<FolderShallowDto> },
-    ReadKitLocationsFullCommand { locations: Vec<LocationFullDto> },
-    ReadKitLocationsShallowCommand { locations: Vec<LocationShallowDto> },
-    ReadKitFamiliesFullCommand { families: Vec<FamilyFullDto> },
-    ReadKitFamiliesShallowCommand { families: Vec<FamilyShallowDto> },
-    ReadKitPortsFullCommand { ports: Vec<PortFullDto> },
-    ReadKitAuthorsFullCommand { authors: Vec<AuthorFullDto> },
-    ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
-    ReadKitConceptsFullCommand { concepts: Vec<ConceptFullDto> },
-    ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
-    ReadKitTagsFullCommand { tags: Vec<TagFullDto> },
-    ReadKitTagsShallowCommand { tags: Vec<TagShallowDto> },
-    ReadKitQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadKitPropsFullCommand { props: Vec<PropFullDto> },
-    ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
-    ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorRowDto> },
-    ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
-    ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
-    ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
-    ReadKitFolderCommands { results: Vec<ReadFolderCommandOutput> },
-    ReadKitLocationCommands { results: Vec<ReadLocationCommandOutput> },
-    ReadKitFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
-    ReadKitPortCommands { results: Vec<ReadPortCommandOutput> },
-    ReadKitAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
-    ReadKitConceptCommands { results: Vec<ReadConceptCommandOutput> },
-    ReadKitTagCommands { results: Vec<ReadTagCommandOutput> },
-    ReadKitQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadKitPropCommands { results: Vec<ReadPropCommandOutput> },
-    ReadKitAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Type ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTypeCommand {
-    ReadTypeFullCommand,
-    ReadTypeShallowCommand,
-    ReadTypeMetadataCommand,
-    ReadTypeIdCommand,
-    ReadTypeNameCommand,
-    ReadTypeDescriptionCommand,
-    ReadTypeIconCommand,
-    ReadTypeImageCommand,
-    ReadTypeStockCommand,
-    ReadTypeVirtualCommand,
-    ReadTypeUnitCommand,
-    ReadTypeLocationCommand,
-    ReadTypeCreatedCommand,
-    ReadTypeUpdatedCommand,
-    ReadTypeFamiliesCommand,
-    ReadTypeConnectorsFullCommand,
-    ReadTypeConnectorsShallowCommand,
-    ReadTypeRepresentationsFullCommand,
-    ReadTypeRepresentationsShallowCommand,
-    ReadTypeAuthorsFullCommand,
-    ReadTypeAuthorsShallowCommand,
-    ReadTypeConceptsFullCommand,
-    ReadTypeConceptsShallowCommand,
-    ReadTypeTagsFullCommand,
-    ReadTypeTagsShallowCommand,
-    ReadTypeQualitiesFullCommand,
-    ReadTypeQualitiesShallowCommand,
-    ReadTypePropsFullCommand,
-    ReadTypePropsShallowCommand,
-    ReadTypeAttributesFullCommand,
-    ReadTypeAttributesShallowCommand,
-    /// All ports on families referenced by this type (see [`TypeStore::port`] for single-id resolution).
-    ReadTypePortsFullCommand,
-    ReadTypeConnectorForPortIdCommand { port_id: PortIdDto },
-    /// Tag ids to score representations (Jaccard + filter; see JS `selectBestRepresentation` / `findRepresentation`).
-    ReadTypeBestRepresentationCommand {
-        tag_ids: Vec<Id>,
-    },
-    ReadTypeFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
-    ReadTypeConnectorCommands { id: ConnectorIdDto, commands: Vec<ReadConnectorCommand> },
-    ReadTypeRepresentationCommands { id: RepresentationIdDto, commands: Vec<ReadRepresentationCommand> },
-    ReadTypePortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
-    ReadTypeAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
-    ReadTypeConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
-    ReadTypeTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
-    ReadTypeQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadTypePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
-    ReadTypeAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTypeCommandOutput {
-    ReadTypeFullCommand { dto: TypeFullDto },
-    ReadTypeShallowCommand { dto: TypeShallowDto },
-    ReadTypeMetadataCommand { metadata: TypeMetadataDto },
-    ReadTypeIdCommand { id: TypeIdDto },
-    ReadTypeNameCommand { name: String },
-    ReadTypeDescriptionCommand { description: Option<String> },
-    ReadTypeIconCommand { icon: Option<String> },
-    ReadTypeImageCommand { image: Option<String> },
-    ReadTypeStockCommand { stock: Option<i64> },
-    ReadTypeVirtualCommand { r#virtual: Option<bool> },
-    ReadTypeUnitCommand { unit: Option<String> },
-    ReadTypeLocationCommand { location: Option<crate::location::LocationIdDto> },
-    ReadTypeCreatedCommand { created: Option<String> },
-    ReadTypeUpdatedCommand { updated: Option<String> },
-    ReadTypeFamiliesCommand { families: Vec<FamilyIdDto> },
-    ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFullDto> },
-    ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallowDto> },
-    ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFullDto> },
-    ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallowDto> },
-    ReadTypeAuthorsFullCommand { authors: Vec<AuthorFullDto> },
-    ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
-    ReadTypeConceptsFullCommand { concepts: Vec<ConceptFullDto> },
-    ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
-    ReadTypeTagsFullCommand { tags: Vec<TagFullDto> },
-    ReadTypeTagsShallowCommand { tags: Vec<TagShallowDto> },
-    ReadTypeQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadTypePropsFullCommand { props: Vec<PropFullDto> },
-    ReadTypePropsShallowCommand { props: Vec<PropShallowDto> },
-    ReadTypeAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadTypePortsFullCommand { ports: Vec<PortFullDto> },
-    ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFullDto> },
-    ReadTypeBestRepresentationCommand {
-        representation: Option<RepresentationFullDto>,
-    },
-    ReadTypeFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
-    ReadTypeConnectorCommands { results: Vec<ReadConnectorCommandOutput> },
-    ReadTypeRepresentationCommands { results: Vec<ReadRepresentationCommandOutput> },
-    ReadTypePortCommands { results: Vec<ReadPortCommandOutput> },
-    ReadTypeAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
-    ReadTypeConceptCommands { results: Vec<ReadConceptCommandOutput> },
-    ReadTypeTagCommands { results: Vec<ReadTagCommandOutput> },
-    ReadTypeQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadTypePropCommands { results: Vec<ReadPropCommandOutput> },
-    ReadTypeAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Design ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadDesignCommand {
-    ReadDesignFullCommand,
-    ReadDesignShallowCommand,
-    ReadDesignMetadataCommand,
-    ReadDesignIdCommand,
-    ReadDesignNameCommand,
-    ReadDesignDescriptionCommand,
-    ReadDesignIconCommand,
-    ReadDesignImageCommand,
-    ReadDesignLocationCommand,
-    ReadDesignUnitCommand,
-    ReadDesignCreatedCommand,
-    ReadDesignUpdatedCommand,
-    ReadDesignKitCommand,
-    ReadDesignFamiliesCommand,
-    ReadDesignPiecesFullCommand,
-    ReadDesignPiecesShallowCommand,
-    ReadDesignConnectionsFullCommand,
-    ReadDesignConnectionsShallowCommand,
-    ReadDesignLayersFullCommand,
-    ReadDesignLayersShallowCommand,
-    ReadDesignGroupsFullCommand,
-    ReadDesignGroupsShallowCommand,
-    ReadDesignAuthorsFullCommand,
-    ReadDesignAuthorsShallowCommand,
-    ReadDesignConceptsFullCommand,
-    ReadDesignConceptsShallowCommand,
-    ReadDesignTagsFullCommand,
-    ReadDesignTagsShallowCommand,
-    ReadDesignQualitiesFullCommand,
-    ReadDesignQualitiesShallowCommand,
-    ReadDesignPropsFullCommand,
-    ReadDesignPropsShallowCommand,
-    ReadDesignAttributesFullCommand,
-    ReadDesignAttributesShallowCommand,
-    ReadDesignStatsFullCommand,
-    ReadDesignStatsShallowCommand,
-    ReadDesignFlattenMapCommand,
-    /// Connected component groups among `selection` (see JS `getClusterableGroups`).
-    ReadDesignClusterableGroupsCommand { selection: Vec<PieceIdDto> },
-    /// Child design stubs linked via connection sides (`designPiece` wire), with incident connections.
-    ReadDesignIncludedDesignsCommand,
-    /// Sum of numeric props for `qualityId` over pieces (piece prop overrides type prop). See JS `sumQualityInDesign`.
-    ReadDesignQualitySumCommand { quality_id: QualityIdDto },
-    /// Replacement kind/design ids for `selection` (see [`DesignStore::replaceable_catalog_candidates`]).
-    ReadDesignReplaceableCatalogCommand { selection: Vec<PieceIdDto> },
-    /// Design ids referenced as `designPiece` on connection sides (explode / include list).
-    ReadDesignIncludedDesignIdsCommand,
-    ReadDesignFamilyCommands { id: FamilyIdDto, commands: Vec<ReadFamilyCommand> },
-    ReadDesignPieceCommands { id: PieceIdDto, commands: Vec<ReadPieceCommand> },
-    ReadDesignConnectionCommands { id: ConnectionIdDto, commands: Vec<ReadConnectionCommand> },
-    ReadDesignLayerCommands { id: LayerIdDto, commands: Vec<ReadLayerCommand> },
-    ReadDesignGroupCommands { id: GroupIdDto, commands: Vec<ReadGroupCommand> },
-    ReadDesignAuthorCommands { id: AuthorIdDto, commands: Vec<ReadAuthorCommand> },
-    ReadDesignConceptCommands { id: ConceptIdDto, commands: Vec<ReadConceptCommand> },
-    ReadDesignTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
-    ReadDesignQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadDesignPropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
-    ReadDesignAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-    ReadDesignStatCommands { id: StatIdDto, commands: Vec<ReadStatCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadDesignCommandOutput {
-    ReadDesignFullCommand { dto: DesignFullDto },
-    ReadDesignShallowCommand { dto: DesignShallowDto },
-    ReadDesignMetadataCommand { metadata: DesignMetadataDto },
-    ReadDesignIdCommand { id: DesignIdDto },
-    ReadDesignNameCommand { name: String },
-    ReadDesignDescriptionCommand { description: Option<String> },
-    ReadDesignIconCommand { icon: Option<String> },
-    ReadDesignImageCommand { image: Option<String> },
-    ReadDesignLocationCommand { location: Option<crate::location::LocationIdDto> },
-    ReadDesignUnitCommand { unit: Option<String> },
-    ReadDesignCreatedCommand { created: Option<String> },
-    ReadDesignUpdatedCommand { updated: Option<String> },
-    ReadDesignKitCommand { kit: Option<crate::kit_graph::KitIdDto> },
-    ReadDesignFamiliesCommand { families: Vec<FamilyIdDto> },
-    ReadDesignPiecesFullCommand { pieces: Vec<PieceFullDto> },
-    ReadDesignPiecesShallowCommand { pieces: Vec<PieceShallowDto> },
-    ReadDesignConnectionsFullCommand { connections: Vec<ConnectionFullDto> },
-    ReadDesignConnectionsShallowCommand { connections: Vec<ConnectionShallowDto> },
-    ReadDesignLayersFullCommand { layers: Vec<LayerFullDto> },
-    ReadDesignLayersShallowCommand { layers: Vec<LayerShallowDto> },
-    ReadDesignGroupsFullCommand { groups: Vec<GroupFullDto> },
-    ReadDesignGroupsShallowCommand { groups: Vec<GroupShallowDto> },
-    ReadDesignAuthorsFullCommand { authors: Vec<AuthorFullDto> },
-    ReadDesignAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
-    ReadDesignConceptsFullCommand { concepts: Vec<ConceptFullDto> },
-    ReadDesignConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
-    ReadDesignTagsFullCommand { tags: Vec<TagFullDto> },
-    ReadDesignTagsShallowCommand { tags: Vec<TagShallowDto> },
-    ReadDesignQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadDesignQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadDesignPropsFullCommand { props: Vec<PropFullDto> },
-    ReadDesignPropsShallowCommand { props: Vec<PropShallowDto> },
-    ReadDesignAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadDesignAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadDesignStatsFullCommand { stats: Vec<StatFullDto> },
-    ReadDesignStatsShallowCommand { stats: Vec<StatShallowDto> },
-    ReadDesignFlattenMapCommand { entries: Vec<DesignFlattenMapEntryDto> },
-    ReadDesignClusterableGroupsCommand { groups: Vec<Vec<PieceIdDto>> },
-    ReadDesignIncludedDesignsCommand { designs: Vec<IncludedDesignInfoDto> },
-    ReadDesignQualitySumCommand { sum: f64 },
-    ReadDesignReplaceableCatalogCommand {
-        types: Vec<crate::typ::TypeIdDto>,
-        designs: Vec<crate::design::DesignIdDto>,
-    },
-    ReadDesignIncludedDesignIdsCommand {
-        #[serde(rename = "designIds")]
-        design_ids: Vec<crate::design::DesignIdDto>,
-    },
-    ReadDesignFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
-    ReadDesignPieceCommands { results: Vec<ReadPieceCommandOutput> },
-    ReadDesignConnectionCommands { results: Vec<ReadConnectionCommandOutput> },
-    ReadDesignLayerCommands { results: Vec<ReadLayerCommandOutput> },
-    ReadDesignGroupCommands { results: Vec<ReadGroupCommandOutput> },
-    ReadDesignAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
-    ReadDesignConceptCommands { results: Vec<ReadConceptCommandOutput> },
-    ReadDesignTagCommands { results: Vec<ReadTagCommandOutput> },
-    ReadDesignQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadDesignPropCommands { results: Vec<ReadPropCommandOutput> },
-    ReadDesignAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-    ReadDesignStatCommands { results: Vec<ReadStatCommandOutput> },
-}
-
-// --- Piece ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPieceCommand {
-    ReadPieceFullCommand,
-    ReadPieceShallowCommand,
-    ReadPieceMetadataCommand,
-    ReadPieceIdCommand,
-    ReadPieceNameCommand,
-    ReadPieceDescriptionCommand,
-    ReadPiecePlaneCommand,
-    ReadPieceCenterCommand,
-    ReadPieceScaleCommand,
-    ReadPieceMirrorPlaneCommand,
-    ReadPieceHiddenCommand,
-    ReadPieceLockedCommand,
-    ReadPieceColorCommand,
-    ReadPieceTypeCommand,
-    ReadPieceDesignCommand,
-    ReadPiecePropsFullCommand,
-    ReadPiecePropsShallowCommand,
-    ReadPieceAttributesFullCommand,
-    ReadPieceAttributesShallowCommand,
-    ReadPieceFlatPlaneCommand,
-    ReadPieceFlatCenterCommand,
-    ReadPieceFlatPoseCommand,
-    ReadPiecePathCommand,
-    ReadPieceParentPieceIdCommand,
-    ReadPieceParentConnectionIdCommand,
-    ReadPieceParentConnectionFullCommand,
-    ReadPieceParentDesignIdCommand,
-    ReadPieceFixedCommand,
-    ReadPieceConnectedCommand,
-    ReadPieceAlternativesCommand,
-    ReadPieceAlternativeTypesCommand,
-    ReadPieceAlternativeDesignsCommand,
-    ReadPiecePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
-    ReadPieceAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPieceCommandOutput {
-    ReadPieceFullCommand { dto: PieceFullDto },
-    ReadPieceShallowCommand { dto: PieceShallowDto },
-    ReadPieceMetadataCommand { metadata: PieceMetadataDto },
-    ReadPieceIdCommand { id: PieceIdDto },
-    ReadPieceNameCommand { name: Option<String> },
-    ReadPieceDescriptionCommand { description: Option<String> },
-    ReadPiecePlaneCommand { plane: Option<Plane> },
-    ReadPieceCenterCommand { center: Option<Coordinate> },
-    ReadPieceScaleCommand { scale: Option<f64> },
-    ReadPieceMirrorPlaneCommand { mirror_plane: Option<Plane> },
-    ReadPieceHiddenCommand { hidden: Option<bool> },
-    ReadPieceLockedCommand { locked: Option<bool> },
-    ReadPieceColorCommand { color: Option<String> },
-    ReadPieceTypeCommand { r#type: Option<TypeIdDto> },
-    ReadPieceDesignCommand { design: Option<DesignIdDto> },
-    ReadPiecePropsFullCommand { props: Vec<PropFullDto> },
-    ReadPiecePropsShallowCommand { props: Vec<PropShallowDto> },
-    ReadPieceAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadPieceFlatPlaneCommand { flat_plane: Plane },
-    ReadPieceFlatCenterCommand { flat_center: Coordinate },
-    ReadPieceFlatPoseCommand { flat_pose: PoseFullDto },
-    ReadPiecePathCommand { path: Vec<PieceIdDto> },
-    ReadPieceParentPieceIdCommand { parent_piece: Option<PieceIdDto> },
-    ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionIdDto> },
-    ReadPieceParentConnectionFullCommand { connection: Option<crate::connection::ConnectionFullDto> },
-    ReadPieceParentDesignIdCommand { parent_design: DesignIdDto },
-    ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
-    ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
-    ReadPieceAlternativesCommand { alternatives: PieceAlternativesDto },
-    ReadPieceAlternativeTypesCommand { types: Vec<TypeIdDto> },
-    ReadPieceAlternativeDesignsCommand { designs: Vec<DesignIdDto> },
-    ReadPiecePropCommands { results: Vec<ReadPropCommandOutput> },
-    ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Connection ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectionCommand {
-    ReadConnectionFullCommand,
-    ReadConnectionShallowCommand,
-    ReadConnectionMetadataCommand,
-    ReadConnectionIdCommand,
-    ReadConnectionConnectedSideMetadataCommand,
-    ReadConnectionConnectingSideMetadataCommand,
-    ReadConnectionConnectedSideFullCommand,
-    ReadConnectionConnectingSideFullCommand,
-    ReadConnectionGapCommand,
-    ReadConnectionShiftCommand,
-    ReadConnectionRiseCommand,
-    ReadConnectionRotationCommand,
-    ReadConnectionTurnCommand,
-    ReadConnectionTiltCommand,
-    ReadConnectionUCommand,
-    ReadConnectionVCommand,
-    ReadConnectionDescriptionCommand,
-    ReadConnectionAttributesFullCommand,
-    ReadConnectionAttributesShallowCommand,
-    ReadConnectionChildPlaneMatrixCommand,
-    ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceIdDto },
-    ReadConnectionAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-    ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
-    ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectionCommandOutput {
-    ReadConnectionFullCommand { dto: ConnectionFullDto },
-    ReadConnectionShallowCommand { dto: ConnectionShallowDto },
-    ReadConnectionMetadataCommand { metadata: ConnectionMetadataDto },
-    ReadConnectionIdCommand { id: ConnectionIdDto },
-    ReadConnectionConnectedSideMetadataCommand { side: SideMetadataDto },
-    ReadConnectionConnectingSideMetadataCommand { side: SideMetadataDto },
-    ReadConnectionConnectedSideFullCommand { side: SideFullDto },
-    ReadConnectionConnectingSideFullCommand { side: SideFullDto },
-    ReadConnectionGapCommand { gap: Option<f64> },
-    ReadConnectionShiftCommand { shift: Option<f64> },
-    ReadConnectionRiseCommand { rise: Option<f64> },
-    ReadConnectionRotationCommand { rotation: Option<f64> },
-    ReadConnectionTurnCommand { turn: Option<f64> },
-    ReadConnectionTiltCommand { tilt: Option<f64> },
-    ReadConnectionUCommand { u: Option<f64> },
-    ReadConnectionVCommand { v: Option<f64> },
-    ReadConnectionDescriptionCommand { description: Option<String> },
-    ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
-    ReadConnectionFlatSidesForChildCommand { connected: SideFullDto, connecting: SideFullDto },
-    ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-    ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
-    ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
-}
-
-// --- Side ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadSideCommand {
-    ReadSideFullCommand,
-    ReadSideShallowCommand,
-    ReadSideMetadataCommand,
-    ReadSideIdCommand,
-    ReadSidePieceIdCommand,
-    ReadSidePortIdCommand,
-    ReadSideDesignPieceIdCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadSideCommandOutput {
-    ReadSideFullCommand { side: SideFullDto },
-    ReadSideShallowCommand { side: SideShallowDto },
-    ReadSideMetadataCommand { side: SideMetadataDto },
-    ReadSideIdCommand { id: SideIdDto },
-    ReadSidePieceIdCommand { piece: PieceIdDto },
-    ReadSidePortIdCommand { port: Option<PortIdDto> },
-    ReadSideDesignPieceIdCommand { design_piece: Option<PieceIdDto> },
-}
-
-// --- Port ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPortCommand {
-    ReadPortFullCommand,
-    ReadPortShallowCommand,
-    ReadPortMetadataCommand,
-    ReadPortIdCommand,
-    ReadPortNameCommand,
-    ReadPortDescriptionCommand,
-    ReadPortIconCommand,
-    ReadPortCompatibleFamiliesCommand,
-    ReadPortMandatoryCommand,
-    ReadPortTCommand,
-    ReadPortPointCommand,
-    ReadPortDirectionCommand,
-    ReadPortCompatiblePortsCommand,
-    ReadPortQualitiesFullCommand,
-    ReadPortQualitiesShallowCommand,
-    ReadPortAttributesFullCommand,
-    ReadPortAttributesShallowCommand,
-    ReadPortQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadPortAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPortCommandOutput {
-    ReadPortFullCommand { port: PortFullDto },
-    ReadPortShallowCommand { port: PortShallowDto },
-    ReadPortMetadataCommand { metadata: PortMetadataDto },
-    ReadPortIdCommand { id: PortIdDto },
-    ReadPortNameCommand { name: String },
-    ReadPortDescriptionCommand { description: Option<String> },
-    ReadPortIconCommand { icon: Option<String> },
-    ReadPortCompatibleFamiliesCommand { families: Vec<FamilyIdDto> },
-    ReadPortMandatoryCommand { mandatory: Option<bool> },
-    ReadPortTCommand { t: Option<f64> },
-    ReadPortPointCommand { point: Option<crate::geom::Point> },
-    ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
-    ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortIdDto> },
-    ReadPortQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadPortAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Connector ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectorCommand {
-    ReadConnectorFullCommand,
-    ReadConnectorShallowCommand,
-    ReadConnectorMetadataCommand,
-    ReadConnectorIdCommand,
-    ReadConnectorCodeCommand,
-    ReadConnectorDescriptionCommand,
-    ReadConnectorPortIdCommand,
-    ReadConnectorQualitiesFullCommand,
-    ReadConnectorQualitiesShallowCommand,
-    ReadConnectorAttributesFullCommand,
-    ReadConnectorAttributesShallowCommand,
-    ReadConnectorQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadConnectorAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectorCommandOutput {
-    ReadConnectorFullCommand { connector: ConnectorFullDto },
-    ReadConnectorShallowCommand { connector: ConnectorShallowDto },
-    ReadConnectorMetadataCommand { metadata: ConnectorMetadataDto },
-    ReadConnectorIdCommand { id: ConnectorIdDto },
-    ReadConnectorCodeCommand { code: String },
-    ReadConnectorDescriptionCommand { description: Option<String> },
-    ReadConnectorPortIdCommand { port: Option<PortIdDto> },
-    ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Representation ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadRepresentationCommand {
-    ReadRepresentationFullCommand,
-    ReadRepresentationShallowCommand,
-    ReadRepresentationMetadataCommand,
-    ReadRepresentationIdCommand,
-    ReadRepresentationUrlCommand,
-    ReadRepresentationDescriptionCommand,
-    ReadRepresentationFileIdCommand,
-    ReadRepresentationTagsFullCommand,
-    ReadRepresentationTagsShallowCommand,
-    ReadRepresentationQualitiesFullCommand,
-    ReadRepresentationQualitiesShallowCommand,
-    ReadRepresentationAttributesFullCommand,
-    ReadRepresentationAttributesShallowCommand,
-    ReadRepresentationTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
-    ReadRepresentationQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-    ReadRepresentationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadRepresentationCommandOutput {
-    ReadRepresentationFullCommand { representation: RepresentationFullDto },
-    ReadRepresentationShallowCommand { representation: RepresentationShallowDto },
-    ReadRepresentationMetadataCommand { metadata: RepresentationMetadataDto },
-    ReadRepresentationIdCommand { id: RepresentationIdDto },
-    ReadRepresentationUrlCommand { url: String },
-    ReadRepresentationDescriptionCommand { description: Option<String> },
-    ReadRepresentationFileIdCommand { file: Option<crate::file::FileIdDto> },
-    ReadRepresentationTagsFullCommand { tags: Vec<TagFullDto> },
-    ReadRepresentationTagsShallowCommand { tags: Vec<TagShallowDto> },
-    ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-    ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-    ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
-    ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
-    ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Family ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFamilyCommand {
-    ReadFamilyFullCommand,
-    ReadFamilyShallowCommand,
-    ReadFamilyMetadataCommand,
-    ReadFamilyIdCommand,
-    ReadFamilyNameCommand,
-    ReadFamilyDescriptionCommand,
-    ReadFamilyIconCommand,
-    ReadFamilyPortsFullCommand,
-    ReadFamilyPortsShallowCommand,
-    ReadFamilyAttributesFullCommand,
-    ReadFamilyAttributesShallowCommand,
-    ReadFamilyPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
-    ReadFamilyAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFamilyCommandOutput {
-    ReadFamilyFullCommand { family: FamilyFullDto },
-    ReadFamilyShallowCommand { family: FamilyShallowDto },
-    ReadFamilyMetadataCommand { metadata: FamilyMetadataDto },
-    ReadFamilyIdCommand { id: FamilyIdDto },
-    ReadFamilyNameCommand { name: String },
-    ReadFamilyDescriptionCommand { description: Option<String> },
-    ReadFamilyIconCommand { icon: Option<String> },
-    ReadFamilyPortsFullCommand { ports: Vec<PortFullDto> },
-    ReadFamilyPortsShallowCommand { ports: Vec<PortShallowDto> },
-    ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
-    ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- File ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFileCommand {
-    ReadFileFullCommand,
-    ReadFileShallowCommand,
-    ReadFileMetadataCommand,
-    ReadFileIdCommand,
-    ReadFileUrlCommand,
-    ReadFileMimeCommand,
-    ReadFileSizeCommand,
-    ReadFileHashCommand,
-    ReadFileDescriptionCommand,
-    ReadFileCreatedCommand,
-    ReadFileUpdatedCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFileCommandOutput {
-    ReadFileFullCommand { file: FileFullDto },
-    ReadFileShallowCommand { file: FileShallowDto },
-    ReadFileMetadataCommand { metadata: FileMetadataDto },
-    ReadFileIdCommand { id: FileIdDto },
-    ReadFileUrlCommand { url: String },
-    ReadFileMimeCommand { mime: Option<String> },
-    ReadFileSizeCommand { size: Option<i64> },
-    ReadFileHashCommand { hash: Option<String> },
-    ReadFileDescriptionCommand { description: Option<String> },
-    ReadFileCreatedCommand { created: Option<String> },
-    ReadFileUpdatedCommand { updated: Option<String> },
-}
-
-// --- Folder ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFolderCommand {
-    ReadFolderFullCommand,
-    ReadFolderShallowCommand,
-    ReadFolderMetadataCommand,
-    ReadFolderIdCommand,
-    ReadFolderPathCommand,
-    ReadFolderDescriptionCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadFolderCommandOutput {
-    ReadFolderFullCommand { folder: FolderFullDto },
-    ReadFolderShallowCommand { folder: FolderShallowDto },
-    ReadFolderMetadataCommand { metadata: FolderMetadataDto },
-    ReadFolderIdCommand { id: FolderIdDto },
-    ReadFolderPathCommand { path: String },
-    ReadFolderDescriptionCommand { description: Option<String> },
-}
-
-// --- Location ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadLocationCommand {
-    ReadLocationFullCommand,
-    ReadLocationShallowCommand,
-    ReadLocationMetadataCommand,
-    ReadLocationIdCommand,
-    ReadLocationLongitudeCommand,
-    ReadLocationLatitudeCommand,
-    ReadLocationAltitudeCommand,
-    ReadLocationAttributesFullCommand,
-    ReadLocationAttributesShallowCommand,
-    ReadLocationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadLocationCommandOutput {
-    ReadLocationFullCommand { location: LocationFullDto },
-    ReadLocationShallowCommand { location: LocationShallowDto },
-    ReadLocationMetadataCommand { metadata: LocationMetadataDto },
-    ReadLocationIdCommand { id: LocationIdDto },
-    ReadLocationLongitudeCommand { longitude: f64 },
-    ReadLocationLatitudeCommand { latitude: f64 },
-    ReadLocationAltitudeCommand { altitude: Option<f64> },
-    ReadLocationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-    ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-    ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
-}
-
-// --- Layer ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadLayerCommand {
-    ReadLayerFullCommand,
-    ReadLayerShallowCommand,
-    ReadLayerMetadataCommand,
-    ReadLayerIdCommand,
-    ReadLayerNameCommand,
-    ReadLayerDescriptionCommand,
-    ReadLayerColorCommand,
-    ReadLayerOrderCommand,
-    ReadLayerVisibleCommand,
-    ReadLayerLockedCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadLayerCommandOutput {
-    ReadLayerFullCommand { layer: LayerFullDto },
-    ReadLayerShallowCommand { layer: LayerShallowDto },
-    ReadLayerMetadataCommand { metadata: LayerMetadataDto },
-    ReadLayerIdCommand { id: LayerIdDto },
-    ReadLayerNameCommand { name: String },
-    ReadLayerDescriptionCommand { description: Option<String> },
-    ReadLayerColorCommand { color: Option<String> },
-    ReadLayerOrderCommand { order: Option<i64> },
-    ReadLayerVisibleCommand { visible: Option<bool> },
-    ReadLayerLockedCommand { locked: Option<bool> },
-}
-
-// --- Group ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadGroupCommand {
-    ReadGroupFullCommand,
-    ReadGroupShallowCommand,
-    ReadGroupMetadataCommand,
-    ReadGroupIdCommand,
-    ReadGroupNameCommand,
-    ReadGroupDescriptionCommand,
-    ReadGroupColorCommand,
-    ReadGroupIconCommand,
-    ReadGroupPiecesCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadGroupCommandOutput {
-    ReadGroupFullCommand { group: GroupFullDto },
-    ReadGroupShallowCommand { group: GroupShallowDto },
-    ReadGroupMetadataCommand { metadata: GroupMetadataDto },
-    ReadGroupIdCommand { id: GroupIdDto },
-    ReadGroupNameCommand { name: String },
-    ReadGroupDescriptionCommand { description: Option<String> },
-    ReadGroupColorCommand { color: Option<String> },
-    ReadGroupIconCommand { icon: Option<String> },
-    ReadGroupPiecesCommand { pieces: Vec<PieceIdDto> },
-}
-
-// --- Author ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadAuthorCommand {
-    ReadAuthorFullCommand,
-    ReadAuthorShallowCommand,
-    ReadAuthorMetadataCommand,
-    ReadAuthorIdCommand,
-    ReadAuthorNameCommand,
-    ReadAuthorEmailCommand,
-    ReadAuthorRoleCommand,
-    ReadAuthorRankCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadAuthorCommandOutput {
-    ReadAuthorFullCommand { author: AuthorFullDto },
-    ReadAuthorShallowCommand { author: AuthorShallowDto },
-    ReadAuthorMetadataCommand { metadata: AuthorMetadataDto },
-    ReadAuthorIdCommand { id: AuthorIdDto },
-    ReadAuthorNameCommand { name: String },
-    ReadAuthorEmailCommand { email: String },
-    ReadAuthorRoleCommand { role: Option<String> },
-    ReadAuthorRankCommand { rank: Option<i64> },
-}
-
-// --- Concept ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConceptCommand {
-    ReadConceptFullCommand,
-    ReadConceptShallowCommand,
-    ReadConceptMetadataCommand,
-    ReadConceptIdCommand,
-    ReadConceptNameCommand,
-    ReadConceptDescriptionCommand,
-    ReadConceptOrderCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConceptCommandOutput {
-    ReadConceptFullCommand { concept: ConceptFullDto },
-    ReadConceptShallowCommand { concept: ConceptShallowDto },
-    ReadConceptMetadataCommand { metadata: ConceptMetadataDto },
-    ReadConceptIdCommand { id: ConceptIdDto },
-    ReadConceptNameCommand { name: String },
-    ReadConceptDescriptionCommand { description: Option<String> },
-    ReadConceptOrderCommand { order: Option<i64> },
-}
-
-// --- Tag ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTagCommand {
-    ReadTagFullCommand,
-    ReadTagShallowCommand,
-    ReadTagMetadataCommand,
-    ReadTagIdCommand,
-    ReadTagNameCommand,
-    ReadTagOrderCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTagCommandOutput {
-    ReadTagFullCommand { tag: TagFullDto },
-    ReadTagShallowCommand { tag: TagShallowDto },
-    ReadTagMetadataCommand { metadata: TagMetadataDto },
-    ReadTagIdCommand { id: TagIdDto },
-    ReadTagNameCommand { name: String },
-    ReadTagOrderCommand { order: Option<i64> },
-}
-
-// --- Quality ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadQualityCommand {
-    ReadQualityFullCommand,
-    ReadQualityShallowCommand,
-    ReadQualityMetadataCommand,
-    ReadQualityIdCommand,
-    ReadQualityKeyCommand,
-    ReadQualityValueCommand,
-    ReadQualityUnitCommand,
-    ReadQualityDefinitionCommand,
-    ReadQualityDescriptionCommand,
-    ReadQualityBenchmarksFullCommand,
-    ReadQualityBenchmarksShallowCommand,
-    ReadQualityBenchmarkCommands { id: BenchmarkIdDto, commands: Vec<ReadBenchmarkCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadQualityCommandOutput {
-    ReadQualityFullCommand { quality: QualityFullDto },
-    ReadQualityShallowCommand { quality: QualityShallowDto },
-    ReadQualityMetadataCommand { metadata: QualityMetadataDto },
-    ReadQualityIdCommand { id: QualityIdDto },
-    ReadQualityKeyCommand { key: String },
-    ReadQualityValueCommand { value: Option<String> },
-    ReadQualityUnitCommand { unit: Option<String> },
-    ReadQualityDefinitionCommand { definition: Option<String> },
-    ReadQualityDescriptionCommand { description: Option<String> },
-    ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFullDto> },
-    ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallowDto> },
-    ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
-}
-
-// --- Benchmark ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadBenchmarkCommand {
-    ReadBenchmarkFullCommand,
-    ReadBenchmarkShallowCommand,
-    ReadBenchmarkMetadataCommand,
-    ReadBenchmarkIdCommand,
-    ReadBenchmarkNameCommand,
-    ReadBenchmarkMinCommand,
-    ReadBenchmarkMaxCommand,
-    ReadBenchmarkMinExcludedCommand,
-    ReadBenchmarkMaxExcludedCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadBenchmarkCommandOutput {
-    ReadBenchmarkFullCommand { benchmark: BenchmarkFullDto },
-    ReadBenchmarkShallowCommand { benchmark: BenchmarkShallowDto },
-    ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadataDto },
-    ReadBenchmarkIdCommand { id: BenchmarkIdDto },
-    ReadBenchmarkNameCommand { name: String },
-    ReadBenchmarkMinCommand { min: Option<f64> },
-    ReadBenchmarkMaxCommand { max: Option<f64> },
-    ReadBenchmarkMinExcludedCommand { min_excluded: Option<bool> },
-    ReadBenchmarkMaxExcludedCommand { max_excluded: Option<bool> },
-}
-
-// --- Prop ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPropCommand {
-    ReadPropFullCommand,
-    ReadPropShallowCommand,
-    ReadPropIdCommand,
-    ReadPropKeyCommand,
-    ReadPropValueCommand,
-    ReadPropUnitCommand,
-    ReadPropQualityIdCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPropCommandOutput {
-    ReadPropFullCommand { prop: PropFullDto },
-    ReadPropShallowCommand { prop: PropShallowDto },
-    ReadPropIdCommand { id: PropIdDto },
-    ReadPropKeyCommand { key: String },
-    ReadPropValueCommand { value: String },
-    ReadPropUnitCommand { unit: Option<String> },
-    ReadPropQualityIdCommand { quality: Option<QualityIdDto> },
-}
-
-// --- Attribute ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadAttributeCommand {
-    ReadAttributeFullCommand,
-    ReadAttributeShallowCommand,
-    ReadAttributeMetadataCommand,
-    ReadAttributeIdCommand,
-    ReadAttributeKeyCommand,
-    ReadAttributeValueCommand,
-    ReadAttributeDefinitionCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadAttributeCommandOutput {
-    ReadAttributeFullCommand { attribute: AttributeFullDto },
-    ReadAttributeShallowCommand { attribute: AttributeShallowDto },
-    ReadAttributeMetadataCommand { metadata: AttributeMetadataDto },
-    ReadAttributeIdCommand { id: AttributeIdDto },
-    ReadAttributeKeyCommand { key: String },
-    ReadAttributeValueCommand { value: String },
-    ReadAttributeDefinitionCommand { definition: Option<String> },
-}
-
-// --- Stat ---
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadStatCommand {
-    ReadStatFullCommand,
-    ReadStatShallowCommand,
-    ReadStatMetadataCommand,
-    ReadStatIdCommand,
-    ReadStatKeyCommand,
-    ReadStatValueCommand,
-    ReadStatUnitCommand,
-    ReadStatDescriptionCommand,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadStatCommandOutput {
-    ReadStatFullCommand { stat: StatFullDto },
-    ReadStatShallowCommand { stat: StatShallowDto },
-    ReadStatMetadataCommand { metadata: StatMetadataDto },
-    ReadStatIdCommand { id: StatIdDto },
-    ReadStatKeyCommand { key: String },
-    ReadStatValueCommand { value: String },
-    ReadStatUnitCommand { unit: Option<String> },
-    ReadStatDescriptionCommand { description: Option<String> },
-}
-
-
-use crate::attribute::AttributeStore;
-use crate::attribute::AttributeStoreRef;
-use crate::typ::TypeStore;
-use crate::tag::TagStore;
-use crate::tag::TagStoreRef;
-use crate::{error::Result, error::SemioError};
-
-// --- helpers ----------------------------------------------------------------
-
-fn lp(s: &'static str) -> SemioError {
-    SemioError::LockPoisoned(s)
-}
-
-fn nf(kind: &'static str, id: &Id) -> SemioError {
-    SemioError::NotFound { kind, id: id.clone() }
-}
-
-fn kit_family(g: &KitGraph, id: &Id) -> Option<crate::family::FamilyStoreRef> {
-    g.families.iter().find(|f| f.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-
-fn kit_location(g: &KitGraph, id: &Id) -> Option<crate::location::LocationStoreRef> {
-    g.locations.iter().find(|l| l.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-
-fn kit_find_author(g: &KitGraph, id: &Id) -> Option<crate::author::AuthorStoreRef> {
-    g.authors.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-fn kit_find_concept(g: &KitGraph, id: &Id) -> Option<crate::concept::ConceptStoreRef> {
-    g.concepts.iter().find(|c| c.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-fn kit_find_tag(g: &KitGraph, id: &Id) -> Option<crate::tag::TagStoreRef> {
-    g.tags.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-fn kit_find_quality(g: &KitGraph, id: &Id) -> Option<crate::quality::QualityStoreRef> {
-    g.qualities.iter().find(|q| q.read().map(|q| q.id == *id).unwrap_or(false)).cloned()
-}
-fn kit_find_prop(g: &KitGraph, id: &Id) -> Option<crate::prop::PropStoreRef> {
-    g.props.iter().find(|p| p.read().map(|p| p.id == *id).unwrap_or(false)).cloned()
-}
-fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeStoreRef> {
-    g.attributes.iter().find(|a| a.read().map(|a| a.id == *id).unwrap_or(false)).cloned()
-}
-
-pub(crate) fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
-    g.types.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
-    g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
-}
-fn type_all_ports(t: &TypeStore) -> Vec<PortFullDto> {
-    let mut out = Vec::new();
-    for fw in &t.families {
-        let Some(f) = fw.upgrade() else { continue };
-        let Ok(fr) = f.read() else { continue };
-        for p in &fr.ports {
-            if let Ok(pr) = p.read() {
-                out.push(pr.to_full_dto());
-            }
-        }
+    // Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
+    // Regenerate: `python gen_read_module.py` from semio/rs (optional; hand-edit for tweaks).
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto};
+    use crate::author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto};
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto};
+    use crate::concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto};
+    use crate::connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto};
+    use crate::connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStoreRef};
+    use crate::design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef};
+    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyMetadataDto, FamilyShallowDto, FamilyStoreRef};
+    use crate::file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto};
+    use crate::folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto};
+    use crate::geom::{Coordinate, Plane};
+    use crate::group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto};
+    use crate::id::Id;
+    use crate::kit_graph::{KitFullDto, KitGraph, KitIdDto, KitMetadataDto, KitShallowDto};
+    use crate::layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto};
+    use crate::location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto};
+    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto, PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStoreRef, PoseFullDto};
+    use crate::port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStoreRef};
+    use crate::prop::{PropFullDto, PropIdDto, PropShallowDto};
+    use crate::quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto};
+    use crate::representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStoreRef};
+    use crate::side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStoreRef};
+    use crate::stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto};
+    use crate::tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto};
+    use crate::typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStoreRef};
+
+    /// One row of [`crate::design::DesignStore::flatten_map`].
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignFlattenMapEntryDto {
+        pub piece_id: Id,
+        pub plane: Plane,
+        pub center: Coordinate,
     }
-    out
-}
 
-// --- small entity executes ---------------------------------------------------
+    /// Included child design stub referenced from connections (port of [`getIncludedDesigns`](DesignStore::included_design_infos) in JS).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct IncludedDesignInfoDto {
+        pub id: Id,
+        #[serde(rename = "designId")]
+        pub design_id: Id,
+        /// `"connected"` or `"fixed"`.
+        #[serde(rename = "type")]
+        pub type_: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub center: Option<Coordinate>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub plane: Option<Plane>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub external_connections: Vec<ConnectionFullDto>,
+    }
 
-impl ReadStatCommand {
-    pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
-        let s = s.read().map_err(|_| lp("stat"))?;
-        Ok(match self {
-            ReadStatCommand::ReadStatFullCommand => ReadStatCommandOutput::ReadStatFullCommand { stat: s.to_full_dto() },
-            ReadStatCommand::ReadStatShallowCommand => ReadStatCommandOutput::ReadStatShallowCommand { stat: s.to_shallow_dto() },
-            ReadStatCommand::ReadStatMetadataCommand => ReadStatCommandOutput::ReadStatMetadataCommand { metadata: s.to_metadata_dto() },
-            ReadStatCommand::ReadStatIdCommand => ReadStatCommandOutput::ReadStatIdCommand { id: s.to_id_dto() },
-            ReadStatCommand::ReadStatKeyCommand => ReadStatCommandOutput::ReadStatKeyCommand { key: s.key.clone() },
-            ReadStatCommand::ReadStatValueCommand => ReadStatCommandOutput::ReadStatValueCommand { value: s.value.clone() },
-            ReadStatCommand::ReadStatUnitCommand => ReadStatCommandOutput::ReadStatUnitCommand { unit: s.unit.clone() },
-            ReadStatCommand::ReadStatDescriptionCommand => ReadStatCommandOutput::ReadStatDescriptionCommand { description: s.description.clone() },
-        })
+    /// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct KitColoredConnectorRowDto {
+        pub type_id: TypeIdDto,
+        pub connector_id: crate::connector::ConnectorIdDto,
+        pub color: String,
     }
-}
 
-impl ReadBenchmarkCommand {
-    pub fn execute(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<ReadBenchmarkCommandOutput> {
-        let b = b.read().map_err(|_| lp("benchmark"))?;
-        Ok(match self {
-            ReadBenchmarkCommand::ReadBenchmarkFullCommand => ReadBenchmarkCommandOutput::ReadBenchmarkFullCommand { benchmark: b.to_full_dto() },
-            ReadBenchmarkCommand::ReadBenchmarkShallowCommand => ReadBenchmarkCommandOutput::ReadBenchmarkShallowCommand { benchmark: b.to_shallow_dto() },
-            ReadBenchmarkCommand::ReadBenchmarkMetadataCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMetadataCommand { metadata: b.to_metadata_dto() },
-            ReadBenchmarkCommand::ReadBenchmarkIdCommand => ReadBenchmarkCommandOutput::ReadBenchmarkIdCommand { id: b.to_id_dto() },
-            ReadBenchmarkCommand::ReadBenchmarkNameCommand => ReadBenchmarkCommandOutput::ReadBenchmarkNameCommand { name: b.name.clone() },
-            ReadBenchmarkCommand::ReadBenchmarkMinCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinCommand { min: b.min },
-            ReadBenchmarkCommand::ReadBenchmarkMaxCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxCommand { max: b.max },
-            ReadBenchmarkCommand::ReadBenchmarkMinExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinExcludedCommand { min_excluded: b.min_excluded },
-            ReadBenchmarkCommand::ReadBenchmarkMaxExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxExcludedCommand { max_excluded: b.max_excluded },
-        })
-    }
-}
+    // --- Kit ---
 
-impl ReadAttributeCommand {
-    pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
-        Ok(match self {
-            ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full_dto() },
-            ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow_dto() },
-            ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata_dto() },
-            ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_id_dto() },
-            ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
-            ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
-            ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadKitCommand {
+        ReadKitFullCommand,
+        ReadKitShallowCommand,
+        ReadKitMetadataCommand,
+        ReadKitIdCommand,
+        ReadKitNameCommand,
+        ReadKitDescriptionCommand,
+        ReadKitIconCommand,
+        ReadKitImageCommand,
+        ReadKitPreviewCommand,
+        ReadKitRemoteCommand,
+        ReadKitHomepageCommand,
+        ReadKitLicenseCommand,
+        ReadKitUriCommand,
+        ReadKitCreatedCommand,
+        ReadKitUpdatedCommand,
+        ReadKitTypesFullCommand,
+        ReadKitTypesShallowCommand,
+        /// Stable type id list (kit graph order).
+        ReadKitTypeIdsCommand,
+        /// Per-type metadata rows (no full type payload).
+        ReadKitTypesMetadataCommand,
+        ReadKitDesignsFullCommand,
+        ReadKitDesignsShallowCommand,
+        /// Stable design id list (kit graph order).
+        ReadKitDesignIdsCommand,
+        /// Per-design metadata rows (no full design payload).
+        ReadKitDesignsMetadataCommand,
+        ReadKitFilesFullCommand,
+        ReadKitFilesShallowCommand,
+        ReadKitFoldersFullCommand,
+        ReadKitFoldersShallowCommand,
+        ReadKitLocationsFullCommand,
+        ReadKitLocationsShallowCommand,
+        ReadKitFamiliesFullCommand,
+        ReadKitFamiliesShallowCommand,
+        ReadKitPortsFullCommand,
+        ReadKitAuthorsFullCommand,
+        ReadKitAuthorsShallowCommand,
+        ReadKitConceptsFullCommand,
+        ReadKitConceptsShallowCommand,
+        ReadKitTagsFullCommand,
+        ReadKitTagsShallowCommand,
+        ReadKitQualitiesFullCommand,
+        ReadKitQualitiesShallowCommand,
+        ReadKitPropsFullCommand,
+        ReadKitPropsShallowCommand,
+        ReadKitAttributesFullCommand,
+        ReadKitAttributesShallowCommand,
+        /// Per-connector UI colors derived from port id (see JS `colorPortsForTypes` / `getColorForText`).
+        ReadKitColoredConnectorsCommand,
+        ReadKitTypeCommands {
+            id: TypeIdDto,
+            commands: Vec<ReadTypeCommand>,
+        },
+        ReadKitDesignCommands {
+            id: DesignIdDto,
+            commands: Vec<ReadDesignCommand>,
+        },
+        ReadKitFileCommands {
+            id: FileIdDto,
+            commands: Vec<ReadFileCommand>,
+        },
+        ReadKitFolderCommands {
+            id: FolderIdDto,
+            commands: Vec<ReadFolderCommand>,
+        },
+        ReadKitLocationCommands {
+            id: LocationIdDto,
+            commands: Vec<ReadLocationCommand>,
+        },
+        ReadKitFamilyCommands {
+            id: FamilyIdDto,
+            commands: Vec<ReadFamilyCommand>,
+        },
+        ReadKitPortCommands {
+            id: PortIdDto,
+            commands: Vec<ReadPortCommand>,
+        },
+        ReadKitAuthorCommands {
+            id: AuthorIdDto,
+            commands: Vec<ReadAuthorCommand>,
+        },
+        ReadKitConceptCommands {
+            id: ConceptIdDto,
+            commands: Vec<ReadConceptCommand>,
+        },
+        ReadKitTagCommands {
+            id: TagIdDto,
+            commands: Vec<ReadTagCommand>,
+        },
+        ReadKitQualityCommands {
+            id: QualityIdDto,
+            commands: Vec<ReadQualityCommand>,
+        },
+        ReadKitPropCommands {
+            id: PropIdDto,
+            commands: Vec<ReadPropCommand>,
+        },
+        ReadKitAttributeCommands {
+            id: AttributeIdDto,
+            commands: Vec<ReadAttributeCommand>,
+        },
     }
-    pub fn execute_ref(&self, a: &AttributeStoreRef) -> Result<ReadAttributeCommandOutput> {
-        let a = a.read().map_err(|_| lp("attribute"))?;
-        self.execute(&*a)
-    }
-}
 
-impl ReadPropCommand {
-    pub fn execute(&self, p: &crate::prop::PropStoreRef) -> Result<ReadPropCommandOutput> {
-        let p = p.read().map_err(|_| lp("prop"))?;
-        Ok(match self {
-            ReadPropCommand::ReadPropFullCommand => ReadPropCommandOutput::ReadPropFullCommand { prop: p.to_full_dto() },
-            ReadPropCommand::ReadPropShallowCommand => ReadPropCommandOutput::ReadPropShallowCommand { prop: p.to_shallow_dto() },
-            ReadPropCommand::ReadPropIdCommand => ReadPropCommandOutput::ReadPropIdCommand { id: p.to_id_dto() },
-            ReadPropCommand::ReadPropKeyCommand => ReadPropCommandOutput::ReadPropKeyCommand { key: p.key.clone() },
-            ReadPropCommand::ReadPropValueCommand => ReadPropCommandOutput::ReadPropValueCommand { value: p.value.clone() },
-            ReadPropCommand::ReadPropUnitCommand => ReadPropCommandOutput::ReadPropUnitCommand { unit: p.unit.clone() },
-            ReadPropCommand::ReadPropQualityIdCommand => ReadPropCommandOutput::ReadPropQualityIdCommand { quality: p.to_full_dto().quality },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadKitCommandOutput {
+        ReadKitFullCommand { kit: KitFullDto },
+        ReadKitShallowCommand { kit: KitShallowDto },
+        ReadKitMetadataCommand { metadata: KitMetadataDto },
+        ReadKitIdCommand { id: KitIdDto },
+        ReadKitNameCommand { name: String },
+        ReadKitDescriptionCommand { description: Option<String> },
+        ReadKitIconCommand { icon: Option<String> },
+        ReadKitImageCommand { image: Option<String> },
+        ReadKitPreviewCommand { preview: Option<String> },
+        ReadKitRemoteCommand { remote: Option<String> },
+        ReadKitHomepageCommand { homepage: Option<String> },
+        ReadKitLicenseCommand { license: Option<String> },
+        ReadKitUriCommand { uri: Option<String> },
+        ReadKitCreatedCommand { created: Option<String> },
+        ReadKitUpdatedCommand { updated: Option<String> },
+        ReadKitTypesFullCommand { types: Vec<TypeFullDto> },
+        ReadKitTypesShallowCommand { types: Vec<TypeShallowDto> },
+        ReadKitTypeIdsCommand { r#type_ids: Vec<TypeIdDto> },
+        ReadKitTypesMetadataCommand { types: Vec<TypeMetadataDto> },
+        ReadKitDesignsFullCommand { designs: Vec<DesignFullDto> },
+        ReadKitDesignsShallowCommand { designs: Vec<DesignShallowDto> },
+        ReadKitDesignIdsCommand { design_ids: Vec<DesignIdDto> },
+        ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadataDto> },
+        ReadKitFilesFullCommand { files: Vec<FileFullDto> },
+        ReadKitFilesShallowCommand { files: Vec<FileShallowDto> },
+        ReadKitFoldersFullCommand { folders: Vec<FolderFullDto> },
+        ReadKitFoldersShallowCommand { folders: Vec<FolderShallowDto> },
+        ReadKitLocationsFullCommand { locations: Vec<LocationFullDto> },
+        ReadKitLocationsShallowCommand { locations: Vec<LocationShallowDto> },
+        ReadKitFamiliesFullCommand { families: Vec<FamilyFullDto> },
+        ReadKitFamiliesShallowCommand { families: Vec<FamilyShallowDto> },
+        ReadKitPortsFullCommand { ports: Vec<PortFullDto> },
+        ReadKitAuthorsFullCommand { authors: Vec<AuthorFullDto> },
+        ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
+        ReadKitConceptsFullCommand { concepts: Vec<ConceptFullDto> },
+        ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
+        ReadKitTagsFullCommand { tags: Vec<TagFullDto> },
+        ReadKitTagsShallowCommand { tags: Vec<TagShallowDto> },
+        ReadKitQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+        ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+        ReadKitPropsFullCommand { props: Vec<PropFullDto> },
+        ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
+        ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorRowDto> },
+        ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
+        ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
+        ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
+        ReadKitFolderCommands { results: Vec<ReadFolderCommandOutput> },
+        ReadKitLocationCommands { results: Vec<ReadLocationCommandOutput> },
+        ReadKitFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
+        ReadKitPortCommands { results: Vec<ReadPortCommandOutput> },
+        ReadKitAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
+        ReadKitConceptCommands { results: Vec<ReadConceptCommandOutput> },
+        ReadKitTagCommands { results: Vec<ReadTagCommandOutput> },
+        ReadKitQualityCommands { results: Vec<ReadQualityCommandOutput> },
+        ReadKitPropCommands { results: Vec<ReadPropCommandOutput> },
+        ReadKitAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-}
 
-impl ReadTagCommand {
-    pub fn execute(&self, t: &TagStore) -> Result<ReadTagCommandOutput> {
-        Ok(match self {
-            ReadTagCommand::ReadTagFullCommand => ReadTagCommandOutput::ReadTagFullCommand { tag: t.to_full_dto() },
-            ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow_dto() },
-            ReadTagCommand::ReadTagMetadataCommand => ReadTagCommandOutput::ReadTagMetadataCommand { metadata: t.to_metadata_dto() },
-            ReadTagCommand::ReadTagIdCommand => ReadTagCommandOutput::ReadTagIdCommand { id: t.to_id_dto() },
-            ReadTagCommand::ReadTagNameCommand => ReadTagCommandOutput::ReadTagNameCommand { name: t.name.clone() },
-            ReadTagCommand::ReadTagOrderCommand => ReadTagCommandOutput::ReadTagOrderCommand { order: t.order },
-        })
-    }
-    pub fn execute_ref(&self, t: &TagStoreRef) -> Result<ReadTagCommandOutput> {
-        let t = t.read().map_err(|_| lp("tag"))?;
-        self.execute(&*t)
-    }
-}
+    // --- Type ---
 
-
-impl ReadQualityCommand {
-    pub fn execute(&self, q: &crate::quality::QualityStoreRef) -> Result<ReadQualityCommandOutput> {
-        let q = q.read().map_err(|_| lp("quality"))?;
-        Ok(match self {
-            ReadQualityCommand::ReadQualityFullCommand => ReadQualityCommandOutput::ReadQualityFullCommand { quality: q.to_full_dto() },
-            ReadQualityCommand::ReadQualityShallowCommand => ReadQualityCommandOutput::ReadQualityShallowCommand { quality: q.to_shallow_dto() },
-            ReadQualityCommand::ReadQualityMetadataCommand => ReadQualityCommandOutput::ReadQualityMetadataCommand { metadata: q.to_metadata_dto() },
-            ReadQualityCommand::ReadQualityIdCommand => ReadQualityCommandOutput::ReadQualityIdCommand { id: q.to_id_dto() },
-            ReadQualityCommand::ReadQualityKeyCommand => ReadQualityCommandOutput::ReadQualityKeyCommand { key: q.key.clone() },
-            ReadQualityCommand::ReadQualityValueCommand => ReadQualityCommandOutput::ReadQualityValueCommand { value: q.value.clone() },
-            ReadQualityCommand::ReadQualityUnitCommand => ReadQualityCommandOutput::ReadQualityUnitCommand { unit: q.unit.clone() },
-            ReadQualityCommand::ReadQualityDefinitionCommand => ReadQualityCommandOutput::ReadQualityDefinitionCommand { definition: q.definition.clone() },
-            ReadQualityCommand::ReadQualityDescriptionCommand => ReadQualityCommandOutput::ReadQualityDescriptionCommand { description: q.description.clone() },
-            ReadQualityCommand::ReadQualityBenchmarksFullCommand => ReadQualityCommandOutput::ReadQualityBenchmarksFullCommand {
-                benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect(),
-            },
-            ReadQualityCommand::ReadQualityBenchmarksShallowCommand => ReadQualityCommandOutput::ReadQualityBenchmarksShallowCommand {
-                benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_shallow_dto())).collect(),
-            },
-            ReadQualityCommand::ReadQualityBenchmarkCommands { id, commands } => {
-                let b = q.benchmarks.iter().find(|b| b.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Benchmark", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(b)?);
-                }
-                ReadQualityCommandOutput::ReadQualityBenchmarkCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommand {
+        ReadTypeFullCommand,
+        ReadTypeShallowCommand,
+        ReadTypeMetadataCommand,
+        ReadTypeIdCommand,
+        ReadTypeNameCommand,
+        ReadTypeDescriptionCommand,
+        ReadTypeIconCommand,
+        ReadTypeImageCommand,
+        ReadTypeStockCommand,
+        ReadTypeVirtualCommand,
+        ReadTypeUnitCommand,
+        ReadTypeLocationCommand,
+        ReadTypeCreatedCommand,
+        ReadTypeUpdatedCommand,
+        ReadTypeFamiliesCommand,
+        ReadTypeConnectorsFullCommand,
+        ReadTypeConnectorsShallowCommand,
+        ReadTypeRepresentationsFullCommand,
+        ReadTypeRepresentationsShallowCommand,
+        ReadTypeAuthorsFullCommand,
+        ReadTypeAuthorsShallowCommand,
+        ReadTypeConceptsFullCommand,
+        ReadTypeConceptsShallowCommand,
+        ReadTypeTagsFullCommand,
+        ReadTypeTagsShallowCommand,
+        ReadTypeQualitiesFullCommand,
+        ReadTypeQualitiesShallowCommand,
+        ReadTypePropsFullCommand,
+        ReadTypePropsShallowCommand,
+        ReadTypeAttributesFullCommand,
+        ReadTypeAttributesShallowCommand,
+        /// All ports on families referenced by this type (see [`TypeStore::port`] for single-id resolution).
+        ReadTypePortsFullCommand,
+        ReadTypeConnectorForPortIdCommand {
+            port_id: PortIdDto,
+        },
+        /// Tag ids to score representations (Jaccard + filter; see JS `selectBestRepresentation` / `findRepresentation`).
+        ReadTypeBestRepresentationCommand {
+            tag_ids: Vec<Id>,
+        },
+        ReadTypeFamilyCommands {
+            id: FamilyIdDto,
+            commands: Vec<ReadFamilyCommand>,
+        },
+        ReadTypeConnectorCommands {
+            id: ConnectorIdDto,
+            commands: Vec<ReadConnectorCommand>,
+        },
+        ReadTypeRepresentationCommands {
+            id: RepresentationIdDto,
+            commands: Vec<ReadRepresentationCommand>,
+        },
+        ReadTypePortCommands {
+            id: PortIdDto,
+            commands: Vec<ReadPortCommand>,
+        },
+        ReadTypeAuthorCommands {
+            id: AuthorIdDto,
+            commands: Vec<ReadAuthorCommand>,
+        },
+        ReadTypeConceptCommands {
+            id: ConceptIdDto,
+            commands: Vec<ReadConceptCommand>,
+        },
+        ReadTypeTagCommands {
+            id: TagIdDto,
+            commands: Vec<ReadTagCommand>,
+        },
+        ReadTypeQualityCommands {
+            id: QualityIdDto,
+            commands: Vec<ReadQualityCommand>,
+        },
+        ReadTypePropCommands {
+            id: PropIdDto,
+            commands: Vec<ReadPropCommand>,
+        },
+        ReadTypeAttributeCommands {
+            id: AttributeIdDto,
+            commands: Vec<ReadAttributeCommand>,
+        },
     }
-}
 
-impl ReadAuthorCommand {
-    pub fn execute(&self, a: &crate::author::AuthorStoreRef) -> Result<ReadAuthorCommandOutput> {
-        let a = a.read().map_err(|_| lp("author"))?;
-        Ok(match self {
-            ReadAuthorCommand::ReadAuthorFullCommand => ReadAuthorCommandOutput::ReadAuthorFullCommand { author: a.to_full_dto() },
-            ReadAuthorCommand::ReadAuthorShallowCommand => ReadAuthorCommandOutput::ReadAuthorShallowCommand { author: a.to_shallow_dto() },
-            ReadAuthorCommand::ReadAuthorMetadataCommand => ReadAuthorCommandOutput::ReadAuthorMetadataCommand { metadata: a.to_metadata_dto() },
-            ReadAuthorCommand::ReadAuthorIdCommand => ReadAuthorCommandOutput::ReadAuthorIdCommand { id: a.to_id_dto() },
-            ReadAuthorCommand::ReadAuthorNameCommand => ReadAuthorCommandOutput::ReadAuthorNameCommand { name: a.name.clone() },
-            ReadAuthorCommand::ReadAuthorEmailCommand => ReadAuthorCommandOutput::ReadAuthorEmailCommand { email: a.email.clone() },
-            ReadAuthorCommand::ReadAuthorRoleCommand => ReadAuthorCommandOutput::ReadAuthorRoleCommand { role: a.role.clone() },
-            ReadAuthorCommand::ReadAuthorRankCommand => ReadAuthorCommandOutput::ReadAuthorRankCommand { rank: a.rank },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommandOutput {
+        ReadTypeFullCommand { dto: TypeFullDto },
+        ReadTypeShallowCommand { dto: TypeShallowDto },
+        ReadTypeMetadataCommand { metadata: TypeMetadataDto },
+        ReadTypeIdCommand { id: TypeIdDto },
+        ReadTypeNameCommand { name: String },
+        ReadTypeDescriptionCommand { description: Option<String> },
+        ReadTypeIconCommand { icon: Option<String> },
+        ReadTypeImageCommand { image: Option<String> },
+        ReadTypeStockCommand { stock: Option<i64> },
+        ReadTypeVirtualCommand { r#virtual: Option<bool> },
+        ReadTypeUnitCommand { unit: Option<String> },
+        ReadTypeLocationCommand { location: Option<crate::location::LocationIdDto> },
+        ReadTypeCreatedCommand { created: Option<String> },
+        ReadTypeUpdatedCommand { updated: Option<String> },
+        ReadTypeFamiliesCommand { families: Vec<FamilyIdDto> },
+        ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFullDto> },
+        ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallowDto> },
+        ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFullDto> },
+        ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallowDto> },
+        ReadTypeAuthorsFullCommand { authors: Vec<AuthorFullDto> },
+        ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
+        ReadTypeConceptsFullCommand { concepts: Vec<ConceptFullDto> },
+        ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
+        ReadTypeTagsFullCommand { tags: Vec<TagFullDto> },
+        ReadTypeTagsShallowCommand { tags: Vec<TagShallowDto> },
+        ReadTypeQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+        ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+        ReadTypePropsFullCommand { props: Vec<PropFullDto> },
+        ReadTypePropsShallowCommand { props: Vec<PropShallowDto> },
+        ReadTypeAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadTypePortsFullCommand { ports: Vec<PortFullDto> },
+        ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFullDto> },
+        ReadTypeBestRepresentationCommand { representation: Option<RepresentationFullDto> },
+        ReadTypeFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
+        ReadTypeConnectorCommands { results: Vec<ReadConnectorCommandOutput> },
+        ReadTypeRepresentationCommands { results: Vec<ReadRepresentationCommandOutput> },
+        ReadTypePortCommands { results: Vec<ReadPortCommandOutput> },
+        ReadTypeAuthorCommands { results: Vec<ReadAuthorCommandOutput> },
+        ReadTypeConceptCommands { results: Vec<ReadConceptCommandOutput> },
+        ReadTypeTagCommands { results: Vec<ReadTagCommandOutput> },
+        ReadTypeQualityCommands { results: Vec<ReadQualityCommandOutput> },
+        ReadTypePropCommands { results: Vec<ReadPropCommandOutput> },
+        ReadTypeAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-}
 
-impl ReadConceptCommand {
-    pub fn execute(&self, c: &crate::concept::ConceptStoreRef) -> Result<ReadConceptCommandOutput> {
-        let c = c.read().map_err(|_| lp("concept"))?;
-        Ok(match self {
-            ReadConceptCommand::ReadConceptFullCommand => ReadConceptCommandOutput::ReadConceptFullCommand { concept: c.to_full_dto() },
-            ReadConceptCommand::ReadConceptShallowCommand => ReadConceptCommandOutput::ReadConceptShallowCommand { concept: c.to_shallow_dto() },
-            ReadConceptCommand::ReadConceptMetadataCommand => ReadConceptCommandOutput::ReadConceptMetadataCommand { metadata: c.to_metadata_dto() },
-            ReadConceptCommand::ReadConceptIdCommand => ReadConceptCommandOutput::ReadConceptIdCommand { id: c.to_id_dto() },
-            ReadConceptCommand::ReadConceptNameCommand => ReadConceptCommandOutput::ReadConceptNameCommand { name: c.name.clone() },
-            ReadConceptCommand::ReadConceptDescriptionCommand => ReadConceptCommandOutput::ReadConceptDescriptionCommand { description: c.description.clone() },
-            ReadConceptCommand::ReadConceptOrderCommand => ReadConceptCommandOutput::ReadConceptOrderCommand { order: c.order },
-        })
-    }
-}
+    // --- Design ---
 
-impl ReadFileCommand {
-    pub fn execute(&self, f: &crate::file::FileStoreRef) -> Result<ReadFileCommandOutput> {
-        let f = f.read().map_err(|_| lp("file"))?;
-        Ok(match self {
-            ReadFileCommand::ReadFileFullCommand => ReadFileCommandOutput::ReadFileFullCommand { file: f.to_full_dto() },
-            ReadFileCommand::ReadFileShallowCommand => ReadFileCommandOutput::ReadFileShallowCommand { file: f.to_shallow_dto() },
-            ReadFileCommand::ReadFileMetadataCommand => ReadFileCommandOutput::ReadFileMetadataCommand { metadata: f.to_metadata_dto() },
-            ReadFileCommand::ReadFileIdCommand => ReadFileCommandOutput::ReadFileIdCommand { id: f.to_id_dto() },
-            ReadFileCommand::ReadFileUrlCommand => ReadFileCommandOutput::ReadFileUrlCommand { url: f.url.clone() },
-            ReadFileCommand::ReadFileMimeCommand => ReadFileCommandOutput::ReadFileMimeCommand { mime: f.mime.clone() },
-            ReadFileCommand::ReadFileSizeCommand => ReadFileCommandOutput::ReadFileSizeCommand { size: f.size },
-            ReadFileCommand::ReadFileHashCommand => ReadFileCommandOutput::ReadFileHashCommand { hash: f.hash.clone() },
-            ReadFileCommand::ReadFileDescriptionCommand => ReadFileCommandOutput::ReadFileDescriptionCommand { description: f.description.clone() },
-            ReadFileCommand::ReadFileCreatedCommand => ReadFileCommandOutput::ReadFileCreatedCommand { created: f.created.clone() },
-            ReadFileCommand::ReadFileUpdatedCommand => ReadFileCommandOutput::ReadFileUpdatedCommand { updated: f.updated.clone() },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadDesignCommand {
+        ReadDesignFullCommand,
+        ReadDesignShallowCommand,
+        ReadDesignMetadataCommand,
+        ReadDesignIdCommand,
+        ReadDesignNameCommand,
+        ReadDesignDescriptionCommand,
+        ReadDesignIconCommand,
+        ReadDesignImageCommand,
+        ReadDesignLocationCommand,
+        ReadDesignUnitCommand,
+        ReadDesignCreatedCommand,
+        ReadDesignUpdatedCommand,
+        ReadDesignKitCommand,
+        ReadDesignFamiliesCommand,
+        ReadDesignPiecesFullCommand,
+        ReadDesignPiecesShallowCommand,
+        ReadDesignConnectionsFullCommand,
+        ReadDesignConnectionsShallowCommand,
+        ReadDesignLayersFullCommand,
+        ReadDesignLayersShallowCommand,
+        ReadDesignGroupsFullCommand,
+        ReadDesignGroupsShallowCommand,
+        ReadDesignAuthorsFullCommand,
+        ReadDesignAuthorsShallowCommand,
+        ReadDesignConceptsFullCommand,
+        ReadDesignConceptsShallowCommand,
+        ReadDesignTagsFullCommand,
+        ReadDesignTagsShallowCommand,
+        ReadDesignQualitiesFullCommand,
+        ReadDesignQualitiesShallowCommand,
+        ReadDesignPropsFullCommand,
+        ReadDesignPropsShallowCommand,
+        ReadDesignAttributesFullCommand,
+        ReadDesignAttributesShallowCommand,
+        ReadDesignStatsFullCommand,
+        ReadDesignStatsShallowCommand,
+        ReadDesignFlattenMapCommand,
+        /// Connected component groups among `selection` (see JS `getClusterableGroups`).
+        ReadDesignClusterableGroupsCommand {
+            selection: Vec<PieceIdDto>,
+        },
+        /// Child design stubs linked via connection sides (`designPiece` wire), with incident connections.
+        ReadDesignIncludedDesignsCommand,
+        /// Sum of numeric props for `qualityId` over pieces (piece prop overrides type prop). See JS `sumQualityInDesign`.
+        ReadDesignQualitySumCommand {
+            quality_id: QualityIdDto,
+        },
+        /// Replacement kind/design ids for `selection` (see [`DesignStore::replaceable_catalog_candidates`]).
+        ReadDesignReplaceableCatalogCommand {
+            selection: Vec<PieceIdDto>,
+        },
+        /// Design ids referenced as `designPiece` on connection sides (explode / include list).
+        ReadDesignIncludedDesignIdsCommand,
+        ReadDesignFamilyCommands {
+            id: FamilyIdDto,
+            commands: Vec<ReadFamilyCommand>,
+        },
+        ReadDesignPieceCommands {
+            id: PieceIdDto,
+            commands: Vec<ReadPieceCommand>,
+        },
+        ReadDesignConnectionCommands {
+            id: ConnectionIdDto,
+            commands: Vec<ReadConnectionCommand>,
+        },
+        ReadDesignLayerCommands {
+            id: LayerIdDto,
+            commands: Vec<ReadLayerCommand>,
+        },
+        ReadDesignGroupCommands {
+            id: GroupIdDto,
+            commands: Vec<ReadGroupCommand>,
+        },
+        ReadDesignAuthorCommands {
+            id: AuthorIdDto,
+            commands: Vec<ReadAuthorCommand>,
+        },
+        ReadDesignConceptCommands {
+            id: ConceptIdDto,
+            commands: Vec<ReadConceptCommand>,
+        },
+        ReadDesignTagCommands {
+            id: TagIdDto,
+            commands: Vec<ReadTagCommand>,
+        },
+        ReadDesignQualityCommands {
+            id: QualityIdDto,
+            commands: Vec<ReadQualityCommand>,
+        },
+        ReadDesignPropCommands {
+            id: PropIdDto,
+            commands: Vec<ReadPropCommand>,
+        },
+        ReadDesignAttributeCommands {
+            id: AttributeIdDto,
+            commands: Vec<ReadAttributeCommand>,
+        },
+        ReadDesignStatCommands {
+            id: StatIdDto,
+            commands: Vec<ReadStatCommand>,
+        },
     }
-}
 
-impl ReadFolderCommand {
-    pub fn execute(&self, f: &crate::folder::FolderStoreRef) -> Result<ReadFolderCommandOutput> {
-        let f = f.read().map_err(|_| lp("folder"))?;
-        Ok(match self {
-            ReadFolderCommand::ReadFolderFullCommand => ReadFolderCommandOutput::ReadFolderFullCommand { folder: f.to_full_dto() },
-            ReadFolderCommand::ReadFolderShallowCommand => ReadFolderCommandOutput::ReadFolderShallowCommand { folder: f.to_shallow_dto() },
-            ReadFolderCommand::ReadFolderMetadataCommand => ReadFolderCommandOutput::ReadFolderMetadataCommand { metadata: f.to_metadata_dto() },
-            ReadFolderCommand::ReadFolderIdCommand => ReadFolderCommandOutput::ReadFolderIdCommand { id: f.to_id_dto() },
-            ReadFolderCommand::ReadFolderPathCommand => ReadFolderCommandOutput::ReadFolderPathCommand { path: f.path.clone() },
-            ReadFolderCommand::ReadFolderDescriptionCommand => ReadFolderCommandOutput::ReadFolderDescriptionCommand { description: f.description.clone() },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadDesignCommandOutput {
+        ReadDesignFullCommand {
+            dto: DesignFullDto,
+        },
+        ReadDesignShallowCommand {
+            dto: DesignShallowDto,
+        },
+        ReadDesignMetadataCommand {
+            metadata: DesignMetadataDto,
+        },
+        ReadDesignIdCommand {
+            id: DesignIdDto,
+        },
+        ReadDesignNameCommand {
+            name: String,
+        },
+        ReadDesignDescriptionCommand {
+            description: Option<String>,
+        },
+        ReadDesignIconCommand {
+            icon: Option<String>,
+        },
+        ReadDesignImageCommand {
+            image: Option<String>,
+        },
+        ReadDesignLocationCommand {
+            location: Option<crate::location::LocationIdDto>,
+        },
+        ReadDesignUnitCommand {
+            unit: Option<String>,
+        },
+        ReadDesignCreatedCommand {
+            created: Option<String>,
+        },
+        ReadDesignUpdatedCommand {
+            updated: Option<String>,
+        },
+        ReadDesignKitCommand {
+            kit: Option<crate::kit_graph::KitIdDto>,
+        },
+        ReadDesignFamiliesCommand {
+            families: Vec<FamilyIdDto>,
+        },
+        ReadDesignPiecesFullCommand {
+            pieces: Vec<PieceFullDto>,
+        },
+        ReadDesignPiecesShallowCommand {
+            pieces: Vec<PieceShallowDto>,
+        },
+        ReadDesignConnectionsFullCommand {
+            connections: Vec<ConnectionFullDto>,
+        },
+        ReadDesignConnectionsShallowCommand {
+            connections: Vec<ConnectionShallowDto>,
+        },
+        ReadDesignLayersFullCommand {
+            layers: Vec<LayerFullDto>,
+        },
+        ReadDesignLayersShallowCommand {
+            layers: Vec<LayerShallowDto>,
+        },
+        ReadDesignGroupsFullCommand {
+            groups: Vec<GroupFullDto>,
+        },
+        ReadDesignGroupsShallowCommand {
+            groups: Vec<GroupShallowDto>,
+        },
+        ReadDesignAuthorsFullCommand {
+            authors: Vec<AuthorFullDto>,
+        },
+        ReadDesignAuthorsShallowCommand {
+            authors: Vec<AuthorShallowDto>,
+        },
+        ReadDesignConceptsFullCommand {
+            concepts: Vec<ConceptFullDto>,
+        },
+        ReadDesignConceptsShallowCommand {
+            concepts: Vec<ConceptShallowDto>,
+        },
+        ReadDesignTagsFullCommand {
+            tags: Vec<TagFullDto>,
+        },
+        ReadDesignTagsShallowCommand {
+            tags: Vec<TagShallowDto>,
+        },
+        ReadDesignQualitiesFullCommand {
+            qualities: Vec<QualityFullDto>,
+        },
+        ReadDesignQualitiesShallowCommand {
+            qualities: Vec<QualityShallowDto>,
+        },
+        ReadDesignPropsFullCommand {
+            props: Vec<PropFullDto>,
+        },
+        ReadDesignPropsShallowCommand {
+            props: Vec<PropShallowDto>,
+        },
+        ReadDesignAttributesFullCommand {
+            attributes: Vec<AttributeFullDto>,
+        },
+        ReadDesignAttributesShallowCommand {
+            attributes: Vec<AttributeShallowDto>,
+        },
+        ReadDesignStatsFullCommand {
+            stats: Vec<StatFullDto>,
+        },
+        ReadDesignStatsShallowCommand {
+            stats: Vec<StatShallowDto>,
+        },
+        ReadDesignFlattenMapCommand {
+            entries: Vec<DesignFlattenMapEntryDto>,
+        },
+        ReadDesignClusterableGroupsCommand {
+            groups: Vec<Vec<PieceIdDto>>,
+        },
+        ReadDesignIncludedDesignsCommand {
+            designs: Vec<IncludedDesignInfoDto>,
+        },
+        ReadDesignQualitySumCommand {
+            sum: f64,
+        },
+        ReadDesignReplaceableCatalogCommand {
+            types: Vec<crate::typ::TypeIdDto>,
+            designs: Vec<crate::design::DesignIdDto>,
+        },
+        ReadDesignIncludedDesignIdsCommand {
+            #[serde(rename = "designIds")]
+            design_ids: Vec<crate::design::DesignIdDto>,
+        },
+        ReadDesignFamilyCommands {
+            results: Vec<ReadFamilyCommandOutput>,
+        },
+        ReadDesignPieceCommands {
+            results: Vec<ReadPieceCommandOutput>,
+        },
+        ReadDesignConnectionCommands {
+            results: Vec<ReadConnectionCommandOutput>,
+        },
+        ReadDesignLayerCommands {
+            results: Vec<ReadLayerCommandOutput>,
+        },
+        ReadDesignGroupCommands {
+            results: Vec<ReadGroupCommandOutput>,
+        },
+        ReadDesignAuthorCommands {
+            results: Vec<ReadAuthorCommandOutput>,
+        },
+        ReadDesignConceptCommands {
+            results: Vec<ReadConceptCommandOutput>,
+        },
+        ReadDesignTagCommands {
+            results: Vec<ReadTagCommandOutput>,
+        },
+        ReadDesignQualityCommands {
+            results: Vec<ReadQualityCommandOutput>,
+        },
+        ReadDesignPropCommands {
+            results: Vec<ReadPropCommandOutput>,
+        },
+        ReadDesignAttributeCommands {
+            results: Vec<ReadAttributeCommandOutput>,
+        },
+        ReadDesignStatCommands {
+            results: Vec<ReadStatCommandOutput>,
+        },
     }
-}
 
-impl ReadLocationCommand {
-    pub fn execute(&self, l: &crate::location::LocationStoreRef) -> Result<ReadLocationCommandOutput> {
-        let l = l.read().map_err(|_| lp("location"))?;
-        Ok(match self {
-            ReadLocationCommand::ReadLocationFullCommand => ReadLocationCommandOutput::ReadLocationFullCommand { location: l.to_full_dto() },
-            ReadLocationCommand::ReadLocationShallowCommand => ReadLocationCommandOutput::ReadLocationShallowCommand { location: l.to_shallow_dto() },
-            ReadLocationCommand::ReadLocationMetadataCommand => ReadLocationCommandOutput::ReadLocationMetadataCommand { metadata: l.to_metadata_dto() },
-            ReadLocationCommand::ReadLocationIdCommand => ReadLocationCommandOutput::ReadLocationIdCommand { id: l.to_id_dto() },
-            ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
-            ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
-            ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
-            ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand {
-                attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-            },
-            ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand {
-                attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-            },
-            ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
-                let a = l
-                    .attributes
-                    .iter()
-                    .find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false))
-                    .ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
-                }
-                ReadLocationCommandOutput::ReadLocationAttributeCommands { results }
-            }
-        })
-    }
-}
+    // --- Piece ---
 
-impl ReadLayerCommand {
-    pub fn execute(&self, l: &crate::layer::LayerStoreRef) -> Result<ReadLayerCommandOutput> {
-        let l = l.read().map_err(|_| lp("layer"))?;
-        Ok(match self {
-            ReadLayerCommand::ReadLayerFullCommand => ReadLayerCommandOutput::ReadLayerFullCommand { layer: l.to_full_dto() },
-            ReadLayerCommand::ReadLayerShallowCommand => ReadLayerCommandOutput::ReadLayerShallowCommand { layer: l.to_shallow_dto() },
-            ReadLayerCommand::ReadLayerMetadataCommand => ReadLayerCommandOutput::ReadLayerMetadataCommand { metadata: l.to_metadata_dto() },
-            ReadLayerCommand::ReadLayerIdCommand => ReadLayerCommandOutput::ReadLayerIdCommand { id: l.to_id_dto() },
-            ReadLayerCommand::ReadLayerNameCommand => ReadLayerCommandOutput::ReadLayerNameCommand { name: l.name.clone() },
-            ReadLayerCommand::ReadLayerDescriptionCommand => ReadLayerCommandOutput::ReadLayerDescriptionCommand { description: l.description.clone() },
-            ReadLayerCommand::ReadLayerColorCommand => ReadLayerCommandOutput::ReadLayerColorCommand { color: l.color.clone() },
-            ReadLayerCommand::ReadLayerOrderCommand => ReadLayerCommandOutput::ReadLayerOrderCommand { order: l.order },
-            ReadLayerCommand::ReadLayerVisibleCommand => ReadLayerCommandOutput::ReadLayerVisibleCommand { visible: l.visible },
-            ReadLayerCommand::ReadLayerLockedCommand => ReadLayerCommandOutput::ReadLayerLockedCommand { locked: l.locked },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommand {
+        ReadPieceFullCommand,
+        ReadPieceShallowCommand,
+        ReadPieceMetadataCommand,
+        ReadPieceIdCommand,
+        ReadPieceNameCommand,
+        ReadPieceDescriptionCommand,
+        ReadPiecePlaneCommand,
+        ReadPieceCenterCommand,
+        ReadPieceScaleCommand,
+        ReadPieceMirrorPlaneCommand,
+        ReadPieceHiddenCommand,
+        ReadPieceLockedCommand,
+        ReadPieceColorCommand,
+        ReadPieceTypeCommand,
+        ReadPieceDesignCommand,
+        ReadPiecePropsFullCommand,
+        ReadPiecePropsShallowCommand,
+        ReadPieceAttributesFullCommand,
+        ReadPieceAttributesShallowCommand,
+        ReadPieceFlatPlaneCommand,
+        ReadPieceFlatCenterCommand,
+        ReadPieceFlatPoseCommand,
+        ReadPiecePathCommand,
+        ReadPieceParentPieceIdCommand,
+        ReadPieceParentConnectionIdCommand,
+        ReadPieceParentConnectionFullCommand,
+        ReadPieceParentDesignIdCommand,
+        ReadPieceFixedCommand,
+        ReadPieceConnectedCommand,
+        ReadPieceAlternativesCommand,
+        ReadPieceAlternativeTypesCommand,
+        ReadPieceAlternativeDesignsCommand,
+        ReadPiecePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
+        ReadPieceAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
     }
-}
 
-impl ReadGroupCommand {
-    pub fn execute(&self, g: &crate::group::GroupStoreRef) -> Result<ReadGroupCommandOutput> {
-        let g = g.read().map_err(|_| lp("group"))?;
-        Ok(match self {
-            ReadGroupCommand::ReadGroupFullCommand => ReadGroupCommandOutput::ReadGroupFullCommand { group: g.to_full_dto() },
-            ReadGroupCommand::ReadGroupShallowCommand => ReadGroupCommandOutput::ReadGroupShallowCommand { group: g.to_shallow_dto() },
-            ReadGroupCommand::ReadGroupMetadataCommand => ReadGroupCommandOutput::ReadGroupMetadataCommand { metadata: g.to_metadata_dto() },
-            ReadGroupCommand::ReadGroupIdCommand => ReadGroupCommandOutput::ReadGroupIdCommand { id: g.to_id_dto() },
-            ReadGroupCommand::ReadGroupNameCommand => ReadGroupCommandOutput::ReadGroupNameCommand { name: g.name.clone() },
-            ReadGroupCommand::ReadGroupDescriptionCommand => ReadGroupCommandOutput::ReadGroupDescriptionCommand { description: g.description.clone() },
-            ReadGroupCommand::ReadGroupColorCommand => ReadGroupCommandOutput::ReadGroupColorCommand { color: g.color.clone() },
-            ReadGroupCommand::ReadGroupIconCommand => ReadGroupCommandOutput::ReadGroupIconCommand { icon: g.icon.clone() },
-            ReadGroupCommand::ReadGroupPiecesCommand => ReadGroupCommandOutput::ReadGroupPiecesCommand { pieces: g.pieces.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommandOutput {
+        ReadPieceFullCommand { dto: PieceFullDto },
+        ReadPieceShallowCommand { dto: PieceShallowDto },
+        ReadPieceMetadataCommand { metadata: PieceMetadataDto },
+        ReadPieceIdCommand { id: PieceIdDto },
+        ReadPieceNameCommand { name: Option<String> },
+        ReadPieceDescriptionCommand { description: Option<String> },
+        ReadPiecePlaneCommand { plane: Option<Plane> },
+        ReadPieceCenterCommand { center: Option<Coordinate> },
+        ReadPieceScaleCommand { scale: Option<f64> },
+        ReadPieceMirrorPlaneCommand { mirror_plane: Option<Plane> },
+        ReadPieceHiddenCommand { hidden: Option<bool> },
+        ReadPieceLockedCommand { locked: Option<bool> },
+        ReadPieceColorCommand { color: Option<String> },
+        ReadPieceTypeCommand { r#type: Option<TypeIdDto> },
+        ReadPieceDesignCommand { design: Option<DesignIdDto> },
+        ReadPiecePropsFullCommand { props: Vec<PropFullDto> },
+        ReadPiecePropsShallowCommand { props: Vec<PropShallowDto> },
+        ReadPieceAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadPieceFlatPlaneCommand { flat_plane: Plane },
+        ReadPieceFlatCenterCommand { flat_center: Coordinate },
+        ReadPieceFlatPoseCommand { flat_pose: PoseFullDto },
+        ReadPiecePathCommand { path: Vec<PieceIdDto> },
+        ReadPieceParentPieceIdCommand { parent_piece: Option<PieceIdDto> },
+        ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionIdDto> },
+        ReadPieceParentConnectionFullCommand { connection: Option<crate::connection::ConnectionFullDto> },
+        ReadPieceParentDesignIdCommand { parent_design: DesignIdDto },
+        ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
+        ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
+        ReadPieceAlternativesCommand { alternatives: PieceAlternativesDto },
+        ReadPieceAlternativeTypesCommand { types: Vec<TypeIdDto> },
+        ReadPieceAlternativeDesignsCommand { designs: Vec<DesignIdDto> },
+        ReadPiecePropCommands { results: Vec<ReadPropCommandOutput> },
+        ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-}
 
-impl ReadFamilyCommand {
-    pub fn execute(&self, f: &FamilyStoreRef) -> Result<ReadFamilyCommandOutput> {
-        let f = f.read().map_err(|_| lp("family"))?;
-        Ok(match self {
-            ReadFamilyCommand::ReadFamilyFullCommand => ReadFamilyCommandOutput::ReadFamilyFullCommand { family: f.to_full_dto() },
-            ReadFamilyCommand::ReadFamilyShallowCommand => ReadFamilyCommandOutput::ReadFamilyShallowCommand { family: f.to_shallow_dto() },
-            ReadFamilyCommand::ReadFamilyMetadataCommand => ReadFamilyCommandOutput::ReadFamilyMetadataCommand { metadata: f.to_metadata_dto() },
-            ReadFamilyCommand::ReadFamilyIdCommand => ReadFamilyCommandOutput::ReadFamilyIdCommand { id: f.to_id_dto() },
-            ReadFamilyCommand::ReadFamilyNameCommand => ReadFamilyCommandOutput::ReadFamilyNameCommand { name: f.name.clone() },
-            ReadFamilyCommand::ReadFamilyDescriptionCommand => ReadFamilyCommandOutput::ReadFamilyDescriptionCommand { description: f.description.clone() },
-            ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
-            ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full_dto()).collect() },
-            ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
-            ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
-                let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(p)?);
-                }
-                ReadFamilyCommandOutput::ReadFamilyPortCommands { results }
-            }
-            ReadFamilyCommand::ReadFamilyAttributeCommands { id, commands } => {
-                let a = f.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadFamilyCommandOutput::ReadFamilyAttributeCommands { results }
-            }
-        })
-    }
-}
+    // --- Connection ---
 
-impl ReadSideCommand {
-    pub fn execute(&self, s: &SideStoreRef) -> Result<ReadSideCommandOutput> {
-        let s = s.read().map_err(|_| lp("side"))?;
-        Ok(match self {
-            ReadSideCommand::ReadSideFullCommand => ReadSideCommandOutput::ReadSideFullCommand { side: s.to_full_dto() },
-            ReadSideCommand::ReadSideShallowCommand => ReadSideCommandOutput::ReadSideShallowCommand { side: s.to_shallow_dto() },
-            ReadSideCommand::ReadSideMetadataCommand => ReadSideCommandOutput::ReadSideMetadataCommand { side: s.to_metadata_dto() },
-            ReadSideCommand::ReadSideIdCommand => ReadSideCommandOutput::ReadSideIdCommand { id: s.to_id_dto() },
-            ReadSideCommand::ReadSidePieceIdCommand => ReadSideCommandOutput::ReadSidePieceIdCommand { piece: s.to_metadata_dto().piece },
-            ReadSideCommand::ReadSidePortIdCommand => ReadSideCommandOutput::ReadSidePortIdCommand { port: s.to_metadata_dto().port },
-            ReadSideCommand::ReadSideDesignPieceIdCommand => ReadSideCommandOutput::ReadSideDesignPieceIdCommand { design_piece: s.to_metadata_dto().design_piece },
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectionCommand {
+        ReadConnectionFullCommand,
+        ReadConnectionShallowCommand,
+        ReadConnectionMetadataCommand,
+        ReadConnectionIdCommand,
+        ReadConnectionConnectedSideMetadataCommand,
+        ReadConnectionConnectingSideMetadataCommand,
+        ReadConnectionConnectedSideFullCommand,
+        ReadConnectionConnectingSideFullCommand,
+        ReadConnectionGapCommand,
+        ReadConnectionShiftCommand,
+        ReadConnectionRiseCommand,
+        ReadConnectionRotationCommand,
+        ReadConnectionTurnCommand,
+        ReadConnectionTiltCommand,
+        ReadConnectionUCommand,
+        ReadConnectionVCommand,
+        ReadConnectionDescriptionCommand,
+        ReadConnectionAttributesFullCommand,
+        ReadConnectionAttributesShallowCommand,
+        ReadConnectionChildPlaneMatrixCommand,
+        ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceIdDto },
+        ReadConnectionAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
+        ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
     }
-}
 
-impl ReadConnectionCommand {
-    pub fn execute(&self, c: &crate::connection::ConnectionStoreRef) -> Result<ReadConnectionCommandOutput> {
-        let c = c.read().map_err(|_| lp("connection"))?;
-        Ok(match self {
-            ReadConnectionCommand::ReadConnectionFullCommand => ReadConnectionCommandOutput::ReadConnectionFullCommand { dto: c.to_full_dto() },
-            ReadConnectionCommand::ReadConnectionShallowCommand => ReadConnectionCommandOutput::ReadConnectionShallowCommand { dto: c.to_shallow_dto() },
-            ReadConnectionCommand::ReadConnectionMetadataCommand => ReadConnectionCommandOutput::ReadConnectionMetadataCommand { metadata: c.to_metadata_dto() },
-            ReadConnectionCommand::ReadConnectionIdCommand => ReadConnectionCommandOutput::ReadConnectionIdCommand { id: c.to_id_dto() },
-            ReadConnectionCommand::ReadConnectionConnectedSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideMetadataCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_metadata_dto() },
-            ReadConnectionCommand::ReadConnectionConnectingSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideMetadataCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_metadata_dto() },
-            ReadConnectionCommand::ReadConnectionConnectedSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideFullCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_full_dto() },
-            ReadConnectionCommand::ReadConnectionConnectingSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideFullCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_full_dto() },
-            ReadConnectionCommand::ReadConnectionGapCommand => ReadConnectionCommandOutput::ReadConnectionGapCommand { gap: c.gap },
-            ReadConnectionCommand::ReadConnectionShiftCommand => ReadConnectionCommandOutput::ReadConnectionShiftCommand { shift: c.shift },
-            ReadConnectionCommand::ReadConnectionRiseCommand => ReadConnectionCommandOutput::ReadConnectionRiseCommand { rise: c.rise },
-            ReadConnectionCommand::ReadConnectionRotationCommand => ReadConnectionCommandOutput::ReadConnectionRotationCommand { rotation: c.rotation },
-            ReadConnectionCommand::ReadConnectionTurnCommand => ReadConnectionCommandOutput::ReadConnectionTurnCommand { turn: c.turn },
-            ReadConnectionCommand::ReadConnectionTiltCommand => ReadConnectionCommandOutput::ReadConnectionTiltCommand { tilt: c.tilt },
-            ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
-            ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
-            ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
-            ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadConnectionCommand::ReadConnectionAttributesShallowCommand => ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
-            ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
-                let (a, b) = c.flat_side_dtos_for_child(&child_piece_id.id).ok_or_else(|| SemioError::InvalidOperation("no flat sides for child on this connection".into()))?;
-                ReadConnectionCommandOutput::ReadConnectionFlatSidesForChildCommand { connected: a, connecting: b }
-            }
-            ReadConnectionCommand::ReadConnectionAttributeCommands { id, commands } => {
-                let a = c.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for cmd in commands {
-                    results.push(cmd.execute_ref(a)?);
-                }
-                ReadConnectionCommandOutput::ReadConnectionAttributeCommands { results }
-            }
-            ReadConnectionCommand::ReadConnectionConnectedSideCommands { commands } => {
-                let mut results = Vec::with_capacity(commands.len());
-                for cmd in commands {
-                    results.push(cmd.execute(&c.connected)?);
-                }
-                ReadConnectionCommandOutput::ReadConnectionConnectedSideCommands { results }
-            }
-            ReadConnectionCommand::ReadConnectionConnectingSideCommands { commands } => {
-                let mut results = Vec::with_capacity(commands.len());
-                for cmd in commands {
-                    results.push(cmd.execute(&c.connecting)?);
-                }
-                ReadConnectionCommandOutput::ReadConnectionConnectingSideCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectionCommandOutput {
+        ReadConnectionFullCommand { dto: ConnectionFullDto },
+        ReadConnectionShallowCommand { dto: ConnectionShallowDto },
+        ReadConnectionMetadataCommand { metadata: ConnectionMetadataDto },
+        ReadConnectionIdCommand { id: ConnectionIdDto },
+        ReadConnectionConnectedSideMetadataCommand { side: SideMetadataDto },
+        ReadConnectionConnectingSideMetadataCommand { side: SideMetadataDto },
+        ReadConnectionConnectedSideFullCommand { side: SideFullDto },
+        ReadConnectionConnectingSideFullCommand { side: SideFullDto },
+        ReadConnectionGapCommand { gap: Option<f64> },
+        ReadConnectionShiftCommand { shift: Option<f64> },
+        ReadConnectionRiseCommand { rise: Option<f64> },
+        ReadConnectionRotationCommand { rotation: Option<f64> },
+        ReadConnectionTurnCommand { turn: Option<f64> },
+        ReadConnectionTiltCommand { tilt: Option<f64> },
+        ReadConnectionUCommand { u: Option<f64> },
+        ReadConnectionVCommand { v: Option<f64> },
+        ReadConnectionDescriptionCommand { description: Option<String> },
+        ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
+        ReadConnectionFlatSidesForChildCommand { connected: SideFullDto, connecting: SideFullDto },
+        ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+        ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
+        ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
     }
-}
 
+    // --- Side ---
 
-impl ReadPortCommand {
-    pub fn execute(&self, p: &PortStoreRef) -> Result<ReadPortCommandOutput> {
-        let p = p.read().map_err(|_| lp("port"))?;
-        Ok(match self {
-            ReadPortCommand::ReadPortFullCommand => ReadPortCommandOutput::ReadPortFullCommand { port: p.to_full_dto() },
-            ReadPortCommand::ReadPortShallowCommand => ReadPortCommandOutput::ReadPortShallowCommand { port: p.to_shallow_dto() },
-            ReadPortCommand::ReadPortMetadataCommand => ReadPortCommandOutput::ReadPortMetadataCommand { metadata: p.to_metadata_dto() },
-            ReadPortCommand::ReadPortIdCommand => ReadPortCommandOutput::ReadPortIdCommand { id: p.to_id_dto() },
-            ReadPortCommand::ReadPortNameCommand => ReadPortCommandOutput::ReadPortNameCommand { name: p.name.clone() },
-            ReadPortCommand::ReadPortDescriptionCommand => ReadPortCommandOutput::ReadPortDescriptionCommand { description: p.description.clone() },
-            ReadPortCommand::ReadPortIconCommand => ReadPortCommandOutput::ReadPortIconCommand { icon: p.icon.clone() },
-            ReadPortCommand::ReadPortCompatibleFamiliesCommand => ReadPortCommandOutput::ReadPortCompatibleFamiliesCommand { families: p.compatible_families.clone() },
-            ReadPortCommand::ReadPortMandatoryCommand => ReadPortCommandOutput::ReadPortMandatoryCommand { mandatory: p.mandatory },
-            ReadPortCommand::ReadPortTCommand => ReadPortCommandOutput::ReadPortTCommand { t: p.t },
-            ReadPortCommand::ReadPortPointCommand => ReadPortCommandOutput::ReadPortPointCommand { point: p.point },
-            ReadPortCommand::ReadPortDirectionCommand => ReadPortCommandOutput::ReadPortDirectionCommand { direction: p.direction },
-            ReadPortCommand::ReadPortCompatiblePortsCommand => ReadPortCommandOutput::ReadPortCompatiblePortsCommand { compatible_ports: p.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
-            ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full_dto()).collect() },
-            ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
-            ReadPortCommand::ReadPortQualityCommands { id, commands } => {
-                let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(q)?);
-                }
-                ReadPortCommandOutput::ReadPortQualityCommands { results }
-            }
-            ReadPortCommand::ReadPortAttributeCommands { id, commands } => {
-                let a = p.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadPortCommandOutput::ReadPortAttributeCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadSideCommand {
+        ReadSideFullCommand,
+        ReadSideShallowCommand,
+        ReadSideMetadataCommand,
+        ReadSideIdCommand,
+        ReadSidePieceIdCommand,
+        ReadSidePortIdCommand,
+        ReadSideDesignPieceIdCommand,
     }
-}
 
-impl ReadConnectorCommand {
-    pub fn execute(&self, c: &ConnectorStoreRef) -> Result<ReadConnectorCommandOutput> {
-        let c = c.read().map_err(|_| lp("connector"))?;
-        Ok(match self {
-            ReadConnectorCommand::ReadConnectorFullCommand => ReadConnectorCommandOutput::ReadConnectorFullCommand { connector: c.to_full_dto() },
-            ReadConnectorCommand::ReadConnectorShallowCommand => ReadConnectorCommandOutput::ReadConnectorShallowCommand { connector: c.to_shallow_dto() },
-            ReadConnectorCommand::ReadConnectorMetadataCommand => ReadConnectorCommandOutput::ReadConnectorMetadataCommand { metadata: c.to_metadata_dto() },
-            ReadConnectorCommand::ReadConnectorIdCommand => ReadConnectorCommandOutput::ReadConnectorIdCommand { id: c.to_id_dto() },
-            ReadConnectorCommand::ReadConnectorCodeCommand => ReadConnectorCommandOutput::ReadConnectorCodeCommand { code: c.code.clone() },
-            ReadConnectorCommand::ReadConnectorDescriptionCommand => ReadConnectorCommandOutput::ReadConnectorDescriptionCommand { description: c.description.clone() },
-            ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata_dto().port },
-            ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full_dto()).collect() },
-            ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
-            ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
-                let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for cmd in commands {
-                    results.push(cmd.execute(q)?);
-                }
-                ReadConnectorCommandOutput::ReadConnectorQualityCommands { results }
-            }
-            ReadConnectorCommand::ReadConnectorAttributeCommands { id, commands } => {
-                let a = c.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for cmd in commands {
-                    results.push(cmd.execute(a)?);
-                }
-                ReadConnectorCommandOutput::ReadConnectorAttributeCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadSideCommandOutput {
+        ReadSideFullCommand { side: SideFullDto },
+        ReadSideShallowCommand { side: SideShallowDto },
+        ReadSideMetadataCommand { side: SideMetadataDto },
+        ReadSideIdCommand { id: SideIdDto },
+        ReadSidePieceIdCommand { piece: PieceIdDto },
+        ReadSidePortIdCommand { port: Option<PortIdDto> },
+        ReadSideDesignPieceIdCommand { design_piece: Option<PieceIdDto> },
     }
-}
 
-impl ReadRepresentationCommand {
-    pub fn execute(&self, r: &RepresentationStoreRef) -> Result<ReadRepresentationCommandOutput> {
-        let r = r.read().map_err(|_| lp("representation"))?;
-        Ok(match self {
-            ReadRepresentationCommand::ReadRepresentationFullCommand => ReadRepresentationCommandOutput::ReadRepresentationFullCommand { representation: r.to_full_dto() },
-            ReadRepresentationCommand::ReadRepresentationShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationShallowCommand { representation: r.to_shallow_dto() },
-            ReadRepresentationCommand::ReadRepresentationMetadataCommand => ReadRepresentationCommandOutput::ReadRepresentationMetadataCommand { metadata: r.to_metadata_dto() },
-            ReadRepresentationCommand::ReadRepresentationIdCommand => ReadRepresentationCommandOutput::ReadRepresentationIdCommand { id: r.to_id_dto() },
-            ReadRepresentationCommand::ReadRepresentationUrlCommand => ReadRepresentationCommandOutput::ReadRepresentationUrlCommand { url: r.url.clone() },
-            ReadRepresentationCommand::ReadRepresentationDescriptionCommand => ReadRepresentationCommandOutput::ReadRepresentationDescriptionCommand { description: r.description.clone() },
-            ReadRepresentationCommand::ReadRepresentationFileIdCommand => ReadRepresentationCommandOutput::ReadRepresentationFileIdCommand { file: r.to_metadata_dto().file },
-            ReadRepresentationCommand::ReadRepresentationTagsFullCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsFullCommand { tags: r.tags.iter().map(|t| t.to_full_dto()).collect() },
-            ReadRepresentationCommand::ReadRepresentationTagsShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsShallowCommand { tags: r.tags.iter().map(|t| t.to_shallow_dto()).collect() },
-            ReadRepresentationCommand::ReadRepresentationQualitiesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full_dto()).collect() },
-            ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
-            ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
-                let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(t)?);
-                }
-                ReadRepresentationCommandOutput::ReadRepresentationTagCommands { results }
-            }
-            ReadRepresentationCommand::ReadRepresentationQualityCommands { id, commands } => {
-                let q = r.qualities.iter().find(|q| q.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(q)?);
-                }
-                ReadRepresentationCommandOutput::ReadRepresentationQualityCommands { results }
-            }
-            ReadRepresentationCommand::ReadRepresentationAttributeCommands { id, commands } => {
-                let a = r.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadRepresentationCommandOutput::ReadRepresentationAttributeCommands { results }
-            }
-        })
-    }
-}
+    // --- Port ---
 
-impl ReadPieceCommand {
-    pub fn execute(&self, p: &PieceStoreRef, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
-        let o = p.read().map_err(|_| lp("piece"))?;
-        Ok(match self {
-            ReadPieceCommand::ReadPieceFullCommand => ReadPieceCommandOutput::ReadPieceFullCommand { dto: o.to_full_dto() },
-            ReadPieceCommand::ReadPieceShallowCommand => ReadPieceCommandOutput::ReadPieceShallowCommand { dto: o.to_shallow_dto() },
-            ReadPieceCommand::ReadPieceMetadataCommand => ReadPieceCommandOutput::ReadPieceMetadataCommand { metadata: o.to_metadata_dto() },
-            ReadPieceCommand::ReadPieceIdCommand => ReadPieceCommandOutput::ReadPieceIdCommand { id: o.to_id_dto() },
-            ReadPieceCommand::ReadPieceNameCommand => ReadPieceCommandOutput::ReadPieceNameCommand { name: o.name.clone() },
-            ReadPieceCommand::ReadPieceDescriptionCommand => ReadPieceCommandOutput::ReadPieceDescriptionCommand { description: o.description.clone() },
-            ReadPieceCommand::ReadPiecePlaneCommand => ReadPieceCommandOutput::ReadPiecePlaneCommand { plane: o.pose.plane },
-            ReadPieceCommand::ReadPieceCenterCommand => ReadPieceCommandOutput::ReadPieceCenterCommand { center: o.pose.center },
-            ReadPieceCommand::ReadPieceScaleCommand => ReadPieceCommandOutput::ReadPieceScaleCommand { scale: o.scale },
-            ReadPieceCommand::ReadPieceMirrorPlaneCommand => ReadPieceCommandOutput::ReadPieceMirrorPlaneCommand { mirror_plane: o.mirror_plane },
-            ReadPieceCommand::ReadPieceHiddenCommand => ReadPieceCommandOutput::ReadPieceHiddenCommand { hidden: o.hidden },
-            ReadPieceCommand::ReadPieceLockedCommand => ReadPieceCommandOutput::ReadPieceLockedCommand { locked: o.locked },
-            ReadPieceCommand::ReadPieceColorCommand => ReadPieceCommandOutput::ReadPieceColorCommand { color: o.color.clone() },
-            ReadPieceCommand::ReadPieceTypeCommand => ReadPieceCommandOutput::ReadPieceTypeCommand { r#type: o.to_metadata_dto().r#type },
-            ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata_dto().design },
-            ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
-            ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
-            ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_full_dto() },
-            ReadPieceCommand::ReadPiecePathCommand => ReadPieceCommandOutput::ReadPiecePathCommand { path: o.path() },
-            ReadPieceCommand::ReadPieceParentPieceIdCommand => ReadPieceCommandOutput::ReadPieceParentPieceIdCommand {
-                parent_piece: o.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto())),
-            },
-            ReadPieceCommand::ReadPieceParentConnectionIdCommand => ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand {
-                parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_id_dto())),
-            },
-            ReadPieceCommand::ReadPieceParentConnectionFullCommand => ReadPieceCommandOutput::ReadPieceParentConnectionFullCommand {
-                connection: o
-                    .parent_connection
-                    .as_ref()
-                    .and_then(|w| w.upgrade())
-                    .and_then(|c| c.read().ok().map(|c| c.to_full_dto())),
-            },
-            ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
-                parent_design: o
-                    .parent_design
-                    .upgrade()
-                    .and_then(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() }))
-                    .ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
-            },
-            ReadPieceCommand::ReadPieceFixedCommand => {
-                if o.parent_piece.is_some() || o.parent_connection.is_some() {
-                    return Err(SemioError::InvalidOperation("ReadPieceFixedCommand requires no parent piece or connection".into()));
-                }
-                ReadPieceCommandOutput::ReadPieceFixedCommand {
-                    fixed: crate::piece::FixedPieceOutputDto { piece: o.to_id_dto(), pose: o.pose_full_dto() },
-                }
-            }
-            ReadPieceCommand::ReadPieceConnectedCommand => {
-                let (pp, pc) = (o.parent_piece.as_ref().and_then(|w| w.upgrade()), o.parent_connection.as_ref().and_then(|w| w.upgrade()));
-                let (Some(pp), Some(pc)) = (pp, pc) else {
-                    return Err(SemioError::InvalidOperation("ReadPieceConnectedCommand requires parent piece and parent connection".into()));
-                };
-                let _pp = pp.read().map_err(|_| lp("piece"))?;
-                let _pc = pc.read().map_err(|_| lp("connection"))?;
-                ReadPieceCommandOutput::ReadPieceConnectedCommand {
-                    connected: crate::piece::ConnectedPieceOutputDto {
-                        piece: o.to_id_dto(),
-                        parent_piece: _pp.to_id_dto(),
-                        parent_connection: _pc.to_id_dto(),
-                        flat_pose: o.flat_pose_full_dto(),
-                    },
-                }
-            }
-            ReadPieceCommand::ReadPieceAlternativesCommand => {
-                let alt = o.alternatives();
-                ReadPieceCommandOutput::ReadPieceAlternativesCommand {
-                    alternatives: crate::piece::PieceAlternativesDto {
-                        types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
-                        designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
-                    },
-                }
-            }
-            ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand {
-                types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
-            },
-            ReadPieceCommand::ReadPieceAlternativeDesignsCommand => ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand {
-                designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
-            },
-            ReadPieceCommand::ReadPiecePropCommands { id, commands } => {
-                let pr = o.props.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(pr)?);
-                }
-                ReadPieceCommandOutput::ReadPiecePropCommands { results }
-            }
-            ReadPieceCommand::ReadPieceAttributeCommands { id, commands } => {
-                let a = o.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
-                }
-                ReadPieceCommandOutput::ReadPieceAttributeCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPortCommand {
+        ReadPortFullCommand,
+        ReadPortShallowCommand,
+        ReadPortMetadataCommand,
+        ReadPortIdCommand,
+        ReadPortNameCommand,
+        ReadPortDescriptionCommand,
+        ReadPortIconCommand,
+        ReadPortCompatibleFamiliesCommand,
+        ReadPortMandatoryCommand,
+        ReadPortTCommand,
+        ReadPortPointCommand,
+        ReadPortDirectionCommand,
+        ReadPortCompatiblePortsCommand,
+        ReadPortQualitiesFullCommand,
+        ReadPortQualitiesShallowCommand,
+        ReadPortAttributesFullCommand,
+        ReadPortAttributesShallowCommand,
+        ReadPortQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+        ReadPortAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
     }
-}
 
-impl ReadTypeCommand {
-    pub fn execute(&self, t: &TypeStoreRef, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
-        let r = t.read().map_err(|_| lp("type"))?;
-        Ok(match self {
-            ReadTypeCommand::ReadTypeFullCommand => ReadTypeCommandOutput::ReadTypeFullCommand { dto: r.to_full_dto() },
-            ReadTypeCommand::ReadTypeShallowCommand => ReadTypeCommandOutput::ReadTypeShallowCommand { dto: r.to_shallow_dto() },
-            ReadTypeCommand::ReadTypeMetadataCommand => ReadTypeCommandOutput::ReadTypeMetadataCommand { metadata: r.to_metadata_dto() },
-            ReadTypeCommand::ReadTypeIdCommand => ReadTypeCommandOutput::ReadTypeIdCommand { id: r.to_id_dto() },
-            ReadTypeCommand::ReadTypeNameCommand => ReadTypeCommandOutput::ReadTypeNameCommand { name: r.name.clone() },
-            ReadTypeCommand::ReadTypeDescriptionCommand => ReadTypeCommandOutput::ReadTypeDescriptionCommand { description: r.description.clone() },
-            ReadTypeCommand::ReadTypeIconCommand => ReadTypeCommandOutput::ReadTypeIconCommand { icon: r.icon.clone() },
-            ReadTypeCommand::ReadTypeImageCommand => ReadTypeCommandOutput::ReadTypeImageCommand { image: r.image.clone() },
-            ReadTypeCommand::ReadTypeStockCommand => ReadTypeCommandOutput::ReadTypeStockCommand { stock: r.stock },
-            ReadTypeCommand::ReadTypeVirtualCommand => ReadTypeCommandOutput::ReadTypeVirtualCommand { r#virtual: r.virtual_ },
-            ReadTypeCommand::ReadTypeUnitCommand => ReadTypeCommandOutput::ReadTypeUnitCommand { unit: r.unit.clone() },
-            ReadTypeCommand::ReadTypeLocationCommand => ReadTypeCommandOutput::ReadTypeLocationCommand { location: r.location.clone() },
-            ReadTypeCommand::ReadTypeCreatedCommand => ReadTypeCommandOutput::ReadTypeCreatedCommand { created: r.created.clone() },
-            ReadTypeCommand::ReadTypeUpdatedCommand => ReadTypeCommandOutput::ReadTypeUpdatedCommand { updated: r.updated.clone() },
-            ReadTypeCommand::ReadTypeFamiliesCommand => ReadTypeCommandOutput::ReadTypeFamiliesCommand { families: r.to_full_dto().families },
-            ReadTypeCommand::ReadTypeConnectorsFullCommand => ReadTypeCommandOutput::ReadTypeConnectorsFullCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeConnectorsShallowCommand => ReadTypeCommandOutput::ReadTypeConnectorsShallowCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeRepresentationsFullCommand => ReadTypeCommandOutput::ReadTypeRepresentationsFullCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeRepresentationsShallowCommand => ReadTypeCommandOutput::ReadTypeRepresentationsShallowCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeAuthorsFullCommand => ReadTypeCommandOutput::ReadTypeAuthorsFullCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeAuthorsShallowCommand => ReadTypeCommandOutput::ReadTypeAuthorsShallowCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeConceptsFullCommand => ReadTypeCommandOutput::ReadTypeConceptsFullCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeConceptsShallowCommand => ReadTypeCommandOutput::ReadTypeConceptsShallowCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeTagsFullCommand => ReadTypeCommandOutput::ReadTypeTagsFullCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeTagsShallowCommand => ReadTypeCommandOutput::ReadTypeTagsShallowCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeQualitiesFullCommand => ReadTypeCommandOutput::ReadTypeQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadTypeCommand::ReadTypePortsFullCommand => ReadTypeCommandOutput::ReadTypePortsFullCommand { ports: type_all_ports(&*r) },
-            ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand {
-                connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full_dto())),
-            },
-            ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand {
-                representation: r.best_representation_for_tag_ids(&tag_ids),
-            },
-            ReadTypeCommand::ReadTypeFamilyCommands { id, commands } => {
-                let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&f)?);
-                }
-                ReadTypeCommandOutput::ReadTypeFamilyCommands { results }
-            }
-            ReadTypeCommand::ReadTypeConnectorCommands { id, commands } => {
-                let c = r.connector(id.id.as_str()).ok_or_else(|| nf("Connector", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for x in commands {
-                    results.push(x.execute(&c)?);
-                }
-                ReadTypeCommandOutput::ReadTypeConnectorCommands { results }
-            }
-            ReadTypeCommand::ReadTypeRepresentationCommands { id, commands } => {
-                let x = r.representation(id.id.as_str()).ok_or_else(|| nf("Representation", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&x)?);
-                }
-                ReadTypeCommandOutput::ReadTypeRepresentationCommands { results }
-            }
-            ReadTypeCommand::ReadTypePortCommands { id, commands } => {
-                let p = r.port(id.id.as_str()).ok_or_else(|| nf("Port", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&p)?);
-                }
-                ReadTypeCommandOutput::ReadTypePortCommands { results }
-            }
-            ReadTypeCommand::ReadTypeAuthorCommands { id, commands } => {
-                let a = r.authors.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypeAuthorCommands { results }
-            }
-            ReadTypeCommand::ReadTypeConceptCommands { id, commands } => {
-                let a = r.concepts.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypeConceptCommands { results }
-            }
-            ReadTypeCommand::ReadTypeTagCommands { id, commands } => {
-                let a = r.tags.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypeTagCommands { results }
-            }
-            ReadTypeCommand::ReadTypeQualityCommands { id, commands } => {
-                let a = r.qualities.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypeQualityCommands { results }
-            }
-            ReadTypeCommand::ReadTypePropCommands { id, commands } => {
-                let a = r.props.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypePropCommands { results }
-            }
-            ReadTypeCommand::ReadTypeAttributeCommands { id, commands } => {
-                let a = r.attributes.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
-                }
-                ReadTypeCommandOutput::ReadTypeAttributeCommands { results }
-            }
-        })
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPortCommandOutput {
+        ReadPortFullCommand { port: PortFullDto },
+        ReadPortShallowCommand { port: PortShallowDto },
+        ReadPortMetadataCommand { metadata: PortMetadataDto },
+        ReadPortIdCommand { id: PortIdDto },
+        ReadPortNameCommand { name: String },
+        ReadPortDescriptionCommand { description: Option<String> },
+        ReadPortIconCommand { icon: Option<String> },
+        ReadPortCompatibleFamiliesCommand { families: Vec<FamilyIdDto> },
+        ReadPortMandatoryCommand { mandatory: Option<bool> },
+        ReadPortTCommand { t: Option<f64> },
+        ReadPortPointCommand { point: Option<crate::geom::Point> },
+        ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
+        ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortIdDto> },
+        ReadPortQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+        ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+        ReadPortAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
+        ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-}
 
-// --- design-domain reads (port of previous JS: getClusterableGroups, getIncludedDesigns, sumQualityInDesign) —
+    // --- Connector ---
 
-/// Stable CSS `color-mix` string for a port/connector id (see JS `getColorForText`).
-fn color_string_for_id_text(text: &str) -> String {
-    if text.is_empty() {
-        return "var(--foreground)".to_string();
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectorCommand {
+        ReadConnectorFullCommand,
+        ReadConnectorShallowCommand,
+        ReadConnectorMetadataCommand,
+        ReadConnectorIdCommand,
+        ReadConnectorCodeCommand,
+        ReadConnectorDescriptionCommand,
+        ReadConnectorPortIdCommand,
+        ReadConnectorQualitiesFullCommand,
+        ReadConnectorQualitiesShallowCommand,
+        ReadConnectorAttributesFullCommand,
+        ReadConnectorAttributesShallowCommand,
+        ReadConnectorQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+        ReadConnectorAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
     }
-    let mut hash: i32 = 0;
-    for c in text.chars() {
-        hash = (hash << 5).wrapping_sub(hash).wrapping_add(c as i32);
-    }
-    const VARI: [[&str; 4]; 6] = [
-        [
-            "color-mix(in srgb, var(--accent) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--accent) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--accent) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--accent) 45%, var(--foreground) 55%)",
-        ],
-        [
-            "color-mix(in srgb, var(--accent-secondary) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--accent-secondary) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--accent-secondary) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--accent-secondary) 45%, var(--foreground) 55%)",
-        ],
-        [
-            "color-mix(in srgb, var(--accent-tertiary) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--accent-tertiary) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--accent-tertiary) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--accent-tertiary) 45%, var(--foreground) 55%)",
-        ],
-        [
-            "color-mix(in srgb, var(--status-success) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--status-success) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--status-success) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--status-success) 45%, var(--foreground) 55%)",
-        ],
-        [
-            "color-mix(in srgb, var(--status-warning) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--status-warning) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--status-warning) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--status-warning) 45%, var(--foreground) 55%)",
-        ],
-        [
-            "color-mix(in srgb, var(--status-info) 85%, var(--base) 15%)",
-            "color-mix(in srgb, var(--status-info) 70%, var(--base) 30%)",
-            "color-mix(in srgb, var(--status-info) 60%, var(--foreground) 40%)",
-            "color-mix(in srgb, var(--status-info) 45%, var(--foreground) 55%)",
-        ],
-    ];
-    let h = hash.unsigned_abs() as usize;
-    let i = h % VARI.len();
-    let j = (h / VARI.len()) % VARI[i].len();
-    VARI[i][j].to_string()
-}
 
-pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
-    let mut out: Vec<KitColoredConnectorRowDto> = Vec::new();
-    for t in &g.types {
-        let Ok(tr) = t.read() else { continue };
-        let tid = TypeIdDto { id: tr.id.clone() };
-        for c in &tr.connectors {
-            let Ok(co) = c.read() else { continue };
-            let dto = co.to_full_dto();
-            let key = dto
-                .port
-                .as_ref()
-                .map(|p| p.id.as_str().to_string())
-                .unwrap_or_else(|| co.id.as_str().to_string());
-            out.push(KitColoredConnectorRowDto {
-                type_id: tid.clone(),
-                connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() },
-                color: color_string_for_id_text(&key),
-            });
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectorCommandOutput {
+        ReadConnectorFullCommand { connector: ConnectorFullDto },
+        ReadConnectorShallowCommand { connector: ConnectorShallowDto },
+        ReadConnectorMetadataCommand { metadata: ConnectorMetadataDto },
+        ReadConnectorIdCommand { id: ConnectorIdDto },
+        ReadConnectorCodeCommand { code: String },
+        ReadConnectorDescriptionCommand { description: Option<String> },
+        ReadConnectorPortIdCommand { port: Option<PortIdDto> },
+        ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+        ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+        ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
+        ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-    out
-}
 
-pub(crate) fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
-    use std::collections::{HashMap, HashSet};
-    if selected.len() < 2 {
-        return vec![];
+    // --- Representation ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadRepresentationCommand {
+        ReadRepresentationFullCommand,
+        ReadRepresentationShallowCommand,
+        ReadRepresentationMetadataCommand,
+        ReadRepresentationIdCommand,
+        ReadRepresentationUrlCommand,
+        ReadRepresentationDescriptionCommand,
+        ReadRepresentationFileIdCommand,
+        ReadRepresentationTagsFullCommand,
+        ReadRepresentationTagsShallowCommand,
+        ReadRepresentationQualitiesFullCommand,
+        ReadRepresentationQualitiesShallowCommand,
+        ReadRepresentationAttributesFullCommand,
+        ReadRepresentationAttributesShallowCommand,
+        ReadRepresentationTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
+        ReadRepresentationQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
+        ReadRepresentationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
     }
-    let mut adjacency: HashMap<Id, HashSet<Id>> = HashMap::new();
-    for conn in &d.connections {
-        let Ok(cr) = conn.read() else { continue };
-        let Ok(s0) = cr.connected.read() else { continue };
-        let Ok(s1) = cr.connecting.read() else { continue };
-        let a = s0.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
-        let b = s1.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
-        let (Some(a), Some(b)) = (a, b) else { continue };
-        adjacency.entry(a.clone()).or_default().insert(b.clone());
-        adjacency.entry(b).or_default().insert(a);
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadRepresentationCommandOutput {
+        ReadRepresentationFullCommand { representation: RepresentationFullDto },
+        ReadRepresentationShallowCommand { representation: RepresentationShallowDto },
+        ReadRepresentationMetadataCommand { metadata: RepresentationMetadataDto },
+        ReadRepresentationIdCommand { id: RepresentationIdDto },
+        ReadRepresentationUrlCommand { url: String },
+        ReadRepresentationDescriptionCommand { description: Option<String> },
+        ReadRepresentationFileIdCommand { file: Option<crate::file::FileIdDto> },
+        ReadRepresentationTagsFullCommand { tags: Vec<TagFullDto> },
+        ReadRepresentationTagsShallowCommand { tags: Vec<TagShallowDto> },
+        ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFullDto> },
+        ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
+        ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
+        ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
+        ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
-    let piece_id_set: HashSet<Id> = d
-        .pieces
-        .iter()
-        .filter_map(|p| p.read().ok().map(|pr| pr.id.clone()))
-        .collect();
-    let selected_set: HashSet<Id> = selected.iter().cloned().collect();
-    let mut visited: HashSet<Id> = HashSet::new();
-    let mut groups: Vec<Vec<Id>> = vec![];
-    for start in selected {
-        if visited.contains(start) {
-            continue;
-        }
-        let mut g = vec![];
-        let mut stack = vec![start.clone()];
-        visited.insert(start.clone());
-        while let Some(cur) = stack.pop() {
-            g.push(cur.clone());
-            for nb in adjacency.get(&cur).into_iter().flatten() {
-                if selected_set.contains(nb) && !visited.contains(nb) {
-                    visited.insert(nb.clone());
-                    stack.push(nb.clone());
+
+    // --- Family ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFamilyCommand {
+        ReadFamilyFullCommand,
+        ReadFamilyShallowCommand,
+        ReadFamilyMetadataCommand,
+        ReadFamilyIdCommand,
+        ReadFamilyNameCommand,
+        ReadFamilyDescriptionCommand,
+        ReadFamilyIconCommand,
+        ReadFamilyPortsFullCommand,
+        ReadFamilyPortsShallowCommand,
+        ReadFamilyAttributesFullCommand,
+        ReadFamilyAttributesShallowCommand,
+        ReadFamilyPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
+        ReadFamilyAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFamilyCommandOutput {
+        ReadFamilyFullCommand { family: FamilyFullDto },
+        ReadFamilyShallowCommand { family: FamilyShallowDto },
+        ReadFamilyMetadataCommand { metadata: FamilyMetadataDto },
+        ReadFamilyIdCommand { id: FamilyIdDto },
+        ReadFamilyNameCommand { name: String },
+        ReadFamilyDescriptionCommand { description: Option<String> },
+        ReadFamilyIconCommand { icon: Option<String> },
+        ReadFamilyPortsFullCommand { ports: Vec<PortFullDto> },
+        ReadFamilyPortsShallowCommand { ports: Vec<PortShallowDto> },
+        ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
+        ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+    }
+
+    // --- File ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFileCommand {
+        ReadFileFullCommand,
+        ReadFileShallowCommand,
+        ReadFileMetadataCommand,
+        ReadFileIdCommand,
+        ReadFileUrlCommand,
+        ReadFileMimeCommand,
+        ReadFileSizeCommand,
+        ReadFileHashCommand,
+        ReadFileDescriptionCommand,
+        ReadFileCreatedCommand,
+        ReadFileUpdatedCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFileCommandOutput {
+        ReadFileFullCommand { file: FileFullDto },
+        ReadFileShallowCommand { file: FileShallowDto },
+        ReadFileMetadataCommand { metadata: FileMetadataDto },
+        ReadFileIdCommand { id: FileIdDto },
+        ReadFileUrlCommand { url: String },
+        ReadFileMimeCommand { mime: Option<String> },
+        ReadFileSizeCommand { size: Option<i64> },
+        ReadFileHashCommand { hash: Option<String> },
+        ReadFileDescriptionCommand { description: Option<String> },
+        ReadFileCreatedCommand { created: Option<String> },
+        ReadFileUpdatedCommand { updated: Option<String> },
+    }
+
+    // --- Folder ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFolderCommand {
+        ReadFolderFullCommand,
+        ReadFolderShallowCommand,
+        ReadFolderMetadataCommand,
+        ReadFolderIdCommand,
+        ReadFolderPathCommand,
+        ReadFolderDescriptionCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadFolderCommandOutput {
+        ReadFolderFullCommand { folder: FolderFullDto },
+        ReadFolderShallowCommand { folder: FolderShallowDto },
+        ReadFolderMetadataCommand { metadata: FolderMetadataDto },
+        ReadFolderIdCommand { id: FolderIdDto },
+        ReadFolderPathCommand { path: String },
+        ReadFolderDescriptionCommand { description: Option<String> },
+    }
+
+    // --- Location ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadLocationCommand {
+        ReadLocationFullCommand,
+        ReadLocationShallowCommand,
+        ReadLocationMetadataCommand,
+        ReadLocationIdCommand,
+        ReadLocationLongitudeCommand,
+        ReadLocationLatitudeCommand,
+        ReadLocationAltitudeCommand,
+        ReadLocationAttributesFullCommand,
+        ReadLocationAttributesShallowCommand,
+        ReadLocationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadLocationCommandOutput {
+        ReadLocationFullCommand { location: LocationFullDto },
+        ReadLocationShallowCommand { location: LocationShallowDto },
+        ReadLocationMetadataCommand { metadata: LocationMetadataDto },
+        ReadLocationIdCommand { id: LocationIdDto },
+        ReadLocationLongitudeCommand { longitude: f64 },
+        ReadLocationLatitudeCommand { latitude: f64 },
+        ReadLocationAltitudeCommand { altitude: Option<f64> },
+        ReadLocationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
+        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
+    }
+
+    // --- Layer ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadLayerCommand {
+        ReadLayerFullCommand,
+        ReadLayerShallowCommand,
+        ReadLayerMetadataCommand,
+        ReadLayerIdCommand,
+        ReadLayerNameCommand,
+        ReadLayerDescriptionCommand,
+        ReadLayerColorCommand,
+        ReadLayerOrderCommand,
+        ReadLayerVisibleCommand,
+        ReadLayerLockedCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadLayerCommandOutput {
+        ReadLayerFullCommand { layer: LayerFullDto },
+        ReadLayerShallowCommand { layer: LayerShallowDto },
+        ReadLayerMetadataCommand { metadata: LayerMetadataDto },
+        ReadLayerIdCommand { id: LayerIdDto },
+        ReadLayerNameCommand { name: String },
+        ReadLayerDescriptionCommand { description: Option<String> },
+        ReadLayerColorCommand { color: Option<String> },
+        ReadLayerOrderCommand { order: Option<i64> },
+        ReadLayerVisibleCommand { visible: Option<bool> },
+        ReadLayerLockedCommand { locked: Option<bool> },
+    }
+
+    // --- Group ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadGroupCommand {
+        ReadGroupFullCommand,
+        ReadGroupShallowCommand,
+        ReadGroupMetadataCommand,
+        ReadGroupIdCommand,
+        ReadGroupNameCommand,
+        ReadGroupDescriptionCommand,
+        ReadGroupColorCommand,
+        ReadGroupIconCommand,
+        ReadGroupPiecesCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadGroupCommandOutput {
+        ReadGroupFullCommand { group: GroupFullDto },
+        ReadGroupShallowCommand { group: GroupShallowDto },
+        ReadGroupMetadataCommand { metadata: GroupMetadataDto },
+        ReadGroupIdCommand { id: GroupIdDto },
+        ReadGroupNameCommand { name: String },
+        ReadGroupDescriptionCommand { description: Option<String> },
+        ReadGroupColorCommand { color: Option<String> },
+        ReadGroupIconCommand { icon: Option<String> },
+        ReadGroupPiecesCommand { pieces: Vec<PieceIdDto> },
+    }
+
+    // --- Author ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadAuthorCommand {
+        ReadAuthorFullCommand,
+        ReadAuthorShallowCommand,
+        ReadAuthorMetadataCommand,
+        ReadAuthorIdCommand,
+        ReadAuthorNameCommand,
+        ReadAuthorEmailCommand,
+        ReadAuthorRoleCommand,
+        ReadAuthorRankCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadAuthorCommandOutput {
+        ReadAuthorFullCommand { author: AuthorFullDto },
+        ReadAuthorShallowCommand { author: AuthorShallowDto },
+        ReadAuthorMetadataCommand { metadata: AuthorMetadataDto },
+        ReadAuthorIdCommand { id: AuthorIdDto },
+        ReadAuthorNameCommand { name: String },
+        ReadAuthorEmailCommand { email: String },
+        ReadAuthorRoleCommand { role: Option<String> },
+        ReadAuthorRankCommand { rank: Option<i64> },
+    }
+
+    // --- Concept ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConceptCommand {
+        ReadConceptFullCommand,
+        ReadConceptShallowCommand,
+        ReadConceptMetadataCommand,
+        ReadConceptIdCommand,
+        ReadConceptNameCommand,
+        ReadConceptDescriptionCommand,
+        ReadConceptOrderCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConceptCommandOutput {
+        ReadConceptFullCommand { concept: ConceptFullDto },
+        ReadConceptShallowCommand { concept: ConceptShallowDto },
+        ReadConceptMetadataCommand { metadata: ConceptMetadataDto },
+        ReadConceptIdCommand { id: ConceptIdDto },
+        ReadConceptNameCommand { name: String },
+        ReadConceptDescriptionCommand { description: Option<String> },
+        ReadConceptOrderCommand { order: Option<i64> },
+    }
+
+    // --- Tag ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTagCommand {
+        ReadTagFullCommand,
+        ReadTagShallowCommand,
+        ReadTagMetadataCommand,
+        ReadTagIdCommand,
+        ReadTagNameCommand,
+        ReadTagOrderCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTagCommandOutput {
+        ReadTagFullCommand { tag: TagFullDto },
+        ReadTagShallowCommand { tag: TagShallowDto },
+        ReadTagMetadataCommand { metadata: TagMetadataDto },
+        ReadTagIdCommand { id: TagIdDto },
+        ReadTagNameCommand { name: String },
+        ReadTagOrderCommand { order: Option<i64> },
+    }
+
+    // --- Quality ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadQualityCommand {
+        ReadQualityFullCommand,
+        ReadQualityShallowCommand,
+        ReadQualityMetadataCommand,
+        ReadQualityIdCommand,
+        ReadQualityKeyCommand,
+        ReadQualityValueCommand,
+        ReadQualityUnitCommand,
+        ReadQualityDefinitionCommand,
+        ReadQualityDescriptionCommand,
+        ReadQualityBenchmarksFullCommand,
+        ReadQualityBenchmarksShallowCommand,
+        ReadQualityBenchmarkCommands { id: BenchmarkIdDto, commands: Vec<ReadBenchmarkCommand> },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadQualityCommandOutput {
+        ReadQualityFullCommand { quality: QualityFullDto },
+        ReadQualityShallowCommand { quality: QualityShallowDto },
+        ReadQualityMetadataCommand { metadata: QualityMetadataDto },
+        ReadQualityIdCommand { id: QualityIdDto },
+        ReadQualityKeyCommand { key: String },
+        ReadQualityValueCommand { value: Option<String> },
+        ReadQualityUnitCommand { unit: Option<String> },
+        ReadQualityDefinitionCommand { definition: Option<String> },
+        ReadQualityDescriptionCommand { description: Option<String> },
+        ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFullDto> },
+        ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallowDto> },
+        ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
+    }
+
+    // --- Benchmark ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadBenchmarkCommand {
+        ReadBenchmarkFullCommand,
+        ReadBenchmarkShallowCommand,
+        ReadBenchmarkMetadataCommand,
+        ReadBenchmarkIdCommand,
+        ReadBenchmarkNameCommand,
+        ReadBenchmarkMinCommand,
+        ReadBenchmarkMaxCommand,
+        ReadBenchmarkMinExcludedCommand,
+        ReadBenchmarkMaxExcludedCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadBenchmarkCommandOutput {
+        ReadBenchmarkFullCommand { benchmark: BenchmarkFullDto },
+        ReadBenchmarkShallowCommand { benchmark: BenchmarkShallowDto },
+        ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadataDto },
+        ReadBenchmarkIdCommand { id: BenchmarkIdDto },
+        ReadBenchmarkNameCommand { name: String },
+        ReadBenchmarkMinCommand { min: Option<f64> },
+        ReadBenchmarkMaxCommand { max: Option<f64> },
+        ReadBenchmarkMinExcludedCommand { min_excluded: Option<bool> },
+        ReadBenchmarkMaxExcludedCommand { max_excluded: Option<bool> },
+    }
+
+    // --- Prop ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPropCommand {
+        ReadPropFullCommand,
+        ReadPropShallowCommand,
+        ReadPropIdCommand,
+        ReadPropKeyCommand,
+        ReadPropValueCommand,
+        ReadPropUnitCommand,
+        ReadPropQualityIdCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPropCommandOutput {
+        ReadPropFullCommand { prop: PropFullDto },
+        ReadPropShallowCommand { prop: PropShallowDto },
+        ReadPropIdCommand { id: PropIdDto },
+        ReadPropKeyCommand { key: String },
+        ReadPropValueCommand { value: String },
+        ReadPropUnitCommand { unit: Option<String> },
+        ReadPropQualityIdCommand { quality: Option<QualityIdDto> },
+    }
+
+    // --- Attribute ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadAttributeCommand {
+        ReadAttributeFullCommand,
+        ReadAttributeShallowCommand,
+        ReadAttributeMetadataCommand,
+        ReadAttributeIdCommand,
+        ReadAttributeKeyCommand,
+        ReadAttributeValueCommand,
+        ReadAttributeDefinitionCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadAttributeCommandOutput {
+        ReadAttributeFullCommand { attribute: AttributeFullDto },
+        ReadAttributeShallowCommand { attribute: AttributeShallowDto },
+        ReadAttributeMetadataCommand { metadata: AttributeMetadataDto },
+        ReadAttributeIdCommand { id: AttributeIdDto },
+        ReadAttributeKeyCommand { key: String },
+        ReadAttributeValueCommand { value: String },
+        ReadAttributeDefinitionCommand { definition: Option<String> },
+    }
+
+    // --- Stat ---
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadStatCommand {
+        ReadStatFullCommand,
+        ReadStatShallowCommand,
+        ReadStatMetadataCommand,
+        ReadStatIdCommand,
+        ReadStatKeyCommand,
+        ReadStatValueCommand,
+        ReadStatUnitCommand,
+        ReadStatDescriptionCommand,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadStatCommandOutput {
+        ReadStatFullCommand { stat: StatFullDto },
+        ReadStatShallowCommand { stat: StatShallowDto },
+        ReadStatMetadataCommand { metadata: StatMetadataDto },
+        ReadStatIdCommand { id: StatIdDto },
+        ReadStatKeyCommand { key: String },
+        ReadStatValueCommand { value: String },
+        ReadStatUnitCommand { unit: Option<String> },
+        ReadStatDescriptionCommand { description: Option<String> },
+    }
+
+    use crate::attribute::AttributeStore;
+    use crate::attribute::AttributeStoreRef;
+    use crate::tag::TagStore;
+    use crate::tag::TagStoreRef;
+    use crate::typ::TypeStore;
+    use crate::{error::Result, error::SemioError};
+
+    // --- helpers ----------------------------------------------------------------
+
+    fn lp(s: &'static str) -> SemioError {
+        SemioError::LockPoisoned(s)
+    }
+
+    fn nf(kind: &'static str, id: &Id) -> SemioError {
+        SemioError::NotFound { kind, id: id.clone() }
+    }
+
+    fn kit_family(g: &KitGraph, id: &Id) -> Option<crate::family::FamilyStoreRef> {
+        g.families.iter().find(|f| f.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+
+    fn kit_location(g: &KitGraph, id: &Id) -> Option<crate::location::LocationStoreRef> {
+        g.locations.iter().find(|l| l.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+
+    fn kit_find_author(g: &KitGraph, id: &Id) -> Option<crate::author::AuthorStoreRef> {
+        g.authors.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+    fn kit_find_concept(g: &KitGraph, id: &Id) -> Option<crate::concept::ConceptStoreRef> {
+        g.concepts.iter().find(|c| c.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+    fn kit_find_tag(g: &KitGraph, id: &Id) -> Option<crate::tag::TagStoreRef> {
+        g.tags.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+    fn kit_find_quality(g: &KitGraph, id: &Id) -> Option<crate::quality::QualityStoreRef> {
+        g.qualities.iter().find(|q| q.read().map(|q| q.id == *id).unwrap_or(false)).cloned()
+    }
+    fn kit_find_prop(g: &KitGraph, id: &Id) -> Option<crate::prop::PropStoreRef> {
+        g.props.iter().find(|p| p.read().map(|p| p.id == *id).unwrap_or(false)).cloned()
+    }
+    fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeStoreRef> {
+        g.attributes.iter().find(|a| a.read().map(|a| a.id == *id).unwrap_or(false)).cloned()
+    }
+
+    pub(crate) fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
+        g.types.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+    pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
+        g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
+    }
+    fn type_all_ports(t: &TypeStore) -> Vec<PortFullDto> {
+        let mut out = Vec::new();
+        for fw in &t.families {
+            let Some(f) = fw.upgrade() else { continue };
+            let Ok(fr) = f.read() else { continue };
+            for p in &fr.ports {
+                if let Ok(pr) = p.read() {
+                    out.push(pr.to_full_dto());
                 }
             }
         }
-        groups.push(g);
+        out
     }
-    let has_design_nodes = selected.iter().any(|id| !piece_id_set.contains(id));
-    let has_multiple = groups.len() > 1;
-    let has_large = groups.iter().any(|g| g.len() > 1);
-    if has_design_nodes || has_multiple || has_large {
-        return vec![selected.to_vec()];
-    }
-    vec![]
-}
 
-pub(crate) fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
-    use std::collections::HashSet;
-    let mut design_ids: HashSet<Id> = HashSet::new();
-    for conn in &d.connections {
-        let Ok(cr) = conn.read() else { continue };
-        let Ok(s0) = cr.connected.read() else { continue };
-        let Ok(s1) = cr.connecting.read() else { continue };
-        if let Some(dp) = s0
-            .to_metadata_dto()
-            .design_piece
-        {
-            design_ids.insert(dp.id);
-        }
-        if let Some(dp) = s1.to_metadata_dto().design_piece {
-            design_ids.insert(dp.id);
-        }
-    }
-    let mut out: Vec<IncludedDesignInfoDto> = vec![];
-    for design_id in design_ids {
-        let ex: Vec<ConnectionFullDto> = d
-            .connections
-            .iter()
-            .filter_map(|c| c.read().ok().map(|cr| cr.to_full_dto()))
-            .filter(|c| {
-                c.connected
-                    .design_piece
-                    .as_ref()
-                    .is_some_and(|p| p.id == design_id)
-                    || c.connecting
-                        .design_piece
-                        .as_ref()
-                        .is_some_and(|p| p.id == design_id)
+    // --- small entity executes ---------------------------------------------------
+
+    impl ReadStatCommand {
+        pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
+            let s = s.read().map_err(|_| lp("stat"))?;
+            Ok(match self {
+                ReadStatCommand::ReadStatFullCommand => ReadStatCommandOutput::ReadStatFullCommand { stat: s.to_full_dto() },
+                ReadStatCommand::ReadStatShallowCommand => ReadStatCommandOutput::ReadStatShallowCommand { stat: s.to_shallow_dto() },
+                ReadStatCommand::ReadStatMetadataCommand => ReadStatCommandOutput::ReadStatMetadataCommand { metadata: s.to_metadata_dto() },
+                ReadStatCommand::ReadStatIdCommand => ReadStatCommandOutput::ReadStatIdCommand { id: s.to_id_dto() },
+                ReadStatCommand::ReadStatKeyCommand => ReadStatCommandOutput::ReadStatKeyCommand { key: s.key.clone() },
+                ReadStatCommand::ReadStatValueCommand => ReadStatCommandOutput::ReadStatValueCommand { value: s.value.clone() },
+                ReadStatCommand::ReadStatUnitCommand => ReadStatCommandOutput::ReadStatUnitCommand { unit: s.unit.clone() },
+                ReadStatCommand::ReadStatDescriptionCommand => ReadStatCommandOutput::ReadStatDescriptionCommand { description: s.description.clone() },
             })
-            .collect();
-        out.push(IncludedDesignInfoDto {
-            id: design_id.clone(),
-            design_id: design_id.clone(),
-            type_: "connected".to_string(),
-            center: None,
-            plane: None,
-            external_connections: ex,
-        });
+        }
     }
-    out
-}
 
-pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
-    design_included_infos(d)
-        .into_iter()
-        .map(|i| crate::design::DesignIdDto { id: i.design_id })
-        .collect()
-}
+    impl ReadBenchmarkCommand {
+        pub fn execute(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<ReadBenchmarkCommandOutput> {
+            let b = b.read().map_err(|_| lp("benchmark"))?;
+            Ok(match self {
+                ReadBenchmarkCommand::ReadBenchmarkFullCommand => ReadBenchmarkCommandOutput::ReadBenchmarkFullCommand { benchmark: b.to_full_dto() },
+                ReadBenchmarkCommand::ReadBenchmarkShallowCommand => ReadBenchmarkCommandOutput::ReadBenchmarkShallowCommand { benchmark: b.to_shallow_dto() },
+                ReadBenchmarkCommand::ReadBenchmarkMetadataCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMetadataCommand { metadata: b.to_metadata_dto() },
+                ReadBenchmarkCommand::ReadBenchmarkIdCommand => ReadBenchmarkCommandOutput::ReadBenchmarkIdCommand { id: b.to_id_dto() },
+                ReadBenchmarkCommand::ReadBenchmarkNameCommand => ReadBenchmarkCommandOutput::ReadBenchmarkNameCommand { name: b.name.clone() },
+                ReadBenchmarkCommand::ReadBenchmarkMinCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinCommand { min: b.min },
+                ReadBenchmarkCommand::ReadBenchmarkMaxCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxCommand { max: b.max },
+                ReadBenchmarkCommand::ReadBenchmarkMinExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinExcludedCommand { min_excluded: b.min_excluded },
+                ReadBenchmarkCommand::ReadBenchmarkMaxExcludedCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxExcludedCommand { max_excluded: b.max_excluded },
+            })
+        }
+    }
 
-pub(crate) fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
-    use std::collections::HashMap;
-    let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g
-        .types
-        .iter()
-        .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
-        .collect();
-    let mut sum: f64 = 0.0;
-    for pref in &d.pieces {
-        let Ok(pr) = pref.read() else { continue };
-        let mut from_piece = false;
-        for prop in &pr.props {
-            if let Ok(p) = prop.read() {
-                let df = p.to_full_dto();
-                if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
-                    if let Ok(v) = df.value.parse::<f64>() {
-                        sum += v;
+    impl ReadAttributeCommand {
+        pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
+            Ok(match self {
+                ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full_dto() },
+                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow_dto() },
+                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata_dto() },
+                ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_id_dto() },
+                ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
+                ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
+                ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
+            })
+        }
+        pub fn execute_ref(&self, a: &AttributeStoreRef) -> Result<ReadAttributeCommandOutput> {
+            let a = a.read().map_err(|_| lp("attribute"))?;
+            self.execute(&*a)
+        }
+    }
+
+    impl ReadPropCommand {
+        pub fn execute(&self, p: &crate::prop::PropStoreRef) -> Result<ReadPropCommandOutput> {
+            let p = p.read().map_err(|_| lp("prop"))?;
+            Ok(match self {
+                ReadPropCommand::ReadPropFullCommand => ReadPropCommandOutput::ReadPropFullCommand { prop: p.to_full_dto() },
+                ReadPropCommand::ReadPropShallowCommand => ReadPropCommandOutput::ReadPropShallowCommand { prop: p.to_shallow_dto() },
+                ReadPropCommand::ReadPropIdCommand => ReadPropCommandOutput::ReadPropIdCommand { id: p.to_id_dto() },
+                ReadPropCommand::ReadPropKeyCommand => ReadPropCommandOutput::ReadPropKeyCommand { key: p.key.clone() },
+                ReadPropCommand::ReadPropValueCommand => ReadPropCommandOutput::ReadPropValueCommand { value: p.value.clone() },
+                ReadPropCommand::ReadPropUnitCommand => ReadPropCommandOutput::ReadPropUnitCommand { unit: p.unit.clone() },
+                ReadPropCommand::ReadPropQualityIdCommand => ReadPropCommandOutput::ReadPropQualityIdCommand { quality: p.to_full_dto().quality },
+            })
+        }
+    }
+
+    impl ReadTagCommand {
+        pub fn execute(&self, t: &TagStore) -> Result<ReadTagCommandOutput> {
+            Ok(match self {
+                ReadTagCommand::ReadTagFullCommand => ReadTagCommandOutput::ReadTagFullCommand { tag: t.to_full_dto() },
+                ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow_dto() },
+                ReadTagCommand::ReadTagMetadataCommand => ReadTagCommandOutput::ReadTagMetadataCommand { metadata: t.to_metadata_dto() },
+                ReadTagCommand::ReadTagIdCommand => ReadTagCommandOutput::ReadTagIdCommand { id: t.to_id_dto() },
+                ReadTagCommand::ReadTagNameCommand => ReadTagCommandOutput::ReadTagNameCommand { name: t.name.clone() },
+                ReadTagCommand::ReadTagOrderCommand => ReadTagCommandOutput::ReadTagOrderCommand { order: t.order },
+            })
+        }
+        pub fn execute_ref(&self, t: &TagStoreRef) -> Result<ReadTagCommandOutput> {
+            let t = t.read().map_err(|_| lp("tag"))?;
+            self.execute(&*t)
+        }
+    }
+
+    impl ReadQualityCommand {
+        pub fn execute(&self, q: &crate::quality::QualityStoreRef) -> Result<ReadQualityCommandOutput> {
+            let q = q.read().map_err(|_| lp("quality"))?;
+            Ok(match self {
+                ReadQualityCommand::ReadQualityFullCommand => ReadQualityCommandOutput::ReadQualityFullCommand { quality: q.to_full_dto() },
+                ReadQualityCommand::ReadQualityShallowCommand => ReadQualityCommandOutput::ReadQualityShallowCommand { quality: q.to_shallow_dto() },
+                ReadQualityCommand::ReadQualityMetadataCommand => ReadQualityCommandOutput::ReadQualityMetadataCommand { metadata: q.to_metadata_dto() },
+                ReadQualityCommand::ReadQualityIdCommand => ReadQualityCommandOutput::ReadQualityIdCommand { id: q.to_id_dto() },
+                ReadQualityCommand::ReadQualityKeyCommand => ReadQualityCommandOutput::ReadQualityKeyCommand { key: q.key.clone() },
+                ReadQualityCommand::ReadQualityValueCommand => ReadQualityCommandOutput::ReadQualityValueCommand { value: q.value.clone() },
+                ReadQualityCommand::ReadQualityUnitCommand => ReadQualityCommandOutput::ReadQualityUnitCommand { unit: q.unit.clone() },
+                ReadQualityCommand::ReadQualityDefinitionCommand => ReadQualityCommandOutput::ReadQualityDefinitionCommand { definition: q.definition.clone() },
+                ReadQualityCommand::ReadQualityDescriptionCommand => ReadQualityCommandOutput::ReadQualityDescriptionCommand { description: q.description.clone() },
+                ReadQualityCommand::ReadQualityBenchmarksFullCommand => ReadQualityCommandOutput::ReadQualityBenchmarksFullCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect() },
+                ReadQualityCommand::ReadQualityBenchmarksShallowCommand => ReadQualityCommandOutput::ReadQualityBenchmarksShallowCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_shallow_dto())).collect() },
+                ReadQualityCommand::ReadQualityBenchmarkCommands { id, commands } => {
+                    let b = q.benchmarks.iter().find(|b| b.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Benchmark", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(b)?);
                     }
-                    from_piece = true;
-                    break;
+                    ReadQualityCommandOutput::ReadQualityBenchmarkCommands { results }
                 }
+            })
+        }
+    }
+
+    impl ReadAuthorCommand {
+        pub fn execute(&self, a: &crate::author::AuthorStoreRef) -> Result<ReadAuthorCommandOutput> {
+            let a = a.read().map_err(|_| lp("author"))?;
+            Ok(match self {
+                ReadAuthorCommand::ReadAuthorFullCommand => ReadAuthorCommandOutput::ReadAuthorFullCommand { author: a.to_full_dto() },
+                ReadAuthorCommand::ReadAuthorShallowCommand => ReadAuthorCommandOutput::ReadAuthorShallowCommand { author: a.to_shallow_dto() },
+                ReadAuthorCommand::ReadAuthorMetadataCommand => ReadAuthorCommandOutput::ReadAuthorMetadataCommand { metadata: a.to_metadata_dto() },
+                ReadAuthorCommand::ReadAuthorIdCommand => ReadAuthorCommandOutput::ReadAuthorIdCommand { id: a.to_id_dto() },
+                ReadAuthorCommand::ReadAuthorNameCommand => ReadAuthorCommandOutput::ReadAuthorNameCommand { name: a.name.clone() },
+                ReadAuthorCommand::ReadAuthorEmailCommand => ReadAuthorCommandOutput::ReadAuthorEmailCommand { email: a.email.clone() },
+                ReadAuthorCommand::ReadAuthorRoleCommand => ReadAuthorCommandOutput::ReadAuthorRoleCommand { role: a.role.clone() },
+                ReadAuthorCommand::ReadAuthorRankCommand => ReadAuthorCommandOutput::ReadAuthorRankCommand { rank: a.rank },
+            })
+        }
+    }
+
+    impl ReadConceptCommand {
+        pub fn execute(&self, c: &crate::concept::ConceptStoreRef) -> Result<ReadConceptCommandOutput> {
+            let c = c.read().map_err(|_| lp("concept"))?;
+            Ok(match self {
+                ReadConceptCommand::ReadConceptFullCommand => ReadConceptCommandOutput::ReadConceptFullCommand { concept: c.to_full_dto() },
+                ReadConceptCommand::ReadConceptShallowCommand => ReadConceptCommandOutput::ReadConceptShallowCommand { concept: c.to_shallow_dto() },
+                ReadConceptCommand::ReadConceptMetadataCommand => ReadConceptCommandOutput::ReadConceptMetadataCommand { metadata: c.to_metadata_dto() },
+                ReadConceptCommand::ReadConceptIdCommand => ReadConceptCommandOutput::ReadConceptIdCommand { id: c.to_id_dto() },
+                ReadConceptCommand::ReadConceptNameCommand => ReadConceptCommandOutput::ReadConceptNameCommand { name: c.name.clone() },
+                ReadConceptCommand::ReadConceptDescriptionCommand => ReadConceptCommandOutput::ReadConceptDescriptionCommand { description: c.description.clone() },
+                ReadConceptCommand::ReadConceptOrderCommand => ReadConceptCommandOutput::ReadConceptOrderCommand { order: c.order },
+            })
+        }
+    }
+
+    impl ReadFileCommand {
+        pub fn execute(&self, f: &crate::file::FileStoreRef) -> Result<ReadFileCommandOutput> {
+            let f = f.read().map_err(|_| lp("file"))?;
+            Ok(match self {
+                ReadFileCommand::ReadFileFullCommand => ReadFileCommandOutput::ReadFileFullCommand { file: f.to_full_dto() },
+                ReadFileCommand::ReadFileShallowCommand => ReadFileCommandOutput::ReadFileShallowCommand { file: f.to_shallow_dto() },
+                ReadFileCommand::ReadFileMetadataCommand => ReadFileCommandOutput::ReadFileMetadataCommand { metadata: f.to_metadata_dto() },
+                ReadFileCommand::ReadFileIdCommand => ReadFileCommandOutput::ReadFileIdCommand { id: f.to_id_dto() },
+                ReadFileCommand::ReadFileUrlCommand => ReadFileCommandOutput::ReadFileUrlCommand { url: f.url.clone() },
+                ReadFileCommand::ReadFileMimeCommand => ReadFileCommandOutput::ReadFileMimeCommand { mime: f.mime.clone() },
+                ReadFileCommand::ReadFileSizeCommand => ReadFileCommandOutput::ReadFileSizeCommand { size: f.size },
+                ReadFileCommand::ReadFileHashCommand => ReadFileCommandOutput::ReadFileHashCommand { hash: f.hash.clone() },
+                ReadFileCommand::ReadFileDescriptionCommand => ReadFileCommandOutput::ReadFileDescriptionCommand { description: f.description.clone() },
+                ReadFileCommand::ReadFileCreatedCommand => ReadFileCommandOutput::ReadFileCreatedCommand { created: f.created.clone() },
+                ReadFileCommand::ReadFileUpdatedCommand => ReadFileCommandOutput::ReadFileUpdatedCommand { updated: f.updated.clone() },
+            })
+        }
+    }
+
+    impl ReadFolderCommand {
+        pub fn execute(&self, f: &crate::folder::FolderStoreRef) -> Result<ReadFolderCommandOutput> {
+            let f = f.read().map_err(|_| lp("folder"))?;
+            Ok(match self {
+                ReadFolderCommand::ReadFolderFullCommand => ReadFolderCommandOutput::ReadFolderFullCommand { folder: f.to_full_dto() },
+                ReadFolderCommand::ReadFolderShallowCommand => ReadFolderCommandOutput::ReadFolderShallowCommand { folder: f.to_shallow_dto() },
+                ReadFolderCommand::ReadFolderMetadataCommand => ReadFolderCommandOutput::ReadFolderMetadataCommand { metadata: f.to_metadata_dto() },
+                ReadFolderCommand::ReadFolderIdCommand => ReadFolderCommandOutput::ReadFolderIdCommand { id: f.to_id_dto() },
+                ReadFolderCommand::ReadFolderPathCommand => ReadFolderCommandOutput::ReadFolderPathCommand { path: f.path.clone() },
+                ReadFolderCommand::ReadFolderDescriptionCommand => ReadFolderCommandOutput::ReadFolderDescriptionCommand { description: f.description.clone() },
+            })
+        }
+    }
+
+    impl ReadLocationCommand {
+        pub fn execute(&self, l: &crate::location::LocationStoreRef) -> Result<ReadLocationCommandOutput> {
+            let l = l.read().map_err(|_| lp("location"))?;
+            Ok(match self {
+                ReadLocationCommand::ReadLocationFullCommand => ReadLocationCommandOutput::ReadLocationFullCommand { location: l.to_full_dto() },
+                ReadLocationCommand::ReadLocationShallowCommand => ReadLocationCommandOutput::ReadLocationShallowCommand { location: l.to_shallow_dto() },
+                ReadLocationCommand::ReadLocationMetadataCommand => ReadLocationCommandOutput::ReadLocationMetadataCommand { metadata: l.to_metadata_dto() },
+                ReadLocationCommand::ReadLocationIdCommand => ReadLocationCommandOutput::ReadLocationIdCommand { id: l.to_id_dto() },
+                ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
+                ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
+                ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
+                ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
+                    let a = l.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadLocationCommandOutput::ReadLocationAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadLayerCommand {
+        pub fn execute(&self, l: &crate::layer::LayerStoreRef) -> Result<ReadLayerCommandOutput> {
+            let l = l.read().map_err(|_| lp("layer"))?;
+            Ok(match self {
+                ReadLayerCommand::ReadLayerFullCommand => ReadLayerCommandOutput::ReadLayerFullCommand { layer: l.to_full_dto() },
+                ReadLayerCommand::ReadLayerShallowCommand => ReadLayerCommandOutput::ReadLayerShallowCommand { layer: l.to_shallow_dto() },
+                ReadLayerCommand::ReadLayerMetadataCommand => ReadLayerCommandOutput::ReadLayerMetadataCommand { metadata: l.to_metadata_dto() },
+                ReadLayerCommand::ReadLayerIdCommand => ReadLayerCommandOutput::ReadLayerIdCommand { id: l.to_id_dto() },
+                ReadLayerCommand::ReadLayerNameCommand => ReadLayerCommandOutput::ReadLayerNameCommand { name: l.name.clone() },
+                ReadLayerCommand::ReadLayerDescriptionCommand => ReadLayerCommandOutput::ReadLayerDescriptionCommand { description: l.description.clone() },
+                ReadLayerCommand::ReadLayerColorCommand => ReadLayerCommandOutput::ReadLayerColorCommand { color: l.color.clone() },
+                ReadLayerCommand::ReadLayerOrderCommand => ReadLayerCommandOutput::ReadLayerOrderCommand { order: l.order },
+                ReadLayerCommand::ReadLayerVisibleCommand => ReadLayerCommandOutput::ReadLayerVisibleCommand { visible: l.visible },
+                ReadLayerCommand::ReadLayerLockedCommand => ReadLayerCommandOutput::ReadLayerLockedCommand { locked: l.locked },
+            })
+        }
+    }
+
+    impl ReadGroupCommand {
+        pub fn execute(&self, g: &crate::group::GroupStoreRef) -> Result<ReadGroupCommandOutput> {
+            let g = g.read().map_err(|_| lp("group"))?;
+            Ok(match self {
+                ReadGroupCommand::ReadGroupFullCommand => ReadGroupCommandOutput::ReadGroupFullCommand { group: g.to_full_dto() },
+                ReadGroupCommand::ReadGroupShallowCommand => ReadGroupCommandOutput::ReadGroupShallowCommand { group: g.to_shallow_dto() },
+                ReadGroupCommand::ReadGroupMetadataCommand => ReadGroupCommandOutput::ReadGroupMetadataCommand { metadata: g.to_metadata_dto() },
+                ReadGroupCommand::ReadGroupIdCommand => ReadGroupCommandOutput::ReadGroupIdCommand { id: g.to_id_dto() },
+                ReadGroupCommand::ReadGroupNameCommand => ReadGroupCommandOutput::ReadGroupNameCommand { name: g.name.clone() },
+                ReadGroupCommand::ReadGroupDescriptionCommand => ReadGroupCommandOutput::ReadGroupDescriptionCommand { description: g.description.clone() },
+                ReadGroupCommand::ReadGroupColorCommand => ReadGroupCommandOutput::ReadGroupColorCommand { color: g.color.clone() },
+                ReadGroupCommand::ReadGroupIconCommand => ReadGroupCommandOutput::ReadGroupIconCommand { icon: g.icon.clone() },
+                ReadGroupCommand::ReadGroupPiecesCommand => ReadGroupCommandOutput::ReadGroupPiecesCommand { pieces: g.pieces.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
+            })
+        }
+    }
+
+    impl ReadFamilyCommand {
+        pub fn execute(&self, f: &FamilyStoreRef) -> Result<ReadFamilyCommandOutput> {
+            let f = f.read().map_err(|_| lp("family"))?;
+            Ok(match self {
+                ReadFamilyCommand::ReadFamilyFullCommand => ReadFamilyCommandOutput::ReadFamilyFullCommand { family: f.to_full_dto() },
+                ReadFamilyCommand::ReadFamilyShallowCommand => ReadFamilyCommandOutput::ReadFamilyShallowCommand { family: f.to_shallow_dto() },
+                ReadFamilyCommand::ReadFamilyMetadataCommand => ReadFamilyCommandOutput::ReadFamilyMetadataCommand { metadata: f.to_metadata_dto() },
+                ReadFamilyCommand::ReadFamilyIdCommand => ReadFamilyCommandOutput::ReadFamilyIdCommand { id: f.to_id_dto() },
+                ReadFamilyCommand::ReadFamilyNameCommand => ReadFamilyCommandOutput::ReadFamilyNameCommand { name: f.name.clone() },
+                ReadFamilyCommand::ReadFamilyDescriptionCommand => ReadFamilyCommandOutput::ReadFamilyDescriptionCommand { description: f.description.clone() },
+                ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
+                ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full_dto()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
+                    let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(p)?);
+                    }
+                    ReadFamilyCommandOutput::ReadFamilyPortCommands { results }
+                }
+                ReadFamilyCommand::ReadFamilyAttributeCommands { id, commands } => {
+                    let a = f.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadFamilyCommandOutput::ReadFamilyAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadSideCommand {
+        pub fn execute(&self, s: &SideStoreRef) -> Result<ReadSideCommandOutput> {
+            let s = s.read().map_err(|_| lp("side"))?;
+            Ok(match self {
+                ReadSideCommand::ReadSideFullCommand => ReadSideCommandOutput::ReadSideFullCommand { side: s.to_full_dto() },
+                ReadSideCommand::ReadSideShallowCommand => ReadSideCommandOutput::ReadSideShallowCommand { side: s.to_shallow_dto() },
+                ReadSideCommand::ReadSideMetadataCommand => ReadSideCommandOutput::ReadSideMetadataCommand { side: s.to_metadata_dto() },
+                ReadSideCommand::ReadSideIdCommand => ReadSideCommandOutput::ReadSideIdCommand { id: s.to_id_dto() },
+                ReadSideCommand::ReadSidePieceIdCommand => ReadSideCommandOutput::ReadSidePieceIdCommand { piece: s.to_metadata_dto().piece },
+                ReadSideCommand::ReadSidePortIdCommand => ReadSideCommandOutput::ReadSidePortIdCommand { port: s.to_metadata_dto().port },
+                ReadSideCommand::ReadSideDesignPieceIdCommand => ReadSideCommandOutput::ReadSideDesignPieceIdCommand { design_piece: s.to_metadata_dto().design_piece },
+            })
+        }
+    }
+
+    impl ReadConnectionCommand {
+        pub fn execute(&self, c: &crate::connection::ConnectionStoreRef) -> Result<ReadConnectionCommandOutput> {
+            let c = c.read().map_err(|_| lp("connection"))?;
+            Ok(match self {
+                ReadConnectionCommand::ReadConnectionFullCommand => ReadConnectionCommandOutput::ReadConnectionFullCommand { dto: c.to_full_dto() },
+                ReadConnectionCommand::ReadConnectionShallowCommand => ReadConnectionCommandOutput::ReadConnectionShallowCommand { dto: c.to_shallow_dto() },
+                ReadConnectionCommand::ReadConnectionMetadataCommand => ReadConnectionCommandOutput::ReadConnectionMetadataCommand { metadata: c.to_metadata_dto() },
+                ReadConnectionCommand::ReadConnectionIdCommand => ReadConnectionCommandOutput::ReadConnectionIdCommand { id: c.to_id_dto() },
+                ReadConnectionCommand::ReadConnectionConnectedSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideMetadataCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_metadata_dto() },
+                ReadConnectionCommand::ReadConnectionConnectingSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideMetadataCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_metadata_dto() },
+                ReadConnectionCommand::ReadConnectionConnectedSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideFullCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_full_dto() },
+                ReadConnectionCommand::ReadConnectionConnectingSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideFullCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_full_dto() },
+                ReadConnectionCommand::ReadConnectionGapCommand => ReadConnectionCommandOutput::ReadConnectionGapCommand { gap: c.gap },
+                ReadConnectionCommand::ReadConnectionShiftCommand => ReadConnectionCommandOutput::ReadConnectionShiftCommand { shift: c.shift },
+                ReadConnectionCommand::ReadConnectionRiseCommand => ReadConnectionCommandOutput::ReadConnectionRiseCommand { rise: c.rise },
+                ReadConnectionCommand::ReadConnectionRotationCommand => ReadConnectionCommandOutput::ReadConnectionRotationCommand { rotation: c.rotation },
+                ReadConnectionCommand::ReadConnectionTurnCommand => ReadConnectionCommandOutput::ReadConnectionTurnCommand { turn: c.turn },
+                ReadConnectionCommand::ReadConnectionTiltCommand => ReadConnectionCommandOutput::ReadConnectionTiltCommand { tilt: c.tilt },
+                ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
+                ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
+                ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
+                ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadConnectionCommand::ReadConnectionAttributesShallowCommand => {
+                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() }
+                }
+                ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
+                ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
+                    let (a, b) = c.flat_side_dtos_for_child(&child_piece_id.id).ok_or_else(|| SemioError::InvalidOperation("no flat sides for child on this connection".into()))?;
+                    ReadConnectionCommandOutput::ReadConnectionFlatSidesForChildCommand { connected: a, connecting: b }
+                }
+                ReadConnectionCommand::ReadConnectionAttributeCommands { id, commands } => {
+                    let a = c.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for cmd in commands {
+                        results.push(cmd.execute_ref(a)?);
+                    }
+                    ReadConnectionCommandOutput::ReadConnectionAttributeCommands { results }
+                }
+                ReadConnectionCommand::ReadConnectionConnectedSideCommands { commands } => {
+                    let mut results = Vec::with_capacity(commands.len());
+                    for cmd in commands {
+                        results.push(cmd.execute(&c.connected)?);
+                    }
+                    ReadConnectionCommandOutput::ReadConnectionConnectedSideCommands { results }
+                }
+                ReadConnectionCommand::ReadConnectionConnectingSideCommands { commands } => {
+                    let mut results = Vec::with_capacity(commands.len());
+                    for cmd in commands {
+                        results.push(cmd.execute(&c.connecting)?);
+                    }
+                    ReadConnectionCommandOutput::ReadConnectionConnectingSideCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadPortCommand {
+        pub fn execute(&self, p: &PortStoreRef) -> Result<ReadPortCommandOutput> {
+            let p = p.read().map_err(|_| lp("port"))?;
+            Ok(match self {
+                ReadPortCommand::ReadPortFullCommand => ReadPortCommandOutput::ReadPortFullCommand { port: p.to_full_dto() },
+                ReadPortCommand::ReadPortShallowCommand => ReadPortCommandOutput::ReadPortShallowCommand { port: p.to_shallow_dto() },
+                ReadPortCommand::ReadPortMetadataCommand => ReadPortCommandOutput::ReadPortMetadataCommand { metadata: p.to_metadata_dto() },
+                ReadPortCommand::ReadPortIdCommand => ReadPortCommandOutput::ReadPortIdCommand { id: p.to_id_dto() },
+                ReadPortCommand::ReadPortNameCommand => ReadPortCommandOutput::ReadPortNameCommand { name: p.name.clone() },
+                ReadPortCommand::ReadPortDescriptionCommand => ReadPortCommandOutput::ReadPortDescriptionCommand { description: p.description.clone() },
+                ReadPortCommand::ReadPortIconCommand => ReadPortCommandOutput::ReadPortIconCommand { icon: p.icon.clone() },
+                ReadPortCommand::ReadPortCompatibleFamiliesCommand => ReadPortCommandOutput::ReadPortCompatibleFamiliesCommand { families: p.compatible_families.clone() },
+                ReadPortCommand::ReadPortMandatoryCommand => ReadPortCommandOutput::ReadPortMandatoryCommand { mandatory: p.mandatory },
+                ReadPortCommand::ReadPortTCommand => ReadPortCommandOutput::ReadPortTCommand { t: p.t },
+                ReadPortCommand::ReadPortPointCommand => ReadPortCommandOutput::ReadPortPointCommand { point: p.point },
+                ReadPortCommand::ReadPortDirectionCommand => ReadPortCommandOutput::ReadPortDirectionCommand { direction: p.direction },
+                ReadPortCommand::ReadPortCompatiblePortsCommand => {
+                    ReadPortCommandOutput::ReadPortCompatiblePortsCommand { compatible_ports: p.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() }
+                }
+                ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+                ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+                ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full_dto()).collect() },
+                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadPortCommand::ReadPortQualityCommands { id, commands } => {
+                    let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(q)?);
+                    }
+                    ReadPortCommandOutput::ReadPortQualityCommands { results }
+                }
+                ReadPortCommand::ReadPortAttributeCommands { id, commands } => {
+                    let a = p.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadPortCommandOutput::ReadPortAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadConnectorCommand {
+        pub fn execute(&self, c: &ConnectorStoreRef) -> Result<ReadConnectorCommandOutput> {
+            let c = c.read().map_err(|_| lp("connector"))?;
+            Ok(match self {
+                ReadConnectorCommand::ReadConnectorFullCommand => ReadConnectorCommandOutput::ReadConnectorFullCommand { connector: c.to_full_dto() },
+                ReadConnectorCommand::ReadConnectorShallowCommand => ReadConnectorCommandOutput::ReadConnectorShallowCommand { connector: c.to_shallow_dto() },
+                ReadConnectorCommand::ReadConnectorMetadataCommand => ReadConnectorCommandOutput::ReadConnectorMetadataCommand { metadata: c.to_metadata_dto() },
+                ReadConnectorCommand::ReadConnectorIdCommand => ReadConnectorCommandOutput::ReadConnectorIdCommand { id: c.to_id_dto() },
+                ReadConnectorCommand::ReadConnectorCodeCommand => ReadConnectorCommandOutput::ReadConnectorCodeCommand { code: c.code.clone() },
+                ReadConnectorCommand::ReadConnectorDescriptionCommand => ReadConnectorCommandOutput::ReadConnectorDescriptionCommand { description: c.description.clone() },
+                ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata_dto().port },
+                ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+                ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full_dto()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
+                    let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for cmd in commands {
+                        results.push(cmd.execute(q)?);
+                    }
+                    ReadConnectorCommandOutput::ReadConnectorQualityCommands { results }
+                }
+                ReadConnectorCommand::ReadConnectorAttributeCommands { id, commands } => {
+                    let a = c.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for cmd in commands {
+                        results.push(cmd.execute(a)?);
+                    }
+                    ReadConnectorCommandOutput::ReadConnectorAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadRepresentationCommand {
+        pub fn execute(&self, r: &RepresentationStoreRef) -> Result<ReadRepresentationCommandOutput> {
+            let r = r.read().map_err(|_| lp("representation"))?;
+            Ok(match self {
+                ReadRepresentationCommand::ReadRepresentationFullCommand => ReadRepresentationCommandOutput::ReadRepresentationFullCommand { representation: r.to_full_dto() },
+                ReadRepresentationCommand::ReadRepresentationShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationShallowCommand { representation: r.to_shallow_dto() },
+                ReadRepresentationCommand::ReadRepresentationMetadataCommand => ReadRepresentationCommandOutput::ReadRepresentationMetadataCommand { metadata: r.to_metadata_dto() },
+                ReadRepresentationCommand::ReadRepresentationIdCommand => ReadRepresentationCommandOutput::ReadRepresentationIdCommand { id: r.to_id_dto() },
+                ReadRepresentationCommand::ReadRepresentationUrlCommand => ReadRepresentationCommandOutput::ReadRepresentationUrlCommand { url: r.url.clone() },
+                ReadRepresentationCommand::ReadRepresentationDescriptionCommand => ReadRepresentationCommandOutput::ReadRepresentationDescriptionCommand { description: r.description.clone() },
+                ReadRepresentationCommand::ReadRepresentationFileIdCommand => ReadRepresentationCommandOutput::ReadRepresentationFileIdCommand { file: r.to_metadata_dto().file },
+                ReadRepresentationCommand::ReadRepresentationTagsFullCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsFullCommand { tags: r.tags.iter().map(|t| t.to_full_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationTagsShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsShallowCommand { tags: r.tags.iter().map(|t| t.to_shallow_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationQualitiesFullCommand => {
+                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() }
+                }
+                ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => {
+                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() }
+                }
+                ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
+                    let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(t)?);
+                    }
+                    ReadRepresentationCommandOutput::ReadRepresentationTagCommands { results }
+                }
+                ReadRepresentationCommand::ReadRepresentationQualityCommands { id, commands } => {
+                    let q = r.qualities.iter().find(|q| q.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(q)?);
+                    }
+                    ReadRepresentationCommandOutput::ReadRepresentationQualityCommands { results }
+                }
+                ReadRepresentationCommand::ReadRepresentationAttributeCommands { id, commands } => {
+                    let a = r.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadRepresentationCommandOutput::ReadRepresentationAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadPieceCommand {
+        pub fn execute(&self, p: &PieceStoreRef, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
+            let o = p.read().map_err(|_| lp("piece"))?;
+            Ok(match self {
+                ReadPieceCommand::ReadPieceFullCommand => ReadPieceCommandOutput::ReadPieceFullCommand { dto: o.to_full_dto() },
+                ReadPieceCommand::ReadPieceShallowCommand => ReadPieceCommandOutput::ReadPieceShallowCommand { dto: o.to_shallow_dto() },
+                ReadPieceCommand::ReadPieceMetadataCommand => ReadPieceCommandOutput::ReadPieceMetadataCommand { metadata: o.to_metadata_dto() },
+                ReadPieceCommand::ReadPieceIdCommand => ReadPieceCommandOutput::ReadPieceIdCommand { id: o.to_id_dto() },
+                ReadPieceCommand::ReadPieceNameCommand => ReadPieceCommandOutput::ReadPieceNameCommand { name: o.name.clone() },
+                ReadPieceCommand::ReadPieceDescriptionCommand => ReadPieceCommandOutput::ReadPieceDescriptionCommand { description: o.description.clone() },
+                ReadPieceCommand::ReadPiecePlaneCommand => ReadPieceCommandOutput::ReadPiecePlaneCommand { plane: o.pose.plane },
+                ReadPieceCommand::ReadPieceCenterCommand => ReadPieceCommandOutput::ReadPieceCenterCommand { center: o.pose.center },
+                ReadPieceCommand::ReadPieceScaleCommand => ReadPieceCommandOutput::ReadPieceScaleCommand { scale: o.scale },
+                ReadPieceCommand::ReadPieceMirrorPlaneCommand => ReadPieceCommandOutput::ReadPieceMirrorPlaneCommand { mirror_plane: o.mirror_plane },
+                ReadPieceCommand::ReadPieceHiddenCommand => ReadPieceCommandOutput::ReadPieceHiddenCommand { hidden: o.hidden },
+                ReadPieceCommand::ReadPieceLockedCommand => ReadPieceCommandOutput::ReadPieceLockedCommand { locked: o.locked },
+                ReadPieceCommand::ReadPieceColorCommand => ReadPieceCommandOutput::ReadPieceColorCommand { color: o.color.clone() },
+                ReadPieceCommand::ReadPieceTypeCommand => ReadPieceCommandOutput::ReadPieceTypeCommand { r#type: o.to_metadata_dto().r#type },
+                ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata_dto().design },
+                ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
+                ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
+                ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_full_dto() },
+                ReadPieceCommand::ReadPiecePathCommand => ReadPieceCommandOutput::ReadPiecePathCommand { path: o.path() },
+                ReadPieceCommand::ReadPieceParentPieceIdCommand => ReadPieceCommandOutput::ReadPieceParentPieceIdCommand { parent_piece: o.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto())) },
+                ReadPieceCommand::ReadPieceParentConnectionIdCommand => {
+                    ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand { parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_id_dto())) }
+                }
+                ReadPieceCommand::ReadPieceParentConnectionFullCommand => {
+                    ReadPieceCommandOutput::ReadPieceParentConnectionFullCommand { connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_full_dto())) }
+                }
+                ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
+                    parent_design: o.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
+                },
+                ReadPieceCommand::ReadPieceFixedCommand => {
+                    if o.parent_piece.is_some() || o.parent_connection.is_some() {
+                        return Err(SemioError::InvalidOperation("ReadPieceFixedCommand requires no parent piece or connection".into()));
+                    }
+                    ReadPieceCommandOutput::ReadPieceFixedCommand { fixed: crate::piece::FixedPieceOutputDto { piece: o.to_id_dto(), pose: o.pose_full_dto() } }
+                }
+                ReadPieceCommand::ReadPieceConnectedCommand => {
+                    let (pp, pc) = (o.parent_piece.as_ref().and_then(|w| w.upgrade()), o.parent_connection.as_ref().and_then(|w| w.upgrade()));
+                    let (Some(pp), Some(pc)) = (pp, pc) else {
+                        return Err(SemioError::InvalidOperation("ReadPieceConnectedCommand requires parent piece and parent connection".into()));
+                    };
+                    let _pp = pp.read().map_err(|_| lp("piece"))?;
+                    let _pc = pc.read().map_err(|_| lp("connection"))?;
+                    ReadPieceCommandOutput::ReadPieceConnectedCommand { connected: crate::piece::ConnectedPieceOutputDto { piece: o.to_id_dto(), parent_piece: _pp.to_id_dto(), parent_connection: _pc.to_id_dto(), flat_pose: o.flat_pose_full_dto() } }
+                }
+                ReadPieceCommand::ReadPieceAlternativesCommand => {
+                    let alt = o.alternatives();
+                    ReadPieceCommandOutput::ReadPieceAlternativesCommand {
+                        alternatives: crate::piece::PieceAlternativesDto {
+                            types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
+                            designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
+                        },
+                    }
+                }
+                ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand { types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect() },
+                ReadPieceCommand::ReadPieceAlternativeDesignsCommand => {
+                    ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand { designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect() }
+                }
+                ReadPieceCommand::ReadPiecePropCommands { id, commands } => {
+                    let pr = o.props.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(pr)?);
+                    }
+                    ReadPieceCommandOutput::ReadPiecePropCommands { results }
+                }
+                ReadPieceCommand::ReadPieceAttributeCommands { id, commands } => {
+                    let a = o.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadPieceCommandOutput::ReadPieceAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    impl ReadTypeCommand {
+        pub fn execute(&self, t: &TypeStoreRef, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
+            let r = t.read().map_err(|_| lp("type"))?;
+            Ok(match self {
+                ReadTypeCommand::ReadTypeFullCommand => ReadTypeCommandOutput::ReadTypeFullCommand { dto: r.to_full_dto() },
+                ReadTypeCommand::ReadTypeShallowCommand => ReadTypeCommandOutput::ReadTypeShallowCommand { dto: r.to_shallow_dto() },
+                ReadTypeCommand::ReadTypeMetadataCommand => ReadTypeCommandOutput::ReadTypeMetadataCommand { metadata: r.to_metadata_dto() },
+                ReadTypeCommand::ReadTypeIdCommand => ReadTypeCommandOutput::ReadTypeIdCommand { id: r.to_id_dto() },
+                ReadTypeCommand::ReadTypeNameCommand => ReadTypeCommandOutput::ReadTypeNameCommand { name: r.name.clone() },
+                ReadTypeCommand::ReadTypeDescriptionCommand => ReadTypeCommandOutput::ReadTypeDescriptionCommand { description: r.description.clone() },
+                ReadTypeCommand::ReadTypeIconCommand => ReadTypeCommandOutput::ReadTypeIconCommand { icon: r.icon.clone() },
+                ReadTypeCommand::ReadTypeImageCommand => ReadTypeCommandOutput::ReadTypeImageCommand { image: r.image.clone() },
+                ReadTypeCommand::ReadTypeStockCommand => ReadTypeCommandOutput::ReadTypeStockCommand { stock: r.stock },
+                ReadTypeCommand::ReadTypeVirtualCommand => ReadTypeCommandOutput::ReadTypeVirtualCommand { r#virtual: r.virtual_ },
+                ReadTypeCommand::ReadTypeUnitCommand => ReadTypeCommandOutput::ReadTypeUnitCommand { unit: r.unit.clone() },
+                ReadTypeCommand::ReadTypeLocationCommand => ReadTypeCommandOutput::ReadTypeLocationCommand { location: r.location.clone() },
+                ReadTypeCommand::ReadTypeCreatedCommand => ReadTypeCommandOutput::ReadTypeCreatedCommand { created: r.created.clone() },
+                ReadTypeCommand::ReadTypeUpdatedCommand => ReadTypeCommandOutput::ReadTypeUpdatedCommand { updated: r.updated.clone() },
+                ReadTypeCommand::ReadTypeFamiliesCommand => ReadTypeCommandOutput::ReadTypeFamiliesCommand { families: r.to_full_dto().families },
+                ReadTypeCommand::ReadTypeConnectorsFullCommand => ReadTypeCommandOutput::ReadTypeConnectorsFullCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeConnectorsShallowCommand => ReadTypeCommandOutput::ReadTypeConnectorsShallowCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeRepresentationsFullCommand => ReadTypeCommandOutput::ReadTypeRepresentationsFullCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeRepresentationsShallowCommand => ReadTypeCommandOutput::ReadTypeRepresentationsShallowCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeAuthorsFullCommand => ReadTypeCommandOutput::ReadTypeAuthorsFullCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeAuthorsShallowCommand => ReadTypeCommandOutput::ReadTypeAuthorsShallowCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeConceptsFullCommand => ReadTypeCommandOutput::ReadTypeConceptsFullCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeConceptsShallowCommand => ReadTypeCommandOutput::ReadTypeConceptsShallowCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeTagsFullCommand => ReadTypeCommandOutput::ReadTypeTagsFullCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeTagsShallowCommand => ReadTypeCommandOutput::ReadTypeTagsShallowCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeQualitiesFullCommand => ReadTypeCommandOutput::ReadTypeQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypePortsFullCommand => ReadTypeCommandOutput::ReadTypePortsFullCommand { ports: type_all_ports(&*r) },
+                ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand { connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full_dto())) },
+                ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand { representation: r.best_representation_for_tag_ids(&tag_ids) },
+                ReadTypeCommand::ReadTypeFamilyCommands { id, commands } => {
+                    let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&f)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeFamilyCommands { results }
+                }
+                ReadTypeCommand::ReadTypeConnectorCommands { id, commands } => {
+                    let c = r.connector(id.id.as_str()).ok_or_else(|| nf("Connector", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for x in commands {
+                        results.push(x.execute(&c)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeConnectorCommands { results }
+                }
+                ReadTypeCommand::ReadTypeRepresentationCommands { id, commands } => {
+                    let x = r.representation(id.id.as_str()).ok_or_else(|| nf("Representation", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&x)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeRepresentationCommands { results }
+                }
+                ReadTypeCommand::ReadTypePortCommands { id, commands } => {
+                    let p = r.port(id.id.as_str()).ok_or_else(|| nf("Port", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&p)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypePortCommands { results }
+                }
+                ReadTypeCommand::ReadTypeAuthorCommands { id, commands } => {
+                    let a = r.authors.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeAuthorCommands { results }
+                }
+                ReadTypeCommand::ReadTypeConceptCommands { id, commands } => {
+                    let a = r.concepts.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeConceptCommands { results }
+                }
+                ReadTypeCommand::ReadTypeTagCommands { id, commands } => {
+                    let a = r.tags.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeTagCommands { results }
+                }
+                ReadTypeCommand::ReadTypeQualityCommands { id, commands } => {
+                    let a = r.qualities.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeQualityCommands { results }
+                }
+                ReadTypeCommand::ReadTypePropCommands { id, commands } => {
+                    let a = r.props.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypePropCommands { results }
+                }
+                ReadTypeCommand::ReadTypeAttributeCommands { id, commands } => {
+                    let a = r.attributes.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadTypeCommandOutput::ReadTypeAttributeCommands { results }
+                }
+            })
+        }
+    }
+
+    // --- design-domain reads (port of previous JS: getClusterableGroups, getIncludedDesigns, sumQualityInDesign) —
+
+    /// Stable CSS `color-mix` string for a port/connector id (see JS `getColorForText`).
+    fn color_string_for_id_text(text: &str) -> String {
+        if text.is_empty() {
+            return "var(--foreground)".to_string();
+        }
+        let mut hash: i32 = 0;
+        for c in text.chars() {
+            hash = (hash << 5).wrapping_sub(hash).wrapping_add(c as i32);
+        }
+        const VARI: [[&str; 4]; 6] = [
+            [
+                "color-mix(in srgb, var(--accent) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--accent) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--accent) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--accent) 45%, var(--foreground) 55%)",
+            ],
+            [
+                "color-mix(in srgb, var(--accent-secondary) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--accent-secondary) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--accent-secondary) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--accent-secondary) 45%, var(--foreground) 55%)",
+            ],
+            [
+                "color-mix(in srgb, var(--accent-tertiary) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--accent-tertiary) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--accent-tertiary) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--accent-tertiary) 45%, var(--foreground) 55%)",
+            ],
+            [
+                "color-mix(in srgb, var(--status-success) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--status-success) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--status-success) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--status-success) 45%, var(--foreground) 55%)",
+            ],
+            [
+                "color-mix(in srgb, var(--status-warning) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--status-warning) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--status-warning) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--status-warning) 45%, var(--foreground) 55%)",
+            ],
+            [
+                "color-mix(in srgb, var(--status-info) 85%, var(--base) 15%)",
+                "color-mix(in srgb, var(--status-info) 70%, var(--base) 30%)",
+                "color-mix(in srgb, var(--status-info) 60%, var(--foreground) 40%)",
+                "color-mix(in srgb, var(--status-info) 45%, var(--foreground) 55%)",
+            ],
+        ];
+        let h = hash.unsigned_abs() as usize;
+        let i = h % VARI.len();
+        let j = (h / VARI.len()) % VARI[i].len();
+        VARI[i][j].to_string()
+    }
+
+    pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
+        let mut out: Vec<KitColoredConnectorRowDto> = Vec::new();
+        for t in &g.types {
+            let Ok(tr) = t.read() else { continue };
+            let tid = TypeIdDto { id: tr.id.clone() };
+            for c in &tr.connectors {
+                let Ok(co) = c.read() else { continue };
+                let dto = co.to_full_dto();
+                let key = dto.port.as_ref().map(|p| p.id.as_str().to_string()).unwrap_or_else(|| co.id.as_str().to_string());
+                out.push(KitColoredConnectorRowDto { type_id: tid.clone(), connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() }, color: color_string_for_id_text(&key) });
             }
         }
-        if from_piece {
-            continue;
+        out
+    }
+
+    pub(crate) fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
+        use std::collections::{HashMap, HashSet};
+        if selected.len() < 2 {
+            return vec![];
         }
-        let tid = pr
-            .type_ref
-            .as_ref()
-            .and_then(|w| w.upgrade())
-            .and_then(|t| t.read().ok().map(|r| r.id.clone()))
-            .or_else(|| pr.to_full_dto().r#type.map(|t| t.id));
-        if let Some(tid) = tid {
-            if let Some(t) = types_by_id.get(&tid) {
-                if let Ok(tr) = t.read() {
-                    for prop in &tr.props {
-                        if let Ok(p) = prop.read() {
-                            let df = p.to_full_dto();
-                            if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
-                                if let Ok(v) = df.value.parse::<f64>() {
-                                    sum += v;
+        let mut adjacency: HashMap<Id, HashSet<Id>> = HashMap::new();
+        for conn in &d.connections {
+            let Ok(cr) = conn.read() else { continue };
+            let Ok(s0) = cr.connected.read() else { continue };
+            let Ok(s1) = cr.connecting.read() else { continue };
+            let a = s0.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
+            let b = s1.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone()));
+            let (Some(a), Some(b)) = (a, b) else { continue };
+            adjacency.entry(a.clone()).or_default().insert(b.clone());
+            adjacency.entry(b).or_default().insert(a);
+        }
+        let piece_id_set: HashSet<Id> = d.pieces.iter().filter_map(|p| p.read().ok().map(|pr| pr.id.clone())).collect();
+        let selected_set: HashSet<Id> = selected.iter().cloned().collect();
+        let mut visited: HashSet<Id> = HashSet::new();
+        let mut groups: Vec<Vec<Id>> = vec![];
+        for start in selected {
+            if visited.contains(start) {
+                continue;
+            }
+            let mut g = vec![];
+            let mut stack = vec![start.clone()];
+            visited.insert(start.clone());
+            while let Some(cur) = stack.pop() {
+                g.push(cur.clone());
+                for nb in adjacency.get(&cur).into_iter().flatten() {
+                    if selected_set.contains(nb) && !visited.contains(nb) {
+                        visited.insert(nb.clone());
+                        stack.push(nb.clone());
+                    }
+                }
+            }
+            groups.push(g);
+        }
+        let has_design_nodes = selected.iter().any(|id| !piece_id_set.contains(id));
+        let has_multiple = groups.len() > 1;
+        let has_large = groups.iter().any(|g| g.len() > 1);
+        if has_design_nodes || has_multiple || has_large {
+            return vec![selected.to_vec()];
+        }
+        vec![]
+    }
+
+    pub(crate) fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
+        use std::collections::HashSet;
+        let mut design_ids: HashSet<Id> = HashSet::new();
+        for conn in &d.connections {
+            let Ok(cr) = conn.read() else { continue };
+            let Ok(s0) = cr.connected.read() else { continue };
+            let Ok(s1) = cr.connecting.read() else { continue };
+            if let Some(dp) = s0.to_metadata_dto().design_piece {
+                design_ids.insert(dp.id);
+            }
+            if let Some(dp) = s1.to_metadata_dto().design_piece {
+                design_ids.insert(dp.id);
+            }
+        }
+        let mut out: Vec<IncludedDesignInfoDto> = vec![];
+        for design_id in design_ids {
+            let ex: Vec<ConnectionFullDto> = d
+                .connections
+                .iter()
+                .filter_map(|c| c.read().ok().map(|cr| cr.to_full_dto()))
+                .filter(|c| c.connected.design_piece.as_ref().is_some_and(|p| p.id == design_id) || c.connecting.design_piece.as_ref().is_some_and(|p| p.id == design_id))
+                .collect();
+            out.push(IncludedDesignInfoDto { id: design_id.clone(), design_id: design_id.clone(), type_: "connected".to_string(), center: None, plane: None, external_connections: ex });
+        }
+        out
+    }
+
+    pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
+        design_included_infos(d).into_iter().map(|i| crate::design::DesignIdDto { id: i.design_id }).collect()
+    }
+
+    pub(crate) fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
+        use std::collections::HashMap;
+        let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
+        let mut sum: f64 = 0.0;
+        for pref in &d.pieces {
+            let Ok(pr) = pref.read() else { continue };
+            let mut from_piece = false;
+            for prop in &pr.props {
+                if let Ok(p) = prop.read() {
+                    let df = p.to_full_dto();
+                    if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
+                        if let Ok(v) = df.value.parse::<f64>() {
+                            sum += v;
+                        }
+                        from_piece = true;
+                        break;
+                    }
+                }
+            }
+            if from_piece {
+                continue;
+            }
+            let tid = pr.type_ref.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| r.id.clone())).or_else(|| pr.to_full_dto().r#type.map(|t| t.id));
+            if let Some(tid) = tid {
+                if let Some(t) = types_by_id.get(&tid) {
+                    if let Ok(tr) = t.read() {
+                        for prop in &tr.props {
+                            if let Ok(p) = prop.read() {
+                                let df = p.to_full_dto();
+                                if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
+                                    if let Ok(v) = df.value.parse::<f64>() {
+                                        sum += v;
+                                    }
+                                    break;
                                 }
-                                break;
                             }
                         }
                     }
                 }
             }
         }
+        sum
     }
-    sum
-}
 
-impl ReadDesignCommand {
-    pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
-        let o = d.read().map_err(|_| lp("design"))?;
-        Ok(match self {
-            ReadDesignCommand::ReadDesignFullCommand => ReadDesignCommandOutput::ReadDesignFullCommand { dto: o.to_full_dto() },
-            ReadDesignCommand::ReadDesignShallowCommand => ReadDesignCommandOutput::ReadDesignShallowCommand { dto: o.to_shallow_dto() },
-            ReadDesignCommand::ReadDesignMetadataCommand => ReadDesignCommandOutput::ReadDesignMetadataCommand { metadata: o.to_metadata_dto() },
-            ReadDesignCommand::ReadDesignIdCommand => ReadDesignCommandOutput::ReadDesignIdCommand { id: o.to_id_dto() },
-            ReadDesignCommand::ReadDesignNameCommand => ReadDesignCommandOutput::ReadDesignNameCommand { name: o.name.clone() },
-            ReadDesignCommand::ReadDesignDescriptionCommand => ReadDesignCommandOutput::ReadDesignDescriptionCommand { description: o.description.clone() },
-            ReadDesignCommand::ReadDesignIconCommand => ReadDesignCommandOutput::ReadDesignIconCommand { icon: o.icon.clone() },
-            ReadDesignCommand::ReadDesignImageCommand => ReadDesignCommandOutput::ReadDesignImageCommand { image: o.image.clone() },
-            ReadDesignCommand::ReadDesignLocationCommand => ReadDesignCommandOutput::ReadDesignLocationCommand { location: o.location.clone() },
-            ReadDesignCommand::ReadDesignUnitCommand => ReadDesignCommandOutput::ReadDesignUnitCommand { unit: o.unit.clone() },
-            ReadDesignCommand::ReadDesignCreatedCommand => ReadDesignCommandOutput::ReadDesignCreatedCommand { created: o.created.clone() },
-            ReadDesignCommand::ReadDesignUpdatedCommand => ReadDesignCommandOutput::ReadDesignUpdatedCommand { updated: o.updated.clone() },
-            ReadDesignCommand::ReadDesignKitCommand => ReadDesignCommandOutput::ReadDesignKitCommand { kit: o.to_full_dto().kit },
-            ReadDesignCommand::ReadDesignFamiliesCommand => ReadDesignCommandOutput::ReadDesignFamiliesCommand { families: o.to_full_dto().families },
-            ReadDesignCommand::ReadDesignPiecesFullCommand => ReadDesignCommandOutput::ReadDesignPiecesFullCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignPiecesShallowCommand => ReadDesignCommandOutput::ReadDesignPiecesShallowCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignConnectionsFullCommand => ReadDesignCommandOutput::ReadDesignConnectionsFullCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignConnectionsShallowCommand => ReadDesignCommandOutput::ReadDesignConnectionsShallowCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignLayersFullCommand => ReadDesignCommandOutput::ReadDesignLayersFullCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignLayersShallowCommand => ReadDesignCommandOutput::ReadDesignLayersShallowCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignGroupsFullCommand => ReadDesignCommandOutput::ReadDesignGroupsFullCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignGroupsShallowCommand => ReadDesignCommandOutput::ReadDesignGroupsShallowCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignAuthorsFullCommand => ReadDesignCommandOutput::ReadDesignAuthorsFullCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignAuthorsShallowCommand => ReadDesignCommandOutput::ReadDesignAuthorsShallowCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignConceptsFullCommand => ReadDesignCommandOutput::ReadDesignConceptsFullCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignConceptsShallowCommand => ReadDesignCommandOutput::ReadDesignConceptsShallowCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignTagsFullCommand => ReadDesignCommandOutput::ReadDesignTagsFullCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignTagsShallowCommand => ReadDesignCommandOutput::ReadDesignTagsShallowCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignQualitiesFullCommand => ReadDesignCommandOutput::ReadDesignQualitiesFullCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect() },
-            ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect() },
-            ReadDesignCommand::ReadDesignFlattenMapCommand => {
-                let m = o.flatten_map();
-                let entries: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
-                ReadDesignCommandOutput::ReadDesignFlattenMapCommand { entries }
-            }
-            ReadDesignCommand::ReadDesignClusterableGroupsCommand { selection } => {
-                let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
-                let groups: Vec<Vec<PieceIdDto>> = design_clusterable_groups(&*o, &ids)
-                    .into_iter()
-                    .map(|g| g.into_iter().map(|id| PieceIdDto { id }).collect())
-                    .collect();
-                ReadDesignCommandOutput::ReadDesignClusterableGroupsCommand { groups }
-            }
-            ReadDesignCommand::ReadDesignIncludedDesignsCommand => {
-                ReadDesignCommandOutput::ReadDesignIncludedDesignsCommand {
-                    designs: design_included_infos(&*o),
+    impl ReadDesignCommand {
+        pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
+            let o = d.read().map_err(|_| lp("design"))?;
+            Ok(match self {
+                ReadDesignCommand::ReadDesignFullCommand => ReadDesignCommandOutput::ReadDesignFullCommand { dto: o.to_full_dto() },
+                ReadDesignCommand::ReadDesignShallowCommand => ReadDesignCommandOutput::ReadDesignShallowCommand { dto: o.to_shallow_dto() },
+                ReadDesignCommand::ReadDesignMetadataCommand => ReadDesignCommandOutput::ReadDesignMetadataCommand { metadata: o.to_metadata_dto() },
+                ReadDesignCommand::ReadDesignIdCommand => ReadDesignCommandOutput::ReadDesignIdCommand { id: o.to_id_dto() },
+                ReadDesignCommand::ReadDesignNameCommand => ReadDesignCommandOutput::ReadDesignNameCommand { name: o.name.clone() },
+                ReadDesignCommand::ReadDesignDescriptionCommand => ReadDesignCommandOutput::ReadDesignDescriptionCommand { description: o.description.clone() },
+                ReadDesignCommand::ReadDesignIconCommand => ReadDesignCommandOutput::ReadDesignIconCommand { icon: o.icon.clone() },
+                ReadDesignCommand::ReadDesignImageCommand => ReadDesignCommandOutput::ReadDesignImageCommand { image: o.image.clone() },
+                ReadDesignCommand::ReadDesignLocationCommand => ReadDesignCommandOutput::ReadDesignLocationCommand { location: o.location.clone() },
+                ReadDesignCommand::ReadDesignUnitCommand => ReadDesignCommandOutput::ReadDesignUnitCommand { unit: o.unit.clone() },
+                ReadDesignCommand::ReadDesignCreatedCommand => ReadDesignCommandOutput::ReadDesignCreatedCommand { created: o.created.clone() },
+                ReadDesignCommand::ReadDesignUpdatedCommand => ReadDesignCommandOutput::ReadDesignUpdatedCommand { updated: o.updated.clone() },
+                ReadDesignCommand::ReadDesignKitCommand => ReadDesignCommandOutput::ReadDesignKitCommand { kit: o.to_full_dto().kit },
+                ReadDesignCommand::ReadDesignFamiliesCommand => ReadDesignCommandOutput::ReadDesignFamiliesCommand { families: o.to_full_dto().families },
+                ReadDesignCommand::ReadDesignPiecesFullCommand => ReadDesignCommandOutput::ReadDesignPiecesFullCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignPiecesShallowCommand => ReadDesignCommandOutput::ReadDesignPiecesShallowCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignConnectionsFullCommand => ReadDesignCommandOutput::ReadDesignConnectionsFullCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignConnectionsShallowCommand => ReadDesignCommandOutput::ReadDesignConnectionsShallowCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignLayersFullCommand => ReadDesignCommandOutput::ReadDesignLayersFullCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignLayersShallowCommand => ReadDesignCommandOutput::ReadDesignLayersShallowCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignGroupsFullCommand => ReadDesignCommandOutput::ReadDesignGroupsFullCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignGroupsShallowCommand => ReadDesignCommandOutput::ReadDesignGroupsShallowCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignAuthorsFullCommand => ReadDesignCommandOutput::ReadDesignAuthorsFullCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignAuthorsShallowCommand => ReadDesignCommandOutput::ReadDesignAuthorsShallowCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignConceptsFullCommand => ReadDesignCommandOutput::ReadDesignConceptsFullCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignConceptsShallowCommand => ReadDesignCommandOutput::ReadDesignConceptsShallowCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignTagsFullCommand => ReadDesignCommandOutput::ReadDesignTagsFullCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignTagsShallowCommand => ReadDesignCommandOutput::ReadDesignTagsShallowCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignQualitiesFullCommand => ReadDesignCommandOutput::ReadDesignQualitiesFullCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect() },
+                ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignFlattenMapCommand => {
+                    let m = o.flatten_map();
+                    let entries: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
+                    ReadDesignCommandOutput::ReadDesignFlattenMapCommand { entries }
                 }
-            }
-            ReadDesignCommand::ReadDesignQualitySumCommand { quality_id } => ReadDesignCommandOutput::ReadDesignQualitySumCommand {
-                sum: design_sum_quality(&*o, g, &quality_id.id),
-            },
-            ReadDesignCommand::ReadDesignReplaceableCatalogCommand { selection } => {
-                let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
-                let alts = o.replaceable_catalog_candidates(&ids);
-                ReadDesignCommandOutput::ReadDesignReplaceableCatalogCommand {
-                    types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeIdDto { id: r.id.clone() })).collect(),
-                    designs: alts
-                        .designs
-                        .iter()
-                        .filter_map(|d| d.read().ok().map(|r| crate::design::DesignIdDto { id: r.id.clone() }))
-                        .collect(),
+                ReadDesignCommand::ReadDesignClusterableGroupsCommand { selection } => {
+                    let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
+                    let groups: Vec<Vec<PieceIdDto>> = design_clusterable_groups(&*o, &ids).into_iter().map(|g| g.into_iter().map(|id| PieceIdDto { id }).collect()).collect();
+                    ReadDesignCommandOutput::ReadDesignClusterableGroupsCommand { groups }
                 }
-            }
-            ReadDesignCommand::ReadDesignIncludedDesignIdsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignIdsCommand {
-                design_ids: design_included_design_ids(&*o),
-            },
-            ReadDesignCommand::ReadDesignFamilyCommands { id, commands } => {
-                let f = o
-                    .families
-                    .iter()
-                    .filter_map(|w| w.upgrade())
-                    .find(|f| f.read().map(|r| r.id == id.id).unwrap_or(false))
-                    .ok_or_else(|| nf("Family", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&f)?);
+                ReadDesignCommand::ReadDesignIncludedDesignsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignsCommand { designs: design_included_infos(&*o) },
+                ReadDesignCommand::ReadDesignQualitySumCommand { quality_id } => ReadDesignCommandOutput::ReadDesignQualitySumCommand { sum: design_sum_quality(&*o, g, &quality_id.id) },
+                ReadDesignCommand::ReadDesignReplaceableCatalogCommand { selection } => {
+                    let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
+                    let alts = o.replaceable_catalog_candidates(&ids);
+                    ReadDesignCommandOutput::ReadDesignReplaceableCatalogCommand {
+                        types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeIdDto { id: r.id.clone() })).collect(),
+                        designs: alts.designs.iter().filter_map(|d| d.read().ok().map(|r| crate::design::DesignIdDto { id: r.id.clone() })).collect(),
+                    }
                 }
-                ReadDesignCommandOutput::ReadDesignFamilyCommands { results }
-            }
-            ReadDesignCommand::ReadDesignPieceCommands { id, commands } => {
-                let p = o.piece(id.id.as_str()).ok_or_else(|| nf("Piece", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&p, g)?);
+                ReadDesignCommand::ReadDesignIncludedDesignIdsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignIdsCommand { design_ids: design_included_design_ids(&*o) },
+                ReadDesignCommand::ReadDesignFamilyCommands { id, commands } => {
+                    let f = o.families.iter().filter_map(|w| w.upgrade()).find(|f| f.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Family", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&f)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignFamilyCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignPieceCommands { results }
-            }
-            ReadDesignCommand::ReadDesignConnectionCommands { id, commands } => {
-                let c = o.connection(id.id.as_str()).ok_or_else(|| nf("Connection", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for x in commands {
-                    results.push(x.execute(&c)?);
+                ReadDesignCommand::ReadDesignPieceCommands { id, commands } => {
+                    let p = o.piece(id.id.as_str()).ok_or_else(|| nf("Piece", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&p, g)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignPieceCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignConnectionCommands { results }
-            }
-            ReadDesignCommand::ReadDesignLayerCommands { id, commands } => {
-                let l = o.layer(id.id.as_str()).ok_or_else(|| nf("Layer", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&l)?);
+                ReadDesignCommand::ReadDesignConnectionCommands { id, commands } => {
+                    let c = o.connection(id.id.as_str()).ok_or_else(|| nf("Connection", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for x in commands {
+                        results.push(x.execute(&c)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignConnectionCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignLayerCommands { results }
-            }
-            ReadDesignCommand::ReadDesignGroupCommands { id, commands } => {
-                let l = o.group(id.id.as_str()).ok_or_else(|| nf("Group", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&l)?);
+                ReadDesignCommand::ReadDesignLayerCommands { id, commands } => {
+                    let l = o.layer(id.id.as_str()).ok_or_else(|| nf("Layer", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&l)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignLayerCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignGroupCommands { results }
-            }
-            ReadDesignCommand::ReadDesignAuthorCommands { id, commands } => {
-                let a = o.authors.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
+                ReadDesignCommand::ReadDesignGroupCommands { id, commands } => {
+                    let l = o.group(id.id.as_str()).ok_or_else(|| nf("Group", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&l)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignGroupCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignAuthorCommands { results }
-            }
-            ReadDesignCommand::ReadDesignConceptCommands { id, commands } => {
-                let a = o.concepts.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
+                ReadDesignCommand::ReadDesignAuthorCommands { id, commands } => {
+                    let a = o.authors.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Author", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignAuthorCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignConceptCommands { results }
-            }
-            ReadDesignCommand::ReadDesignTagCommands { id, commands } => {
-                let a = o.tags.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
+                ReadDesignCommand::ReadDesignConceptCommands { id, commands } => {
+                    let a = o.concepts.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Concept", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignConceptCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignTagCommands { results }
-            }
-            ReadDesignCommand::ReadDesignQualityCommands { id, commands } => {
-                let a = o.qualities.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
+                ReadDesignCommand::ReadDesignTagCommands { id, commands } => {
+                    let a = o.tags.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Tag", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignTagCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignQualityCommands { results }
-            }
-            ReadDesignCommand::ReadDesignPropCommands { id, commands } => {
-                let a = o.props.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
+                ReadDesignCommand::ReadDesignQualityCommands { id, commands } => {
+                    let a = o.qualities.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignQualityCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignPropCommands { results }
-            }
-            ReadDesignCommand::ReadDesignAttributeCommands { id, commands } => {
-                let a = o.attributes.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(a)?);
+                ReadDesignCommand::ReadDesignPropCommands { id, commands } => {
+                    let a = o.props.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignPropCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignAttributeCommands { results }
-            }
-            ReadDesignCommand::ReadDesignStatCommands { id, commands } => {
-                let a = o.stats.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Stat", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(a)?);
+                ReadDesignCommand::ReadDesignAttributeCommands { id, commands } => {
+                    let a = o.attributes.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignAttributeCommands { results }
                 }
-                ReadDesignCommandOutput::ReadDesignStatCommands { results }
-            }
-        })
+                ReadDesignCommand::ReadDesignStatCommands { id, commands } => {
+                    let a = o.stats.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Stat", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(a)?);
+                    }
+                    ReadDesignCommandOutput::ReadDesignStatCommands { results }
+                }
+            })
+        }
     }
-}
 
-impl ReadKitCommand {
-    pub fn execute(&self, g: &KitGraph) -> Result<ReadKitCommandOutput> {
-        Ok(match self {
-            ReadKitCommand::ReadKitFullCommand => ReadKitCommandOutput::ReadKitFullCommand { kit: g.to_full_dto() },
-            ReadKitCommand::ReadKitShallowCommand => ReadKitCommandOutput::ReadKitShallowCommand { kit: g.to_shallow_dto() },
-            ReadKitCommand::ReadKitMetadataCommand => ReadKitCommandOutput::ReadKitMetadataCommand { metadata: g.to_metadata_dto() },
-            ReadKitCommand::ReadKitIdCommand => ReadKitCommandOutput::ReadKitIdCommand { id: g.to_id_dto() },
-            ReadKitCommand::ReadKitNameCommand => ReadKitCommandOutput::ReadKitNameCommand { name: g.name.clone() },
-            ReadKitCommand::ReadKitDescriptionCommand => ReadKitCommandOutput::ReadKitDescriptionCommand { description: g.description.clone() },
-            ReadKitCommand::ReadKitIconCommand => ReadKitCommandOutput::ReadKitIconCommand { icon: g.icon.clone() },
-            ReadKitCommand::ReadKitImageCommand => ReadKitCommandOutput::ReadKitImageCommand { image: g.image.clone() },
-            ReadKitCommand::ReadKitPreviewCommand => ReadKitCommandOutput::ReadKitPreviewCommand { preview: g.preview.clone() },
-            ReadKitCommand::ReadKitRemoteCommand => ReadKitCommandOutput::ReadKitRemoteCommand { remote: g.remote.clone() },
-            ReadKitCommand::ReadKitHomepageCommand => ReadKitCommandOutput::ReadKitHomepageCommand { homepage: g.homepage.clone() },
-            ReadKitCommand::ReadKitLicenseCommand => ReadKitCommandOutput::ReadKitLicenseCommand { license: g.license.clone() },
-            ReadKitCommand::ReadKitUriCommand => ReadKitCommandOutput::ReadKitUriCommand { uri: g.uri.clone() },
-            ReadKitCommand::ReadKitCreatedCommand => ReadKitCommandOutput::ReadKitCreatedCommand { created: g.created.clone() },
-            ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
-            ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand {
-                r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() })).collect(),
-            },
-            ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand {
-                types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata_dto())).collect(),
-            },
-            ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand {
-                design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).collect(),
-            },
-            ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand {
-                designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata_dto())).collect(),
-            },
-            ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitFoldersShallowCommand => ReadKitCommandOutput::ReadKitFoldersShallowCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitLocationsFullCommand => ReadKitCommandOutput::ReadKitLocationsFullCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitLocationsShallowCommand => ReadKitCommandOutput::ReadKitLocationsShallowCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitFamiliesFullCommand => ReadKitCommandOutput::ReadKitFamiliesFullCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitFamiliesShallowCommand => ReadKitCommandOutput::ReadKitFamiliesShallowCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitPortsFullCommand => {
-                let mut ports: Vec<PortFullDto> = g.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect();
-                for f in &g.families {
-                    if let Ok(fr) = f.read() {
-                        for p in &fr.ports {
-                            if let Ok(pr) = p.read() {
-                                ports.push(pr.to_full_dto());
+    impl ReadKitCommand {
+        pub fn execute(&self, g: &KitGraph) -> Result<ReadKitCommandOutput> {
+            Ok(match self {
+                ReadKitCommand::ReadKitFullCommand => ReadKitCommandOutput::ReadKitFullCommand { kit: g.to_full_dto() },
+                ReadKitCommand::ReadKitShallowCommand => ReadKitCommandOutput::ReadKitShallowCommand { kit: g.to_shallow_dto() },
+                ReadKitCommand::ReadKitMetadataCommand => ReadKitCommandOutput::ReadKitMetadataCommand { metadata: g.to_metadata_dto() },
+                ReadKitCommand::ReadKitIdCommand => ReadKitCommandOutput::ReadKitIdCommand { id: g.to_id_dto() },
+                ReadKitCommand::ReadKitNameCommand => ReadKitCommandOutput::ReadKitNameCommand { name: g.name.clone() },
+                ReadKitCommand::ReadKitDescriptionCommand => ReadKitCommandOutput::ReadKitDescriptionCommand { description: g.description.clone() },
+                ReadKitCommand::ReadKitIconCommand => ReadKitCommandOutput::ReadKitIconCommand { icon: g.icon.clone() },
+                ReadKitCommand::ReadKitImageCommand => ReadKitCommandOutput::ReadKitImageCommand { image: g.image.clone() },
+                ReadKitCommand::ReadKitPreviewCommand => ReadKitCommandOutput::ReadKitPreviewCommand { preview: g.preview.clone() },
+                ReadKitCommand::ReadKitRemoteCommand => ReadKitCommandOutput::ReadKitRemoteCommand { remote: g.remote.clone() },
+                ReadKitCommand::ReadKitHomepageCommand => ReadKitCommandOutput::ReadKitHomepageCommand { homepage: g.homepage.clone() },
+                ReadKitCommand::ReadKitLicenseCommand => ReadKitCommandOutput::ReadKitLicenseCommand { license: g.license.clone() },
+                ReadKitCommand::ReadKitUriCommand => ReadKitCommandOutput::ReadKitUriCommand { uri: g.uri.clone() },
+                ReadKitCommand::ReadKitCreatedCommand => ReadKitCommandOutput::ReadKitCreatedCommand { created: g.created.clone() },
+                ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
+                ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand { r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() })).collect() },
+                ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata_dto())).collect() },
+                ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand { design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).collect() },
+                ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata_dto())).collect() },
+                ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitFoldersShallowCommand => ReadKitCommandOutput::ReadKitFoldersShallowCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitLocationsFullCommand => ReadKitCommandOutput::ReadKitLocationsFullCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitLocationsShallowCommand => ReadKitCommandOutput::ReadKitLocationsShallowCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitFamiliesFullCommand => ReadKitCommandOutput::ReadKitFamiliesFullCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitFamiliesShallowCommand => ReadKitCommandOutput::ReadKitFamiliesShallowCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitPortsFullCommand => {
+                    let mut ports: Vec<PortFullDto> = g.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect();
+                    for f in &g.families {
+                        if let Ok(fr) = f.read() {
+                            for p in &fr.ports {
+                                if let Ok(pr) = p.read() {
+                                    ports.push(pr.to_full_dto());
+                                }
                             }
                         }
                     }
+                    ReadKitCommandOutput::ReadKitPortsFullCommand { ports }
                 }
-                ReadKitCommandOutput::ReadKitPortsFullCommand { ports }
-            }
-            ReadKitCommand::ReadKitAuthorsFullCommand => ReadKitCommandOutput::ReadKitAuthorsFullCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitAuthorsShallowCommand => ReadKitCommandOutput::ReadKitAuthorsShallowCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitConceptsFullCommand => ReadKitCommandOutput::ReadKitConceptsFullCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitConceptsShallowCommand => ReadKitCommandOutput::ReadKitConceptsShallowCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitTagsFullCommand => ReadKitCommandOutput::ReadKitTagsFullCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitTagsShallowCommand => ReadKitCommandOutput::ReadKitTagsShallowCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitQualitiesFullCommand => ReadKitCommandOutput::ReadKitQualitiesFullCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-            ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-            ReadKitCommand::ReadKitColoredConnectorsCommand => ReadKitCommandOutput::ReadKitColoredConnectorsCommand {
-                rows: kit_colored_connector_rows(g),
-            },
-            ReadKitCommand::ReadKitTypeCommands { id, commands } => {
-                let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&t, g)?);
+                ReadKitCommand::ReadKitAuthorsFullCommand => ReadKitCommandOutput::ReadKitAuthorsFullCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitAuthorsShallowCommand => ReadKitCommandOutput::ReadKitAuthorsShallowCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitConceptsFullCommand => ReadKitCommandOutput::ReadKitConceptsFullCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitConceptsShallowCommand => ReadKitCommandOutput::ReadKitConceptsShallowCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitTagsFullCommand => ReadKitCommandOutput::ReadKitTagsFullCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitTagsShallowCommand => ReadKitCommandOutput::ReadKitTagsShallowCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitQualitiesFullCommand => ReadKitCommandOutput::ReadKitQualitiesFullCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitColoredConnectorsCommand => ReadKitCommandOutput::ReadKitColoredConnectorsCommand { rows: kit_colored_connector_rows(g) },
+                ReadKitCommand::ReadKitTypeCommands { id, commands } => {
+                    let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&t, g)?);
+                    }
+                    ReadKitCommandOutput::ReadKitTypeCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitTypeCommands { results }
-            }
-            ReadKitCommand::ReadKitDesignCommands { id, commands } => {
-                let d = kit_design(g, &id.id).ok_or_else(|| nf("Design", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&d, g)?);
+                ReadKitCommand::ReadKitDesignCommands { id, commands } => {
+                    let d = kit_design(g, &id.id).ok_or_else(|| nf("Design", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&d, g)?);
+                    }
+                    ReadKitCommandOutput::ReadKitDesignCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitDesignCommands { results }
-            }
-            ReadKitCommand::ReadKitFileCommands { id, commands } => {
-                let f = g.file(id.id.as_str()).ok_or_else(|| nf("File", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&f)?);
+                ReadKitCommand::ReadKitFileCommands { id, commands } => {
+                    let f = g.file(id.id.as_str()).ok_or_else(|| nf("File", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&f)?);
+                    }
+                    ReadKitCommandOutput::ReadKitFileCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitFileCommands { results }
-            }
-            ReadKitCommand::ReadKitFolderCommands { id, commands } => {
-                let f = g.folder(id.id.as_str()).ok_or_else(|| nf("Folder", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&f)?);
+                ReadKitCommand::ReadKitFolderCommands { id, commands } => {
+                    let f = g.folder(id.id.as_str()).ok_or_else(|| nf("Folder", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&f)?);
+                    }
+                    ReadKitCommandOutput::ReadKitFolderCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitFolderCommands { results }
-            }
-            ReadKitCommand::ReadKitLocationCommands { id, commands } => {
-                let l = kit_location(g, &id.id).ok_or_else(|| nf("Location", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&l)?);
+                ReadKitCommand::ReadKitLocationCommands { id, commands } => {
+                    let l = kit_location(g, &id.id).ok_or_else(|| nf("Location", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&l)?);
+                    }
+                    ReadKitCommandOutput::ReadKitLocationCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitLocationCommands { results }
-            }
-            ReadKitCommand::ReadKitFamilyCommands { id, commands } => {
-                let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&f)?);
+                ReadKitCommand::ReadKitFamilyCommands { id, commands } => {
+                    let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&f)?);
+                    }
+                    ReadKitCommandOutput::ReadKitFamilyCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitFamilyCommands { results }
-            }
-            ReadKitCommand::ReadKitPortCommands { id, commands } => {
-                let p = g.port_by_id(&id.id).ok_or_else(|| nf("Port", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&p)?);
+                ReadKitCommand::ReadKitPortCommands { id, commands } => {
+                    let p = g.port_by_id(&id.id).ok_or_else(|| nf("Port", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&p)?);
+                    }
+                    ReadKitCommandOutput::ReadKitPortCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitPortCommands { results }
-            }
-            ReadKitCommand::ReadKitAuthorCommands { id, commands } => {
-                let a = kit_find_author(g, &id.id).ok_or_else(|| nf("Author", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&a)?);
+                ReadKitCommand::ReadKitAuthorCommands { id, commands } => {
+                    let a = kit_find_author(g, &id.id).ok_or_else(|| nf("Author", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitAuthorCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitAuthorCommands { results }
-            }
-            ReadKitCommand::ReadKitConceptCommands { id, commands } => {
-                let a = kit_find_concept(g, &id.id).ok_or_else(|| nf("Concept", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&a)?);
+                ReadKitCommand::ReadKitConceptCommands { id, commands } => {
+                    let a = kit_find_concept(g, &id.id).ok_or_else(|| nf("Concept", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitConceptCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitConceptCommands { results }
-            }
-            ReadKitCommand::ReadKitTagCommands { id, commands } => {
-                let a = kit_find_tag(g, &id.id).ok_or_else(|| nf("Tag", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(&a)?);
+                ReadKitCommand::ReadKitTagCommands { id, commands } => {
+                    let a = kit_find_tag(g, &id.id).ok_or_else(|| nf("Tag", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitTagCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitTagCommands { results }
-            }
-            ReadKitCommand::ReadKitQualityCommands { id, commands } => {
-                let a = kit_find_quality(g, &id.id).ok_or_else(|| nf("Quality", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&a)?);
+                ReadKitCommand::ReadKitQualityCommands { id, commands } => {
+                    let a = kit_find_quality(g, &id.id).ok_or_else(|| nf("Quality", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitQualityCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitQualityCommands { results }
-            }
-            ReadKitCommand::ReadKitPropCommands { id, commands } => {
-                let a = kit_find_prop(g, &id.id).ok_or_else(|| nf("Prop", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(&a)?);
+                ReadKitCommand::ReadKitPropCommands { id, commands } => {
+                    let a = kit_find_prop(g, &id.id).ok_or_else(|| nf("Prop", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitPropCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitPropCommands { results }
-            }
-            ReadKitCommand::ReadKitAttributeCommands { id, commands } => {
-                let a = kit_find_attr(g, &id.id).ok_or_else(|| nf("Attribute", &id.id))?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute_ref(&a)?);
+                ReadKitCommand::ReadKitAttributeCommands { id, commands } => {
+                    let a = kit_find_attr(g, &id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute_ref(&a)?);
+                    }
+                    ReadKitCommandOutput::ReadKitAttributeCommands { results }
                 }
-                ReadKitCommandOutput::ReadKitAttributeCommands { results }
-            }
-        })
-    }
+            })
+        }
 
-    pub fn execute_many(g: &KitGraph, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandOutput>> {
-        commands.iter().map(|c| c.execute(g)).collect()
+        pub fn execute_many(g: &KitGraph, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandOutput>> {
+            commands.iter().map(|c| c.execute(g)).collect()
+        }
     }
-}
 }
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
     // Granular change commands: run against `KitGraphRef`, inverses for undo.
-    use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
-    use std::sync::Arc;
-    use std::sync::RwLock;
     use crate::attribute::AttributeFullDto;
     use crate::attribute::AttributeIdDto;
     use crate::attribute::AttributeStore;
@@ -2568,9 +2661,9 @@ pub mod change_command {
     use crate::design::DesignIdDto;
     use crate::design::DesignStore;
     use crate::event_wire;
+    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreRef};
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
-    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreRef};
     use crate::file::FileStoreRef;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
@@ -2582,10 +2675,11 @@ pub mod change_command {
     use crate::group::GroupIdDto;
     use crate::group::GroupStore;
     use crate::id::Id;
+    use crate::kit_change::KitChangeKind;
+    use crate::kit_diff::KitDiff;
     use crate::kit_graph::KitFullDto;
     use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
-    use crate::kit_change::KitChangeKind;
     use crate::layer::LayerFullDto;
     use crate::layer::LayerIdDto;
     use crate::layer::LayerStore;
@@ -2620,6 +2714,10 @@ pub mod change_command {
     use crate::typ::TypeFullDto;
     use crate::typ::TypeIdDto;
     use crate::{error::Result, error::SemioError};
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
+    use std::sync::Arc;
+    use std::sync::RwLock;
 
     fn se(e: crate::error::SetError) -> SemioError {
         SemioError::InvalidOperation(e.to_string())
@@ -3112,15 +3210,9 @@ pub mod change_command {
         Unit { unit: Option<String> },
         Created { created: Option<String> },
         Updated { updated: Option<String> },
-        AddFamilyRef {
-            family_id: FamilyIdDto,
-        },
-        RemoveFamilyRef {
-            family_id: FamilyIdDto,
-        },
-        SetFamilies {
-            families: Vec<FamilyIdDto>,
-        },
+        AddFamilyRef { family_id: FamilyIdDto },
+        RemoveFamilyRef { family_id: FamilyIdDto },
+        SetFamilies { families: Vec<FamilyIdDto> },
         AddPiece { piece: PieceFullDto },
         RemovePiece { piece_id: PieceIdDto },
         ChangePieceCommands { piece_id: PieceIdDto, commands: Vec<ChangePieceCommand> },
@@ -3651,6 +3743,47 @@ pub mod change_command {
             k
         }
 
+        // #region 🔖CommandDiff
+
+        /// 🧮 Computes the concrete kit diff for this command without mutating the caller's kit graph.
+        pub fn kit_diff(&self, kit: &KitGraphRef) -> Result<KitDiff> {
+            Self::kit_diff_many(kit, std::slice::from_ref(self))
+        }
+
+        /// 🧮 Computes the concrete kit diff for ordered commands without mutating the caller's kit graph.
+        pub fn kit_diff_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            if cmds.is_empty() {
+                return Ok(KitDiff::default());
+            }
+            let twin = KitGraph::from_full_dto(before.clone());
+            for c in cmds {
+                c.apply_mutation(&twin)?;
+            }
+            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            Ok(KitDiff::between_dto(&before, &after))
+        }
+
+        /// ↩️ Builds undo commands for ordered commands without mutating the caller's kit graph.
+        pub fn inverse_commands_for_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+            if cmds.is_empty() {
+                return Ok(vec![]);
+            }
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let twin = KitGraph::from_full_dto(before);
+            let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
+            for c in cmds {
+                groups.push(c.apply_mutation(&twin)?);
+            }
+            let mut out = Vec::new();
+            for g in groups.into_iter().rev() {
+                out.extend(g);
+            }
+            Ok(out)
+        }
+
+        // #endregion
+
         /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_mutation`].
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
@@ -3658,7 +3791,9 @@ pub mod change_command {
             let inv = self.apply_mutation(&twin)?;
             let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
             if a != b0 {
-                let _d = KitGraph::apply_kit_mutation(kit, &b0, &a).map_err(SemioError::from)?;
+                let b0_apply = b0.clone();
+                let a_apply = a.clone();
+                KitGraph::with_undo(kit, || KitGraph::apply_kit_mutation(kit, &b0_apply, &a_apply).map(|_| ())).map_err(SemioError::from)?;
             }
             Ok(inv)
         }
@@ -3677,7 +3812,9 @@ pub mod change_command {
             }
             let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
             if a != b0 {
-                let _d = KitGraph::apply_kit_mutation(kit, &b0, &a).map_err(SemioError::from)?;
+                let b0_apply = b0.clone();
+                let a_apply = a.clone();
+                KitGraph::with_undo(kit, || KitGraph::apply_kit_mutation(kit, &b0_apply, &a_apply).map(|_| ())).map_err(SemioError::from)?;
             }
             let mut out = Vec::new();
             for g in groups.into_iter().rev() {
@@ -4056,58 +4193,29 @@ pub mod change_command {
                     inv.reverse();
                     Ok(vec![ChangeKitCommand::ChangeFamilyCommands { family_id: family_id.clone(), commands: inv }])
                 }
-                ChangeKitCommand::ClusterPieces {
-                    design_id,
-                    piece_ids,
-                    cluster_name,
-                } => {
+                ChangeKitCommand::ClusterPieces { design_id, piece_ids, cluster_name } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitGraph::cluster_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), cluster_name.clone())
-                        .map_err(se)?;
+                    KitGraph::cluster_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), cluster_name.clone()).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
-                ChangeKitCommand::DragPieces {
-                    design_id,
-                    piece_ids,
-                    du,
-                    dv,
-                } => {
+                ChangeKitCommand::DragPieces { design_id, piece_ids, du, dv } => {
                     if piece_ids.is_empty() {
                         return Ok(vec![]);
                     }
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                     KitGraph::drag_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *du, *dv).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
-                ChangeKitCommand::MovePieces {
-                    design_id,
-                    piece_ids,
-                    gap,
-                    shift,
-                    rise,
-                } => {
+                ChangeKitCommand::MovePieces { design_id, piece_ids, gap, shift, rise } => {
                     if piece_ids.is_empty() {
                         return Ok(vec![]);
                     }
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitGraph::move_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *gap, *shift, *rise)
-                        .map_err(se)?;
+                    KitGraph::move_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *gap, *shift, *rise).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
                 ChangeKitCommand::FixPieces { design_id, piece_ids } => {
                     if piece_ids.is_empty() {
@@ -4116,63 +4224,30 @@ pub mod change_command {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                     KitGraph::fix_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone()).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
                 ChangeKitCommand::FlattenDesign { design_id } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                     KitGraph::flatten_design_apply_unchecked(kit, design_id.id.as_str()).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
-                ChangeKitCommand::ExpandNestedDesign {
-                    parent_design_id,
-                    nested_design_id,
-                } => {
+                ChangeKitCommand::ExpandNestedDesign { parent_design_id, nested_design_id } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitGraph::expand_nested_design_unchecked(kit, parent_design_id.id.as_str(), nested_design_id.id.as_str())
-                        .map_err(se)?;
+                    KitGraph::expand_nested_design_unchecked(kit, parent_design_id.id.as_str(), nested_design_id.id.as_str()).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
-                ChangeKitCommand::DeleteConnection {
-                    design_id,
-                    connection_id,
-                } => {
+                ChangeKitCommand::DeleteConnection { design_id, connection_id } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitGraph::delete_connection_in_design_unchecked(kit, design_id.id.as_str(), connection_id.id.as_str())
-                        .map_err(se)?;
+                    KitGraph::delete_connection_in_design_unchecked(kit, design_id.id.as_str(), connection_id.id.as_str()).map_err(se)?;
                     let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old {
-                        vec![]
-                    } else {
-                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
-                    })
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
-                ChangeKitCommand::ChangePieceKind {
-                    design_id,
-                    piece_id,
-                    new_type_id,
-                } => {
+                ChangeKitCommand::ChangePieceKind { design_id, piece_id, new_type_id } => {
                     let inner = ChangeKitCommand::ChangeDesignCommands {
                         design_id: design_id.clone(),
-                        commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                            piece_id: piece_id.clone(),
-                            commands: vec![ChangePieceCommand::Type {
-                                type_id: Some(new_type_id.clone()),
-                            }],
-                        }],
+                        commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Type { type_id: Some(new_type_id.clone()) }] }],
                     };
                     inner.apply_mutation(kit)
                 }
@@ -4353,14 +4428,8 @@ pub mod change_command {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_full_dto().families;
                     let mut new_weaks = Vec::new();
                     for fid in families {
-                        let pref = kit
-                            .read()
-                            .map_err(|_| SemioError::LockPoisoned("kit"))?
-                            .families
-                            .iter()
-                            .find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false))
-                            .cloned()
-                            .ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
+                        let pref =
+                            kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.families.iter().find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
                         new_weaks.push(std::sync::Arc::downgrade(&pref));
                     }
                     {
@@ -4692,14 +4761,8 @@ pub mod change_command {
                     let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_full_dto().families;
                     let mut new_weaks = Vec::new();
                     for fid in families {
-                        let pref = kit
-                            .read()
-                            .map_err(|_| SemioError::LockPoisoned("kit"))?
-                            .families
-                            .iter()
-                            .find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false))
-                            .cloned()
-                            .ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
+                        let pref =
+                            kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.families.iter().find(|f| f.read().map(|r| r.id == fid.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Family", id: fid.id.clone() })?;
                         new_weaks.push(std::sync::Arc::downgrade(&pref));
                     }
                     {
@@ -4753,8 +4816,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_piece(&did, piece.clone())
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
@@ -4771,8 +4833,7 @@ pub mod change_command {
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_remove_design_pieces(&did, &[piece_id.id.clone()])
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_remove_design_pieces(&did, &[piece_id.id.clone()]).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
@@ -4791,8 +4852,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_connection(&did, connection.clone())
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionIdDto { id } }])
@@ -4808,8 +4868,7 @@ pub mod change_command {
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_remove_design_connection(&did, &connection_id.id)
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_remove_design_connection(&did, &connection_id.id).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
@@ -5728,9 +5787,7 @@ pub mod change_command {
                     }
                     {
                         let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        pr.write()
-                            .map_err(|_| SemioError::LockPoisoned("port"))?
-                            .set_compatible_ports_from_ids(&port.compatible_ports, &*kr);
+                        pr.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_ports_from_ids(&port.compatible_ports, &*kr);
                     }
                     pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
@@ -5738,12 +5795,7 @@ pub mod change_command {
                 }
                 ChangeFamilyCommand::RemovePort { port_id } => {
                     KitGraph::ensure_port_unused_by_connectors(kit, &port_id.id)?;
-                    let pos = fam
-                        .read()
-                        .map_err(|_| SemioError::LockPoisoned("family"))?
-                        .ports
-                        .iter()
-                        .position(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false));
+                    let pos = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.ports.iter().position(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false));
                     let Some(pos) = pos else {
                         return Err(SemioError::NotFound { kind: "Port", id: port_id.id.clone() });
                     };
@@ -5757,11 +5809,7 @@ pub mod change_command {
                 ChangeFamilyCommand::ChangePortCommands { port_id, commands } => {
                     let pref: PortStoreRef = {
                         let fr = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?;
-                        fr.ports
-                            .iter()
-                            .find(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false))
-                            .cloned()
-                            .ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?
+                        fr.ports.iter().find(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?
                     };
                     let mut inv = Vec::new();
                     for c in commands {
@@ -6060,8 +6108,8 @@ pub mod kit_checkpoint {
     use std::collections::HashMap;
 
     use crate::id::Id;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
     use crate::kit_change::KitChange;
+    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct MaterializedKit {
@@ -6483,18 +6531,31 @@ pub mod kit_draft {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitDraftCommand {
-        ReadKitCommands { commands: Vec<ReadKitCommand> },
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
         StartTransaction,
         FinalizeToKitCheckpoint {
             #[serde(rename = "message")]
             message: String,
         },
         Abort,
-        Undo { count: i32 },
-        CanUndo { count: i32 },
-        Redo { count: i32 },
-        CanRedo { count: i32 },
-        ExecuteTransactionCommands { id: Id, commands: Vec<TransactionCommand> },
+        Undo {
+            count: i32,
+        },
+        CanUndo {
+            count: i32,
+        },
+        Redo {
+            count: i32,
+        },
+        CanRedo {
+            count: i32,
+        },
+        ExecuteTransactionCommands {
+            id: Id,
+            commands: Vec<TransactionCommand>,
+        },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -6707,13 +6768,7 @@ pub mod backbone {
 
     impl BackboneSnapshot {
         pub fn from_graph(g: &KitGraph) -> Self {
-            Self {
-                initial: g.initial.clone(),
-                checkpoints: g.checkpoints.clone(),
-                the_kit_head: g.the_kit_head.clone(),
-                alternatives: g.alternatives.clone(),
-                children: g.children.clone(),
-            }
+            Self { initial: g.initial.clone(), checkpoints: g.checkpoints.clone(), the_kit_head: g.the_kit_head.clone(), alternatives: g.alternatives.clone(), children: g.children.clone() }
         }
 
         pub fn verify_linear_mainline_extension(auth: &Self, proposed: &Self) -> std::result::Result<(), String> {
@@ -6735,10 +6790,7 @@ pub mod backbone {
             let tip = proposed.the_kit_head.clone().ok_or_else(|| "proposed has no the_kit_head".to_string())?;
             let ncp = proposed.checkpoints.get(&tip).ok_or_else(|| "tip checkpoint missing".to_string())?;
             if ncp.parent != auth.the_kit_head {
-                return Err(format!(
-                    "checkpoint parent {:?} != backbone tip {:?}",
-                    ncp.parent, auth.the_kit_head
-                ));
+                return Err(format!("checkpoint parent {:?} != backbone tip {:?}", ncp.parent, auth.the_kit_head));
             }
             let new_ids: HashSet<_> = proposed.checkpoints.keys().filter(|k| !auth.checkpoints.contains_key(*k)).cloned().collect();
             if new_ids.len() != 1 || !new_ids.contains(&tip) {
@@ -6799,10 +6851,7 @@ pub mod backbone {
 
         fn read_file(&self) -> Result<BackboneSnapshot> {
             if !self.path.exists() {
-                return Err(SemioError::InvalidOperation(format!(
-                    "dev backbone file missing: {}",
-                    self.path.display()
-                )));
+                return Err(SemioError::InvalidOperation(format!("dev backbone file missing: {}", self.path.display())));
             }
             let s = std::fs::read_to_string(&self.path).map_err(|e| SemioError::Other(e.to_string()))?;
             let mut snap: BackboneSnapshot = serde_json::from_str(&s).map_err(|e| SemioError::Other(e.to_string()))?;
@@ -6834,28 +6883,14 @@ pub mod backbone {
         }
 
         fn persist_full(&self, proposed: &BackboneSnapshot) -> Result<ProposeOutcome> {
-            let auth = if self.path.exists() {
-                self.read_file()?
-            } else {
-                BackboneSnapshot {
-                    initial: proposed.initial.clone(),
-                    checkpoints: HashMap::new(),
-                    the_kit_head: None,
-                    alternatives: HashMap::new(),
-                    children: HashMap::new(),
-                }
-            };
+            let auth = if self.path.exists() { self.read_file()? } else { BackboneSnapshot { initial: proposed.initial.clone(), checkpoints: HashMap::new(), the_kit_head: None, alternatives: HashMap::new(), children: HashMap::new() } };
             if BackboneSnapshot::verify_linear_mainline_extension(&auth, proposed).is_err() {
-                return Ok(ProposeOutcome::Rejected {
-                    current_tip: auth.the_kit_head.clone(),
-                });
+                return Ok(ProposeOutcome::Rejected { current_tip: auth.the_kit_head.clone() });
             }
             if self.path.exists() {
                 let auth2 = self.read_file()?;
                 if auth2.the_kit_head != auth.the_kit_head {
-                    return Ok(ProposeOutcome::Rejected {
-                        current_tip: auth2.the_kit_head.clone(),
-                    });
+                    return Ok(ProposeOutcome::Rejected { current_tip: auth2.the_kit_head.clone() });
                 }
             }
             self.write_atomic(proposed)?;
@@ -6884,18 +6919,10 @@ pub mod backbone {
             let auth = if self.folder.join(".semio").join("kit.db").exists() {
                 self.pull()?
             } else {
-                BackboneSnapshot {
-                    initial: proposed.initial.clone(),
-                    checkpoints: HashMap::new(),
-                    the_kit_head: None,
-                    alternatives: HashMap::new(),
-                    children: HashMap::new(),
-                }
+                BackboneSnapshot { initial: proposed.initial.clone(), checkpoints: HashMap::new(), the_kit_head: None, alternatives: HashMap::new(), children: HashMap::new() }
             };
             if BackboneSnapshot::verify_linear_mainline_extension(&auth, proposed).is_err() {
-                return Ok(ProposeOutcome::Rejected {
-                    current_tip: auth.the_kit_head.clone(),
-                });
+                return Ok(ProposeOutcome::Rejected { current_tip: auth.the_kit_head.clone() });
             }
             let dto = KitCheckpoint::materialize(&proposed.initial, &proposed.checkpoints, proposed.the_kit_head.as_ref());
             let k = KitGraph::from_full_dto(dto);
@@ -6907,8 +6934,7 @@ pub mod backbone {
                 g.alternatives = proposed.alternatives.clone();
                 g.children = proposed.children.clone();
             }
-            k.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?
-                .save_local_folder(&self.folder)?;
+            k.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?.save_local_folder(&self.folder)?;
             Ok(ProposeOutcome::Accepted)
         }
 
@@ -6919,8 +6945,7 @@ pub mod backbone {
                 KitCheckpoint::materialize(&g.initial, &g.checkpoints, id)
             };
             let k2 = KitGraph::from_full_dto(dto);
-            k2.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?
-                .save_local_folder(&self.folder)?;
+            k2.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?.save_local_folder(&self.folder)?;
             Ok(())
         }
     }
@@ -6944,9 +6969,7 @@ pub mod backbone {
         }
 
         fn persist_full(&self, _proposed: &BackboneSnapshot) -> Result<ProposeOutcome> {
-            Err(SemioError::InvalidOperation(
-                "Remote backbone commit requires an authenticated RemoteKitSession (owner token). Use Dev or Local backbone.".into(),
-            ))
+            Err(SemioError::InvalidOperation("Remote backbone commit requires an authenticated RemoteKitSession (owner token). Use Dev or Local backbone.".into()))
         }
     }
 
@@ -7007,42 +7030,18 @@ pub mod wip_kit {
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 
     pub enum WipMsg {
-        Exec {
-            cmd: KitStoreCommand,
-            reply: Sender<crate::error::Result<KitStoreCommandResult>>,
-        },
-        ApplyAuth {
-            snap: BackboneSnapshot,
-            reply: Sender<crate::error::SetResult>,
-        },
+        Exec { cmd: KitStoreCommand, reply: Sender<crate::error::Result<KitStoreCommandResult>> },
+        ApplyAuth { snap: BackboneSnapshot, reply: Sender<crate::error::SetResult> },
     }
 
     pub enum CoordMsg {
-        WipProposal {
-            proposed: BackboneSnapshot,
-            reply: Option<Sender<crate::error::Result<()>>>,
-        },
+        WipProposal { proposed: BackboneSnapshot, reply: Option<Sender<crate::error::Result<()>>> },
         SyncNow,
-        Attach {
-            cfg: crate::kit_backbone_wire::BackboneConfig,
-            reply: Sender<crate::error::Result<()>>,
-        },
-        Detach {
-            reply: Sender<()>,
-        },
-        Status {
-            reply: Sender<crate::backbone::BackboneStatusDto>,
-        },
-        SetActiveCheckpoint {
-            id: Option<crate::id::Id>,
-            reply: Sender<crate::error::Result<()>>,
-        },
-        ResolveConflict {
-            id: crate::id::Id,
-            strategy: crate::kit_conflict_registry::ConflictResolution,
-            wip: KitGraphRef,
-            reply: Sender<crate::error::Result<()>>,
-        },
+        Attach { cfg: crate::kit_backbone_wire::BackboneConfig, reply: Sender<crate::error::Result<()>> },
+        Detach { reply: Sender<()> },
+        Status { reply: Sender<crate::backbone::BackboneStatusDto> },
+        SetActiveCheckpoint { id: Option<crate::id::Id>, reply: Sender<crate::error::Result<()>> },
+        ResolveConflict { id: crate::id::Id, strategy: crate::kit_conflict_registry::ConflictResolution, wip: KitGraphRef, reply: Sender<crate::error::Result<()>> },
     }
 
     fn scan_finalize(graph: &KitGraphRef, res: &KitStoreCommandResult, coord: &Sender<CoordMsg>) {
@@ -7099,33 +7098,17 @@ pub mod kit_coordinator {
     use crate::kit_graph::KitGraphRef;
     use crate::wip_kit::{CoordMsg, WipMsg};
 
-    fn process_proposal(
-        backbone: &BackboneKind,
-        sync: &KitGraphRef,
-        conflicts: &ConflictRegistry,
-        proposed: &BackboneSnapshot,
-        wip_tx: &std::sync::mpsc::Sender<WipMsg>,
-    ) -> Result<()> {
+    fn process_proposal(backbone: &BackboneKind, sync: &KitGraphRef, conflicts: &ConflictRegistry, proposed: &BackboneSnapshot, wip_tx: &std::sync::mpsc::Sender<WipMsg>) -> Result<()> {
         let auth = backbone.pull()?;
         apply_snap_to_graph(sync, &auth).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
         let tip = proposed.the_kit_head.clone().ok_or_else(|| SemioError::InvalidOperation("wip has no the_kit_head".into()))?;
         if auth.checkpoints.contains_key(&tip) {
             return Ok(());
         }
-        let cp = proposed
-            .checkpoints
-            .get(&tip)
-            .ok_or_else(|| SemioError::InvalidOperation("missing tip checkpoint".into()))?
-            .clone();
+        let cp = proposed.checkpoints.get(&tip).ok_or_else(|| SemioError::InvalidOperation("missing tip checkpoint".into()))?.clone();
         for ch in &cp.changes {
             if let Err(e) = KitChange::apply_forward(ch, sync) {
-                conflicts.insert(KitConflict {
-                    id: cp.id.clone(),
-                    wip_checkpoint: cp.clone(),
-                    backbone_tip: auth.the_kit_head.clone(),
-                    reason: e.to_string(),
-                    created_at: Utc::now().to_rfc3339(),
-                });
+                conflicts.insert(KitConflict { id: cp.id.clone(), wip_checkpoint: cp.clone(), backbone_tip: auth.the_kit_head.clone(), reason: e.to_string(), created_at: Utc::now().to_rfc3339() });
                 return Ok(());
             }
         }
@@ -7139,29 +7122,15 @@ pub mod kit_coordinator {
             ProposeOutcome::Accepted => {
                 let new_auth = backbone.pull()?;
                 let (tx, rx) = std::sync::mpsc::channel();
-                wip_tx
-                    .send(WipMsg::ApplyAuth {
-                        snap: new_auth,
-                        reply: tx,
-                    })
-                    .map_err(|_| SemioError::InvalidOperation("wip channel closed".into()))?;
-                rx.recv()
-                    .map_err(|_| SemioError::InvalidOperation("wip apply auth".into()))?
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                wip_tx.send(WipMsg::ApplyAuth { snap: new_auth, reply: tx }).map_err(|_| SemioError::InvalidOperation("wip channel closed".into()))?;
+                rx.recv().map_err(|_| SemioError::InvalidOperation("wip apply auth".into()))?.map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
             ProposeOutcome::Rejected { .. } => {}
         }
         Ok(())
     }
 
-    pub fn run(
-        backbone_slot: Arc<Mutex<Option<BackboneKind>>>,
-        sync: KitGraphRef,
-        pending: Arc<Mutex<usize>>,
-        conflicts: Arc<ConflictRegistry>,
-        wip_tx: std::sync::mpsc::Sender<WipMsg>,
-        rx: Receiver<CoordMsg>,
-    ) {
+    pub fn run(backbone_slot: Arc<Mutex<Option<BackboneKind>>>, sync: KitGraphRef, pending: Arc<Mutex<usize>>, conflicts: Arc<ConflictRegistry>, wip_tx: std::sync::mpsc::Sender<WipMsg>, rx: Receiver<CoordMsg>) {
         while let Ok(msg) = rx.recv() {
             match msg {
                 CoordMsg::WipProposal { proposed, reply } => {
@@ -7208,12 +7177,7 @@ pub mod kit_coordinator {
                         }
                     };
                     let pend = *pending.lock().expect("p");
-                    let _ = reply.send(crate::backbone::BackboneStatusDto {
-                        attached,
-                        kind,
-                        backbone_tip: tip,
-                        pending_wip_checkpoints: pend,
-                    });
+                    let _ = reply.send(crate::backbone::BackboneStatusDto { attached, kind, backbone_tip: tip, pending_wip_checkpoints: pend });
                 }
                 CoordMsg::SetActiveCheckpoint { id, reply } => {
                     let r = (|| {
@@ -7257,8 +7221,8 @@ pub mod kit_store {
 
     use crate::backbone::BackboneConfig;
     use crate::error::{Result, SemioError};
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
     use crate::kit_conflict_registry::{ConflictRegistry, ConflictResolution, KitConflict};
+    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
@@ -7310,16 +7274,7 @@ pub mod kit_store {
                     let _ = ex_run.run(futures_lite::future::pending::<()>()).await;
                 });
             });
-            Self {
-                graph,
-                wip_tx,
-                coord_tx,
-                conflicts,
-                backbone_slot,
-                pending,
-                _executor: executor,
-                _handles: vec![t_wip, t_coord, t_exec],
-            }
+            Self { graph, wip_tx, coord_tx, conflicts, backbone_slot, pending, _executor: executor, _handles: vec![t_wip, t_coord, t_exec] }
         }
 
         pub fn graph(&self) -> KitGraphRef {
@@ -7332,11 +7287,8 @@ pub mod kit_store {
 
         pub fn execute_vcs(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
             let (tx, rx) = mpsc::channel();
-            self.wip_tx
-                .send(WipMsg::Exec { cmd, reply: tx })
-                .map_err(|_| SemioError::InvalidOperation("wip store closed".into()))?;
-            rx.recv()
-                .map_err(|_| SemioError::InvalidOperation("wip reply missing".into()))?
+            self.wip_tx.send(WipMsg::Exec { cmd, reply: tx }).map_err(|_| SemioError::InvalidOperation("wip store closed".into()))?;
+            rx.recv().map_err(|_| SemioError::InvalidOperation("wip reply missing".into()))?
         }
 
         /// JSON-RPC / control-plane entry: backbone + conflict commands, plus recursive `Batch`, else wip graph.
@@ -7361,20 +7313,14 @@ pub mod kit_store {
                     self.set_active_checkpoint(id)?;
                     Ok(KitStoreCommandResult::SetActiveCheckpoint { ok: true })
                 }
-                KitStoreCommand::ListConflicts => Ok(KitStoreCommandResult::ListConflicts {
-                    items: self.list_conflicts(),
-                }),
+                KitStoreCommand::ListConflicts => Ok(KitStoreCommandResult::ListConflicts { items: self.list_conflicts() }),
                 KitStoreCommand::ResolveConflict { id, strategy } => {
                     self.resolve_conflict(id, strategy)?;
                     Ok(KitStoreCommandResult::ResolveConflict { ok: true })
                 }
                 KitStoreCommand::BackboneStatus => {
                     let s = self.backbone_status()?;
-                    Ok(KitStoreCommandResult::BackboneStatus {
-                        attached: s.attached,
-                        kind: s.kind,
-                        tip: s.backbone_tip,
-                    })
+                    Ok(KitStoreCommandResult::BackboneStatus { attached: s.attached, kind: s.kind, tip: s.backbone_tip })
                 }
                 KitStoreCommand::SyncNow => {
                     self.sync_now()?;
@@ -7386,11 +7332,8 @@ pub mod kit_store {
 
         pub fn attach_backbone(&self, cfg: BackboneConfig) -> Result<()> {
             let (tx, rx) = mpsc::channel();
-            self.coord_tx
-                .send(CoordMsg::Attach { cfg, reply: tx })
-                .map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
-            rx.recv()
-                .map_err(|_| SemioError::InvalidOperation("attach reply missing".into()))?
+            self.coord_tx.send(CoordMsg::Attach { cfg, reply: tx }).map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
+            rx.recv().map_err(|_| SemioError::InvalidOperation("attach reply missing".into()))?
         }
 
         pub fn detach_backbone(&self) {
@@ -7402,26 +7345,18 @@ pub mod kit_store {
 
         pub fn backbone_status(&self) -> Result<crate::backbone::BackboneStatusDto> {
             let (tx, rx) = mpsc::channel();
-            self.coord_tx
-                .send(CoordMsg::Status { reply: tx })
-                .map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
-            rx.recv()
-                .map_err(|_| SemioError::InvalidOperation("status reply missing".into()))
+            self.coord_tx.send(CoordMsg::Status { reply: tx }).map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
+            rx.recv().map_err(|_| SemioError::InvalidOperation("status reply missing".into()))
         }
 
         pub fn set_active_checkpoint(&self, id: Option<crate::id::Id>) -> Result<()> {
             let (tx, rx) = mpsc::channel();
-            self.coord_tx
-                .send(CoordMsg::SetActiveCheckpoint { id, reply: tx })
-                .map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
-            rx.recv()
-                .map_err(|_| SemioError::InvalidOperation("setActive reply missing".into()))?
+            self.coord_tx.send(CoordMsg::SetActiveCheckpoint { id, reply: tx }).map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
+            rx.recv().map_err(|_| SemioError::InvalidOperation("setActive reply missing".into()))?
         }
 
         pub fn sync_now(&self) -> Result<()> {
-            self.coord_tx
-                .send(CoordMsg::SyncNow)
-                .map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
+            self.coord_tx.send(CoordMsg::SyncNow).map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
             Ok(())
         }
 
@@ -7431,16 +7366,8 @@ pub mod kit_store {
 
         pub fn resolve_conflict(&self, id: crate::id::Id, strategy: ConflictResolution) -> Result<()> {
             let (tx, rx) = mpsc::channel();
-            self.coord_tx
-                .send(CoordMsg::ResolveConflict {
-                    id,
-                    strategy,
-                    wip: self.graph.clone(),
-                    reply: tx,
-                })
-                .map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
-            rx.recv()
-                .map_err(|_| SemioError::InvalidOperation("resolve reply missing".into()))?
+            self.coord_tx.send(CoordMsg::ResolveConflict { id, strategy, wip: self.graph.clone(), reply: tx }).map_err(|_| SemioError::InvalidOperation("coordinator closed".into()))?;
+            rx.recv().map_err(|_| SemioError::InvalidOperation("resolve reply missing".into()))?
         }
     }
 }
@@ -7453,12 +7380,12 @@ pub mod kit_store_command {
 
     use crate::change_command::ChangeKitCommand;
     use crate::id::Id;
-    use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
     use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
     use crate::kit_change::{KitChange, KitChangeKind};
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
+    use crate::kit_graph::KitGraph;
+    use crate::kit_graph::KitGraphRef;
     use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
@@ -7558,20 +7485,42 @@ pub mod kit_store_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitStoreCommandResult {
-        ReadKitCommands { results: Vec<ReadKitCommandOutput> },
-        NewSession { id: Id },
-        EndSession { ok: bool },
-        NewAlternative { id: Id },
-        ExecuteSessionCommands { results: Vec<SessionCommandResult> },
-        ExecuteKitCheckpointCommands { results: Vec<KitCheckpointCommandResult> },
-        ExecuteKitAlternativeCommands { results: Vec<KitAlternativeCommandResult> },
-        AttachBackbone { ok: bool },
-        DetachBackbone { ok: bool },
-        SetActiveCheckpoint { ok: bool },
+        ReadKitCommands {
+            results: Vec<ReadKitCommandOutput>,
+        },
+        NewSession {
+            id: Id,
+        },
+        EndSession {
+            ok: bool,
+        },
+        NewAlternative {
+            id: Id,
+        },
+        ExecuteSessionCommands {
+            results: Vec<SessionCommandResult>,
+        },
+        ExecuteKitCheckpointCommands {
+            results: Vec<KitCheckpointCommandResult>,
+        },
+        ExecuteKitAlternativeCommands {
+            results: Vec<KitAlternativeCommandResult>,
+        },
+        AttachBackbone {
+            ok: bool,
+        },
+        DetachBackbone {
+            ok: bool,
+        },
+        SetActiveCheckpoint {
+            ok: bool,
+        },
         ListConflicts {
             items: Vec<crate::kit_backbone_wire::KitConflict>,
         },
-        ResolveConflict { ok: bool },
+        ResolveConflict {
+            ok: bool,
+        },
         BackboneStatus {
             attached: bool,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -7579,8 +7528,12 @@ pub mod kit_store_command {
             #[serde(rename = "tip")]
             tip: Option<Id>,
         },
-        SyncNow { ok: bool },
-        Batch { results: Vec<KitStoreCommandResult> },
+        SyncNow {
+            ok: bool,
+        },
+        Batch {
+            results: Vec<KitStoreCommandResult>,
+        },
         Nothing,
     }
 
@@ -7596,9 +7549,7 @@ pub mod kit_store_command {
                 | KitStoreCommand::ListConflicts
                 | KitStoreCommand::ResolveConflict { .. }
                 | KitStoreCommand::BackboneStatus
-                | KitStoreCommand::SyncNow => Err(SemioError::InvalidOperation(
-                    "backbone and conflict commands must be run via kit_store::KitStore::execute (semio-store control plane)".into(),
-                )),
+                | KitStoreCommand::SyncNow => Err(SemioError::InvalidOperation("backbone and conflict commands must be run via kit_store::KitStore::execute (semio-store control plane)".into())),
                 KitStoreCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
                     for c in commands {
@@ -7810,7 +7761,7 @@ pub mod kit_store_command {
                     return Err(SemioError::InvalidOperation("no change to finalize in draft".into()));
                 }
                 let kc = KitChange { forward, inverse, kind: KitChangeKind::Inferred, author: None, time: None };
-            (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
+                (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
             if alt.is_some() {
                 // Alternative drafts apply eagerly to the shared live graph; snapshot the change on the
@@ -8020,11 +7971,7 @@ pub mod kit_store_command {
                             return Err(SemioError::InvalidOperation("empty alternative".into()));
                         }
                         let t = alt.tip().cloned().expect("len checked");
-                        let a = if let Some(r) = &alt.root {
-                            g.materialize_at(Some(r))
-                        } else {
-                            g.materialize_at(None)
-                        };
+                        let a = if let Some(r) = &alt.root { g.materialize_at(Some(r)) } else { g.materialize_at(None) };
                         let b = g.materialize_at(Some(&t));
                         (alt.root.clone(), a, b)
                     };
@@ -10519,11 +10466,7 @@ pub mod design {
                 return true;
             }
             match (Self::port_parent_family_id(&c), Self::port_parent_family_id(&r)) {
-                (Some(cid), Some(rid)) => {
-                    cid == rid
-                        || c.compatible_families.iter().any(|f| f.id == rid)
-                        || r.compatible_families.iter().any(|f| f.id == cid)
-                }
+                (Some(cid), Some(rid)) => cid == rid || c.compatible_families.iter().any(|f| f.id == rid) || r.compatible_families.iter().any(|f| f.id == cid),
                 _ => false,
             }
         }
@@ -10947,13 +10890,7 @@ pub mod design {
             }
         }
 
-        pub fn apply_diff(
-            &mut self,
-            diff: &crate::diff::DesignDiff,
-            type_index: &HashMap<Id, TypeStoreRef>,
-            design_weak: DesignStoreWeak,
-            family_by_id: &HashMap<Id, FamilyStoreRef>,
-        ) -> crate::error::Result<()> {
+        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak, family_by_id: &HashMap<Id, FamilyStoreRef>) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             if let Some(n) = &diff.name {
                 self.set_name(n.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -11384,22 +11321,14 @@ pub mod design {
         }
 
         /// 🧩 Add one piece from a full DTO (semantic command path; no [`crate::diff::DesignDiff`]).
-        pub(crate) fn semantic_add_piece(
-            &mut self,
-            piece: PieceFullDto,
-            type_index: &HashMap<Id, TypeStoreRef>,
-            design_weak: DesignStoreWeak,
-        ) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFullDto, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
             {
                 let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                 pw.apply_full_dto(piece.clone(), design_weak, type_index);
             }
-            self.emit_ev(KitEvent::ChildAdded {
-                parent: parent.clone(),
-                child: EntityRef::new(EntityKind::Piece, piece.id.clone()),
-            });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, piece.id.clone()) });
             self.pieces.push(pref);
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -11410,10 +11339,7 @@ pub mod design {
         /// 🧩 Remove one connection by id (semantic command path).
         pub(crate) fn semantic_remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            self.emit_ev(KitEvent::ChildRemoved {
-                parent: parent.clone(),
-                child: EntityRef::new(EntityKind::Connection, connection_id.clone()),
-            });
+            self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
             self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -11422,11 +11348,7 @@ pub mod design {
         }
 
         /// 🧩 Add one connection from full DTO (semantic command path).
-        pub(crate) fn semantic_add_connection(
-            &mut self,
-            cdto: ConnectionFullDto,
-            design_weak: DesignStoreWeak,
-        ) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFullDto, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
@@ -11435,10 +11357,7 @@ pub mod design {
                 }
             }
             let cref = connection_from_full_dto(cdto.clone(), &piece_index, design_weak);
-            self.emit_ev(KitEvent::ChildAdded {
-                parent: parent.clone(),
-                child: EntityRef::new(EntityKind::Connection, cdto.id.clone()),
-            });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cdto.id.clone()) });
             self.connections.push(cref);
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -12615,13 +12534,7 @@ pub mod diff {
 
     impl PortDiff {
         pub fn is_empty(&self) -> bool {
-            self.id.is_none()
-                && self.name.is_none()
-                && self.description.is_none()
-                && self.icon.is_none()
-                && self.compatible_ports.is_none()
-                && self.compatible_families.is_none()
-                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+            self.id.is_none() && self.name.is_none() && self.description.is_none() && self.icon.is_none() && self.compatible_ports.is_none() && self.compatible_families.is_none() && self.attributes.as_ref().map_or(true, |a| a.is_empty())
         }
         pub fn merge(&self, b: &Self) -> Self {
             Self {
@@ -13267,6 +13180,225 @@ pub mod diff {
             }
             d.stats = stats_between(&before.stats, &after.stats);
             d
+        }
+
+        /// 🧩 Apply [`Self::between_dto`]-shaped diff onto a full design (semantic kit-diff materialize).
+        pub fn merge_into_full_dto(&self, d: &mut crate::design::DesignFullDto) {
+            if let Some(n) = &self.name {
+                d.name = n.clone();
+            }
+            if let Some(x) = &self.description {
+                d.description = x.clone();
+            }
+            if let Some(x) = &self.icon {
+                d.icon = x.clone();
+            }
+            if let Some(x) = &self.image {
+                d.image = x.clone();
+            }
+            if let Some(f) = &self.families {
+                merge_family_ids_into_vec(&mut d.families, f);
+            }
+            if let Some(x) = &self.location {
+                d.location = x.clone();
+            }
+            if let Some(x) = &self.unit {
+                d.unit = x.clone();
+            }
+            if let Some(x) = &self.created {
+                d.created = x.clone();
+            }
+            if let Some(x) = &self.updated {
+                d.updated = x.clone();
+            }
+            if let Some(x) = &self.kit {
+                d.kit = x.clone();
+            }
+            if let Some(pc) = &self.pieces {
+                for r in &pc.removed {
+                    d.pieces.retain(|p| p.id != r.id);
+                }
+                for u in &pc.updated {
+                    if let Some(p) = d.pieces.iter_mut().find(|p| p.id == u.id.id) {
+                        Self::merge_piece_sparse_dto(p, &u.diff);
+                    }
+                }
+                d.pieces.extend(pc.added.iter().cloned());
+            }
+            if let Some(cc) = &self.connections {
+                for r in &cc.removed {
+                    d.connections.retain(|c| c.id != r.id);
+                }
+                for u in &cc.updated {
+                    if let Some(c) = d.connections.iter_mut().find(|c| c.id == u.id.id) {
+                        Self::merge_connection_sparse_dto(c, &u.diff);
+                    }
+                }
+                d.connections.extend(cc.added.iter().cloned());
+            }
+            if let Some(ld) = &self.layers {
+                for r in &ld.removed {
+                    d.layers.retain(|l| l.id != r.id);
+                }
+                for u in &ld.updated {
+                    if let Some(l) = d.layers.iter_mut().find(|l| l.id == u.id.id) {
+                        Self::merge_layer_sparse_dto(l, &u.diff);
+                    }
+                }
+                d.layers.extend(ld.added.iter().cloned());
+            }
+            if let Some(gd) = &self.groups {
+                for r in &gd.removed {
+                    d.groups.retain(|g| g.id != r.id);
+                }
+                for u in &gd.updated {
+                    if let Some(g) = d.groups.iter_mut().find(|g| g.id == u.id.id) {
+                        Self::merge_group_sparse_dto(g, &u.diff);
+                    }
+                }
+                d.groups.extend(gd.added.iter().cloned());
+            }
+            if let Some(a) = &self.authors {
+                merge_authors_coll_into_vec(&mut d.authors, a);
+            }
+            if let Some(c) = &self.concepts {
+                merge_concepts_coll_into_vec(&mut d.concepts, c);
+            }
+            if let Some(t) = &self.tags {
+                merge_tags_coll_into_vec(&mut d.tags, t);
+            }
+            if let Some(q) = &self.qualities {
+                merge_qualities_coll_into_vec(&mut d.qualities, q);
+            }
+            if let Some(p) = &self.props {
+                merge_props_coll_into_vec(&mut d.props, p);
+            }
+            if let Some(a) = &self.attributes {
+                merge_attributes_coll_into_vec(&mut d.attributes, a);
+            }
+            if let Some(s) = &self.stats {
+                merge_stats_coll_into_vec(&mut d.stats, s);
+            }
+        }
+
+        fn merge_piece_sparse_dto(dto: &mut PieceFullDto, d: &PieceDiff) {
+            if let Some(v) = &d.name {
+                dto.name = v.clone();
+            }
+            if let Some(v) = &d.description {
+                dto.description = v.clone();
+            }
+            if let Some(v) = &d.plane {
+                dto.plane = *v;
+            }
+            if let Some(v) = &d.center {
+                dto.center = *v;
+            }
+            if let Some(v) = &d.scale {
+                dto.scale = *v;
+            }
+            if let Some(v) = &d.mirror_plane {
+                dto.mirror_plane = *v;
+            }
+            if let Some(v) = &d.hidden {
+                dto.hidden = *v;
+            }
+            if let Some(v) = &d.locked {
+                dto.locked = *v;
+            }
+            if let Some(v) = &d.color {
+                dto.color = v.clone();
+            }
+            if let Some(v) = &d.r#type {
+                dto.r#type = v.clone();
+            }
+            if let Some(v) = &d.design {
+                dto.design = v.clone();
+            }
+            if let Some(ref pd) = d.props {
+                merge_props_coll_into_vec(&mut dto.props, pd);
+            }
+            if let Some(ref ad) = d.attributes {
+                merge_attributes_coll_into_vec(&mut dto.attributes, ad);
+            }
+        }
+
+        fn merge_connection_sparse_dto(dto: &mut ConnectionFullDto, d: &ConnectionDiff) {
+            if let Some(v) = &d.connected {
+                dto.connected = v.clone();
+            }
+            if let Some(v) = &d.connecting {
+                dto.connecting = v.clone();
+            }
+            if let Some(v) = &d.gap {
+                dto.gap = *v;
+            }
+            if let Some(v) = &d.shift {
+                dto.shift = *v;
+            }
+            if let Some(v) = &d.rise {
+                dto.rise = *v;
+            }
+            if let Some(v) = &d.rotation {
+                dto.rotation = *v;
+            }
+            if let Some(v) = &d.turn {
+                dto.turn = *v;
+            }
+            if let Some(v) = &d.tilt {
+                dto.tilt = *v;
+            }
+            if let Some(v) = &d.x {
+                dto.x = *v;
+            }
+            if let Some(v) = &d.y {
+                dto.y = *v;
+            }
+            if let Some(v) = &d.description {
+                dto.description = v.clone();
+            }
+            if let Some(ref ad) = d.attributes {
+                merge_attributes_coll_into_vec(&mut dto.attributes, ad);
+            }
+        }
+
+        fn merge_layer_sparse_dto(fd: &mut LayerFullDto, d: &LayerDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(v) = &d.color {
+                fd.color = v.clone();
+            }
+            if let Some(v) = &d.order {
+                fd.order = *v;
+            }
+            if let Some(v) = &d.visible {
+                fd.visible = *v;
+            }
+            if let Some(v) = &d.locked {
+                fd.locked = *v;
+            }
+        }
+
+        fn merge_group_sparse_dto(fd: &mut GroupFullDto, d: &GroupDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(v) = &d.color {
+                fd.color = v.clone();
+            }
+            if let Some(v) = &d.icon {
+                fd.icon = v.clone();
+            }
+            if let Some(ref ps) = d.pieces {
+                fd.pieces = ps.clone();
+            }
         }
     }
 
@@ -14313,6 +14445,33 @@ pub mod diff {
         for u in &d.updated {
             if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
                 merge_quality_diff_into_full(x, &u.diff);
+            }
+        }
+        vec.extend(d.added.iter().cloned());
+    }
+
+    pub fn merge_stat_diff_into_full(fd: &mut StatFullDto, d: &StatDiff) {
+        if let Some(v) = &d.key {
+            fd.key = v.clone();
+        }
+        if let Some(v) = &d.value {
+            fd.value = v.clone();
+        }
+        if let Some(v) = &d.unit {
+            fd.unit = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+    }
+
+    pub fn merge_stats_coll_into_vec(vec: &mut Vec<StatFullDto>, d: &StatsDiff) {
+        for id in &d.removed {
+            vec.retain(|x| x.id != id.id);
+        }
+        for u in &d.updated {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+                merge_stat_diff_into_full(x, &u.diff);
             }
         }
         vec.extend(d.added.iter().cloned());
@@ -15840,10 +15999,7 @@ pub(crate) mod event_wire {
                 if bd.families != ad.families {
                     if let Some(dref) = kit.read().ok().and_then(|g| g.design(ad.id.as_str())) {
                         if let Ok(mut dw) = dref.write() {
-                            dw.emit_ev(KitEvent::Design {
-                                design_id: ad.id.clone(),
-                                event: DesignEvent::FieldChanged(DesignField::Families),
-                            });
+                            dw.emit_ev(KitEvent::Design { design_id: ad.id.clone(), event: DesignEvent::FieldChanged(DesignField::Families) });
                         }
                     }
                 }
@@ -15855,10 +16011,7 @@ pub(crate) mod event_wire {
                 if bt.families != at.families {
                     if let Some(tref) = kit.read().ok().and_then(|g| g.semio_type(at.id.as_str())) {
                         if let Ok(mut tw) = tref.write() {
-                            tw.emit_ev(KitEvent::Type {
-                                type_id: at.id.clone(),
-                                event: TypeEvent::FieldChanged(TypeField::Families),
-                            });
+                            tw.emit_ev(KitEvent::Type { type_id: at.id.clone(), event: TypeEvent::FieldChanged(TypeField::Families) });
                         }
                     }
                 }
@@ -16870,13 +17023,7 @@ pub mod location {
 
         pub fn to_shallow_dto(&self) -> LocationShallowDto {
             let m = self.to_metadata_dto();
-            LocationShallowDto {
-                id: m.id,
-                longitude: m.longitude,
-                latitude: m.latitude,
-                altitude: m.altitude,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-            }
+            LocationShallowDto { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() }
         }
 
         pub fn to_full_dto(&self) -> LocationFullDto {
@@ -17390,9 +17537,9 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
-    use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+    use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
     use crate::design::{DesignFullDto, DesignIdDto, DesignStore, DesignStoreRef};
@@ -17953,10 +18100,7 @@ pub mod kit_graph {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let design_weak = Arc::downgrade(&dref);
-            dref
-                .write()
-                .map_err(|_| SemioError::LockPoisoned("design"))?
-                .semantic_add_piece(piece, &type_index, design_weak)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_piece(piece, &type_index, design_weak)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -18123,26 +18267,20 @@ pub mod kit_graph {
         }
 
         /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
-        pub fn change_kit_commands_for_field_patch(
-            kit: &KitGraphRef,
-            entity_kind: EntityKind,
-            id: &str,
-            field: &str,
-            value: serde_json::Value,
-        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_field_patch(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
-            use crate::change_command::{
-                ChangeAuthorCommand, ChangeConceptCommand, ChangeDesignCommand, ChangeFamilyCommand, ChangeFileCommand, ChangeFolderCommand, ChangeKitCommand,
-                ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand, ChangeTypeCommand,
-            };
             use crate::author::AuthorIdDto;
-            use crate::connection::ConnectionIdDto;
+            use crate::change_command::{
+                ChangeAuthorCommand, ChangeConceptCommand, ChangeDesignCommand, ChangeFamilyCommand, ChangeFileCommand, ChangeFolderCommand, ChangeKitCommand, ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand,
+                ChangeTypeCommand,
+            };
             use crate::concept::ConceptIdDto;
+            use crate::connection::ConnectionIdDto;
             use crate::design::DesignIdDto;
+            use crate::family::FamilyIdDto;
             use crate::file::FileIdDto;
             use crate::folder::FolderIdDto;
-            use crate::family::FamilyIdDto;
             use crate::piece::PieceIdDto;
             use crate::port::PortIdDto;
             use crate::quality::QualityIdDto;
@@ -18212,10 +18350,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands {
-                        design_id: DesignIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Type => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18254,10 +18389,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTypeCommands {
-                        type_id: TypeIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Piece => {
                     let design_id = {
@@ -18281,10 +18413,7 @@ pub mod kit_graph {
                         let pcmds = Self::piece_diff_to_change_commands(&pd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
                             design_id: DesignIdDto { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                                piece_id: PieceIdDto { id: Id::from(id.as_str()) },
-                                commands: pcmds,
-                            }],
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: Id::from(id.as_str()) }, commands: pcmds }],
                         }]);
                     }
                     let piece_cmd = match field.as_str() {
@@ -18298,13 +18427,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands {
-                        design_id: DesignIdDto { id: design_id },
-                        commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                            piece_id: PieceIdDto { id: Id::from(id.as_str()) },
-                            commands: vec![piece_cmd],
-                        }],
-                    }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: design_id }, commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: Id::from(id.as_str()) }, commands: vec![piece_cmd] }] }]
                 }
                 EntityKind::Connection => {
                     let design_id = Self::find_design_id_for_connection(kit, &id)?;
@@ -18316,10 +18439,7 @@ pub mod kit_graph {
                         let ccmds = Self::connection_diff_to_change_commands(&cd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
                             design_id: DesignIdDto { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands {
-                                connection_id: ConnectionIdDto { id: Id::from(id.as_str()) },
-                                commands: ccmds,
-                            }],
+                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: ConnectionIdDto { id: Id::from(id.as_str()) }, commands: ccmds }],
                         }]);
                     }
                     return Err(SetError::InvalidValue(format!("unknown connection field '{field}' (use __patch for batch)")));
@@ -18349,10 +18469,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown author field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeAuthorCommands {
-                        author_id: AuthorIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeAuthorCommands { author_id: AuthorIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Concept => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18375,10 +18492,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown concept field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeConceptCommands {
-                        concept_id: ConceptIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeConceptCommands { concept_id: ConceptIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Tag => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18397,10 +18511,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown tag field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTagCommands {
-                        tag_id: TagIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeTagCommands { tag_id: TagIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::File => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18439,10 +18550,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown file field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFileCommands {
-                        file_id: FileIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeFileCommands { file_id: FileIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Folder => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18461,10 +18569,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown folder field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFolderCommands {
-                        folder_id: FolderIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeFolderCommands { folder_id: FolderIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Quality => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18495,10 +18600,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown quality field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeKitQualityCommands {
-                        quality_id: QualityIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: QualityIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Family => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18521,16 +18623,12 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown family field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFamilyCommands {
-                        family_id: FamilyIdDto { id: Id::from(id.as_str()) },
-                        commands: vec![cmd],
-                    }]
+                    vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Port => {
                     let pref = {
                         let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.port_by_id(&Id::from(id.as_str()))
-                            .ok_or_else(|| SetError::NotFound(format!("port {id}")))?
+                        g.port_by_id(&Id::from(id.as_str())).ok_or_else(|| SetError::NotFound(format!("port {id}")))?
                     };
                     let parent_fam_id: Option<Id> = match pref.read().map_err(|_| SetError::LockPoisoned("port".into()))?.parent_family.upgrade() {
                         Some(pf) => Some(pf.read().map_err(|_| SetError::LockPoisoned("family".into()))?.id.clone()),
@@ -18553,18 +18651,9 @@ pub mod kit_graph {
                     };
                     let pid = Id::from(id.as_str());
                     if let Some(fid) = parent_fam_id {
-                        vec![ChangeKitCommand::ChangeFamilyCommands {
-                            family_id: FamilyIdDto { id: fid },
-                            commands: vec![ChangeFamilyCommand::ChangePortCommands {
-                                port_id: PortIdDto { id: pid },
-                                commands: vec![pcmd],
-                            }],
-                        }]
+                        vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyIdDto { id: fid }, commands: vec![ChangeFamilyCommand::ChangePortCommands { port_id: PortIdDto { id: pid }, commands: vec![pcmd] }] }]
                     } else {
-                        vec![ChangeKitCommand::ChangeKitPortCommands {
-                            port_id: PortIdDto { id: pid },
-                            commands: vec![pcmd],
-                        }]
+                        vec![ChangeKitCommand::ChangeKitPortCommands { port_id: PortIdDto { id: pid }, commands: vec![pcmd] }]
                     }
                 }
                 _ => return Err(SetError::InvalidValue(format!("change_kit_commands_for_field_patch not implemented for {entity_kind:?}"))),
@@ -18811,13 +18900,7 @@ pub mod kit_graph {
             kit.read().map(|g| !g.undo_future.is_empty()).unwrap_or(false)
         }
 
-        pub fn change_kit_commands_for_add_child(
-            kit: &KitGraphRef,
-            parent_kind: EntityKind,
-            parent_id: &str,
-            child_kind: EntityKind,
-            dto: serde_json::Value,
-        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_add_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
             use crate::design::DesignIdDto;
             use crate::family::FamilyFullDto;
@@ -18833,22 +18916,13 @@ pub mod kit_graph {
                 }
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                    Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                        design_id: DesignIdDto { id: Id::from(pg.as_str()) },
-                        commands: vec![ChangeDesignCommand::AddPiece { piece }],
-                    }])
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::AddPiece { piece }] }])
                 }
                 _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_add_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
-        pub fn change_kit_commands_for_remove_child(
-            kit: &KitGraphRef,
-            parent_kind: EntityKind,
-            parent_id: &str,
-            child_kind: EntityKind,
-            child_id: &str,
-        ) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_remove_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
             use crate::design::DesignIdDto;
             use crate::family::FamilyIdDto;
@@ -18861,19 +18935,12 @@ pub mod kit_graph {
                     if pg != kid {
                         return Err(SetError::NotFound(format!("kit {pg}")));
                     }
-                    Ok(vec![ChangeKitCommand::RemoveFamily {
-                        family_id: FamilyIdDto { id: Id::from(cg.as_str()) },
-                    }])
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyIdDto { id: Id::from(cg.as_str()) } }])
                 }
-                (EntityKind::Design, EntityKind::Piece) => Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                    design_id: DesignIdDto { id: Id::from(pg.as_str()) },
-                    commands: vec![ChangeDesignCommand::RemovePiece {
-                        piece_id: PieceIdDto { id: Id::from(cg.as_str()) },
-                    }],
-                }]),
-                _ => Err(SetError::InvalidValue(format!(
-                    "change_kit_commands_for_remove_child not implemented for {parent_kind:?} -> {child_kind:?}"
-                ))),
+                (EntityKind::Design, EntityKind::Piece) => {
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id: Id::from(cg.as_str()) } }] }])
+                }
+                _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_remove_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
@@ -19601,11 +19668,7 @@ pub mod kit_graph {
             for t in &g.types {
                 let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
                 if tr.connector_for_port_id(pid).is_some() {
-                    return Err(SetError::InvalidValue(format!(
-                        "port {} is still referenced by a connector on type {}",
-                        pid.as_str(),
-                        tr.id.as_str()
-                    )));
+                    return Err(SetError::InvalidValue(format!("port {} is still referenced by a connector on type {}", pid.as_str(), tr.id.as_str())));
                 }
             }
             Ok(())
@@ -19618,11 +19681,7 @@ pub mod kit_graph {
                     if let Some(fr) = w.upgrade() {
                         if let Ok(r) = fr.read() {
                             if r.id == *fid {
-                                return Err(SetError::InvalidValue(format!(
-                                    "family {} is still referenced by type {}",
-                                    fid.as_str(),
-                                    tr.id.as_str()
-                                )));
+                                return Err(SetError::InvalidValue(format!("family {} is still referenced by type {}", fid.as_str(), tr.id.as_str())));
                             }
                         }
                     }
@@ -19634,11 +19693,7 @@ pub mod kit_graph {
                     if let Some(fr) = w.upgrade() {
                         if let Ok(r) = fr.read() {
                             if r.id == *fid {
-                                return Err(SetError::InvalidValue(format!(
-                                    "family {} is still referenced by design {}",
-                                    fid.as_str(),
-                                    dr.id.as_str()
-                                )));
+                                return Err(SetError::InvalidValue(format!("family {} is still referenced by design {}", fid.as_str(), dr.id.as_str())));
                             }
                         }
                     }
@@ -19647,13 +19702,7 @@ pub mod kit_graph {
             let Some(fam) = g.families.iter().find(|f| f.read().map(|r| r.id == *fid).unwrap_or(false)) else {
                 return Ok(());
             };
-            let port_ids: Vec<Id> = fam
-                .read()
-                .map_err(|_| SetError::LockPoisoned("family".into()))?
-                .ports
-                .iter()
-                .filter_map(|p| p.read().ok().map(|r| r.id.clone()))
-                .collect();
+            let port_ids: Vec<Id> = fam.read().map_err(|_| SetError::LockPoisoned("family".into()))?.ports.iter().filter_map(|p| p.read().ok().map(|r| r.id.clone())).collect();
             for pid in &port_ids {
                 Self::check_port_unused_by_connectors(g, pid)?;
             }
@@ -19708,9 +19757,7 @@ pub mod kit_graph {
                     let Some(pref) = g2.port_by_id(&pd.id) else {
                         return Err(SetError::Internal(format!("port {} missing after family insert", pd.id)));
                     };
-                    pref.write()
-                        .map_err(|_| SetError::LockPoisoned("port".into()))?
-                        .set_compatible_ports_from_ids(&pd.compatible_ports, &*g2);
+                    pref.write().map_err(|_| SetError::LockPoisoned("port".into()))?.set_compatible_ports_from_ids(&pd.compatible_ports, &*g2);
                 }
             }
             event_wire::wire_graph_bus(kit);
@@ -20039,9 +20086,7 @@ pub mod kit_graph {
             let id_str = new_dto.id.as_str().to_string();
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.designs
-                    .iter()
-                    .position(|d| d.read().map(|r| r.id.as_str() == id_str).unwrap_or(false))
+                g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == id_str).unwrap_or(false))
             }
             .ok_or_else(|| SetError::NotFound(format!("design {id_str}")))?;
             if Self::remove_design_dto(kit, &id_str)?.is_none() {
@@ -20083,12 +20128,7 @@ pub mod kit_graph {
                 return Err(SetError::InvalidValue("no pieces found matching the provided IDs".into()));
             }
 
-            let internal_connections: Vec<ConnectionFullDto> = parent_dto
-                .connections
-                .iter()
-                .filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str()))
-                .cloned()
-                .collect();
+            let internal_connections: Vec<ConnectionFullDto> = parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str())).cloned().collect();
 
             let external_connections: Vec<ConnectionFullDto> = parent_dto
                 .connections
@@ -20144,14 +20184,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::ClusterPieces {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                piece_ids,
-                cluster_name,
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ClusterPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, cluster_name }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         fn domain_has_selected_ancestor_drag(piece: &str, selected: &HashSet<String>, parent_map: &HashMap<String, (String, String)>) -> bool {
@@ -20213,15 +20246,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::DragPieces {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                piece_ids,
-                du,
-                dv,
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DragPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn move_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
@@ -20258,16 +20283,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::MovePieces {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                piece_ids,
-                gap,
-                shift,
-                rise,
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::MovePieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn fix_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
@@ -20294,13 +20310,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::FixPieces {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                piece_ids,
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FixPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn delete_connection_in_design_unchecked(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
@@ -20315,13 +20325,7 @@ pub mod kit_graph {
             use crate::connection::ConnectionIdDto;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::DeleteConnection {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                connection_id: ConnectionIdDto { id: Id::from(connection_id) },
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DeleteConnection { design_id: DesignIdDto { id: Id::from(design_id) }, connection_id: ConnectionIdDto { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         /// Compute flattened design DTO and replace that design in the graph.
@@ -20345,12 +20349,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::FlattenDesign {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FlattenDesign { design_id: DesignIdDto { id: Id::from(design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFullDto> {
@@ -20426,18 +20425,10 @@ pub mod kit_graph {
             }
 
             let existing_piece: HashSet<String> = before.pieces.iter().map(|p| p.id.to_string()).collect();
-            let add_pieces: Vec<PieceFullDto> = expanded_child
-                .pieces
-                .into_iter()
-                .filter(|p| !existing_piece.contains(p.id.as_str()))
-                .collect();
+            let add_pieces: Vec<PieceFullDto> = expanded_child.pieces.into_iter().filter(|p| !existing_piece.contains(p.id.as_str())).collect();
 
             let existing_conn_key: HashSet<String> = before.connections.iter().map(Self::domain_connection_key).collect();
-            let add_connections: Vec<ConnectionFullDto> = expanded_child
-                .connections
-                .into_iter()
-                .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
-                .collect();
+            let add_connections: Vec<ConnectionFullDto> = expanded_child.connections.into_iter().filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c))).collect();
 
             let mut after = before.clone();
             after.pieces.extend(add_pieces);
@@ -20452,13 +20443,7 @@ pub mod kit_graph {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
-            ChangeKitCommand::ExpandNestedDesign {
-                parent_design_id: DesignIdDto { id: Id::from(parent_design_id) },
-                nested_design_id: DesignIdDto { id: Id::from(nested_design_id) },
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignIdDto { id: Id::from(parent_design_id) }, nested_design_id: DesignIdDto { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
@@ -20467,14 +20452,10 @@ pub mod kit_graph {
             use crate::id::Id;
             use crate::piece::PieceIdDto;
             use crate::typ::TypeIdDto;
-            ChangeKitCommand::ChangePieceKind {
-                design_id: DesignIdDto { id: Id::from(design_id) },
-                piece_id: PieceIdDto { id: Id::from(piece_id) },
-                new_type_id: TypeIdDto { id: Id::from(new_type_id) },
-            }
-            .apply(kit)
-            .map(|_| ())
-            .map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ChangePieceKind { design_id: DesignIdDto { id: Id::from(design_id) }, piece_id: PieceIdDto { id: Id::from(piece_id) }, new_type_id: TypeIdDto { id: Id::from(new_type_id) } }
+                .apply(kit)
+                .map(|_| ())
+                .map_err(KitGraph::map_semio_err)
         }
 
         pub fn paste_design_selection(_kit: &KitGraphRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
@@ -21375,10 +21356,7 @@ pub mod piece {
 
         /// Pose from explicit [`PoseStore`] fields (local), for fixed / root pieces.
         pub fn pose_full_dto(&self) -> PoseFullDto {
-            PoseFullDto {
-                plane: self.pose.plane.unwrap_or_else(Plane::world_xy),
-                center: self.pose.center.unwrap_or_default(),
-            }
+            PoseFullDto { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
         }
 
         /// World-space flat pose (uses [`Self::flat_plane`] / [`Self::flat_center`]).
@@ -24602,10 +24580,10 @@ pub mod io {
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::group::GroupFullDto;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::layer::LayerFullDto;
         use crate::location::LocationIdDto;
         use crate::piece::PieceFullDto;
@@ -24788,31 +24766,14 @@ pub mod io {
                 let forward_json = serde_json::to_string(&cp.changes)?;
                 tx.execute(
                     "INSERT INTO kit_change (id, kind, forward_json, inverse_json, author_id, time) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                    params![
-                        kc_id.as_str(),
-                        "checkpoint",
-                        forward_json,
-                        "[]",
-                        cp.authors.first().map(|a| a.as_str()),
-                        cp.time.clone(),
-                    ],
+                    params![kc_id.as_str(), "checkpoint", forward_json, "[]", cp.authors.first().map(|a| a.as_str()), cp.time.clone(),],
                 )?;
                 let author_ids = serde_json::to_string(&cp.authors.iter().map(|a| a.to_string()).collect::<Vec<_>>())?;
                 let is_release = if cp.release.is_some() { 1i64 } else { 0 };
                 tx.execute(
                     "INSERT INTO checkpoint (id, kit_id, parent_checkpoint_id, change_id, message, time, is_release, materialized_kit_hash, author_ids)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                    params![
-                        cp.id.as_str(),
-                        kit_id.as_str(),
-                        cp.parent.as_ref().map(|p| p.as_str()),
-                        kc_id.as_str(),
-                        cp.message.clone(),
-                        cp.time.clone(),
-                        is_release,
-                        Option::<String>::None,
-                        author_ids,
-                    ],
+                    params![cp.id.as_str(), kit_id.as_str(), cp.parent.as_ref().map(|p| p.as_str()), kc_id.as_str(), cp.message.clone(), cp.time.clone(), is_release, Option::<String>::None, author_ids,],
                 )?;
                 if let Some(mk) = &cp.release {
                     let kit_json = serde_json::to_string(mk)?;
@@ -24826,27 +24787,14 @@ pub mod io {
                 tx.execute(
                     "INSERT INTO alternative (id, ordinal, kit_id, name, description, branch_from_checkpoint_id)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                    params![
-                        a.id.as_str(),
-                        ordinal as i64,
-                        kit_id.as_str(),
-                        a.name.as_str(),
-                        Option::<String>::None,
-                        a.root.as_ref().map(|r| r.as_str()),
-                    ],
+                    params![a.id.as_str(), ordinal as i64, kit_id.as_str(), a.name.as_str(), Option::<String>::None, a.root.as_ref().map(|r| r.as_str()),],
                 )?;
                 for (ord_cp, ck) in a.checkpoints.iter().enumerate() {
-                    tx.execute(
-                        "INSERT INTO alternative_checkpoint (alternative_id, ordinal, checkpoint_id) VALUES (?1, ?2, ?3)",
-                        params![a.id.as_str(), ord_cp as i64, ck.as_str()],
-                    )?;
+                    tx.execute("INSERT INTO alternative_checkpoint (alternative_id, ordinal, checkpoint_id) VALUES (?1, ?2, ?3)", params![a.id.as_str(), ord_cp as i64, ck.as_str()])?;
                 }
             }
 
-            tx.execute(
-                "INSERT INTO kit_main_line (kit_id, head_checkpoint_id) VALUES (?1, ?2)",
-                params![kit_id.as_str(), g.the_kit_head.as_ref().map(|h| h.as_str())],
-            )?;
+            tx.execute("INSERT INTO kit_main_line (kit_id, head_checkpoint_id) VALUES (?1, ?2)", params![kit_id.as_str(), g.the_kit_head.as_ref().map(|h| h.as_str())])?;
 
             let sessions_json = serde_json::to_string(&g.sessions)?;
             tx.execute("INSERT INTO kit_sessions_bundle (kit_id, json) VALUES (?1, ?2)", params![kit_id.as_str(), sessions_json])?;
@@ -24892,25 +24840,12 @@ pub mod io {
                 };
                 let mut release: Option<MaterializedKit> = None;
                 if is_release != 0 {
-                    let mk_j: Option<String> = conn
-                        .query_row("SELECT kit_json FROM materialized_kit WHERE checkpoint_id = ?1", params![id_s.as_str()], |r| r.get(0))
-                        .optional()?;
+                    let mk_j: Option<String> = conn.query_row("SELECT kit_json FROM materialized_kit WHERE checkpoint_id = ?1", params![id_s.as_str()], |r| r.get(0)).optional()?;
                     if let Some(j) = mk_j {
                         release = Some(serde_json::from_str(&j)?);
                     }
                 }
-                checkpoints.insert(
-                    id.clone(),
-                    KitCheckpoint {
-                        id,
-                        parent,
-                        changes,
-                        message,
-                        time,
-                        authors,
-                        release,
-                    },
-                );
+                checkpoints.insert(id.clone(), KitCheckpoint { id, parent, changes, message, time, authors, release });
             }
 
             let mut alternatives: std::collections::HashMap<Id, KitAlternative> = std::collections::HashMap::new();
@@ -24929,21 +24864,10 @@ pub mod io {
                     let cid: String = cr.get(0)?;
                     checkpoints_ordered.push(Id::from(cid.as_str()));
                 }
-                alternatives.insert(
-                    alt_id.clone(),
-                    KitAlternative {
-                        id: alt_id,
-                        name,
-                        root,
-                        checkpoints: checkpoints_ordered,
-                    },
-                );
+                alternatives.insert(alt_id.clone(), KitAlternative { id: alt_id, name, root, checkpoints: checkpoints_ordered });
             }
 
-            if let Some(json) = conn
-                .query_row("SELECT json FROM kit_sessions_bundle WHERE kit_id = ?1", params![kit_id.as_str()], |row| row.get::<_, String>(0))
-                .optional()?
-            {
+            if let Some(json) = conn.query_row("SELECT json FROM kit_sessions_bundle WHERE kit_id = ?1", params![kit_id.as_str()], |row| row.get::<_, String>(0)).optional()? {
                 g.sessions = serde_json::from_str(&json)?;
             } else {
                 g.sessions.clear();
@@ -25097,35 +25021,13 @@ pub mod io {
                     point_x, point_y, point_z, direction_x, direction_y, direction_z,
                     kit_id, parent_family_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
-                params![
-                    port.id.as_str(),
-                    ordinal as i64,
-                    port.name.as_str(),
-                    port.icon,
-                    opt_bool_to_int(port.mandatory),
-                    port.t,
-                    port.description,
-                    point_x,
-                    point_y,
-                    point_z,
-                    dir_x,
-                    dir_y,
-                    dir_z,
-                    kit_id.as_str(),
-                    parent_family_id.map(Id::as_str),
-                ],
+                params![port.id.as_str(), ordinal as i64, port.name.as_str(), port.icon, opt_bool_to_int(port.mandatory), port.t, port.description, point_x, point_y, point_z, dir_x, dir_y, dir_z, kit_id.as_str(), parent_family_id.map(Id::as_str),],
             )?;
             for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO port_compatible_family (port_id, ordinal, family_id) VALUES (?1, ?2, ?3)",
-                    params![port.id.as_str(), compatible_ordinal as i64, family.id.as_str()],
-                )?;
+                tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family_id) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family.id.as_str()])?;
             }
             for (cp_ordinal, pid) in port.compatible_ports.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?1, ?2, ?3)",
-                    params![port.id.as_str(), cp_ordinal as i64, pid.id.as_str()],
-                )?;
+                tx.execute("INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?1, ?2, ?3)", params![port.id.as_str(), cp_ordinal as i64, pid.id.as_str()])?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
                 insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
@@ -25137,10 +25039,7 @@ pub mod io {
         }
 
         fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFullDto, ordinal: usize) -> Result<()> {
-            tx.execute(
-                "INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()],
-            )?;
+            tx.execute("INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()])?;
             for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
                 insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
             }
@@ -25160,10 +25059,7 @@ pub mod io {
                 params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_id, typ.created, typ.updated, kit_id.as_str(),],
             )?;
             for (family_ordinal, family_ref) in typ.families.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?1, ?2, ?3)",
-                    params![typ.id.as_str(), family_ref.id.as_str(), family_ordinal as i64],
-                )?;
+                tx.execute("INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?1, ?2, ?3)", params![typ.id.as_str(), family_ref.id.as_str(), family_ordinal as i64])?;
             }
             for (connector_ordinal, connector) in typ.connectors.iter().enumerate() {
                 insert_connector(tx, &typ.id, connector, connector_ordinal)?;
@@ -25340,10 +25236,7 @@ pub mod io {
                 params![design.id.as_str(), ordinal as i64, design.name, design.description, design.icon, design.image, location_id, design.unit, design.created, design.updated, kit_id.as_str(),],
             )?;
             for (family_ordinal, family_ref) in design.families.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?1, ?2, ?3)",
-                    params![design.id.as_str(), family_ref.id.as_str(), family_ordinal as i64],
-                )?;
+                tx.execute("INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?1, ?2, ?3)", params![design.id.as_str(), family_ref.id.as_str(), family_ordinal as i64])?;
             }
             for (layer_ordinal, layer) in design.layers.iter().enumerate() {
                 insert_layer(tx, &design.id, layer, layer_ordinal)?;
@@ -26251,10 +26144,7 @@ pub mod io {
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
-    use async_graphql::{
-        Context, Enum, Error, InputObject, Object, OneofObject, Request, Result, Schema, SimpleObject, Subscription,
-        Variables, Json,
-    };
+    use async_graphql::{Context, Enum, Error, InputObject, Json, Object, OneofObject, Request, Result, Schema, SimpleObject, Subscription, Variables};
     use async_stream::stream;
     use futures_channel::oneshot;
     use futures_util::Stream;
@@ -26262,17 +26152,17 @@ pub mod kit_graphql {
 
     use crate::change_command::ChangeKitCommand;
     use crate::connection::ConnectionStoreRef;
-    use crate::geom::Plane;
     use crate::connector::ConnectorStoreRef;
     use crate::design::DesignStoreRef;
     use crate::events::KitEvent;
+    use crate::geom::Plane;
     use crate::id::Id;
-    use crate::kit_graph::{KitGraph, KitGraphRef};
-    use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-    use crate::piece::PieceStoreRef;
     use crate::kit_alternative::KitAlternativeCommand;
     use crate::kit_checkpoint::KitCheckpointCommand;
+    use crate::kit_graph::{KitGraph, KitGraphRef};
     use crate::kit_session::SessionCommand;
+    use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+    use crate::piece::PieceStoreRef;
     use crate::read::DesignFlattenMapEntryDto;
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
@@ -26310,11 +26200,7 @@ pub mod kit_graphql {
             while let Ok(work) = rx.recv().await {
                 match work {
                     GraphWork::ChangeKitCommands { commands, reply } => {
-                        let r = KitGraph::with_undo(&graph, || {
-                            ChangeKitCommand::apply_many(&graph, &commands)
-                                .map(|_| ())
-                                .map_err(KitGraph::map_semio_err)
-                        });
+                        let r = KitGraph::with_undo(&graph, || ChangeKitCommand::apply_many(&graph, &commands).map(|_| ()).map_err(KitGraph::map_semio_err));
                         let _ = reply.send(r.map_err(|e| format!("{e:?}")));
                     }
                     GraphWork::ChangeKitWithInverse { commands, reply } => {
@@ -26758,20 +26644,11 @@ pub mod kit_graphql {
 
         /// Apply a batch of [`ChangeKitCommand`] on the live graph (waits for actor).
         async fn change_kit_commands(&self, ctx: &Context<'_>, commands: Json<serde_json::Value>) -> Result<bool> {
-            let cmds: Vec<ChangeKitCommand> =
-                serde_json::from_value(commands.0).map_err(|e| Error::new(format!("change_kit_commands: {e}")))?;
+            let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands.0).map_err(|e| Error::new(format!("change_kit_commands: {e}")))?;
             let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
             let (reply_tx, reply_rx) = oneshot::channel();
-            tx.send(GraphWork::ChangeKitCommands {
-                commands: cmds,
-                reply: reply_tx,
-            })
-            .await
-            .map_err(|e| Error::new(format!("change queue: {e}")))?;
-            reply_rx
-                .await
-                .map_err(|_| Error::new("kit actor dropped"))?
-                .map_err(Error::new)?;
+            tx.send(GraphWork::ChangeKitCommands { commands: cmds, reply: reply_tx }).await.map_err(|e| Error::new(format!("change queue: {e}")))?;
+            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)?;
             Ok(true)
         }
 
@@ -26779,122 +26656,48 @@ pub mod kit_graphql {
             run_kit_store(ctx, KitStoreCommand::NewSession).await
         }
         async fn end_session(&self, ctx: &Context<'_>, id: String) -> Result<Json<serde_json::Value>> {
-            run_kit_store(
-                ctx,
-                KitStoreCommand::EndSession {
-                    id: Id::from(id.as_str()),
-                },
-            )
-            .await
+            run_kit_store(ctx, KitStoreCommand::EndSession { id: Id::from(id.as_str()) }).await
         }
-        async fn new_alternative(
-            &self,
-            ctx: &Context<'_>,
-            from_checkpoint: Option<String>,
-            name: String,
-        ) -> Result<Json<serde_json::Value>> {
-            run_kit_store(
-                ctx,
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint: from_checkpoint.map(|s| Id::from(s.as_str())),
-                    name,
-                },
-            )
-            .await
+        async fn new_alternative(&self, ctx: &Context<'_>, from_checkpoint: Option<String>, name: String) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::NewAlternative { from_checkpoint: from_checkpoint.map(|s| Id::from(s.as_str())), name }).await
         }
-        async fn execute_session_commands(
-            &self,
-            ctx: &Context<'_>,
-            session_id: String,
-            session_commands: Vec<Json<serde_json::Value>>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn execute_session_commands(&self, ctx: &Context<'_>, session_id: String, session_commands: Vec<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
             let mut sc: Vec<SessionCommand> = Vec::with_capacity(session_commands.len());
             for v in session_commands {
                 sc.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("session command: {e}")))?);
             }
-            run_kit_store(
-                ctx,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: Id::from(session_id.as_str()),
-                    commands: sc,
-                },
-            )
-            .await
+            run_kit_store(ctx, KitStoreCommand::ExecuteSessionCommands { id: Id::from(session_id.as_str()), commands: sc }).await
         }
-        async fn execute_kit_checkpoint_commands(
-            &self,
-            ctx: &Context<'_>,
-            checkpoint_id: String,
-            commands: Vec<Json<serde_json::Value>>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn execute_kit_checkpoint_commands(&self, ctx: &Context<'_>, checkpoint_id: String, commands: Vec<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
             let mut c: Vec<KitCheckpointCommand> = Vec::with_capacity(commands.len());
             for v in commands {
                 c.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("checkpoint command: {e}")))?);
             }
-            run_kit_store(
-                ctx,
-                KitStoreCommand::ExecuteKitCheckpointCommands {
-                    id: Id::from(checkpoint_id.as_str()),
-                    commands: c,
-                },
-            )
-            .await
+            run_kit_store(ctx, KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: c }).await
         }
-        async fn execute_kit_alternative_commands(
-            &self,
-            ctx: &Context<'_>,
-            alternative_id: String,
-            commands: Vec<Json<serde_json::Value>>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn execute_kit_alternative_commands(&self, ctx: &Context<'_>, alternative_id: String, commands: Vec<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
             let mut c: Vec<KitAlternativeCommand> = Vec::with_capacity(commands.len());
             for v in commands {
                 c.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("alternative command: {e}")))?);
             }
-            run_kit_store(
-                ctx,
-                KitStoreCommand::ExecuteKitAlternativeCommands {
-                    id: Id::from(alternative_id.as_str()),
-                    commands: c,
-                },
-            )
-            .await
+            run_kit_store(ctx, KitStoreCommand::ExecuteKitAlternativeCommands { id: Id::from(alternative_id.as_str()), commands: c }).await
         }
         async fn attach_backbone(&self, ctx: &Context<'_>, config: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let cfg: crate::kit_backbone_wire::BackboneConfig =
-                serde_json::from_value(config.0).map_err(|e| Error::new(format!("attach back bone: {e}")))?;
+            let cfg: crate::kit_backbone_wire::BackboneConfig = serde_json::from_value(config.0).map_err(|e| Error::new(format!("attach back bone: {e}")))?;
             run_kit_store(ctx, KitStoreCommand::AttachBackbone { config: cfg }).await
         }
         async fn detach_backbone(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
             run_kit_store(ctx, KitStoreCommand::DetachBackbone).await
         }
         async fn set_active_checkpoint(&self, ctx: &Context<'_>, id: Option<String>) -> Result<Json<serde_json::Value>> {
-            run_kit_store(
-                ctx,
-                KitStoreCommand::SetActiveCheckpoint {
-                    id: id.map(|s| Id::from(s.as_str())),
-                },
-            )
-            .await
+            run_kit_store(ctx, KitStoreCommand::SetActiveCheckpoint { id: id.map(|s| Id::from(s.as_str())) }).await
         }
         async fn list_conflicts(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
             run_kit_store(ctx, KitStoreCommand::ListConflicts).await
         }
-        async fn resolve_conflict(
-            &self,
-            ctx: &Context<'_>,
-            id: String,
-            strategy: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
-            let st: crate::kit_backbone_wire::ConflictResolution =
-                serde_json::from_value(strategy.0).map_err(|e| Error::new(format!("strategy: {e}")))?;
-            run_kit_store(
-                ctx,
-                KitStoreCommand::ResolveConflict {
-                    id: Id::from(id.as_str()),
-                    strategy: st,
-                },
-            )
-            .await
+        async fn resolve_conflict(&self, ctx: &Context<'_>, id: String, strategy: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
+            let st: crate::kit_backbone_wire::ConflictResolution = serde_json::from_value(strategy.0).map_err(|e| Error::new(format!("strategy: {e}")))?;
+            run_kit_store(ctx, KitStoreCommand::ResolveConflict { id: Id::from(id.as_str()), strategy: st }).await
         }
         async fn backbone_status(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
             run_kit_store(ctx, KitStoreCommand::BackboneStatus).await
@@ -26904,218 +26707,80 @@ pub mod kit_graphql {
         }
 
         /// Apply [`ChangeKitCommand`]s and return `kind` + `inverse` (same as the former WASM `executeChangeKitCommands`).
-        async fn change_kit_with_inverse(
-            &self,
-            ctx: &Context<'_>,
-            commands: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
-            let parsed: Vec<ChangeKitCommand> =
-                serde_json::from_value(commands.0).map_err(|e| Error::new(format!("changeKitWithInverse: {e}")))?;
+        async fn change_kit_with_inverse(&self, ctx: &Context<'_>, commands: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
+            let parsed: Vec<ChangeKitCommand> = serde_json::from_value(commands.0).map_err(|e| Error::new(format!("changeKitWithInverse: {e}")))?;
             let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
             let (reply_tx, reply_rx) = oneshot::channel();
-            tx.send(GraphWork::ChangeKitWithInverse {
-                commands: parsed,
-                reply: reply_tx,
-            })
-            .await
-            .map_err(|e| Error::new(format!("change queue: {e}")))?;
-            let (kind, inverse) = reply_rx
-                .await
-                .map_err(|_| Error::new("kit actor dropped"))?
-                .map_err(Error::new)?;
+            tx.send(GraphWork::ChangeKitWithInverse { commands: parsed, reply: reply_tx }).await.map_err(|e| Error::new(format!("change queue: {e}")))?;
+            let (kind, inverse) = reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)?;
             Ok(Json(serde_json::json!({ "kind": kind, "inverse": inverse })))
         }
 
-        async fn cluster_pieces(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            piece_ids: Vec<String>,
-            cluster_name: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn cluster_pieces(&self, ctx: &Context<'_>, design_id: String, piece_ids: Vec<String>, cluster_name: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, piece_ids, cluster_name)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, piece_ids, cluster_name))).await
         }
 
-        async fn drag_pieces(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            piece_ids: Vec<String>,
-            du: f64,
-            dv: f64,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn drag_pieces(&self, ctx: &Context<'_>, design_id: String, piece_ids: Vec<String>, du: f64, dv: f64) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::drag_pieces(&graph, &design_id, piece_ids, du, dv)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::drag_pieces(&graph, &design_id, piece_ids, du, dv))).await
         }
 
-        async fn move_pieces(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            piece_ids: Vec<String>,
-            gap: f64,
-            shift: f64,
-            rise: f64,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn move_pieces(&self, ctx: &Context<'_>, design_id: String, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::move_pieces(&graph, &design_id, piece_ids, gap, shift, rise)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::move_pieces(&graph, &design_id, piece_ids, gap, shift, rise))).await
         }
 
-        async fn fix_pieces(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            piece_ids: Vec<String>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn fix_pieces(&self, ctx: &Context<'_>, design_id: String, piece_ids: Vec<String>) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::fix_pieces(&graph, &design_id, piece_ids)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::fix_pieces(&graph, &design_id, piece_ids))).await
         }
 
         async fn flatten_design(&self, ctx: &Context<'_>, design_id: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id))).await
         }
 
-        async fn expand_design(
-            &self,
-            ctx: &Context<'_>,
-            parent_design_id: String,
-            nested_design_id: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn expand_design(&self, ctx: &Context<'_>, parent_design_id: String, nested_design_id: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::expand_nested_design(&graph, &parent_design_id, &nested_design_id)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::expand_nested_design(&graph, &parent_design_id, &nested_design_id))).await
         }
 
-        async fn delete_connection(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            connection_id: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn delete_connection(&self, ctx: &Context<'_>, design_id: String, connection_id: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &connection_id)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &connection_id))).await
         }
 
-        async fn change_piece_type(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            piece_id: String,
-            new_type_id: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_piece_type(&self, ctx: &Context<'_>, design_id: String, piece_id: String, new_type_id: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &piece_id, &new_type_id)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &piece_id, &new_type_id))).await
         }
 
-        async fn paste_design_selection(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            selection: Json<serde_json::Value>,
-            plane: Option<Json<serde_json::Value>>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn paste_design_selection(&self, ctx: &Context<'_>, design_id: String, selection: Json<serde_json::Value>, plane: Option<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
             let pl: Option<Plane> = match plane {
                 None => None,
                 Some(Json(v)) if v.is_null() => None,
                 Some(Json(v)) => Some(serde_json::from_value(v).map_err(|e| Error::new(format!("plane: {e}")))?),
             };
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::paste_design_selection(&graph, &design_id, selection.0, pl)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::paste_design_selection(&graph, &design_id, selection.0, pl))).await
         }
 
-        async fn create_hanging_pieces(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            type_ids: Vec<String>,
-            plane: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn create_hanging_pieces(&self, ctx: &Context<'_>, design_id: String, type_ids: Vec<String>, plane: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
             let pl: Plane = serde_json::from_value(plane.0).map_err(|e| Error::new(format!("plane: {e}")))?;
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, type_ids, pl)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, type_ids, pl))).await
         }
 
-        async fn create_connected_piece(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            parent_piece: String,
-            parent_port: String,
-            child_type: String,
-            child_port: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn create_connected_piece(&self, ctx: &Context<'_>, design_id: String, parent_piece: String, parent_port: String, child_type: String, child_port: String) -> Result<Json<serde_json::Value>> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || {
-                    KitGraph::create_connected_piece(
-                        &graph,
-                        &design_id,
-                        &parent_piece,
-                        &parent_port,
-                        &child_type,
-                        &child_port,
-                    )
-                }),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::create_connected_piece(&graph, &design_id, &parent_piece, &parent_port, &child_type, &child_port))).await
         }
 
-        async fn create_fixed_piece(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            type_id: String,
-            plane: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn create_fixed_piece(&self, ctx: &Context<'_>, design_id: String, type_id: String, plane: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
             let pl: Plane = serde_json::from_value(plane.0).map_err(|e| Error::new(format!("plane: {e}")))?;
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &type_id, pl)),
-            )
-            .await
+            run_set_result(ctx, Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &type_id, pl))).await
         }
 
         async fn undo(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
@@ -27138,64 +26803,31 @@ pub mod kit_graphql {
 
     fn plane_from_input(input: PlaneInputBatch) -> Plane {
         Plane {
-            origin: crate::geom::Point {
-                x: input.origin.x,
-                y: input.origin.y,
-                z: input.origin.z,
-            },
-            x_axis: crate::geom::Vector {
-                x: input.x_axis.x,
-                y: input.x_axis.y,
-                z: input.x_axis.z,
-            },
-            y_axis: crate::geom::Vector {
-                x: input.y_axis.x,
-                y: input.y_axis.y,
-                z: input.y_axis.z,
-            },
+            origin: crate::geom::Point { x: input.origin.x, y: input.origin.y, z: input.origin.z },
+            x_axis: crate::geom::Vector { x: input.x_axis.x, y: input.x_axis.y, z: input.x_axis.z },
+            y_axis: crate::geom::Vector { x: input.y_axis.x, y: input.y_axis.y, z: input.y_axis.z },
         }
     }
 
     async fn run_vcs_command(ctx: &Context<'_>, command: KitStoreCommand) -> Result<KitStoreCommandResult> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::Vcs { command, reply: reply_tx })
-            .await
-            .map_err(|e| Error::new(format!("execute queue: {e}")))?;
-        reply_rx
-            .await
-            .map_err(|_| Error::new("kit actor dropped"))?
-            .map_err(|e| Error::new(e.to_string()))
+        tx.send(GraphWork::Vcs { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
+        reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(e.to_string()))
     }
 
     async fn run_graph_change(ctx: &Context<'_>, commands: Vec<ChangeKitCommand>) -> Result<()> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::ChangeKitCommands {
-            commands,
-            reply: reply_tx,
-        })
-        .await
-        .map_err(|e| Error::new(format!("change queue: {e}")))?;
-        reply_rx
-            .await
-            .map_err(|_| Error::new("kit actor dropped"))?
-            .map_err(|e| Error::new(e.to_string()))
+        tx.send(GraphWork::ChangeKitCommands { commands, reply: reply_tx }).await.map_err(|e| Error::new(format!("change queue: {e}")))?;
+        reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(e.to_string()))
     }
 
-    async fn run_custom_set_result(
-        ctx: &Context<'_>,
-        run: Box<dyn FnOnce() -> crate::error::SetResult + Send>,
-    ) -> Result<()> {
+    async fn run_custom_set_result(ctx: &Context<'_>, run: Box<dyn FnOnce() -> crate::error::SetResult + Send>) -> Result<()> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::CustomSetResult { run, reply: reply_tx })
-            .await
-            .map_err(|e| Error::new(format!("queue: {e}")))?;
-        reply_rx
-            .await
-            .map_err(|_| Error::new("kit actor dropped"))?
-            .map_err(|e| Error::new(e.to_string()))
+        tx.send(GraphWork::CustomSetResult { run, reply: reply_tx }).await.map_err(|e| Error::new(format!("queue: {e}")))?;
+        reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(e.to_string()))
     }
 
     async fn execute_batch(ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
@@ -27209,25 +26841,14 @@ pub mod kit_graphql {
                 KitStoreBatchCommandInput::Backbone(batch) => execute_backbone_batch(ctx, batch, &mut results).await?,
             }
         }
-        Ok(KitStoreBatchPayload {
-            client_mutation_id: input.client_mutation_id,
-            results,
-        })
+        Ok(KitStoreBatchPayload { client_mutation_id: input.client_mutation_id, results })
     }
 
-    async fn execute_live_batch(
-        ctx: &Context<'_>,
-        batch: LiveBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_live_batch(ctx: &Context<'_>, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
                 LiveBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands = change
-                        .commands
-                        .into_iter()
-                        .map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string())))
-                        .collect::<Result<Vec<ChangeKitCommand>>>()?;
+                    let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
                     let count = commands.len() as i32;
                     run_graph_change(ctx, commands).await?;
                     results.push(KitStoreBatchResult {
@@ -27281,11 +26902,7 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_design_batch(
-        ctx: &Context<'_>,
-        batch: DesignBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_design_batch(ctx: &Context<'_>, batch: DesignBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let design_id = batch.design_id.clone();
@@ -27304,25 +26921,13 @@ pub mod kit_graphql {
             };
             match command {
                 DesignBatchCommandInput::ClusterPieces(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, input.piece_ids, input.cluster_name)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, input.piece_ids, input.cluster_name))).await?;
                 }
                 DesignBatchCommandInput::DragPieces(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::drag_pieces(&graph, &design_id, input.piece_ids, input.du, input.dv)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::drag_pieces(&graph, &design_id, input.piece_ids, input.du, input.dv))).await?;
                 }
                 DesignBatchCommandInput::MovePieces(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::move_pieces(&graph, &design_id, input.piece_ids, input.gap, input.shift, input.rise)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::move_pieces(&graph, &design_id, input.piece_ids, input.gap, input.shift, input.rise))).await?;
                 }
                 DesignBatchCommandInput::FixPieces(input) => {
                     run_custom_set_result(ctx, Box::new(move || KitGraph::fix_pieces(&graph, &design_id, input.piece_ids))).await?;
@@ -27331,86 +26936,40 @@ pub mod kit_graphql {
                     run_custom_set_result(ctx, Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id))).await?;
                 }
                 DesignBatchCommandInput::ExpandDesign(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::expand_nested_design(&graph, &design_id, &input.nested_design_id)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::expand_nested_design(&graph, &design_id, &input.nested_design_id))).await?;
                 }
                 DesignBatchCommandInput::DeleteConnection(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &input.connection_id)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &input.connection_id))).await?;
                 }
                 DesignBatchCommandInput::ChangePieceType(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &input.piece_id, &input.new_type_id)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &input.piece_id, &input.new_type_id))).await?;
                 }
                 DesignBatchCommandInput::CreateHangingPieces(input) => {
                     let plane = plane_from_input(input.plane);
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
                 }
                 DesignBatchCommandInput::CreateConnectedPiece(input) => {
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || {
-                            KitGraph::create_connected_piece(
-                                &graph,
-                                &design_id,
-                                &input.parent_piece,
-                                &input.parent_port,
-                                &input.child_type,
-                                &input.child_port,
-                            )
-                        }),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_connected_piece(&graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port))).await?;
                 }
                 DesignBatchCommandInput::CreateFixedPiece(input) => {
                     let plane = plane_from_input(input.plane);
-                    run_custom_set_result(
-                        ctx,
-                        Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane)),
-                    )
-                    .await?;
+                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane))).await?;
                 }
             }
-            results.push(KitStoreBatchResult {
-                kind,
-                ok: Some(true),
-                count: None,
-                session_id: None,
-                draft_id: None,
-                transaction_id: None,
-                checkpoint_id: None,
-                alternative_id: None,
-                backbone: None,
-                conflicts: None,
-            });
+            results.push(KitStoreBatchResult { kind, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
         }
         Ok(())
     }
 
-    async fn execute_session_batch(
-        ctx: &Context<'_>,
-        batch: SessionBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_session_batch(ctx: &Context<'_>, batch: SessionBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut session_id = batch.session_id.map(|id| Id::from(id.as_str()));
         for command in batch.commands {
             match command {
                 SessionBatchCommandInput::CreateSession(_) => {
                     let res = run_vcs_command(ctx, KitStoreCommand::NewSession).await?;
-                    let KitStoreCommandResult::NewSession { id } = res else { return Err(Error::new("expected NewSession result")); };
+                    let KitStoreCommandResult::NewSession { id } = res else {
+                        return Err(Error::new("expected NewSession result"));
+                    };
                     let id_string = id.to_string();
                     session_id = Some(id);
                     results.push(KitStoreBatchResult {
@@ -27429,7 +26988,9 @@ pub mod kit_graphql {
                 SessionBatchCommandInput::EndSession(_) => {
                     let id = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
                     let res = run_vcs_command(ctx, KitStoreCommand::EndSession { id }).await?;
-                    let KitStoreCommandResult::EndSession { ok } = res else { return Err(Error::new("expected EndSession result")); };
+                    let KitStoreCommandResult::EndSession { ok } = res else {
+                        return Err(Error::new("expected EndSession result"));
+                    };
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::EndSession,
                         ok: Some(ok),
@@ -27449,10 +27010,7 @@ pub mod kit_graphql {
                         ctx,
                         KitStoreCommand::ExecuteSessionCommands {
                             id: sid,
-                            commands: vec![SessionCommand::NewDraft {
-                                checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from),
-                                alternative_id: input.target_alternative_id.as_deref().map(Id::from),
-                            }],
+                            commands: vec![SessionCommand::NewDraft { checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from), alternative_id: input.target_alternative_id.as_deref().map(Id::from) }],
                         },
                     )
                     .await?;
@@ -27485,12 +27043,7 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_draft_batch(
-        ctx: &Context<'_>,
-        session_id: Id,
-        batch: DraftBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_draft_batch(ctx: &Context<'_>, session_id: Id, batch: DraftBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut draft_id = batch.draft_id.map(|id| Id::from(id.as_str()));
         let mut transaction_id: Option<Id> = None;
         for command in batch.commands {
@@ -27501,10 +27054,7 @@ pub mod kit_graphql {
                         ctx,
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: did,
-                                commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }],
-                            }],
+                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }] }],
                         },
                     )
                     .await?;
@@ -27518,22 +27068,34 @@ pub mod kit_graphql {
                         },
                         _ => return Err(Error::new("expected ExecuteSessionCommands result")),
                     };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::FinalizeDraft, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: Some(checkpoint_id.to_string()), alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::FinalizeDraft,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: Some(checkpoint_id.to_string()),
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 DraftBatchCommandInput::AbortDraft(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    run_vcs_command(
-                        ctx,
-                        KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: did,
-                                commands: vec![crate::kit_draft::KitDraftCommand::Abort],
-                            }],
-                        },
-                    )
-                    .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::AbortDraft, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    run_vcs_command(ctx, KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::AbortDraft,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 DraftBatchCommandInput::UndoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
@@ -27541,14 +27103,22 @@ pub mod kit_graphql {
                         ctx,
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: did,
-                                commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }],
-                            }],
+                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }] }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::UndoDraft, ok: Some(true), count: input.count, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::UndoDraft,
+                        ok: Some(true),
+                        count: input.count,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 DraftBatchCommandInput::RedoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
@@ -27556,26 +27126,28 @@ pub mod kit_graphql {
                         ctx,
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: did,
-                                commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }],
-                            }],
+                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }] }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::RedoDraft, ok: Some(true), count: input.count, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::RedoDraft,
+                        ok: Some(true),
+                        count: input.count,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 DraftBatchCommandInput::StartTransaction(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     let res = run_vcs_command(
                         ctx,
-                        KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: did,
-                                commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction],
-                            }],
-                        },
+                        KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] },
                     )
                     .await?;
                     let new_transaction_id = match res {
@@ -27589,7 +27161,18 @@ pub mod kit_graphql {
                         _ => return Err(Error::new("expected ExecuteSessionCommands result")),
                     };
                     transaction_id = Some(new_transaction_id.clone());
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::StartTransaction, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: Some(new_transaction_id.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::StartTransaction,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(new_transaction_id.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 DraftBatchCommandInput::Transaction(tx_batch) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
@@ -27600,24 +27183,13 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_transaction_batch(
-        ctx: &Context<'_>,
-        session_id: Id,
-        draft_id: Id,
-        batch: TransactionBatchInput,
-        current_transaction_id: &mut Option<Id>,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_transaction_batch(ctx: &Context<'_>, session_id: Id, draft_id: Id, batch: TransactionBatchInput, current_transaction_id: &mut Option<Id>, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut transaction_id = batch.transaction_id.map(|id| Id::from(id.as_str())).or_else(|| current_transaction_id.clone());
         for command in batch.commands {
             let txid = transaction_id.clone().ok_or_else(|| Error::new("transactionId is required"))?;
             match command {
                 TransactionBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands = change
-                        .commands
-                        .into_iter()
-                        .map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string())))
-                        .collect::<Result<Vec<ChangeKitCommand>>>()?;
+                    let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
                     let count = commands.len() as i32;
                     run_vcs_command(
                         ctx,
@@ -27625,15 +27197,23 @@ pub mod kit_graphql {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
                             }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::ChangeKitCommands, ok: Some(true), count: Some(count), session_id: None, draft_id: None, transaction_id: Some(txid.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ChangeKitCommands,
+                        ok: Some(true),
+                        count: Some(count),
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 TransactionBatchCommandInput::FinalizeTransaction(_) => {
                     run_vcs_command(
@@ -27642,15 +27222,23 @@ pub mod kit_graphql {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::Finalize],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Finalize] }],
                             }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::FinalizeTransaction, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: Some(txid.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::FinalizeTransaction,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 TransactionBatchCommandInput::AbortTransaction(_) => {
                     run_vcs_command(
@@ -27659,15 +27247,23 @@ pub mod kit_graphql {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::Abort],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Abort] }],
                             }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::AbortTransaction, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: Some(txid.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::AbortTransaction,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 TransactionBatchCommandInput::UndoTransaction(_) => {
                     run_vcs_command(
@@ -27676,15 +27272,23 @@ pub mod kit_graphql {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::Undo],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Undo] }],
                             }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::UndoTransaction, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: Some(txid.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::UndoTransaction,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 TransactionBatchCommandInput::RedoTransaction(_) => {
                     run_vcs_command(
@@ -27693,15 +27297,23 @@ pub mod kit_graphql {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::Redo],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Redo] }],
                             }],
                         },
                     )
                     .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::RedoTransaction, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: Some(txid.to_string()), checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::RedoTransaction,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
             }
         }
@@ -27709,85 +27321,94 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_checkpoint_batch(
-        ctx: &Context<'_>,
-        batch: CheckpointBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_checkpoint_batch(ctx: &Context<'_>, batch: CheckpointBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let checkpoint_id = batch.checkpoint_id.ok_or_else(|| Error::new("checkpointId is required"))?;
         for command in batch.commands {
             match command {
                 CheckpointBatchCommandInput::MarkRelease(_) => {
-                    run_vcs_command(
-                        ctx,
-                        KitStoreCommand::ExecuteKitCheckpointCommands {
-                            id: Id::from(checkpoint_id.as_str()),
-                            commands: vec![KitCheckpointCommand::MarkAsRelease],
-                        },
-                    )
-                    .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::MarkRelease, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: Some(checkpoint_id.clone()), alternative_id: None, backbone: None, conflicts: None });
+                    run_vcs_command(ctx, KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::MarkRelease,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: Some(checkpoint_id.clone()),
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 CheckpointBatchCommandInput::SetActive(_) => {
-                    let res = run_vcs_command(
-                        ctx,
-                        KitStoreCommand::SetActiveCheckpoint {
-                            id: Some(Id::from(checkpoint_id.as_str())),
-                        },
-                    )
-                    .await?;
-                    let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else { return Err(Error::new("expected SetActiveCheckpoint result")); };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::SetActiveCheckpoint, ok: Some(ok), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: Some(checkpoint_id.clone()), alternative_id: None, backbone: None, conflicts: None });
+                    let res = run_vcs_command(ctx, KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
+                    let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else {
+                        return Err(Error::new("expected SetActiveCheckpoint result"));
+                    };
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::SetActiveCheckpoint,
+                        ok: Some(ok),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: Some(checkpoint_id.clone()),
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_alternative_batch(
-        ctx: &Context<'_>,
-        batch: AlternativeBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_alternative_batch(ctx: &Context<'_>, batch: AlternativeBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut alternative_id = batch.alternative_id.map(|id| Id::from(id.as_str()));
         for command in batch.commands {
             match command {
                 AlternativeBatchCommandInput::CreateAlternative(input) => {
-                    let res = run_vcs_command(
-                        ctx,
-                        KitStoreCommand::NewAlternative {
-                            from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from),
-                            name: input.name,
-                        },
-                    )
-                    .await?;
-                    let KitStoreCommandResult::NewAlternative { id } = res else { return Err(Error::new("expected NewAlternative result")); };
+                    let res = run_vcs_command(ctx, KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
+                    let KitStoreCommandResult::NewAlternative { id } = res else {
+                        return Err(Error::new("expected NewAlternative result"));
+                    };
                     let id_string = id.to_string();
                     alternative_id = Some(id);
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::NewAlternative, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: Some(id_string), backbone: None, conflicts: None });
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::NewAlternative,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: Some(id_string),
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 AlternativeBatchCommandInput::UnifyAlternative(input) => {
                     let aid = alternative_id.clone().ok_or_else(|| Error::new("alternativeId is required"))?;
-                    run_vcs_command(
-                        ctx,
-                        KitStoreCommand::ExecuteKitAlternativeCommands {
-                            id: aid,
-                            commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }],
-                        },
-                    )
-                    .await?;
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::UnifyAlternative, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: alternative_id.clone().map(|id| id.to_string()), backbone: None, conflicts: None });
+                    run_vcs_command(ctx, KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::UnifyAlternative,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: alternative_id.clone().map(|id| id.to_string()),
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_backbone_batch(
-        ctx: &Context<'_>,
-        batch: BackboneBatchInput,
-        results: &mut Vec<KitStoreBatchResult>,
-    ) -> Result<()> {
+    async fn execute_backbone_batch(ctx: &Context<'_>, batch: BackboneBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
                 BackboneBatchCommandInput::AttachBackbone(config) => {
@@ -27797,47 +27418,86 @@ pub mod kit_graphql {
                         BackboneConfigBatchInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
                     };
                     let res = run_vcs_command(ctx, KitStoreCommand::AttachBackbone { config }).await?;
-                    let KitStoreCommandResult::AttachBackbone { ok } = res else { return Err(Error::new("expected AttachBackbone result")); };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::AttachBackbone, ok: Some(ok), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    let KitStoreCommandResult::AttachBackbone { ok } = res else {
+                        return Err(Error::new("expected AttachBackbone result"));
+                    };
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::AttachBackbone,
+                        ok: Some(ok),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 BackboneBatchCommandInput::DetachBackbone(_) => {
                     let res = run_vcs_command(ctx, KitStoreCommand::DetachBackbone).await?;
-                    let KitStoreCommandResult::DetachBackbone { ok } = res else { return Err(Error::new("expected DetachBackbone result")); };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::DetachBackbone, ok: Some(ok), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    let KitStoreCommandResult::DetachBackbone { ok } = res else {
+                        return Err(Error::new("expected DetachBackbone result"));
+                    };
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::DetachBackbone,
+                        ok: Some(ok),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 BackboneBatchCommandInput::ListConflicts(_) => {
                     let res = run_vcs_command(ctx, KitStoreCommand::ListConflicts).await?;
-                    let KitStoreCommandResult::ListConflicts { items } = res else { return Err(Error::new("expected ListConflicts result")); };
-                    let conflicts = items
-                        .into_iter()
-                        .map(|item| ConflictBatchRecord {
-                            id: item.id.to_string(),
-                            backbone_tip: item.backbone_tip.map(|tip| tip.to_string()),
-                            reason: item.reason,
-                            created_at: item.created_at,
-                        })
-                        .collect();
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::ListConflicts, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: Some(conflicts) });
+                    let KitStoreCommandResult::ListConflicts { items } = res else {
+                        return Err(Error::new("expected ListConflicts result"));
+                    };
+                    let conflicts = items.into_iter().map(|item| ConflictBatchRecord { id: item.id.to_string(), backbone_tip: item.backbone_tip.map(|tip| tip.to_string()), reason: item.reason, created_at: item.created_at }).collect();
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ListConflicts,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: Some(conflicts),
+                    });
                 }
                 BackboneBatchCommandInput::ResolveConflict(input) => {
                     let strategy = match input.strategy {
                         ConflictResolutionBatchInput::DropWip => crate::kit_backbone_wire::ConflictResolution::DropWip,
                         ConflictResolutionBatchInput::ForceOverwriteBackbone => crate::kit_backbone_wire::ConflictResolution::ForceOverwriteBackbone,
                     };
-                    let res = run_vcs_command(
-                        ctx,
-                        KitStoreCommand::ResolveConflict {
-                            id: Id::from(input.conflict_id.as_str()),
-                            strategy,
-                        },
-                    )
-                    .await?;
-                    let KitStoreCommandResult::ResolveConflict { ok } = res else { return Err(Error::new("expected ResolveConflict result")); };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::ResolveConflict, ok: Some(ok), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    let res = run_vcs_command(ctx, KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
+                    let KitStoreCommandResult::ResolveConflict { ok } = res else {
+                        return Err(Error::new("expected ResolveConflict result"));
+                    };
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ResolveConflict,
+                        ok: Some(ok),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
                 BackboneBatchCommandInput::BackboneStatus(_) => {
                     let res = run_vcs_command(ctx, KitStoreCommand::BackboneStatus).await?;
-                    let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else { return Err(Error::new("expected BackboneStatus result")); };
+                    let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else {
+                        return Err(Error::new("expected BackboneStatus result"));
+                    };
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::BackboneStatus,
                         ok: Some(true),
@@ -27853,8 +27513,21 @@ pub mod kit_graphql {
                 }
                 BackboneBatchCommandInput::SyncNow(_) => {
                     let res = run_vcs_command(ctx, KitStoreCommand::SyncNow).await?;
-                    let KitStoreCommandResult::SyncNow { ok } = res else { return Err(Error::new("expected SyncNow result")); };
-                    results.push(KitStoreBatchResult { kind: KitStoreBatchResultKind::SyncNow, ok: Some(ok), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+                    let KitStoreCommandResult::SyncNow { ok } = res else {
+                        return Err(Error::new("expected SyncNow result"));
+                    };
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::SyncNow,
+                        ok: Some(ok),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                    });
                 }
             }
         }
@@ -27864,8 +27537,7 @@ pub mod kit_graphql {
     pub struct RootSubscription;
 
     /// Pin-boxed stream (avoid `impl Stream + Send`: async-graphql derive keeps only the last trait bound).
-    type KitEventSubscriptionStream =
-        Pin<Box<dyn Stream<Item = std::result::Result<Json<KitEvent>, Error>> + Send>>;
+    type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<Json<KitEvent>, Error>> + Send>>;
 
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
@@ -27897,30 +27569,18 @@ pub mod kit_graphql {
     async fn run_kit_store(ctx: &Context<'_>, command: KitStoreCommand) -> Result<Json<serde_json::Value>> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::Vcs { command, reply: reply_tx })
-            .await
-            .map_err(|e| Error::new(format!("execute queue: {e}")))?;
-        let res = reply_rx
-            .await
-            .map_err(|_| Error::new("kit actor dropped"))?
-            .map_err(Error::new)?;
+        tx.send(GraphWork::Vcs { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
+        let res = reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)?;
         let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
         Ok(Json(v))
     }
 
     /// 🌐 Settle payload `{ ok: true } | { ok: false, error: SetError }` for JS `settleSetPromise`.
-    async fn run_set_result(
-        ctx: &Context<'_>,
-        run: Box<dyn FnOnce() -> crate::error::SetResult + Send>,
-    ) -> Result<Json<serde_json::Value>> {
+    async fn run_set_result(ctx: &Context<'_>, run: Box<dyn FnOnce() -> crate::error::SetResult + Send>) -> Result<Json<serde_json::Value>> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::CustomSetResult { run, reply: reply_tx })
-            .await
-            .map_err(|e| Error::new(format!("queue: {e}")))?;
-        let r = reply_rx
-            .await
-            .map_err(|_| Error::new("kit actor dropped"))?;
+        tx.send(GraphWork::CustomSetResult { run, reply: reply_tx }).await.map_err(|e| Error::new(format!("queue: {e}")))?;
+        let r = reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?;
         match r {
             Ok(()) => Ok(Json(serde_json::json!({ "ok": true }))),
             Err(e) => Ok(Json(serde_json::json!({ "ok": false, "error": e }))),
@@ -28001,86 +27661,46 @@ pub mod kit_graphql {
         async fn type_by_dto_id(&self, id: String) -> Result<Option<TypeNode>> {
             let g = lock_graph(&self.0)?;
             let target = Id::from(id.as_str());
-            Ok(g
-                .types
-                .iter()
-                .find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false))
-                .cloned()
-                .map(TypeNode))
+            Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(TypeNode))
         }
 
         /// 🌐 Build [`ChangeKitCommand`]s for a field write (read-only; apply via `changeKitCommands` or `changeKitWithInverse`).
-        async fn change_kit_commands_for_field_patch(
-            &self,
-            kind: String,
-            id: String,
-            field: String,
-            value: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_kit_commands_for_field_patch(&self, kind: String, id: String, field: String, value: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
             let ek = KitGraph::parse_entity_kind(&kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value.0)
-                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value.0).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Same as [`change_kit_commands_for_field_patch`], but `value_json` is a JSON text blob (WASM/JS hosts avoid `JSON!` variable typing issues).
-        async fn change_kit_commands_for_field_patch_value_json(
-            &self,
-            kind: String,
-            id: String,
-            field: String,
-            value_json: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_kit_commands_for_field_patch_value_json(&self, kind: String, id: String, field: String, value_json: String) -> Result<Json<serde_json::Value>> {
             let value: serde_json::Value = serde_json::from_str(&value_json).map_err(|e| Error::new(e.to_string()))?;
             let ek = KitGraph::parse_entity_kind(&kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value)
-                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Build [`ChangeKitCommand`]s to add a child entity (read-only; apply via mutations).
-        async fn change_kit_commands_for_add_child(
-            &self,
-            parent_kind: String,
-            parent_id: String,
-            child_kind: String,
-            dto: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_kit_commands_for_add_child(&self, parent_kind: String, parent_id: String, child_kind: String, dto: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
             let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto.0)
-                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto.0).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Same as [`change_kit_commands_for_add_child`], with `dto_json` as a JSON text blob.
-        async fn change_kit_commands_for_add_child_dto_json(
-            &self,
-            parent_kind: String,
-            parent_id: String,
-            child_kind: String,
-            dto_json: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_kit_commands_for_add_child_dto_json(&self, parent_kind: String, parent_id: String, child_kind: String, dto_json: String) -> Result<Json<serde_json::Value>> {
             let dto: serde_json::Value = serde_json::from_str(&dto_json).map_err(|e| Error::new(e.to_string()))?;
             let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto)
-                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Build [`ChangeKitCommand`]s to remove a child (read-only; apply via mutations).
-        async fn change_kit_commands_for_remove_child(
-            &self,
-            parent_kind: String,
-            parent_id: String,
-            child_kind: String,
-            child_id: String,
-        ) -> Result<Json<serde_json::Value>> {
+        async fn change_kit_commands_for_remove_child(&self, parent_kind: String, parent_id: String, child_kind: String, child_id: String) -> Result<Json<serde_json::Value>> {
             let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_remove_child(&self.0, pk, &parent_id, ck, &child_id)
-                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_remove_child(&self.0, pk, &parent_id, ck, &child_id).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
@@ -28091,21 +27711,13 @@ pub mod kit_graphql {
         /// 🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
         async fn type_ids(&self) -> Result<Vec<String>> {
             let g = lock_graph(&self.0)?;
-            Ok(g
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| r.id.to_string()))
-                .collect())
+            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect())
         }
 
         /// 🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
         async fn design_ids(&self) -> Result<Vec<String>> {
             let g = lock_graph(&self.0)?;
-            Ok(g
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.id.to_string()))
-                .collect())
+            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.id.to_string())).collect())
         }
 
         async fn types(&self) -> Result<Vec<TypeNode>> {
@@ -28119,21 +27731,13 @@ pub mod kit_graphql {
         /// 🌐 Per-type metadata rows.
         async fn types_metadata(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
-            let m: Vec<crate::typ::TypeMetadataDto> = g
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto()))
-                .collect();
+            let m: Vec<crate::typ::TypeMetadataDto> = g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto())).collect();
             Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
         }
         /// 🌐 Per-design metadata rows.
         async fn designs_metadata(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
-            let m: Vec<crate::design::DesignMetadataDto> = g
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto()))
-                .collect();
+            let m: Vec<crate::design::DesignMetadataDto> = g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto())).collect();
             Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
         }
         /// 🌐 Colored connector index rows.
@@ -28167,33 +27771,21 @@ pub mod kit_graphql {
         /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]).
         async fn designs_shallow_json(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect();
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
         async fn types_shallow_json(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect();
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
         async fn authors_shallow_json(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g
-                .authors
-                .iter()
-                .filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = g.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect();
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
@@ -28272,12 +27864,7 @@ pub mod kit_graphql {
             let mut alternatives: Vec<VcsAlternative> = g
                 .alternatives
                 .values()
-                .map(|a| VcsAlternative {
-                    id: a.id.to_string(),
-                    name: a.name.clone(),
-                    root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(),
-                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
-                })
+                .map(|a| VcsAlternative { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
             let mut sessions: Vec<VcsSession> = g
@@ -28303,27 +27890,8 @@ pub mod kit_graphql {
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
-            let the_kit_line: Vec<String> = g
-                .the_kit_head
-                .as_ref()
-                .map(|head| {
-                    crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints)
-                        .into_iter()
-                        .map(|i| i.to_string())
-                        .collect()
-                })
-                .unwrap_or_default();
-            let out = VcsState {
-                the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
-                root: VcsRoot {
-                    id: g.initial.id.to_string(),
-                    name: g.initial.name.clone(),
-                },
-                checkpoints,
-                alternatives,
-                sessions,
-                the_kit_line,
-            };
+            let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
+            let out = VcsState { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRoot { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line };
             Ok(Json(serde_json::to_value(&out).map_err(|e| Error::new(e.to_string()))?))
         }
     }
@@ -28343,48 +27911,24 @@ pub mod kit_graphql {
         }
 
         async fn pieces(&self) -> Result<Vec<PieceNode>> {
-            Ok(self
-                .0
-                .read()
-                .map_err(|_| Error::new("design lock poisoned"))?
-                .pieces
-                .iter()
-                .cloned()
-                .map(PieceNode)
-                .collect())
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(PieceNode).collect())
         }
 
         /// 🌐 Resolves a piece by persisted DTO id within this design.
         async fn piece_by_dto_id(&self, id: String) -> Result<Option<PieceNode>> {
             let target = Id::from(id.as_str());
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d
-                .pieces
-                .iter()
-                .find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false))
-                .cloned()
-                .map(PieceNode))
+            Ok(d.pieces.iter().find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(PieceNode))
         }
 
         async fn connections(&self) -> Result<Vec<ConnectionNode>> {
-            Ok(self
-                .0
-                .read()
-                .map_err(|_| Error::new("design lock poisoned"))?
-                .connections
-                .iter()
-                .cloned()
-                .map(ConnectionNode)
-                .collect())
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
         }
 
         async fn flatten_map(&self) -> Result<Json<Vec<DesignFlattenMapEntryDto>>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
-            let mut rows: Vec<DesignFlattenMapEntryDto> = m
-                .into_iter()
-                .map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center })
-                .collect();
+            let mut rows: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
             rows.sort_by(|a, b| a.piece_id.as_str().cmp(b.piece_id.as_str()));
             Ok(Json(rows))
         }
@@ -28392,9 +27936,7 @@ pub mod kit_graphql {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let g = crate::read::design_clusterable_groups(&*d, &ids);
-            Ok(g.into_iter()
-                .map(|grp: Vec<Id>| grp.into_iter().map(|i| i.to_string()).collect::<Vec<_>>())
-                .collect())
+            Ok(g.into_iter().map(|grp: Vec<Id>| grp.into_iter().map(|i| i.to_string()).collect::<Vec<_>>()).collect())
         }
         async fn quality_sum(&self, ctx: &Context<'_>, quality_id: String) -> Result<f64> {
             let gref: &KitGraphRef = ctx.data()?;
@@ -28407,18 +27949,7 @@ pub mod kit_graphql {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let alts = d.replaceable_catalog_candidates(&ids);
-            Ok(ReplaceableCatalogNode {
-                type_ids: alts
-                    .types
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|r| r.id.to_string()))
-                    .collect(),
-                design_ids: alts
-                    .designs
-                    .iter()
-                    .filter_map(|x| x.read().ok().map(|r| r.id.to_string()))
-                    .collect(),
-            })
+            Ok(ReplaceableCatalogNode { type_ids: alts.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect(), design_ids: alts.designs.iter().filter_map(|x| x.read().ok().map(|r| r.id.to_string())).collect() })
         }
         async fn included_designs(&self) -> Result<Json<serde_json::Value>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -28427,31 +27958,20 @@ pub mod kit_graphql {
         }
         async fn included_design_ids(&self) -> Result<Vec<String>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(crate::read::design_included_design_ids(&*d)
-                .into_iter()
-                .map(|x| x.id.to_string())
-                .collect())
+            Ok(crate::read::design_included_design_ids(&*d).into_iter().map(|x| x.id.to_string()).collect())
         }
 
         /// 🌐 Full piece DTO list (same as [`KitGraph::get_pieces_json`] for this design).
         async fn pieces_full_json(&self) -> Result<Json<serde_json::Value>> {
             let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = dr
-                .pieces
-                .iter()
-                .filter_map(|p| p.read().ok().map(|r| r.to_full_dto()))
-                .collect();
+            let v: Vec<_> = dr.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
         /// 🌐 Full connection DTO list (same as [`KitGraph::get_connections_json`] for this design).
         async fn connections_full_json(&self) -> Result<Json<serde_json::Value>> {
             let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = dr
-                .connections
-                .iter()
-                .filter_map(|c| c.read().ok().map(|r| r.to_full_dto()))
-                .collect();
+            let v: Vec<_> = dr.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
@@ -28487,12 +28007,7 @@ pub mod kit_graphql {
         }
 
         async fn flat_pose(&self) -> Result<Json<crate::piece::PoseFullDto>> {
-            Ok(Json(
-                self.0
-                    .read()
-                    .map_err(|_| Error::new("piece lock poisoned"))?
-                    .flat_pose_full_dto(),
-            ))
+            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_pose_full_dto()))
         }
 
         async fn scale(&self) -> Result<Option<f64>> {
@@ -28508,11 +28023,7 @@ pub mod kit_graphql {
         /// 🌐 Full parent connection DTO when the piece is linked through a connection.
         async fn parent_connection_full(&self) -> Result<Option<Json<serde_json::Value>>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            let c = p
-                .parent_connection
-                .as_ref()
-                .and_then(|w| w.upgrade())
-                .and_then(|c| c.read().ok().map(|c| c.to_full_dto()));
+            let c = p.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_full_dto()));
             match c {
                 Some(dto) => Ok(Some(Json(serde_json::to_value(&dto).map_err(|e| Error::new(e.to_string()))?))),
                 None => Ok(None),
@@ -28535,27 +28046,11 @@ pub mod kit_graphql {
         }
 
         async fn connectors(&self) -> Result<Vec<ConnectorNode>> {
-            Ok(self
-                .0
-                .read()
-                .map_err(|_| Error::new("type lock poisoned"))?
-                .connectors
-                .iter()
-                .cloned()
-                .map(ConnectorNode)
-                .collect())
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(ConnectorNode).collect())
         }
 
         async fn representations(&self) -> Result<Vec<RepresentationNode>> {
-            Ok(self
-                .0
-                .read()
-                .map_err(|_| Error::new("type lock poisoned"))?
-                .representations
-                .iter()
-                .cloned()
-                .map(RepresentationNode)
-                .collect())
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationNode).collect())
         }
 
         /// 🌐 Best matching representation for tag selection.
@@ -28770,8 +28265,7 @@ pub mod wasm {
             let work_tx = self.work_tx.clone();
             let cb = on_message.clone();
             future_to_promise(async move {
-                let mut req = crate::kit_graphql::request_from_json(&req_json)
-                    .map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
+                let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
                 req = req.data(graph).data(work_tx);
                 let schema = crate::kit_graphql::schema();
                 let mut stream = schema.execute_stream(req);
@@ -28827,11 +28321,7 @@ mod tests {
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 serde_json::to_value(resp).expect("to json")
             });
-            let name = out
-                .get("data")
-                .and_then(|d| d.get("kitStore"))
-                .and_then(|k| k.get("name"))
-                .and_then(|n| n.as_str());
+            let name = out.get("data").and_then(|d| d.get("kitStore")).and_then(|k| k.get("name")).and_then(|n| n.as_str());
             assert_eq!(name, Some("gql-name"));
         }
     }
@@ -28851,11 +28341,7 @@ mod tests {
         #[test]
         fn kit_store_no_backbone_status() {
             let kid = Id::new_v7();
-            let dto = KitFullDto {
-                id: kid,
-                name: "k".into(),
-                ..Default::default()
-            };
+            let dto = KitFullDto { id: kid, name: "k".into(), ..Default::default() };
             let ks = KitStore::from_full_dto(dto);
             let st = ks.backbone_status().expect("status");
             assert!(!st.attached);
@@ -28867,21 +28353,14 @@ mod tests {
             let dir = tempdir().expect("tmp");
             let path = dir.path().join("bb.json");
             let kid = Id::new_v7();
-            let k = KitGraph::from_full_dto(KitFullDto {
-                id: kid,
-                name: "k".into(),
-                ..Default::default()
-            });
+            let k = KitGraph::from_full_dto(KitFullDto { id: kid, name: "k".into(), ..Default::default() });
             {
                 let g = k.read().expect("read");
                 let snap = BackboneSnapshot::from_graph(&*g);
                 fs::write(&path, serde_json::to_string_pretty(&snap).expect("json")).expect("write");
             }
             let ks = KitStore::from_graph(k);
-            ks.attach_backbone(BackboneConfig::Dev {
-                path: path.to_string_lossy().into(),
-            })
-            .expect("attach");
+            ks.attach_backbone(BackboneConfig::Dev { path: path.to_string_lossy().into() }).expect("attach");
             let st = ks.backbone_status().expect("status");
             assert!(st.attached);
             assert_eq!(st.kind.as_deref(), Some("dev"));
@@ -28896,8 +28375,8 @@ mod tests {
         use crate::design::DesignFullDto;
         use crate::design::DesignIdDto;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::kit_change::{KitChange, KitChangeKind};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::piece::PieceFullDto;
         use crate::piece::PieceIdDto;
         use crate::typ::TypeFullDto;
@@ -28995,6 +28474,36 @@ mod tests {
             assert_eq!(kit.read().expect("r").name, "c");
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("r").name, "a");
+        }
+
+        #[test]
+        fn kit_diff_for_command_matches_concrete_mutation() {
+            let kit = Arc::new(RwLock::new(KitGraph::new("before")));
+            let before = kit.read().expect("r").to_full_dto();
+            let cmd = ChangeKitCommand::Name { name: "after".into() };
+            let diff = cmd.kit_diff(&kit).expect("kit_diff");
+            assert_eq!(kit.read().expect("r").to_full_dto(), before);
+
+            cmd.run(&kit).expect("run");
+            let after = kit.read().expect("r").to_full_dto();
+            assert_eq!(diff, crate::kit_diff::KitDiff::between_dto(&before, &after));
+        }
+
+        #[test]
+        fn kit_diff_many_and_inverse_commands_for_many_are_non_mutating() {
+            let kit = Arc::new(RwLock::new(KitGraph::new("a")));
+            let before = kit.read().expect("r").to_full_dto();
+            let cmds = vec![ChangeKitCommand::Name { name: "b".into() }, ChangeKitCommand::Description { description: Some("desc".into()) }, ChangeKitCommand::Name { name: "c".into() }];
+
+            let diff = ChangeKitCommand::kit_diff_many(&kit, &cmds).expect("kit_diff_many");
+            let inv = ChangeKitCommand::inverse_commands_for_many(&kit, &cmds).expect("inverse_commands_for_many");
+            assert_eq!(kit.read().expect("r").to_full_dto(), before);
+
+            ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
+            let after = kit.read().expect("r").to_full_dto();
+            assert_eq!(diff, crate::kit_diff::KitDiff::between_dto(&before, &after));
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("r").to_full_dto(), before);
         }
 
         #[test]
@@ -29676,9 +29185,9 @@ mod tests {
 
         use crate::design::DesignFullDto;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph};
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::kit_checkpoint::KitCheckpoint;
+        use crate::kit_graph::{KitFullDto, KitGraph};
         use crate::piece::PieceFullDto;
         use crate::typ::TypeFullDto;
 
@@ -29713,13 +29222,7 @@ mod tests {
             use std::sync::{Arc, RwLock};
 
             let kit: Arc<RwLock<KitGraph>> = Arc::new(RwLock::new(KitGraph::new("vcs-sqlite")));
-            let kc = KitChange {
-                forward: vec![],
-                inverse: vec![],
-                kind: KitChangeKind::Inferred,
-                author: None,
-                time: None,
-            };
+            let kc = KitChange { forward: vec![], inverse: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
             let cp = KitCheckpoint::new(None, vec![kc], Some("test".into()));
             let cp_id = cp.id.clone();
             {
@@ -30447,17 +29950,7 @@ mod tests {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write()
-                    .unwrap()
-                    .semantic_add_design_piece(
-                        dg.as_str(),
-                        PieceFullDto {
-                            id: new_piece.clone(),
-                            r#type: Some(TypeIdDto { id: tg.clone() }),
-                            ..Default::default()
-                        },
-                    )
-                    .unwrap();
+                kit.write().unwrap().semantic_add_design_piece(dg.as_str(), PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }).unwrap();
                 let evs = super::common::drain(&mut rx);
                 let child = EntityRef::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
@@ -30541,26 +30034,15 @@ mod tests {
                     name: "kit".into(),
                     families: vec![FamilyFullDto { id: family_id.clone(), name: "F".into(), ..Default::default() }],
                     types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto {
-                        id: design_id.clone(),
-                        name: "des".into(),
-                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
-                        ..Default::default()
-                    }],
+                    designs: vec![DesignFullDto { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitGraph::from_full_dto(dto);
                 let mut rx = kit.read().unwrap().subscribe();
-                let cmd = ChangeKitCommand::ChangeDesignCommands {
-                    design_id: DesignIdDto { id: design_id.clone() },
-                    commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyIdDto { id: family_id.clone() }] }],
-                };
+                let cmd = ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: design_id.clone() }, commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyIdDto { id: family_id.clone() }] }] };
                 cmd.apply(&kit).unwrap();
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::Design { event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families), .. }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Design { event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families), .. })));
             }
         }
 
@@ -31084,10 +30566,7 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitGraph::from_full_dto(dto);
-                let fragment = TypeDiff {
-                    families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
-                    ..Default::default()
-                };
+                let fragment = TypeDiff { families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }), ..Default::default() };
                 KitGraph::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
                 let t = kit.read().unwrap().semio_type(type_id.as_str()).unwrap();
                 let tr = t.read().unwrap();
@@ -31102,10 +30581,10 @@ mod tests {
 
         use crate::change_command::ChangeKitCommand;
         use crate::id::Id;
-        use crate::kit_graph::KitGraph;
         use crate::kit_alternative::KitAlternativeCommand;
         use crate::kit_checkpoint::KitCheckpointCommand;
         use crate::kit_draft::KitDraftCommand;
+        use crate::kit_graph::KitGraph;
         use crate::kit_session::SessionCommand;
         use crate::kit_store_command::{self, KitStoreCommand};
         use crate::kit_transaction::TransactionCommand;
@@ -31156,19 +30635,9 @@ mod tests {
             use crate::family::FamilyFullDto;
             use crate::kit_graph::KitFullDto;
 
-            let kit = KitGraph::from_full_dto(KitFullDto {
-                id: Id::new_v7(),
-                name: "k".into(),
-                ..Default::default()
-            });
+            let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), ..Default::default() });
             let fid = Id::new_v7();
-            let cmd = ChangeKitCommand::AddFamily {
-                family: FamilyFullDto {
-                    id: fid.clone(),
-                    name: "Fam".into(),
-                    ..Default::default()
-                },
-            };
+            let cmd = ChangeKitCommand::AddFamily { family: FamilyFullDto { id: fid.clone(), name: "Fam".into(), ..Default::default() } };
             let inv = cmd.apply(&kit).expect("apply add family");
             assert_eq!(kit.read().expect("kr").families.len(), 1);
             ChangeKitCommand::apply_many(&kit, &inv).expect("undo");
@@ -31677,7 +31146,9 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] }).expect("st") {
+            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
+            {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                         crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
@@ -31689,10 +31160,7 @@ mod tests {
             };
 
             let change_name = |name: &str| TransactionCommand::ChangeKitCommands {
-                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                    type_id: TypeIdDto { id: tid.clone() },
-                    commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }],
-                }],
+                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
             };
 
             let run_tx = |command: TransactionCommand| {
@@ -31700,10 +31168,7 @@ mod tests {
                     &k,
                     KitStoreCommand::ExecuteSessionCommands {
                         id: sid.clone(),
-                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                            id: did.clone(),
-                            commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx.clone(), commands: vec![command] }],
-                        }],
+                        commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx.clone(), commands: vec![command] }] }],
                     },
                 )
                 .expect("tx cmd")
@@ -31712,26 +31177,29 @@ mod tests {
             run_tx(change_name("Step1"));
             run_tx(change_name("Step2"));
 
-            assert_eq!({
-                let g = k.read().expect("g before undo");
-                read_type_name(&*g, &tid)
-            }, "Step2");
+            assert_eq!(
+                {
+                    let g = k.read().expect("g before undo");
+                    read_type_name(&*g, &tid)
+                },
+                "Step2"
+            );
 
             run_tx(TransactionCommand::Undo);
 
-            assert_eq!({
-                let g = k.read().expect("g after undo");
-                read_type_name(&*g, &tid)
-            }, "Step1");
+            assert_eq!(
+                {
+                    let g = k.read().expect("g after undo");
+                    read_type_name(&*g, &tid)
+                },
+                "Step1"
+            );
 
             let can_redo = match KitGraph::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx, commands: vec![TransactionCommand::CanRedo] }],
-                    }],
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx, commands: vec![TransactionCommand::CanRedo] }] }],
                 },
             )
             .expect("can redo")
@@ -31970,12 +31438,7 @@ mod tests {
         fn read_type_ports_and_name_nested() {
             let (k, tid) = make_kit_with_type();
             let g = k.read().expect("g");
-            let r = ReadKitCommand::ReadKitTypeCommands {
-                id: TypeIdDto { id: tid },
-                commands: vec![ReadTypeCommand::ReadTypePortsFullCommand, ReadTypeCommand::ReadTypeNameCommand],
-            }
-            .execute(&*g)
-            .expect("r");
+            let r = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::ReadTypePortsFullCommand, ReadTypeCommand::ReadTypeNameCommand] }.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
                     assert!(matches!(&results[0], ReadTypeCommandOutput::ReadTypePortsFullCommand { .. }));
@@ -32027,9 +31490,7 @@ mod wasm_handle_tests {
         let req = r#"{"query":"query { kitStore { name } }"}"#;
         let prom = h.execute(req, closure.as_ref().unchecked_ref());
         closure.forget();
-        wasm_bindgen_futures::JsFuture::from(prom)
-            .await
-            .expect("graphql execute future");
+        wasm_bindgen_futures::JsFuture::from(prom).await.expect("graphql execute future");
 
         let lines = captured.borrow();
         assert!(!lines.is_empty(), "expected GraphQL stream chunk(s): {:?}", &*lines);
@@ -32067,16 +31528,16 @@ pub use geom::{Camera, Coordinate, Plane, Point, Vector};
 pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
-pub use kit_graph::KitGraph;
-pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitGraphRef, KitGraphWeak};
-#[cfg(not(target_arch = "wasm32"))]
-pub use kit_conflict_registry::ConflictRegistry;
+pub use kit::{KitFullDto, KitGraphRef, KitGraphWeak, KitIdDto, KitMetadataDto, KitShallowDto, KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
+pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{KitChange, KitChangeKind};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
+#[cfg(not(target_arch = "wasm32"))]
+pub use kit_conflict_registry::ConflictRegistry;
 pub use kit_diff::KitDiff;
 pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+pub use kit_graph::KitGraph;
 pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
@@ -32087,12 +31548,11 @@ pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStor
 pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
 pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef, QualityStoreWeak};
 pub use read::{
-    DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand,
-    ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand, ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput,
-    ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand, ReadFolderCommandOutput, ReadGroupCommand,
-    ReadGroupCommandOutput, ReadKitCommand, ReadKitCommandOutput, ReadLayerCommand, ReadLayerCommandOutput, ReadLocationCommand, ReadLocationCommandOutput, ReadPieceCommand, ReadPieceCommandOutput, ReadPortCommand,
-    ReadPortCommandOutput, ReadPropCommand, ReadPropCommandOutput, ReadQualityCommand, ReadQualityCommandOutput, ReadRepresentationCommand, ReadRepresentationCommandOutput, ReadSideCommand, ReadSideCommandOutput,
-    ReadStatCommand, ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
+    DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand, ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand,
+    ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput, ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand,
+    ReadFolderCommandOutput, ReadGroupCommand, ReadGroupCommandOutput, ReadKitCommand, ReadKitCommandOutput, ReadLayerCommand, ReadLayerCommandOutput, ReadLocationCommand, ReadLocationCommandOutput, ReadPieceCommand, ReadPieceCommandOutput,
+    ReadPortCommand, ReadPortCommandOutput, ReadPropCommand, ReadPropCommandOutput, ReadQualityCommand, ReadQualityCommandOutput, ReadRepresentationCommand, ReadRepresentationCommandOutput, ReadSideCommand, ReadSideCommandOutput, ReadStatCommand,
+    ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
 pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
