@@ -18,6 +18,8 @@ emoji: 👤
 
 ### InMemory
 
+**Layout:** In `semio/rs`, the live in-memory `KitGraph` is updated only on the DTO-mutation path: `ChangeKitCommand` and `change_kit` helpers compute the next `KitFullDto` on an isolated `KitGraph` clone, then `KitGraph::apply_kit_mutation` `KitDiff::between` + `apply_kit_state` (full DTO re-layout) and `emit_kit_dto_reconcile_events` so the event bus and caches stay correct. Call sites that use `from_full` / `from_full_dto` on the live `KitRef` to refresh layout (e.g. WIP) must keep the same invariants: never swap DTOs on live without the twin-then-apply path.
+
 ```mermaid
 classDiagram
 direction TB

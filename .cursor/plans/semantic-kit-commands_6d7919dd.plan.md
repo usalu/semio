@@ -13,7 +13,7 @@ todos:
    status: in_progress
  - id: react-downstream
    content: Replace React piece/connection diff update hooks with semantic command or field patch calls.
-   status: pending
+   status: completed
  - id: sketchpad-downstream
    content: Replace sketchpad kit-diff edit/event/store flows with semantic command steps and snapshot refreshes.
    status: pending

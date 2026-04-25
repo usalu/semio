@@ -1,0 +1,13 @@
+{
+  "title": "Semantic Kit Command Events",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "semio/rs: enforce external kit modification exclusively through semantic commands. Commands are async and return only request ids; success/result/error is delivered over events. Ensure semio/js stores track requests and emit correct events consumed by semio/react. Extend existing tests only and verify relevant Rust/JS/React checks pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1379"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kitapp",
+  "sessions": [
+    "⚪dd75cbe965dc4c97ab9e29f4198b884d"
+  ]
+}

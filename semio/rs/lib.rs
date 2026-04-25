@@ -2822,6 +2822,53 @@ pub mod change_command {
             family_id: FamilyIdDto,
             commands: Vec<ChangeFamilyCommand>,
         },
+        // --- design-canvas / layout batch (semantic: twin + one [`KitGraph::apply_kit_mutation`]) ---
+        /// 🧩 Cluster selected pieces into a new nested design; inverse is prior [`Self::ReplaceKitFromFullDto`] when state changes.
+        ClusterPieces {
+            design_id: DesignIdDto,
+            piece_ids: Vec<String>,
+            cluster_name: String,
+        },
+        /// 🧩 Drag pieces in UV.
+        DragPieces {
+            design_id: DesignIdDto,
+            piece_ids: Vec<String>,
+            du: f64,
+            dv: f64,
+        },
+        /// 🧩 Move pieces in domain space.
+        MovePieces {
+            design_id: DesignIdDto,
+            piece_ids: Vec<String>,
+            gap: f64,
+            shift: f64,
+            rise: f64,
+        },
+        /// 🧩 Fix selected pieces in place.
+        FixPieces {
+            design_id: DesignIdDto,
+            piece_ids: Vec<String>,
+        },
+        /// 🧩 Flatten one design (read-only flatten report + replace design DTO on apply path).
+        FlattenDesign {
+            design_id: DesignIdDto,
+        },
+        /// 🧩 Expand a nested child design’s pieces/connections into the parent’s domain.
+        ExpandNestedDesign {
+            parent_design_id: DesignIdDto,
+            nested_design_id: DesignIdDto,
+        },
+        /// 🧩 Remove a connection in a design.
+        DeleteConnection {
+            design_id: DesignIdDto,
+            connection_id: ConnectionIdDto,
+        },
+        /// 🧩 Set a piece’s type (delegates to nested [`ChangeDesignCommands`] in [`Self::apply_mutation`]).
+        ChangePieceKind {
+            design_id: DesignIdDto,
+            piece_id: PieceIdDto,
+            new_type_id: TypeIdDto,
+        },
     }
 
     /// Per-field on [`crate::family::FamilyStore`].
@@ -3582,6 +3629,14 @@ pub mod change_command {
                 ChangeKitCommand::AddFamily { .. } => KitChangeKind::Other("addFamily".into()),
                 ChangeKitCommand::RemoveFamily { .. } => KitChangeKind::Other("removeFamily".into()),
                 ChangeKitCommand::ChangeFamilyCommands { .. } => KitChangeKind::Other("modifyFamily".into()),
+                ChangeKitCommand::ClusterPieces { .. }
+                | ChangeKitCommand::DragPieces { .. }
+                | ChangeKitCommand::MovePieces { .. }
+                | ChangeKitCommand::FixPieces { .. }
+                | ChangeKitCommand::FlattenDesign { .. }
+                | ChangeKitCommand::ExpandNestedDesign { .. }
+                | ChangeKitCommand::DeleteConnection { .. }
+                | ChangeKitCommand::ChangePieceKind { .. } => KitChangeKind::ModifyDesign,
             }
         }
 
@@ -3596,8 +3651,43 @@ pub mod change_command {
             k
         }
 
-        /// Apply and return inverse commands for undo (no kit diff).
+        /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_mutation`].
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
+            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let twin = KitGraph::from_full_dto(b0.clone());
+            let inv = self.apply_mutation(&twin)?;
+            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            if a != b0 {
+                let _d = KitGraph::apply_kit_mutation(kit, &b0, &a).map_err(SemioError::from)?;
+            }
+            Ok(inv)
+        }
+
+        /// Like [`Self::apply`] for each command, using one shared throwaway buffer and a single live write.
+        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+            if cmds.is_empty() {
+                return Ok(vec![]);
+            }
+            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let twin = KitGraph::from_full_dto(b0.clone());
+            let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
+            for c in cmds {
+                let inv = c.apply_mutation(&twin)?;
+                groups.push(inv);
+            }
+            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            if a != b0 {
+                let _d = KitGraph::apply_kit_mutation(kit, &b0, &a).map_err(SemioError::from)?;
+            }
+            let mut out = Vec::new();
+            for g in groups.into_iter().rev() {
+                out.extend(g);
+            }
+            Ok(out)
+        }
+
+        /// Isolated throwaway path: inverses and mutation target only the passed graph (twin, not the live ref).
+        fn apply_mutation(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
@@ -3966,23 +4056,128 @@ pub mod change_command {
                     inv.reverse();
                     Ok(vec![ChangeKitCommand::ChangeFamilyCommands { family_id: family_id.clone(), commands: inv }])
                 }
+                ChangeKitCommand::ClusterPieces {
+                    design_id,
+                    piece_ids,
+                    cluster_name,
+                } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::cluster_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), cluster_name.clone())
+                        .map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::DragPieces {
+                    design_id,
+                    piece_ids,
+                    du,
+                    dv,
+                } => {
+                    if piece_ids.is_empty() {
+                        return Ok(vec![]);
+                    }
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::drag_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *du, *dv).map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::MovePieces {
+                    design_id,
+                    piece_ids,
+                    gap,
+                    shift,
+                    rise,
+                } => {
+                    if piece_ids.is_empty() {
+                        return Ok(vec![]);
+                    }
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::move_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *gap, *shift, *rise)
+                        .map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::FixPieces { design_id, piece_ids } => {
+                    if piece_ids.is_empty() {
+                        return Ok(vec![]);
+                    }
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::fix_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone()).map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::FlattenDesign { design_id } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::flatten_design_apply_unchecked(kit, design_id.id.as_str()).map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::ExpandNestedDesign {
+                    parent_design_id,
+                    nested_design_id,
+                } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::expand_nested_design_unchecked(kit, parent_design_id.id.as_str(), nested_design_id.id.as_str())
+                        .map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::DeleteConnection {
+                    design_id,
+                    connection_id,
+                } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitGraph::delete_connection_in_design_unchecked(kit, design_id.id.as_str(), connection_id.id.as_str())
+                        .map_err(se)?;
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    Ok(if new == old {
+                        vec![]
+                    } else {
+                        vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }]
+                    })
+                }
+                ChangeKitCommand::ChangePieceKind {
+                    design_id,
+                    piece_id,
+                    new_type_id,
+                } => {
+                    let inner = ChangeKitCommand::ChangeDesignCommands {
+                        design_id: design_id.clone(),
+                        commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                            piece_id: piece_id.clone(),
+                            commands: vec![ChangePieceCommand::Type {
+                                type_id: Some(new_type_id.clone()),
+                            }],
+                        }],
+                    };
+                    inner.apply_mutation(kit)
+                }
             }?;
             Ok(inv)
-        }
-
-        /// Apply many commands in order; inverses are concatenated in **undo order** (last command's
-        /// inverses first) so that applying the returned `Vec` once reverses the whole batch.
-        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
-            let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
-            for c in cmds {
-                let inv = c.apply(kit)?;
-                groups.push(inv);
-            }
-            let mut out = Vec::new();
-            for g in groups.into_iter().rev() {
-                out.extend(g);
-            }
-            Ok(out)
         }
 
         /// Best-effort batch simplification (extend as more patterns emerge).
@@ -15632,6 +15827,44 @@ pub(crate) mod event_wire {
             }
         }
     }
+
+    /// Field-level bus sync after a whole-graph replace from DTOs (families and similar).
+    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFullDto, after: &crate::kit_graph::KitFullDto) {
+        use std::collections::HashMap;
+
+        use crate::events::{DesignEvent, DesignField, KitEvent, TypeEvent, TypeField};
+
+        let bdm: HashMap<_, _> = before.designs.iter().map(|d| (d.id.clone(), d)).collect();
+        for ad in &after.designs {
+            if let Some(bd) = bdm.get(&ad.id) {
+                if bd.families != ad.families {
+                    if let Some(dref) = kit.read().ok().and_then(|g| g.design(ad.id.as_str())) {
+                        if let Ok(mut dw) = dref.write() {
+                            dw.emit_ev(KitEvent::Design {
+                                design_id: ad.id.clone(),
+                                event: DesignEvent::FieldChanged(DesignField::Families),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        let btm: HashMap<_, _> = before.types.iter().map(|t| (t.id.clone(), t)).collect();
+        for at in &after.types {
+            if let Some(bt) = btm.get(&at.id) {
+                if bt.families != at.families {
+                    if let Some(tref) = kit.read().ok().and_then(|g| g.semio_type(at.id.as_str())) {
+                        if let Ok(mut tw) = tref.write() {
+                            tw.emit_ev(KitEvent::Type {
+                                type_id: at.id.clone(),
+                                event: TypeEvent::FieldChanged(TypeField::Families),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub(crate) mod flatten_math {
@@ -17790,6 +18023,105 @@ pub mod kit_graph {
             }
         }
 
+        fn find_design_id_for_connection(kit: &KitGraphRef, connection_id: &str) -> std::result::Result<Id, SetError> {
+            let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            let cid = Id::from(connection_id);
+            for d in &g.designs {
+                if let Ok(dr) = d.read() {
+                    if dr.connections.iter().any(|c| c.read().map(|r| r.id == cid).unwrap_or(false)) {
+                        return Ok(dr.id.clone());
+                    }
+                }
+            }
+            Err(SetError::NotFound(format!("connection {connection_id}")))
+        }
+
+        /// 🧩 Turn a [`crate::diff::PieceDiff`] into [`ChangePieceCommand`]s (semantic; no apply).
+        fn piece_diff_to_change_commands(d: &crate::diff::PieceDiff) -> std::result::Result<Vec<crate::change_command::ChangePieceCommand>, SetError> {
+            use crate::change_command::ChangePieceCommand;
+            if d.props.as_ref().is_some_and(|p| !p.is_empty()) || d.attributes.as_ref().is_some_and(|a| !a.is_empty()) {
+                return Err(SetError::InvalidValue("piece __patch: nested props/attributes not supported here; use dedicated commands".into()));
+            }
+            let mut out = Vec::new();
+            if let Some(v) = &d.name {
+                out.push(ChangePieceCommand::Name { name: v.clone() });
+            }
+            if let Some(v) = &d.description {
+                out.push(ChangePieceCommand::Description { description: v.clone() });
+            }
+            if let Some(v) = &d.plane {
+                out.push(ChangePieceCommand::Plane { plane: v.clone() });
+            }
+            if let Some(v) = &d.center {
+                out.push(ChangePieceCommand::Center { center: v.clone() });
+            }
+            if let Some(v) = &d.scale {
+                out.push(ChangePieceCommand::Scale { scale: v.clone() });
+            }
+            if let Some(v) = &d.mirror_plane {
+                out.push(ChangePieceCommand::MirrorPlane { mirror_plane: v.clone() });
+            }
+            if let Some(v) = &d.hidden {
+                out.push(ChangePieceCommand::Hidden { hidden: v.clone() });
+            }
+            if let Some(v) = &d.locked {
+                out.push(ChangePieceCommand::Locked { locked: v.clone() });
+            }
+            if let Some(v) = &d.color {
+                out.push(ChangePieceCommand::Color { color: v.clone() });
+            }
+            if let Some(v) = &d.r#type {
+                out.push(ChangePieceCommand::Type { type_id: v.clone() });
+            }
+            if d.design.is_some() {
+                return Err(SetError::InvalidValue("piece __patch: design field is not supported via setField; use a dedicated move command".into()));
+            }
+            Ok(out)
+        }
+
+        /// 🧩 [`crate::diff::ConnectionDiff`] → [`ChangeConnectionCommand`]s.
+        fn connection_diff_to_change_commands(d: &crate::diff::ConnectionDiff) -> std::result::Result<Vec<crate::change_command::ChangeConnectionCommand>, SetError> {
+            use crate::change_command::ChangeConnectionCommand;
+            if d.attributes.as_ref().is_some_and(|a| !a.is_empty()) {
+                return Err(SetError::InvalidValue("connection __patch: nested attributes not supported here".into()));
+            }
+            let mut out = Vec::new();
+            if let Some(v) = &d.gap {
+                out.push(ChangeConnectionCommand::Gap { value: v.clone() });
+            }
+            if let Some(v) = &d.shift {
+                out.push(ChangeConnectionCommand::Shift { value: v.clone() });
+            }
+            if let Some(v) = &d.rise {
+                out.push(ChangeConnectionCommand::Rise { value: v.clone() });
+            }
+            if let Some(v) = &d.rotation {
+                out.push(ChangeConnectionCommand::Rotation { value: v.clone() });
+            }
+            if let Some(v) = &d.turn {
+                out.push(ChangeConnectionCommand::Turn { value: v.clone() });
+            }
+            if let Some(v) = &d.tilt {
+                out.push(ChangeConnectionCommand::Tilt { value: v.clone() });
+            }
+            if let Some(v) = &d.x {
+                out.push(ChangeConnectionCommand::X { value: v.clone() });
+            }
+            if let Some(v) = &d.y {
+                out.push(ChangeConnectionCommand::Y { value: v.clone() });
+            }
+            if let Some(v) = &d.description {
+                out.push(ChangeConnectionCommand::Description { value: v.clone() });
+            }
+            if let Some(s) = &d.connected {
+                out.push(ChangeConnectionCommand::ReplaceConnected { side: s.clone() });
+            }
+            if let Some(s) = &d.connecting {
+                out.push(ChangeConnectionCommand::ReplaceConnecting { side: s.clone() });
+            }
+            Ok(out)
+        }
+
         /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
         pub fn change_kit_commands_for_field_patch(
             kit: &KitGraphRef,
@@ -17805,6 +18137,7 @@ pub mod kit_graph {
                 ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand, ChangeTypeCommand,
             };
             use crate::author::AuthorIdDto;
+            use crate::connection::ConnectionIdDto;
             use crate::concept::ConceptIdDto;
             use crate::design::DesignIdDto;
             use crate::file::FileIdDto;
@@ -17940,6 +18273,20 @@ pub mod kit_graph {
                         }
                         found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
                     };
+                    if field.as_str() == "__patch" {
+                        let pd: crate::diff::PieceDiff = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                        if pd.is_empty() {
+                            return Ok(vec![]);
+                        }
+                        let pcmds = Self::piece_diff_to_change_commands(&pd)?;
+                        return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
+                            design_id: DesignIdDto { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                                piece_id: PieceIdDto { id: Id::from(id.as_str()) },
+                                commands: pcmds,
+                            }],
+                        }]);
+                    }
                     let piece_cmd = match field.as_str() {
                         "name" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
@@ -17958,6 +18305,24 @@ pub mod kit_graph {
                             commands: vec![piece_cmd],
                         }],
                     }]
+                }
+                EntityKind::Connection => {
+                    let design_id = Self::find_design_id_for_connection(kit, &id)?;
+                    if field.as_str() == "__patch" {
+                        let cd: crate::diff::ConnectionDiff = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                        if cd.is_empty() {
+                            return Ok(vec![]);
+                        }
+                        let ccmds = Self::connection_diff_to_change_commands(&cd)?;
+                        return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
+                            design_id: DesignIdDto { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands {
+                                connection_id: ConnectionIdDto { id: Id::from(id.as_str()) },
+                                commands: ccmds,
+                            }],
+                        }]);
+                    }
+                    return Err(SetError::InvalidValue(format!("unknown connection field '{field}' (use __patch for batch)")));
                 }
                 EntityKind::Author => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18282,6 +18647,22 @@ pub mod kit_graph {
                 #[cfg(not(target_arch = "wasm32"))]
                 SemioError::Zip(z) => SetError::Internal(z.to_string()),
             }
+        }
+
+        /// Central content write: replace materialized kit DTO, preserving `event_bus` and VCS/undo.
+        /// [`Self::apply_kit_mutation`] is the preferred public path when you have before/after DTOs.
+        pub fn apply_kit_state(kit: &KitGraphRef, after: KitFullDto) -> SetResult {
+            Self::replace_from_full_dto(kit, after)
+        }
+
+        /// One-pass apply from a before/after pair: returns the [`crate::kit_diff::KitDiff`] and updates live.
+        pub fn apply_kit_mutation(kit: &KitGraphRef, before: &KitFullDto, after: &KitFullDto) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
+            let d = crate::kit_diff::KitDiff::between(before, after);
+            if *before != *after {
+                Self::apply_kit_state(kit, after.clone())?;
+                crate::event_wire::emit_kit_dto_reconcile_events(kit, before, after);
+            }
+            Ok(d)
         }
 
         /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
@@ -19684,7 +20065,8 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        /// 🧩 Clustering without undo wrapper (twin or tests); live callers use [`ChangeKitCommand::ClusterPieces`].
+        pub fn cluster_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
@@ -19701,7 +20083,12 @@ pub mod kit_graph {
                 return Err(SetError::InvalidValue("no pieces found matching the provided IDs".into()));
             }
 
-            let internal_connections: Vec<ConnectionFullDto> = parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str())).cloned().collect();
+            let internal_connections: Vec<ConnectionFullDto> = parent_dto
+                .connections
+                .iter()
+                .filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str()))
+                .cloned()
+                .collect();
 
             let external_connections: Vec<ConnectionFullDto> = parent_dto
                 .connections
@@ -19740,18 +20127,31 @@ pub mod kit_graph {
 
             let pids_cluster: Vec<Id> = piece_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let dg = design_id.to_string();
-            Self::with_undo(kit, || {
-                Self::insert_design_ref(kit, clustered_dto)?;
-                {
-                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.semantic_remove_design_pieces(&dg, &pids_cluster).map_err(Self::map_semio_err)?;
-                }
-                for c in added_connections {
-                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.semantic_add_design_connection(&dg, c).map_err(Self::map_semio_err)?;
-                }
-                Ok(())
-            })
+            Self::insert_design_ref(kit, clustered_dto)?;
+            {
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.semantic_remove_design_pieces(&dg, &pids_cluster).map_err(Self::map_semio_err)?;
+            }
+            for c in added_connections {
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.semantic_add_design_connection(&dg, c).map_err(Self::map_semio_err)?;
+            }
+            Ok(())
+        }
+
+        /// 🧩 [`crate::change_command::ChangeKitCommand::ClusterPieces`] on the live kit.
+        pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::ClusterPieces {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                piece_ids,
+                cluster_name,
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
         }
 
         fn domain_has_selected_ancestor_drag(piece: &str, selected: &HashSet<String>, parent_map: &HashMap<String, (String, String)>) -> bool {
@@ -19765,116 +20165,167 @@ pub mod kit_graph {
             false
         }
 
-        pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        /// 🧩 See [`ChangeKitCommand::DragPieces`].
+        pub fn drag_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            Self::with_undo(kit, || {
-                let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    (dr.to_full_dto(), d.clone())
-                };
+            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                (dr.to_full_dto(), d.clone())
+            };
 
-                let selected: HashSet<String> = piece_ids.clone().into_iter().collect();
-                let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
-                for c in &dto.connections {
-                    let child = c.connecting.piece.id.to_string();
-                    let parent = c.connected.piece.id.to_string();
-                    parent_map.insert(child, (c.id.to_string(), parent));
+            let selected: HashSet<String> = piece_ids.into_iter().collect();
+            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+            for c in &dto.connections {
+                let child = c.connecting.piece.id.to_string();
+                let parent = c.connected.piece.id.to_string();
+                parent_map.insert(child, (c.id.to_string(), parent));
+            }
+
+            let fixed_ids: Vec<String> = selected.iter().filter(|g| !parent_map.contains_key(*g)).cloned().collect();
+
+            let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+            for g in &fixed_ids {
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
                 }
+            }
 
-                let fixed_ids: Vec<String> = selected.iter().filter(|g| !parent_map.contains_key(*g)).cloned().collect();
-
-                let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                for g in &fixed_ids {
-                    if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
-                    }
+            for g in &selected {
+                if fixed_ids.iter().any(|x| x == g) {
+                    continue;
                 }
-
-                for g in &selected {
-                    if fixed_ids.iter().any(|x| x == g) {
-                        continue;
-                    }
-                    if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
-                        continue;
-                    }
-                    if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
-                    }
+                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                    continue;
                 }
-                Ok(())
-            })
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
+                }
+            }
+            Ok(())
+        }
+
+        pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::DragPieces {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                piece_ids,
+                du,
+                dv,
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
+        }
+
+        pub fn move_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+            if piece_ids.is_empty() {
+                return Ok(());
+            }
+            let dg = design_id.to_string();
+            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                (dr.to_full_dto(), d.clone())
+            };
+
+            let selected: HashSet<String> = piece_ids.iter().cloned().collect();
+            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+            for c in &dto.connections {
+                parent_map.insert(c.connecting.piece.id.to_string(), (c.id.to_string(), c.connected.piece.id.to_string()));
+            }
+
+            let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+            for g in &selected {
+                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                    continue;
+                }
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.r#move(gap, shift, rise)?;
+                }
+            }
+            Ok(())
         }
 
         pub fn move_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::MovePieces {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                piece_ids,
+                gap,
+                shift,
+                rise,
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
+        }
+
+        pub fn fix_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let piece_ids = piece_ids;
-            Self::with_undo(kit, || {
-                let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    (dr.to_full_dto(), d.clone())
-                };
+            let design_ref = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
+            };
 
-                let selected: HashSet<String> = piece_ids.iter().cloned().collect();
-                let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
-                for c in &dto.connections {
-                    parent_map.insert(c.connecting.piece.id.to_string(), (c.id.to_string(), c.connected.piece.id.to_string()));
-                }
-
-                let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                for g in &selected {
-                    if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
-                        continue;
-                    }
-                    if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.r#move(gap, shift, rise)?;
-                    }
-                }
-                Ok(())
-            })
+            let pieces: Vec<PieceStoreRef> = {
+                let design = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                piece_ids.iter().filter_map(|piece_id| design.piece(piece_id.as_str())).collect()
+            };
+            for piece in pieces {
+                piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.fix()?;
+            }
+            Ok(())
         }
 
         pub fn fix_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
-            if piece_ids.is_empty() {
-                return Ok(());
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::FixPieces {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                piece_ids,
             }
-            let dg = design_id.to_string();
-            Self::with_undo(kit, || {
-                let design_ref = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
-                };
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
+        }
 
-                let pieces: Vec<PieceStoreRef> = {
-                    let design = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    piece_ids.iter().filter_map(|piece_id| design.piece(piece_id.as_str())).collect()
-                };
-                for piece in pieces {
-                    piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.fix()?;
-                }
-                Ok(())
-            })
+        pub fn delete_connection_in_design_unchecked(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
+            let dg = design_id.to_string();
+            let cid = Id::from(connection_id);
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.semantic_remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
         }
 
         pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
-            let dg = design_id.to_string();
-            let cid = Id::from(connection_id);
-            Self::with_undo(kit, || {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.semantic_remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
-            })
+            use crate::change_command::ChangeKitCommand;
+            use crate::connection::ConnectionIdDto;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::DeleteConnection {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                connection_id: ConnectionIdDto { id: Id::from(connection_id) },
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
         }
 
-        pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
+        /// Compute flattened design DTO and replace that design in the graph.
+        pub fn flatten_design_apply_unchecked(kit: &KitGraphRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let after_full: DesignFullDto = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19887,7 +20338,19 @@ pub mod kit_graph {
                 };
                 change.after.ok_or_else(|| SetError::Internal("flatten_design missing after dto".into()))?
             };
-            Self::with_undo(kit, || Self::replace_design_full(kit, after_full))
+            Self::replace_design_full(kit, after_full)
+        }
+
+        pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::FlattenDesign {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
         }
 
         fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFullDto> {
@@ -19940,61 +20403,78 @@ pub mod kit_graph {
             Ok(design)
         }
 
-        pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design_unchecked(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
-            Self::with_undo(kit, || {
-                let before: DesignFullDto = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g.design(pg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
-                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    dr.to_full_dto()
-                };
+            let before: DesignFullDto = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g.design(pg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
 
-                let mut expanded_child: DesignFullDto = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g.design(ng.as_str()).ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
-                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    dr.to_full_dto()
-                };
+            let mut expanded_child: DesignFullDto = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g.design(ng.as_str()).ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
 
-                {
-                    let kg = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
-                }
+            {
+                let kg = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
+            }
 
-                let existing_piece: HashSet<String> = before.pieces.iter().map(|p| p.id.to_string()).collect();
-                let add_pieces: Vec<PieceFullDto> = expanded_child.pieces.into_iter().filter(|p| !existing_piece.contains(p.id.as_str())).collect();
+            let existing_piece: HashSet<String> = before.pieces.iter().map(|p| p.id.to_string()).collect();
+            let add_pieces: Vec<PieceFullDto> = expanded_child
+                .pieces
+                .into_iter()
+                .filter(|p| !existing_piece.contains(p.id.as_str()))
+                .collect();
 
-                let existing_conn_key: HashSet<String> = before.connections.iter().map(Self::domain_connection_key).collect();
-                let add_connections: Vec<ConnectionFullDto> = expanded_child.connections.into_iter().filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c))).collect();
+            let existing_conn_key: HashSet<String> = before.connections.iter().map(Self::domain_connection_key).collect();
+            let add_connections: Vec<ConnectionFullDto> = expanded_child
+                .connections
+                .into_iter()
+                .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
+                .collect();
 
-                let mut after = before.clone();
-                after.pieces.extend(add_pieces);
-                let mut conns: Vec<ConnectionFullDto> = after.connections.iter().map(|c| Self::strip_design_piece_id(c, ng.as_str())).collect();
-                conns.extend(add_connections);
-                after.connections = conns;
+            let mut after = before.clone();
+            after.pieces.extend(add_pieces);
+            let mut conns: Vec<ConnectionFullDto> = after.connections.iter().map(|c| Self::strip_design_piece_id(c, ng.as_str())).collect();
+            conns.extend(add_connections);
+            after.connections = conns;
 
-                Self::replace_design_full(kit, after)
-            })
+            Self::replace_design_full(kit, after)
+        }
+
+        pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            ChangeKitCommand::ExpandNestedDesign {
+                parent_design_id: DesignIdDto { id: Id::from(parent_design_id) },
+                nested_design_id: DesignIdDto { id: Id::from(nested_design_id) },
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
         }
 
         pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
-            let dg = design_id.to_string();
-            let pid = piece_id.to_string();
-            let ntg = new_type_id.to_string();
-            Self::with_undo(kit, || {
-                let cmd = ChangeKitCommand::ChangeDesignCommands {
-                    design_id: DesignIdDto { id: Id::from(dg.as_str()) },
-                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                        piece_id: PieceIdDto { id: Id::from(pid.as_str()) },
-                        commands: vec![ChangePieceCommand::Type {
-                            type_id: Some(TypeIdDto { id: Id::from(ntg.as_str()) }),
-                        }],
-                    }],
-                };
-                cmd.apply(kit).map(|_| ()).map_err(Self::map_semio_err)
-            })
+            use crate::change_command::ChangeKitCommand;
+            use crate::design::DesignIdDto;
+            use crate::id::Id;
+            use crate::piece::PieceIdDto;
+            use crate::typ::TypeIdDto;
+            ChangeKitCommand::ChangePieceKind {
+                design_id: DesignIdDto { id: Id::from(design_id) },
+                piece_id: PieceIdDto { id: Id::from(piece_id) },
+                new_type_id: TypeIdDto { id: Id::from(new_type_id) },
+            }
+            .apply(kit)
+            .map(|_| ())
+            .map_err(KitGraph::map_semio_err)
         }
 
         pub fn paste_design_selection(_kit: &KitGraphRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {

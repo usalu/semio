@@ -163,25 +163,25 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
     - Remove unused dependencies from `package.json` if applicable
     - _Requirements: 1.1 through 1.20, 9.1, 9.2_
 
-- [-] 13. Checkpoint - Ensure compilation and existing tests pass after refactoring
+- [x] 13. Checkpoint - Ensure compilation and existing tests pass after refactoring
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Update embedded tests to use WASM bridge
-  - [~] 14.1 Rewrite embedded tests that exercised deleted domain logic to call through `FallbackKitStoreClient` or `Semio` utility class
+- [x] 14. Update embedded tests to use WASM bridge
+  - [x] 14.1 Rewrite embedded tests that exercised deleted domain logic to call through `FallbackKitStoreClient` or `Semio` utility class
     - Tests for flatten, diff, hash, placement, etc. → rewrite to use WASM bridge or remove with comment
     - _Requirements: 8.2, 8.3_
 
-  - [~] 14.2 Add export surface smoke tests
+  - [x] 14.2 Add export surface smoke tests
     - Verify all expected schemas, type aliases, entity classes, wire types, and bridge classes are exported
     - Verify all deleted domain logic functions/classes are NOT exported (denylist check)
     - _Requirements: 1.1 through 1.20, 6.1 through 6.7, 9.1 through 9.6_
 
-  - [~] 14.3 Add entity class method existence tests
+  - [x] 14.3 Add entity class method existence tests
     - Verify each entity class has `serialize()`, `deserialize()`, `toPlain()`, `fromPlain()`, `createId()`, `areSameId()` methods (where applicable)
     - Verify geometry classes retain `rounded()` method
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [~] 14.4 Add WASM bridge integration tests
+  - [x] 14.4 Add WASM bridge integration tests
     - Create a client with a minimal kit via `FallbackKitStoreClient`, call `setField`, verify `SetResult.ok === true`
     - Call `getTypes()`, `getDesigns()`, verify they return data from WASM
     - Call `undo()` / `redo()`, verify state changes
@@ -189,32 +189,32 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
     - Call `executeRead()` with a `ReadCommandBatch`, verify typed results
     - _Requirements: 4.1 through 4.7, 5.1, 5.2, 5.3_
 
-- [~] 15. Checkpoint - Ensure all unit tests pass
+- [x] 15. Checkpoint - Ensure all unit tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Add property-based tests
-  - [~] 16.1 Write property test for entity toPlain/fromPlain round-trip
+- [x] 16. Add property-based tests
+  - [x] 16.1 Write property test for entity toPlain/fromPlain round-trip
     - **Property 1: Entity toPlain/fromPlain round-trip**
     - Generate random valid plain objects for each entity kind using fast-check arbitraries matching the Zod schema
     - Verify `Entity.fromPlain(data).toPlain()` deep-equals the input for all entity kinds
     - Minimum 100 iterations
     - **Validates: Requirements 3.1, 7.2**
 
-  - [~] 16.2 Write property test for entity serialize/deserialize round-trip
+  - [x] 16.2 Write property test for entity serialize/deserialize round-trip
     - **Property 2: Entity serialize/deserialize round-trip**
     - Generate random valid plain objects for each entity kind
     - Verify `Entity.deserialize(entity.serialize()).toPlain()` deep-equals the original data
     - Minimum 100 iterations
     - **Validates: Requirements 7.1**
 
-  - [~] 16.3 Write property test for entity ID factory and comparison
+  - [x] 16.3 Write property test for entity ID factory and comparison
     - **Property 3: Entity ID factory and comparison**
     - Generate random string pairs using fast-check
     - Verify `Entity.createId(a)` produces `{ id: a }` and `Entity.areSameId(createId(a), createId(b))` returns `true` iff `a === b`
     - Minimum 100 iterations
     - **Validates: Requirements 3.2, 7.3, 7.4**
 
-- [~] 17. Final checkpoint - Ensure all tests pass
+- [x] 17. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

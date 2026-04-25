@@ -25,6 +25,7 @@ import {
   getStoredKitFileUrls,
   id,
   InMemoryKitStore,
+  isKitCommandLifecycleEvent,
   isBrowserReadableFileUrl,
   Kit,
   LiveKitRoot,
@@ -69,6 +70,9 @@ export type SchemaPropertyEvent = {
   id?: string;
   previous: unknown;
   current: unknown;
+  requestId?: string;
+  commandKind?: string;
+  phase?: string;
 };
 
 export type MemoryBackboneConfig = {
@@ -1416,6 +1420,29 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
   const pushSetRejection = React.useCallback((e: SetError) => {
     setRecentSetRejections((r) => [...r.slice(-99), e]);
   }, []);
+
+  React.useEffect(() => {
+    if (!kitClient) return;
+    return kitClient.subscribe((event: unknown) => {
+      if (!isKitCommandLifecycleEvent(event)) return;
+      const command = event.semioKitCommand;
+      if (command.error) pushSetRejection(command.error);
+      setRecentEvents((existing) => [
+        ...existing,
+        {
+          key: `KitCommand:${command.requestId}:${command.phase}`,
+          typeName: "KitCommand",
+          fieldName: command.phase,
+          id: command.requestId,
+          previous: undefined,
+          current: command.error ?? command.commandKind,
+          requestId: command.requestId,
+          commandKind: command.commandKind,
+          phase: command.phase,
+        },
+      ].slice(-500));
+    });
+  }, [kitClient, pushSetRejection]);
 
   const setFieldValue = React.useCallback(
     (typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null) => {
@@ -3176,8 +3203,7 @@ export function useUpdatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const diff = { pieces: { updated: [{ piece: { id: pieceId }, diff: patch }] } };
-      const r = await runtime.kitClient.applyDesignDiff(designId, diff);
+      const r = await runtime.kitClient.setField("Piece", pieceId, "__patch", patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3205,19 +3231,16 @@ export function useUpdatePieces(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const diff = {
-        pieces: {
-          updated: updates.map((u) => ({ piece: { id: u.id }, diff: u.diff })),
-        },
-      };
-      const r = await runtime.kitClient.applyDesignDiff(designId, diff);
-      if (!r.ok) {
-        runtime.pushSetRejection(r.error);
-        setStatus({ kind: "error", pending: 0, lastError: r.error });
-        return r;
+      for (const u of updates) {
+        const r = await runtime.kitClient.setField("Piece", u.id, "__patch", u.diff);
+        if (!r.ok) {
+          runtime.pushSetRejection(r.error);
+          setStatus({ kind: "error", pending: 0, lastError: r.error });
+          return r;
+        }
       }
       setStatus({ kind: "idle", pending: 0 });
-      return r;
+      return { ok: true } as const;
     },
     [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
   );
@@ -3238,8 +3261,7 @@ export function useUpdateConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const diff = { connections: { updated: [{ connection: { id: connectionId }, diff: patch }] } };
-      const r = await runtime.kitClient.applyDesignDiff(designId, diff);
+      const r = await runtime.kitClient.setField("Connection", connectionId, "__patch", patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3267,19 +3289,16 @@ export function useUpdateConnections(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const diff = {
-        connections: {
-          updated: updates.map((u) => ({ connection: { id: u.id }, diff: u.diff })),
-        },
-      };
-      const r = await runtime.kitClient.applyDesignDiff(designId, diff);
-      if (!r.ok) {
-        runtime.pushSetRejection(r.error);
-        setStatus({ kind: "error", pending: 0, lastError: r.error });
-        return r;
+      for (const u of updates) {
+        const r = await runtime.kitClient.setField("Connection", u.id, "__patch", u.diff);
+        if (!r.ok) {
+          runtime.pushSetRejection(r.error);
+          setStatus({ kind: "error", pending: 0, lastError: r.error });
+          return r;
+        }
       }
       setStatus({ kind: "idle", pending: 0 });
-      return r;
+      return { ok: true } as const;
     },
     [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
   );
@@ -4480,7 +4499,6 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 /** Re-exports for hosts (e.g. sketchpad) that must not import kit domain from `@semio/js` directly. */
 export {
-  applyKitDiff,
   areDesignsInSameFamily,
   arePortsCompatible,
   areSameConnection,
@@ -15680,8 +15698,6 @@ if (shouldRunReactEmbeddedTests) {
       },
       addChild: async () => ({ ok: true }),
       removeChild: async () => ({ ok: true }),
-      applyDesignDiff: async () => ({ ok: true }),
-      applyKitDiff: async () => ({ ok: true }),
       clusterPieces: async () => ({ ok: true }),
       dragPieces: async () => ({ ok: true }),
       movePieces: async () => ({ ok: true }),
@@ -15911,7 +15927,6 @@ if (shouldRunReactEmbeddedTests) {
         setField: async () => ({ ok: true }) as const,
         addChild: async () => ({ ok: true }) as const,
         removeChild: async () => ({ ok: true }) as const,
-        applyDesignDiff: async () => ({ ok: true }) as const,
         clusterPieces: async () => ({ ok: false, error: { kind: "InvalidValue", message: "stub-cluster" } }),
         dragPieces: async () => ({ ok: true }) as const,
         movePieces: async () => ({ ok: true }) as const,
