@@ -45,7 +45,7 @@ todos:
    content: "semio/sketchpad: wrap Sketchpad root in KitRegistryProvider, mount <KitScope kitId=...> per open tab, add DesignScope/PieceScope/ConnectionScope/TypeScope around the matching panels and inspectors. Finalize sketchpadMachine events for new UI interactions replacing kit-mutation command strings."
    status: pending
  - id: package_cleanup
-   content: Remove @semio/js from semio/sketchpad/package.json deps, audit semio/react and semio/js dep lists, add eslint rule forbidding @semio/js imports in sketchpad.
+   content: "@semio/js removed from sketchpad/package.json (done). Add eslint (or nx) rule forbidding @semio/js in sketchpad sources; audit react/js dep lists."
    status: in_progress
  - id: tests_and_verify
    content: cargo test (rs, incl. wasm module); pnpm -F @semio/js test (per-entity stores); pnpm -F @semio/react test (Scopes + hooks + draft/rollback); pnpm -F @semio/sketchpad test (Playwright — kit boot temporary/file/folder/remote, piece-name edit, undo/redo, file blob, no @semio/js import); desktop smoke on metabolism.zip.

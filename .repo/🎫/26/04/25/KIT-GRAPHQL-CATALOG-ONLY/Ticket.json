@@ -1,0 +1,5 @@
+{
+  "title": "Kit Graphql Catalog Only Read Path",
+  "status": "open",
+  "summary": "RS: kitStore JSON snapshot fields; JS: FallbackKitStoreClient + worker catalog reads via kitGraphqlRun only; react: single hook names (no useRpc* / duplicate triads)."
+}

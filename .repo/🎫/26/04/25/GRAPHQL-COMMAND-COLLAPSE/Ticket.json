@@ -1,4 +1,5 @@
 {
   "title": "Graphql Command Collapse And Field Reads",
-  "status": "open"
+  "status": "closed",
+  "summary": "Restored self-contained semio/js/kitGraphLive.ts (no import from index); fixed ReadCommandBatchResult build with ReadKitCommandOutput[]; removed KitStore read_kit_commands from semio/rs GraphQL; dropped unused ReadKitCommand import in kit_graphql module; marked rs-command-collapse in graphql_kit_control_plane plan completed."
 }

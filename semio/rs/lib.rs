@@ -25983,7 +25983,7 @@ pub mod kit_graphql {
     use crate::kit_alternative::KitAlternativeCommand;
     use crate::kit_checkpoint::KitCheckpointCommand;
     use crate::kit_session::SessionCommand;
-    use crate::read::{DesignFlattenMapEntryDto, ReadKitCommand};
+    use crate::read::DesignFlattenMapEntryDto;
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
 
@@ -26441,6 +26441,45 @@ pub mod kit_graphql {
             Ok(Json(lock_graph(&self.0)?.materialize_at(opt.as_ref())))
         }
 
+        /// 🌐 Same JSON as [`KitGraph::get_kit_json`] (kit metadata DTO).
+        async fn kit_metadata_json(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            g.get_kit_json().map(Json).map_err(|e| Error::new(format!("{e:?}")))
+        }
+
+        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]).
+        async fn designs_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let v: Vec<_> = g
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+
+        /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
+        async fn types_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let v: Vec<_> = g
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+
+        /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
+        async fn authors_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let v: Vec<_> = g
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+
         /// Opaque JSON VCS tree (same shape as legacy `vcsState` WASM helper).
         async fn vcs_state_json(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
@@ -26570,21 +26609,6 @@ pub mod kit_graphql {
             };
             Ok(Json(serde_json::to_value(&out).map_err(|e| Error::new(e.to_string()))?))
         }
-
-        /// Batched read commands (`@semio/js` `readKitCommands` query); `batch` is a JSON array of read commands.
-        async fn read_kit_commands(&self, batch: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let items: Vec<ReadKitCommand> = match batch.0 {
-                serde_json::Value::Array(a) => a
-                    .into_iter()
-                    .map(|v| serde_json::from_value(v).map_err(|e| Error::new(format!("read_kit_commands item: {e}"))))
-                    .collect::<Result<Vec<_>, _>>()?,
-                _ => return Err(Error::new("readKitCommands: expected JSON array")),
-            };
-            let g = lock_graph(&self.0)?;
-            let results = ReadKitCommand::execute_many(&*g, &items).map_err(|e| Error::new(format!("{e:?}")))?;
-            let v = serde_json::to_value(&results).map_err(|e| Error::new(e.to_string()))?;
-            Ok(Json(v))
-        }
     }
 
     #[Object(name = "Design")]
@@ -26683,6 +26707,36 @@ pub mod kit_graphql {
                 .into_iter()
                 .map(|x| x.id.to_string())
                 .collect())
+        }
+
+        /// 🌐 Full piece DTO list (same as [`KitGraph::get_pieces_json`] for this design).
+        async fn pieces_full_json(&self) -> Result<Json<serde_json::Value>> {
+            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let v: Vec<_> = dr
+                .pieces
+                .iter()
+                .filter_map(|p| p.read().ok().map(|r| r.to_full_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+
+        /// 🌐 Full connection DTO list (same as [`KitGraph::get_connections_json`] for this design).
+        async fn connections_full_json(&self) -> Result<Json<serde_json::Value>> {
+            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let v: Vec<_> = dr
+                .connections
+                .iter()
+                .filter_map(|c| c.read().ok().map(|r| r.to_full_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+
+        /// 🌐 Flatten placement map JSON (same as [`KitGraph::get_pieces_metadata_json`]).
+        async fn pieces_metadata_json(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            let gref: &KitGraphRef = ctx.data()?;
+            let g = lock_graph(gref)?;
+            let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
+            g.get_pieces_metadata_json(&did).map(Json).map_err(|e| Error::new(format!("{e:?}")))
         }
     }
 

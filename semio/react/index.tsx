@@ -3384,7 +3384,8 @@ export function usePiecesMetadataMap(designId?: string): HookRead<Record<string,
 	return [value, status] as const;
 }
 
-export function useRpcPieces(designId?: string): HookTriad<any[]> {
+/** @emoji 📌 Piece DTO rows for a design (GraphQL `piecesFullJson` / `KitStoreClient.getPieces`). */
+export function useKitPieces(designId?: string): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3418,10 +3419,11 @@ export function useRpcPieces(designId?: string): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useRpcConnections(designId?: string): HookTriad<any[]> {
+/** @emoji 📌 Connection DTO rows for a design (GraphQL `connectionsFullJson`). */
+export function useKitConnections(designId?: string): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3455,10 +3457,11 @@ export function useRpcConnections(designId?: string): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useRpcDesigns(): HookTriad<any[]> {
+/** @emoji 📌 Shallow design catalog rows (`designsShallowJson`). */
+export function useKitDesignsShallow(): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3492,10 +3495,11 @@ export function useRpcDesigns(): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useRpcTypes(): HookTriad<any[]> {
+/** @emoji 📌 Shallow type catalog rows (`typesShallowJson`). */
+export function useKitTypesShallow(): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3529,10 +3533,11 @@ export function useRpcTypes(): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useRpcAuthors(): HookTriad<any[]> {
+/** @emoji 📌 Shallow author rows (`authorsShallowJson`). */
+export function useKitAuthorsShallow(): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3566,17 +3571,7 @@ export function useRpcAuthors(): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
-}
-
-/** Alias for {@link useRpcPieces}. */
-export function usePiecesTriad(designId?: string): HookTriad<any[]> {
-	return useRpcPieces(designId);
-}
-
-/** Alias for {@link useRpcConnections}. */
-export function useConnectionsTriad(designId?: string): HookTriad<any[]> {
-	return useRpcConnections(designId);
+	return [value, status] as const;
 }
 
 const EMPTY_SCOPED_PIECES: any[] = [];
@@ -3585,14 +3580,14 @@ const EMPTY_SCOPED_CONNECTIONS: any[] = [];
 /** @emoji 📌 Piece rows for the active {@link DesignScope} (sketchpad-style, no HookTriad). */
 export function usePieces(): any[] {
 	const designId = useDesignScope()?.id;
-	const [arr] = usePiecesTriad(designId);
+	const [arr] = useKitPieces(designId);
 	return Array.isArray(arr) ? arr : EMPTY_SCOPED_PIECES;
 }
 
 /** @emoji 📌 Connection rows for the active {@link DesignScope} (sketchpad-style, no HookTriad). */
 export function useConnections(): any[] {
 	const designId = useDesignScope()?.id;
-	const [arr] = useConnectionsTriad(designId);
+	const [arr] = useKitConnections(designId);
 	return Array.isArray(arr) ? arr : EMPTY_SCOPED_CONNECTIONS;
 }
 
@@ -3621,7 +3616,7 @@ function mergeWriteStatuses(...statuses: WriteStatus[]): WriteStatus {
 
 /**
  * Full kit `types` collection: full + shallow DTOs, metadata, ids, CRUD, and combined status.
- * Prefer this over ad-hoc {@link useRpcTypes} + separate create/delete hooks in app code.
+ * Prefer this over ad-hoc {@link useKitTypesShallow} + separate create/delete hooks in app code.
  */
 export type UseTypesResult = {
 	types: any[];
@@ -3634,7 +3629,7 @@ export type UseTypesResult = {
 };
 
 export function useTypes(): UseTypesResult {
-	const [types, , rpcStatus] = useRpcTypes();
+	const [types, rpcStatus] = useKitTypesShallow();
 	const { run: createType, status: createStatus } = useCreateType();
 	const { run: deleteType, status: deleteStatus } = useDeleteType();
 
@@ -3686,7 +3681,7 @@ export type UseDesignsResult = {
 };
 
 export function useDesigns(): UseDesignsResult {
-	const [designs, , rpcStatus] = useRpcDesigns();
+	const [designs, rpcStatus] = useKitDesignsShallow();
 	const { run: createDesign, status: createStatus } = useCreateDesign();
 	const { run: deleteDesign, status: deleteStatus } = useDeleteDesign();
 
@@ -3724,9 +3719,9 @@ export function useDesigns(): UseDesignsResult {
 	};
 }
 
-/** Alias for {@link useRpcAuthors}. */
-export function useAuthors(): HookTriad<any[]> {
-	return useRpcAuthors();
+/** @emoji 📌 Author rows (`authorsShallowJson`) — use {@link useKitAuthorsShallow} for the raw `[value, status]` pair. */
+export function useAuthors(): HookRead<any[]> {
+	return useKitAuthorsShallow();
 }
 
 export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<any> {
@@ -3847,34 +3842,34 @@ export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRea
 			: snap.pending > 0
 				? { kind: "pending", pending: snap.pending }
 				: { kind: "idle", pending: 0 };
-	return [snap.value, noopAsyncSet, status] as const;
+	return [snap.value, status] as const;
 }
 
-export function useIsConnectedPiece(designId?: string, pieceId?: string): HookTriad<boolean> {
-	const [meta, , status] = usePieceMetadata(designId, pieceId);
+export function useIsConnectedPiece(designId?: string, pieceId?: string): HookRead<boolean> {
+	const [meta, status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => !!(meta?.parentPieceId), [meta]);
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function usePieceDepth(designId?: string, pieceId?: string): HookTriad<number> {
-	const [meta, , status] = usePieceMetadata(designId, pieceId);
+export function usePieceDepth(designId?: string, pieceId?: string): HookRead<number> {
+	const [meta, status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => (typeof meta?.depth === "number" ? meta.depth : 0), [meta]);
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useFixedPieceId(designId?: string, pieceId?: string): HookTriad<string | undefined> {
-	const [meta, , status] = usePieceMetadata(designId, pieceId);
+export function useFixedPieceId(designId?: string, pieceId?: string): HookRead<string | undefined> {
+	const [meta, status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.fixedPieceId, [meta]);
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useParentPieceId(designId?: string, pieceId?: string): HookTriad<string | undefined> {
-	const [meta, , status] = usePieceMetadata(designId, pieceId);
+export function useParentPieceId(designId?: string, pieceId?: string): HookRead<string | undefined> {
+	const [meta, status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.parentPieceId ?? undefined, [meta]);
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function usePieceParentConnection(designId?: string, pieceId?: string): HookTriad<any | undefined> {
+export function usePieceParentConnection(designId?: string, pieceId?: string): HookRead<any | undefined> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any | undefined>(undefined);
 	const [pending, setPending] = React.useState(0);
@@ -3908,10 +3903,10 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useIncludedDesigns(designId?: string): HookTriad<any[]> {
+export function useIncludedDesigns(designId?: string): HookRead<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -3945,7 +3940,7 @@ export function useIncludedDesigns(designId?: string): HookTriad<any[]> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 /**
@@ -3954,7 +3949,7 @@ export function useIncludedDesigns(designId?: string): HookTriad<any[]> {
 export function useDesignClusterableGroups(
 	designId?: string,
 	selection?: ReadonlyArray<string>
-): HookTriad<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>> {
+): HookRead<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>> {
 	const runtime = useKitRuntime();
 	const selectionDep = React.useMemo(() => JSON.stringify(selection ?? []), [selection]);
 	const sel = selection ?? [];
@@ -3991,11 +3986,11 @@ export function useDesignClusterableGroups(
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 /** Sum of prop values linked to `qualityId` in the design (`readDesignQualitySumCommand`). */
-export function useDesignQualitySum(designId?: string, qualityId?: string): HookTriad<number> {
+export function useDesignQualitySum(designId?: string, qualityId?: string): HookRead<number> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState(0);
 	const [pending, setPending] = React.useState(0);
@@ -4029,7 +4024,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 /**
@@ -4038,7 +4033,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
 export function useTypeBestRepresentation(
 	typeId?: string,
 	tagIds?: ReadonlyArray<string>
-): HookTriad<unknown> {
+): HookRead<unknown> {
 	const runtime = useKitRuntime();
 	const tagDep = React.useMemo(() => JSON.stringify(tagIds ?? []), [tagIds]);
 	const tags = tagIds ?? [];
@@ -4075,11 +4070,11 @@ export function useTypeBestRepresentation(
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 /** Colored connector rows for the kit (`readKitColoredConnectorsCommand`). */
-export function useKitColoredConnectors(): HookTriad<ReadonlyArray<unknown>> {
+export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<ReadonlyArray<unknown>>([]);
 	const [pending, setPending] = React.useState(0);
@@ -4113,10 +4108,10 @@ export function useKitColoredConnectors(): HookTriad<ReadonlyArray<unknown>> {
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookTriad<string[]> {
+export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookRead<string[]> {
 	const runtime = useKitRuntime();
 	const pieceKey = pieceIds?.join("\u0000") ?? "";
 	const [value, setValue] = React.useState<string[]>([]);
@@ -4153,10 +4148,10 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookTriad<string[]> {
+export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookRead<string[]> {
 	const runtime = useKitRuntime();
 	const pieceKey = pieceIds?.join("\u0000") ?? "";
 	const [value, setValue] = React.useState<string[]>([]);
@@ -4193,10 +4188,10 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
-export function useExplodeableDesignNodes(designId?: string): HookTriad<string[]> {
+export function useExplodeableDesignNodes(designId?: string): HookRead<string[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<string[]>([]);
 	const [pending, setPending] = React.useState(0);
@@ -4230,7 +4225,7 @@ export function useExplodeableDesignNodes(designId?: string): HookTriad<string[]
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 // #endregion 🎛️KitStoreClient command hooks

@@ -1,32 +1,38 @@
 ---
 name: Graphql Kit Control Plane
-overview: Replace the current JSON command/read control plane with a Rust-owned async-graphql execution boundary for kit data, using existing store references as resolver objects and making semio/js and downstream packages talk only through GraphQL operations.
+overview: "Rust-owned async-graphql execute stream is the WASM control plane; semio/js maps many ReadKitCommand batches to kitStore field queries via kitGraphLive. Full removal of read-command JSON and selector-heavy SDL is tracked as follow-up (see todos)."
 todos:
  - id: rs-graphql-boundary
    content: Replace Rust WASM command/read exports with boot plus single async-graphql execute stream and dual actor channels.
    status: completed
  - id: rs-object-resolvers
-   content: Add async-graphql Object impls directly on existing kit graph/store/entity store refs for every stored and computed field.
-   status: completed
+   content: Add async-graphql Object impls on kit graph/store refs for stored and computed fields (incremental coverage).
+   status: in_progress
  - id: rs-command-collapse
-   content: Convert read/change/session/backbone/string command semantics into typed GraphQL fields, mutations, and events.
-   status: pending
+   content: Convert remaining read/change/session/backbone semantics from command IDs to pure GraphQL fields/mutations/events.
+   status: in_progress
  - id: schema-rewrite
-   content: Rewrite semio/graphql/schema.graphql to remove ID selector control-plane semantics and match the Rust resolver surface.
-   status: completed
+   content: "Rewrite semio/graphql/schema.graphql toward traversal-first kitStore (reduce EntityIdInput / *SelectorInput where resolver graph allows)."
+   status: in_progress
  - id: js-graphql-only
-   content: Rewrite semio/js client, worker, per-entity stores, and generated types to use only GraphQL execute/subscription.
-   status: completed
+   content: "Replace executeRead + readCommandTypes batch with typed GraphQL operations only (remove kitGraphqlMapReadCommand shim)."
+   status: pending
  - id: downstream-alignment
-   content: Rewire semio/react, semio/sketchpad, and semio/algorithms to consume the JS GraphQL store surface only.
-   status: completed
+   content: Rewire semio/react, semio/sketchpad, semio/algorithms to consume only the JS GraphQL document surface (no ReadCommandBatch).
+   status: pending
  - id: verification
-   content: Extend existing tests and run Rust, wasm, JS, React, sketchpad, and algorithm verification commands.
-   status: completed
+   content: Extend tests; run cargo test, wasm tests, pnpm -F @semio/js|react|sketchpad (note Windows LNK1104 if linker locks test exe).
+   status: in_progress
 isProject: false
 ---
 
 # GraphQL Kit Control Plane Migration
+
+## Completion notes (synced with repo)
+
+- **Done:** WASM `execute` streams GraphQL; `KitStoreClient` uses `kitGraphqlExecuteRead` / `kitGraphqlExecuteStoreCommand`; `kitGraphLive.ts` maps a subset of `ReadKitCommand` to `kitStore { … }` queries; SDL grew to a full selector/Node surface (`semio/graphql/schema.graphql`).
+- **In progress:** Schema still uses `*SelectorInput` / `Node` patterns; JS still exposes `executeRead(ReadCommandBatch)` and `readCommandTypes.ts`; React/sketchpad still depend on that batch path indirectly.
+- **Verification:** `cargo check` / `npm run build` for js+react+sketchpad are the usual green gates; `cargo test -p semio` may hit **LNK1104** on Windows if the test `.exe` is locked—retry or exclude AV interference.
 
 ## Target Shape
 
