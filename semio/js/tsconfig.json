@@ -33,6 +33,7 @@
     // "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional
     // "sourceMap": true,
     "types": [
+      "node",
       "react",
       "react-dom"
     ],

@@ -3597,9 +3597,8 @@ pub mod change_command {
             k
         }
 
-        /// Apply and return `(forward kit diff, inverse command list)`.
-        pub fn apply(&self, kit: &KitGraphRef) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
-            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+        /// Apply and return inverse commands for undo (no kit diff).
+        pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
@@ -3969,30 +3968,22 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFamilyCommands { family_id: family_id.clone(), commands: inv }])
                 }
             }?;
-            let after = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-            Ok((crate::kit_diff::KitDiff::between(&before, &after), inv))
+            Ok(inv)
         }
 
         /// Apply many commands in order; inverses are concatenated in **undo order** (last command's
         /// inverses first) so that applying the returned `Vec` once reverses the whole batch.
-        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
-            let mut merged = crate::kit_diff::KitDiff::default();
+        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
             for c in cmds {
-                let (d, inv) = c.apply(kit)?;
-                merged = merged.merge(&d);
+                let inv = c.apply(kit)?;
                 groups.push(inv);
             }
             let mut out = Vec::new();
             for g in groups.into_iter().rev() {
                 out.extend(g);
             }
-            Ok((merged, out))
-        }
-
-        /// Same as [`Self::apply_many`] (merged diff + inverses); kept for call sites that want an explicit name.
-        pub fn apply_many_kit_diff(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
-            Self::apply_many(kit, cmds)
+            Ok(out)
         }
 
         /// Best-effort batch simplification (extend as more patterns emerge).
@@ -11189,6 +11180,69 @@ pub mod design {
             Ok(())
         }
 
+        /// 🧩 Add one piece from a full DTO (semantic command path; no [`crate::diff::DesignDiff`]).
+        pub(crate) fn semantic_add_piece(
+            &mut self,
+            piece: PieceFullDto,
+            type_index: &HashMap<Id, TypeStoreRef>,
+            design_weak: DesignStoreWeak,
+        ) -> crate::error::Result<()> {
+            let parent = self.entity_ref();
+            let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
+            {
+                let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
+                pw.apply_full_dto(piece.clone(), design_weak, type_index);
+            }
+            self.emit_ev(KitEvent::ChildAdded {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Piece, piece.id.clone()),
+            });
+            self.pieces.push(pref);
+            self.rewire_piece_flatten_parents();
+            self.invalidate_hash_local();
+            self.invalidate_flatten();
+            Ok(())
+        }
+
+        /// 🧩 Remove one connection by id (semantic command path).
+        pub(crate) fn semantic_remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
+            let parent = self.entity_ref();
+            self.emit_ev(KitEvent::ChildRemoved {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, connection_id.clone()),
+            });
+            self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
+            self.rewire_piece_flatten_parents();
+            self.invalidate_hash_local();
+            self.invalidate_flatten();
+            Ok(())
+        }
+
+        /// 🧩 Add one connection from full DTO (semantic command path).
+        pub(crate) fn semantic_add_connection(
+            &mut self,
+            cdto: ConnectionFullDto,
+            design_weak: DesignStoreWeak,
+        ) -> crate::error::Result<()> {
+            let parent = self.entity_ref();
+            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            for p in &self.pieces {
+                if let Ok(pr) = p.read() {
+                    piece_index.insert(pr.id.clone(), p.clone());
+                }
+            }
+            let cref = connection_from_full_dto(cdto.clone(), &piece_index, design_weak);
+            self.emit_ev(KitEvent::ChildAdded {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, cdto.id.clone()),
+            });
+            self.connections.push(cref);
+            self.rewire_piece_flatten_parents();
+            self.invalidate_hash_local();
+            self.invalidate_flatten();
+            Ok(())
+        }
+
         /// Compute a forward/backward sparse [`crate::diff::DesignChange`] by baking implicit poses
         /// (see [`crate::piece::PieceStore::fix_on_design`]) until stable.
         pub fn flatten_change(&mut self) -> crate::report::SemioReport<crate::diff::DesignChange> {
@@ -17653,13 +17707,46 @@ pub mod kit_graph {
             Ok(dw.flatten_change())
         }
 
-        /// Apply a structural [`crate::diff::DesignDiff`] to the named design (mutable kit).
-        pub fn apply_design_diff(&mut self, design_id: &str, diff: &crate::diff::DesignDiff) -> Result<()> {
+        /// 🧩 Add a piece to a design (semantic command path; no [`crate::diff::DesignDiff`]).
+        pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFullDto) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
-            let family_by_id = Self::domain_family_index(self);
-            let dw = Arc::downgrade(&dref);
-            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.apply_diff(diff, &type_index, dw, &family_by_id)?;
+            let design_weak = Arc::downgrade(&dref);
+            dref
+                .write()
+                .map_err(|_| SemioError::LockPoisoned("design"))?
+                .semantic_add_piece(piece, &type_index, design_weak)?;
+            self.invalidate_hash();
+            self.invalidate_validation();
+            Ok(())
+        }
+
+        /// 🧩 Remove pieces from a design (semantic).
+        pub fn semantic_remove_design_pieces(&mut self, design_id: &str, piece_ids: &[Id]) -> Result<()> {
+            if piece_ids.is_empty() {
+                return Ok(());
+            }
+            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.delete_pieces(piece_ids);
+            self.invalidate_hash();
+            self.invalidate_validation();
+            Ok(())
+        }
+
+        /// 🧩 Remove one connection (semantic).
+        pub fn semantic_remove_design_connection(&mut self, design_id: &str, connection_id: &Id) -> Result<()> {
+            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_remove_connection(connection_id)?;
+            self.invalidate_hash();
+            self.invalidate_validation();
+            Ok(())
+        }
+
+        /// 🧩 Add one connection (semantic).
+        pub fn semantic_add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFullDto) -> Result<()> {
+            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
+            let design_weak = Arc::downgrade(&dref);
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_connection(c, design_weak)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -19849,6 +19936,38 @@ pub mod kit_graph {
             Ok(None)
         }
 
+        /// Replace a design with a new full DTO (same id), preserving kit order (semantic; no diffs).
+        pub fn replace_design_full(kit: &KitGraphRef, new_dto: DesignFullDto) -> SetResult {
+            use crate::design::DesignStore;
+            let id_str = new_dto.id.as_str().to_string();
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.designs
+                    .iter()
+                    .position(|d| d.read().map(|r| r.id.as_str() == id_str).unwrap_or(false))
+            }
+            .ok_or_else(|| SetError::NotFound(format!("design {id_str}")))?;
+            if Self::remove_design_dto(kit, &id_str)?.is_none() {
+                return Err(SetError::NotFound(format!("design {id_str}")));
+            }
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            let idx = Self::domain_type_index(&g);
+            let family_by_id = Self::domain_family_index(&g);
+            let design = DesignStore::hydrate_from_full_dto(new_dto, &idx, &family_by_id);
+            {
+                let kw = Arc::downgrade(kit);
+                if let Ok(mut dw) = design.write() {
+                    dw.parent_kit = Some(kw);
+                }
+            }
+            g.designs.insert(pos, design);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
         pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
@@ -19903,22 +20022,19 @@ pub mod kit_graph {
                 added_connections.push(c);
             }
 
-            let removed_connections: Vec<ConnectionIdDto> =
-                parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) || cluster_set.contains(c.connecting.piece.id.as_str())).map(|c| ConnectionIdDto { id: c.id.clone() }).collect();
-
-            let removed_pieces: Vec<PieceIdDto> = piece_ids.iter().filter(|g| cluster_set.contains(g.as_str())).map(|g| PieceIdDto { id: Id::from(g.as_str()) }).collect();
-
-            let forward = DesignDiff {
-                pieces: Some(crate::diff::PiecesDiff { removed: removed_pieces, ..Default::default() }),
-                connections: Some(crate::diff::ConnectionsDiff { removed: removed_connections, added: added_connections, ..Default::default() }),
-                ..Default::default()
-            };
-
+            let pids_cluster: Vec<Id> = piece_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 Self::insert_design_ref(kit, clustered_dto)?;
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &forward).map_err(Self::map_semio_err)
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.semantic_remove_design_pieces(&dg, &pids_cluster)?;
+                }
+                for c in added_connections {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.semantic_add_design_connection(&dg, c)?;
+                }
+                Ok(())
             })
         }
 

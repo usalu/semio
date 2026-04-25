@@ -111,11 +111,11 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
   - [x] 6.14 Delete all clusterable group functions (`getClusterableGroups`, `getIncludedDesigns`)
     - _Requirements: 1.20_
 
-- [-] 7. Checkpoint - Ensure file compiles after deletions
+- [x] 7. Checkpoint - Ensure file compiles after deletions
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Clean up entity classes (remove domain logic methods, keep OO data methods)
-  - [~] 8.1 Strip domain logic methods from entity classes (e.g., `Piece.flatPlane()`, `Piece.flatCenter()`, `Piece.delete()`, `Piece.changeType()`, `Design.deletePieces()`, etc.) while retaining `serialize`, `deserialize`, `toPlain`, `fromPlain`, `createId`, `areSameId`
+  - [-] 8.1 Strip domain logic methods from entity classes (e.g., `Piece.flatPlane()`, `Piece.flatCenter()`, `Piece.delete()`, `Piece.changeType()`, `Design.deletePieces()`, etc.) while retaining `serialize`, `deserialize`, `toPlain`, `fromPlain`, `createId`, `areSameId`
     - Ensure each entity class follows the pattern defined in the design: constructor, serialize/deserialize, toPlain/fromPlain, createId/areSameId
     - Geometry classes (`Coordinate`, `Vec`, `Point`, `Vector`, `Plane`, `Camera`) retain their `rounded()` method
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
