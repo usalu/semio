@@ -19,99 +19,99 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
 - [x] 2. Checkpoint - Ensure baseline tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Delete all domain logic classes
-  - [-] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `ops`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
+- [x] 3. Delete all domain logic classes
+  - [x] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `ops`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
     - Remove the entire `KitImpl` class definition and any helper code only used by it
     - _Requirements: 1.15, 2.1, 2.2, 2.5, 9.3_
 
-  - [~] 3.2 Delete `KitEntity`, `KitEntityIndexes`, `KitEntityCaches`, `KitInteractionsApi`, `KitInteractionEntity`, `KitEntityType`, `KitEntityPiece`, `KitEntityDesign`, `KitDocument`, `KitBackboneBridge` classes
+  - [x] 3.2 Delete `KitEntity`, `KitEntityIndexes`, `KitEntityCaches`, `KitInteractionsApi`, `KitInteractionEntity`, `KitEntityType`, `KitEntityPiece`, `KitEntityDesign`, `KitDocument`, `KitBackboneBridge` classes
     - Remove all class definitions and any helper code only used by them
     - _Requirements: 9.5_
 
-  - [~] 3.3 Delete `KitTypesOps`, `KitDesignsOps`, `KitFamiliesOps`, `KitFilesOps`, `KitTagsOps`, `KitConceptsOps`, `KitAttributesOps`, `KitOps` classes
+  - [x] 3.3 Delete `KitTypesOps`, `KitDesignsOps`, `KitFamiliesOps`, `KitFilesOps`, `KitTagsOps`, `KitConceptsOps`, `KitAttributesOps`, `KitOps` classes
     - Remove all class definitions and any helper code only used by them
     - _Requirements: 9.6_
 
-  - [~] 3.4 Delete `KitTransactionsCoordinator`, `KitActiveTransactionSurface`, `Transaction`, `DiffComposer`, `recomputeTxNet` and all transaction/history management code
+  - [x] 3.4 Delete `KitTransactionsCoordinator`, `KitActiveTransactionSurface`, `Transaction`, `DiffComposer`, `recomputeTxNet` and all transaction/history management code
     - _Requirements: 1.15_
 
-  - [~] 3.5 Delete `InMemoryKitStore` and legacy `KitStore` (JS-side) classes
+  - [x] 3.5 Delete `InMemoryKitStore` and legacy `KitStore` (JS-side) classes
     - _Requirements: 9.4_
 
-- [ ] 4. Delete all caching code
-  - [~] 4.1 Delete `FlatMerkleCacheEntry`, `ensureFlattenGeometryCache`, `getFlattenMerkleCache`, `invalidateFlattenMerkleCaches`, `piecesMetadataCached`, `cachedSqlJs` and all cache-related code
+- [x] 4. Delete all caching code
+  - [x] 4.1 Delete `FlatMerkleCacheEntry`, `ensureFlattenGeometryCache`, `getFlattenMerkleCache`, `invalidateFlattenMerkleCaches`, `piecesMetadataCached`, `cachedSqlJs` and all cache-related code
     - Remove all flatten merkle cache maps, SQL.js cache, and any cache management methods
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 5. Delete all free functions
-  - [~] 5.1 Delete all free serialization functions (`serializeKit`, `deserializeKit`, `serializeType`, `deserializeType`, and all per-entity `serialize*`/`deserialize*` variants)
+- [x] 5. Delete all free functions
+  - [x] 5.1 Delete all free serialization functions (`serializeKit`, `deserializeKit`, `serializeType`, `deserializeType`, and all per-entity `serialize*`/`deserialize*` variants)
     - _Requirements: 3.1_
 
-  - [~] 5.2 Delete all free ID factory functions (`createTypeId`, `areSameTypeId`, `getTypeId`, and all per-entity `create*Id`/`areSame*Id`/`get*Id` variants)
+  - [x] 5.2 Delete all free ID factory functions (`createTypeId`, `areSameTypeId`, `getTypeId`, and all per-entity `create*Id`/`areSame*Id`/`get*Id` variants)
     - _Requirements: 3.2_
 
-  - [~] 5.3 Delete all free utility functions (`normalize`, `round`, `deepEqual`, `arraysEqual`, `generateUniqueName`, `cn`, `id`, `jaccard`)
+  - [x] 5.3 Delete all free utility functions (`normalize`, `round`, `deepEqual`, `arraysEqual`, `generateUniqueName`, `cn`, `id`, `jaccard`)
     - _Requirements: 3.5, 1.3_
 
-  - [~] 5.4 Delete all free geometry helper functions (`roundPlane`, `serializePlane`, `deserializePlane`, and all per-geometry diff/serialize/deserialize free functions)
+  - [x] 5.4 Delete all free geometry helper functions (`roundPlane`, `serializePlane`, `deserializePlane`, and all per-geometry diff/serialize/deserialize free functions)
     - _Requirements: 3.6_
 
-  - [~] 5.5 Delete all free design-diff builder functions (`addPieceToDesignDiff`, `removePieceFromDesignDiff`, `addConnectionToDesignDiff`, `removeConnectionFromDesignDiff`, `setPieceInDesignDiff`, etc.)
+  - [x] 5.5 Delete all free design-diff builder functions (`addPieceToDesignDiff`, `removePieceFromDesignDiff`, `addConnectionToDesignDiff`, `removeConnectionFromDesignDiff`, `setPieceInDesignDiff`, etc.)
     - _Requirements: 3.7_
 
-  - [~] 5.6 Delete all free collection-diff functions (`getCollectionDiff`, `inverseCollectionDiff`, `applyCollectionDiff`, `mergeCollectionDiff`)
+  - [x] 5.6 Delete all free collection-diff functions (`getCollectionDiff`, `inverseCollectionDiff`, `applyCollectionDiff`, `mergeCollectionDiff`)
     - _Requirements: 3.8_
 
-  - [~] 5.7 Delete all free backbone factory functions (`createLocalBackbone`, `createDevBackbone`, `createRemoteBackbone`)
+  - [x] 5.7 Delete all free backbone factory functions (`createLocalBackbone`, `createDevBackbone`, `createRemoteBackbone`)
     - _Requirements: 3.9_
 
-  - [~] 5.8 Delete all free kit conversion functions (`asKitInstance`, `requireKit`, `duplicateKitForIsolation`, `stripNullsJsonClone`, `detachPieceForLocalMutation`, `detachConnectionForLocalMutation`, `detachDesignForLocalMutation`, `designWithDiff`)
+  - [x] 5.8 Delete all free kit conversion functions (`asKitInstance`, `requireKit`, `duplicateKitForIsolation`, `stripNullsJsonClone`, `detachPieceForLocalMutation`, `detachConnectionForLocalMutation`, `detachDesignForLocalMutation`, `designWithDiff`)
     - _Requirements: 3.10_
 
-- [ ] 6. Delete all domain logic functions
-  - [~] 6.1 Delete all flatten geometry functions (`computeChildPlane`, `connectionPlacementTranslationBasis`, `flattenPlacementWalkDesignOrderRoots`, `buildFlattenPieceAdjacency`, `collectUndirectedComponentIds`, `moveTranslationWorldFromPiecePlane`, `childConnectorOriginWorld`, `solveConnectionOriginMinNorm`, `connectionDiffFromStructuralMoveVector`)
+- [x] 6. Delete all domain logic functions
+  - [x] 6.1 Delete all flatten geometry functions (`computeChildPlane`, `connectionPlacementTranslationBasis`, `flattenPlacementWalkDesignOrderRoots`, `buildFlattenPieceAdjacency`, `collectUndirectedComponentIds`, `moveTranslationWorldFromPiecePlane`, `childConnectorOriginWorld`, `solveConnectionOriginMinNorm`, `connectionDiffFromStructuralMoveVector`)
     - _Requirements: 1.1, 1.2_
 
-  - [~] 6.2 Delete all representation selection functions (`selectBestRepresentation`, `filterRepresentationsByTagIds`, `getAvailableTagIdsForRepresentations`, `getAllTagIdsFromRepresentations`)
+  - [x] 6.2 Delete all representation selection functions (`selectBestRepresentation`, `filterRepresentationsByTagIds`, `getAvailableTagIdsForRepresentations`, `getAllTagIdsFromRepresentations`)
     - _Requirements: 1.3_
 
-  - [~] 6.3 Delete all type/design/piece resolution functions (`resolvePieceTypeForFlatten`, `findTypeInKit`, `findDesignInKit`, `findPieceInDesign`, `findConnectionInDesign`)
+  - [x] 6.3 Delete all type/design/piece resolution functions (`resolvePieceTypeForFlatten`, `findTypeInKit`, `findDesignInKit`, `findPieceInDesign`, `findConnectionInDesign`)
     - _Requirements: 1.4_
 
-  - [~] 6.4 Delete all connector compatibility functions (`arePortsCompatible`, `areConnectorsCompatible`, `unifyConnectorPortsAndCompatiblePortsForTypes`)
+  - [x] 6.4 Delete all connector compatibility functions (`arePortsCompatible`, `areConnectorsCompatible`, `unifyConnectorPortsAndCompatiblePortsForTypes`)
     - _Requirements: 1.5_
 
-  - [~] 6.5 Delete all diff computation, application, inversion, and merge functions (`getTypeDiff`, `applyTypeDiff`, `inverseTypeDiff`, `mergeTypeDiff`, `getDesignDiff`, `applyDesignDiff`, `inverseDesignDiff`, `mergeDesignDiff`, `getKitDiff`, `applyKitDiff`, `inverseKitDiff`, `mergeKitDiff`, and all variants)
+  - [x] 6.5 Delete all diff computation, application, inversion, and merge functions (`getTypeDiff`, `applyTypeDiff`, `inverseTypeDiff`, `mergeTypeDiff`, `getDesignDiff`, `applyDesignDiff`, `inverseDesignDiff`, `mergeDesignDiff`, `getKitDiff`, `applyKitDiff`, `inverseKitDiff`, `mergeKitDiff`, and all variants)
     - _Requirements: 1.6, 1.7, 1.8, 1.9_
 
-  - [~] 6.6 Delete all hashing functions (`hashType`, `hashDesign`, `hashKit`, `hashPiece`, `hashConnection`, `HashWriter`, `sha256bytes`, `formatNumberForHash`, `hashPlaneRoot`, `hashPlaneChain`, `hashCenterRoot`, `hashCenterChain`)
+  - [x] 6.6 Delete all hashing functions (`hashType`, `hashDesign`, `hashKit`, `hashPiece`, `hashConnection`, `HashWriter`, `sha256bytes`, `formatNumberForHash`, `hashPlaneRoot`, `hashPlaneChain`, `hashCenterRoot`, `hashCenterChain`)
     - _Requirements: 1.10, 1.11_
 
-  - [~] 6.7 Delete all copy/paste logic (`copyDesign`, `pasteDesign`, `mergeDesigns`, `orientDesign`)
+  - [x] 6.7 Delete all copy/paste logic (`copyDesign`, `pasteDesign`, `mergeDesigns`, `orientDesign`)
     - _Requirements: 1.12_
 
-  - [~] 6.8 Delete all design mutation helpers (`deletePiecesAndConnectionsInDesign`, `removePiecesAndConnectionsFromDesign`, `fixPieceInDesign`, `buildDragMoveStructuralContext`)
+  - [x] 6.8 Delete all design mutation helpers (`deletePiecesAndConnectionsInDesign`, `removePiecesAndConnectionsFromDesign`, `fixPieceInDesign`, `buildDragMoveStructuralContext`)
     - _Requirements: 1.13_
 
-  - [~] 6.9 Delete all geometry 3D math functions (`planeToMatrix`, `matrixToPlane`, `averagePlane`, `toThreeRotation`, `toSemioRotation`, `toThreeQuaternion`, `toSemioQuaternion`, `vectorToThree`)
+  - [x] 6.9 Delete all geometry 3D math functions (`planeToMatrix`, `matrixToPlane`, `averagePlane`, `toThreeRotation`, `toSemioRotation`, `toThreeQuaternion`, `toSemioQuaternion`, `vectorToThree`)
     - _Requirements: 1.14_
 
-  - [~] 6.10 Delete all validation functions (`validateKitEntityDiff`, `kitEntityDiffIsBlocking`, `validationReportFromGraph`, `graphValidationFromLedgerReport`)
+  - [x] 6.10 Delete all validation functions (`validateKitEntityDiff`, `kitEntityDiffIsBlocking`, `validationReportFromGraph`, `graphValidationFromLedgerReport`)
     - _Requirements: 1.16_
 
-  - [~] 6.11 Delete all semantic command expansion functions (`expandSemanticCommandToDiff`, `FlattenDesignCommand`, `DeletePieceCommand`, `ChangePieceTypeCommand`)
+  - [x] 6.11 Delete all semantic command expansion functions (`expandSemanticCommandToDiff`, `FlattenDesignCommand`, `DeletePieceCommand`, `ChangePieceTypeCommand`)
     - _Requirements: 1.17_
 
-  - [~] 6.12 Delete all wire projection/conversion functions (`kitWireProjectionFromImpl`, `kitDataFromWireDto`, `emptyKitWireDto`, `kitGraphToPlainData`)
+  - [x] 6.12 Delete all wire projection/conversion functions (`kitWireProjectionFromImpl`, `kitDataFromWireDto`, `emptyKitWireDto`, `kitGraphToPlainData`)
     - _Requirements: 1.18_
 
-  - [~] 6.13 Delete all ledger diff functions (`emptyLedgerDiff`, `normalizeLedgerDiff`, `squashLedgerChangesForward`, `squashLedgerChangesBackward`, `invertLedgerDiff`, `ledgerKitChangeFromGraph`, `graphKitChangeFromLedger`)
+  - [x] 6.13 Delete all ledger diff functions (`emptyLedgerDiff`, `normalizeLedgerDiff`, `squashLedgerChangesForward`, `squashLedgerChangesBackward`, `invertLedgerDiff`, `ledgerKitChangeFromGraph`, `graphKitChangeFromLedger`)
     - _Requirements: 1.19_
 
-  - [~] 6.14 Delete all clusterable group functions (`getClusterableGroups`, `getIncludedDesigns`)
+  - [x] 6.14 Delete all clusterable group functions (`getClusterableGroups`, `getIncludedDesigns`)
     - _Requirements: 1.20_
 
-- [~] 7. Checkpoint - Ensure file compiles after deletions
+- [-] 7. Checkpoint - Ensure file compiles after deletions
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Clean up entity classes (remove domain logic methods, keep OO data methods)
