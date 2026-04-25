@@ -4,7 +4,6 @@ directive @oneOf on INPUT_OBJECT
 scalar DateTime
 scalar Cursor
 scalar Long
-scalar JSON
 
 schema {
   query: Query
@@ -30,42 +29,12 @@ type Query {
 
 "Control-plane mutations: actor-queued graph writes, VCS, and backbone (`kit_graphql::RootMutation`)."
 type Mutation {
-  changeKitCommands(commands: JSON!): Boolean!
-  changeKitWithInverse(commands: JSON!): JSON!
-  applyDesignDiff(designId: String!, diff: JSON!): JSON!
-  applyKitDiff(diff: JSON!): JSON!
-  clusterPieces(designId: String!, pieceIds: [String!]!, clusterName: String!): JSON!
-  dragPieces(designId: String!, pieceIds: [String!]!, du: Float!, dv: Float!): JSON!
-  movePieces(designId: String!, pieceIds: [String!]!, gap: Float!, shift: Float!, rise: Float!): JSON!
-  fixPieces(designId: String!, pieceIds: [String!]!): JSON!
-  flattenDesign(designId: String!): JSON!
-  expandDesign(parentDesignId: String!, nestedDesignId: String!): JSON!
-  deleteConnection(designId: String!, connectionId: String!): JSON!
-  changePieceType(designId: String!, pieceId: String!, newTypeId: String!): JSON!
-  pasteDesignSelection(designId: String!, selection: JSON!, plane: JSON): JSON!
-  createHangingPieces(designId: String!, typeIds: [String!]!, plane: JSON!): JSON!
-  createConnectedPiece(designId: String!, parentPiece: String!, parentPort: String!, childType: String!, childPort: String!): JSON!
-  createFixedPiece(designId: String!, typeId: String!, plane: JSON!): JSON!
-  undo: JSON!
-  redo: JSON!
-  newSession: JSON!
-  endSession(id: String!): JSON!
-  newAlternative(fromCheckpoint: String, name: String!): JSON!
-  executeSessionCommands(sessionId: String!, sessionCommands: [JSON!]!): JSON!
-  executeKitCheckpointCommands(checkpointId: String!, commands: [JSON!]!): JSON!
-  executeKitAlternativeCommands(alternativeId: String!, commands: [JSON!]!): JSON!
-  attachBackbone(config: JSON!): JSON!
-  detachBackbone: JSON!
-  setActiveCheckpoint(id: String): JSON!
-  listConflicts: JSON!
-  resolveConflict(id: String!, strategy: JSON!): JSON!
-  backboneStatus: JSON!
-  syncNow: JSON!
+  kitStore: KitStoreMutation!
 }
 
 "Outbound kit events from the live graph bus (`event_stream` → `Json<KitEvent>`)."
 type Subscription {
-  eventStream: JSON!
+  eventStream: StoreEvent!
 }
 
 input EntityIdInput {
@@ -294,23 +263,300 @@ type KitStore {
   session(input: SessionSelectorInput!): Session
 }
 
-input ChangeInput {
+type KitStoreMutation {
+  batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
+}
+
+input KitStoreBatchInput {
   clientMutationId: String
-  requestToken: String
-  target: ChangeTargetInput
+  commands: [KitStoreBatchCommandInput!]!
+}
+
+input KitStoreBatchCommandInput @oneOf {
+  live: LiveBatchInput
+  session: SessionBatchInput
+  checkpoint: CheckpointBatchInput
+  alternative: AlternativeBatchInput
+  backbone: BackboneBatchInput
+}
+
+input LiveBatchInput {
+  commands: [LiveBatchCommandInput!]!
+}
+
+input LiveBatchCommandInput @oneOf {
+  changeKitCommands: ChangeKitCommandsBatchInput
+  design: DesignBatchInput
+  undo: ConfirmOnlyInput
+  redo: ConfirmOnlyInput
+}
+
+input ChangeKitCommandsBatchInput {
   commands: [KitChangeCommandInput!]!
 }
 
-input ChangeTargetInput @oneOf {
-  live: LiveScopeInput
-  draft: DraftScopeInput
-  transaction: TransactionScopeInput
+input SessionBatchInput {
+  sessionId: ID
+  commands: [SessionBatchCommandInput!]!
 }
 
-input ExecuteInput {
+input SessionBatchCommandInput @oneOf {
+  createSession: ConfirmOnlyInput
+  endSession: ConfirmOnlyInput
+  createDraft: CreateDraftBatchInput
+  draft: DraftBatchInput
+}
+
+input CreateDraftBatchInput {
+  parentCheckpointId: ID
+  targetAlternativeId: ID
+}
+
+input DraftBatchInput {
+  draftId: ID
+  commands: [DraftBatchCommandInput!]!
+}
+
+input DraftBatchCommandInput @oneOf {
+  finalizeDraft: MessageOnlyInput
+  abortDraft: ConfirmOnlyInput
+  undoDraft: CountInput
+  redoDraft: CountInput
+  startTransaction: ConfirmOnlyInput
+  transaction: TransactionBatchInput
+}
+
+input TransactionBatchInput {
+  transactionId: ID
+  commands: [TransactionBatchCommandInput!]!
+}
+
+input TransactionBatchCommandInput @oneOf {
+  changeKitCommands: ChangeKitCommandsBatchInput
+  finalizeTransaction: ConfirmOnlyInput
+  abortTransaction: ConfirmOnlyInput
+  undoTransaction: CountInput
+  redoTransaction: CountInput
+}
+
+input CheckpointBatchInput {
+  checkpointId: ID
+  commands: [CheckpointBatchCommandInput!]!
+}
+
+input CheckpointBatchCommandInput @oneOf {
+  markRelease: ConfirmOnlyInput
+  setActive: ConfirmOnlyInput
+}
+
+input AlternativeBatchInput {
+  alternativeId: ID
+  commands: [AlternativeBatchCommandInput!]!
+}
+
+input AlternativeBatchCommandInput @oneOf {
+  createAlternative: CreateAlternativeBatchInput
+  unifyAlternative: MessageOnlyInput
+}
+
+input CreateAlternativeBatchInput {
+  name: String!
+  fromCheckpointId: ID
+}
+
+input BackboneBatchInput {
+  commands: [BackboneBatchCommandInput!]!
+}
+
+input BackboneBatchCommandInput @oneOf {
+  attachBackbone: BackboneConfigBatchInput
+  detachBackbone: ConfirmOnlyInput
+  listConflicts: ConfirmOnlyInput
+  resolveConflict: ResolveConflictBatchInput
+  backboneStatus: ConfirmOnlyInput
+  syncNow: ConfirmOnlyInput
+}
+
+input BackboneConfigBatchInput @oneOf {
+  dev: DevBackboneBatchInput
+  local: LocalBackboneBatchInput
+  remote: RemoteBackboneBatchInput
+}
+
+input DevBackboneBatchInput {
+  path: String!
+}
+
+input LocalBackboneBatchInput {
+  folder: String!
+}
+
+input RemoteBackboneBatchInput {
+  url: String!
+  sessionId: String!
+}
+
+enum ConflictResolutionBatchInput {
+  DROP_WIP
+  FORCE_OVERWRITE_BACKBONE
+}
+
+input ResolveConflictBatchInput {
+  conflictId: ID!
+  strategy: ConflictResolutionBatchInput!
+}
+
+input DesignBatchInput {
+  designId: ID!
+  commands: [DesignBatchCommandInput!]!
+}
+
+input DesignBatchCommandInput @oneOf {
+  clusterPieces: ClusterPiecesBatchInput
+  dragPieces: DragPiecesBatchInput
+  movePieces: MovePiecesBatchInput
+  fixPieces: PieceIdsBatchInput
+  flattenDesign: ConfirmOnlyInput
+  expandDesign: ExpandDesignBatchInput
+  deleteConnection: DeleteConnectionBatchInput
+  changePieceType: ChangePieceTypeBatchInput
+  createHangingPieces: CreateHangingPiecesBatchInput
+  createConnectedPiece: CreateConnectedPieceBatchInput
+  createFixedPiece: CreateFixedPieceBatchInput
+}
+
+input ClusterPiecesBatchInput {
+  pieceIds: [ID!]!
+  clusterName: String!
+}
+
+input DragPiecesBatchInput {
+  pieceIds: [ID!]!
+  du: Float!
+  dv: Float!
+}
+
+input MovePiecesBatchInput {
+  pieceIds: [ID!]!
+  gap: Float!
+  shift: Float!
+  rise: Float!
+}
+
+input PieceIdsBatchInput {
+  pieceIds: [ID!]!
+}
+
+input ExpandDesignBatchInput {
+  nestedDesignId: ID!
+}
+
+input DeleteConnectionBatchInput {
+  connectionId: ID!
+}
+
+input ChangePieceTypeBatchInput {
+  pieceId: ID!
+  newTypeId: ID!
+}
+
+input CreateHangingPiecesBatchInput {
+  typeIds: [ID!]!
+  plane: PlaneInput!
+}
+
+input CreateConnectedPieceBatchInput {
+  parentPiece: ID!
+  parentPort: ID!
+  childType: ID!
+  childPort: ID!
+}
+
+input CreateFixedPieceBatchInput {
+  typeId: ID!
+  plane: PlaneInput!
+}
+
+input ConfirmOnlyInput {
+  confirm: Boolean = true
+}
+
+input CountInput {
+  count: Int = 1
+}
+
+input MessageOnlyInput {
+  message: String!
+}
+
+enum KitStoreBatchResultKind {
+  CHANGE_KIT_COMMANDS
+  CLUSTER_PIECES
+  DRAG_PIECES
+  MOVE_PIECES
+  FIX_PIECES
+  FLATTEN_DESIGN
+  EXPAND_DESIGN
+  DELETE_CONNECTION
+  CHANGE_PIECE_TYPE
+  CREATE_HANGING_PIECES
+  CREATE_CONNECTED_PIECE
+  CREATE_FIXED_PIECE
+  UNDO
+  REDO
+  NEW_SESSION
+  END_SESSION
+  NEW_DRAFT
+  START_TRANSACTION
+  FINALIZE_DRAFT
+  ABORT_DRAFT
+  UNDO_DRAFT
+  REDO_DRAFT
+  FINALIZE_TRANSACTION
+  ABORT_TRANSACTION
+  UNDO_TRANSACTION
+  REDO_TRANSACTION
+  MARK_RELEASE
+  SET_ACTIVE_CHECKPOINT
+  NEW_ALTERNATIVE
+  UNIFY_ALTERNATIVE
+  ATTACH_BACKBONE
+  DETACH_BACKBONE
+  LIST_CONFLICTS
+  RESOLVE_CONFLICT
+  BACKBONE_STATUS
+  SYNC_NOW
+}
+
+type BackboneBatchStatus {
+  attached: Boolean!
+  kind: String
+  tip: ID
+}
+
+type ConflictBatchRecord {
+  id: ID!
+  backboneTip: ID
+  reason: String!
+  createdAt: DateTime!
+}
+
+type KitStoreBatchResult {
+  kind: KitStoreBatchResultKind!
+  ok: Boolean
+  count: Int
+  sessionId: ID
+  draftId: ID
+  transactionId: ID
+  checkpointId: ID
+  alternativeId: ID
+  backbone: BackboneBatchStatus
+  conflicts: [ConflictBatchRecord!]
+}
+
+type KitStoreBatchPayload {
   clientMutationId: String
-  requestToken: String
-  commands: [ExecuteCommandInput!]!
+  results: [KitStoreBatchResult!]!
 }
 
 type CommandTarget {
@@ -1303,7 +1549,8 @@ input VectorInput {
 
 input PlaneInput {
   origin: PointInput!
-  normal: VectorInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
 }
 
 input PoseInput {
@@ -2110,4 +2357,3 @@ input ResolveConflictInput {
 input SyncNowInput {
   confirm: Boolean! = true
 }
-
