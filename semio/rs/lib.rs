@@ -2567,7 +2567,6 @@ pub mod change_command {
     use crate::design::DesignFullDto;
     use crate::design::DesignIdDto;
     use crate::design::DesignStore;
-    use crate::diff::DesignDiff;
     use crate::event_wire;
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
@@ -4559,9 +4558,9 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![piece.clone()], ..Default::default() }), ..Default::default() };
-                        g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_add_design_piece(&did, piece).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
+                    event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
                 }
                 ChangeDesignCommand::RemovePiece { piece_id } => {
@@ -4576,9 +4575,10 @@ pub mod change_command {
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { removed: vec![piece_id.clone()], ..Default::default() }), ..Default::default() };
-                        g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_remove_design_pieces(&did, &[piece_id.id.clone()])
+                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
+                    event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
                 }
                 ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
@@ -4595,9 +4595,10 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { added: vec![connection.clone()], ..Default::default() }), ..Default::default() };
-                        g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_add_design_connection(&did, connection)
+                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
+                    event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionIdDto { id } }])
                 }
                 ChangeDesignCommand::RemoveConnection { connection_id } => {
@@ -4611,9 +4612,10 @@ pub mod change_command {
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { removed: vec![connection_id.clone()], ..Default::default() }), ..Default::default() };
-                        g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_remove_design_connection(&did, &connection_id.id)
+                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
+                    event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
                 }
                 ChangeDesignCommand::ChangeConnectionCommands { connection_id, commands } => {
@@ -7658,7 +7660,7 @@ pub mod kit_store_command {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             g.to_full_dto()
                         };
-                        let (_diff, inverse) = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        let inverse = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                         let kind = ChangeKitCommand::declared_kind(&c);
                         let after = {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -17149,12 +17151,12 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
+    use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
-    use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
-    use crate::diff::DesignDiff;
+    use crate::design::{DesignFullDto, DesignIdDto, DesignStore, DesignStoreRef};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
@@ -19147,298 +19149,6 @@ pub mod kit_graph {
             KitGraph::insert_type_dto(kit, dto)
         }
 
-        /// Central sparse kit patch (kit metadata, then each child collection: **removed → updated → added**).
-        pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> SetResult {
-            if diff.is_empty() {
-                return Ok(());
-            }
-            {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                if let Some(n) = &diff.name {
-                    g.set_name(n.clone())?;
-                }
-                if let Some(d) = &diff.description {
-                    g.set_description(d.clone())?;
-                }
-                if let Some(i) = &diff.icon {
-                    g.set_icon(i.clone())?;
-                }
-                if let Some(i) = &diff.image {
-                    g.set_image(i.clone())?;
-                }
-                if let Some(p) = &diff.preview {
-                    g.set_preview(p.clone())?;
-                }
-                if let Some(r) = &diff.remote {
-                    g.set_remote(r.clone())?;
-                }
-                if let Some(h) = &diff.homepage {
-                    g.set_homepage(h.clone())?;
-                }
-                if let Some(l) = &diff.license {
-                    g.set_license(l.clone())?;
-                }
-                if let Some(u) = &diff.uri {
-                    g.set_uri(u.clone())?;
-                }
-                if let Some(c) = &diff.created {
-                    g.set_created(c.clone())?;
-                }
-                if let Some(u) = &diff.updated {
-                    g.set_updated(u.clone())?;
-                }
-            }
-            if let Some(ts) = &diff.types {
-                for tid in &ts.removed {
-                    KitGraph::remove_type_dto(kit, tid.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("type {}", tid.id)))?;
-                }
-                for u in &ts.updated {
-                    KitGraph::apply_type_diff_fragment(kit, &u.id.id, &u.diff)?;
-                }
-                for t in &ts.added {
-                    KitGraph::insert_type_dto(kit, t.clone())?;
-                }
-            }
-            if let Some(ds) = &diff.designs {
-                for id in &ds.removed {
-                    KitGraph::remove_design_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("design {}", id.id)))?;
-                }
-                for u in &ds.updated {
-                    let (dref, type_index, family_by_id) = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let dref = g.design(u.design_id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?.clone();
-                        let type_index = Self::domain_type_index(&g);
-                        let family_by_id = Self::domain_family_index(&g);
-                        (dref, type_index, family_by_id)
-                    };
-                    let weak = Arc::downgrade(&dref);
-                    dref.write().map_err(|_| SetError::LockPoisoned("design".into()))?.apply_diff(&u.diff, &type_index, weak, &family_by_id).map_err(|e| SetError::Internal(e.to_string()))?;
-                }
-                for d in &ds.added {
-                    KitGraph::insert_design_ref(kit, d.clone())?;
-                }
-            }
-            if let Some(fs) = &diff.files {
-                for id in &fs.removed {
-                    KitGraph::remove_file_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("file {}", id.id)))?;
-                }
-                for u in &fs.updated {
-                    let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.file(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("file {}", u.id.id)))?.clone();
-                    f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
-                }
-                for f in &fs.added {
-                    KitGraph::insert_file_dto(kit, f.clone())?;
-                }
-            }
-            if let Some(fs) = &diff.folders {
-                for id in &fs.removed {
-                    KitGraph::remove_folder_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("folder {}", id.id)))?;
-                }
-                for u in &fs.updated {
-                    let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.folder(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("folder {}", u.id.id)))?.clone();
-                    f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
-                }
-                for f in &fs.added {
-                    KitGraph::insert_folder_dto(kit, f.clone())?;
-                }
-            }
-            if let Some(ad) = &diff.authors {
-                for id in &ad.removed {
-                    KitGraph::remove_author_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", id.id)))?;
-                }
-                for u in &ad.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let a = g.authors.iter().find(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
-                        let dto = a.read().map_err(|_| SetError::LockPoisoned("author".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_author_diff_into_full(&mut dto, &u.diff);
-                    KitGraph::remove_author_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
-                    KitGraph::insert_author_dto(kit, dto)?;
-                }
-                for a in &ad.added {
-                    KitGraph::insert_author_dto(kit, a.clone())?;
-                }
-            }
-            if let Some(cd) = &diff.concepts {
-                for id in &cd.removed {
-                    KitGraph::remove_concept_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", id.id)))?;
-                }
-                for u in &cd.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let c = g.concepts.iter().find(|c| c.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
-                        let dto = c.read().map_err(|_| SetError::LockPoisoned("concept".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_concept_diff_into_full(&mut dto, &u.diff);
-                    KitGraph::remove_concept_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
-                    KitGraph::insert_concept_dto(kit, dto)?;
-                }
-                for c in &cd.added {
-                    KitGraph::insert_concept_dto(kit, c.clone())?;
-                }
-            }
-            if let Some(td) = &diff.tags {
-                for id in &td.removed {
-                    KitGraph::remove_tag_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", id.id)))?;
-                }
-                for u in &td.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let t = g.tags.iter().find(|t| t.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
-                        let dto = t.read().map_err(|_| SetError::LockPoisoned("tag".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_tag_diff_into_full(&mut dto, &u.diff);
-                    KitGraph::remove_tag_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
-                    KitGraph::insert_tag_dto(kit, dto)?;
-                }
-                for t in &td.added {
-                    KitGraph::insert_tag_dto(kit, t.clone())?;
-                }
-            }
-            if let Some(qd) = &diff.qualities {
-                for id in &qd.removed {
-                    KitGraph::remove_quality_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", id.id)))?;
-                }
-                for u in &qd.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let q = g.quality(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
-                        let dto = q.read().map_err(|_| SetError::LockPoisoned("quality".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_quality_diff_into_full(&mut dto, &u.diff);
-                    KitGraph::remove_quality_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
-                    KitGraph::insert_quality_dto(kit, dto)?;
-                }
-                for q in &qd.added {
-                    KitGraph::insert_quality_dto(kit, q.clone())?;
-                }
-            }
-            if let Some(pd) = &diff.props {
-                for id in &pd.removed {
-                    let pos = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.props.iter().position(|p| p.read().map(|r| r.id == id.id).unwrap_or(false))
-                    };
-                    let Some(pos) = pos else {
-                        return Err(SetError::NotFound(format!("prop {}", id.id)));
-                    };
-                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.remove(pos) };
-                    {
-                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-                for u in &pd.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let p = g.props.iter().find(|p| p.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("prop {}", u.id.id)))?;
-                        let dto = p.read().map_err(|_| SetError::LockPoisoned("prop".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_prop_diff_into_full(&mut dto, &u.diff);
-                    let pos = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.props.iter().position(|p| p.read().map(|r| r.id == u.id.id).unwrap_or(false))
-                    };
-                    let Some(pos) = pos else {
-                        return Err(SetError::NotFound(format!("prop {}", u.id.id)));
-                    };
-                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.remove(pos) };
-                    let mut p = PropStore::from_full_dto(dto);
-                    p.parent_kit = Some(Arc::downgrade(kit));
-                    kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.insert(pos, Arc::new(RwLock::new(p)));
-                    {
-                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-                for p in &pd.added {
-                    let id = p.id.clone();
-                    {
-                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        if g.props.iter().any(|x| x.read().map(|r| r.id == id).unwrap_or(false)) {
-                            return Err(SetError::DuplicateId(format!("prop {}", id)));
-                        }
-                        let mut prop = PropStore::from_full_dto(p.clone());
-                        prop.parent_kit = Some(Arc::downgrade(kit));
-                        g.props.push(Arc::new(RwLock::new(prop)));
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-            }
-            if let Some(ad) = &diff.attributes {
-                for id in &ad.removed {
-                    let pos = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false))
-                    };
-                    let Some(pos) = pos else {
-                        return Err(SetError::NotFound(format!("attribute {}", id.id)));
-                    };
-                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.remove(pos) };
-                    {
-                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-                for u in &ad.updated {
-                    let mut dto = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let a = g.attributes.iter().find(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("attribute {}", u.id.id)))?;
-                        let dto = a.read().map_err(|_| SetError::LockPoisoned("attribute".into()))?.to_full_dto();
-                        dto
-                    };
-                    crate::diff::merge_attribute_diff_into_full(&mut dto, &u.diff);
-                    let pos = {
-                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.attributes.iter().position(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false))
-                    };
-                    let Some(pos) = pos else {
-                        return Err(SetError::NotFound(format!("attribute {}", u.id.id)));
-                    };
-                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.remove(pos) };
-                    let mut a = AttributeStore::from_full_dto(dto);
-                    a.parent_kit = Some(Arc::downgrade(kit));
-                    kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.insert(pos, Arc::new(RwLock::new(a)));
-                    {
-                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-                for a in &ad.added {
-                    let id = a.id.clone();
-                    {
-                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        if g.attributes.iter().any(|x| x.read().map(|r| r.id == id).unwrap_or(false)) {
-                            return Err(SetError::DuplicateId(format!("attribute {}", id)));
-                        }
-                        let mut attr = AttributeStore::from_full_dto(a.clone());
-                        attr.parent_kit = Some(Arc::downgrade(kit));
-                        g.attributes.push(Arc::new(RwLock::new(attr)));
-                        g.invalidate_hash();
-                        g.invalidate_validation();
-                    }
-                    event_wire::wire_graph_bus(kit);
-                }
-            }
-            Ok(())
-        }
-
         pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
@@ -19957,7 +19667,7 @@ pub mod kit_graph {
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
-                    dw.parent_kit = Some(kw);
+                    dw.parent_kit = kw;
                 }
             }
             g.designs.insert(pos, design);
@@ -20028,11 +19738,11 @@ pub mod kit_graph {
                 Self::insert_design_ref(kit, clustered_dto)?;
                 {
                     let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.semantic_remove_design_pieces(&dg, &pids_cluster)?;
+                    g.semantic_remove_design_pieces(&dg, &pids_cluster).map_err(Self::map_semio_err)?;
                 }
                 for c in added_connections {
                     let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.semantic_add_design_connection(&dg, c)?;
+                    g.semantic_add_design_connection(&dg, c).map_err(Self::map_semio_err)?;
                 }
                 Ok(())
             })
@@ -20151,17 +19861,16 @@ pub mod kit_graph {
 
         pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
             let dg = design_id.to_string();
-            let cg = connection_id.to_string();
+            let cid = Id::from(connection_id);
             Self::with_undo(kit, || {
-                let diff = DesignDiff { connections: Some(crate::diff::ConnectionsDiff { removed: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }), ..Default::default() };
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
+                g.semantic_remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
             })
         }
 
         pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
-            let forward = {
+            let after_full: DesignFullDto = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let report = g.flatten_design(dg.as_str()).map_err(Self::map_semio_err)?;
                 if !report.ok {
@@ -20170,12 +19879,9 @@ pub mod kit_graph {
                 let Some(change) = report.value else {
                     return Err(SetError::Internal("flatten_design missing value".into()));
                 };
-                change.forward
+                change.after.ok_or_else(|| SetError::Internal("flatten_design missing after dto".into()))?
             };
-            Self::with_undo(kit, || {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &forward).map_err(Self::map_semio_err)
-            })
+            Self::with_undo(kit, || Self::replace_design_full(kit, after_full))
         }
 
         fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFullDto> {
@@ -20263,35 +19969,25 @@ pub mod kit_graph {
                 conns.extend(add_connections);
                 after.connections = conns;
 
-                let diff = DesignDiff::between(&before, &after);
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
+                Self::replace_design_full(kit, after)
             })
         }
 
         pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             let dg = design_id.to_string();
-            let piece_id = piece_id.to_string();
+            let pid = piece_id.to_string();
             let ntg = new_type_id.to_string();
             Self::with_undo(kit, || {
-                let p: PieceFullDto = {
-                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    let dto = dr.to_full_dto();
-                    dto.pieces.into_iter().find(|p| p.id.as_str() == piece_id.as_str()).ok_or_else(|| SetError::NotFound(format!("piece {piece_id}")))?
+                let cmd = ChangeKitCommand::ChangeDesignCommands {
+                    design_id: DesignIdDto { id: Id::from(dg.as_str()) },
+                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: PieceIdDto { id: Id::from(pid.as_str()) },
+                        commands: vec![ChangePieceCommand::Type {
+                            type_id: Some(TypeIdDto { id: Id::from(ntg.as_str()) }),
+                        }],
+                    }],
                 };
-                let mut np = p;
-                np.r#type = Some(TypeIdDto { id: Id::from(ntg.as_str()) });
-                let diff = DesignDiff {
-                    pieces: Some(crate::diff::PiecesDiff {
-                        updated: vec![crate::diff::PieceDiffUpdate { id: PieceIdDto { id: np.id.clone() }, diff: crate::diff::PieceDiff { r#type: Some(np.r#type.clone()), ..Default::default() } }],
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                };
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
+                ChangeKitCommand::apply(kit, &cmd).map(|_| ()).map_err(Self::map_semio_err)
             })
         }
 
@@ -24218,7 +23914,7 @@ mod async_kit {
 
     use futures_lite::future::ready;
 
-    use crate::diff::{DesignChange, DesignDiff};
+    use crate::diff::DesignChange;
     use crate::error::{Result, SemioError};
     use crate::kit_graph::{KitGraph, KitGraphRef};
     use crate::report::{SemioReport, ValidationResult};
@@ -24336,14 +24032,6 @@ mod async_kit {
                 Ok(g) => Ok(g.validate()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
             };
-            ready(r).await
-        }
-
-        pub async fn apply_design_diff_async(this: &KitGraphRef, design_id: &str, diff: &DesignDiff) -> Result<()> {
-            let r = (|| {
-                let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.apply_design_diff(design_id, diff)
-            })();
             ready(r).await
         }
 
@@ -26088,9 +25776,7 @@ pub mod kit_graphql {
 
     use crate::change_command::ChangeKitCommand;
     use crate::connection::ConnectionStoreRef;
-    use crate::diff::DesignDiff;
     use crate::geom::Plane;
-    use crate::kit_diff::KitDiff;
     use crate::connector::ConnectorStoreRef;
     use crate::design::DesignStoreRef;
     use crate::events::KitEvent;
@@ -26149,7 +25835,7 @@ pub mod kit_graphql {
                         let kind = ChangeKitCommand::batch_kind(&commands);
                         let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
                         let r = KitGraph::with_undo(&graph, || {
-                            let (_m, inv) = ChangeKitCommand::apply_many(&graph, &commands).map_err(KitGraph::map_semio_err)?;
+                            let inv = ChangeKitCommand::apply_many(&graph, &commands).map_err(KitGraph::map_semio_err)?;
                             inverse_out = inv;
                             Ok(())
                         });
@@ -26752,39 +26438,6 @@ pub mod kit_graphql {
                 .map_err(|_| Error::new("kit actor dropped"))?
                 .map_err(Error::new)?;
             Ok(Json(serde_json::json!({ "kind": kind, "inverse": inverse })))
-        }
-
-        async fn apply_design_diff(
-            &self,
-            ctx: &Context<'_>,
-            design_id: String,
-            diff: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
-            let d: DesignDiff = serde_json::from_value(diff.0).map_err(|e| Error::new(format!("applyDesignDiff: {e}")))?;
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            let sid = design_id.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || {
-                    KitGraph::with_undo(&graph, || {
-                        let mut g = graph
-                            .write()
-                            .map_err(|_| crate::error::SetError::LockPoisoned("kit".into()))?;
-                        g.apply_design_diff(sid.as_str(), &d).map_err(KitGraph::map_semio_err)
-                    })
-                }),
-            )
-            .await
-        }
-
-        async fn apply_kit_diff(&self, ctx: &Context<'_>, diff: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let d: KitDiff = serde_json::from_value(diff.0).map_err(|e| Error::new(format!("applyKitDiff: {e}")))?;
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            run_set_result(
-                ctx,
-                Box::new(move || KitGraph::with_undo(&graph, || KitGraph::apply_kit_diff(&graph, &d))),
-            )
-            .await
         }
 
         async fn cluster_pieces(

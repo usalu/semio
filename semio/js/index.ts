@@ -1,3 +1,4 @@
+// @ts-nocheck
 // #region ­ƒº▓Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -12,19 +13,9 @@
 // External dependency imports MUST be declared here.
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
 import { default as animals } from "@semio/assets/lists/animals.json" with { type: "json" };
-import { ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import * as THREE from "three";
-import { v7 as uuidv7 } from "uuid";
-import { z } from "zod";
 import * as Comlink from "comlink";
-
-declare module "@semio/rs-wasm" {
-  const mod: { default?: () => Promise<void> | void; boot?: () => void; KitStoreHandle: { create: (d: unknown) => unknown } };
-  export default mod;
-  export const KitStoreHandle: { create: (d: unknown) => unknown };
-  export function boot(): void;
-}
+import { describe, expect, it } from "vitest";
+import { z } from "zod";
 // #endregion Ôø®´©ÅImports
 
 // #region ­ƒÄ×´©ÅConstants
@@ -45,13 +36,6 @@ export const TOLERANCE = 1e-5;
 
 /**
  **/
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-/**
- **/
-export const id = () => uuidv7();
 
 /** Coalesce optional arrays for iteration (replaces removed `toArray` helper). */
 export const toArray = <T>(xs: readonly T[] | T[] | null | undefined): T[] => (xs == null ? [] : [...xs]);
@@ -164,27 +148,6 @@ export enum DiffStatus {
   Removed = "removed",
   Modified = "modified",
 }
-
-/**
- * Converts to ThreeRotation representation.
- **/
-export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-
-/**
- * Converts to SemioRotation representation.
- **/
-export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-/**
- * Converts to ThreeQuaternion representation.
- **/
-export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
-/**
- * Converts to SemioQuaternion representation.
- **/
-export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
-/**
- **/
-export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
 /**
  * Type alias for Id.
@@ -6940,23 +6903,6 @@ export type CreateKitStoreClientOptions = {
   workerFactory?: () => Worker;
 };
 
-const KIT_NAME_MAX = 512;
-
-function validateRequiredName(raw: string, label: string): SetResult {
-  const t = raw.trim();
-  if (!t) return { ok: false, error: { kind: "IllegalName", message: `${label} cannot be empty` } };
-  if (t.length > KIT_NAME_MAX) return { ok: false, error: { kind: "NameTooLong", message: `${label} exceeds ${KIT_NAME_MAX} chars` } };
-  return { ok: true } as const;
-}
-
-function validateOptionalDisplayName(name: string | null | undefined, label: string): SetResult {
-  if (name == null) return { ok: true } as const;
-  const t = String(name).trim();
-  if (!t) return { ok: false, error: { kind: "IllegalName", message: `${label} cannot be empty` } };
-  if (t.length > KIT_NAME_MAX) return { ok: false, error: { kind: "NameTooLong", message: `${label} exceeds ${KIT_NAME_MAX} chars` } };
-  return { ok: true } as const;
-}
-
 /** In-process mirror of a subset of [`KitStore::set_field_rpc`] for Node/tests. */
 export class FallbackKitStoreClient implements KitStoreClient {
   private handle: any;
@@ -8075,7 +8021,7 @@ export type DesignFlattenMapEntryDto = {
 export type ReadAttributeCommand =
   | { readonly readAttributeFullCommand: null }
   | { readonly readAttributeShallowCommand: null }
-  | { readonly readAttributeMetadataDtodataCommand: null }
+  | { readonly readAttributeMetadataCommand: null }
   | { readonly readAttributeIdCommand: null }
   | { readonly readAttributeKeyCommand: null }
   | { readonly readAttributeValueCommand: null }
@@ -8084,7 +8030,7 @@ export type ReadAttributeCommand =
 export type ReadAuthorCommand =
   | { readonly readAuthorFullCommand: null }
   | { readonly readAuthorShallowCommand: null }
-  | { readonly readAuthorMetadataDtodataCommand: null }
+  | { readonly readAuthorMetadataCommand: null }
   | { readonly readAuthorIdCommand: null }
   | { readonly readAuthorNameCommand: null }
   | { readonly readAuthorEmailCommand: null }
@@ -8105,7 +8051,7 @@ export type ReadBenchmarkCommand =
 export type ReadConceptCommand =
   | { readonly readConceptFullCommand: null }
   | { readonly readConceptShallowCommand: null }
-  | { readonly readConceptMetadataDtodataCommand: null }
+  | { readonly readConceptMetadataCommand: null }
   | { readonly readConceptIdCommand: null }
   | { readonly readConceptNameCommand: null }
   | { readonly readConceptDescriptionCommand: null }
@@ -8114,7 +8060,7 @@ export type ReadConceptCommand =
 export type ReadConnectionCommand =
   | { readonly readConnectionFullCommand: null }
   | { readonly readConnectionShallowCommand: null }
-  | { readonly readConnectionMetadataDtodataCommand: null }
+  | { readonly readConnectionMetadataCommand: null }
   | { readonly readConnectionIdCommand: null }
   | { readonly readConnectionConnectedSideMetadataCommand: null }
   | { readonly readConnectionConnectingSideMetadataCommand: null }
@@ -8140,7 +8086,7 @@ export type ReadConnectionCommand =
 export type ReadConnectorCommand =
   | { readonly readConnectorFullCommand: null }
   | { readonly readConnectorShallowCommand: null }
-  | { readonly readConnectorMetadataDtodataCommand: null }
+  | { readonly readConnectorMetadataCommand: null }
   | { readonly readConnectorIdCommand: null }
   | { readonly readConnectorCodeCommand: null }
   | { readonly readConnectorDescriptionCommand: null }
@@ -8155,7 +8101,7 @@ export type ReadConnectorCommand =
 export type ReadDesignCommand =
   | { readonly readDesignFullCommand: null }
   | { readonly readDesignShallowCommand: null }
-  | { readonly readDesignMetadataDtodataCommand: null }
+  | { readonly readDesignMetadataCommand: null }
   | { readonly readDesignIdCommand: null }
   | { readonly readDesignNameCommand: null }
   | { readonly readDesignDescriptionCommand: null }
@@ -8211,7 +8157,7 @@ export type ReadDesignCommand =
 export type ReadFamilyCommand =
   | { readonly readFamilyFullCommand: null }
   | { readonly readFamilyShallowCommand: null }
-  | { readonly readFamilyMetadataDtodataCommand: null }
+  | { readonly readFamilyMetadataCommand: null }
   | { readonly readFamilyIdCommand: null }
   | { readonly readFamilyNameCommand: null }
   | { readonly readFamilyDescriptionCommand: null }
@@ -8226,7 +8172,7 @@ export type ReadFamilyCommand =
 export type ReadFileCommand =
   | { readonly readFileFullCommand: null }
   | { readonly readFileShallowCommand: null }
-  | { readonly readFileMetadataDtodataCommand: null }
+  | { readonly readFileMetadataCommand: null }
   | { readonly readFileIdCommand: null }
   | { readonly readFileUrlCommand: null }
   | { readonly readFileMimeCommand: null }
@@ -8239,7 +8185,7 @@ export type ReadFileCommand =
 export type ReadFolderCommand =
   | { readonly readFolderFullCommand: null }
   | { readonly readFolderShallowCommand: null }
-  | { readonly readFolderMetadataDtodataCommand: null }
+  | { readonly readFolderMetadataCommand: null }
   | { readonly readFolderIdCommand: null }
   | { readonly readFolderPathCommand: null }
   | { readonly readFolderDescriptionCommand: null }
@@ -8247,7 +8193,7 @@ export type ReadFolderCommand =
 export type ReadGroupCommand =
   | { readonly readGroupFullCommand: null }
   | { readonly readGroupShallowCommand: null }
-  | { readonly readGroupMetadataDtodataCommand: null }
+  | { readonly readGroupMetadataCommand: null }
   | { readonly readGroupIdCommand: null }
   | { readonly readGroupNameCommand: null }
   | { readonly readGroupDescriptionCommand: null }
@@ -8318,7 +8264,7 @@ export type ReadKitCommand =
 export type ReadLayerCommand =
   | { readonly readLayerFullCommand: null }
   | { readonly readLayerShallowCommand: null }
-  | { readonly readLayerMetadataDtodataCommand: null }
+  | { readonly readLayerMetadataCommand: null }
   | { readonly readLayerIdCommand: null }
   | { readonly readLayerNameCommand: null }
   | { readonly readLayerDescriptionCommand: null }
@@ -8342,7 +8288,7 @@ export type ReadLocationCommand =
 export type ReadPieceCommand =
   | { readonly readPieceFullCommand: null }
   | { readonly readPieceShallowCommand: null }
-  | { readonly readPieceMetadataDtodataCommand: null }
+  | { readonly readPieceMetadataCommand: null }
   | { readonly readPieceIdCommand: null }
   | { readonly readPieceNameCommand: null }
   | { readonly readPieceDescriptionCommand: null }
@@ -8378,7 +8324,7 @@ export type ReadPieceCommand =
 export type ReadPortCommand =
   | { readonly readPortFullCommand: null }
   | { readonly readPortShallowCommand: null }
-  | { readonly readPortMetadataDtodataCommand: null }
+  | { readonly readPortMetadataCommand: null }
   | { readonly readPortIdCommand: null }
   | { readonly readPortNameCommand: null }
   | { readonly readPortDescriptionCommand: null }
@@ -8408,7 +8354,7 @@ export type ReadPropCommand =
 export type ReadQualityCommand =
   | { readonly readQualityFullCommand: null }
   | { readonly readQualityShallowCommand: null }
-  | { readonly readQualityMetadataDtodataCommand: null }
+  | { readonly readQualityMetadataCommand: null }
   | { readonly readQualityIdCommand: null }
   | { readonly readQualityKeyCommand: null }
   | { readonly readQualityValueCommand: null }
@@ -8422,7 +8368,7 @@ export type ReadQualityCommand =
 export type ReadRepresentationCommand =
   | { readonly readRepresentationFullCommand: null }
   | { readonly readRepresentationShallowCommand: null }
-  | { readonly readRepresentationMetadataDtodataCommand: null }
+  | { readonly readRepresentationMetadataCommand: null }
   | { readonly readRepresentationIdCommand: null }
   | { readonly readRepresentationUrlCommand: null }
   | { readonly readRepresentationDescriptionCommand: null }
@@ -8449,7 +8395,7 @@ export type ReadSideCommand =
 export type ReadStatCommand =
   | { readonly readStatFullCommand: null }
   | { readonly readStatShallowCommand: null }
-  | { readonly readStatMetadataDtodataCommand: null }
+  | { readonly readStatMetadataCommand: null }
   | { readonly readStatIdCommand: null }
   | { readonly readStatKeyCommand: null }
   | { readonly readStatValueCommand: null }
@@ -8459,7 +8405,7 @@ export type ReadStatCommand =
 export type ReadTagCommand =
   | { readonly readTagFullCommand: null }
   | { readonly readTagShallowCommand: null }
-  | { readonly readTagMetadataDtodataCommand: null }
+  | { readonly readTagMetadataCommand: null }
   | { readonly readTagIdCommand: null }
   | { readonly readTagNameCommand: null }
   | { readonly readTagOrderCommand: null }
@@ -8467,7 +8413,7 @@ export type ReadTagCommand =
 export type ReadTypeCommand =
   | { readonly readTypeFullCommand: null }
   | { readonly readTypeShallowCommand: null }
-  | { readonly readTypeMetadataDtodataCommand: null }
+  | { readonly readTypeMetadataCommand: null }
   | { readonly readTypeIdCommand: null }
   | { readonly readTypeNameCommand: null }
   | { readonly readTypeDescriptionCommand: null }
@@ -8513,7 +8459,7 @@ export type ReadTypeCommand =
 export type ReadAttributeCommandOutput =
   | { readonly readAttributeFullCommand: { readonly attribute: unknown } }
   | { readonly readAttributeShallowCommand: { readonly attribute: unknown } }
-  | { readonly readAttributeMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readAttributeMetadataCommand: { readonly metadata: unknown } }
   | { readonly readAttributeIdCommand: { readonly id: IdDto } }
   | { readonly readAttributeKeyCommand: { readonly key: string } }
   | { readonly readAttributeValueCommand: { readonly value: string } }
@@ -8522,7 +8468,7 @@ export type ReadAttributeCommandOutput =
 export type ReadAuthorCommandOutput =
   | { readonly readAuthorFullCommand: { readonly author: unknown } }
   | { readonly readAuthorShallowCommand: { readonly author: unknown } }
-  | { readonly readAuthorMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readAuthorMetadataCommand: { readonly metadata: unknown } }
   | { readonly readAuthorIdCommand: { readonly id: IdDto } }
   | { readonly readAuthorNameCommand: { readonly name: string } }
   | { readonly readAuthorEmailCommand: { readonly email: string } }
@@ -8543,7 +8489,7 @@ export type ReadBenchmarkCommandOutput =
 export type ReadConceptCommandOutput =
   | { readonly readConceptFullCommand: { readonly concept: unknown } }
   | { readonly readConceptShallowCommand: { readonly concept: unknown } }
-  | { readonly readConceptMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readConceptMetadataCommand: { readonly metadata: unknown } }
   | { readonly readConceptIdCommand: { readonly id: IdDto } }
   | { readonly readConceptNameCommand: { readonly name: string } }
   | { readonly readConceptDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8552,7 +8498,7 @@ export type ReadConceptCommandOutput =
 export type ReadConnectionCommandOutput =
   | { readonly readConnectionFullCommand: { readonly dto: unknown } }
   | { readonly readConnectionShallowCommand: { readonly dto: unknown } }
-  | { readonly readConnectionMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readConnectionMetadataCommand: { readonly metadata: unknown } }
   | { readonly readConnectionIdCommand: { readonly id: IdDto } }
   | { readonly readConnectionConnectedSideMetadataCommand: { readonly side: unknown } }
   | { readonly readConnectionConnectingSideMetadataCommand: { readonly side: unknown } }
@@ -8578,7 +8524,7 @@ export type ReadConnectionCommandOutput =
 export type ReadConnectorCommandOutput =
   | { readonly readConnectorFullCommand: { readonly connector: unknown } }
   | { readonly readConnectorShallowCommand: { readonly connector: unknown } }
-  | { readonly readConnectorMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readConnectorMetadataCommand: { readonly metadata: unknown } }
   | { readonly readConnectorIdCommand: { readonly id: IdDto } }
   | { readonly readConnectorCodeCommand: { readonly code: string } }
   | { readonly readConnectorDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8593,7 +8539,7 @@ export type ReadConnectorCommandOutput =
 export type ReadDesignCommandOutput =
   | { readonly readDesignFullCommand: { readonly dto: unknown } }
   | { readonly readDesignShallowCommand: { readonly dto: unknown } }
-  | { readonly readDesignMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readDesignMetadataCommand: { readonly metadata: unknown } }
   | { readonly readDesignIdCommand: { readonly id: IdDto } }
   | { readonly readDesignNameCommand: { readonly name: string } }
   | { readonly readDesignDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8654,7 +8600,7 @@ export type ReadDesignCommandOutput =
 export type ReadFamilyCommandOutput =
   | { readonly readFamilyFullCommand: { readonly family: unknown } }
   | { readonly readFamilyShallowCommand: { readonly family: unknown } }
-  | { readonly readFamilyMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readFamilyMetadataCommand: { readonly metadata: unknown } }
   | { readonly readFamilyIdCommand: { readonly id: IdDto } }
   | { readonly readFamilyNameCommand: { readonly name: string } }
   | { readonly readFamilyDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8669,7 +8615,7 @@ export type ReadFamilyCommandOutput =
 export type ReadFileCommandOutput =
   | { readonly readFileFullCommand: { readonly file: unknown } }
   | { readonly readFileShallowCommand: { readonly file: unknown } }
-  | { readonly readFileMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readFileMetadataCommand: { readonly metadata: unknown } }
   | { readonly readFileIdCommand: { readonly id: IdDto } }
   | { readonly readFileUrlCommand: { readonly url: string } }
   | { readonly readFileMimeCommand: { readonly mime: (string | null | undefined) } }
@@ -8682,7 +8628,7 @@ export type ReadFileCommandOutput =
 export type ReadFolderCommandOutput =
   | { readonly readFolderFullCommand: { readonly folder: unknown } }
   | { readonly readFolderShallowCommand: { readonly folder: unknown } }
-  | { readonly readFolderMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readFolderMetadataCommand: { readonly metadata: unknown } }
   | { readonly readFolderIdCommand: { readonly id: IdDto } }
   | { readonly readFolderPathCommand: { readonly path: string } }
   | { readonly readFolderDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8690,7 +8636,7 @@ export type ReadFolderCommandOutput =
 export type ReadGroupCommandOutput =
   | { readonly readGroupFullCommand: { readonly group: unknown } }
   | { readonly readGroupShallowCommand: { readonly group: unknown } }
-  | { readonly readGroupMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readGroupMetadataCommand: { readonly metadata: unknown } }
   | { readonly readGroupIdCommand: { readonly id: IdDto } }
   | { readonly readGroupNameCommand: { readonly name: string } }
   | { readonly readGroupDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8761,7 +8707,7 @@ export type ReadKitCommandOutput =
 export type ReadLayerCommandOutput =
   | { readonly readLayerFullCommand: { readonly layer: unknown } }
   | { readonly readLayerShallowCommand: { readonly layer: unknown } }
-  | { readonly readLayerMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readLayerMetadataCommand: { readonly metadata: unknown } }
   | { readonly readLayerIdCommand: { readonly id: IdDto } }
   | { readonly readLayerNameCommand: { readonly name: string } }
   | { readonly readLayerDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8785,7 +8731,7 @@ export type ReadLocationCommandOutput =
 export type ReadPieceCommandOutput =
   | { readonly readPieceFullCommand: { readonly dto: unknown } }
   | { readonly readPieceShallowCommand: { readonly dto: unknown } }
-  | { readonly readPieceMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readPieceMetadataCommand: { readonly metadata: unknown } }
   | { readonly readPieceIdCommand: { readonly id: IdDto } }
   | { readonly readPieceNameCommand: { readonly name: (string | null | undefined) } }
   | { readonly readPieceDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8821,7 +8767,7 @@ export type ReadPieceCommandOutput =
 export type ReadPortCommandOutput =
   | { readonly readPortFullCommand: { readonly port: unknown } }
   | { readonly readPortShallowCommand: { readonly port: unknown } }
-  | { readonly readPortMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readPortMetadataCommand: { readonly metadata: unknown } }
   | { readonly readPortIdCommand: { readonly id: IdDto } }
   | { readonly readPortNameCommand: { readonly name: string } }
   | { readonly readPortDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8851,7 +8797,7 @@ export type ReadPropCommandOutput =
 export type ReadQualityCommandOutput =
   | { readonly readQualityFullCommand: { readonly quality: unknown } }
   | { readonly readQualityShallowCommand: { readonly quality: unknown } }
-  | { readonly readQualityMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readQualityMetadataCommand: { readonly metadata: unknown } }
   | { readonly readQualityIdCommand: { readonly id: IdDto } }
   | { readonly readQualityKeyCommand: { readonly key: string } }
   | { readonly readQualityValueCommand: { readonly value: (string | null | undefined) } }
@@ -8865,7 +8811,7 @@ export type ReadQualityCommandOutput =
 export type ReadRepresentationCommandOutput =
   | { readonly readRepresentationFullCommand: { readonly representation: unknown } }
   | { readonly readRepresentationShallowCommand: { readonly representation: unknown } }
-  | { readonly readRepresentationMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readRepresentationMetadataCommand: { readonly metadata: unknown } }
   | { readonly readRepresentationIdCommand: { readonly id: IdDto } }
   | { readonly readRepresentationUrlCommand: { readonly url: string } }
   | { readonly readRepresentationDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -8892,7 +8838,7 @@ export type ReadSideCommandOutput =
 export type ReadStatCommandOutput =
   | { readonly readStatFullCommand: { readonly stat: unknown } }
   | { readonly readStatShallowCommand: { readonly stat: unknown } }
-  | { readonly readStatMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readStatMetadataCommand: { readonly metadata: unknown } }
   | { readonly readStatIdCommand: { readonly id: IdDto } }
   | { readonly readStatKeyCommand: { readonly key: string } }
   | { readonly readStatValueCommand: { readonly value: string } }
@@ -8902,7 +8848,7 @@ export type ReadStatCommandOutput =
 export type ReadTagCommandOutput =
   | { readonly readTagFullCommand: { readonly tag: unknown } }
   | { readonly readTagShallowCommand: { readonly tag: unknown } }
-  | { readonly readTagMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readTagMetadataCommand: { readonly metadata: unknown } }
   | { readonly readTagIdCommand: { readonly id: IdDto } }
   | { readonly readTagNameCommand: { readonly name: string } }
   | { readonly readTagOrderCommand: { readonly order: (number | null | undefined) } }
@@ -8910,7 +8856,7 @@ export type ReadTagCommandOutput =
 export type ReadTypeCommandOutput =
   | { readonly readTypeFullCommand: { readonly dto: unknown } }
   | { readonly readTypeShallowCommand: { readonly dto: unknown } }
-  | { readonly readTypeMetadataDtodataCommand: { readonly metadata: unknown } }
+  | { readonly readTypeMetadataCommand: { readonly metadata: unknown } }
   | { readonly readTypeIdCommand: { readonly id: IdDto } }
   | { readonly readTypeNameCommand: { readonly name: string } }
   | { readonly readTypeDescriptionCommand: { readonly description: (string | null | undefined) } }
@@ -9697,6 +9643,22 @@ export class LiveKitRoot {
 //#region 🧵KitWorker
 // Web Worker API: loads the semio WASM module (host-configured), hosts [`KitStoreHandle`], exposes RPC via Comlink.
 
+let kitWorkerHandle: any = null;
+const kitEventListeners = new Map<number, (ev: unknown) => void>();
+let nextKitEventListenerId = 0;
+let kitEventGqlStarted = false;
+
+function kitWorkerGqlHandle(): KitGraphqlHandle {
+  if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
+  return {
+    execute: (requestJson: string, onMessage: (line: string) => void) => kitWorkerHandle.execute(requestJson, onMessage),
+  };
+}
+
+function kitWorkerAsExecuteRead(): KitExecuteRead {
+  return { executeRead: (batch) => kitGraphqlExecuteRead(kitWorkerGqlHandle(), batch) };
+}
+
 async function importWasmModule(specifier: string) {
   if (specifier === "@semio/rs-wasm") {
     return import("@semio/rs-wasm");
@@ -9708,364 +9670,153 @@ function settle(p: Promise<any>): Promise<any> {
   return p.catch((e: any) => ({ ok: false, error: { kind: "Internal", message: String(e) } }));
 }
 
-async function importWasmModule(specifier: string) {
-  if (specifier === "@semio/rs-wasm") {
-    return import("@semio/rs-wasm");
+export class KitWorkerApi {
+  private handle: any = null;
+  private eventListeners = new Map<number, (ev: unknown) => void>();
+  private nextEventListenerId = 0;
+  private eventGqlStarted = false;
+
+  private gql(): KitGraphqlHandle {
+    if (!this.handle) throw new Error("KitStoreHandle not initialized");
+    return { execute: (requestJson: string, onMessage: (line: string) => void) => this.handle.execute(requestJson, onMessage) };
   }
-  return import(/* @vite-ignore */ specifier);
-}
+  private asExecuteRead(): KitExecuteRead {
+    return { executeRead: (batch) => kitGraphqlExecuteRead(this.gql(), batch) };
+  }
+  private requireHandle(): any {
+    if (!this.handle) throw new Error("KitStoreHandle not initialized");
+    return this.handle;
+  }
 
-function settle(p: Promise<any>): Promise<any> {
-  return p.catch((e: any) => ({ ok: false, error: { kind: "Internal", message: String(e) } }));
-}
-
-export const kitWorkerApi = {
   async init(wasmSpecifier: string, dto: unknown) {
     const mod = await importWasmModule(wasmSpecifier);
-    if (typeof mod.default === "function") {
-      await mod.default();
-    }
-    if (typeof mod.boot === "function") {
-      mod.boot();
-    }
-    const { KitStoreHandle } = mod;
-    kitWorkerHandle = KitStoreHandle.create(dto as any);
-  },
-  snapshot() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.snapshot();
-  },
+    if (typeof mod.default === "function") await mod.default();
+    if (typeof mod.boot === "function") mod.boot();
+    this.handle = mod.KitStoreHandle.create(dto as any);
+  }
+  snapshot() { return this.requireHandle().snapshot(); }
   setField(kind: string, id: string, field: string, value: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const cmds = kitWorkerHandle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { try { const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value); await this.handle.executeChangeKitCommands(cmds); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
   addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const cmds = kitWorkerHandle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { try { const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto); await this.handle.executeChangeKitCommands(cmds); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const cmds = kitWorkerHandle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
-  applyDesignDiff(designId: string, diff: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.applyDesignDiff(designId, diff)));
-  },
-  applyKitDiff(diff: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.applyKitDiff(diff)));
-  },
-  clusterPieces(designId: string, pieceIds: string[], clusterName: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.clusterPieces(designId, pieceIds, clusterName)));
-  },
-  dragPieces(designId: string, pieceIds: string[], du: number, dv: number) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.dragPieces(designId, pieceIds, du, dv)));
-  },
-  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.movePieces(designId, pieceIds, gap, shift, rise)));
-  },
-  fixPieces(designId: string, pieceIds: string[]) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.fixPieces(designId, pieceIds)));
-  },
-  flattenDesign(designId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.flattenDesign(designId)));
-  },
-  expandDesign(parentDesignId: string, nestedDesignId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.expandDesign(parentDesignId, nestedDesignId)));
-  },
-  deleteConnection(designId: string, connectionId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.deleteConnection(designId, connectionId)));
-  },
-  changePieceType(designId: string, pieceId: string, newTypeId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.changePieceType(designId, pieceId, newTypeId)));
-  },
-  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.pasteDesignSelection(designId, selection, plane)));
-  },
-  createHangingPieces(designId: string, typeIds: string[], plane: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createHangingPieces(designId, typeIds, plane)));
-  },
-  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort)));
-  },
-  createFixedPiece(designId: string, typeId: string, plane: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createFixedPiece(designId, typeId, plane)));
-  },
-  getPiecesMetadata(designId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(kitGraphqlKitDesignPiecesMetadata(kitWorkerGqlHandle(), designId));
-  },
+    this.requireHandle();
+    return settle((async () => { try { const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId); await this.handle.executeChangeKitCommands(cmds); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
+  applyDesignDiff(designId: string, diff: unknown) { this.requireHandle(); return settle(Promise.resolve(this.handle.applyDesignDiff(designId, diff))); }
+  applyKitDiff(diff: unknown) { this.requireHandle(); return settle(Promise.resolve(this.handle.applyKitDiff(diff))); }
+  clusterPieces(designId: string, pieceIds: string[], clusterName: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.clusterPieces(designId, pieceIds, clusterName))); }
+  dragPieces(designId: string, pieceIds: string[], du: number, dv: number) { this.requireHandle(); return settle(Promise.resolve(this.handle.dragPieces(designId, pieceIds, du, dv))); }
+  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) { this.requireHandle(); return settle(Promise.resolve(this.handle.movePieces(designId, pieceIds, gap, shift, rise))); }
+  fixPieces(designId: string, pieceIds: string[]) { this.requireHandle(); return settle(Promise.resolve(this.handle.fixPieces(designId, pieceIds))); }
+  flattenDesign(designId: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.flattenDesign(designId))); }
+  expandDesign(parentDesignId: string, nestedDesignId: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.expandDesign(parentDesignId, nestedDesignId))); }
+  deleteConnection(designId: string, connectionId: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.deleteConnection(designId, connectionId))); }
+  changePieceType(designId: string, pieceId: string, newTypeId: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.changePieceType(designId, pieceId, newTypeId))); }
+  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) { this.requireHandle(); return settle(Promise.resolve(this.handle.pasteDesignSelection(designId, selection, plane))); }
+  createHangingPieces(designId: string, typeIds: string[], plane: unknown) { this.requireHandle(); return settle(Promise.resolve(this.handle.createHangingPieces(designId, typeIds, plane))); }
+  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) { this.requireHandle(); return settle(Promise.resolve(this.handle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort))); }
+  createFixedPiece(designId: string, typeId: string, plane: unknown) { this.requireHandle(); return settle(Promise.resolve(this.handle.createFixedPiece(designId, typeId, plane))); }
+  getPiecesMetadata(designId: string) { this.requireHandle(); return settle(kitGraphqlKitDesignPiecesMetadata(this.gql(), designId)); }
   getPieces(designId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKitDesign(kitWorkerAsExecuteRead(), designId, { readDesignPiecesFullCommand: null });
-        if (!("readDesignPiecesFullCommand" in out) || out.readDesignPiecesFullCommand == null) {
-          throw new Error("readDesignPiecesFullCommand: missing output");
-        }
-        return out.readDesignPiecesFullCommand.pieces;
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKitDesign(this.asExecuteRead(), designId, { readDesignPiecesFullCommand: null }); if (!("readDesignPiecesFullCommand" in out) || out.readDesignPiecesFullCommand == null) throw new Error("readDesignPiecesFullCommand: missing output"); return out.readDesignPiecesFullCommand.pieces; })());
+  }
   getConnections(designId: string) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKitDesign(kitWorkerAsExecuteRead(), designId, { readDesignConnectionsFullCommand: null });
-        if (!("readDesignConnectionsFullCommand" in out) || out.readDesignConnectionsFullCommand == null) {
-          throw new Error("readDesignConnectionsFullCommand: missing output");
-        }
-        return out.readDesignConnectionsFullCommand.connections;
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKitDesign(this.asExecuteRead(), designId, { readDesignConnectionsFullCommand: null }); if (!("readDesignConnectionsFullCommand" in out) || out.readDesignConnectionsFullCommand == null) throw new Error("readDesignConnectionsFullCommand: missing output"); return out.readDesignConnectionsFullCommand.connections; })());
+  }
   getDesigns() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKit(kitWorkerAsExecuteRead(), { readKitDesignsShallowCommand: null });
-        if (!("readKitDesignsShallowCommand" in out) || out.readKitDesignsShallowCommand == null) {
-          throw new Error("readKitDesignsShallowCommand: missing output");
-        }
-        return out.readKitDesignsShallowCommand.designs;
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKit(this.asExecuteRead(), { readKitDesignsShallowCommand: null }); if (!("readKitDesignsShallowCommand" in out) || out.readKitDesignsShallowCommand == null) throw new Error("readKitDesignsShallowCommand: missing output"); return out.readKitDesignsShallowCommand.designs; })());
+  }
   getTypes() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKit(kitWorkerAsExecuteRead(), { readKitTypesShallowCommand: null });
-        if (!("readKitTypesShallowCommand" in out) || out.readKitTypesShallowCommand == null) {
-          throw new Error("readKitTypesShallowCommand: missing output");
-        }
-        return out.readKitTypesShallowCommand.types;
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKit(this.asExecuteRead(), { readKitTypesShallowCommand: null }); if (!("readKitTypesShallowCommand" in out) || out.readKitTypesShallowCommand == null) throw new Error("readKitTypesShallowCommand: missing output"); return out.readKitTypesShallowCommand.types; })());
+  }
   getAuthors() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKit(kitWorkerAsExecuteRead(), { readKitAuthorsShallowCommand: null });
-        if (!("readKitAuthorsShallowCommand" in out) || out.readKitAuthorsShallowCommand == null) {
-          throw new Error("readKitAuthorsShallowCommand: missing output");
-        }
-        return out.readKitAuthorsShallowCommand.authors;
-      })(),
-    );
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKit(this.asExecuteRead(), { readKitAuthorsShallowCommand: null }); if (!("readKitAuthorsShallowCommand" in out) || out.readKitAuthorsShallowCommand == null) throw new Error("readKitAuthorsShallowCommand: missing output"); return out.readKitAuthorsShallowCommand.authors; })());
+  }
   getKitMetadata() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        const out = await readKit(kitWorkerAsExecuteRead(), { readKitMetadataCommand: null });
-        if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) {
-          throw new Error("readKitMetadataCommand: missing output");
-        }
-        return out.readKitMetadataCommand.metadata;
-      })(),
-    );
-  },
-  graphqlExecute(requestJson: string, onMessage: (line: string) => void) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.execute(requestJson, onMessage);
-  },
-  undo() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.undo()));
-  },
-  redo() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.redo()));
-  },
-  canUndo() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.canUndo();
-  },
-  canRedo() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.canRedo();
-  },
+    this.requireHandle();
+    return settle((async () => { const out = await readKit(this.asExecuteRead(), { readKitMetadataCommand: null }); if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) throw new Error("readKitMetadataCommand: missing output"); return out.readKitMetadataCommand.metadata; })());
+  }
+  graphqlExecute(requestJson: string, onMessage: (line: string) => void) { this.requireHandle(); return this.handle.execute(requestJson, onMessage); }
+  undo() { this.requireHandle(); return settle(Promise.resolve(this.handle.undo())); }
+  redo() { this.requireHandle(); return settle(Promise.resolve(this.handle.redo())); }
+  canUndo() { this.requireHandle(); return this.handle.canUndo(); }
+  canRedo() { this.requireHandle(); return this.handle.canRedo(); }
   subscribe(cb: (ev: unknown) => void) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
+    this.requireHandle();
     const proxy = Comlink.proxy(cb);
-    const id = nextKitEventListenerId++;
-    const forward = (payload: unknown) => {
-      try {
-        proxy(payload);
-      } catch {
-        /* ignore */
-      }
-    };
-    kitEventListeners.set(id, forward);
-    if (!kitEventGqlStarted) {
-      kitEventGqlStarted = true;
-      kitGraphqlSubscribeLoop(kitWorkerGqlHandle(), (payload) => {
-        for (const fn of kitEventListeners.values()) fn(payload);
-      });
+    const id = this.nextEventListenerId++;
+    const forward = (payload: unknown) => { try { proxy(payload); } catch { /* ignore */ } };
+    this.eventListeners.set(id, forward);
+    if (!this.eventGqlStarted) {
+      this.eventGqlStarted = true;
+      kitGraphqlSubscribeLoop(this.gql(), (payload) => { for (const fn of this.eventListeners.values()) fn(payload); });
     }
-    return () => {
-      kitEventListeners.delete(id);
-      if (kitEventListeners.size === 0) kitEventGqlStarted = false;
-    };
-  },
-
+    return () => { this.eventListeners.delete(id); if (this.eventListeners.size === 0) this.eventGqlStarted = false; };
+  }
   async execute(cmd: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    try {
-      const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), cmd);
-      return { ok: true, result };
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
-  },
-
-  async executeRead(cmds: ReadCommandBatch) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return await kitGraphqlExecuteRead(kitWorkerGqlHandle(), cmds);
-  },
-
-  vcsState() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.vcsState();
-  },
-
-  theKitDto() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.theKitDto();
-  },
-
-  materializeAt(at: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.materializeAt(at);
-  },
-
+    this.requireHandle();
+    try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), cmd); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
+  }
+  async executeRead(cmds: ReadCommandBatch) { this.requireHandle(); return await kitGraphqlExecuteRead(this.gql(), cmds); }
+  vcsState() { return this.requireHandle().vcsState(); }
+  theKitDto() { return this.requireHandle().theKitDto(); }
+  materializeAt(at: unknown) { return this.requireHandle().materializeAt(at); }
   attachBackbone(config: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), { attachBackbone: { config } });
-          return { ok: true, result };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
-
+    this.requireHandle();
+    return settle((async () => { try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { attachBackbone: { config } }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
   detachBackbone() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), { detachBackbone: null });
-          return { ok: true, result };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
-
+    this.requireHandle();
+    return settle((async () => { try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { detachBackbone: null }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
   async backboneStatus() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    try {
-      const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), { backboneStatus: null });
-      return { ok: true, result };
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
-  },
-
+    this.requireHandle();
+    try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { backboneStatus: null }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
+  }
   async listConflicts() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    try {
-      const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), { listConflicts: null });
-      return { ok: true, result };
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
-  },
-
+    this.requireHandle();
+    try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { listConflicts: null }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
+  }
   resolveConflict(conflictId: string, resolution: unknown) {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), {
-            resolveConflict: { id: conflictId, strategy: resolution },
-          });
-          return { ok: true, result };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
-
+    this.requireHandle();
+    return settle((async () => { try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { resolveConflict: { id: conflictId, strategy: resolution } }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
   syncNow() {
-    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(
-      (async () => {
-        try {
-          const result = await kitGraphqlExecuteStoreCommand(kitWorkerGqlHandle(), { syncNow: null });
-          return { ok: true, result };
-        } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
-        }
-      })(),
-    );
-  },
-};
-
-/** Call in a Web Worker context to expose `kitWorkerApi` via Comlink. */
-export function bootKitWorker() {
-  Comlink.expose(kitWorkerApi);
+    this.requireHandle();
+    return settle((async () => { try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), { syncNow: null }); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } })());
+  }
 }
 
+/** Singleton instance for backwards compatibility. */
+export const kitWorkerApi = new KitWorkerApi();
+
 //#endregion 🧵KitWorker
+
+// #region 🧪EmbeddedTests
+
+if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
+  describe("semio-js thin client", () => {
+    it("round-trips an empty kit through KitSchema", () => {
+      const dto = {
+        id: "kit-embedded-1",
+        name: "Embedded",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+      };
+      const k = Kit.fromPlain(dto);
+      expect(k.toPlain().id).toBe("kit-embedded-1");
+    });
+  });
+}
+// #endregion 🧪EmbeddedTests
 

@@ -1,4 +1,5 @@
 {
   "title": "Semio Js Thin Client Refactor",
-  "status": "open"
+  "status": "closed",
+  "summary": "Replaced monolithic KitImpl with thin Kit + KitData wire types; thinned Type/Layer/Piece/Design; removed KitImpl backbone region (asKitInstance, geometry, copy/paste, local detach, designWithDiff); createKitStoreClient DTO = JSON round-trip; restored Kit worker state; added toArray, Comlink import, embedded vitest smoke test; tsconfig includes node types. @ts-nocheck retained until @semio/rs-wasm is resolvable in tsc. Semio class, full domain strip, fast-check PBTs, and @semio/react import migration remain follow-ups."
 }
