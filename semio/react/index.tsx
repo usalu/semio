@@ -1099,7 +1099,7 @@ export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.readTypeIds()
 					.then((ids) => {
 						const cur = cellRef.current;
@@ -1153,7 +1153,7 @@ export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unk
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.readTypesMetadata()
 					.then((rows) => {
 						const cur = cellRef.current;
@@ -1207,7 +1207,7 @@ export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.readDesignIds()
 					.then((ids) => {
 						const cur = cellRef.current;
@@ -1261,7 +1261,7 @@ export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly u
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.readDesignsMetadata()
 					.then((rows) => {
 						const cur = cellRef.current;
@@ -3748,7 +3748,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.piece(designId, pieceId)
 					.readFlatPlane()
 					.then(
@@ -3805,7 +3805,7 @@ export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRea
 				const before = cellRef.current;
 				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
 				onChange();
-				void new LiveKitRoot(client)
+				void new LiveKitRoot(client.kitGraphql())
 					.piece(designId, pieceId)
 					.readFlatCenter()
 					.then(
@@ -3882,7 +3882,7 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).piece(designId, pieceId).readParentConnectionFull();
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).piece(designId, pieceId).readParentConnectionFull();
 				if (!cancelled) setValue(v ?? undefined);
 			} catch {
 				if (!cancelled) setValue(undefined);
@@ -3919,7 +3919,7 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readIncludedDesigns();
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readIncludedDesigns();
 				if (!cancelled) setValue(Array.isArray(v) ? v : []);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -3964,7 +3964,7 @@ export function useDesignClusterableGroups(
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readClusterableGroups(sel);
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readClusterableGroups(sel);
 				if (!cancelled) setValue(Array.isArray(v) ? v : []);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -4003,7 +4003,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readQualitySum(qualityId);
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readQualitySum(qualityId);
 				if (!cancelled) setValue(typeof v === "number" && !Number.isNaN(v) ? v : 0);
 			} catch {
 				if (!cancelled) setValue(0);
@@ -4048,7 +4048,7 @@ export function useTypeBestRepresentation(
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).type(typeId).readBestRepresentation(tags);
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).type(typeId).readBestRepresentation(tags);
 				if (!cancelled) setValue(v);
 			} catch {
 				if (!cancelled) setValue(undefined);
@@ -4087,7 +4087,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).readColoredConnectors();
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).readColoredConnectors();
 				if (!cancelled) setValue(Array.isArray(v) ? v : []);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -4126,7 +4126,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readReplaceableCatalog(sel);
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readReplaceableCatalog(sel);
 				if (!cancelled) setValue(v.types);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -4166,7 +4166,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readReplaceableCatalog(sel);
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readReplaceableCatalog(sel);
 				if (!cancelled) setValue(v.designs);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -4204,7 +4204,7 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const v = await new LiveKitRoot(runtime.kitClient).design(designId).readIncludedDesignIds();
+				const v = await new LiveKitRoot(runtime.kitClient.kitGraphql()).design(designId).readIncludedDesignIds();
 				if (!cancelled) setValue(v);
 			} catch {
 				if (!cancelled) setValue([]);

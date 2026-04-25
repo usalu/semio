@@ -6,7 +6,7 @@
 
 import * as React from "react";
 
-import { kitGraphqlExecuteStoreCommand, type KitGraphqlHandle } from "@semio/js";
+import { kitGraphqlExecuteStoreCommand, kitGraphqlRun, type KitGraphqlHandle } from "@semio/js";
 
 import type { KitStoreHandle } from "./semioWasm";
 
@@ -113,6 +113,11 @@ export const HistoryControls: React.FC<{
   /** Pushes checkpoint into Snapshot window `materializeAt` for read-only DTO (empty string = initial). */
   onInspectCheckpoint?: (checkpointId: string) => void;
 }> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg, onInspectCheckpoint }) => {
+  const gqlHandle = (): KitGraphqlHandle => {
+    if (!handle) throw new Error("KitStore handle not ready");
+    return { execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage) };
+  };
+
   const ex = (label: string, o: object) => {
     if (!handle) {
       onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
@@ -120,10 +125,7 @@ export const HistoryControls: React.FC<{
     }
     void (async () => {
       try {
-        const gql: KitGraphqlHandle = {
-          execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage),
-        };
-        const r = await kitGraphqlExecuteStoreCommand(gql, o);
+        const r = await kitGraphqlExecuteStoreCommand(gqlHandle(), o);
         onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
         applyKitStoreCommandResultIds(r, {
           onSessionId,
@@ -134,6 +136,21 @@ export const HistoryControls: React.FC<{
         });
       } catch (e) {
         onLog(`execute ${label} ERROR: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
+  };
+
+  const readGql = (label: string, body: { query: string; variables?: Record<string, unknown> }) => {
+    if (!handle) {
+      onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
+      return;
+    }
+    void (async () => {
+      try {
+        const r = await kitGraphqlRun(gqlHandle(), body);
+        onLog(`read ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
+      } catch (e) {
+        onLog(`read ${label} ERROR: ${e instanceof Error ? e.message : String(e)}`);
       }
     })();
   };
@@ -166,10 +183,15 @@ export const HistoryControls: React.FC<{
         <B disabled={!canVcs} onClick={() => ex("end", { endSession: { id: sessionId } })}>
           End session
         </B>
-        <B disabled={!canVcs} onClick={() => ex("readKit", { readKitCommands: { commands: [{ readKitNameCommand: null }] } })}>
+        <B disabled={!canVcs} onClick={() => readGql("kit name", { query: `query { kitStore { kit { name } } }` })}>
           Read kit name
         </B>
-        <B disabled={!canVcs} onClick={() => ex("readKit full", { readKitCommands: { commands: [{ readKitFullCommand: null }] } })}>
+        <B
+          disabled={!canVcs}
+          onClick={() =>
+            readGql("kit summary", { query: `query { kitStore { kit { id name description icon image preview } } }` })
+          }
+        >
           Read kit full
         </B>
         <B

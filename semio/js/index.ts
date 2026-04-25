@@ -19,19 +19,6 @@ import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
-import {
-  kitGraphqlExecuteRead,
-  kitGraphqlExecuteStoreCommand,
-  kitGraphqlKitAuthorsShallow,
-  kitGraphqlKitDesignConnectionsFull,
-  kitGraphqlKitDesignPiecesFull,
-  kitGraphqlKitDesignPiecesMetadata,
-  kitGraphqlKitDesignsShallow,
-  kitGraphqlKitMetadataJson,
-  kitGraphqlKitTypesShallow,
-  kitGraphqlSubscribeLoop,
-  type KitGraphqlHandle,
-} from "./kitGraphLive";
 // #endregion Ôø®´©ÅImports
 
 // #region ­ƒÄ×´©ÅConstants
@@ -19867,7 +19854,10 @@ export interface KitStoreClient {
   dispose(): void;
 
   execute(cmd: unknown): Promise<KitStoreExecuteResult>;
-  executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult>;
+  /** Field `ReadKitCommand` batch via the same GraphQL `execute` stream as `kitGraphqlExecuteRead`. */
+  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
+  /** GraphQL `execute` stream handle (WASM `KitStoreHandle::execute`); all live reads use this. */
+  kitGraphql(): KitGraphqlHandle;
   vcsState(): Promise<any>;
   theKitDto(): Promise<any>;
   materializeAt(id: string): Promise<any>;
@@ -19925,6 +19915,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return {
       execute: (requestJson: string, onMessage: (line: string) => void) => this.handle.execute(requestJson, onMessage),
     };
+  }
+
+  kitGraphql(): KitGraphqlHandle {
+    return this.gql();
   }
 
   getDto() {
@@ -20123,33 +20117,103 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async getPieces(designId: string) {
-    const raw = await withTimeout(kitGraphqlKitDesignPiecesFull(this.gql(), designId), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKitDesign(this, designId, { readDesignPiecesFullCommand: null });
+          if (!("readDesignPiecesFullCommand" in out) || out.readDesignPiecesFullCommand == null) {
+            throw new Error("readDesignPiecesFullCommand: missing output");
+          }
+          return out.readDesignPiecesFullCommand.pieces;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getConnections(designId: string) {
-    const raw = await withTimeout(kitGraphqlKitDesignConnectionsFull(this.gql(), designId), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKitDesign(this, designId, { readDesignConnectionsFullCommand: null });
+          if (!("readDesignConnectionsFullCommand" in out) || out.readDesignConnectionsFullCommand == null) {
+            throw new Error("readDesignConnectionsFullCommand: missing output");
+          }
+          return out.readDesignConnectionsFullCommand.connections;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getDesigns() {
-    const raw = await withTimeout(kitGraphqlKitDesignsShallow(this.gql()), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this, { readKitDesignsShallowCommand: null });
+          if (!("readKitDesignsShallowCommand" in out) || out.readKitDesignsShallowCommand == null) {
+            throw new Error("readKitDesignsShallowCommand: missing output");
+          }
+          return out.readKitDesignsShallowCommand.designs;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getTypes() {
-    const raw = await withTimeout(kitGraphqlKitTypesShallow(this.gql()), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this, { readKitTypesShallowCommand: null });
+          if (!("readKitTypesShallowCommand" in out) || out.readKitTypesShallowCommand == null) {
+            throw new Error("readKitTypesShallowCommand: missing output");
+          }
+          return out.readKitTypesShallowCommand.types;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getAuthors() {
-    const raw = await withTimeout(kitGraphqlKitAuthorsShallow(this.gql()), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this, { readKitAuthorsShallowCommand: null });
+          if (!("readKitAuthorsShallowCommand" in out) || out.readKitAuthorsShallowCommand == null) {
+            throw new Error("readKitAuthorsShallowCommand: missing output");
+          }
+          return out.readKitAuthorsShallowCommand.authors;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getKitMetadata() {
-    const raw = await withTimeout(kitGraphqlKitMetadataJson(this.gql()), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this, { readKitMetadataCommand: null });
+          if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) {
+            throw new Error("readKitMetadataCommand: missing output");
+          }
+          return out.readKitMetadataCommand.metadata;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
+  }
+
+  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+    return await withTimeout(kitGraphqlExecuteRead(this.gql(), cmds), this.timeoutMs, "timeout");
   }
 
   async execute(cmd: unknown): Promise<KitStoreExecuteResult> {
@@ -20159,10 +20223,6 @@ export class FallbackKitStoreClient implements KitStoreClient {
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
-  }
-
-  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
-    return await withTimeout(kitGraphqlExecuteRead(this.gql(), cmds), this.timeoutMs, "timeout");
   }
 
   async vcsState(): Promise<any> {
@@ -20270,6 +20330,15 @@ export class WorkerKitStoreClient implements KitStoreClient {
     this.api = api;
     this.cached = cachedDto;
     this.timeoutMs = timeoutMs;
+  }
+
+  kitGraphql(): KitGraphqlHandle {
+    return {
+      execute: async (requestJson: string, onMessage: (line: string) => void) => {
+        const Comlink = await import("comlink");
+        await this.api.graphqlExecute(requestJson, Comlink.proxy(onMessage));
+      },
+    };
   }
 
   getDto() {
@@ -20650,38 +20719,113 @@ export class WorkerKitStoreClient implements KitStoreClient {
   }
 
   async getPiecesMetadata(designId: string) {
-    const raw = await withTimeout(this.api.getPiecesMetadata(designId), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(kitGraphqlKitDesignPiecesMetadata(this.kitGraphql(), designId), this.timeoutMs, "timeout"),
+    );
+  }
+
+  private asKitExecuteReadClient(): KitExecuteRead {
+    return { executeRead: (batch) => kitGraphqlExecuteRead(this.kitGraphql(), batch) };
   }
 
   async getPieces(designId: string) {
-    const raw = await withTimeout(this.api.getPieces(designId), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKitDesign(this.asKitExecuteReadClient(), designId, { readDesignPiecesFullCommand: null });
+          if (!("readDesignPiecesFullCommand" in out) || out.readDesignPiecesFullCommand == null) {
+            throw new Error("readDesignPiecesFullCommand: missing output");
+          }
+          return out.readDesignPiecesFullCommand.pieces;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getConnections(designId: string) {
-    const raw = await withTimeout(this.api.getConnections(designId), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKitDesign(this.asKitExecuteReadClient(), designId, { readDesignConnectionsFullCommand: null });
+          if (!("readDesignConnectionsFullCommand" in out) || out.readDesignConnectionsFullCommand == null) {
+            throw new Error("readDesignConnectionsFullCommand: missing output");
+          }
+          return out.readDesignConnectionsFullCommand.connections;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getDesigns() {
-    const raw = await withTimeout(this.api.getDesigns(), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this.asKitExecuteReadClient(), { readKitDesignsShallowCommand: null });
+          if (!("readKitDesignsShallowCommand" in out) || out.readKitDesignsShallowCommand == null) {
+            throw new Error("readKitDesignsShallowCommand: missing output");
+          }
+          return out.readKitDesignsShallowCommand.designs;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getTypes() {
-    const raw = await withTimeout(this.api.getTypes(), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this.asKitExecuteReadClient(), { readKitTypesShallowCommand: null });
+          if (!("readKitTypesShallowCommand" in out) || out.readKitTypesShallowCommand == null) {
+            throw new Error("readKitTypesShallowCommand: missing output");
+          }
+          return out.readKitTypesShallowCommand.types;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getAuthors() {
-    const raw = await withTimeout(this.api.getAuthors(), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this.asKitExecuteReadClient(), { readKitAuthorsShallowCommand: null });
+          if (!("readKitAuthorsShallowCommand" in out) || out.readKitAuthorsShallowCommand == null) {
+            throw new Error("readKitAuthorsShallowCommand: missing output");
+          }
+          return out.readKitAuthorsShallowCommand.authors;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
   }
 
   async getKitMetadata() {
-    const raw = await withTimeout(this.api.getKitMetadata(), this.timeoutMs, "timeout");
-    return this.unwrapQuery(raw);
+    return this.unwrapQuery(
+      await withTimeout(
+        (async () => {
+          const out = await readKit(this.asKitExecuteReadClient(), { readKitMetadataCommand: null });
+          if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) {
+            throw new Error("readKitMetadataCommand: missing output");
+          }
+          return out.readKitMetadataCommand.metadata;
+        })(),
+        this.timeoutMs,
+        "timeout",
+      ),
+    );
+  }
+
+  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+    return await withTimeout(this.api.executeRead(cmds) as Promise<ReadCommandBatchResult>, this.timeoutMs, "timeout");
   }
 
   async execute(cmd: unknown): Promise<KitStoreExecuteResult> {
@@ -20690,10 +20834,6 @@ export class WorkerKitStoreClient implements KitStoreClient {
     } catch {
       return { ok: false, error: { kind: "Timeout", message: "timeout" } };
     }
-  }
-
-  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
-    return await withTimeout(this.api.executeRead(cmds), this.timeoutMs, "timeout");
   }
 
   async vcsState(): Promise<any> {
@@ -21017,8 +21157,8 @@ export class InMemoryKitStore implements UndoableKitStore {
     return Promise.reject(new Error("InMemoryKitStore.execute requires a WASM KitStoreHandle-backed client"));
   }
 
-  executeRead(_cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
-    return Promise.reject(new Error("InMemoryKitStore.executeRead requires a WASM KitStoreHandle-backed client"));
+  kitGraphql(): KitGraphqlHandle {
+    throw new Error("InMemoryKitStore.kitGraphql requires a WASM KitStoreHandle-backed client");
   }
 
   vcsState(): Promise<any> {
@@ -23955,7 +24095,7 @@ if (shouldRunEmbeddedJsTests) {
       client.dispose();
     });
 
-    it("fallback: executeRead uses field GraphQL and returns kit name", async () => {
+    it("fallback: kitGraphql query returns kit name", async () => {
       const initialKit = asKitInstance({
         id: "k1",
         name: "GraphQlKit",
@@ -23965,9 +24105,10 @@ if (shouldRunEmbeddedJsTests) {
       });
       const client = await createKitStoreClient({ initialKit, forceFallback: true });
       try {
-        const out = await client.executeRead([{ readKitNameCommand: null }]);
-        expect(out.length).toBe(1);
-        expect(out[0]).toEqual({ readKitNameCommand: { name: "GraphQlKit" } });
+        const data = kitGraphqlFirstData(
+          await kitGraphqlRun(client.kitGraphql(), { query: `query { kitStore { kit { name } } }` }),
+        ) as { kitStore?: { kit?: { name?: string } } };
+        expect(data.kitStore?.kit?.name).toBe("GraphQlKit");
       } finally {
         client.dispose();
       }
@@ -30110,27 +30251,117 @@ export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload
   };
 }
 
+/**
+ * 🌐 Design flatten placement map JSON (`piecesMetadataJson`) — used when no `readDesign*Metadata` read variant exists yet.
+ */
+export async function kitGraphqlKitDesignPiecesMetadata(handle: KitGraphqlHandle, designId: string): Promise<Record<string, unknown>> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($id: String!) { kitStore { designForId(id: $id) { piecesMetadataJson } } }`,
+      variables: { id: designId },
+    }),
+  ) as { kitStore?: { designForId?: { piecesMetadataJson?: unknown } | null } };
+  const v = root.kitStore?.designForId?.piecesMetadataJson;
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    return v as Record<string, unknown>;
+  }
+  return {};
+}
+
+/** @emoji 📌 GraphQL `Json` → array (catalog shallow rows). */
+function kitGraphqlCatalogJsonArray(v: unknown): unknown[] {
+  if (Array.isArray(v)) {
+    return v;
+  }
+  if (typeof v === "string") {
+    try {
+      const p = JSON.parse(v) as unknown;
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/** @emoji 📌 `designsShallowJson` — same contract as legacy wasm `getDesigns`. */
+export async function kitGraphqlKitDesignsShallow(handle: KitGraphqlHandle): Promise<unknown[]> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, { query: `query { kitStore { designsShallowJson } }` }),
+  ) as { kitStore?: { designsShallowJson?: unknown } };
+  return kitGraphqlCatalogJsonArray(root.kitStore?.designsShallowJson);
+}
+
+/** @emoji 📌 `typesShallowJson` — same as wasm `getTypes`. */
+export async function kitGraphqlKitTypesShallow(handle: KitGraphqlHandle): Promise<unknown[]> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, { query: `query { kitStore { typesShallowJson } }` }),
+  ) as { kitStore?: { typesShallowJson?: unknown } };
+  return kitGraphqlCatalogJsonArray(root.kitStore?.typesShallowJson);
+}
+
+/** @emoji 📌 `authorsShallowJson` — same as wasm `getAuthors`. */
+export async function kitGraphqlKitAuthorsShallow(handle: KitGraphqlHandle): Promise<unknown[]> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, { query: `query { kitStore { authorsShallowJson } }` }),
+  ) as { kitStore?: { authorsShallowJson?: unknown } };
+  return kitGraphqlCatalogJsonArray(root.kitStore?.authorsShallowJson);
+}
+
+/** @emoji 📌 `kitMetadataJson` — same as wasm `getKitMetadata`. */
+export async function kitGraphqlKitMetadataJson(handle: KitGraphqlHandle): Promise<unknown> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, { query: `query { kitStore { kitMetadataJson } }` }),
+  ) as { kitStore?: { kitMetadataJson?: unknown } };
+  return root.kitStore?.kitMetadataJson;
+}
+
+/** @emoji 📌 `piecesFullJson` for a design — same as wasm `getPieces`. */
+export async function kitGraphqlKitDesignPiecesFull(handle: KitGraphqlHandle, designId: string): Promise<unknown[]> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($id: String!) { kitStore { designForId(id: $id) { piecesFullJson } } }`,
+      variables: { id: designId },
+    }),
+  ) as { kitStore?: { designForId?: { piecesFullJson?: unknown } | null } };
+  return kitGraphqlCatalogJsonArray(root.kitStore?.designForId?.piecesFullJson);
+}
+
+/** @emoji 📌 `connectionsFullJson` for a design — same as wasm `getConnections`. */
+export async function kitGraphqlKitDesignConnectionsFull(handle: KitGraphqlHandle, designId: string): Promise<unknown[]> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($id: String!) { kitStore { designForId(id: $id) { connectionsFullJson } } }`,
+      variables: { id: designId },
+    }),
+  ) as { kitStore?: { designForId?: { connectionsFullJson?: unknown } | null } };
+  return kitGraphqlCatalogJsonArray(root.kitStore?.designForId?.connectionsFullJson);
+}
+
 //#endregion 🔖KitGraphqlWire
 
 //#region 🔖KitGraphLive
 
-/** Any client exposing `executeRead` (e.g. `KitStoreClient`). */
-export type KitExecuteRead = {
-  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
-};
-
+/** @emoji 📌 `{ id }` DTO helper for GraphQL variables. */
 export function idDto(id: string): IdDto {
   return { id };
 }
 
-function assertSingleResult(results: ReadCommandBatchResult): ReadKitCommandOutput {
-  if (results.length !== 1) {
-    throw new Error(`read batch: expected 1 result, got ${results.length}`);
+function kitGraphqlJsonToReadonlyArray(v: unknown): ReadonlyArray<unknown> {
+  if (Array.isArray(v)) return v;
+  if (v == null) return [];
+  if (typeof v === "string") {
+    try {
+      const p = JSON.parse(v) as unknown;
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
   }
-  return results[0]!;
+  return [];
 }
 
-/** Maps one `ReadKitCommand` to field-based GraphQL (no `readKitCommands`). */
+/** Maps one `ReadKitCommand` to field-based GraphQL (no read-command batch API). */
 export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
   if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
     const d = kitGraphqlFirstData(
@@ -30173,6 +30404,30 @@ export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: Read
     if (d.kitStore?.name == null) throw new Error("kit name");
     return { readKitNameCommand: { name: d.kitStore.name } };
   }
+  if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, { query: `query { kitStore { kitMetadataJson } }` }),
+    ) as { kitStore?: { kitMetadataJson?: unknown } };
+    return { readKitMetadataCommand: { metadata: d.kitStore?.kitMetadataJson } };
+  }
+  if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, { query: `query { kitStore { typesShallowJson } }` }),
+    ) as { kitStore?: { typesShallowJson?: unknown } };
+    return { readKitTypesShallowCommand: { types: kitGraphqlJsonToReadonlyArray(d.kitStore?.typesShallowJson) } };
+  }
+  if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, { query: `query { kitStore { designsShallowJson } }` }),
+    ) as { kitStore?: { designsShallowJson?: unknown } };
+    return { readKitDesignsShallowCommand: { designs: kitGraphqlJsonToReadonlyArray(d.kitStore?.designsShallowJson) } };
+  }
+  if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, { query: `query { kitStore { authorsShallowJson } }` }),
+    ) as { kitStore?: { authorsShallowJson?: unknown } };
+    return { readKitAuthorsShallowCommand: { authors: kitGraphqlJsonToReadonlyArray(d.kitStore?.authorsShallowJson) } };
+  }
   if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
     const { id, commands } = c.readKitDesignCommands;
     const out: ReadDesignCommandOutput[] = [];
@@ -30192,10 +30447,19 @@ export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: Read
   throw new Error(`[DEBUG] kitGraphql: unsupported read command ${Object.keys(c).join(",")}`);
 }
 
-async function kitGraphqlMapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
+async function kitGraphqlMapDesignRead(
+  handle: KitGraphqlHandle,
+  designId: string,
+  cmd: ReadDesignCommand,
+): Promise<ReadDesignCommandOutput> {
   if ("readDesignClusterableGroupsCommand" in cmd && cmd.readDesignClusterableGroupsCommand) {
     const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { clusterableGroups(selection: $sel) } } }`;
-    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId, sel: cmd.readDesignClusterableGroupsCommand.selection.map((x) => x.id) } })) as {
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, {
+        query: q,
+        variables: { id: designId, sel: cmd.readDesignClusterableGroupsCommand.selection.map((x) => x.id) },
+      }),
+    ) as {
       kitStore?: { designForId?: { clusterableGroups?: string[][] } | null };
     };
     const g = d.kitStore?.designForId?.clusterableGroups;
@@ -30244,6 +30508,26 @@ async function kitGraphqlMapDesignRead(handle: KitGraphqlHandle, designId: strin
     const ids = d.kitStore?.designForId?.includedDesignIds;
     if (!Array.isArray(ids)) throw new Error("includedDesignIds");
     return { readDesignIncludedDesignIdsCommand: { designIds: ids.map((x) => idDto(x)) } };
+  }
+  if ("readDesignPiecesFullCommand" in cmd && cmd.readDesignPiecesFullCommand === null) {
+    const q = `query($id: String!) { kitStore { designForId(id: $id) { piecesFullJson } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId } })) as {
+      kitStore?: { designForId?: { piecesFullJson?: unknown } | null } | null;
+    };
+    return {
+      readDesignPiecesFullCommand: { pieces: kitGraphqlJsonToReadonlyArray(d.kitStore?.designForId?.piecesFullJson) },
+    };
+  }
+  if ("readDesignConnectionsFullCommand" in cmd && cmd.readDesignConnectionsFullCommand === null) {
+    const q = `query($id: String!) { kitStore { designForId(id: $id) { connectionsFullJson } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId } })) as {
+      kitStore?: { designForId?: { connectionsFullJson?: unknown } | null } | null;
+    };
+    return {
+      readDesignConnectionsFullCommand: {
+        connections: kitGraphqlJsonToReadonlyArray(d.kitStore?.designForId?.connectionsFullJson),
+      },
+    };
   }
   if ("readDesignPieceCommands" in cmd && cmd.readDesignPieceCommands) {
     const { id, commands } = cmd.readDesignPieceCommands;
@@ -30294,9 +30578,9 @@ async function kitGraphqlMapTypeRead(handle: KitGraphqlHandle, typeId: string, c
   if ("readTypeBestRepresentationCommand" in cmd && cmd.readTypeBestRepresentationCommand) {
     const tags = cmd.readTypeBestRepresentationCommand.tagIds;
     const q = `query($id: String!, $tags: [String!]!) { kitStore { typeForId(id: $id) { bestRepresentation(tagIds: $tags) } } }`;
-    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: typeId, tags } })) as {
-      kitStore?: { typeForId?: { bestRepresentation?: unknown } | null };
-    };
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(handle, { query: q, variables: { id: typeId, tags: [...tags] } }),
+    ) as { kitStore?: { typeForId?: { bestRepresentation?: unknown } | null } };
     return { readTypeBestRepresentationCommand: { representation: d.kitStore?.typeForId?.bestRepresentation as any } };
   }
   throw new Error(`[DEBUG] kitGraphqlMapTypeRead: ${Object.keys(cmd).join(",")}`);
@@ -30310,9 +30594,20 @@ export async function kitGraphqlExecuteRead(handle: KitGraphqlHandle, batch: Rea
   return out;
 }
 
-/** Top-level `ReadKitCommand` (single item batch). */
+/** Any client exposing `executeRead` (e.g. [`FallbackKitStoreClient`]). */
+export type KitExecuteRead = {
+  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
+};
+
+function assertSingleReadResult(results: ReadCommandBatchResult): ReadKitCommandOutput {
+  if (results.length !== 1) {
+    throw new Error(`read batch: expected 1 result, got ${results.length}`);
+  }
+  return results[0]!;
+}
+
 export async function readKit(client: KitExecuteRead, command: ReadKitCommand): Promise<ReadKitCommandOutput> {
-  return assertSingleResult(await client.executeRead([command]));
+  return assertSingleReadResult(await client.executeRead([command]));
 }
 
 export async function readKitDesign(
@@ -30350,11 +30645,7 @@ export async function readKitDesignPiece(
   return d0.readDesignPieceCommands.results[0]!;
 }
 
-export async function readKitType(
-  client: KitExecuteRead,
-  typeId: string,
-  command: ReadTypeCommand,
-): Promise<ReadTypeCommandOutput> {
+export async function readKitType(client: KitExecuteRead, typeId: string, command: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
   const out = await readKit(client, {
     readKitTypeCommands: {
       id: idDto(typeId),
@@ -30367,187 +30658,163 @@ export async function readKitType(
   return out.readKitTypeCommands.results[0]!;
 }
 
-/** `executeRead` for one piece field (nested `readKitDesign` → `readDesignPiece` → field). */
+/** Piece-scoped live reads via `kitStore.designForId.pieceForId` fields. */
 export class LivePieceView {
   constructor(
-    private readonly client: KitExecuteRead,
+    private readonly gql: KitGraphqlHandle,
     readonly designId: string,
     readonly pieceId: string,
-  ) { }
-
-  read(command: ReadPieceCommand): Promise<ReadPieceCommandOutput> {
-    return readKitDesignPiece(this.client, this.designId, this.pieceId, command);
-  }
+  ) {}
 
   async readFlatPlane(): Promise<unknown> {
-    const out = await this.read({ readPieceFlatPlaneCommand: null });
-    if (!("readPieceFlatPlaneCommand" in out) || out.readPieceFlatPlaneCommand == null) {
-      throw new Error("readPieceFlatPlaneCommand: missing output");
-    }
-    return out.readPieceFlatPlaneCommand.flatPlane;
+    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatPlane } } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
+      kitStore?: { designForId?: { pieceForId?: { flatPlane?: unknown } | null } | null };
+    };
+    return d.kitStore?.designForId?.pieceForId?.flatPlane;
   }
 
   async readFlatCenter(): Promise<unknown> {
-    const out = await this.read({ readPieceFlatCenterCommand: null });
-    if (!("readPieceFlatCenterCommand" in out) || out.readPieceFlatCenterCommand == null) {
-      throw new Error("readPieceFlatCenterCommand: missing output");
-    }
-    return out.readPieceFlatCenterCommand.flatCenter;
+    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatCenter } } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
+      kitStore?: { designForId?: { pieceForId?: { flatCenter?: unknown } | null } | null };
+    };
+    return d.kitStore?.designForId?.pieceForId?.flatCenter;
   }
 
   async readParentConnectionFull(): Promise<unknown | null | undefined> {
-    const out = await this.read({ readPieceParentConnectionFullCommand: null });
-    if (!("readPieceParentConnectionFullCommand" in out) || out.readPieceParentConnectionFullCommand == null) {
-      throw new Error("readPieceParentConnectionFullCommand: missing output");
-    }
-    return out.readPieceParentConnectionFullCommand.connection;
+    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { parentConnectionFull } } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
+      kitStore?: { designForId?: { pieceForId?: { parentConnectionFull?: unknown } | null } | null };
+    };
+    return d.kitStore?.designForId?.pieceForId?.parentConnectionFull;
   }
 }
 
-/** `executeRead` for design-scoped fields (e.g. clusterable groups, quality sum). */
+/** Design-scoped live reads via `kitStore.designForId` fields. */
 export class LiveDesignView {
   constructor(
-    private readonly client: KitExecuteRead,
+    private readonly gql: KitGraphqlHandle,
     readonly designId: string,
-  ) { }
-
-  read(command: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
-    return readKitDesign(this.client, this.designId, command);
-  }
+  ) {}
 
   async readClusterableGroups(selection: ReadonlyArray<string>): Promise<ReadonlyArray<ReadonlyArray<IdDto>>> {
-    const out = await this.read({
-      readDesignClusterableGroupsCommand: { selection: selection.map(idDto) },
-    });
-    if (!("readDesignClusterableGroupsCommand" in out) || out.readDesignClusterableGroupsCommand == null) {
-      throw new Error("readDesignClusterableGroupsCommand: missing output");
-    }
-    return out.readDesignClusterableGroupsCommand.groups;
+    const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { clusterableGroups(selection: $sel) } } }`;
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, sel: [...selection] } }),
+    ) as { kitStore?: { designForId?: { clusterableGroups?: string[][] } | null } };
+    const g = d.kitStore?.designForId?.clusterableGroups;
+    if (!Array.isArray(g)) throw new Error("clusterableGroups");
+    return g.map((row) => row.map((id) => idDto(id)));
   }
 
   async readIncludedDesigns(): Promise<ReadonlyArray<unknown>> {
-    const out = await this.read({ readDesignIncludedDesignsCommand: null });
-    if (!("readDesignIncludedDesignsCommand" in out) || out.readDesignIncludedDesignsCommand == null) {
-      throw new Error("readDesignIncludedDesignsCommand: missing output");
-    }
-    return out.readDesignIncludedDesignsCommand.designs;
+    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesigns } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId } })) as {
+      kitStore?: { designForId?: { includedDesigns?: unknown } | null };
+    };
+    const v = d.kitStore?.designForId?.includedDesigns;
+    return Array.isArray(v) ? v : [];
   }
 
   async readQualitySum(qualityId: string): Promise<number> {
-    const out = await this.read({
-      readDesignQualitySumCommand: { qualityId: idDto(qualityId) },
-    });
-    if (!("readDesignQualitySumCommand" in out) || out.readDesignQualitySumCommand == null) {
-      throw new Error("readDesignQualitySumCommand: missing output");
-    }
-    return out.readDesignQualitySumCommand.sum;
+    const q = `query($id: String!, $q: String!) { kitStore { designForId(id: $id) { qualitySum(qualityId: $q) } } }`;
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, q: qualityId } }),
+    ) as { kitStore?: { designForId?: { qualitySum?: number } | null } };
+    const s = d.kitStore?.designForId?.qualitySum;
+    if (typeof s !== "number") throw new Error("qualitySum");
+    return s;
   }
 
   async readReplaceableCatalog(selection: ReadonlyArray<string>): Promise<{ types: string[]; designs: string[] }> {
-    const out = await this.read({
-      readDesignReplaceableCatalogCommand: { selection: selection.map(idDto) },
-    });
-    if (!("readDesignReplaceableCatalogCommand" in out) || out.readDesignReplaceableCatalogCommand == null) {
-      throw new Error("readDesignReplaceableCatalogCommand: missing output");
-    }
-    const row = out.readDesignReplaceableCatalogCommand;
-    return {
-      types: row.types.map((t) => t.id),
-      designs: row.designs.map((d) => d.id),
-    };
+    const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`;
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, sel: [...selection] } }),
+    ) as { kitStore?: { designForId?: { replaceableCatalog?: { typeIds: string[]; designIds: string[] } } | null } };
+    const rc = d.kitStore?.designForId?.replaceableCatalog;
+    if (rc == null) throw new Error("replaceableCatalog");
+    return { types: rc.typeIds, designs: rc.designIds };
   }
 
   async readIncludedDesignIds(): Promise<string[]> {
-    const out = await this.read({ readDesignIncludedDesignIdsCommand: null });
-    if (!("readDesignIncludedDesignIdsCommand" in out) || out.readDesignIncludedDesignIdsCommand == null) {
-      throw new Error("readDesignIncludedDesignIdsCommand: missing output");
-    }
-    return out.readDesignIncludedDesignIdsCommand.designIds.map((d) => d.id);
+    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesignIds } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId } })) as {
+      kitStore?: { designForId?: { includedDesignIds?: string[] } | null };
+    };
+    const ids = d.kitStore?.designForId?.includedDesignIds;
+    if (!Array.isArray(ids)) throw new Error("includedDesignIds");
+    return ids;
   }
 }
 
+/** Type-scoped live reads via `kitStore.typeForId` fields. */
 export class LiveTypeView {
   constructor(
-    private readonly client: KitExecuteRead,
+    private readonly gql: KitGraphqlHandle,
     readonly typeId: string,
-  ) { }
-
-  read(command: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
-    return readKitType(this.client, this.typeId, command);
-  }
+  ) {}
 
   async readBestRepresentation(tagIds: ReadonlyArray<string>): Promise<unknown | null | undefined> {
-    const out = await this.read({
-      readTypeBestRepresentationCommand: { tagIds: [...tagIds] },
-    });
-    if (!("readTypeBestRepresentationCommand" in out) || out.readTypeBestRepresentationCommand == null) {
-      throw new Error("readTypeBestRepresentationCommand: missing output");
-    }
-    return out.readTypeBestRepresentationCommand.representation;
+    const q = `query($id: String!, $tags: [String!]!) { kitStore { typeForId(id: $id) { bestRepresentation(tagIds: $tags) } } }`;
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(this.gql, { query: q, variables: { id: this.typeId, tags: [...tagIds] } }),
+    ) as { kitStore?: { typeForId?: { bestRepresentation?: unknown } | null } };
+    return d.kitStore?.typeForId?.bestRepresentation;
   }
 }
 
 /**
- * Root of live read facades. Construct with a `KitStoreClient` and navigate
- * `piece` / `design` / `type` for `executeRead` calls.
+ * Root of live read facades: pass {@link KitStoreClient.kitGraphql} (WASM GraphQL `execute` stream).
  */
 export class LiveKitRoot {
-  constructor(readonly client: KitExecuteRead) { }
+  constructor(readonly gql: KitGraphqlHandle) {}
 
   piece(designId: string, pieceId: string): LivePieceView {
-    return new LivePieceView(this.client, designId, pieceId);
+    return new LivePieceView(this.gql, designId, pieceId);
   }
 
   design(designId: string): LiveDesignView {
-    return new LiveDesignView(this.client, designId);
+    return new LiveDesignView(this.gql, designId);
   }
 
   type(typeId: string): LiveTypeView {
-    return new LiveTypeView(this.client, typeId);
+    return new LiveTypeView(this.gql, typeId);
   }
 
-  /** @emoji 📌 Type ids in kit graph order (`ReadKitTypeIdsCommand`). */
   async readTypeIds(): Promise<readonly string[]> {
-    const out = await readKit(this.client, { readKitTypeIdsCommand: null });
-    if (!("readKitTypeIdsCommand" in out) || out.readKitTypeIdsCommand == null) {
-      throw new Error("readKitTypeIdsCommand: missing output");
-    }
-    return out.readKitTypeIdsCommand.typeIds.map((r) => r.id);
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: `query { kitStore { typeIds } }` })) as { kitStore?: { typeIds?: string[] } };
+    const typeIds = d.kitStore?.typeIds;
+    if (!Array.isArray(typeIds)) throw new Error("typeIds");
+    return typeIds;
   }
 
-  /** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`). */
   async readTypesMetadata(): Promise<ReadonlyArray<unknown>> {
-    const out = await readKit(this.client, { readKitTypesMetadataCommand: null });
-    if (!("readKitTypesMetadataCommand" in out) || out.readKitTypesMetadataCommand == null) {
-      throw new Error("readKitTypesMetadataCommand: missing output");
-    }
-    return out.readKitTypesMetadataCommand.types;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: `query { kitStore { typesMetadata } }` })) as {
+      kitStore?: { typesMetadata?: unknown };
+    };
+    return kitGraphqlCatalogJsonArray(d.kitStore?.typesMetadata);
   }
 
-  /** @emoji 📌 Design ids in kit graph order (`ReadKitDesignIdsCommand`). */
   async readDesignIds(): Promise<readonly string[]> {
-    const out = await readKit(this.client, { readKitDesignIdsCommand: null });
-    if (!("readKitDesignIdsCommand" in out) || out.readKitDesignIdsCommand == null) {
-      throw new Error("readKitDesignIdsCommand: missing output");
-    }
-    return out.readKitDesignIdsCommand.designIds.map((r) => r.id);
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: `query { kitStore { designIds } }` })) as { kitStore?: { designIds?: string[] } };
+    const designIds = d.kitStore?.designIds;
+    if (!Array.isArray(designIds)) throw new Error("designIds");
+    return designIds;
   }
 
-  /** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`). */
   async readDesignsMetadata(): Promise<ReadonlyArray<unknown>> {
-    const out = await readKit(this.client, { readKitDesignsMetadataCommand: null });
-    if (!("readKitDesignsMetadataCommand" in out) || out.readKitDesignsMetadataCommand == null) {
-      throw new Error("readKitDesignsMetadataCommand: missing output");
-    }
-    return out.readKitDesignsMetadataCommand.designs;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: `query { kitStore { designsMetadata } }` })) as {
+      kitStore?: { designsMetadata?: unknown };
+    };
+    return kitGraphqlCatalogJsonArray(d.kitStore?.designsMetadata);
   }
 
   async readColoredConnectors(): Promise<ReadonlyArray<unknown>> {
-    const out = await readKit(this.client, { readKitColoredConnectorsCommand: null });
-    if (!("readKitColoredConnectorsCommand" in out) || out.readKitColoredConnectorsCommand == null) {
-      throw new Error("readKitColoredConnectorsCommand: missing output");
-    }
-    return out.readKitColoredConnectorsCommand.rows;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: `query { kitStore { coloredConnectors } }` })) as {
+      kitStore?: { coloredConnectors?: unknown };
+    };
+    return kitGraphqlCatalogJsonArray(d.kitStore?.coloredConnectors);
   }
 }
 
@@ -30566,6 +30833,10 @@ function kitWorkerGqlHandle(): KitGraphqlHandle {
   return {
     execute: (requestJson: string, onMessage: (line: string) => void) => kitWorkerHandle.execute(requestJson, onMessage),
   };
+}
+
+function kitWorkerAsExecuteRead(): KitExecuteRead {
+  return { executeRead: (batch) => kitGraphqlExecuteRead(kitWorkerGqlHandle(), batch) };
 }
 
 async function importWasmModule(specifier: string) {
@@ -30695,31 +30966,83 @@ export const kitWorkerApi = {
   },
   getPiecesMetadata(designId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getPiecesMetadata(designId)));
+    return settle(kitGraphqlKitDesignPiecesMetadata(kitWorkerGqlHandle(), designId));
   },
   getPieces(designId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getPieces(designId)));
+    return settle(
+      (async () => {
+        const out = await readKitDesign(kitWorkerAsExecuteRead(), designId, { readDesignPiecesFullCommand: null });
+        if (!("readDesignPiecesFullCommand" in out) || out.readDesignPiecesFullCommand == null) {
+          throw new Error("readDesignPiecesFullCommand: missing output");
+        }
+        return out.readDesignPiecesFullCommand.pieces;
+      })(),
+    );
   },
   getConnections(designId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getConnections(designId)));
+    return settle(
+      (async () => {
+        const out = await readKitDesign(kitWorkerAsExecuteRead(), designId, { readDesignConnectionsFullCommand: null });
+        if (!("readDesignConnectionsFullCommand" in out) || out.readDesignConnectionsFullCommand == null) {
+          throw new Error("readDesignConnectionsFullCommand: missing output");
+        }
+        return out.readDesignConnectionsFullCommand.connections;
+      })(),
+    );
   },
   getDesigns() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getDesigns()));
+    return settle(
+      (async () => {
+        const out = await readKit(kitWorkerAsExecuteRead(), { readKitDesignsShallowCommand: null });
+        if (!("readKitDesignsShallowCommand" in out) || out.readKitDesignsShallowCommand == null) {
+          throw new Error("readKitDesignsShallowCommand: missing output");
+        }
+        return out.readKitDesignsShallowCommand.designs;
+      })(),
+    );
   },
   getTypes() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getTypes()));
+    return settle(
+      (async () => {
+        const out = await readKit(kitWorkerAsExecuteRead(), { readKitTypesShallowCommand: null });
+        if (!("readKitTypesShallowCommand" in out) || out.readKitTypesShallowCommand == null) {
+          throw new Error("readKitTypesShallowCommand: missing output");
+        }
+        return out.readKitTypesShallowCommand.types;
+      })(),
+    );
   },
   getAuthors() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getAuthors()));
+    return settle(
+      (async () => {
+        const out = await readKit(kitWorkerAsExecuteRead(), { readKitAuthorsShallowCommand: null });
+        if (!("readKitAuthorsShallowCommand" in out) || out.readKitAuthorsShallowCommand == null) {
+          throw new Error("readKitAuthorsShallowCommand: missing output");
+        }
+        return out.readKitAuthorsShallowCommand.authors;
+      })(),
+    );
   },
   getKitMetadata() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.getKitMetadata()));
+    return settle(
+      (async () => {
+        const out = await readKit(kitWorkerAsExecuteRead(), { readKitMetadataCommand: null });
+        if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) {
+          throw new Error("readKitMetadataCommand: missing output");
+        }
+        return out.readKitMetadataCommand.metadata;
+      })(),
+    );
+  },
+  graphqlExecute(requestJson: string, onMessage: (line: string) => void) {
+    if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
+    return kitWorkerHandle.execute(requestJson, onMessage);
   },
   undo() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
@@ -30771,7 +31094,7 @@ export const kitWorkerApi = {
     }
   },
 
-  async executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+  async executeRead(cmds: ReadCommandBatch) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
     return await kitGraphqlExecuteRead(kitWorkerGqlHandle(), cmds);
   },

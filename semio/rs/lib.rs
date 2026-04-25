@@ -25956,9 +25956,8 @@ pub mod io {
 }
 
 //#region 🔖KitGraphql
-/// 🌐 `async-graphql` control plane for WASM: queries traverse live [`Arc<RwLock<_>>`] stores;
-/// mutations run through a single actor queue; subscriptions mirror [`KitGraph::subscribe`].
-#[cfg(target_arch = "wasm32")]
+/// 🌐 `async-graphql` kit control plane: queries traverse live [`Arc<RwLock<_>>`] stores;
+/// mutations run through a single **inbound** actor queue; **outbound** events are [`KitEvent`]s from the live graph.
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
@@ -25997,7 +25996,8 @@ pub mod kit_graphql {
             commands: Vec<ChangeKitCommand>,
             reply: oneshot::Sender<std::result::Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), String>>,
         },
-        KitStoreCommand {
+        /// Internal VCS graph command (not exposed as JSON in GraphQL).
+        Vcs {
             command: KitStoreCommand,
             reply: oneshot::Sender<std::result::Result<KitStoreCommandResult, String>>,
         },
@@ -26015,7 +26015,7 @@ pub mod kit_graphql {
 
     /// Spawn the single-writer loop for one [`KitGraphRef`] (zero busy-wait: `recv().await`).
     pub fn spawn_actor(graph: KitGraphRef, rx: async_channel::Receiver<GraphWork>) {
-        wasm_bindgen_futures::spawn_local(async move {
+        let kmain = async move {
             while let Ok(work) = rx.recv().await {
                 match work {
                     GraphWork::ChangeKitCommands { commands, reply } => {
@@ -26036,7 +26036,7 @@ pub mod kit_graphql {
                         });
                         let _ = reply.send(r.map(|_| (kind, inverse_out)).map_err(|e| format!("{e:?}")));
                     }
-                    GraphWork::KitStoreCommand { command, reply } => {
+                    GraphWork::Vcs { command, reply } => {
                         let r = KitGraph::execute_vcs(&graph, command).map_err(|e| e.to_string());
                         let _ = reply.send(r);
                     }
@@ -26048,7 +26048,18 @@ pub mod kit_graphql {
                     }
                 }
             }
-        });
+        };
+        #[cfg(target_arch = "wasm32")]
+        wasm_bindgen_futures::spawn_local(kmain);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            std::thread::Builder::new()
+                .name("semio-graphql-actor".to_string())
+                .spawn(move || {
+                    let _ = futures_lite::future::block_on(kmain);
+                })
+                .expect("spawn kit graphql actor");
+        }
     }
 
     fn lock_graph(this: &Arc<RwLock<KitGraph>>) -> Result<std::sync::RwLockReadGuard<'_, KitGraph>> {
@@ -26080,9 +26091,9 @@ pub mod kit_graphql {
 
     #[Object(name = "Query")]
     impl RootQuery {
-        /// Live kit graph root (pointer graph: nested fields return store refs).
-        async fn kit_store(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
-            Ok(KitStoreNode(ctx.data::<KitGraphRef>()?.clone()))
+        /// Live kit graph root (pointer graph: nested fields return `Arc` store handles).
+        async fn kit_store(&self, ctx: &Context<'_>) -> Result<KitGraphRef> {
+            Ok(ctx.data::<KitGraphRef>()?.clone())
         }
     }
 
@@ -26236,28 +26247,6 @@ pub mod kit_graphql {
         async fn sync_now(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
             run_kit_store(ctx, KitStoreCommand::SyncNow).await
         }
-        async fn kit_store_batch(&self, ctx: &Context<'_>, commands: Vec<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
-            let mut inner: Vec<KitStoreCommand> = Vec::with_capacity(commands.len());
-            for v in commands {
-                inner.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("batch command: {e}")))?);
-            }
-            run_kit_store(
-                ctx,
-                KitStoreCommand::Batch { commands: inner },
-            )
-            .await
-        }
-
-        /// Single [`KitStoreCommand`] JSON (same shape as each element of `kitStoreBatch`); for `kitStoreExecute` in JS.
-        async fn kit_store_execute(
-            &self,
-            ctx: &Context<'_>,
-            command: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
-            let cmd: KitStoreCommand =
-                serde_json::from_value(command.0).map_err(|e| Error::new(format!("kit_store_execute: {e}")))?;
-            run_kit_store(ctx, cmd).await
-        }
     }
 
     pub struct RootSubscription;
@@ -26296,7 +26285,7 @@ pub mod kit_graphql {
     async fn run_kit_store(ctx: &Context<'_>, command: KitStoreCommand) -> Result<Json<serde_json::Value>> {
         let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
         let (reply_tx, reply_rx) = oneshot::channel();
-        tx.send(GraphWork::KitStoreCommand { command, reply: reply_tx })
+        tx.send(GraphWork::Vcs { command, reply: reply_tx })
             .await
             .map_err(|e| Error::new(format!("execute queue: {e}")))?;
         let res = reply_rx
@@ -26327,60 +26316,27 @@ pub mod kit_graphql {
         }
     }
 
-    /// 🌐 Thin GraphQL wrapper around [`KitGraphRef`] (required for `async-graphql` orphan rules).
-    #[derive(Clone)]
-    pub struct KitStoreNode(pub KitGraphRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`DesignStoreRef`].
-    #[derive(Clone)]
-    pub struct DesignNode(pub DesignStoreRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`PieceStoreRef`].
-    #[derive(Clone)]
-    pub struct PieceNode(pub PieceStoreRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`TypeStoreRef`].
-    #[derive(Clone)]
-    pub struct TypeNode(pub TypeStoreRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`ConnectionStoreRef`].
-    #[derive(Clone)]
-    pub struct ConnectionNode(pub ConnectionStoreRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`ConnectorStoreRef`].
-    #[derive(Clone)]
-    pub struct ConnectorNode(pub ConnectorStoreRef);
-
-    /// 🌐 Thin GraphQL wrapper around [`RepresentationStoreRef`].
-    #[derive(Clone)]
-    pub struct RepresentationNode(pub RepresentationStoreRef);
-
     #[Object(name = "KitStore")]
-    impl KitStoreNode {
+    impl Arc<RwLock<KitGraph>> {
         async fn name(&self) -> Result<String> {
-            Ok(lock_graph(&self.0)?.name.clone())
+            Ok(lock_graph(self)?.name.clone())
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(lock_graph(&self.0)?.description.clone())
+            Ok(lock_graph(self)?.description.clone())
         }
 
-        async fn types(&self) -> Result<Vec<TypeNode>> {
-            Ok(lock_graph(&self.0)?.types.iter().cloned().map(TypeNode).collect())
+        async fn types(&self) -> Result<Vec<TypeStoreRef>> {
+            Ok(lock_graph(self)?.types.iter().cloned().collect())
         }
 
-        async fn designs(&self) -> Result<Vec<DesignNode>> {
-            Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignNode).collect())
+        async fn designs(&self) -> Result<Vec<DesignStoreRef>> {
+            Ok(lock_graph(self)?.designs.iter().cloned().collect())
         }
 
-        /// 🌐 Kit-level type ids in live graph order.
-        async fn type_ids(&self) -> Result<Vec<String>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect())
-        }
         /// 🌐 Per-type metadata rows.
         async fn types_metadata(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let m: Vec<crate::typ::TypeMetadataDto> = g
                 .types
                 .iter()
@@ -26388,18 +26344,9 @@ pub mod kit_graphql {
                 .collect();
             Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
         }
-        /// 🌐 Kit-level design ids in live graph order.
-        async fn design_ids(&self) -> Result<Vec<String>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.id.to_string()))
-                .collect())
-        }
         /// 🌐 Per-design metadata rows.
         async fn designs_metadata(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let m: Vec<crate::design::DesignMetadataDto> = g
                 .designs
                 .iter()
@@ -26409,47 +26356,35 @@ pub mod kit_graphql {
         }
         /// 🌐 Colored connector index rows.
         async fn colored_connectors(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let rows = crate::read::kit_colored_connector_rows(&*g);
             Ok(Json(serde_json::to_value(&rows).map_err(|e| Error::new(e.to_string()))?))
-        }
-        /// 🌐 Resolve a design by id from the live graph.
-        async fn design_for_id(&self, id: String) -> Result<Option<DesignNode>> {
-            let g = lock_graph(&self.0)?;
-            let did = Id::from(id.as_str());
-            Ok(crate::read::kit_design(&*g, &did).map(DesignNode))
-        }
-        /// 🌐 Resolve a type by id from the live graph.
-        async fn type_for_id(&self, id: String) -> Result<Option<TypeNode>> {
-            let g = lock_graph(&self.0)?;
-            let tid = Id::from(id.as_str());
-            Ok(crate::read::kit_type(&*g, &tid).map(TypeNode))
         }
 
         /// Full kit DTO snapshot (materialized live graph).
         async fn live_full_dto(&self) -> Result<Json<crate::kit_graph::KitFullDto>> {
-            Ok(Json(lock_graph(&self.0)?.to_full_dto()))
+            Ok(Json(lock_graph(self)?.to_full_dto()))
         }
 
         /// `the_kit` line DTO (committed main line).
         async fn the_kit_dto(&self) -> Result<Json<crate::kit_graph::KitFullDto>> {
-            Ok(Json(lock_graph(&self.0)?.the_kit_dto()))
+            Ok(Json(lock_graph(self)?.the_kit_dto()))
         }
 
         async fn materialize_at(&self, checkpoint_id: Option<String>) -> Result<Json<crate::kit_graph::KitFullDto>> {
             let opt = checkpoint_id.map(|s| Id::from(s.as_str()));
-            Ok(Json(lock_graph(&self.0)?.materialize_at(opt.as_ref())))
+            Ok(Json(lock_graph(self)?.materialize_at(opt.as_ref())))
         }
 
         /// 🌐 Same JSON as [`KitGraph::get_kit_json`] (kit metadata DTO).
         async fn kit_metadata_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             g.get_kit_json().map(Json).map_err(|e| Error::new(format!("{e:?}")))
         }
 
         /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]).
         async fn designs_shallow_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let v: Vec<_> = g
                 .designs
                 .iter()
@@ -26460,7 +26395,7 @@ pub mod kit_graphql {
 
         /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
         async fn types_shallow_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let v: Vec<_> = g
                 .types
                 .iter()
@@ -26471,7 +26406,7 @@ pub mod kit_graphql {
 
         /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
         async fn authors_shallow_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             let v: Vec<_> = g
                 .authors
                 .iter()
@@ -26482,7 +26417,7 @@ pub mod kit_graphql {
 
         /// Opaque JSON VCS tree (same shape as legacy `vcsState` WASM helper).
         async fn vcs_state_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
+            let g = lock_graph(self)?;
             #[derive(serde::Serialize)]
             #[serde(rename_all = "camelCase")]
             struct VcsCheckpoint {
@@ -26612,45 +26547,41 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "Design")]
-    impl DesignNode {
+    impl Arc<RwLock<crate::design::DesignStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
         }
 
         async fn name(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.name.clone())
+            Ok(self.read().map_err(|_| Error::new("design lock poisoned"))?.name.clone())
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.description.clone())
+            Ok(self.read().map_err(|_| Error::new("design lock poisoned"))?.description.clone())
         }
 
-        async fn pieces(&self) -> Result<Vec<PieceNode>> {
+        async fn pieces(&self) -> Result<Vec<PieceStoreRef>> {
             Ok(self
-                .0
                 .read()
                 .map_err(|_| Error::new("design lock poisoned"))?
                 .pieces
                 .iter()
                 .cloned()
-                .map(PieceNode)
                 .collect())
         }
 
-        async fn connections(&self) -> Result<Vec<ConnectionNode>> {
+        async fn connections(&self) -> Result<Vec<ConnectionStoreRef>> {
             Ok(self
-                .0
                 .read()
                 .map_err(|_| Error::new("design lock poisoned"))?
                 .connections
                 .iter()
                 .cloned()
-                .map(ConnectionNode)
                 .collect())
         }
 
         async fn flatten_map(&self) -> Result<Json<Vec<DesignFlattenMapEntryDto>>> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
             let mut rows: Vec<DesignFlattenMapEntryDto> = m
                 .into_iter()
@@ -26659,13 +26590,8 @@ pub mod kit_graphql {
             rows.sort_by(|a, b| a.piece_id.as_str().cmp(b.piece_id.as_str()));
             Ok(Json(rows))
         }
-
-        async fn piece_for_id(&self, id: String) -> Result<Option<PieceNode>> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d.piece(id.as_str()).map(PieceNode))
-        }
         async fn clusterable_groups(&self, selection: Vec<String>) -> Result<Vec<Vec<String>>> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let g = crate::read::design_clusterable_groups(&*d, &ids);
             Ok(g.into_iter()
@@ -26675,12 +26601,12 @@ pub mod kit_graphql {
         async fn quality_sum(&self, ctx: &Context<'_>, quality_id: String) -> Result<f64> {
             let gref: &KitGraphRef = ctx.data()?;
             let g = lock_graph(gref)?;
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let qid = Id::from(quality_id.as_str());
             Ok(crate::read::design_sum_quality(&*d, &*g, &qid))
         }
         async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalogNode> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let alts = d.replaceable_catalog_candidates(&ids);
             Ok(ReplaceableCatalogNode {
@@ -26697,12 +26623,12 @@ pub mod kit_graphql {
             })
         }
         async fn included_designs(&self) -> Result<Json<serde_json::Value>> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let v = crate::read::design_included_infos(&*d);
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
         async fn included_design_ids(&self) -> Result<Vec<String>> {
-            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let d = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             Ok(crate::read::design_included_design_ids(&*d)
                 .into_iter()
                 .map(|x| x.id.to_string())
@@ -26711,7 +26637,7 @@ pub mod kit_graphql {
 
         /// 🌐 Full piece DTO list (same as [`KitGraph::get_pieces_json`] for this design).
         async fn pieces_full_json(&self) -> Result<Json<serde_json::Value>> {
-            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let dr = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let v: Vec<_> = dr
                 .pieces
                 .iter()
@@ -26722,7 +26648,7 @@ pub mod kit_graphql {
 
         /// 🌐 Full connection DTO list (same as [`KitGraph::get_connections_json`] for this design).
         async fn connections_full_json(&self) -> Result<Json<serde_json::Value>> {
-            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let dr = self.read().map_err(|_| Error::new("design lock poisoned"))?;
             let v: Vec<_> = dr
                 .connections
                 .iter()
@@ -26735,49 +26661,54 @@ pub mod kit_graphql {
         async fn pieces_metadata_json(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
             let gref: &KitGraphRef = ctx.data()?;
             let g = lock_graph(gref)?;
-            let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
+            let did = self.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
             g.get_pieces_metadata_json(&did).map(Json).map_err(|e| Error::new(format!("{e:?}")))
         }
     }
 
     #[Object(name = "Piece")]
-    impl PieceNode {
+    impl Arc<RwLock<crate::piece::PieceStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
         }
 
         async fn name(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.name.clone())
+            Ok(self.read().map_err(|_| Error::new("piece lock poisoned"))?.name.clone())
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
+            Ok(self.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
         }
 
         async fn flat_plane(&self) -> Result<Json<crate::geom::Plane>> {
-            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_plane()))
+            Ok(Json(self.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_plane()))
         }
 
         async fn flat_center(&self) -> Result<Json<crate::geom::Coordinate>> {
-            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_center()))
+            Ok(Json(self.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_center()))
         }
 
         async fn flat_pose(&self) -> Result<Json<crate::piece::PoseFullDto>> {
             Ok(Json(
-                self.0
-                    .read()
+                self.read()
                     .map_err(|_| Error::new("piece lock poisoned"))?
                     .flat_pose_full_dto(),
             ))
         }
 
         async fn scale(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
+            Ok(self.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
+        }
+
+        /// Strong reference to the resolved type ([`TypeStoreRef`]) for this piece.
+        async fn ref_type(&self) -> Result<Option<TypeStoreRef>> {
+            let p = self.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()))
         }
 
         /// 🌐 Full parent connection DTO when the piece is linked through a connection.
         async fn parent_connection_full(&self) -> Result<Option<Json<serde_json::Value>>> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            let p = self.read().map_err(|_| Error::new("piece lock poisoned"))?;
             let c = p
                 .parent_connection
                 .as_ref()
@@ -26791,46 +26722,42 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "Type")]
-    impl TypeNode {
+    impl Arc<RwLock<crate::typ::TypeStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())
         }
 
         async fn name(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.name.clone())
+            Ok(self.read().map_err(|_| Error::new("type lock poisoned"))?.name.clone())
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.description.clone())
+            Ok(self.read().map_err(|_| Error::new("type lock poisoned"))?.description.clone())
         }
 
-        async fn connectors(&self) -> Result<Vec<ConnectorNode>> {
+        async fn connectors(&self) -> Result<Vec<ConnectorStoreRef>> {
             Ok(self
-                .0
                 .read()
                 .map_err(|_| Error::new("type lock poisoned"))?
                 .connectors
                 .iter()
                 .cloned()
-                .map(ConnectorNode)
                 .collect())
         }
 
-        async fn representations(&self) -> Result<Vec<RepresentationNode>> {
+        async fn representations(&self) -> Result<Vec<RepresentationStoreRef>> {
             Ok(self
-                .0
                 .read()
                 .map_err(|_| Error::new("type lock poisoned"))?
                 .representations
                 .iter()
                 .cloned()
-                .map(RepresentationNode)
                 .collect())
         }
 
         /// 🌐 Best matching representation for tag selection.
         async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<Json<serde_json::Value>>> {
-            let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
+            let t = self.read().map_err(|_| Error::new("type lock poisoned"))?;
             let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let r = t.best_representation_for_tag_ids(&ids);
             match r {
@@ -26841,71 +26768,71 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "Connector")]
-    impl ConnectorNode {
+    impl Arc<RwLock<crate::connector::ConnectorStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
         }
 
         async fn code(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.code.clone())
+            Ok(self.read().map_err(|_| Error::new("connector lock poisoned"))?.code.clone())
         }
     }
 
     #[Object(name = "Representation")]
-    impl RepresentationNode {
+    impl Arc<RwLock<crate::representation::RepresentationStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
         }
 
         async fn url(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.url.clone())
+            Ok(self.read().map_err(|_| Error::new("representation lock poisoned"))?.url.clone())
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.description.clone())
+            Ok(self.read().map_err(|_| Error::new("representation lock poisoned"))?.description.clone())
         }
     }
 
     #[Object(name = "Connection")]
-    impl ConnectionNode {
+    impl Arc<RwLock<crate::connection::ConnectionStore>> {
         async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
         }
 
         async fn gap(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.gap)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.gap)
         }
 
         async fn shift(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.shift)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.shift)
         }
 
         async fn rise(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.rise)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.rise)
         }
 
         async fn rotation(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.rotation)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.rotation)
         }
 
         async fn turn(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.turn)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.turn)
         }
 
         async fn tilt(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.tilt)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.tilt)
         }
 
         async fn u(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.x)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.x)
         }
 
         async fn v(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.y)
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.y)
         }
 
         async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.description.clone())
+            Ok(self.read().map_err(|_| Error::new("connection lock poisoned"))?.description.clone())
         }
     }
 }

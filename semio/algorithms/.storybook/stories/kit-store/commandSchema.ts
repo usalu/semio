@@ -15,7 +15,7 @@ export interface ChangeKitPreset {
   readonly json: string;
 }
 
-/** One `ReadKitCommand` JSON value. */
+/** One `kitGraphqlRun` body: `{ query, variables?, operationName? }` (JSON in the textarea). */
 export interface ReadKitPreset {
   readonly id: string;
   readonly label: string;
@@ -168,29 +168,33 @@ export const CHANGE_TYPE_COMMAND_KEYS = [
 ] as const;
 
 export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
-  { id: "rk-full", label: "Read: readKitFullCommand", json: j({ readKitFullCommand: null }) },
-  { id: "rk-name", label: "Read: readKitNameCommand", json: j({ readKitNameCommand: null }) },
-  { id: "rk-types", label: "Read: readKitTypesFullCommand", json: j({ readKitTypesFullCommand: null }) },
-  { id: "rk-designs", label: "Read: readKitDesignsFullCommand", json: j({ readKitDesignsFullCommand: null }) },
-  { id: "rk-desc", label: "Read: readKitDescriptionCommand", json: j({ readKitDescriptionCommand: null }) },
+  {
+    id: "rk-full",
+    label: "GraphQL: kit (id, name, description, icon)",
+    json: j({ query: `query { kitStore { kit { id name description icon } } }` }),
+  },
+  { id: "rk-name", label: "GraphQL: kit { name }", json: j({ query: `query { kitStore { kit { name } } }` }) },
+  { id: "rk-types", label: "GraphQL: typesShallowJson", json: j({ query: `query { kitStore { typesShallowJson } }` }) },
+  { id: "rk-designs", label: "GraphQL: designsShallowJson", json: j({ query: `query { kitStore { designsShallowJson } }` }) },
+  {
+    id: "rk-desc",
+    label: "GraphQL: kit { description }",
+    json: j({ query: `query { kitStore { kit { description } } }` }),
+  },
   {
     id: "rk-type-nested",
-    label: "Read: readKitTypeCommands (name)",
+    label: "GraphQL: typeForId { name }",
     json: j({
-      readKitTypeCommands: {
-        id: { id: "PLACEHOLDER_TYPE_ID" },
-        commands: [{ readTypeNameCommand: null }],
-      },
+      query: `query($id: String!) { kitStore { typeForId(id: $id) { name } } }`,
+      variables: { id: "PLACEHOLDER_TYPE_ID" },
     }),
   },
   {
     id: "rk-computed",
-    label: "Read: readKitDesignCommands (flattenMap)",
+    label: "GraphQL: designForId { flattenMap }",
     json: j({
-      readKitDesignCommands: {
-        id: { id: "PLACEHOLDER_DESIGN_ID" },
-        commands: [{ readDesignFlattenMapCommand: null }],
-      },
+      query: `query($id: String!) { kitStore { designForId(id: $id) { flattenMap } } }`,
+      variables: { id: "PLACEHOLDER_DESIGN_ID" },
     }),
   },
 ];

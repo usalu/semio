@@ -130,7 +130,7 @@ import {
   useCreateType,
   useDesign,
   useDesignClusterableGroups,
-  useDesigns as useDesignsFromKit,
+  useDesigns,
   useDesignScope,
   useDesignsFull,
   useDesignsIds,
@@ -179,8 +179,8 @@ import {
   useResolvedKitIdentifier,
   useType,
   useTypeScope,
-  useKitTypesShallow as useTypesFromKit,
   useTagsFull,
+  useTypes,
   useTypesFull,
   useUpdateAuthor,
   useUpdateDesign,
@@ -7101,7 +7101,7 @@ export function usePiecesFromIds(pieceIds: Id[]): Piece[] {
 export function useReplacableTypes(pieceIds: Id[], selectedVariants?: string[]): Type[] {
   const designId = useDesignScope()?.id;
   const [replaceTypeIds] = useReplacableTypeIdsFromKit(designId, pieceIds);
-  const [allTypes] = useTypesFromKit();
+  const { types: allTypes } = useTypes();
   return useMemo(() => {
     const idSet = new Set((replaceTypeIds ?? []).map(String));
     const base = ((allTypes ?? []) as Type[]).filter((t) => t && idSet.has(t.id));
@@ -7114,7 +7114,7 @@ export function useReplacableDesigns(piece: Piece): Design[] {
   const designId = useDesignScope()?.id;
   const pieceIds = piece?.id ? [piece.id] : [];
   const [replaceDesignIds] = useReplacableDesignIdsFromKit(designId, pieceIds);
-  const [allDesigns] = useDesignsFromKit();
+  const { designs: allDesigns } = useDesigns();
   return useMemo(() => {
     const idSet = new Set((replaceDesignIds ?? []).map(String));
     return ((allDesigns ?? []) as Design[]).filter((d) => d && idSet.has(d.id));
@@ -16594,7 +16594,7 @@ export function useConnectionDescription(): HookResult<string> {
 }
 
 /**
- * Clusterable piece groups for the current design (rs-backed via `executeRead`).
+ * Clusterable piece groups for the current design (rs-backed via GraphQL `kitStore.designForId.clusterableGroups`).
  * Each group is a list of piece id strings.
  **/
 export function useClusterableGroups() {

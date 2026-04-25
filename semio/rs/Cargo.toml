@@ -21,6 +21,11 @@ futures-lite = "2"
 async-channel = "2"
 async-executor = "1.13"
 async-lock = "3"
+# GraphQL control plane: shared by wasm (WASM) and rlib (native tests / future hosts).
+async-graphql = { version = "7.0.17", default-features = false }
+async-stream = "0.3.6"
+futures-channel = "0.3.31"
+futures-util = { version = "0.3.31", default-features = false, features = ["async-await", "std"] }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
 wasm-bindgen-test = "0.3"
@@ -33,10 +38,6 @@ web-sys = { version = "0.3.83", features = ["console"] }
 serde-wasm-bindgen = "0.6.5"
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 uuid = { version = "1.19.0", features = ["js"] }
-async-graphql = { version = "7.0.17", default-features = false }
-async-stream = "0.3.6"
-futures-channel = "0.3.31"
-futures-util = { version = "0.3.31", default-features = false, features = ["async-await"] }
 console_error_panic_hook = "0.1.7"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
