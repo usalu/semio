@@ -19803,6 +19803,19 @@ export function normalizeRustSetError(raw: any): SetError {
   return { kind, message };
 }
 
+/** 🪤 Normalize wasm-thrown kit command errors (strings from `JsValue::from_str`) into [`SetError`]. */
+export function normalizeWasmThrownKitError(err: unknown): SetError {
+  const message = String(err).replace(/^Error:\s*/, "").trim();
+  const lower = message.toLowerCase();
+  if (lower.includes("illegal name") || lower.includes("cannot be empty")) {
+    return { kind: "IllegalName", message };
+  }
+  if (lower.includes("name too long") || (lower.includes("exceeds") && lower.includes("char"))) {
+    return { kind: "NameTooLong", message };
+  }
+  return { kind: "Internal", message };
+}
+
 export function settleSetPromise(p: Promise<unknown>): Promise<SetResult> {
   return p.then((v: any) => {
     if (v && typeof v === "object" && v.ok === true) return { ok: true } as const;
@@ -19975,10 +19988,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
       (async () => {
         try {
           const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          this.handle.executeChangeKitCommands(cmds);
+          await this.handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
+          return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
       })(),
     );
@@ -19989,10 +20002,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
       (async () => {
         try {
           const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          this.handle.executeChangeKitCommands(cmds);
+          await this.handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
+          return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
       })(),
     );
@@ -20003,10 +20016,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
       (async () => {
         try {
           const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          this.handle.executeChangeKitCommands(cmds);
+          await this.handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
-          return { ok: false, error: { kind: "Internal", message: String(e) } };
+          return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
       })(),
     );
@@ -20245,6 +20258,7 @@ export class WorkerKitStoreClient implements KitStoreClient {
   private listeners: Set<(ev: any) => void> = new Set();
   private cached: any;
   private timeoutMs: number;
+  private workerGqlSubStarted = false;
 
   constructor(worker: Worker, api: any, cachedDto: any, timeoutMs: number) {
     this.worker = worker;
@@ -20268,19 +20282,23 @@ export class WorkerKitStoreClient implements KitStoreClient {
 
   subscribe(cb: (ev: any) => void): () => void {
     this.listeners.add(cb);
-    void import("comlink").then((Comlink) => {
-      void this.api.subscribe(Comlink.proxy((ev: any) => {
-        for (const l of this.listeners) {
-          try {
-            l(ev);
-          } catch {
-            /* ignore */
+    if (!this.workerGqlSubStarted) {
+      this.workerGqlSubStarted = true;
+      void import("comlink").then((Comlink) => {
+        void this.api.subscribe(Comlink.proxy((ev: any) => {
+          for (const l of this.listeners) {
+            try {
+              l(ev);
+            } catch {
+              /* ignore */
+            }
           }
-        }
-      }));
-    });
+        }));
+      });
+    }
     return () => {
       this.listeners.delete(cb);
+      if (this.listeners.size === 0) this.workerGqlSubStarted = false;
     };
   }
 
@@ -20763,9 +20781,39 @@ export class WorkerKitStoreClient implements KitStoreClient {
   }
 }
 
+/** Single-flight wasm `default()` + `boot()` per specifier (re-entrant `createKitStoreClient` must not re-init). */
+const semioWasmInitBySpecifier = new Map<string, Promise<void>>();
+
+async function ensureSemioWasmInitialized(wasmSpecifier: string, mod: any, tryNodeFsWasm: boolean): Promise<void> {
+  let flight = semioWasmInitBySpecifier.get(wasmSpecifier);
+  if (!flight) {
+    flight = (async () => {
+      if (typeof mod.default !== "function") return;
+      if (tryNodeFsWasm) {
+        try {
+          const fs = await import("node:fs/promises");
+          const { fileURLToPath } = await import("node:url");
+          const wasmPath = fileURLToPath(new URL("../rs/pkg/semio_bg.wasm", import.meta.url));
+          const wasmBytes = await fs.readFile(wasmPath);
+          await mod.default({ module_or_path: wasmBytes });
+          if (typeof mod.boot === "function") mod.boot();
+          return;
+        } catch {
+          /* fall through to fetch/init */
+        }
+      }
+      await mod.default();
+      if (typeof mod.boot === "function") mod.boot();
+    })();
+    semioWasmInitBySpecifier.set(wasmSpecifier, flight);
+  }
+  await flight;
+}
+
 /** Hosts should map this import to the wasm-bindgen JS glue (see sketchpad Vite config). */
 export async function createKitStoreClient(opts: CreateKitStoreClientOptions): Promise<KitStoreClient> {
-  const dto = structuredClone(asKitInstance(opts.initialKit).toJSON());
+  // JSON round-trip: wasm bindgen deserializer expects plain objects; structuredClone can preserve prototypes that break `Reflect.get` during `from_value`.
+  const dto = JSON.parse(JSON.stringify(asKitInstance(opts.initialKit).toJSON())) as ReturnType<KitImpl["toJSON"]>;
   const wasmSpecifier =
     opts.wasmSpecifier ??
     (globalThis as any).__SEMIO_WASM_SPECIFIER__ ??
@@ -20781,26 +20829,9 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     return import(/* @vite-ignore */ specifier);
   };
 
-  const initWasmModule = async (mod: any): Promise<void> => {
-    if (typeof mod.default !== "function") return;
-    if (useFallback) {
-      try {
-        const fs = await import("node:fs/promises");
-        const { fileURLToPath } = await import("node:url");
-        const wasmPath = fileURLToPath(new URL("../rs/pkg/semio_bg.wasm", import.meta.url));
-        const wasmBytes = await fs.readFile(wasmPath);
-        await mod.default(wasmBytes);
-        if (typeof mod.boot === "function") mod.boot();
-        return;
-      } catch {}
-    }
-    await mod.default();
-    if (typeof mod.boot === "function") mod.boot();
-  };
-
   if (useFallback) {
     const mod = await importWasmModule(wasmSpecifier);
-    await initWasmModule(mod);
+    await ensureSemioWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
   try {
@@ -20813,7 +20844,7 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
   } catch {
     const mod = await importWasmModule(wasmSpecifier);
-    await initWasmModule(mod);
+    await ensureSemioWasmInitialized(wasmSpecifier, mod, isNodeRuntime);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
 }
@@ -23881,14 +23912,17 @@ if (shouldRunEmbeddedJsTests) {
         ],
       });
       const client = await createKitStoreClient({ initialKit, forceFallback: true });
-      const ok = await client.setField("Piece", "p1", "name", "Beta");
-      expect(ok.ok).toBe(true);
-      expect(client.getDto().designs[0].pieces[0].name).toBe("Beta");
-      const bad = await client.setField("Kit", "k1", "name", "");
-      expect(bad.ok).toBe(false);
-      if (!bad.ok) expect(bad.error.kind).toBe("IllegalName");
-      expect(client.getDto().name).toBe("K");
-      client.dispose();
+      try {
+        const ok = await client.setField("Piece", "p1", "name", "Beta");
+        expect(ok.ok).toBe(true);
+        expect(client.getDto().designs[0].pieces[0].name).toBe("Beta");
+        const bad = await client.setField("Kit", "k1", "name", "");
+        expect(bad.ok).toBe(false);
+        if (!bad.ok) expect(bad.error.kind).toBe("IllegalName");
+        expect(client.getDto().name).toBe("K");
+      } finally {
+        client.dispose();
+      }
     });
 
     it("fallback: concurrent writes bump pending semantics via client serialization", async () => {
@@ -23914,6 +23948,24 @@ if (shouldRunEmbeddedJsTests) {
       await Promise.all([a, b, c]);
       expect(["X", "Y", "Z"]).toContain(client.getDto().designs[0].pieces[0].name);
       client.dispose();
+    });
+
+    it("fallback: executeRead routes readKitCommands GraphQL and returns kit name", async () => {
+      const initialKit = asKitInstance({
+        id: "k1",
+        name: "GraphQlKit",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        designs: [],
+      });
+      const client = await createKitStoreClient({ initialKit, forceFallback: true });
+      try {
+        const out = await client.executeRead([{ readKitNameCommand: null }]);
+        expect(out.length).toBe(1);
+        expect(out[0]).toEqual({ readKitNameCommand: { name: "GraphQlKit" } });
+      } finally {
+        client.dispose();
+      }
     });
   });
   // #endregion 🌐KitStoreClient Tests

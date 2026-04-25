@@ -1006,6 +1006,109 @@ export function useActiveKitId(): string | undefined {
 	return React.useContext(KitRuntimeContext)?.kitId;
 }
 
+/** @emoji 📌 Shell / tab kit id (DOM bridge, R3F); complements {@link useActiveKitId} from {@link KitRuntimeContext}. */
+export type KitShellScopeValue = { id: string };
+
+const KitShellScopeContext = React.createContext<KitShellScopeValue | null>(null);
+
+/** @emoji 📌 Provider for tab-scoped kit id (sketchpad shell, scene bridge). */
+export function KitShellScopeProvider(props: { id: string; children: React.ReactNode }): React.ReactElement {
+	return React.createElement(KitShellScopeContext.Provider, { value: { id: props.id } }, props.children as any);
+}
+
+export function useKitShellScope(): KitShellScopeValue | null {
+	return React.useContext(KitShellScopeContext);
+}
+
+/** @emoji 📌 Same context as {@link KitShellScopeContext}; stable name for kit tab scope. */
+export const KitScopeContext = KitShellScopeContext;
+
+/**
+ * @emoji 📌 Resolves kit id: explicit argument, then {@link useKitShellScope}, then {@link useActiveKitId}.
+ */
+export function useResolvedKitIdentifier(explicitKitId?: string): string | undefined {
+	const bridged = useKitShellScope();
+	const active = useActiveKitId();
+	if (explicitKitId != null && String(explicitKitId) !== "") return String(explicitKitId);
+	if (bridged?.id) return bridged.id;
+	if (active != null && active !== "") return active;
+	return undefined;
+}
+
+/** @emoji 📌 Active kit scope `{ id }` from shell context or runtime (same resolution as sketchpad `useKitScope`). */
+export function useKitScope(): KitShellScopeValue | null {
+	const bridged = useKitShellScope();
+	if (bridged) return bridged;
+	const g = useActiveKitId();
+	return g != null && g !== "" ? { id: g } : null;
+}
+
+export function useIsInKitScope(): boolean {
+	return useKitScope() != null;
+}
+
+/**
+ * @emoji 📌 Live {@link KitStoreSnapshot} for the resolved kit when it matches the current {@link KitRuntimeContext}.
+ */
+export function useKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
+	const runtime = useKitRuntimeSafe();
+	const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
+	const subscribe = React.useCallback(
+		(onStoreChange: () => void) => {
+			if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
+				return runtime.store.subscribe(onStoreChange);
+			}
+			return () => {};
+		},
+		[runtime, effectiveKitId],
+	);
+	const getSnapshot = React.useCallback(() => {
+		if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
+			return runtime.snapshot;
+		}
+		return null;
+	}, [runtime, effectiveKitId]);
+	return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+function kitReadonlyTriad<T>(value: T): HookTriad<T> {
+	return [value, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
+}
+
+/** @emoji 📌 Full kit store snapshot triad (read-only). */
+export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitStoreSnapshot | null> {
+	const snap = useKitStoreSnapshot(explicitKitId);
+	return kitReadonlyTriad(snap);
+}
+
+/** @emoji 📌 Kit `types` array from live store snapshot (RS-backed). */
+export function useTypesFull(explicitKitId?: string): HookTriad<any[]> {
+	const snap = useKitStoreSnapshot(explicitKitId);
+	const raw = snap?.kit?.types;
+	return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+}
+
+/** @emoji 📌 Kit `designs` array from live store snapshot (RS-backed). */
+export function useDesignsFull(explicitKitId?: string): HookTriad<any[]> {
+	const snap = useKitStoreSnapshot(explicitKitId);
+	const raw = snap?.kit?.designs;
+	return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+}
+
+/** @emoji 📌 Kit `files` array from live store snapshot (RS-backed). */
+export function useFilesFull(explicitKitId?: string): HookTriad<any[]> {
+	const snap = useKitStoreSnapshot(explicitKitId);
+	const raw = snap?.kit?.files;
+	return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+}
+
+/** @emoji 📌 Kit `tags` array from live store snapshot (RS-backed). */
+export function useTagsFull(explicitKitId?: string): HookTriad<any[]> {
+	const snap = useKitStoreSnapshot(explicitKitId);
+	const raw = snap?.kit?.tags;
+	return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+}
+
 export type KitScopeProps = {
 	store?: KitStore;
 	/** When set with <KitRegistryProvider>, uses the registry entry for this kit (warm WASM worker). */
@@ -3410,85 +3513,118 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookTriad
 }
 
 /**
- * Flattened piece plane from `semio/rs` via {@link executeRead} (`readPieceFlatPlaneCommand`).
- * @param designId Design containing the piece
- * @param pieceId Piece id
+ * Flattened piece plane from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatPlaneCommand`).
+ * Subscribes with `useSyncExternalStore` to kit client notifications; async read fills the external cell.
  */
 export function usePieceFlatPlane(designId?: string, pieceId?: string): HookTriad<any> {
 	const runtime = useKitRuntime();
-	const [value, setValue] = React.useState<any>(undefined);
-	const [pending, setPending] = React.useState(0);
-	React.useEffect(() => {
-		if (!runtime.kitClient || !designId || !pieceId) {
-			setValue(undefined);
-			return;
-		}
-		let cancelled = false;
-		const load = async () => {
-			setPending((p) => p + 1);
-			try {
-				const v = await new LiveKitRoot(runtime.kitClient).piece(designId, pieceId).readFlatPlane();
-				if (!cancelled) setValue(v);
-			} catch {
-				if (!cancelled) setValue(undefined);
-			} finally {
-				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+	const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !designId || !pieceId) {
+				cellRef.current = { version: cellRef.current.version + 1, value: undefined, pending: 0 };
+				return () => {};
 			}
-		};
-		void load();
-		const unsub = runtime.kitClient.subscribe(() => void load());
-		return () => {
-			cancelled = true;
-			unsub();
-		};
-	}, [runtime.kitClient, designId, pieceId]);
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.piece(designId, pieceId)
+					.readFlatPlane()
+					.then(
+						(v) => {
+							const cur = cellRef.current;
+							cellRef.current = {
+								version: cur.version + 1,
+								value: v,
+								pending: Math.max(0, cur.pending - 1),
+							};
+							onChange();
+						},
+						() => {
+							const cur = cellRef.current;
+							cellRef.current = {
+								version: cur.version + 1,
+								value: undefined,
+								pending: Math.max(0, cur.pending - 1),
+							};
+							onChange();
+						},
+					);
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, designId, pieceId],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
 	const status: WriteStatus =
 		!designId || !pieceId || !runtime.kitClient
 			? { kind: "readonly", pending: 0 }
-			: pending > 0
-				? { kind: "pending", pending }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [snap.value, noopAsyncSet, status] as const;
 }
 
 /**
- * Flattened piece center from `semio/rs` via {@link executeRead} (`readPieceFlatCenterCommand`).
+ * Flattened piece center from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatCenterCommand`).
  */
 export function usePieceFlatCenter(designId?: string, pieceId?: string): HookTriad<any> {
 	const runtime = useKitRuntime();
-	const [value, setValue] = React.useState<any>(undefined);
-	const [pending, setPending] = React.useState(0);
-	React.useEffect(() => {
-		if (!runtime.kitClient || !designId || !pieceId) {
-			setValue(undefined);
-			return;
-		}
-		let cancelled = false;
-		const load = async () => {
-			setPending((p) => p + 1);
-			try {
-				const v = await new LiveKitRoot(runtime.kitClient).piece(designId, pieceId).readFlatCenter();
-				if (!cancelled) setValue(v);
-			} catch {
-				if (!cancelled) setValue(undefined);
-			} finally {
-				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+	const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !designId || !pieceId) {
+				cellRef.current = { version: cellRef.current.version + 1, value: undefined, pending: 0 };
+				return () => {};
 			}
-		};
-		void load();
-		const unsub = runtime.kitClient.subscribe(() => void load());
-		return () => {
-			cancelled = true;
-			unsub();
-		};
-	}, [runtime.kitClient, designId, pieceId]);
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.piece(designId, pieceId)
+					.readFlatCenter()
+					.then(
+						(v) => {
+							const cur = cellRef.current;
+							cellRef.current = {
+								version: cur.version + 1,
+								value: v,
+								pending: Math.max(0, cur.pending - 1),
+							};
+							onChange();
+						},
+						() => {
+							const cur = cellRef.current;
+							cellRef.current = {
+								version: cur.version + 1,
+								value: undefined,
+								pending: Math.max(0, cur.pending - 1),
+							};
+							onChange();
+						},
+					);
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, designId, pieceId],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
 	const status: WriteStatus =
 		!designId || !pieceId || !runtime.kitClient
 			? { kind: "readonly", pending: 0 }
-			: pending > 0
-				? { kind: "pending", pending }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [snap.value, noopAsyncSet, status] as const;
 }
 
 export function useIsConnectedPiece(designId?: string, pieceId?: string): HookTriad<boolean> {
@@ -7302,16 +7438,8 @@ export function useKitVersion(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("Kit", "release", idValue);
 }
 
-export function useKitTypes(idValue?: string): HookTriad<any> {
-	return useSchemaFieldState("Kit", "types", idValue);
-}
-
-export function useKitDesigns(idValue?: string): HookTriad<any> {
-	return useSchemaFieldState("Kit", "designs", idValue);
-}
-
-export function useKitTags(idValue?: string): HookTriad<any> {
-	return useSchemaFieldState("Kit", "tags", idValue);
+export function useKitTags(explicitKitId?: string): HookTriad<any> {
+	return useTagsFull(explicitKitId);
 }
 
 export function useKitConcepts(idValue?: string): HookTriad<any> {
@@ -7330,8 +7458,8 @@ export function useKitQualities(idValue?: string): HookTriad<any> {
 	return useSchemaFieldState("Kit", "qualities", idValue);
 }
 
-export function useKitFiles(idValue?: string): HookTriad<any> {
-	return useSchemaFieldState("Kit", "files", idValue);
+export function useKitFiles(explicitKitId?: string): HookTriad<any> {
+	return useFilesFull(explicitKitId);
 }
 
 export function useKitFolders(idValue?: string): HookTriad<any> {

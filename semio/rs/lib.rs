@@ -30306,6 +30306,11 @@ mod tests {
 
 #[cfg(all(test, target_arch = "wasm32"))]
 mod wasm_handle_tests {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    use wasm_bindgen::closure::Closure;
+    use wasm_bindgen::JsCast;
     use wasm_bindgen_test::*;
 
     use crate::kit_graph::KitGraph;
@@ -30314,11 +30319,48 @@ mod wasm_handle_tests {
     #[wasm_bindgen_test]
     fn kit_store_handle_create_roundtrips_snapshot() {
         let kit = KitGraph::new("wasm-kit-test");
-        let dto = kit.read().unwrap().to_full_dto();
+        let dto = kit.to_full_dto();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
         let snap = h.snapshot().expect("snapshot");
         let parsed: serde_json::Value = serde_wasm_bindgen::from_value(snap).unwrap();
         assert_eq!(parsed["name"], "wasm-kit-test");
+    }
+
+    #[wasm_bindgen_test(async)]
+    async fn kit_graphql_query_kit_store_name() {
+        crate::wasm::boot();
+        let kit = KitGraph::new("wasm-gql-name");
+        let dto = kit.to_full_dto();
+        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
+
+        let captured: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
+        let cap2 = captured.clone();
+        let closure = Closure::wrap(Box::new(move |line: wasm_bindgen::JsValue| {
+            if let Some(s) = line.as_string() {
+                cap2.borrow_mut().push(s);
+            }
+        }) as Box<dyn FnMut(wasm_bindgen::JsValue)>);
+
+        let req = r#"{"query":"query { kitStore { name } }"}"#;
+        let prom = h.execute(req, closure.as_ref().unchecked_ref());
+        closure.forget();
+        wasm_bindgen_futures::JsFuture::from(prom)
+            .await
+            .expect("graphql execute future");
+
+        let lines = captured.borrow();
+        assert!(!lines.is_empty(), "expected GraphQL stream chunk(s): {:?}", &*lines);
+        let mut saw = false;
+        for line in lines.iter() {
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+                continue;
+            };
+            if v["data"]["kitStore"]["name"] == "wasm-gql-name" {
+                saw = true;
+                break;
+            }
+        }
+        assert!(saw, "expected kitStore.name in responses: {:?}", &*lines);
     }
 }
 

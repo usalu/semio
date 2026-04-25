@@ -88,7 +88,8 @@ export function useKitStore(seedKit: unknown) {
     void (async () => {
       try {
         await ensureSemioWasm();
-        const h = KitStoreHandle.create(seedKit);
+        const plain = JSON.parse(JSON.stringify(seedKit)) as object;
+        const h = KitStoreHandle.create(plain);
         if (cancelled) {
           h.free();
           return;

@@ -7,22 +7,22 @@ todos:
    status: completed
  - id: rs-object-resolvers
    content: Add async-graphql Object impls directly on existing kit graph/store/entity store refs for every stored and computed field.
-   status: in_progress
+   status: completed
  - id: rs-command-collapse
    content: Convert read/change/session/backbone/string command semantics into typed GraphQL fields, mutations, and events.
    status: pending
  - id: schema-rewrite
    content: Rewrite semio/graphql/schema.graphql to remove ID selector control-plane semantics and match the Rust resolver surface.
-   status: pending
+   status: completed
  - id: js-graphql-only
    content: Rewrite semio/js client, worker, per-entity stores, and generated types to use only GraphQL execute/subscription.
-   status: pending
+   status: completed
  - id: downstream-alignment
    content: Rewire semio/react, semio/sketchpad, and semio/algorithms to consume the JS GraphQL store surface only.
    status: pending
  - id: verification
    content: Extend existing tests and run Rust, wasm, JS, React, sketchpad, and algorithm verification commands.
-   status: pending
+   status: in_progress
 isProject: false
 ---
 

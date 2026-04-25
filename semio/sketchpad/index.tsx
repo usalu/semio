@@ -108,6 +108,8 @@ import {
   ConnectionScopeProvider,
   DesignScopeProvider,
   KitScope,
+  KitScopeContext,
+  KitShellScopeProvider,
   PieceScopeProvider,
   QualityScopeProvider,
   TypeScopeProvider,
@@ -130,13 +132,17 @@ import {
   useDesignClusterableGroups,
   useDesigns as useDesignsFromKit,
   useDesignScope,
+  useDesignsFull,
+  useFilesFull,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
   useFixedPieceId as useFixedPieceIdFromKit,
   useIncludedDesigns as useIncludedDesignsFromKit,
   useIsInAuthorScope,
   useIsInDesignScope,
   useIsInQualityScope,
+  useIsInKitScope,
   useIsInTypeScope,
+  useKitSnapshotTriad,
   usePieceFlatCenter,
   usePieceFlatPlane,
   useIsConnectedPiece as useIsConnectedPieceFromKit,
@@ -152,6 +158,7 @@ import {
   useKitRuntimeSafe,
   useKitFileBlobUrl,
   useKitFileUrl,
+  useKitScope,
   useKitStore,
   useParentPieceId as useParentPieceIdFromKit,
   useMoveKitArtifactToFolder,
@@ -167,9 +174,12 @@ import {
   useQualityScope,
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
+  useResolvedKitIdentifier,
   useType,
   useTypeScope,
   useRpcTypes as useTypesFromKit,
+  useTagsFull,
+  useTypesFull,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
@@ -6957,70 +6967,26 @@ export {
   useConnections,
   useDesign,
   useDesignScope,
+  useDesignsFull,
+  useFilesFull,
   useIsInAuthorScope,
   useIsInDesignScope,
+  useIsInKitScope,
   useIsInQualityScope,
   useIsInTypeScope,
+  useKitScope,
+  useKitSnapshotTriad,
   usePiece,
   usePieceScope,
   usePieces,
   useQuality,
   useQualityScope,
+  useTagsFull,
   useType,
   useTypeScope,
+  useTypesFull,
+  KitScopeContext,
 } from "@semio/react";
-
-// #region ⏰Kit snapshot helpers
-
-function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
-  const runtime = useKitRuntimeSafe();
-  const effectiveKitId = useSketchpadKitId(explicitKitId as Id);
-
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
-        return runtime.store.subscribe(onStoreChange);
-      }
-      return () => {};
-    },
-    [runtime, effectiveKitId],
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
-      return runtime.snapshot;
-    }
-    return null;
-  }, [runtime, effectiveKitId]);
-
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-}
-
-function useKitSnapshot(explicitKitId?: string): HookResult<KitStoreSnapshot | null> {
-  return readonlyHookResult(useResolvedKitStoreSnapshot(explicitKitId));
-}
-
-function useKitTypes(explicitKitId?: string): HookResult<Type[] | undefined> {
-  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
-  return readonlyHookResult(snapshot?.kit?.types);
-}
-
-function useKitDesigns(explicitKitId?: string): HookResult<Design[] | undefined> {
-  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
-  return readonlyHookResult(snapshot?.kit?.designs);
-}
-
-function useKitFiles(explicitKitId?: string): HookResult<SemioFile[] | undefined> {
-  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
-  return readonlyHookResult(snapshot?.kit?.files);
-}
-
-function useKitTags(explicitKitId?: string): HookResult<Tag[] | undefined> {
-  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
-  return readonlyHookResult(snapshot?.kit?.tags);
-}
-
-// #endregion ⏰Kit snapshot helpers
 
 // #region 🎆Piece Derived Hooks
 
@@ -7154,14 +7120,7 @@ export function useReplacableDesigns(piece: Piece): Design[] {
 // #endregion 🥈Entity Hooks
 
 // #region ⏱️Kit
-// Storage-agnostic kit store hooks using KitStore interface.
-
-/**
- * Active tab kit id (sketchpad shell context, not the {@link KitScope} component).
- */
-type ActiveKit = { id: string };
-
-export const KitScopeContext = createContext<ActiveKit | null>(null);
+// Shell kit id context lives in `@semio/react` ({@link KitShellScopeProvider}, {@link KitScopeContext}).
 
 /**
  * Wraps children with {@link KitScope} from `@semio/react` so command/query hooks work.
@@ -7188,37 +7147,15 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
 }
 
 /**
- * React context provider scoping kit by id.
+ * React provider: tab shell id + wasm {@link KitScope} for that kit.
  **/
 export const KitScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  return React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any });
+  return React.createElement(
+    KitShellScopeProvider,
+    { id: props.id },
+    React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }),
+  );
 };
-/**
- * Resolves the active kit id: R3F {@link SceneContextBridge} re-provides {@link KitScopeContext};
- * the DOM tree uses {@link useActiveKitId} from {@link KitScope}.
- **/
-export const useKitScope = (): ActiveKit | null => {
-  const bridged = useContext(KitScopeContext);
-  if (bridged) return bridged;
-  const g = useActiveKitId();
-  return g != null && g !== "" ? { id: g } : null;
-};
-/**
- * Hook returning whether a kit scope is active.
- **/
-export const useIsInKitScope = () => useKitScope() !== null;
-
-/**
- * Resolves kit id: explicit param, then {@link KitScopeContext}, then {@link useActiveKitId}.
- */
-function useSketchpadKitId(explicit?: Id): string | undefined {
-  const bridged = useContext(KitScopeContext);
-  const active = useActiveKitId();
-  if (explicit != null && String(explicit) !== "") return String(explicit);
-  if (bridged?.id) return bridged.id;
-  if (active != null && active !== "") return active;
-  return undefined;
-}
 
 // #endregion ⏱️Kit
 
@@ -10133,7 +10070,7 @@ export function useKitAppClearAuthors(): ActionHookResult<[]> {
  *MUST return a callback that adds all artifact IDs to selection.
  **/
 export function useKitAppSelectAll(): ActionHookResult<[]> {
-  const [ks0] = useKitSnapshot();
+  const [ks0] = useKitSnapshotTriad();
   const kit = ks0?.kit as Kit | undefined;
   const [, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined && kit !== null && kit !== undefined;
@@ -11300,7 +11237,7 @@ const KitKindToggles: FC = () => {
  **/
 const KitCreateActions: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [ks0] = useKitSnapshot();
+  const [ks0] = useKitSnapshotTriad();
   const kit = ks0?.kit as Kit | undefined;
   const { run: runCreateDesign } = useCreateDesign();
   const { run: runCreateType } = useCreateType();
@@ -11595,7 +11532,7 @@ const AppContent: FC = () => {
   const kitScope = useKitScope();
   const hasKit = useHasKit(kitScope?.id || "");
 
-  const [appKs] = useKitSnapshot();
+  const [appKs] = useKitSnapshotTriad();
   const kit = appKs?.kit as Kit;
   const { run: moveKitArtifact } = useMoveKitArtifactToFolder();
   const { run: runCreateDesign } = useCreateDesign();
@@ -14284,7 +14221,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
  * KitDiagramInner holds the data fields for a KitDiagramInner record.
  **/
 const KitDiagramInner: FC = () => {
-  const [ks0] = useKitSnapshot();
+  const [ks0] = useKitSnapshotTriad();
   const kit = ks0?.kit as Kit | undefined;
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const kitCommands = useKitAppCommands();
@@ -15375,7 +15312,7 @@ export const KitToolbarHistory: FC = () => {
  * MUST re-import the kit from its remote URL, discarding all local changes.
  **/
 export const KitToolbarReset: FC = () => {
-  const [ks0] = useKitSnapshot();
+  const [ks0] = useKitSnapshotTriad();
   const kit = ks0?.kit as Kit | undefined;
   const [kitStore] = useKitStore();
   const getOrigin = useOrigin();
@@ -15424,7 +15361,7 @@ export const KitSection: FC = () => {
 /**
  **/
 const KitSectionForm: FC = () => {
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit | undefined;
   const [, setName] = useKitName();
   const [, setVersion] = useKitRelease();
@@ -15494,7 +15431,7 @@ export const TypeSection: FC = () => {
 /**
  **/
 const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const type = kit?.types?.find((t) => t.id === typeId);
   if (!type) return null;
@@ -15533,7 +15470,7 @@ const SingleTypeSection: FC<{ typeId: string }> = ({ typeId }) => {
  **/
 const MultipleTypesSection: FC<{ typeIds: string[] }> = ({ typeIds }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const types = typeIds.map((id) => kit?.types?.find((t) => t.id === id)).filter((t) => t !== undefined) as Type[];
   return (
@@ -15567,7 +15504,7 @@ export const PortSection: FC = () => {
  **/
 const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const iface = kit?.ports?.find((i) => i.id === portId);
   if (!iface) return null;
@@ -15596,7 +15533,7 @@ const SinglePortSection: FC<{ portId: string }> = ({ portId }) => {
  **/
 const MultiplePortsSection: FC<{ portIds: string[] }> = ({ portIds }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const ports = portIds.map((id) => kit?.ports?.find((i) => i.id === id)).filter((i) => i !== undefined) as Port[];
   return (
@@ -15630,7 +15567,7 @@ export const TagSection: FC = () => {
  **/
 const SingleTagSection: FC<{ tagId: string }> = ({ tagId }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const tag = kit?.tags?.find((t) => t.id === tagId);
   if (!tag) return null;
@@ -15650,7 +15587,7 @@ const SingleTagSection: FC<{ tagId: string }> = ({ tagId }) => {
  **/
 const MultipleTagsSection: FC<{ tagIds: string[] }> = ({ tagIds }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const tags = tagIds.map((id) => kit?.tags?.find((t) => t.id === id)).filter((t) => t !== undefined) as Tag[];
   return (
@@ -15686,7 +15623,7 @@ export const ConceptSection: FC = () => {
  **/
 const SingleConceptSection: FC<{ conceptId: string }> = ({ conceptId }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const concept = kit?.concepts?.find((c) => c.id === conceptId);
   if (!concept) return null;
@@ -15706,7 +15643,7 @@ const SingleConceptSection: FC<{ conceptId: string }> = ({ conceptId }) => {
  **/
 const MultipleConceptsSection: FC<{ conceptIds: string[] }> = ({ conceptIds }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const concepts = conceptIds.map((id) => kit?.concepts?.find((c) => c.id === id)).filter((c) => c !== undefined) as Concept[];
   return (
@@ -15738,7 +15675,7 @@ export const KitDesignSection: FC = () => {
  * SingleDesignSection holds the data fields for a SingleDesignSection record.
  **/
 const SingleDesignSection: FC<{ designId: string }> = ({ designId }) => {
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const design = kit?.designs?.find((d) => d.id === designId);
   if (!design) return null;
@@ -15815,7 +15752,7 @@ const SingleDesignSection: FC<{ designId: string }> = ({ designId }) => {
  **/
 const MultipleDesignsSection: FC<{ designIds: string[] }> = ({ designIds }) => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const designs = designIds.map((id) => kit?.designs?.find((d) => d.id === id)).filter((d) => d !== undefined) as Design[];
   return (
@@ -15838,7 +15775,7 @@ const MultipleDesignsSection: FC<{ designIds: string[] }> = ({ designIds }) => {
  **/
 export const FileSection: FC = () => {
   const { t } = useTranslation();
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const [selection] = useKitAppSelection();
   const selectedFiles = selection?.files || [];
@@ -15907,7 +15844,7 @@ export const FileSection: FC = () => {
 export const FolderSection: FC = () => {
   const { t } = useTranslation();
   const kitDataSource = useKitAppStore() as any;
-  const [ksFolder] = useKitSnapshot();
+  const [ksFolder] = useKitSnapshotTriad();
   const kit = ksFolder?.kit as Kit;
   const [selection] = useKitAppSelection();
   const selectedFolders = selection?.folders || [];
@@ -16674,7 +16611,7 @@ export function useClusterableGroups() {
  * Hook returning the kit with applied transaction diffs.
  **/
 export function useDiffedKit(): Kit {
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const diff = useDesignAppDiff();
   return diff ? applyKitDiff(kit, diff) : kit;
@@ -16685,7 +16622,7 @@ export function useDiffedKit(): Kit {
  **/
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
-  const [kitTypes] = useKitTypes();
+  const [kitTypes] = useTypesFull();
   const typesWithColoredConnectors = useMemo(() => {
     if (!diffedKit.types || !kitTypes) return [];
     const colorDiff = colorPortsForTypes(diffedKit.types);
@@ -20041,7 +19978,7 @@ export function useKits(): KitShallow[] {
  **/
 function useKitCommandsById(kitId?: string) {
   const runtime = useKitRuntimeSafe();
-  const effectiveKitId = useSketchpadKitId(kitId as Id);
+  const effectiveKitId = useResolvedKitIdentifier(kitId);
   const kitStore =
     runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
   return useKitCommandDispatchersWithOrigin(kitStore);
@@ -21023,7 +20960,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const isKitApp = kitId && !isDesignApp && !isTypeApp && !isQualityApp;
 
-  const [navbarKitSnap] = useKitSnapshot();
+  const [navbarKitSnap] = useKitSnapshotTriad();
   const kitFromScope = navbarKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
@@ -23306,7 +23243,7 @@ const LayoutWrapper: FC = () => {
   const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
   const isKitApp = kitId && !isDesignApp && !isTypeApp && !isQualityApp;
 
-  const [footerKitSnap] = useKitSnapshot();
+  const [footerKitSnap] = useKitSnapshotTriad();
   const kitFromScope = footerKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
@@ -29591,8 +29528,8 @@ export const DesignAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const design = useDesign() as Design | undefined;
-  const [types] = useKitTypes();
-  const [tags] = useKitTags();
+  const [types] = useTypesFull();
+  const [tags] = useTagsFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [addRepresentationTagForAllTypes] = useDesignAppAddRepresentationTagForAllTypes();
   const [removeRepresentationTagFromAllTypes] = useDesignAppRemoveRepresentationTagFromAllTypes();
@@ -30187,9 +30124,9 @@ const DesignSectionForm: FC = () => {
   }, [location.pathname]);
   const scopedKitId = kitScope?.id ?? pathScope.kitId;
   const scopedDesignId = designScope?.id ?? pathScope.designId;
-  const [dsgKs] = useKitSnapshot();
+  const [dsgKs] = useKitSnapshotTriad();
   const kit = dsgKs?.kit as Kit | null;
-  const [kitDesignsRaw] = useKitDesigns(scopedKitId as string | undefined);
+  const [kitDesignsRaw] = useDesignsFull(scopedKitId as string | undefined);
   const kitDesigns = (kitDesignsRaw ?? []) as Design[];
   const designFromScope = useDesign() as Design | null;
   const design = useMemo(() => {
@@ -30596,7 +30533,7 @@ const PiecesSectionForm: FC = () => {
   const [updatePiece] = useDesignAppUpdatePiece();
   const [updatePieces] = useDesignAppUpdatePieces();
   const design = useDesign() as Design;
-  const [pcKs] = useKitSnapshot();
+  const [pcKs] = useKitSnapshotTriad();
   const kit = pcKs?.kit as Kit;
   const { run: runUpdateDesign } = useUpdateDesign();
   const includedDesigns = useIncludedDesigns();
@@ -31898,7 +31835,7 @@ export const ConnectorSection: FC<{ pieceId: Id; connectorId: Id }> = ({ pieceId
 const ConnectorSectionForm: FC<{ pieceId: Id; connectorId: Id }> = ({ pieceId, connectorId }) => {
   const { t } = useTranslation();
   const design = useDesign() as Design;
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const connectorNotFoundLabel = useLabel("semio.sketchpad.app.design.panel.details.section.connector.notFound");
   const yesLabel = useLabel("semio.sketchpad.common.yes");
@@ -32296,7 +32233,7 @@ type ExpandMenuProps = {
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
   const designScope = useDesignScope();
   const [explodeableIds] = useExplodeableDesignNodeIdsFromKit(designScope?.id ?? undefined);
-  const [ksKit] = useKitSnapshot();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const explodeableDesignNodes = useMemo(() => {
     const idSet = new Set((explodeableIds ?? []).map(String));
@@ -32468,7 +32405,7 @@ const getConnectorPositionStyle = (connector: Connector): { x: number; y: number
  **/
 const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getConnectorPositionStyle(connector);
-  const [ks0] = useKitSnapshot();
+  const [ks0] = useKitSnapshotTriad();
   const kit = ks0?.kit as Kit | undefined;
   const selectedPortId = useContext(SelectedConnectorPortContext);
   const connectorPortId = getConnectorPortId(connector);
@@ -33795,9 +33732,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
   const sketchpadCommands = useSketchpadCommands();
-  const [kitTypes] = useKitTypes();
-  const [kitDesigns] = useKitDesigns();
-  const [ksKit] = useKitSnapshot();
+  const [kitTypes] = useTypesFull();
+  const [kitDesigns] = useDesignsFull();
+  const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
   const [activeTool] = useDesignAppActiveTool();
 
@@ -35699,7 +35636,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const piece = usePiece() as Piece;
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.id) as Type | undefined;
   const typeConcepts = type?.concepts;
-  const [files] = useKitFiles();
+  const [files] = useFilesFull();
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const prevRepresentationIdRef = useRef<string | null>(null);
 
@@ -36134,8 +36071,8 @@ const DesignAppScene: FC = () => {
   const selectionOnDrag = activeTool !== ToolKind.HAND;
   const [focusedPieceId] = useDesignAppFocusedPieceId();
   const [projection, setProjection] = React.useState<"camera" | "orthographic">("camera");
-  const [sceneTypes0] = useKitTypes();
-  const [sceneDesigns0] = useKitDesigns();
+  const [sceneTypes0] = useTypesFull();
+  const [sceneDesigns0] = useDesignsFull();
   const sceneTypes = sceneTypes0 ?? [];
   const sceneDesigns = sceneDesigns0 ?? [];
   const { setActiveDraggedType, setActiveDraggedDesign } = useDragDrop();
@@ -36391,7 +36328,7 @@ const DesignWindowApp: FC<AppProps> = () => {
   const [selection] = useDesignAppSelection();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
-  const [wbKs] = useKitSnapshot();
+  const [wbKs] = useKitSnapshotTriad();
   const kit = wbKs?.kit as Kit | null;
   const designFromScope = useDesign() as Design | null;
   const design = useMemo(() => {
@@ -36400,8 +36337,8 @@ const DesignWindowApp: FC<AppProps> = () => {
     return kit.designs?.find((entry) => entry.id === designScope.id);
   }, [designFromScope, kit, designScope?.id]);
   const kitId = kitScope?.id ?? kit?.id;
-  const [workbenchTypes0] = useKitTypes();
-  const [workbenchDesigns0] = useKitDesigns();
+  const [workbenchTypes0] = useTypesFull();
+  const [workbenchDesigns0] = useDesignsFull();
   const workbenchTypes = workbenchTypes0 ?? [];
   const workbenchDesigns = workbenchDesigns0 ?? [];
   const appSettings = useSketchpad((s) => s.settings?.apps) as any;
@@ -36822,7 +36759,7 @@ const DesignWindowApp: FC<AppProps> = () => {
   }, [addSection, removeSection]);
 
   const PiecesWorkbenchContent: FC = () => {
-    const [ksKit] = useKitSnapshot();
+    const [ksKit] = useKitSnapshotTriad();
     const kit = ksKit?.kit as Kit;
     const resolveParentId = (parent: any): string | undefined => (typeof parent === "string" ? parent : parent?.id);
 
@@ -38766,7 +38703,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
   const typeId = useType(selectTypeMeshId) as string | undefined;
 
-  const [files] = useKitFiles();
+  const [files] = useFilesFull();
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
@@ -39703,7 +39640,7 @@ const AuthorsSectionForm: FC = () => {
   const { run: runCreateAuthor } = useCreateAuthor();
   const { run: runUpdateAuthor } = useUpdateAuthor();
   const type = useType(undefined, undefined, true) as Type;
-  const [auKs] = useKitSnapshot();
+  const [auKs] = useKitSnapshotTriad();
   const kit = auKs?.kit as Kit | null;
 
   const updateAuthors = (authors: string[]) => {
@@ -41036,7 +40973,7 @@ export const TypeAppFooter: FC = () => {
   const removeFooterItem = useRemoveFooterItem();
   const appType = useAppType();
   const type = useType() as Type | undefined;
-  const [tags] = useKitTags();
+  const [tags] = useTagsFull();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const [addRepresentationTag] = useTypeAppAddRepresentationTag();
   const [removeRepresentationTag] = useTypeAppRemoveRepresentationTag();
@@ -42719,7 +42656,7 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
  **/
 export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
-  const [qwKs] = useKitSnapshot();
+  const [qwKs] = useKitSnapshotTriad();
   const kit = qwKs?.kit as Kit | null;
   const qualities = kit?.qualities || [];
 
@@ -42837,7 +42774,7 @@ const QualityTree: FC<{ qualities: Quality[] }> = ({ qualities }) => {
  **/
 const QualityWorkbenchQualities: FC = () => {
   const { t } = useTranslation();
-  const [qqKs] = useKitSnapshot();
+  const [qqKs] = useKitSnapshotTriad();
   const kit = qqKs?.kit as Kit | null;
   const qualities = kit?.qualities || [];
 

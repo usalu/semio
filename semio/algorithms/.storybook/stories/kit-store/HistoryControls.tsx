@@ -1,10 +1,12 @@
 // #region 🧲Header
-// VCS: `KitStoreCommand` via `KitStoreHandle.execute` (JSON camelCase per serde on command results).
+// VCS: `kitStoreExecute` GraphQL mutation (`KitStoreCommand` JSON) via `@semio/js` + `KitStoreHandle.execute` stream.
 // Also hosts the 🌳KitTreeGraph window renderer so both the button grid and the GitKraken-style
 // history live next to the VCS domain model (single source of truth for wiring-to-store).
 // #endregion
 
 import * as React from "react";
+
+import { kitGraphqlExecuteStoreCommand, type KitGraphqlHandle } from "@semio/js";
 
 import type { KitStoreHandle } from "./semioWasm";
 
@@ -116,19 +118,24 @@ export const HistoryControls: React.FC<{
       onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
       return;
     }
-    try {
-      const r = handle.execute(o);
-      onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
-      applyKitStoreCommandResultIds(r, {
-        onSessionId,
-        onDraftId,
-        onTxId,
-        onCpId,
-        onAltId,
-      });
-    } catch (e) {
-      onLog(`execute ${label} ERROR: ${e instanceof Error ? e.message : String(e)}`);
-    }
+    void (async () => {
+      try {
+        const gql: KitGraphqlHandle = {
+          execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage),
+        };
+        const r = await kitGraphqlExecuteStoreCommand(gql, o);
+        onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
+        applyKitStoreCommandResultIds(r, {
+          onSessionId,
+          onDraftId,
+          onTxId,
+          onCpId,
+          onAltId,
+        });
+      } catch (e) {
+        onLog(`execute ${label} ERROR: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    })();
   };
 
   const canVcs = Boolean(handle);

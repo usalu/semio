@@ -51,7 +51,7 @@ const api = {
       (async () => {
         try {
           const cmds = handle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          handle.executeChangeKitCommands(cmds);
+          await handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
@@ -65,7 +65,7 @@ const api = {
       (async () => {
         try {
           const cmds = handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          handle.executeChangeKitCommands(cmds);
+          await handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
@@ -79,7 +79,7 @@ const api = {
       (async () => {
         try {
           const cmds = handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          handle.executeChangeKitCommands(cmds);
+          await handle.executeChangeKitCommands(cmds);
           return { ok: true };
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
