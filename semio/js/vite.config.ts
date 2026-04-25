@@ -23,6 +23,7 @@ export default defineConfig({
   test: {
     name: "semio",
     environment: "node",
+    globals: true,
     testTimeout: 30000,
     include: ["index.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],

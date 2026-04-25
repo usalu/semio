@@ -502,8 +502,7 @@ fn run_method(
         let kind = ChangeKitCommand::batch_kind(&cmds);
         let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
         KitGraph::with_undo(&k, || {
-            let (_d, inv) = ChangeKitCommand::apply_many(&k, &cmds).map_err(KitGraph::map_semio_err)?;
-            inverse_out = inv;
+            inverse_out = ChangeKitCommand::apply_many(&k, &cmds).map_err(KitGraph::map_semio_err)?;
             Ok(())
         })
         .map_err(|e| e32000(e.to_string()))?;

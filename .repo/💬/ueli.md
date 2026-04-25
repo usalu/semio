@@ -288,6 +288,8 @@ TODO: Introduce Design/Interpolate algorithm.
 
 semio:
 
+All kit modification in semio/js, semio/
+
 Currently everything uses mostly functional style programming.
 We are rewriting everythingy to be stateful in order to avoid expensive copy of memory.
 Rewrite everything object with classes and methods.

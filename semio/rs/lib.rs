@@ -3672,11 +3672,6 @@ pub mod change_command {
     // --- impl: ChangeKitCommand ---
 
     impl ChangeKitCommand {
-        /// Apply the command; does not return inverses (checkpoint replay, redo).
-        pub fn run(&self, kit: &KitGraphRef) -> Result<()> {
-            self.apply(kit).map(|_| ())
-        }
-
         /// Declared semantic kind for VCS/UI (batch uses last non-[`KitChangeKind::Inferred`]).
         pub fn declared_kind(&self) -> KitChangeKind {
             match self {
@@ -4312,10 +4307,6 @@ pub mod change_command {
     // the editor size limit. See the remaining impls appended below.
 
     impl ChangeTypeCommand {
-        pub fn run(&self, kit: &KitGraphRef, type_id: &Id) -> Result<()> {
-            self.apply(kit, type_id)?;
-            Ok(())
-        }
         /// Returns inverse fragments (forward order) — the caller will reverse for nesting.
         pub fn apply(&self, kit: &KitGraphRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
             let t = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
@@ -4687,10 +4678,6 @@ pub mod change_command {
     }
 
     impl ChangeDesignCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id) -> Result<()> {
-            self.apply(kit, design_id)?;
-            Ok(())
-        }
         /// Inverse atoms in forward order; [`ChangeKitCommand`] reverses the batch.
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -5139,10 +5126,6 @@ pub mod change_command {
     }
 
     impl ChangePieceCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<()> {
-            self.apply(kit, design_id, piece_id)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
             let pref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5329,10 +5312,6 @@ pub mod change_command {
     }
 
     impl ChangeConnectionCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<()> {
-            self.apply(kit, design_id, connection_id)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
             let cref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5482,10 +5461,6 @@ pub mod change_command {
     }
 
     impl ChangeLayerCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<()> {
-            self.apply(kit, design_id, layer_id)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let l = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
@@ -5548,10 +5523,6 @@ pub mod change_command {
         }
     }
     impl ChangeGroupCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<()> {
-            self.apply(kit, design_id, group_id)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let g = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
@@ -5608,10 +5579,6 @@ pub mod change_command {
         }
     }
     impl ChangeStatCommand {
-        pub fn run(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<()> {
-            self.apply(kit, design_id, stat_id)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let s = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
@@ -5656,10 +5623,6 @@ pub mod change_command {
         }
     }
     impl ChangePropCommand {
-        pub fn run(&self, p: &PropStoreRef) -> Result<()> {
-            self.apply(p)?;
-            Ok(())
-        }
         pub fn apply(&self, p: &PropStoreRef) -> Result<Vec<ChangePropCommand>> {
             match self {
                 ChangePropCommand::Key { key } => {
@@ -5693,10 +5656,6 @@ pub mod change_command {
         }
     }
     impl ChangeAttributeCommand {
-        pub fn run(&self, a: &AttributeStoreRef) -> Result<()> {
-            self.apply(a)?;
-            Ok(())
-        }
         pub fn apply(&self, a: &AttributeStoreRef) -> Result<Vec<ChangeAttributeCommand>> {
             match self {
                 ChangeAttributeCommand::Key { key } => {
@@ -5731,10 +5690,6 @@ pub mod change_command {
     }
 
     impl ChangeFamilyCommand {
-        pub fn run(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<()> {
-            self.apply(kit, fam)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
             match self {
                 ChangeFamilyCommand::Name { name } => {
@@ -5833,10 +5788,6 @@ pub mod change_command {
     }
 
     impl ChangePortCommand {
-        pub fn run(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<()> {
-            self.apply(p, kit)?;
-            Ok(())
-        }
         pub fn apply(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<Vec<ChangePortCommand>> {
             match self {
                 ChangePortCommand::Id { id } => {
@@ -5921,10 +5872,6 @@ pub mod change_command {
         }
     }
     impl ChangeConnectorCommand {
-        pub fn run(&self, c: &ConnectorStoreRef) -> Result<()> {
-            self.apply(c)?;
-            Ok(())
-        }
         pub fn apply(&self, c: &ConnectorStoreRef) -> Result<Vec<ChangeConnectorCommand>> {
             match self {
                 ChangeConnectorCommand::Code { code } => {
@@ -6009,10 +5956,6 @@ pub mod change_command {
         }
     }
     impl ChangeRepresentationCommand {
-        pub fn run(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<()> {
-            self.apply(kit, r)?;
-            Ok(())
-        }
         pub fn apply(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
             match self {
                 ChangeRepresentationCommand::Url { url } => {
@@ -28685,7 +28628,7 @@ mod tests {
 
         fn undo_inverses(kit: &KitGraphRef, inv: &[ChangeKitCommand]) {
             for u in inv {
-                u.run(kit).expect("undo step");
+                u.apply(kit).expect("undo step");
             }
         }
 
@@ -28770,7 +28713,7 @@ mod tests {
             let diff = cmd.kit_diff(&kit).expect("kit_diff");
             assert_eq!(kit.read().expect("r").to_full_dto(), before);
 
-            cmd.run(&kit).expect("run");
+            cmd.apply(&kit).expect("apply");
             let after = kit.read().expect("r").to_full_dto();
             assert_eq!(diff, crate::kit_diff::KitDiff::between_dto(&before, &after));
         }

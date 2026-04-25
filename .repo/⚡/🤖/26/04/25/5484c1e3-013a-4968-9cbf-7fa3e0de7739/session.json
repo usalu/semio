@@ -3047,6 +3047,49 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "ab7911486825801aa7ce84f6b2b593faec800a6c",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-25T19:05:02Z",
+        "session": "5484c1e3-013a-4968-9cbf-7fa3e0de7739"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "pre_user_prompt",
+          "trajectory_id": "5484c1e3-013a-4968-9cbf-7fa3e0de7739",
+          "timestamp": "2026-04-25T21:05:01.8530112+02:00",
+          "execution_id": "884a4f7d-aff5-4526-9ba1-bb17870ec4dc",
+          "tool_info": {
+            "user_prompt": "Continue"
+          }
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "ab7911486825801aa7ce84f6b2b593faec800a6c",
+        "client": "windsurf-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-25T19:05:13Z",
+        "session": "5484c1e3-013a-4968-9cbf-7fa3e0de7739"
+      },
+      "native": {
+        "event": {
+          "agent_action_name": "post_cascade_response",
+          "trajectory_id": "5484c1e3-013a-4968-9cbf-7fa3e0de7739",
+          "timestamp": "2026-04-25T21:05:12.757155+02:00",
+          "tool_info": {
+            "response": "*Rules used for this response:*\n- (Always On) Triggered Rule: AGENTS.md"
+          }
+        }
+      },
+      "response": {}
     }
   ]
 }
