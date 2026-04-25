@@ -3,8 +3,7 @@
 // Web Worker entry: loads the semio WASM module (host-configured), hosts [`KitStoreHandle`], exposes RPC via Comlink.
 
 import * as Comlink from "comlink";
-import { kitGraphqlExecuteRead, kitGraphqlExecuteStoreCommand, kitGraphqlSubscribeLoop, type KitGraphqlHandle } from "./kitGraphLive";
-import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
+import { kitGraphqlExecuteRead, kitGraphqlExecuteStoreCommand, kitGraphqlSubscribeLoop, type KitGraphqlHandle, type ReadCommandBatch, type ReadCommandBatchResult } from "./index";
 
 let handle: any = null;
 const kitEventListeners = new Map<number, (ev: unknown) => void>();

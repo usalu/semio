@@ -195,7 +195,7 @@ function assertSingleResult(results: ReadCommandBatchResult): ReadKitCommandOutp
 
 /** Maps one `ReadKitCommand` to field-based GraphQL (no `readKitCommands`). */
 export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
-  if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand == null) {
+  if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { typeIds } }` }),
     ) as { kitStore?: { typeIds?: string[] } };
@@ -203,13 +203,13 @@ export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: Read
     if (!Array.isArray(typeIds)) throw new Error("typeIds");
     return { readKitTypeIdsCommand: { typeIds: typeIds.map((id) => idDto(id)) } };
   }
-  if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand == null) {
+  if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { typesMetadata } }` }),
     ) as { kitStore?: { typesMetadata?: unknown } };
     return { readKitTypesMetadataCommand: { types: d.kitStore?.typesMetadata as any } };
   }
-  if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand == null) {
+  if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { designIds } }` }),
     ) as { kitStore?: { designIds?: string[] } };
@@ -217,19 +217,19 @@ export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: Read
     if (!Array.isArray(designIds)) throw new Error("designIds");
     return { readKitDesignIdsCommand: { designIds: designIds.map((id) => idDto(id)) } };
   }
-  if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand == null) {
+  if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { designsMetadata } }` }),
     ) as { kitStore?: { designsMetadata?: unknown } };
     return { readKitDesignsMetadataCommand: { designs: d.kitStore?.designsMetadata as any } };
   }
-  if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand == null) {
+  if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { coloredConnectors } }` }),
     ) as { kitStore?: { coloredConnectors?: unknown } };
     return { readKitColoredConnectorsCommand: { rows: d.kitStore?.coloredConnectors as any } };
   }
-  if ("readKitNameCommand" in c && c.readKitNameCommand == null) {
+  if ("readKitNameCommand" in c && c.readKitNameCommand === null) {
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, { query: `query { kitStore { name } }` }),
     ) as { kitStore?: { name?: string } };
@@ -256,7 +256,7 @@ export async function kitGraphqlMapReadCommand(handle: KitGraphqlHandle, c: Read
 }
 
 async function mapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
-  if (cmd.readDesignClusterableGroupsCommand) {
+  if ("readDesignClusterableGroupsCommand" in cmd && cmd.readDesignClusterableGroupsCommand) {
     const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { clusterableGroups(selection: $sel) } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId, sel: cmd.readDesignClusterableGroupsCommand.selection.map((x) => x.id) } })) as {
       kitStore?: { designForId?: { clusterableGroups?: string[][] } | null };
@@ -265,14 +265,7 @@ async function mapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: Re
     if (!Array.isArray(g)) throw new Error("clusterableGroups");
     return { readDesignClusterableGroupsCommand: { groups: g.map((row) => row.map((id) => idDto(id))) } };
   }
-  if (cmd.readDesignIncludedDesignsCommand == null) {
-    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesigns } } }`;
-    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId } })) as {
-      kitStore?: { designForId?: { includedDesigns?: unknown } | null };
-    };
-    return { readDesignIncludedDesignsCommand: { designs: d.kitStore?.designForId?.includedDesigns as any } };
-  }
-  if (cmd.readDesignQualitySumCommand) {
+  if ("readDesignQualitySumCommand" in cmd && cmd.readDesignQualitySumCommand) {
     const qid = cmd.readDesignQualitySumCommand.qualityId.id;
     const q = `query($id: String!, $q: String!) { kitStore { designForId(id: $id) { qualitySum(qualityId: $q) } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId, q: qid } })) as {
@@ -282,7 +275,7 @@ async function mapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: Re
     if (typeof s !== "number") throw new Error("qualitySum");
     return { readDesignQualitySumCommand: { sum: s } };
   }
-  if (cmd.readDesignReplaceableCatalogCommand) {
+  if ("readDesignReplaceableCatalogCommand" in cmd && cmd.readDesignReplaceableCatalogCommand) {
     const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`;
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(handle, {
@@ -299,7 +292,14 @@ async function mapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: Re
       },
     };
   }
-  if (cmd.readDesignIncludedDesignIdsCommand == null) {
+  if ("readDesignIncludedDesignsCommand" in cmd && cmd.readDesignIncludedDesignsCommand === null) {
+    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesigns } } }`;
+    const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId } })) as {
+      kitStore?: { designForId?: { includedDesigns?: unknown } | null };
+    };
+    return { readDesignIncludedDesignsCommand: { designs: d.kitStore?.designForId?.includedDesigns as any } };
+  }
+  if ("readDesignIncludedDesignIdsCommand" in cmd && cmd.readDesignIncludedDesignIdsCommand === null) {
     const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesignIds } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: designId } })) as {
       kitStore?: { designForId?: { includedDesignIds?: string[] } | null };
@@ -308,12 +308,13 @@ async function mapDesignRead(handle: KitGraphqlHandle, designId: string, cmd: Re
     if (!Array.isArray(ids)) throw new Error("includedDesignIds");
     return { readDesignIncludedDesignIdsCommand: { designIds: ids.map((x) => idDto(x)) } };
   }
-  if (cmd.readDesignPieceCommands) {
-    return {
-      readDesignPieceCommands: {
-        results: [await mapPieceRead(handle, designId, cmd.readDesignPieceCommands.id.id, cmd.readDesignPieceCommands.commands[0]!)],
-      },
-    };
+  if ("readDesignPieceCommands" in cmd && cmd.readDesignPieceCommands) {
+    const { id, commands } = cmd.readDesignPieceCommands;
+    const results: ReadPieceCommandOutput[] = [];
+    for (const pc of commands) {
+      results.push(await mapPieceRead(handle, designId, id.id, pc));
+    }
+    return { readDesignPieceCommands: { results } };
   }
   throw new Error(`[DEBUG] mapDesignRead: ${Object.keys(cmd).join(",")}`);
 }
@@ -324,21 +325,21 @@ async function mapPieceRead(
   pieceId: string,
   cmd: ReadPieceCommand,
 ): Promise<ReadPieceCommandOutput> {
-  if (cmd.readPieceFlatPlaneCommand == null) {
+  if ("readPieceFlatPlaneCommand" in cmd && cmd.readPieceFlatPlaneCommand === null) {
     const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatPlane } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { d: designId, p: pieceId } })) as {
       kitStore?: { designForId?: { pieceForId?: { flatPlane?: unknown } | null } | null };
     };
     return { readPieceFlatPlaneCommand: { flatPlane: d.kitStore?.designForId?.pieceForId?.flatPlane as any } };
   }
-  if (cmd.readPieceFlatCenterCommand == null) {
+  if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
     const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatCenter } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { d: designId, p: pieceId } })) as {
       kitStore?: { designForId?: { pieceForId?: { flatCenter?: unknown } | null } | null };
     };
     return { readPieceFlatCenterCommand: { flatCenter: d.kitStore?.designForId?.pieceForId?.flatCenter as any } };
   }
-  if (cmd.readPieceParentConnectionFullCommand == null) {
+  if ("readPieceParentConnectionFullCommand" in cmd && cmd.readPieceParentConnectionFullCommand === null) {
     const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { parentConnectionFull } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { d: designId, p: pieceId } })) as {
       kitStore?: { designForId?: { pieceForId?: { parentConnectionFull?: unknown } | null } | null };
@@ -353,7 +354,7 @@ async function mapPieceRead(
 }
 
 async function mapTypeRead(handle: KitGraphqlHandle, typeId: string, cmd: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
-  if (cmd.readTypeBestRepresentationCommand) {
+  if ("readTypeBestRepresentationCommand" in cmd && cmd.readTypeBestRepresentationCommand) {
     const tags = cmd.readTypeBestRepresentationCommand.tagIds;
     const q = `query($id: String!, $tags: [String!]!) { kitStore { typeForId(id: $id) { bestRepresentation(tagIds: $tags) } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(handle, { query: q, variables: { id: typeId, tags } })) as {

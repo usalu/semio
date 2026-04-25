@@ -1,5 +1,5 @@
 // #region 🧲Header
-// VCS: `kitStoreExecute` GraphQL mutation (`KitStoreCommand` JSON) via `@semio/js` + `KitStoreHandle.execute` stream.
+// VCS: typed GraphQL mutations (`newSession`, `executeSessionCommands`, …) via `kitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` stream.
 // Also hosts the 🌳KitTreeGraph window renderer so both the button grid and the GitKraken-style
 // history live next to the VCS domain model (single source of truth for wiring-to-store).
 // #endregion

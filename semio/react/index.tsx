@@ -77,6 +77,8 @@ export type {
 
 export type { SetError, SetResult, WriteStatus };
 export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
+/** Read-only async-backed value + {@link WriteStatus} (no setter). */
+export type HookRead<T> = readonly [T | undefined, WriteStatus];
 
 export type SchemaPropertyEvent = {
 	key: string;
@@ -3343,7 +3345,7 @@ export function useUpdateConnections(): {
 }
 
 /** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`). */
-export function usePiecesMetadataMap(designId?: string): HookTriad<Record<string, any>> {
+export function usePiecesMetadataMap(designId?: string): HookRead<Record<string, any>> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<Record<string, any>>({});
 	const [pending, setPending] = React.useState(0);
@@ -3379,7 +3381,7 @@ export function usePiecesMetadataMap(designId?: string): HookTriad<Record<string
 			: pending > 0
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 export function useRpcPieces(designId?: string): HookTriad<any[]> {
@@ -3727,17 +3729,17 @@ export function useAuthors(): HookTriad<any[]> {
 	return useRpcAuthors();
 }
 
-export function usePieceMetadata(designId?: string, pieceId?: string): HookTriad<any> {
-	const [map, , status] = usePiecesMetadataMap(designId);
+export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<any> {
+	const [map, status] = usePiecesMetadataMap(designId);
 	const value = React.useMemo(() => (pieceId ? map[pieceId] : undefined), [map, pieceId]);
-	return [value, noopAsyncSet, status] as const;
+	return [value, status] as const;
 }
 
 /**
  * Flattened piece plane from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatPlaneCommand`).
  * Subscribes with `useSyncExternalStore` to kit client notifications; async read fills the external cell.
  */
-export function usePieceFlatPlane(designId?: string, pieceId?: string): HookTriad<any> {
+export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
 	const runtime = useKitRuntime();
 	const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
 	const subscribe = React.useCallback(
@@ -3788,13 +3790,13 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookTria
 			: snap.pending > 0
 				? { kind: "pending", pending: snap.pending }
 				: { kind: "idle", pending: 0 };
-	return [snap.value, noopAsyncSet, status] as const;
+	return [snap.value, status] as const;
 }
 
 /**
  * Flattened piece center from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatCenterCommand`).
  */
-export function usePieceFlatCenter(designId?: string, pieceId?: string): HookTriad<any> {
+export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
 	const runtime = useKitRuntime();
 	const cellRef = React.useRef({ version: 0, value: undefined as any, pending: 0 });
 	const subscribe = React.useCallback(
