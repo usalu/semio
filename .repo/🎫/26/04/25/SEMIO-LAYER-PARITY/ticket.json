@@ -1,4 +1,8 @@
 {
   "title": "Semio Layer Parity",
-  "status": "open"
+  "status": "closed",
+  "summary": "Layer parity (JS/React): Selective KitEvent invalidation for SemioKitViewStore; SemioKitDesignReadStore + SemioKitShallowListReadStore; React hooks use useSyncExternalStore + useSemioReadSnap. See layer-parity-impl.md. Tests: vitest js 139, react 10, cargo lib 122.",
+  "sessions": [
+    "⚪154f9e4386274198abe0659b6603106e"
+  ]
 }

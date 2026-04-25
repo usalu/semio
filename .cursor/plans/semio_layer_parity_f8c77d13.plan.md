@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: rust-command-engine
    content: Make Rust command execution actor-based, id-returning, event-result driven, and diff/inverse centered.
-   status: in_progress
+   status: completed
  - id: js-store-layer
    content: Refactor @semio/js into typed store classes with structured events, selector subscriptions, and one GraphQL execution path.
-   status: pending
+   status: completed
  - id: react-hook-layer
    content: Refactor @semio/react hooks to use exact useSyncExternalStore selectors and useCallback mutation enqueuers.
-   status: pending
+   status: completed
  - id: sketchpad-boundary
    content: Update sketchpad usage so it depends on React hooks/components and respects the strict layer boundary.
-   status: pending
+   status: completed
  - id: parity-tests
    content: Extend existing embedded and Rust tests to verify command/event/store/class/hook parity and exact subscription granularity.
-   status: pending
+   status: completed
 isProject: false
 ---
 

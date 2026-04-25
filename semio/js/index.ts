@@ -863,6 +863,86 @@ export class Kit {
   static areSameId(a: KitId, b: KitId): boolean { return a.id === b.id; }
 }
 export type KitLike = Kit | KitFullDto;
+
+// #region KitHostStores
+/** @emoji 🧭 Client-side v7/UUID id for empty kit records when not using WASM. */
+export function id(): string {
+  if (typeof globalThis !== "undefined" && globalThis.crypto && typeof (globalThis.crypto as Crypto).randomUUID === "function") return (globalThis.crypto as Crypto).randomUUID()!;
+  return `k-${Date.now()}-${((Math.random() * 0x1_0000_0000) | 0).toString(16)}`;
+}
+
+/** @emoji 🧭 DTO/entity to `Kit` (react / kit registry). */
+export function asKitInstance(input: KitLike): Kit {
+  return input instanceof Kit ? input : Kit.fromPlain(KitFullDtoSchema.parse(input as KitFullDto));
+}
+
+/** @emoji 🧭 Local/sync facet on every kit store snapshot (WASM or file-backed; hooks read `sync.readonly` etc). */
+export type KitSyncSnapshot = { status: string; dirty: boolean; readonly: boolean; lastSyncedAt: string | null; error: unknown | null };
+export const DEFAULT_KIT_SYNC: Readonly<KitSyncSnapshot> = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
+export type KitStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
+export type KitStore = { getSnapshot(): KitStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
+
+export class InMemoryKitStore implements KitStore {
+  private listeners = new Set<() => void>();
+  private _kit: Kit;
+  /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
+  readonly name = "InMemoryKitStore";
+  constructor(seed: Kit) { this._kit = seed; }
+  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
+  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) { try { l(); } catch { /* ignore */ } } }
+}
+
+export type KitJsonFileAdapter = { read: () => Promise<string>; write: (json: string) => Promise<void> };
+export type KitFolderAdapter = { readKit: () => Promise<Uint8Array | undefined>; writeKit: (bytes: Uint8Array) => Promise<void>; readFile: (path: string) => Promise<Blob | undefined>; writeFile: (path: string, blob: Blob) => Promise<void>; deleteFile: (path: string) => Promise<void>; createDirectory: (path: string) => Promise<void>; moveEntry: (from: string, to: string) => Promise<void>; listFiles: () => Promise<string[]> };
+
+export class JsonFileKitStore implements KitStore {
+  private listeners = new Set<() => void>();
+  private _kit: Kit;
+  /** @internal */
+  readonly name = "JsonFileKitStore";
+  private constructor(private readonly adapter: KitJsonFileAdapter, seed: Kit) { this._kit = seed; }
+  static async create(adapter: KitJsonFileAdapter) {
+    const json = await adapter.read();
+    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(json)));
+    return new JsonFileKitStore(adapter, seed);
+  }
+  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
+  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void this.adapter.write(JSON.stringify(kit.toJSON())); }
+}
+
+export class FolderKitStore implements KitStore {
+  private listeners = new Set<() => void>();
+  private _kit: Kit;
+  /** @internal */
+  readonly name = "FolderKitStore";
+  private constructor(private readonly adapter: KitFolderAdapter, seed: Kit) { this._kit = seed; }
+  static async create(adapter: KitFolderAdapter, initial?: KitFullDto) {
+    const bytes = await adapter.readKit();
+    if (bytes != null && bytes.length > 0) {
+      try { const t = new TextDecoder().decode(bytes); return new FolderKitStore(adapter, Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(t)))); } catch { /* fall through */ }
+    }
+    return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
+  }
+  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
+  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void (async () => { try { const enc = new TextEncoder().encode(JSON.stringify(kit.toJSON())); await this.adapter.writeKit(enc); } catch { /* ignore */ } })(); }
+}
+
+export async function createJsonFileKitStore(adapter: KitJsonFileAdapter) { return await JsonFileKitStore.create(adapter); }
+export async function createFolderKitStore(adapter: KitFolderAdapter, initial?: KitFullDto) { return await FolderKitStore.create(adapter, initial); }
+
+export type SessionKitStoreConfig = { serverUrl: string; sessionId?: string; kitName?: string; personId?: string; clientId?: string; authToken?: string; readOnly?: boolean };
+/** @emoji 🧭 Placeholder session store: in-memory until hub sync is host-wired. */
+export async function createSessionKitStore(config: SessionKitStoreConfig) {
+  const t = new Date().toISOString();
+  const store = new InMemoryKitStore(asKitInstance({ id: id(), name: config.kitName ?? "Remote", createdAt: t, updatedAt: t, remote: config.serverUrl }));
+  (store as InMemoryKitStore & { __semioSessionConfig?: SessionKitStoreConfig }).__semioSessionConfig = config;
+  return store;
+}
+// #endregion KitHostStores
+
 export const KitDiffSchema = z.object({ types: TypesDiffSchema.optional(), designs: DesignsDiffSchema.optional() }).passthrough();
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 // #endregion Kit
@@ -1421,6 +1501,27 @@ export class LiveKitRoot {
 export type KitViewCatalogKey = "typeIds" | "designIds" | "typesMetadata" | "designsMetadata";
 const KIT_VIEW_EMPTY_ROW: readonly unknown[] = Object.freeze([]);
 
+/** @emoji 🧭 True if a GraphQL `eventStream` payload should trigger a refetch of `key` (aligns with `semio::events::KitEvent` JSON). */
+export function kitEventShouldRefetchViewCatalogKey(ev: unknown, key: KitViewCatalogKey): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    const ph = (ev as KitCommandLifecycleEvent).semioKitCommand.phase;
+    if (ph === "accepted") return false;
+    if (ph === "succeeded" || ph === "failed") return true;
+    return false;
+  }
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(e, "Changed")) return true;
+  if (Object.prototype.hasOwnProperty.call(e, "FieldChanged")) return true;
+  if (e.Type != null) return key === "typeIds" || key === "typesMetadata";
+  if (e.Design != null) return key === "designIds" || key === "designsMetadata";
+  if (e.ChildAdded != null || e.ChildRemoved != null) return true;
+  if (e.Piece != null || e.Connection != null || e.Layer != null || e.Group != null) return false;
+  if (e.File != null || e.Folder != null || e.Author != null || e.Tag != null || e.Concept != null || e.Quality != null) return false;
+  if (e.Port != null || e.Connector != null || e.Representation != null) return key === "typeIds" || key === "typesMetadata";
+  return true;
+}
+
 const semioKitViewStoreByClient = new WeakMap<KitStoreClient, SemioKitViewStore>();
 
 /**
@@ -1475,14 +1576,18 @@ export class SemioKitViewStore {
     for (const l of s) { try { l(); } catch { /* ignore */ } }
   }
 
-  private touchAllWatched() {
-    const keys = [...this.listeners.keys()].filter((k) => (this.listeners.get(k)?.size ?? 0) > 0);
-    for (const key of keys) { void this.refreshKey(key as KitViewCatalogKey).then((c) => { if (c) this.notify(key as KitViewCatalogKey); }); }
+  /** @emoji 🧭 Selective invalidation: only refetch catalog keys the event may affect (parity with Rust `KitEvent` wire). */
+  private onGraphEvent(ev: unknown) {
+    const keys = [...this.listeners.keys()].filter((k) => (this.listeners.get(k)?.size ?? 0) > 0) as KitViewCatalogKey[];
+    for (const key of keys) {
+      if (!kitEventShouldRefetchViewCatalogKey(ev, key)) continue;
+      void this.refreshKey(key).then((c) => { if (c) this.notify(key); });
+    }
   }
 
   private ensureEventPipe() {
     if (this.clientUnsub) return;
-    this.clientUnsub = this.client.subscribe(() => { this.touchAllWatched(); });
+    this.clientUnsub = this.client.subscribe((ev: unknown) => { this.onGraphEvent(ev); });
   }
 
   /** @emoji 🧭 Subscribe to one catalog key; first subscriber triggers a load. */
@@ -1491,7 +1596,7 @@ export class SemioKitViewStore {
     let set = this.listeners.get(key);
     if (!set) { set = new Set(); this.listeners.set(key, set); }
     set.add(onChange);
-    void this.refreshKey(key).then((c) => { if (c) this.notify(key); else if (set!.size > 0 && !this.cache.has(key)) { this.commit(key, []); this.notify(key); } });
+    void this.refreshKey(key).then((c) => { if (c) this.notify(key); });
     return () => {
       set!.delete(onChange);
       if (set!.size === 0) { this.listeners.delete(key); this.cache.delete(key); }
@@ -1502,6 +1607,327 @@ export class SemioKitViewStore {
 
 export function getSemioKitViewStore(client: KitStoreClient) { return SemioKitViewStore.forClient(client); }
 // #endregion KitViewStore
+
+//#region KitEventParity
+function idSetFromRows(rows: readonly unknown[], idKey = "id"): Set<string> {
+  const s = new Set<string>();
+  for (const r of rows) {
+    if (r && typeof r === "object") {
+      const id = (r as Record<string, unknown>)[idKey];
+      if (typeof id === "string" && id.length > 0) s.add(id);
+    }
+  }
+  return s;
+}
+
+function designPayloadId(obj: unknown): string | undefined {
+  if (obj == null || typeof obj !== "object") return undefined;
+  const o = obj as Record<string, unknown>;
+  const id = o.design_id ?? o.designId;
+  return typeof id === "string" ? id : undefined;
+}
+
+/** @emoji 🧭 Whether a kit event may change async design-scoped reads (`getPieces` / `getConnections` / `getPiecesMetadata`). */
+export function kitEventAffectsDesignRead(
+  ev: unknown,
+  designId: string,
+  cachedPieceIds: ReadonlySet<string>,
+  cachedConnectionIds: ReadonlySet<string>,
+): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    const ph = (ev as KitCommandLifecycleEvent).semioKitCommand.phase;
+    if (ph === "accepted") return false;
+    if (ph === "succeeded" || ph === "failed") return true;
+    return false;
+  }
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(e, "Changed")) return true;
+  if (Object.prototype.hasOwnProperty.call(e, "FieldChanged")) return true;
+  const fin = e.flattenInvalidated ?? e.FlattenInvalidated;
+  if (fin && typeof fin === "object") {
+    const fd = designPayloadId(fin);
+    if (fd === designId) return true;
+  }
+  const des = e.Design ?? e.design;
+  if (des != null && typeof des === "object") {
+    if (designPayloadId(des) === designId) return true;
+  }
+  const pe = e.Piece ?? e.piece;
+  if (pe != null && typeof pe === "object") {
+    const pid = (pe as Record<string, unknown>).piece_id ?? (pe as Record<string, unknown>).pieceId;
+    if (typeof pid === "string" && (cachedPieceIds.has(pid) || !cachedPieceIds.size)) return true;
+  }
+  const cev = e.Connection ?? e.connection;
+  if (cev != null && typeof cev === "object") {
+    const cid = (cev as Record<string, unknown>).connection_id ?? (cev as Record<string, unknown>).connectionId;
+    if (typeof cid === "string" && (cachedConnectionIds.has(cid) || !cachedConnectionIds.size)) return true;
+  }
+  if (e.Type != null || e.Concept != null) return true;
+  return false;
+}
+
+export type KitDesignReadKind = "pieces" | "connections" | "metadata";
+
+/** @emoji 🧭 Versioned cell for `useSyncExternalStore` + async GraphQL-backed reads. */
+export type KitStoreReadSnap = { version: number; data: unknown; pending: number };
+
+type DesignReadSnap = KitStoreReadSnap;
+
+const EMPTY_ARR: readonly unknown[] = Object.freeze([]);
+const EMPTY_META: Readonly<Record<string, unknown>> = Object.freeze({});
+
+const semioKitDesignReadStoreByClient = new WeakMap<KitStoreClient, SemioKitDesignReadStore>();
+
+/**
+ * @emoji 🧭 Per-design async read model: `useSyncExternalStore` snapshots with selective invalidation
+ * (avoids refetching pieces when an unrelated design changes).
+ */
+export class SemioKitDesignReadStore {
+  private readonly byDesign = new Map<string, { pieceIds: Set<string>; connectionIds: Set<string>; pieces: DesignReadSnap; connections: DesignReadSnap; metadata: DesignReadSnap }>();
+  private readonly kindListeners = new Map<string, Set<() => void>>();
+  private clientUnsub: (() => void) | undefined;
+
+  private constructor(private readonly client: KitStoreClient) { }
+
+  static forClient(client: KitStoreClient): SemioKitDesignReadStore {
+    let s = semioKitDesignReadStoreByClient.get(client);
+    if (!s) { s = new SemioKitDesignReadStore(client); semioKitDesignReadStoreByClient.set(client, s); }
+    return s;
+  }
+
+  getSnapshot(designId: string, kind: KitDesignReadKind): DesignReadSnap {
+    const e = this.byDesign.get(designId);
+    if (!e) {
+      return { version: 0, data: kind === "metadata" ? EMPTY_META : EMPTY_ARR, pending: 0 };
+    }
+    if (kind === "pieces") return e.pieces;
+    if (kind === "connections") return e.connections;
+    return e.metadata;
+  }
+
+  private listenerKey(designId: string, kind: KitDesignReadKind) { return `${designId}\0${kind}`; }
+
+  private ensureDesign(designId: string) {
+    let e = this.byDesign.get(designId);
+    if (!e) {
+      e = {
+        pieceIds: new Set(),
+        connectionIds: new Set(),
+        pieces: { version: 0, data: EMPTY_ARR, pending: 0 },
+        connections: { version: 0, data: EMPTY_ARR, pending: 0 },
+        metadata: { version: 0, data: EMPTY_META, pending: 0 },
+      };
+      this.byDesign.set(designId, e);
+    }
+    return e;
+  }
+
+  private notify(designId: string, kind: KitDesignReadKind) {
+    const s = this.kindListeners.get(this.listenerKey(designId, kind));
+    if (!s) return;
+    for (const l of s) { try { l(); } catch { /* ignore */ } }
+  }
+
+  private ensureEventPipe() {
+    if (this.clientUnsub) return;
+    this.clientUnsub = this.client.subscribe((ev: unknown) => this.onGraphEvent(ev));
+  }
+
+  private onGraphEvent(ev: unknown) {
+    for (const [designId, ent] of this.byDesign) {
+      const hasAny = ["pieces", "connections", "metadata"].some((k) => (this.kindListeners.get(this.listenerKey(designId, k as KitDesignReadKind))?.size ?? 0) > 0);
+      if (!hasAny) continue;
+      if (!kitEventAffectsDesignRead(ev, designId, ent.pieceIds, ent.connectionIds)) continue;
+      for (const kind of (["pieces", "connections", "metadata"] as const)) {
+        if ((this.kindListeners.get(this.listenerKey(designId, kind))?.size ?? 0) > 0) void this.load(designId, kind);
+      }
+    }
+  }
+
+  private async load(designId: string, kind: KitDesignReadKind) {
+    const ent = this.ensureDesign(designId);
+    const sk = kind === "pieces" ? "pieces" : kind === "connections" ? "connections" : "metadata";
+    const prev = ent[sk];
+    const bump = prev.version + 1;
+    ent[sk] = { version: bump, data: prev.data, pending: prev.pending + 1 };
+    this.notify(designId, kind);
+    try {
+      if (kind === "pieces") {
+        const m = await this.client.getPieces(designId);
+        const arr = Array.isArray(m) ? m : [];
+        ent.pieceIds = idSetFromRows(arr);
+        ent.pieces = { version: bump + 1, data: Object.freeze(arr.slice()) as readonly unknown[], pending: 0 };
+      } else if (kind === "connections") {
+        const m = await this.client.getConnections(designId);
+        const arr = Array.isArray(m) ? m : [];
+        ent.connectionIds = idSetFromRows(arr);
+        ent.connections = { version: bump + 1, data: Object.freeze(arr.slice()) as readonly unknown[], pending: 0 };
+      } else {
+        const m = await this.client.getPiecesMetadata(designId);
+        const obj = m && typeof m === "object" ? { ...(m as Record<string, unknown>) } : {};
+        ent.metadata = { version: bump + 1, data: Object.freeze(obj), pending: 0 };
+      }
+    } catch {
+      if (kind === "pieces") ent.pieces = { version: bump + 1, data: EMPTY_ARR, pending: 0 };
+      else if (kind === "connections") ent.connections = { version: bump + 1, data: EMPTY_ARR, pending: 0 };
+      else ent.metadata = { version: bump + 1, data: EMPTY_META, pending: 0 };
+    } finally {
+      this.notify(designId, kind);
+    }
+  }
+
+  subscribe(designId: string, kind: KitDesignReadKind, onChange: () => void): () => void {
+    this.ensureEventPipe();
+    const k = this.listenerKey(designId, kind);
+    let set = this.kindListeners.get(k);
+    if (!set) { set = new Set(); this.kindListeners.set(k, set); }
+    set.add(onChange);
+    void this.load(designId, kind);
+    return () => {
+      set!.delete(onChange);
+      if (set!.size === 0) this.kindListeners.delete(k);
+      if (this.kindListeners.size === 0) {
+        this.clientUnsub?.();
+        this.clientUnsub = undefined;
+        this.byDesign.clear();
+      }
+    };
+  }
+}
+
+export function getSemioKitDesignReadStore(client: KitStoreClient) { return SemioKitDesignReadStore.forClient(client); }
+
+/** @emoji 🧭 `getDesigns` / `getTypes` / `getAuthors` row lists — selective refetch for {@link SemioKitShallowListReadStore}. */
+export type KitShallowListKind = "designs" | "types" | "authors";
+
+export function kitEventAffectsShallowList(ev: unknown, kind: KitShallowListKind): boolean {
+  if (isKitCommandLifecycleEvent(ev)) {
+    const ph = (ev as KitCommandLifecycleEvent).semioKitCommand.phase;
+    if (ph === "accepted") return false;
+    if (ph === "succeeded" || ph === "failed") return true;
+    return false;
+  }
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(e, "Changed")) return true;
+  if (Object.prototype.hasOwnProperty.call(e, "FieldChanged")) return true;
+  if (e.ChildAdded != null || e.ChildRemoved != null) return true;
+  if (kind === "designs") {
+    if (e.Design != null) return true;
+    if (e.Type != null) return false;
+    if (e.Piece != null || e.Connection != null || e.Layer != null || e.Group != null) return true;
+    if (e.File != null || e.Folder != null) return true;
+    return false;
+  }
+  if (kind === "types") {
+    if (e.Type != null) return true;
+    if (e.Port != null || e.Connector != null || e.Representation != null) return true;
+    if (e.File != null || e.Folder != null) return true;
+    if (e.Design != null) return false;
+    if (e.Piece != null || e.Connection != null) return false;
+    if (e.Author != null) return false;
+    return true;
+  }
+  if (kind === "authors") {
+    if (e.Author != null) return true;
+    if (e.Type != null || e.Design != null) return true;
+    if (e.Concept != null || e.Tag != null) return true;
+    if (e.File != null || e.Folder != null) return true;
+    if (e.Piece != null || e.Connection != null) return false;
+    return true;
+  }
+  return true;
+}
+
+const semioKitShallowListStoreByClient = new WeakMap<KitStoreClient, SemioKitShallowListReadStore>();
+
+/**
+ * @emoji 🧭 Shallow `getDesigns` / `getTypes` / `getAuthors` with `useSyncExternalStore` and selective events.
+ */
+export class SemioKitShallowListReadStore {
+  private readonly snaps = new Map<KitShallowListKind, DesignReadSnap>();
+  private readonly listeners = new Map<KitShallowListKind, Set<() => void>>();
+  private clientUnsub: (() => void) | undefined;
+  private constructor(private readonly client: KitStoreClient) {
+    for (const k of (["designs", "types", "authors"] as const)) {
+      this.snaps.set(k, { version: 0, data: EMPTY_ARR, pending: 0 });
+    }
+  }
+
+  static forClient(client: KitStoreClient) {
+    let s = semioKitShallowListStoreByClient.get(client);
+    if (!s) { s = new SemioKitShallowListReadStore(client); semioKitShallowListStoreByClient.set(client, s); }
+    return s;
+  }
+
+  getSnapshot(kind: KitShallowListKind): DesignReadSnap {
+    return this.snaps.get(kind) ?? { version: 0, data: EMPTY_ARR, pending: 0 };
+  }
+
+  private notify(kind: KitShallowListKind) {
+    const s = this.listeners.get(kind);
+    if (!s) return;
+    for (const l of s) { try { l(); } catch { /* ignore */ } }
+  }
+
+  private ensureEventPipe() {
+    if (this.clientUnsub) return;
+    this.clientUnsub = this.client.subscribe((ev: unknown) => {
+      for (const kind of (["designs", "types", "authors"] as const)) {
+        if ((this.listeners.get(kind)?.size ?? 0) === 0) continue;
+        if (!kitEventAffectsShallowList(ev, kind)) continue;
+        void this.load(kind);
+      }
+    });
+  }
+
+  private async load(kind: KitShallowListKind) {
+    const prev = this.snaps.get(kind) ?? { version: 0, data: EMPTY_ARR, pending: 0 };
+    const b = prev.version + 1;
+    this.snaps.set(kind, { version: b, data: prev.data, pending: prev.pending + 1 });
+    this.notify(kind);
+    try {
+      if (kind === "designs") {
+        const m = await this.client.getDesigns();
+        const arr = Array.isArray(m) ? m : [];
+        this.snaps.set("designs", { version: b + 1, data: Object.freeze(arr.slice()) as readonly unknown[], pending: 0 });
+      } else if (kind === "types") {
+        const m = await this.client.getTypes();
+        const arr = Array.isArray(m) ? m : [];
+        this.snaps.set("types", { version: b + 1, data: Object.freeze(arr.slice()) as readonly unknown[], pending: 0 });
+      } else {
+        const m = await this.client.getAuthors();
+        const arr = Array.isArray(m) ? m : [];
+        this.snaps.set("authors", { version: b + 1, data: Object.freeze(arr.slice()) as readonly unknown[], pending: 0 });
+      }
+    } catch {
+      this.snaps.set(kind, { version: b + 1, data: EMPTY_ARR, pending: 0 });
+    } finally {
+      this.notify(kind);
+    }
+  }
+
+  subscribe(kind: KitShallowListKind, onChange: () => void): () => void {
+    this.ensureEventPipe();
+    let set = this.listeners.get(kind);
+    if (!set) { set = new Set(); this.listeners.set(kind, set); }
+    set.add(onChange);
+    void this.load(kind);
+    return () => {
+      set!.delete(onChange);
+      if (set!.size === 0) this.listeners.delete(kind);
+      if (this.listeners.size === 0) {
+        this.clientUnsub?.();
+        this.clientUnsub = undefined;
+        for (const k of (["designs", "types", "authors"] as const)) this.snaps.set(k, { version: 0, data: EMPTY_ARR, pending: 0 });
+      }
+    };
+  }
+}
+
+export function getSemioKitShallowListReadStore(client: KitStoreClient) { return SemioKitShallowListReadStore.forClient(client); }
+//#endregion KitEventParity
 
 //#region KitWorker
 function settle(p: Promise<any>): Promise<any> { return p.catch((e: any) => ({ ok: false, error: { kind: "Internal", message: String(e) } })); }
@@ -1521,7 +1947,16 @@ export class KitWorkerApi {
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string) { this.requireHandle(); try { const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   clusterPieces(designId: string, pieceIds: string[], clusterName: string) { this.requireHandle(); return this.submitSetResult("clusterPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } }); }
   dragPieces(designId: string, pieceIds: string[], du: number, dv: number) { this.requireHandle(); return this.submitSetResult("dragPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`, variables: { designId, pieceIds, du, dv } }); }
+  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) { this.requireHandle(); return this.submitSetResult("movePieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`, variables: { designId, pieceIds, gap, shift, rise } }); }
+  fixPieces(designId: string, pieceIds: string[]) { this.requireHandle(); return this.submitSetResult("fixPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`, variables: { designId, pieceIds } }); }
   flattenDesign(designId: string) { this.requireHandle(); return this.submitSetResult("flattenDesign", { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }); }
+  expandDesign(parentDesignId: string, nestedDesignId: string) { this.requireHandle(); return this.submitSetResult("expandDesign", { query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`, variables: { parentDesignId, nestedDesignId } }); }
+  deleteConnection(designId: string, connectionId: string) { this.requireHandle(); return this.submitSetResult("deleteConnection", { query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`, variables: { designId, connectionId } }); }
+  changePieceType(designId: string, pieceId: string, newTypeId: string) { this.requireHandle(); return this.submitSetResult("changePieceType", { query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`, variables: { designId, pieceId, newTypeId } }); }
+  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) { this.requireHandle(); return this.submitSetResult("pasteDesignSelection", { query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`, variables: { designId, selection, plane } }); }
+  createHangingPieces(designId: string, typeIds: string[], plane: unknown) { this.requireHandle(); return this.submitSetResult("createHangingPieces", { query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`, variables: { designId, typeIds, plane } }); }
+  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) { this.requireHandle(); return this.submitSetResult("createConnectedPiece", { query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`, variables: { designId, parentPiece, parentPort, childType, childPort } }); }
+  createFixedPiece(designId: string, typeId: string, plane: unknown) { this.requireHandle(); return this.submitSetResult("createFixedPiece", { query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`, variables: { designId, typeId, plane } }); }
   undo() { this.requireHandle(); return this.submitSetResult("undo", { query: `mutation { undo }` }); }
   redo() { this.requireHandle(); return this.submitSetResult("redo", { query: `mutation { redo }` }); }
   canUndo() { return this.requireHandle().canUndo(); }
@@ -1560,7 +1995,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       it("exports constants", () => { expect(typeof ICON_WIDTH).toBe("number"); expect(ICON_WIDTH).toBe(50); expect(typeof TOLERANCE).toBe("number"); expect(TOLERANCE).toBe(1e-5); });
       it("does NOT export deleted domain logic", async () => {
         const mod = await import("./index.ts") as Record<string, unknown>;
-        const denylist = ["KitImpl", "KitEntity", "KitEntityIndexes", "KitEntityCaches", "hashKit", "hashType", "hashDesign", "hashPiece", "hashConnection", "computeChildPlane", "flattenPlacementWalkDesignOrderRoots", "validateKitGraphDiff", "expandSemanticCommandToDiff", "Generator", "SeededRandom", "round", "jaccard", "deepEqual", "arraysEqual", "toArray", "InMemoryKitStore", "asKitInstance", "selectBestRepresentation", "findRepresentation", "arePortsCompatible", "areConnectorsCompatible", "isFixedPiece", "findPiece", "findConnection", "mergeDesigns", "orientDesign"];
+        const denylist = ["KitImpl", "KitEntity", "KitEntityIndexes", "KitEntityCaches", "hashKit", "hashType", "hashDesign", "hashPiece", "hashConnection", "computeChildPlane", "flattenPlacementWalkDesignOrderRoots", "validateKitGraphDiff", "expandSemanticCommandToDiff", "Generator", "SeededRandom", "round", "jaccard", "deepEqual", "arraysEqual", "toArray", "selectBestRepresentation", "findRepresentation", "arePortsCompatible", "areConnectorsCompatible", "isFixedPiece", "findPiece", "findConnection", "mergeDesigns", "orientDesign"];
         for (const name of denylist) expect(mod[name]).toBeUndefined();
       });
     });
@@ -1607,6 +2042,27 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         const readResults = await client.executeRead(readBatch);
         expect(Array.isArray(readResults)).toBe(true);
         expect(readResults.length).toBe(1);
+        const readIdsBatch: ReadCommandBatch = [{ readKitTypeIdsCommand: null }, { readKitDesignIdsCommand: null }, { readKitTypesMetadataCommand: null }, { readKitDesignsMetadataCommand: null }];
+        const idRows = await client.executeRead(readIdsBatch);
+        expect(idRows.length).toBe(4);
+        const view = getSemioKitViewStore(client);
+        const unsubV = view.subscribe("typeIds", () => { /* coverage */ });
+        expect(Array.isArray(view.getSnapshot("typeIds"))).toBe(true);
+        unsubV();
+        const acceptedEv = { semioKitCommand: { requestId: "a", commandKind: "x", phase: "accepted" } };
+        const succeededEv = { semioKitCommand: { requestId: "b", commandKind: "x", phase: "succeeded" } };
+        expect(kitEventShouldRefetchViewCatalogKey(acceptedEv, "typeIds")).toBe(false);
+        expect(kitEventShouldRefetchViewCatalogKey(succeededEv, "typeIds")).toBe(true);
+        expect(kitEventAffectsShallowList({ Type: { foo: 1 } } as unknown, "designs")).toBe(false);
+        expect(kitEventAffectsShallowList({ Design: { design_id: "d1" } } as unknown, "designs")).toBe(true);
+        const dstore = getSemioKitDesignReadStore(client);
+        const unsubD = dstore.subscribe("design-1", "pieces", () => { /* coverage */ });
+        expect(dstore.getSnapshot("design-1", "pieces").version).toBeGreaterThanOrEqual(0);
+        unsubD();
+        const sstore = getSemioKitShallowListReadStore(client);
+        const unsubS = sstore.subscribe("types", () => { /* coverage */ });
+        expect(sstore.getSnapshot("types").version).toBeGreaterThanOrEqual(0);
+        unsubS();
         unsubscribe();
         client.dispose();
       });

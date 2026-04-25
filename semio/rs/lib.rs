@@ -26728,7 +26728,9 @@ pub mod kit_graphql {
             Ok(KitStoreMutationRoot)
         }
 
-        /// Apply a batch of [`ChangeKitCommand`] on the live graph (waits for actor).
+        /// Apply a batch of [`ChangeKitCommand`] on the live graph (waits for the single-writer actor to finish).
+        /// Hosts that need an immediate `requestId` and async completion via [`KitEvent::SemioKitCommand`] should use
+        /// [`RootMutation::submit_kit_command`], which re-executes a nested document that may call this field.
         async fn change_kit_commands(&self, ctx: &Context<'_>, commands: Json<serde_json::Value>) -> Result<bool> {
             let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands.0).map_err(|e| Error::new(format!("change_kit_commands: {e}")))?;
             let tx: &async_channel::Sender<GraphWork> = ctx.data()?;

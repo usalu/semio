@@ -22,6 +22,9 @@ import {
   getKitPorts,
   getOrCreateKitFileState,
   getReadableKitFileUrl,
+  getSemioKitDesignReadStore,
+  getSemioKitShallowListReadStore,
+  getSemioKitViewStore,
   getStoredKitFileUrls,
   id,
   InMemoryKitStore,
@@ -43,6 +46,7 @@ import {
   type KitLike,
   type KitStore,
   type KitStoreClient,
+  type KitStoreReadSnap,
   type KitStoreSnapshot,
   type SetError,
   type SetResult,
@@ -59,6 +63,9 @@ export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinarySt
 // #region ⚛️Types
 
 export type { SetError, SetResult, WriteStatus };
+export { getSemioKitViewStore, SemioKitViewStore } from "@semio/js";
+export type { KitDesignReadKind, KitShallowListKind, KitStoreReadSnap, KitViewCatalogKey } from "@semio/js";
+export { getSemioKitDesignReadStore, getSemioKitShallowListReadStore, SemioKitDesignReadStore, SemioKitShallowListReadStore } from "@semio/js";
 export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
 /** Read-only async-backed value + {@link WriteStatus} (no setter). */
 export type HookRead<T> = readonly [T | undefined, WriteStatus];
@@ -1054,6 +1061,28 @@ export function useKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | 
   return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+const EMPTY_KIT_READ_SNAP: KitStoreReadSnap = { version: 0, data: Object.freeze([]) as readonly unknown[], pending: 0 };
+
+/**
+ * @emoji 📌 `useSyncExternalStore` on a `getSnapshot`/`subscribe` pair with a stable server snapshot.
+ * Use for {@link getSemioKitDesignReadStore} and {@link getSemioKitShallowListReadStore}.
+ */
+export function useSemioReadSnap<T extends KitStoreReadSnap>(
+  subscribe: (onStoreChange: () => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot: () => T = getSnapshot,
+): T {
+  return React.useSyncExternalStore(
+    React.useCallback(
+      (onChange) => subscribe(onChange),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [subscribe],
+    ),
+    getSnapshot,
+    getServerSnapshot,
+  );
+}
+
 function kitReadonlyTriad<T>(value: T): HookTriad<T> {
   return [value, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
 }
@@ -1063,200 +1092,96 @@ const EMPTY_KIT_TYPES_METADATA: readonly unknown[] = [];
 const EMPTY_KIT_DESIGN_IDS: readonly string[] = [];
 const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
 
-/** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); `useSyncExternalStore` on kit client stream. */
+/** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); `useSyncExternalStore` on {@link getSemioKitViewStore} (refetch + equality in @semio/js). */
 export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_TYPE_IDS as readonly string[], pending: 0 });
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
-        cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_TYPE_IDS, pending: 0 };
         onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .readTypeIds()
-          .then((ids) => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: ids,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          })
-          .catch(() => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: EMPTY_KIT_TYPE_IDS,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          });
-      };
-      run();
-      return client.subscribe(run);
+      return getSemioKitViewStore(runtime.kitClient).subscribe("typeIds", onChange);
     },
     [runtime.kitClient, runtime.kitId, resolved],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, noopAsyncSet, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPE_IDS;
+    return getSemioKitViewStore(runtime.kitClient).getSnapshot("typeIds") as readonly string[];
+  }, [runtime.kitClient, runtime.kitId, resolved]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`). */
+/** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`) via {@link getSemioKitViewStore}. */
 export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_TYPES_METADATA as readonly unknown[], pending: 0 });
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
-        cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_TYPES_METADATA, pending: 0 };
         onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .readTypesMetadata()
-          .then((rows) => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: rows,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          })
-          .catch(() => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: EMPTY_KIT_TYPES_METADATA,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          });
-      };
-      run();
-      return client.subscribe(run);
+      return getSemioKitViewStore(runtime.kitClient).subscribe("typesMetadata", onChange);
     },
     [runtime.kitClient, runtime.kitId, resolved],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, noopAsyncSet, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPES_METADATA;
+    return getSemioKitViewStore(runtime.kitClient).getSnapshot("typesMetadata");
+  }, [runtime.kitClient, runtime.kitId, resolved]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Design ids from live kit graph (`ReadKitDesignIdsCommand`); `useSyncExternalStore` on kit client stream. */
+/** @emoji 📌 Design ids from live kit graph (`ReadKitDesignIdsCommand`) via {@link getSemioKitViewStore}. */
 export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_DESIGN_IDS as readonly string[], pending: 0 });
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
-        cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_DESIGN_IDS, pending: 0 };
         onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .readDesignIds()
-          .then((ids) => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: ids,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          })
-          .catch(() => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: EMPTY_KIT_DESIGN_IDS,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          });
-      };
-      run();
-      return client.subscribe(run);
+      return getSemioKitViewStore(runtime.kitClient).subscribe("designIds", onChange);
     },
     [runtime.kitClient, runtime.kitId, resolved],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, noopAsyncSet, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGN_IDS;
+    return getSemioKitViewStore(runtime.kitClient).getSnapshot("designIds") as readonly string[];
+  }, [runtime.kitClient, runtime.kitId, resolved]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`). */
+/** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`) via {@link getSemioKitViewStore}. */
 export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
-  const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_DESIGNS_METADATA as readonly unknown[], pending: 0 });
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
-        cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_DESIGNS_METADATA, pending: 0 };
         onChange();
         return () => {};
       }
-      const client = runtime.kitClient;
-      const run = () => {
-        const before = cellRef.current;
-        cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
-        onChange();
-        void new LiveKitRoot(client.kitGraphql())
-          .readDesignsMetadata()
-          .then((rows) => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: rows,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          })
-          .catch(() => {
-            const cur = cellRef.current;
-            cellRef.current = {
-              version: cur.version + 1,
-              value: EMPTY_KIT_DESIGNS_METADATA,
-              pending: Math.max(0, cur.pending - 1),
-            };
-            onChange();
-          });
-      };
-      run();
-      return client.subscribe(run);
+      return getSemioKitViewStore(runtime.kitClient).subscribe("designsMetadata", onChange);
     },
     [runtime.kitClient, runtime.kitId, resolved],
   );
-  const getSnap = React.useCallback(() => cellRef.current, []);
-  const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : snap.pending > 0 ? { kind: "pending", pending: snap.pending } : { kind: "idle", pending: 0 };
-  return [snap.value, noopAsyncSet, status] as const;
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGNS_METADATA;
+    return getSemioKitViewStore(runtime.kitClient).getSnapshot("designsMetadata");
+  }, [runtime.kitClient, runtime.kitId, resolved]);
+  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
 /** @emoji 📌 Full kit store snapshot triad (read-only). */
@@ -3308,200 +3233,162 @@ export function useUpdateConnections(): {
 /** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`). */
 export function usePiecesMetadataMap(designId?: string): HookRead<Record<string, any>> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<Record<string, any>>({});
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue({});
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getPiecesMetadata(designId);
-        if (!cancelled && m && typeof m === "object") setValue(m as Record<string, any>);
-      } catch {
-        if (!cancelled) setValue({});
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => {
-      void load();
-    });
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "metadata", onChange);
+    },
+    [runtime.kitClient, designId],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "metadata");
   }, [runtime.kitClient, designId]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = snap.data && typeof snap.data === "object" && !Array.isArray(snap.data) ? (snap.data as Record<string, any>) : {};
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** @emoji 📌 Piece DTO rows for a design (GraphQL `piecesFullJson` / `KitStoreClient.getPieces`). */
 export function useKitPieces(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getPieces(designId);
-        if (!cancelled) setValue(Array.isArray(m) ? m : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "pieces", onChange);
+    },
+    [runtime.kitClient, designId],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "pieces");
   }, [runtime.kitClient, designId]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** @emoji 📌 Connection DTO rows for a design (GraphQL `connectionsFullJson`). */
 export function useKitConnections(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient || !designId) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getConnections(designId);
-        if (!cancelled) setValue(Array.isArray(m) ? m : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !designId) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "connections", onChange);
+    },
+    [runtime.kitClient, designId],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "connections");
   }, [runtime.kitClient, designId]);
-  const status: WriteStatus = !designId || !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !designId || !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** @emoji 📌 Shallow design catalog rows (`designsShallowJson`). */
 export function useKitDesignsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getDesigns();
-        if (!cancelled) setValue(Array.isArray(m) ? m : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("designs", onChange);
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("designs");
   }, [runtime.kitClient]);
-  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** @emoji 📌 Shallow type catalog rows (`typesShallowJson`). */
 export function useKitTypesShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getTypes();
-        if (!cancelled) setValue(Array.isArray(m) ? m : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("types", onChange);
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("types");
   }, [runtime.kitClient]);
-  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 
 /** @emoji 📌 Shallow author rows (`authorsShallowJson`). */
 export function useKitAuthorsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const [value, setValue] = React.useState<any[]>([]);
-  const [pending, setPending] = React.useState(0);
-  React.useEffect(() => {
-    if (!runtime.kitClient) {
-      setValue([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setPending((p) => p + 1);
-      try {
-        const m = await runtime.kitClient.getAuthors();
-        if (!cancelled) setValue(Array.isArray(m) ? m : []);
-      } catch {
-        if (!cancelled) setValue([]);
-      } finally {
-        if (!cancelled) setPending((p) => Math.max(0, p - 1));
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient) {
+        onChange();
+        return () => {};
       }
-    };
-    void load();
-    const unsub = runtime.kitClient.subscribe(() => void load());
-    return () => {
-      cancelled = true;
-      unsub();
-    };
+      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("authors", onChange);
+    },
+    [runtime.kitClient],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("authors");
   }, [runtime.kitClient]);
-  const status: WriteStatus = !runtime.kitClient ? { kind: "readonly", pending: 0 } : pending > 0 ? { kind: "pending", pending } : { kind: "idle", pending: 0 };
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : [];
+  const status: WriteStatus = !runtime.kitClient
+    ? { kind: "readonly", pending: 0 }
+    : snap.pending > 0
+      ? { kind: "pending", pending: snap.pending }
+      : { kind: "idle", pending: 0 };
   return [value, status] as const;
 }
 

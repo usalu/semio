@@ -21,7 +21,8 @@ bundle:
 - **Wire types** (serde-compatible with `semio::kit_store_command` / `kit_backbone_wire`): `BackboneConfig` (`dev` / `local` / `remote` keys), `ConflictResolution` (`dropWip` / `forceOverwriteBackbone` as `{ variant: null }`), `BackboneStatusDto`, `KitConflict`, `KitStoreExecuteResult`.
 - **WASM graph handle**: `KitStoreHandle` wraps a plain in-memory **`KitGraphRef`**. Backbone/coordinator commands require **`semio::kit_store::KitStore`** (native / `semio-store`); on WASM they fail with an invalid-operation style error. Use **`vcsState`** for the Git-style tree without a backbone.
 - **Convenience methods**: `attachBackbone`, `detachBackbone`, `backboneStatus`, `listConflicts`, `resolveConflict`, `syncNow` build the same JSON shapes as Storybook `HistoryControls` (`newSession: null`–style tagged commands).
-- **`InMemoryKitStore`**: `execute` / `vcsState` / `materializeAt` reject; backbone/conflict mutators return **`NotSupported`**.
+- **`InMemoryKitStore` / `JsonFileKitStore` / `FolderKitStore` / `createSessionKitStore`**: host-facing kit containers (`getSnapshot` includes `kit` + `sync` with **`DEFAULT_KIT_SYNC`**). Session store is an in-memory placeholder until hub sync is wired.
+- **`getSemioKitViewStore`**: per-`KitStoreClient` cache; subscribes to the event stream and only notifies when a catalog key’s JSON snapshot changes (used by `@semio/react` catalog hooks).
 
 ## 📛 Entities
 

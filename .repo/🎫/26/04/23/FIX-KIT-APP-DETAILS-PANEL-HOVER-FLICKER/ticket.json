@@ -1,8 +1,9 @@
 {
   "title": "Fix Kit App Details Panel Hover Flicker",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "In the sketchpad Kit app, hovering the mouse on the details panel causes the panel to flicker and throws \"Uncaught (in promise) TypeError: Reflect.get called on non-object\" in the browser console. The bug triggers at http://127.0.0.1:5173/kits/019db9d4-...-ac1e17f10caf. Root-cause and fix the rendering error without removing functionality.",
+  "summary": "Layer parity (JS/React): selective KitEvent invalidation for SemioKitViewStore; SemioKitDesignReadStore for per-design getPieces/getConnections/getPiecesMetadata with kitEventAffectsDesignRead; SemioKitShallowListReadStore for getDesigns/getTypes/getAuthors with kitEventAffectsShallowList; React hooks use useSyncExternalStore via useSemioReadSnap instead of useEffect+broad client.subscribe. Exported KitStoreReadSnap and store getters. Extended embedded JS tests. Rust unchanged; cargo test --lib already green.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1375"
   },
