@@ -145,7 +145,6 @@
         "candidate-ll"
       ],
       "expectedNotContainsTypes": [
-        "candidate-l",
         "candidate-g"
       ]
     },

@@ -6,21 +6,21 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
 
 ## Tasks
 
-- [ ] 1. Add fast-check dev dependency and prepare test infrastructure
+- [x] 1. Add fast-check dev dependency and prepare test infrastructure
   - [x] 1.1 Add `fast-check` as a dev dependency in `semio/js/package.json`
     - Add `"fast-check": "^3.x"` to `devDependencies`
     - Run `npm install` or equivalent to update lockfile
     - _Requirements: 8.1_
 
-  - [-] 1.2 Verify existing test runner configuration works with embedded tests
+  - [x] 1.2 Verify existing test runner configuration works with embedded tests
     - Confirm `cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run` executes successfully before any deletions
     - _Requirements: 8.1_
 
-- [~] 2. Checkpoint - Ensure baseline tests pass
+- [x] 2. Checkpoint - Ensure baseline tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 3. Delete all domain logic classes
-  - [~] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `ops`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
+  - [-] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `ops`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
     - Remove the entire `KitImpl` class definition and any helper code only used by it
     - _Requirements: 1.15, 2.1, 2.2, 2.5, 9.3_
 
