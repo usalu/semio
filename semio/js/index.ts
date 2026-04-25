@@ -8185,7 +8185,7 @@ export class LocalKitBackbone implements Backbone {
 /**
  * ­ƒîÉRemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
  */
-export class RemoteKitBackbone implements Backbone {
+export class RemoteBackbone implements Backbone {
   constructor(private websocketUrl: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.websocketUrl;
@@ -9970,8 +9970,8 @@ export class KitImpl {
     if (this.#phase === "frozen" || this.#conflicted) {
       throw new Error("KitImpl has unresolved validation conflicts; call resolveConflict() before starting a transaction.");
     }
-    const id = id();
-    this.#openTransactions.set(id, {
+    const transactionId = id();
+    this.#openTransactions.set(transactionId, {
       label,
       status: "open",
       startPlain: KitSchema.parse(stripNullsJsonClone(this.#committedPlain)),
@@ -9985,7 +9985,7 @@ export class KitImpl {
       workspaceStatus: "clean",
       conflicts: [],
     });
-    return new Transaction(this, id, label);
+    return new Transaction(this, transactionId, label);
   }
 
   /** @deprecated Prefer {@link KitImpl.beginTransaction}. */
@@ -19720,13 +19720,13 @@ export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false;
  * JSON shape for [`semio::kit_backbone_wire::BackboneConfig`] (externally tagged, camelCase variant keys).
  * Pass as `config` inside `{ attachBackbone: { config } }`.
  */
-export type KitStoreWireBackboneConfig =
+export type BackboneConfig =
   | { dev: { path: string } }
   | { local: { folder: string } }
   | { remote: { url: string; sessionId: string } };
 
 /** JSON shape for [`semio::kit_backbone_wire::ConflictResolution`] (unit variants use `null` payload like `newSession`). */
-export type KitStoreWireConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
+export type ConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
 
 /** Payload inside `KitStoreCommandResult::BackboneStatus` (`tip` is checkpoint id when present). */
 export type KitStoreWireBackboneStatus = {
@@ -19736,7 +19736,7 @@ export type KitStoreWireBackboneStatus = {
 };
 
 /** Row from `KitStoreCommandResult::ListConflicts` (`items` entry). */
-export type KitStoreWireKitConflict = {
+export type KitConflict = {
   id: string;
   wipCheckpoint: unknown;
   backboneTip?: string | null;
@@ -19756,7 +19756,7 @@ function parseKitStoreBackboneStatusResult(raw: unknown): KitStoreWireBackboneSt
   };
 }
 
-function parseKitStoreListConflictsResult(raw: unknown): KitStoreWireKitConflict[] {
+function parseKitStoreListConflictsResult(raw: unknown): KitConflict[] {
   if (raw == null || typeof raw !== "object") throw new Error("listConflicts: unexpected result");
   const o = raw as Record<string, unknown>;
   const inner = o.listConflicts as { items?: unknown[] } | undefined;
@@ -19861,11 +19861,11 @@ export interface KitStoreClient {
   vcsState(): Promise<any>;
   theKitDto(): Promise<any>;
   materializeAt(id: string): Promise<any>;
-  attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
+  attachBackbone(cfg: BackboneConfig): Promise<SetResult>;
   detachBackbone(): Promise<SetResult>;
   backboneStatus(): Promise<KitStoreWireBackboneStatus>;
-  listConflicts(): Promise<KitStoreWireKitConflict[]>;
-  resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
+  listConflicts(): Promise<KitConflict[]>;
+  resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult>;
   syncNow(): Promise<SetResult>;
 }
 
@@ -19986,9 +19986,17 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return this.settleMutateAndRefresh(
       (async () => {
         try {
-          const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          await this.handle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(this.gql(), {
+              query: `query($kind: String!, $id: String!, $field: String!, $value: JSON!) {
+                kitStore { changeKitCommandsForFieldPatch(kind: $kind, id: $id, field: $field, value: $value) }
+              }`,
+              variables: { kind, id, field, value },
+            }),
+          ) as { kitStore?: { changeKitCommandsForFieldPatch?: unknown } };
+          const cmds = plan.kitStore?.changeKitCommandsForFieldPatch;
+          if (cmds == null) throw new Error("changeKitCommandsForFieldPatch");
+          return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
@@ -20000,9 +20008,17 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return this.settleMutateAndRefresh(
       (async () => {
         try {
-          const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          await this.handle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(this.gql(), {
+              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $dto: JSON!) {
+                kitStore { changeKitCommandsForAddChild(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, dto: $dto) }
+              }`,
+              variables: { parentKind, parentId, childKind, dto },
+            }),
+          ) as { kitStore?: { changeKitCommandsForAddChild?: unknown } };
+          const cmds = plan.kitStore?.changeKitCommandsForAddChild;
+          if (cmds == null) throw new Error("changeKitCommandsForAddChild");
+          return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
@@ -20014,9 +20030,17 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return this.settleMutateAndRefresh(
       (async () => {
         try {
-          const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          await this.handle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(this.gql(), {
+              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $childId: String!) {
+                kitStore { changeKitCommandsForRemoveChild(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, childId: $childId) }
+              }`,
+              variables: { parentKind, parentId, childKind, childId },
+            }),
+          ) as { kitStore?: { changeKitCommandsForRemoveChild?: unknown } };
+          const cmds = plan.kitStore?.changeKitCommandsForRemoveChild;
+          if (cmds == null) throw new Error("changeKitCommandsForRemoveChild");
+          return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
         }
@@ -20025,72 +20049,161 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async applyDesignDiff(designId: string, diff: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.applyDesignDiff(designId, diff));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $diff: JSON!) { applyDesignDiff(designId: $designId, diff: $diff) }`,
+        variables: { designId, diff },
+      }),
+    );
   }
 
   async applyKitDiff(diff: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.applyKitDiff(diff));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), { query: `mutation($diff: JSON!) { applyKitDiff(diff: $diff) }`, variables: { diff } }),
+    );
   }
 
   async clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.clusterPieces(designId, pieceIds, clusterName));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) {
+          clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName)
+        }`,
+        variables: { designId, pieceIds, clusterName },
+      }),
+    );
   }
 
   async dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.dragPieces(designId, pieceIds, du, dv));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) {
+          dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv)
+        }`,
+        variables: { designId, pieceIds, du, dv },
+      }),
+    );
   }
 
   async movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.movePieces(designId, pieceIds, gap, shift, rise));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) {
+          movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise)
+        }`,
+        variables: { designId, pieceIds, gap, shift, rise },
+      }),
+    );
   }
 
   async fixPieces(designId: string, pieceIds: string[]): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.fixPieces(designId, pieceIds));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`,
+        variables: { designId, pieceIds },
+      }),
+    );
   }
 
   async flattenDesign(designId: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.flattenDesign(designId));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }),
+    );
   }
 
   async expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.expandDesign(parentDesignId, nestedDesignId));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($parentDesignId: String!, $nestedDesignId: String!) {
+          expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId)
+        }`,
+        variables: { parentDesignId, nestedDesignId },
+      }),
+    );
   }
 
   async deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.deleteConnection(designId, connectionId));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`,
+        variables: { designId, connectionId },
+      }),
+    );
   }
 
   async changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.changePieceType(designId, pieceId, newTypeId));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) {
+          changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId)
+        }`,
+        variables: { designId, pieceId, newTypeId },
+      }),
+    );
   }
 
   async pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.pasteDesignSelection(designId, selection, plane));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) {
+          pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane)
+        }`,
+        variables: { designId, selection, plane: plane == null ? null : plane },
+      }),
+    );
   }
 
   async createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.createHangingPieces(designId, typeIds, plane));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) {
+          createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane)
+        }`,
+        variables: { designId, typeIds, plane },
+      }),
+    );
   }
 
   async createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) {
+          createConnectedPiece(
+            designId: $designId
+            parentPiece: $parentPiece
+            parentPort: $parentPort
+            childType: $childType
+            childPort: $childPort
+          )
+        }`.replace(/\n/g, " "),
+        variables: { designId, parentPiece, parentPort, childType, childPort },
+      }),
+    );
   }
 
   async createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.createFixedPiece(designId, typeId, plane));
+    return this.settleMutateAndRefresh(
+      kitGraphqlMutationSettle(this.gql(), {
+        query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`,
+        variables: { designId, typeId, plane },
+      }),
+    );
   }
 
   async undo(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.undo());
+    return this.settleMutateAndRefresh(kitGraphqlMutationSettle(this.gql(), { query: `mutation { undo }` }));
   }
 
   async redo(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.redo());
+    return this.settleMutateAndRefresh(kitGraphqlMutationSettle(this.gql(), { query: `mutation { redo }` }));
   }
 
   async canUndo(): Promise<boolean> {
     try {
-      return Boolean(await withTimeout(Promise.resolve(this.handle.canUndo()), this.timeoutMs, "timeout"));
+      const d = kitGraphqlFirstData(
+        await withTimeout(kitGraphqlRun(this.gql(), { query: `query { kitStore { canUndo } }` }), this.timeoutMs, "timeout"),
+      ) as { kitStore?: { canUndo?: boolean } };
+      return Boolean(d.kitStore?.canUndo);
     } catch {
       return false;
     }
@@ -20098,7 +20211,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async canRedo(): Promise<boolean> {
     try {
-      return Boolean(await withTimeout(Promise.resolve(this.handle.canRedo()), this.timeoutMs, "timeout"));
+      const d = kitGraphqlFirstData(
+        await withTimeout(kitGraphqlRun(this.gql(), { query: `query { kitStore { canRedo } }` }), this.timeoutMs, "timeout"),
+      ) as { kitStore?: { canRedo?: boolean } };
+      return Boolean(d.kitStore?.canRedo);
     } catch {
       return false;
     }
@@ -20238,7 +20354,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return await withTimeout(Promise.resolve(this.handle.materializeAt(at)), this.timeoutMs, "timeout");
   }
 
-  async attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+  async attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
     const r = await this.execute({ attachBackbone: { config: cfg } });
     if (!r.ok) return r;
     const o = r.result as Record<string, unknown>;
@@ -20268,13 +20384,13 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return parseKitStoreBackboneStatusResult(r.result);
   }
 
-  async listConflicts(): Promise<KitStoreWireKitConflict[]> {
+  async listConflicts(): Promise<KitConflict[]> {
     const r = await this.execute({ listConflicts: null });
     if (!r.ok) throw new Error(r.error.message);
     return parseKitStoreListConflictsResult(r.result);
   }
 
-  async resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+  async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
     const r = await this.execute({ resolveConflict: { id, strategy } });
     if (!r.ok) return r;
     const o = r.result as Record<string, unknown>;
@@ -20849,7 +20965,7 @@ export class WorkerKitStoreClient implements KitStoreClient {
     return await withTimeout(this.api.materializeAt(at), this.timeoutMs, "timeout");
   }
 
-  async attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+  async attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
     const r = await this.execute({ attachBackbone: { config: cfg } });
     if (!r.ok) return r;
     const o = r.result as Record<string, unknown>;
@@ -20887,13 +21003,13 @@ export class WorkerKitStoreClient implements KitStoreClient {
     return parseKitStoreBackboneStatusResult(r.result);
   }
 
-  async listConflicts(): Promise<KitStoreWireKitConflict[]> {
+  async listConflicts(): Promise<KitConflict[]> {
     const r = await this.execute({ listConflicts: null });
     if (!r.ok) throw new Error(r.error.message);
     return parseKitStoreListConflictsResult(r.result);
   }
 
-  async resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+  async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
     const r = await this.execute({ resolveConflict: { id, strategy } });
     if (!r.ok) return r;
     const o = r.result as Record<string, unknown>;
@@ -21173,7 +21289,7 @@ export class InMemoryKitStore implements UndoableKitStore {
     return Promise.reject(new Error("InMemoryKitStore.materializeAt requires a WASM KitStoreHandle-backed client"));
   }
 
-  attachBackbone(_cfg: KitStoreWireBackboneConfig): Promise<SetResult> {
+  attachBackbone(_cfg: BackboneConfig): Promise<SetResult> {
     return Promise.resolve({
       ok: false,
       error: { kind: "NotSupported", message: "InMemoryKitStore has no kit control plane / backbone" },
@@ -21191,11 +21307,11 @@ export class InMemoryKitStore implements UndoableKitStore {
     return Promise.reject(new Error("InMemoryKitStore.backboneStatus requires a WASM KitStoreHandle-backed client"));
   }
 
-  listConflicts(): Promise<KitStoreWireKitConflict[]> {
+  listConflicts(): Promise<KitConflict[]> {
     return Promise.reject(new Error("InMemoryKitStore.listConflicts requires a WASM KitStoreHandle-backed client"));
   }
 
-  resolveConflict(_id: string, _strategy: KitStoreWireConflictResolution): Promise<SetResult> {
+  resolveConflict(_id: string, _strategy: ConflictResolution): Promise<SetResult> {
     return Promise.resolve({
       ok: false,
       error: { kind: "NotSupported", message: "InMemoryKitStore has no kit control plane / conflicts registry" },
@@ -24106,9 +24222,9 @@ if (shouldRunEmbeddedJsTests) {
       const client = await createKitStoreClient({ initialKit, forceFallback: true });
       try {
         const data = kitGraphqlFirstData(
-          await kitGraphqlRun(client.kitGraphql(), { query: `query { kitStore { kit { name } } }` }),
-        ) as { kitStore?: { kit?: { name?: string } } };
-        expect(data.kitStore?.kit?.name).toBe("GraphQlKit");
+          await kitGraphqlRun(client.kitGraphql(), { query: `query { kitStore { name } }` }),
+        ) as { kitStore?: { name?: string } };
+        expect(data.kitStore?.name).toBe("GraphQlKit");
       } finally {
         client.dispose();
       }
@@ -30125,6 +30241,29 @@ export function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
   throw new Error("kitGraphql: no data in response");
 }
 
+/** Single root mutation field returning settle JSON (`{ ok: true }` / `{ ok: false, error }`). */
+export async function kitGraphqlMutationSettle(
+  handle: KitGraphqlHandle,
+  body: { query: string; variables?: Record<string, unknown> },
+): Promise<SetResult> {
+  const root = kitGraphqlFirstData(await kitGraphqlRun(handle, body));
+  const keys = Object.keys(root);
+  const v = keys.length === 1 ? (root as Record<string, unknown>)[keys[0]!] : root;
+  return await settleSetPromise(Promise.resolve(v));
+}
+
+/** Apply a batch of `ChangeKitCommand` JSON values on the live graph (actor queue). */
+export async function kitGraphqlChangeKitCommands(handle: KitGraphqlHandle, commands: unknown): Promise<SetResult> {
+  const root = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
+      variables: { commands },
+    }),
+  ) as { changeKitCommands?: boolean };
+  if (root.changeKitCommands === true) return { ok: true } as const;
+  return { ok: false, error: { kind: "Internal", message: "changeKitCommands did not return true" } } as const;
+}
+
 function storePayload(cmd: unknown): { tag: string; value: unknown } {
   if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) {
     throw new Error("kit store command: expected object");
@@ -30214,11 +30353,6 @@ export async function kitGraphqlExecuteStoreCommand(handle: KitGraphqlHandle, cm
         return { query: `mutation { backboneStatus }` };
       case "syncNow":
         return { query: `mutation { syncNow }` };
-      case "batch": {
-        const cmds = (value as { commands?: unknown[] } | null)?.commands;
-        if (!Array.isArray(cmds)) throw new Error("batch.commands");
-        return { query: `mutation($commands: [JSON!]!) { kitStoreBatch(commands: $commands) }`, variables: { commands: cmds } };
-      }
       default:
         throw new Error(`[DEBUG] kitGraphqlExecuteStoreCommand: unhandled ${tag}`);
     }
@@ -30257,11 +30391,11 @@ export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload
 export async function kitGraphqlKitDesignPiecesMetadata(handle: KitGraphqlHandle, designId: string): Promise<Record<string, unknown>> {
   const root = kitGraphqlFirstData(
     await kitGraphqlRun(handle, {
-      query: `query($id: String!) { kitStore { designForId(id: $id) { piecesMetadataJson } } }`,
+      query: `query($id: String!) { kitStore { designByDtoId(id: $id) { piecesMetadataJson } } }`,
       variables: { id: designId },
     }),
-  ) as { kitStore?: { designForId?: { piecesMetadataJson?: unknown } | null } };
-  const v = root.kitStore?.designForId?.piecesMetadataJson;
+  ) as { kitStore?: { designByDtoId?: { piecesMetadataJson?: unknown } | null } };
+  const v = root.kitStore?.designByDtoId?.piecesMetadataJson;
   if (v && typeof v === "object" && !Array.isArray(v)) {
     return v as Record<string, unknown>;
   }
@@ -30658,7 +30792,7 @@ export async function readKitType(client: KitExecuteRead, typeId: string, comman
   return out.readKitTypeCommands.results[0]!;
 }
 
-/** Piece-scoped live reads via `kitStore.designForId.pieceForId` fields. */
+/** Piece-scoped live reads via `kitStore.designByDtoId.pieceByDtoId` fields. */
 export class LivePieceView {
   constructor(
     private readonly gql: KitGraphqlHandle,
@@ -30667,31 +30801,31 @@ export class LivePieceView {
   ) {}
 
   async readFlatPlane(): Promise<unknown> {
-    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatPlane } } } }`;
+    const q = `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatPlane } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
-      kitStore?: { designForId?: { pieceForId?: { flatPlane?: unknown } | null } | null };
+      kitStore?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: unknown } | null } | null };
     };
-    return d.kitStore?.designForId?.pieceForId?.flatPlane;
+    return d.kitStore?.designByDtoId?.pieceByDtoId?.flatPlane;
   }
 
   async readFlatCenter(): Promise<unknown> {
-    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { flatCenter } } } }`;
+    const q = `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatCenter } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
-      kitStore?: { designForId?: { pieceForId?: { flatCenter?: unknown } | null } | null };
+      kitStore?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null };
     };
-    return d.kitStore?.designForId?.pieceForId?.flatCenter;
+    return d.kitStore?.designByDtoId?.pieceByDtoId?.flatCenter;
   }
 
   async readParentConnectionFull(): Promise<unknown | null | undefined> {
-    const q = `query($d: String!, $p: String!) { kitStore { designForId(id: $d) { pieceForId(id: $p) { parentConnectionFull } } } }`;
+    const q = `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnectionFull } } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { d: this.designId, p: this.pieceId } })) as {
-      kitStore?: { designForId?: { pieceForId?: { parentConnectionFull?: unknown } | null } | null };
+      kitStore?: { designByDtoId?: { pieceByDtoId?: { parentConnectionFull?: unknown } | null } | null };
     };
-    return d.kitStore?.designForId?.pieceForId?.parentConnectionFull;
+    return d.kitStore?.designByDtoId?.pieceByDtoId?.parentConnectionFull;
   }
 }
 
-/** Design-scoped live reads via `kitStore.designForId` fields. */
+/** Design-scoped live reads via `kitStore.designByDtoId` fields. */
 export class LiveDesignView {
   constructor(
     private readonly gql: KitGraphqlHandle,
@@ -30699,56 +30833,56 @@ export class LiveDesignView {
   ) {}
 
   async readClusterableGroups(selection: ReadonlyArray<string>): Promise<ReadonlyArray<ReadonlyArray<IdDto>>> {
-    const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { clusterableGroups(selection: $sel) } } }`;
+    const q = `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`;
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, sel: [...selection] } }),
-    ) as { kitStore?: { designForId?: { clusterableGroups?: string[][] } | null } };
-    const g = d.kitStore?.designForId?.clusterableGroups;
+    ) as { kitStore?: { designByDtoId?: { clusterableGroups?: string[][] } | null } };
+    const g = d.kitStore?.designByDtoId?.clusterableGroups;
     if (!Array.isArray(g)) throw new Error("clusterableGroups");
     return g.map((row) => row.map((id) => idDto(id)));
   }
 
   async readIncludedDesigns(): Promise<ReadonlyArray<unknown>> {
-    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesigns } } }`;
+    const q = `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesigns } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId } })) as {
-      kitStore?: { designForId?: { includedDesigns?: unknown } | null };
+      kitStore?: { designByDtoId?: { includedDesigns?: unknown } | null };
     };
-    const v = d.kitStore?.designForId?.includedDesigns;
+    const v = d.kitStore?.designByDtoId?.includedDesigns;
     return Array.isArray(v) ? v : [];
   }
 
   async readQualitySum(qualityId: string): Promise<number> {
-    const q = `query($id: String!, $q: String!) { kitStore { designForId(id: $id) { qualitySum(qualityId: $q) } } }`;
+    const q = `query($id: String!, $q: String!) { kitStore { designByDtoId(id: $id) { qualitySum(qualityId: $q) } } }`;
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, q: qualityId } }),
-    ) as { kitStore?: { designForId?: { qualitySum?: number } | null } };
-    const s = d.kitStore?.designForId?.qualitySum;
+    ) as { kitStore?: { designByDtoId?: { qualitySum?: number } | null } };
+    const s = d.kitStore?.designByDtoId?.qualitySum;
     if (typeof s !== "number") throw new Error("qualitySum");
     return s;
   }
 
   async readReplaceableCatalog(selection: ReadonlyArray<string>): Promise<{ types: string[]; designs: string[] }> {
-    const q = `query($id: String!, $sel: [String!]!) { kitStore { designForId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`;
+    const q = `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`;
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId, sel: [...selection] } }),
-    ) as { kitStore?: { designForId?: { replaceableCatalog?: { typeIds: string[]; designIds: string[] } } | null } };
-    const rc = d.kitStore?.designForId?.replaceableCatalog;
+    ) as { kitStore?: { designByDtoId?: { replaceableCatalog?: { typeIds: string[]; designIds: string[] } } | null } };
+    const rc = d.kitStore?.designByDtoId?.replaceableCatalog;
     if (rc == null) throw new Error("replaceableCatalog");
     return { types: rc.typeIds, designs: rc.designIds };
   }
 
   async readIncludedDesignIds(): Promise<string[]> {
-    const q = `query($id: String!) { kitStore { designForId(id: $id) { includedDesignIds } } }`;
+    const q = `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesignIds } } }`;
     const d = kitGraphqlFirstData(await kitGraphqlRun(this.gql, { query: q, variables: { id: this.designId } })) as {
-      kitStore?: { designForId?: { includedDesignIds?: string[] } | null };
+      kitStore?: { designByDtoId?: { includedDesignIds?: string[] } | null };
     };
-    const ids = d.kitStore?.designForId?.includedDesignIds;
+    const ids = d.kitStore?.designByDtoId?.includedDesignIds;
     if (!Array.isArray(ids)) throw new Error("includedDesignIds");
     return ids;
   }
 }
 
-/** Type-scoped live reads via `kitStore.typeForId` fields. */
+/** Type-scoped live reads via `kitStore.typeByDtoId` fields. */
 export class LiveTypeView {
   constructor(
     private readonly gql: KitGraphqlHandle,
@@ -30756,11 +30890,11 @@ export class LiveTypeView {
   ) {}
 
   async readBestRepresentation(tagIds: ReadonlyArray<string>): Promise<unknown | null | undefined> {
-    const q = `query($id: String!, $tags: [String!]!) { kitStore { typeForId(id: $id) { bestRepresentation(tagIds: $tags) } } }`;
+    const q = `query($id: String!, $tags: [String!]!) { kitStore { typeByDtoId(id: $id) { bestRepresentation(tagIds: $tags) } } }`;
     const d = kitGraphqlFirstData(
       await kitGraphqlRun(this.gql, { query: q, variables: { id: this.typeId, tags: [...tagIds] } }),
-    ) as { kitStore?: { typeForId?: { bestRepresentation?: unknown } | null } };
-    return d.kitStore?.typeForId?.bestRepresentation;
+    ) as { kitStore?: { typeByDtoId?: { bestRepresentation?: unknown } | null } };
+    return d.kitStore?.typeByDtoId?.bestRepresentation;
   }
 }
 

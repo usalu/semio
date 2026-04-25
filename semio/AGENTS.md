@@ -16,653 +16,6 @@ emoji: 👤
 
 ## 🛠️ Mechanisms
 
-### Kit graph read commands
-
-- **Rust**: `semio::read` assembles [`read_module.rs`](rs/read_module.rs) + [`read_impl.rs`](rs/read_impl.rs) — exhaustive `Read*Command` / `Read*CommandOutput` enums, execution on the **live** `KitGraph`, no `Other` / `#[serde(other)]` escapes.
-- **TypeScript**: [`readCommandTypes.ts`](js/readCommandTypes.ts) (run [`js/gen_read_command_types.py`](js/gen_read_command_types.py) when `read_module.rs` changes) — `KitStoreClient.executeRead` is `ReadCommandBatch` → `ReadCommandBatchResult`.
-- **Wire**: wasm `executeReadKitCommands` and `semio-store` `kit.executeReadKitCommands` use the same JSON (externally tagged, camelCase).
-
-### SQL
-
-```mermaid
-erDiagram
-
-    semio {
-        string release PK
-        string created_by_app
-        string app_version
-        datetime created_at
-    }
-
-    attributes {
-        int id PK
-        string key
-        string value
-        string definition
-        int representation_id FK
-        int connector_id FK
-        int type_id FK
-        int piece_id FK
-        int connection_id FK
-        int design_id FK
-        int kit_id FK
-    }
-
-    files {
-        int id PK
-        string path
-        string remote_url
-        string description
-        int kit_id FK
-    }
-
-    qualities {
-        int id PK
-        string key
-        string name
-        string description
-        string uri
-        int kind
-        boolean can_scale
-        string default_si_unit
-        string default_imperial_unit
-        float min
-        boolean is_min_excluded
-        float max
-        boolean is_max_excluded
-        float default_value
-        string formula
-        datetime created_at
-        datetime updated_at
-        int kit_id FK
-    }
-
-    benchmarks {
-        int id PK
-        string name
-        string icon
-        float min
-        boolean is_min_excluded
-        float max
-        boolean is_max_excluded
-        int quality_id FK
-    }
-
-    props {
-        int id PK
-        string key
-        string value
-        string unit
-        datetime created_at
-        datetime updated_at
-        int representation_id FK
-        int connector_id FK
-        int type_id FK
-        int piece_id FK
-        int connection_id FK
-        int design_id FK
-    }
-
-    stats {
-        int id PK
-        string key
-        string unit
-        float min
-        boolean is_min_excluded
-        float max
-        boolean is_max_excluded
-        datetime created_at
-        datetime updated_at
-        int design_id FK
-    }
-
-    tags {
-        int id PK
-        string id
-        string name
-        string description
-        string icon
-        int kit_id FK
-    }
-
-    concepts {
-        int id PK
-        string id
-        string name
-        string description
-        string icon
-        int kit_id FK
-    }
-
-    representations {
-        int id PK
-        string id
-        string name
-        string description
-        int file_id FK
-        int type_id FK
-    }
-
-    planes {
-        int id PK
-        float origin_x
-        float origin_y
-        float origin_z
-        float x_axis_x
-        float x_axis_y
-        float x_axis_z
-        float y_axis_x
-        float y_axis_y
-        float y_axis_z
-    }
-
-    locations {
-        int id PK
-    }
-
-    compatible_ports {
-        int id PK
-        string name
-        int order
-        int connector_id FK
-    }
-
-    connectors {
-        int id PK
-        string connector_id
-        string description
-        string port
-        boolean is_mandatory
-        float point_x
-        float point_y
-        float point_z
-        float direction_x
-        float direction_y
-        float direction_z
-        float t
-        int type_id FK
-        int design_id FK
-    }
-
-    authors {
-        int id PK
-        string name
-        string email
-        int kit_id FK
-    }
-
-    author_artifact {
-        int author_id PK
-        int rank
-        int type_id PK
-        int design_id PK
-    }
-
-    types {
-        int id PK
-        string name
-        boolean is_virtual
-        boolean can_scale
-        boolean can_mirror
-        string unit
-        float available_count
-        int location_id FK
-        string icon
-        string image_url
-        string description
-        datetime created_at
-        datetime updated_at
-        int kit_id FK
-    }
-
-    pieces {
-        int id PK
-        string piece_id
-        int type_id FK
-        int design_id FK
-        int plane_id FK
-        int center_id FK
-        float scale
-        int mirror_plane_id FK
-        boolean is_hidden
-        boolean is_locked
-        string color
-        string description
-        int parent_piece_id FK
-    }
-
-    connections {
-        int id PK
-        int connected_piece_id FK
-        int connected_design_piece_id FK
-        int connected_connector_id FK
-        int connecting_piece_id FK
-        int connecting_design_piece_id FK
-        int connecting_connector_id FK
-        string description
-        float gap
-        float shift
-        float rise
-        float rotation
-        float turn
-        float tilt
-        float u
-        float v
-        int design_id FK
-    }
-
-    layers {
-        int id PK
-        string name
-        string description
-        string color
-        int design_id FK
-    }
-
-    groups {
-        int id PK
-        string name
-        string description
-        string color
-        int design_id FK
-    }
-
-    group_pieces {
-        int group_id PK
-        int piece_id PK
-    }
-
-    designs {
-        int id PK
-        string name
-        boolean can_scale
-        boolean can_mirror
-        string unit
-        int location_id FK
-        string icon
-        string image_url
-        string description
-        datetime created_at
-        datetime updated_at
-        int kit_id FK
-    }
-
-    kits {
-        int id PK
-        string name
-        string version
-        string remote_url
-        string homepage_url
-        string license
-        string icon
-        string image_url
-        string description
-        datetime created_at
-        datetime updated_at
-    }
-
-    representation_tags {
-        int representation_id PK
-        int tag_id PK
-        int order
-    }
-
-    type_concepts {
-        int type_id PK
-        int concept_id PK
-        int order
-    }
-
-    design_concepts {
-        int design_id PK
-        int concept_id PK
-        int order
-    }
-
-    kit_concepts {
-        int kit_id PK
-        int concept_id PK
-        int order
-    }
-
-    %% Relationships from source
-    authors ||--o{ author_artifact : links
-    types ||--o{ author_artifact : references
-    designs ||--o{ author_artifact : references
-
-    representations ||--o{ representation_tags : links
-    tags ||--o{ representation_tags : references
-
-    representations ||--o{ attributes : has
-    files ||--o{ representations : might_reference
-
-    connectors ||--o{ compatible_ports : has
-    connectors ||--o{ attributes : has
-    connectors ||--o{ props : has
-
-    types ||--o{ locations : has
-
-    types ||--o{ type_concepts : links
-    concepts ||--o{ type_concepts : references
-
-    designs ||--o{ design_concepts : links
-    concepts ||--o{ design_concepts : references
-
-    kits ||--o{ kit_concepts : links
-    concepts ||--o{ kit_concepts : references
-
-    types ||--o{ representations : has
-    types ||--o{ connectors : has
-    types ||--o{ authors : has
-    types ||--o{ attributes : has
-    types ||--o{ concepts : has
-    types }o--o{ authors : has
-
-    pieces ||--o{ planes : has
-    pieces ||--o{ attributes : has
-
-    pieces ||--o{ group_pieces : links
-    groups ||--o{ group_pieces : references
-
-    connections ||--o{ attributes : has
-    pieces }o--o{ connections : connected
-    pieces }o--o{ connections : connecting
-    connectors }o--o{ connections : connected
-    connectors }o--o{ connections : connecting
-
-    designs ||--o{ pieces : has
-    designs ||--o{ connections : has
-    designs ||--o{ stats : has
-    designs ||--o{ props : has
-    designs ||--o{ layers : has
-    designs ||--o{ groups : has
-    designs ||--o{ locations : has
-    designs ||--o{ concepts : has
-    designs ||--o{ attributes : has
-    designs }o--o{ authors : has
-
-    kits ||--o{ types : has
-    kits ||--o{ designs : has
-    kits ||--o{ qualities : has
-    kits ||--o{ files : has
-    kits ||--o{ authors : has
-    kits ||--o{ tags : has
-    kits ||--o{ concepts : has
-    kits ||--o{ attributes : has
-
-    %% FK-implied relationship not explicitly listed in the source
-    qualities ||--o{ benchmarks : has
-```
-
-### Interface
-
-REST and GraphQL-friendly JSON:
-
-```
-kit : !Kit{
-    id: !String
-    description !String
-    name : !String
-    types : *Type[
-        name : !String
-        representations : +Representation[
-            id : !String
-            name : ?String
-            tags : *TagId[] // references to kit-level tags
-            file : !FileId // reference to kit-level file
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        connectors : +Connector[
-            id : !String // empty is default
-            point : !Point{
-                x : !Float
-                y : !Float
-                z : !Float
-            }
-            direction : !Vector{
-                x : !Float
-                y : !Float
-                z : !Float
-            }
-            t : !Float // [0,1[ for diagram ring position
-            mandatory : ?Boolean // default false
-            port : ?PortId
-            compatiblePorts : *PortId[] // Empty list means compatible with all
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        props : *Prop[
-            key : !String // quality key
-            value : !String // number | text
-            unit : ?String
-            attributes : *Attribute[]
-        ]
-        isVirtual : ?Boolean // default false
-        canScale : ?Boolean // default true
-        canMirror : ?Boolean // default true
-        unit : !String // e.g., mm, cm, m
-        availableCount : !Float // default is +infinity
-        location : ?Location{
-            longitude : ?Float
-            latitude : ?Float
-            altitude : ?Float
-        }
-        authors: *AuthorId[
-            email : !String
-        ]
-        concepts : *ConceptId[] // references to kit-level concepts
-        icon : ?String // emoji | logogram | url
-        image : ?String // url
-        description : ?String
-        attributes : *Attribute[]
-        created : !String // date
-        updated : !String // date
-    ]
-    tags : *Tag[
-        id : !String
-        name : !String
-        description : ?String
-        icon : ?String
-        attributes : *Attribute[]
-    ]
-    concepts : *Concept[
-        id : !String
-        name : !String
-        description : ?String
-        icon : ?String
-        attributes : *Attribute[]
-    ]
-    files : *File[
-        id : !String
-        path : !String
-        remoteUrl : ?String
-        description : ?String
-        attributes : *Attribute[]
-    ]
-    designs : *Design[
-        name : !String
-        pieces : +Piece[
-            id : !String
-            type : !TypeId{
-                name : !String
-            }
-            design : ?DesignId{
-                name : !String
-            }
-            plane : ?Plane{
-                origin : !Point{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-                xAxis : !Vector{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-                yAxis : !Vector{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-            }
-            center : ?Coordinate{
-                u : !Float
-                v : !Float
-            }
-            scale : ?Float // default 1.0
-            mirrorPlane : ?Plane{
-                origin : !Point{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-                xAxis : !Vector{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-                yAxis : !Vector{
-                    x : !Float
-                    y : !Float
-                    z : !Float
-                }
-            }
-            props : *Prop[
-                key : !String // quality key
-                value : !String // number | text
-                unit : ?String
-                attributes : *Attribute[]
-            ]
-            hidden : ?Boolean // default false
-            locked : ?Boolean // default false
-            color : ?String // hex color
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        connections : +Connection[
-            connected : !Side{
-                piece : !PieceId{ id : !String }
-                designPiece : ?PieceId{ id : !String }
-                connector : !ConnectorId{ id : !String }
-            }
-            connecting : !Side{
-                piece : !PieceId{ id : !String }
-                designPiece : ?PieceId{ id : !String }
-                connector : !ConnectorId{ id : !String }
-            }
-            gap : ?Float
-            shift : ?Float
-            rise : ?Float
-            rotation : ?Float // degrees
-            turn : ?Float // degrees
-            tilt : ?Float // degrees
-            x : ?Float // diagram offset x
-            y : ?Float // diagram offset y
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        stats : *Stat[
-            key : !String // quality key
-            unit : ?String
-            min : ?Float
-            minExcluded : ?Boolean // default false
-            max : ?Float
-            maxExcluded : ?Boolean // default false
-        ]
-        props : *Prop[
-            key : !String // quality key
-            value : !String // number | text
-            unit : ?String
-            attributes : *Attribute[]
-        ]
-        layers : *Layer[
-            path : !String
-            isHidden : ?Boolean // default false
-            isLocked : ?Boolean // default false
-            color : ?String // hex color
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        activeLayer : ?Layer{
-            path : !String
-        }
-        groups : *Group[
-            pieces : *PieceId[
-                id : !String
-            ]
-            color : ?String // hex color
-            name : ?String
-            description : ?String
-            attributes : *Attribute[]
-        ]
-        canScale : ?Boolean // default true
-        canMirror : ?Boolean // default true
-        unit : !String // e.g., mm, cm, m
-        location : ?Location{
-            longitude : ?Float
-            latitude : ?Float
-            altitude : ?Float
-        }
-        authors: *AuthorId[
-            email : !String
-        ]
-        concepts : *ConceptId[] // references to kit-level concepts
-        icon : ?String // emoji | logogram | url
-        image : ?String // url
-        description : ?String
-        attributes : *Attribute[]
-        created : !String // date
-        updated : !String // date
-    ]
-    qualities : *Quality[
-        key : !String
-        name : !String
-        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Connector
-        default : ?Float
-        formula : ?String
-        defaultSiUnit : ?String
-        defaultImperialUnit : ?String
-        min : ?Float
-        minExcluded : ?Boolean // default true
-        max : ?Float
-        maxExcluded : ?Boolean // default true
-        canScale : ?Boolean // default false
-        benchmarks : *Benchmark[
-            name : !String
-            icon : ?String
-            min : ?Float
-            minExcluded : ?Boolean // default false
-            max : ?Float
-            maxExcluded : ?Boolean // default false
-            definition : ?String // text | uri
-            attributes : *Attribute[]
-        ]
-        definition : ?String // text | uri
-        attributes : *Attribute[]
-    ]
-    authors : *Author[
-        name : !String
-        email : !String
-        attributes : *Attribute[]
-    ]
-    remoteUrl : ?String // url for remote fetching
-    homepageUrl : ?String // url
-    license : ?String // spdx id | url
-    icon : ?String // emoji | logogram | url
-    image : ?String // url
-    description : ?String
-    attributes : *Attribute[
-        key : !String
-        value : ?String // No value means true
-        definition : ?String // text | uri
-    ]
-    created : !String // date
-    updated : !String // date
-}
-```
-
 ### InMemory
 
 ```mermaid
@@ -689,13 +42,10 @@ class IdDto {
 
 class InputDto
 class MetadataDto {
-  <<abstract>>
 }
 class ShallowDto {
-  <<abstract>>
 }
 class FullDto {
-  <<abstract>>
 }
 
 class SideDto {
@@ -1010,21 +360,18 @@ class AttributeInputDto {
   +definition: String
 }
 class AttributeMetadataDto {
-  <<abstract>>
   +id: String
   +key: String
   +value: String
   +definition: String
 }
 class AttributeShallowDto {
-  <<abstract>>
   +id: String
   +key: String
   +value: String
   +definition: String
 }
 class AttributeFullDto {
-  <<abstract>>
   +id: String
   +key: String
   +value: String
@@ -1041,20 +388,17 @@ class AuthorInputDto {
   +attributes: AttributeInputDto[]
 }
 class AuthorMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +email: String
 }
 class AuthorShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +email: String
   +attributes: AttributeMetadataDto[]
 }
 class AuthorFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +email: String
@@ -1072,14 +416,12 @@ class LocationInputDto {
   +attributes: AttributeInputDto[]
 }
 class LocationMetadataDto {
-  <<abstract>>
   +id: String
   +longitude: Float
   +latitude: Float
   +altitude: Float
 }
 class LocationShallowDto {
-  <<abstract>>
   +id: String
   +longitude: Float
   +latitude: Float
@@ -1087,7 +429,6 @@ class LocationShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class LocationFullDto {
-  <<abstract>>
   +id: String
   +longitude: Float
   +latitude: Float
@@ -1110,7 +451,6 @@ class FolderInputDto {
   +modifiedBy: AuthorIdDto
 }
 class FolderMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: FolderIdDto
@@ -1121,7 +461,6 @@ class FolderMetadataDto {
   +modifiedBy: AuthorIdDto
 }
 class FolderShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: FolderIdDto
@@ -1133,7 +472,6 @@ class FolderShallowDto {
   +modifiedBy: AuthorMetadataDto
 }
 class FolderFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: FolderFullDto
@@ -1162,7 +500,6 @@ class FileInputDto {
   +modifiedBy: AuthorIdDto
 }
 class FileMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +remote: String
@@ -1175,7 +512,6 @@ class FileMetadataDto {
   +modifiedBy: AuthorIdDto
 }
 class FileShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +remote: String
@@ -1188,7 +524,6 @@ class FileShallowDto {
   +modifiedBy: AuthorMetadataDto
 }
 class FileFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +remote: String
@@ -1214,14 +549,12 @@ class ConceptInputDto {
   +attributes: AttributeInputDto[]
 }
 class ConceptMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
   +icon: String
 }
 class ConceptShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1229,7 +562,6 @@ class ConceptShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class ConceptFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1264,7 +596,6 @@ class QualityInputDto {
   +attributes: AttributeInputDto[]
 }
 class QualityMetadataDto {
-  <<abstract>>
   +id: String
   +key: String
   +name: String
@@ -1286,7 +617,6 @@ class QualityMetadataDto {
   +unit: String
 }
 class QualityShallowDto {
-  <<abstract>>
   +id: String
   +key: String
   +name: String
@@ -1310,7 +640,6 @@ class QualityShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class QualityFullDto {
-  <<abstract>>
   +id: String
   +key: String
   +name: String
@@ -1348,7 +677,6 @@ class BenchmarkInputDto {
   +attributes: AttributeInputDto[]
 }
 class BenchmarkMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +icon: String
@@ -1358,7 +686,6 @@ class BenchmarkMetadataDto {
   +maxExcluded: Boolean
 }
 class BenchmarkShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +icon: String
@@ -1369,7 +696,6 @@ class BenchmarkShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class BenchmarkFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +icon: String
@@ -1393,7 +719,6 @@ class StatInputDto {
   +maxExcluded: Boolean
 }
 class StatMetadataDto {
-  <<abstract>>
   +id: String
   +quality: QualityIdDto
   +unit: String
@@ -1403,7 +728,6 @@ class StatMetadataDto {
   +maxExcluded: Boolean
 }
 class StatShallowDto {
-  <<abstract>>
   +id: String
   +quality: QualityMetadataDto
   +unit: String
@@ -1413,7 +737,6 @@ class StatShallowDto {
   +maxExcluded: Boolean
 }
 class StatFullDto {
-  <<abstract>>
   +id: String
   +quality: QualityFullDto
   +unit: String
@@ -1434,14 +757,12 @@ class TagInputDto {
   +attributes: AttributeInputDto[]
 }
 class TagMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
   +icon: String
 }
 class TagShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1449,7 +770,6 @@ class TagShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class TagFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1469,7 +789,6 @@ class RepresentationInputDto {
   +attributes: AttributeInputDto[]
 }
 class RepresentationMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +tags: TagIdDto[]
@@ -1477,7 +796,6 @@ class RepresentationMetadataDto {
   +description: String
 }
 class RepresentationShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +tags: TagMetadataDto[]
@@ -1486,7 +804,6 @@ class RepresentationShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class RepresentationFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +tags: TagFullDto[]
@@ -1509,7 +826,6 @@ class PortInputDto {
   +attributes: AttributeInputDto[]
 }
 class PortMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1518,7 +834,6 @@ class PortMetadataDto {
   +compatiblePorts: PortIdDto[]
 }
 class PortShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1528,7 +843,6 @@ class PortShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class PortFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +description: String
@@ -1554,7 +868,6 @@ class ConnectorInputDto {
   +attributes: AttributeInputDto[]
 }
 class ConnectorMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +t: Float
@@ -1566,7 +879,6 @@ class ConnectorMetadataDto {
   +maxChildren: Int
 }
 class ConnectorShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +t: Float
@@ -1580,7 +892,6 @@ class ConnectorShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class ConnectorFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +t: Float
@@ -1605,14 +916,12 @@ class PropInputDto {
   +attributes: AttributeInputDto[]
 }
 class PropMetadataDto {
-  <<abstract>>
   +id: String
   +quality: QualityIdDto
   +value: String
   +unit: String
 }
 class PropShallowDto {
-  <<abstract>>
   +id: String
   +quality: QualityMetadataDto
   +value: String
@@ -1620,7 +929,6 @@ class PropShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class PropFullDto {
-  <<abstract>>
   +id: String
   +quality: QualityFullDto
   +value: String
@@ -1641,7 +949,6 @@ class LayerInputDto {
   +attributes: AttributeInputDto[]
 }
 class LayerMetadataDto {
-  <<abstract>>
   +id: String
   +path: String
   +isHidden: Boolean
@@ -1650,7 +957,6 @@ class LayerMetadataDto {
   +description: String
 }
 class LayerShallowDto {
-  <<abstract>>
   +id: String
   +path: String
   +isHidden: Boolean
@@ -1660,7 +966,6 @@ class LayerShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class LayerFullDto {
-  <<abstract>>
   +id: String
   +path: String
   +isHidden: Boolean
@@ -1682,7 +987,6 @@ class GroupInputDto {
   +attributes: AttributeInputDto[]
 }
 class GroupMetadataDto {
-  <<abstract>>
   +id: String
   +pieces: PieceIdDto[]
   +color: String
@@ -1690,7 +994,6 @@ class GroupMetadataDto {
   +description: String
 }
 class GroupShallowDto {
-  <<abstract>>
   +id: String
   +pieces: PieceMetadataDto[]
   +color: String
@@ -1699,7 +1002,6 @@ class GroupShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class GroupFullDto {
-  <<abstract>>
   +id: String
   +pieces: PieceFullDto[]
   +color: String
@@ -1728,7 +1030,6 @@ class PieceInputDto {
   +attributes: AttributeInputDto[]
 }
 class PieceMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +type: TypeIdDto
@@ -1743,7 +1044,6 @@ class PieceMetadataDto {
   +description: String
 }
 class PieceShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +type: TypeMetadataDto
@@ -1760,7 +1060,6 @@ class PieceShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class PieceFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +type: TypeFullDto
@@ -1797,7 +1096,6 @@ class ConnectionInputDto {
   +attributes: AttributeInputDto[]
 }
 class ConnectionMetadataDto {
-  <<abstract>>
   +id: String
   +connected: SideDto
   +connecting: SideDto
@@ -1812,7 +1110,6 @@ class ConnectionMetadataDto {
   +description: String
 }
 class ConnectionShallowDto {
-  <<abstract>>
   +id: String
   +connected: SideDto
   +connecting: SideDto
@@ -1828,7 +1125,6 @@ class ConnectionShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class ConnectionFullDto {
-  <<abstract>>
   +id: String
   +connected: SideDto
   +connecting: SideDto
@@ -1870,7 +1166,6 @@ class TypeInputDto {
   +attributes: AttributeInputDto[]
 }
 class TypeMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: TypeIdDto
@@ -1889,7 +1184,6 @@ class TypeMetadataDto {
   +description: String
 }
 class TypeShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: TypeMetadataDto
@@ -1912,7 +1206,6 @@ class TypeShallowDto {
   +attributes: AttributeMetadataDto[]
 }
 class TypeFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: TypeMetadataDto
@@ -1966,7 +1259,6 @@ class DesignInputDto {
   +modifiedAt: DateTime
 }
 class DesignMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: DesignIdDto
@@ -1986,7 +1278,6 @@ class DesignMetadataDto {
   +modifiedAt: DateTime
 }
 class DesignShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: DesignMetadataDto
@@ -2013,7 +1304,6 @@ class DesignShallowDto {
   +modifiedAt: DateTime
 }
 class DesignFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +parent: DesignMetadataDto
@@ -2069,7 +1359,6 @@ class KitInputDto {
   +modifiedAt: DateTime
 }
 class KitMetadataDto {
-  <<abstract>>
   +id: String
   +name: String
   +release: String
@@ -2084,7 +1373,6 @@ class KitMetadataDto {
   +modifiedAt: DateTime
 }
 class KitShallowDto {
-  <<abstract>>
   +id: String
   +name: String
   +release: String
@@ -2109,7 +1397,6 @@ class KitShallowDto {
   +modifiedAt: DateTime
 }
 class KitFullDto {
-  <<abstract>>
   +id: String
   +name: String
   +release: String

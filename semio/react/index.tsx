@@ -46,10 +46,10 @@ import {
 	type KitJsonFileAdapter,
 	type KitBinaryStore,
 	type KitStoreExecuteResult,
-	type KitStoreWireBackboneConfig,
-	type KitStoreWireBackboneStatus,
-	type KitStoreWireConflictResolution,
-	type KitStoreWireKitConflict,
+	type BackboneConfig,
+	type BackboneStatusDto,
+	type ConflictResolution,
+	type KitConflict,
 	type DesignMeta,
 	type DesignShallow,
 	type Type,
@@ -67,10 +67,10 @@ export type {
 	KitFileState,
 	KitBinaryStore,
 	KitStoreExecuteResult,
-	KitStoreWireBackboneConfig,
-	KitStoreWireBackboneStatus,
-	KitStoreWireConflictResolution,
-	KitStoreWireKitConflict,
+	BackboneConfig as KitStoreWireBackboneConfig,
+	BackboneStatusDto as KitStoreWireBackboneStatus,
+	ConflictResolution as KitStoreWireConflictResolution,
+	KitConflict as KitStoreWireKitConflict,
 } from "@semio/js";
 
 // #region ⚛️Types
@@ -1783,14 +1783,14 @@ function kitCtlSetError(e: unknown): SetError {
 
 /** Polls {@link KitStoreClient.backboneStatus} when a WASM client is mounted (e.g. coordinator / semio-store parity in the browser). */
 export function useBackboneStatus(pollMs: number = 5000): {
-	status: KitStoreWireBackboneStatus | null;
+	status: BackboneStatusDto | null;
 	pending: boolean;
 	lastError?: SetError;
 	refresh: () => Promise<void>;
 } {
 	const runtime = useKitRuntime();
 	const client = runtime.kitClient;
-	const [status, setStatus] = React.useState<KitStoreWireBackboneStatus | null>(null);
+	const [status, setStatus] = React.useState<BackboneStatusDto | null>(null);
 	const [pending, setPending] = React.useState(false);
 	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
 
@@ -1826,7 +1826,7 @@ export function useBackboneStatus(pollMs: number = 5000): {
 }
 
 export function useAttachBackbone(): {
-	attach: (cfg: KitStoreWireBackboneConfig) => Promise<SetResult>;
+	attach: (cfg: BackboneConfig) => Promise<SetResult>;
 	detach: () => Promise<SetResult>;
 	pending: boolean;
 	lastError?: SetError;
@@ -1837,7 +1837,7 @@ export function useAttachBackbone(): {
 	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
 
 	const attach = React.useCallback(
-		async (cfg: KitStoreWireBackboneConfig) => {
+		async (cfg: BackboneConfig) => {
 			if (!client?.attachBackbone || !client?.detachBackbone) {
 				const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
 				setLastError(err);
@@ -1934,14 +1934,14 @@ export function useDetachBackbone(): {
 }
 
 export function useListConflicts(): {
-	conflicts: KitStoreWireKitConflict[];
+	conflicts: KitConflict[];
 	refresh: () => Promise<void>;
 	pending: boolean;
 	lastError?: SetError;
 } {
 	const runtime = useKitRuntime();
 	const client = runtime.kitClient;
-	const [conflicts, setConflicts] = React.useState<KitStoreWireKitConflict[]>([]);
+	const [conflicts, setConflicts] = React.useState<KitConflict[]>([]);
 	const [pending, setPending] = React.useState(false);
 	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
 
@@ -1970,7 +1970,7 @@ export function useListConflicts(): {
 }
 
 export function useResolveConflict(): {
-	resolve: (id: string, strategy: KitStoreWireConflictResolution) => Promise<SetResult>;
+	resolve: (id: string, strategy: ConflictResolution) => Promise<SetResult>;
 	pending: boolean;
 	lastError?: SetError;
 } {
@@ -1980,7 +1980,7 @@ export function useResolveConflict(): {
 	const [lastError, setLastError] = React.useState<SetError | undefined>(undefined);
 
 	const resolve = React.useCallback(
-		async (id: string, strategy: KitStoreWireConflictResolution) => {
+		async (id: string, strategy: ConflictResolution) => {
 			if (!client?.resolveConflict) {
 				const err: SetError = { kind: "Internal", message: "no KitStoreClient on runtime" };
 				setLastError(err);

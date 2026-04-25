@@ -183,13 +183,13 @@ export const HistoryControls: React.FC<{
         <B disabled={!canVcs} onClick={() => ex("end", { endSession: { id: sessionId } })}>
           End session
         </B>
-        <B disabled={!canVcs} onClick={() => readGql("kit name", { query: `query { kitStore { kit { name } } }` })}>
+        <B disabled={!canVcs} onClick={() => readGql("kit name", { query: `query { kitStore { name } }` })}>
           Read kit name
         </B>
         <B
           disabled={!canVcs}
           onClick={() =>
-            readGql("kit summary", { query: `query { kitStore { kit { id name description icon image preview } } }` })
+            readGql("kit summary", { query: `query { kitStore { name description kitMetadataJson } }` })
           }
         >
           Read kit full

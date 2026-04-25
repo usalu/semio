@@ -1,0 +1,13 @@
+{
+  "title": "Align JS Naming With Rust DTO And Backbone Terms",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement the breaking naming alignment between semio/js and semio/rs for shared DTO/backbone/conflict concepts. Use semio/rs as the naming authority where concepts actually match. Rename JS exports and direct consumers without compatibility aliases. Expected rename set includes: KitDTO-\u003eKitWireDto, KitInteractionDTO-\u003eKitInteractionDto, KitStoreWireBackboneConfig-\u003eBackboneConfig, KitStoreWireConflictResolution-\u003eConflictResolution, KitStoreWireBackboneStatus-\u003eBackboneStatusDto, KitStoreWireKitConflict-\u003eKitConflict, DevKitBackbone-\u003eDevBackbone, LocalKitBackbone-\u003eLocalBackbone, RemoteKitBackbone-\u003eRemoteBackbone. Audit whether any store/client methods need renaming, but preserve names already aligned with wasm/Rust if no real mismatch exists. Update semio/react imports/re-exports and JS/React AGENTS docs, extend existing embedded tests in semio/js/index.ts to cover the renamed API surface, run relevant JS/react validation, and finish end-to-end.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1378"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ec3be572c1a54d2992c17e942a07a8f1"
+  ]
+}

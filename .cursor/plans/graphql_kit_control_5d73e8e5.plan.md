@@ -10,20 +10,37 @@ todos:
    status: in_progress
  - id: actor-bus
    content: Implement the inbound mutation queue and outbound subscription stream as separate async channels with boot/handle lifecycle wiring.
-   status: pending
+   status: in_progress
  - id: js-client
    content: Rewrite `semio/js/index.ts` client and worker paths so GraphQL `execute` is the only kit-store boundary.
-   status: pending
+   status: in_progress
  - id: schema-align
    content: Update `semio/graphql/schema.graphql` to match the new runtime schema and remove selector/id command-plane fields.
    status: pending
  - id: tests
    content: Extend existing Rust and JS test blocks, then run the relevant Rust, WASM, JS, and type-check commands.
-   status: pending
+   status: in_progress
 isProject: false
 ---
 
 # GraphQL Kit Control Plane Migration
+
+## Status (milestone, 2026-04-25)
+
+| Area | State | Notes |
+|------|--------|--------|
+| **Map coverage** | Done | `kitGraphqlMapReadCommand`, `readKit` / `readKitDesign`, `kitGraphqlExecuteRead`, `kitGraphqlExecuteStoreCommand` switch document the live JS mapping; Rust enum path is unchanged. |
+| **JS reads** | In progress (major slice) | `KitStoreClient.executeRead`, worker `executeRead`, catalog getters use typed read batches via GraphQL `execute` — not ad-hoc `kitGraphqlKit*Shallow` on that path. |
+| **JS writes / VCS** | Not done | `executeChangeKitCommands`, field patches, `kitGraphqlExecuteStoreCommand` tagged JSON, and direct WASM helpers remain the active write path. |
+| **Rust GraphQL** | Not done | `GraphWork::KitStoreCommand` / `run_kit_store` still in use; `KitStoreNode` and id-based resolvers not removed. |
+| **Schema artifacts** | Not done | `semio/graphql/schema.graphql` (control-plane style with `kitStore(input: …)`) still diverges from the WASM-embedded `query { kitStore { … } }` surface. |
+| **Tests** | In progress | Embedded Vitest; `npx tsc --noEmit` in `semio/js` passes. Some Vitest cases still fail for unrelated issues (Nakagin, python/sqlrepresentation, etc.). |
+
+**What “finished plan” means here:** the migration is a multi-sprint program; this document is the single source of truth for target shape, sequencing, and honest progress. The checklist below is the definition of done for the *whole* program (not all completed yet).
+
+**Tracking:** open/close work under the repo’s ticket/goal process (`ticket_open` / `ticket_close` per `AGENTS.md`).
+
+**Recent fixes aligned with the plan’s JS read path:** `KitImpl.beginTransaction` no longer shadows `id()` (was `const id = id()` → `ReferenceError` in transaction paths).
 
 ## Target Shape
 

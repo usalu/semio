@@ -917,7 +917,7 @@ export interface KitStoreClient {
 
 semio/rs and semio/js:
 
-Refactor the kit store to have exclusively graphql as control plane. You MUST NOT add it ontop but change everything. You MUST NOT use ids but only use pointers. Directly resolve in-memory. Don't add a new struct and directly add #[Object] to the existing stores.
+Refactor the kit store to have exclusively graphql as control plane. You MUST NOT add it ontop but change everything. You MUST NOT use ids but only use pointers. Directly resolve in-memory. Don't add a new struct and directly add #[Object] to the existing stores. The old enum-based control plane MUST NOT be there afterwards. Only graphql query for reads, graphql mutation for updates and graphql subscribtions for events.
 
 ````md
 # Architectural Migration Plan: Dual-Channel WASM Actor Model

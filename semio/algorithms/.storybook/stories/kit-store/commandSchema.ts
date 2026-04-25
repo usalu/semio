@@ -170,16 +170,16 @@ export const CHANGE_TYPE_COMMAND_KEYS = [
 export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
   {
     id: "rk-full",
-    label: "GraphQL: kit (id, name, description, icon)",
-    json: j({ query: `query { kitStore { kit { id name description icon } } }` }),
+    label: "GraphQL: kitStore name + description + kitMetadataJson",
+    json: j({ query: `query { kitStore { name description kitMetadataJson } }` }),
   },
-  { id: "rk-name", label: "GraphQL: kit { name }", json: j({ query: `query { kitStore { kit { name } } }` }) },
+  { id: "rk-name", label: "GraphQL: kitStore { name }", json: j({ query: `query { kitStore { name } }` }) },
   { id: "rk-types", label: "GraphQL: typesShallowJson", json: j({ query: `query { kitStore { typesShallowJson } }` }) },
   { id: "rk-designs", label: "GraphQL: designsShallowJson", json: j({ query: `query { kitStore { designsShallowJson } }` }) },
   {
     id: "rk-desc",
-    label: "GraphQL: kit { description }",
-    json: j({ query: `query { kitStore { kit { description } } }` }),
+    label: "GraphQL: kitStore { description }",
+    json: j({ query: `query { kitStore { description } }` }),
   },
   {
     id: "rk-type-nested",
