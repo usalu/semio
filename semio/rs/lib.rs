@@ -3784,6 +3784,15 @@ pub mod change_command {
 
         // #endregion
 
+        /// Build the [`crate::kit_diff::KitDiff`] a command would perform relative to a baseline, plus inverses (twin only).
+        pub fn plan_kit_diff(&self, baseline: &KitFullDto) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+            let twin = KitGraph::from_full_dto(baseline.clone());
+            let inv = self.apply_mutation(&twin)?;
+            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            let d = crate::kit_diff::KitDiff::between(baseline, &after);
+            Ok((d, inv))
+        }
+
         /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_mutation`].
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
@@ -14803,6 +14812,105 @@ pub mod kit_diff {
             }
             Self { designs: Some(DesignsDiff { removed: vec![], updated: vec![DesignDiffUpdate { design_id, diff: d }], added: vec![] }), ..Default::default() }
         }
+
+        /// 🧩 Materialize a [`KitFullDto`] in place: inverse shape of [`Self::between_dto`] for sparse `KitDiff` from that API.
+        pub fn merge_into_baseline_dto(&self, k: &mut KitFullDto) {
+            if let Some(n) = &self.name {
+                k.name = n.clone();
+            }
+            if let Some(x) = &self.description {
+                k.description = x.clone();
+            }
+            if let Some(x) = &self.icon {
+                k.icon = x.clone();
+            }
+            if let Some(x) = &self.image {
+                k.image = x.clone();
+            }
+            if let Some(x) = &self.preview {
+                k.preview = x.clone();
+            }
+            if let Some(x) = &self.remote {
+                k.remote = x.clone();
+            }
+            if let Some(x) = &self.homepage {
+                k.homepage = x.clone();
+            }
+            if let Some(x) = &self.license {
+                k.license = x.clone();
+            }
+            if let Some(x) = &self.uri {
+                k.uri = x.clone();
+            }
+            if let Some(x) = &self.created {
+                k.created = x.clone();
+            }
+            if let Some(x) = &self.updated {
+                k.updated = x.clone();
+            }
+            if let Some(t) = &self.types {
+                for r in &t.removed {
+                    k.types.retain(|x| x.id != r.id);
+                }
+                for u in &t.updated {
+                    if let Some(x) = k.types.iter_mut().find(|x| x.id == u.id.id) {
+                        crate::diff::merge_type_diff_into_full(x, &u.diff);
+                    }
+                }
+                k.types.extend(t.added.iter().cloned());
+            }
+            if let Some(d) = &self.designs {
+                for r in &d.removed {
+                    k.designs.retain(|x| x.id != r.id);
+                }
+                for u in &d.updated {
+                    if let Some(dsgn) = k.designs.iter_mut().find(|x| x.id == u.design_id) {
+                        u.diff.merge_into_full_dto(dsgn);
+                    }
+                }
+                k.designs.extend(d.added.iter().cloned());
+            }
+            if let Some(f) = &self.files {
+                for r in &f.removed {
+                    k.files.retain(|x| x.id != r.id);
+                }
+                for u in &f.updated {
+                    if let Some(x) = k.files.iter_mut().find(|x| x.id == u.id.id) {
+                        crate::diff::merge_file_diff_into_full(x, &u.diff);
+                    }
+                }
+                k.files.extend(f.added.iter().cloned());
+            }
+            if let Some(fo) = &self.folders {
+                for r in &fo.removed {
+                    k.folders.retain(|x| x.id != r.id);
+                }
+                for u in &fo.updated {
+                    if let Some(x) = k.folders.iter_mut().find(|x| x.id == u.id.id) {
+                        crate::diff::merge_folder_diff_into_full(x, &u.diff);
+                    }
+                }
+                k.folders.extend(fo.added.iter().cloned());
+            }
+            if let Some(a) = &self.authors {
+                crate::diff::merge_authors_coll_into_vec(&mut k.authors, a);
+            }
+            if let Some(c) = &self.concepts {
+                crate::diff::merge_concepts_coll_into_vec(&mut k.concepts, c);
+            }
+            if let Some(t) = &self.tags {
+                crate::diff::merge_tags_coll_into_vec(&mut k.tags, t);
+            }
+            if let Some(q) = &self.qualities {
+                crate::diff::merge_qualities_coll_into_vec(&mut k.qualities, q);
+            }
+            if let Some(p) = &self.props {
+                crate::diff::merge_props_coll_into_vec(&mut k.props, p);
+            }
+            if let Some(a) = &self.attributes {
+                crate::diff::merge_attributes_coll_into_vec(&mut k.attributes, a);
+            }
+        }
     }
 
     fn diff_id_vec<T: PartialEq + Clone>(before: &[T], after: &[T], get_id: impl Fn(&T) -> &Id) -> (Vec<T>, Vec<Id>, Vec<T>) {
@@ -15527,6 +15635,17 @@ pub mod events {
         FlattenInvalidated { design: Id, pieces: Vec<Id> },
         ValidationInvalidated,
         SetRejected { event: Box<KitEvent>, error: crate::error::SetError },
+        SemioKitCommand {
+            #[serde(rename = "requestId")]
+            request_id: String,
+            #[serde(rename = "commandKind")]
+            command_kind: String,
+            phase: String,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            result: Option<serde_json::Value>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            error: Option<serde_json::Value>,
+        },
     }
 
     impl KitEvent {
@@ -18752,6 +18871,17 @@ pub mod kit_graph {
                 crate::event_wire::emit_kit_dto_reconcile_events(kit, before, after);
             }
             Ok(d)
+        }
+
+        /// 🧩 Central sparse path: materialize `before + diff` in-DTO, then one [`apply_kit_mutation`] (hash / validation / graph bus, reconcile events).
+        pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
+            if diff.is_empty() {
+                return Ok(crate::kit_diff::KitDiff::default());
+            }
+            let b0 = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto();
+            let mut a = b0.clone();
+            diff.merge_into_baseline_dto(&mut a);
+            Self::apply_kit_mutation(kit, &b0, &a)
         }
 
         /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
@@ -26622,6 +26752,19 @@ pub mod kit_graphql {
         results: Vec<KitStoreBatchResult>,
     }
 
+    #[derive(Clone, Debug, InputObject)]
+    struct KitCommandShellInput {
+        command_kind: String,
+        request: Json<serde_json::Value>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct KitCommandReceipt {
+        request_id: String,
+        command_kind: String,
+        accepted: bool,
+    }
+
     pub struct KitStoreMutationRoot;
 
     pub struct RootQuery;
@@ -26792,12 +26935,113 @@ pub mod kit_graphql {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             run_set_result(ctx, Box::new(move || KitGraph::redo(&graph))).await
         }
+
+        /// Submit any semantic kit mutation through one asynchronous shell.
+        async fn submit_kit_command(&self, ctx: &Context<'_>, input: KitCommandShellInput) -> Result<KitCommandReceipt> {
+            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
+            let request_id = Id::new_v7().to_string();
+            emit_command_shell_event(&graph, &request_id, &input.command_kind, "accepted", None, None);
+            spawn_command_shell(graph, tx, request_id.clone(), input.command_kind.clone(), input.request.0);
+            Ok(KitCommandReceipt {
+                request_id,
+                command_kind: input.command_kind,
+                accepted: true,
+            })
+        }
     }
 
     #[Object]
     impl KitStoreMutationRoot {
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
             execute_batch(ctx, input).await
+        }
+    }
+
+    fn emit_command_shell_event(
+        graph: &KitGraphRef,
+        request_id: &str,
+        command_kind: &str,
+        phase: &str,
+        result: Option<serde_json::Value>,
+        error: Option<serde_json::Value>,
+    ) {
+        let bus = graph.read().ok().map(|g| g.event_bus.clone());
+        if let Some(bus) = bus {
+            bus.emit(KitEvent::SemioKitCommand {
+                request_id: request_id.to_string(),
+                command_kind: command_kind.to_string(),
+                phase: phase.to_string(),
+                result,
+                error,
+            });
+        }
+    }
+
+    async fn run_command_shell_request(
+        graph: KitGraphRef,
+        tx: async_channel::Sender<GraphWork>,
+        request_id: String,
+        command_kind: String,
+        request: serde_json::Value,
+    ) {
+        let request_json = match serde_json::to_string(&request) {
+            Ok(value) => value,
+            Err(e) => {
+                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": e.to_string() })));
+                return;
+            }
+        };
+        let mut req = match request_from_json(&request_json) {
+            Ok(req) => req,
+            Err(e) => {
+                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": format!("{e:?}") })));
+                return;
+            }
+        };
+        req = req.data(graph.clone()).data(tx);
+        let response = schema().execute(req).await;
+        let response_value = match serde_json::to_value(&response) {
+            Ok(value) => value,
+            Err(e) => {
+                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": e.to_string() })));
+                return;
+            }
+        };
+        let errors = response_value.get("errors").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+        if errors.is_empty() {
+            emit_command_shell_event(&graph, &request_id, &command_kind, "succeeded", Some(response_value), None);
+        } else {
+            let message = errors.iter().filter_map(|error| error.get("message").and_then(|v| v.as_str())).collect::<Vec<_>>().join("; ");
+            emit_command_shell_event(
+                &graph,
+                &request_id,
+                &command_kind,
+                "failed",
+                Some(response_value),
+                Some(serde_json::json!({ "kind": "Internal", "message": if message.is_empty() { "GraphQL command failed".to_string() } else { message } })),
+            );
+        }
+    }
+
+    fn spawn_command_shell(
+        graph: KitGraphRef,
+        tx: async_channel::Sender<GraphWork>,
+        request_id: String,
+        command_kind: String,
+        request: serde_json::Value,
+    ) {
+        let fut = run_command_shell_request(graph, tx, request_id, command_kind, request);
+        #[cfg(target_arch = "wasm32")]
+        wasm_bindgen_futures::spawn_local(fut);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            std::thread::Builder::new()
+                .name("semio-graphql-command-shell".to_string())
+                .spawn(move || {
+                    let _ = futures_lite::future::block_on(fut);
+                })
+                .expect("spawn kit graphql command shell");
         }
     }
 
@@ -28307,6 +28551,8 @@ mod tests {
 
         use crate::kit_graph::KitGraph;
         use crate::kit_graphql;
+        use crate::change_command::ChangeKitCommand;
+        use crate::events::KitEvent;
 
         #[test]
         fn query_kit_name_via_schema() {
@@ -28323,6 +28569,46 @@ mod tests {
             });
             let name = out.get("data").and_then(|d| d.get("kitStore")).and_then(|k| k.get("name")).and_then(|n| n.as_str());
             assert_eq!(name, Some("gql-name"));
+        }
+
+        #[test]
+        fn submit_kit_command_returns_request_id_and_emits_result_event() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-shell-before")));
+            let mut events = kit.read().expect("read").subscribe();
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let command_json = serde_json::to_value(vec![ChangeKitCommand::Name { name: "gql-shell-after".into() }]).expect("command json");
+            let shell_request = serde_json::json!({
+                "query": "mutation($commands: JSON!) { changeKitCommands(commands: $commands) }",
+                "variables": { "commands": command_json }
+            });
+            let out = futures_lite::future::block_on(async {
+                let body = serde_json::json!({
+                    "query": "mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }",
+                    "variables": { "input": { "commandKind": "changeKitCommands", "request": shell_request } }
+                });
+                let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
+                req = req.data(kit.clone()).data(tx);
+                let schema = kit_graphql::schema();
+                serde_json::to_value(async_graphql::Response::from(schema.execute(req).await)).expect("to json")
+            });
+            let request_id = out.get("data").and_then(|d| d.get("submitKitCommand")).and_then(|r| r.get("requestId")).and_then(|v| v.as_str()).expect("request id").to_string();
+            assert!(!request_id.is_empty());
+
+            let mut seen_succeeded = false;
+            for _ in 0..50 {
+                while let Ok(event) = events.try_recv() {
+                    if matches!(event, KitEvent::SemioKitCommand { request_id: ref id, phase: ref p, .. } if id == &request_id && p == "succeeded") {
+                        seen_succeeded = true;
+                    }
+                }
+                if seen_succeeded {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            assert!(seen_succeeded, "expected succeeded event for {request_id}");
+            assert_eq!(kit.read().expect("read").name, "gql-shell-after");
         }
     }
 
@@ -28536,6 +28822,34 @@ mod tests {
             let mut b = before.clone();
             b.name = "k1".into();
             assert_eq!(after, b);
+        }
+
+        #[test]
+        fn kit_diff_merge_into_baseline_matches_between_and_apply_kit_diff() {
+            use crate::kit_diff::KitDiff;
+            let (kit, _, _, _) = small_kit();
+            let b0 = kit.read().expect("r").to_full_dto();
+            let mut expect = b0.clone();
+            expect.name = "merged-name".into();
+            let d = KitDiff::between(&b0, &expect);
+            let mut m = b0.clone();
+            d.merge_into_baseline_dto(&mut m);
+            assert_eq!(m, expect);
+            assert_eq!(d, KitDiff::between(&b0, &m));
+            KitGraph::apply_kit_diff(&kit, &d).expect("apply_kit_diff");
+            assert_eq!(kit.read().expect("r").name, "merged-name");
+        }
+
+        #[test]
+        fn plan_kit_diff_aligns_with_between() {
+            use crate::kit_diff::KitDiff;
+            let (kit, _, _, _) = small_kit();
+            let baseline = kit.read().expect("r").to_full_dto();
+            let cmd = ChangeKitCommand::Name { name: "planned".into() };
+            let (pl, _inv) = cmd.plan_kit_diff(&baseline).expect("plan");
+            let mut tmp = baseline.clone();
+            pl.merge_into_baseline_dto(&mut tmp);
+            assert_eq!(pl, KitDiff::between(&baseline, &tmp));
         }
     }
 

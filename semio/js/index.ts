@@ -6670,63 +6670,833 @@ export interface UndoableKitStore extends KitStore {
   redo(): void;
 }
 
-/** 🧱Normalizes plain kit DTOs into the JS [`Kit`] entity wrapper. */
-export function asKitInstance(kit: Kit | KitLike): Kit {
-  return kit instanceof Kit ? kit : Kit.fromPlain(kit as KitFullDto);
+// #region 🔖KitLocalMirror
+// 🔖 Local JSON/SQLite kit mirror, read-only structural diffs, and `semio.kit.*` command dispatch for sketchpad (not WASM graph apply).
+
+/** @emoji 📌 Reads/writes embedded kit JSON for dev file kits. */
+export type KitJsonFileAdapter = {
+  read(): Promise<string | null>;
+  write(json: string): Promise<void>;
+};
+
+/** @emoji 📌 Folder kit: SQLite blob + relative asset paths. */
+export type KitFolderAdapter = {
+  readKit(): Promise<Uint8Array | null>;
+  writeKit(data: Uint8Array): Promise<void>;
+  readFile(path: string): Promise<Blob | null | undefined>;
+  writeFile(path: string, blob: Blob): Promise<void>;
+  deleteFile(path: string): Promise<void>;
+  createDirectory(path: string): Promise<void>;
+  moveEntry(fromPath: string, toPath: string): Promise<void>;
+  listFiles(): Promise<string[]>;
+  watch?(cb: () => void): () => void;
+};
+
+export const KitDiffSchema = z
+  .object({
+    name: z.string().optional(),
+    version: z.string().optional(),
+    description: z.string().nullable().optional(),
+    icon: z.string().nullable().optional(),
+    image: z.string().nullable().optional(),
+    remote: z.string().nullable().optional(),
+    homepage: z.string().nullable().optional(),
+    license: z.string().nullable().optional(),
+    preview: z.string().nullable().optional(),
+    types: TypesDiffSchema.optional(),
+    designs: DesignsDiffSchema.optional(),
+    tags: TagsDiffSchema.optional(),
+    concepts: ConceptsDiffSchema.optional(),
+    families: FamiliesDiffSchema.optional(),
+    ports: PortsDiffSchema.optional(),
+    files: FilesDiffSchema.optional(),
+    folders: FoldersDiffSchema.optional(),
+    qualities: QualitiesDiffSchema.optional(),
+    authors: AuthorsDiffSchema.optional(),
+    attributes: AttributesDiffSchema.optional(),
+  })
+  .partial();
+
+/**
+ * @emoji 📌 Structural JSON delta between two `Kit` snapshots (compare/diagnostics / local undo mirror).
+ * Specs: Not used to mutate the WASM `KitGraph` — that path is semantic `ChangeKitCommand` only.
+ */
+export type KitDiff = z.infer<typeof KitDiffSchema>;
+
+const norm = (a: unknown) => a ?? null;
+
+function applyCollectionDiffPlain(items: any[], diff: any, applyItem: (t: any, d: any) => void, entityKey: string): void {
+  if (!diff) return;
+  if (diff.removed) {
+    const rem = new Set(
+      (diff.removed as any[]).map((r) => (typeof r === "string" || typeof r === "number" ? r : r?.id).toString()).filter((x) => x != null),
+    );
+    for (let i = items.length - 1; i >= 0; i--) {
+      const id = items[i]?.id;
+      if (id != null && rem.has(String(id))) items.splice(i, 1);
+    }
+  }
+  if (diff.updated) {
+    for (const u of diff.updated) {
+      const id = (u[entityKey] as any)?.id ?? u.id;
+      if (id == null) continue;
+      const row = items.find((x) => x?.id === id);
+      if (row) applyItem(row, u.diff ?? {});
+    }
+  }
+  if (diff.added) items.push(...(diff.added as any[]));
 }
 
-/** 🧱Small synchronous kit store used by React tests and in-memory callers. */
+function applyAttributesDiffPlain(items: any[], diff: any): void {
+  if (!diff) return;
+  if (diff.removed) {
+    const rem = new Set((diff.removed as any[]).map((r) => r.id));
+    for (let i = items.length - 1; i >= 0; i--) {
+      if (rem.has(items[i].id)) items.splice(i, 1);
+    }
+  }
+  if (diff.updated) {
+    for (const u of diff.updated) {
+      const id = (u as any).attribute?.id;
+      const row = items.find((x) => x.id === id);
+      if (row) Object.assign(row, (u as any).diff);
+    }
+  }
+  if (diff.added) items.push(...diff.added);
+}
+
+function applyPieceDiffPlain(t: any, d: any): void {
+  for (const k of ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked", "type", "design"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyConnectionDiffPlain(t: any, d: any): void {
+  for (const k of ["description", "connecting", "connected"]) {
+    if (k in d) t[k] = d[k];
+  }
+  for (const k of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
+    if (k in d) t[k] = (t[k] ?? 0) + (d[k] ?? 0);
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyDesignDiffPlain(t: any, d: any): void {
+  for (const k of [
+    "name",
+    "variant",
+    "view",
+    "description",
+    "icon",
+    "image",
+    "unit",
+    "folder",
+    "isAbstract",
+    "canScale",
+    "canMirror",
+  ]) {
+    if (k in d) t[k] = d[k];
+  }
+  for (const k of ["activeLayer", "parent", "location"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if ("concepts" in d) t.concepts = d.concepts;
+  if ("authors" in d) t.authors = d.authors;
+  if (d.pieces) {
+    if (!t.pieces) t.pieces = [];
+    applyCollectionDiffPlain(t.pieces, d.pieces, applyPieceDiffPlain, "piece");
+  }
+  if (d.connections) {
+    if (!t.connections) t.connections = [];
+    applyCollectionDiffPlain(t.connections, d.connections, applyConnectionDiffPlain, "connection");
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyTypeDiffPlain(t: any, d: any): void {
+  for (const k of [
+    "name",
+    "description",
+    "icon",
+    "image",
+    "folder",
+    "unit",
+    "stock",
+    "isAbstract",
+    "virtual",
+  ]) {
+    if (k in d) t[k] = d[k];
+  }
+  for (const k of ["location", "parent"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if ("concepts" in d) t.concepts = d.concepts;
+  if ("authors" in d) t.authors = d.authors;
+  if (d.connectors) {
+    if (!t.connectors) t.connectors = [];
+    applyCollectionDiffPlain(
+      t.connectors,
+      d.connectors,
+      (row, x) => Object.assign(row, x),
+      "connector",
+    );
+  }
+  if (d.representations) {
+    if (!t.representations) t.representations = [];
+    applyCollectionDiffPlain(
+      t.representations,
+      d.representations,
+      (row, x) => Object.assign(row, x),
+      "representation",
+    );
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyTagDiffPlain(t: any, d: any): void {
+  for (const k of ["name", "description", "icon"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+const applyConceptDiffPlain = applyTagDiffPlain;
+const applyPortDiffPlain = applyTagDiffPlain;
+
+function applyFileDiffPlain(t: any, d: any): void {
+  for (const k of ["name", "description", "remote", "size", "hash", "blob", "folder"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyFolderDiffPlain(t: any, d: any): void {
+  for (const k of ["name", "description", "parent"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+
+function applyQualityDiffPlain(t: any, d: any): void {
+  for (const k of ["key", "name", "description", "icon", "image", "folder", "unit"]) {
+    if (k in d) t[k] = d[k];
+  }
+  if (d.attributes || t.attributes) {
+    if (!t.attributes) t.attributes = [];
+    applyAttributesDiffPlain(t.attributes, d.attributes);
+  }
+}
+const applyAuthorDiffPlain = applyTagDiffPlain;
+
+/**
+ * @emoji Mutates a plain kit DTO in-place (port of `applyKitDiffDict` in `semio/py`, subset).
+ */
+function applyKitDiffDictPlain(target: any, diff: any): void {
+  for (const key of [
+    "name",
+    "version",
+    "description",
+    "icon",
+    "image",
+    "remote",
+    "homepage",
+    "license",
+    "preview",
+  ]) {
+    if (key in diff) {
+      const v = diff[key];
+      if (v != null) target[key] = v;
+      else delete target[key];
+    }
+  }
+  const cols: [string, (t: any, d: any) => void, string][] = [
+    ["types", applyTypeDiffPlain, "type"],
+    ["designs", applyDesignDiffPlain, "design"],
+    ["tags", applyTagDiffPlain, "tag"],
+    ["concepts", applyConceptDiffPlain, "concept"],
+    ["ports", applyPortDiffPlain, "port"],
+    ["files", applyFileDiffPlain, "file"],
+    ["folders", applyFolderDiffPlain, "folder"],
+    ["qualities", applyQualityDiffPlain, "quality"],
+    ["authors", applyAuthorDiffPlain, "author"],
+  ];
+  for (const [c, fn, k] of cols) {
+    if (diff[c] || target[c]) {
+      if (!target[c]) target[c] = [];
+      applyCollectionDiffPlain(target[c], diff[c], fn, k);
+    }
+  }
+  if (diff.attributes || target.attributes) {
+    if (!target.attributes) target.attributes = [];
+    applyAttributesDiffPlain(target.attributes, diff.attributes);
+  }
+}
+
+/**
+ * @emoji Read-only: merge a structural {@link KitDiff} onto a kit snapshot for **display** and local DTO stores (not WASM apply).
+ */
+export function applyKitDiff(kit: Kit, diff: KitDiff): Kit {
+  const base = JSON.parse(JSON.stringify(kit.toPlain())) as any;
+  applyKitDiffDictPlain(base, diff as any);
+  return Kit.fromPlain(KitFullDtoSchema.parse(base));
+}
+
+function getCollectionDiffPlain(before: any[], after: any[], getItemDiff: (a: any, b: any) => any, entityKey: string): any {
+  const beforeIds = new Set(before.map((x) => x.id));
+  const afterIds = new Set(after.map((x) => x.id));
+  const removed = before.filter((x) => !afterIds.has(x.id)).map((x) => ({ id: x.id }));
+  const added = after.filter((x) => !beforeIds.has(x.id));
+  const updated: any[] = [];
+  for (const b of before) {
+    if (!afterIds.has(b.id)) continue;
+    const a = after.find((x) => x.id === b.id)!;
+    const id = a.id;
+    const d = getItemDiff(b, a);
+    if (d && Object.keys(d).length) {
+      updated.push(
+        entityKey
+          ? { [entityKey]: { id }, diff: d }
+          : { id, diff: d },
+      );
+    }
+  }
+  const out: any = {};
+  if (removed.length) out.removed = removed;
+  if (updated.length) out.updated = updated;
+  if (added.length) out.added = added;
+  return Object.keys(out).length ? out : undefined;
+}
+
+function getPieceDiffPlain(b: any, a: any): any {
+  const o: any = {};
+  for (const k of ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked", "type", "design"]) {
+    if (JSON.stringify(b[k] ?? null) !== JSON.stringify(a[k] ?? null)) o[k] = a[k];
+  }
+  if (JSON.stringify(b.attributes || []) !== JSON.stringify(a.attributes || [])) {
+    o.attributes = getAttributesDiff(
+      (b.attributes || []).map((p: any) => new Attribute(p)),
+      (a.attributes || []).map((p: any) => new Attribute(p)),
+    ) as any;
+  }
+  return o;
+}
+
+function getDesignDiffPlain(before: any, after: any): any {
+  const d: any = {};
+  for (const k of [
+    "name",
+    "variant",
+    "view",
+    "description",
+    "icon",
+    "image",
+    "unit",
+    "folder",
+    "isAbstract",
+    "canScale",
+    "canMirror",
+  ]) {
+    if (norm(before[k]) !== norm(after[k])) d[k] = after[k];
+  }
+  for (const k of ["activeLayer", "parent", "location"]) {
+    if (JSON.stringify(before[k] ?? null) !== JSON.stringify(after[k] ?? null)) d[k] = after[k];
+  }
+  if (JSON.stringify(before.concepts || []) !== JSON.stringify(after.concepts || [])) d.concepts = after.concepts;
+  if (JSON.stringify(before.authors || []) !== JSON.stringify(after.authors || [])) d.authors = after.authors;
+  const pDiff = getCollectionDiffPlain(before.pieces || [], after.pieces || [], getPieceDiffPlain, "piece");
+  if (pDiff) d.pieces = pDiff;
+  const cDiff = getCollectionDiffPlain(
+    before.connections || [],
+    after.connections || [],
+    (x, y) => {
+      const o: any = {};
+      for (const k of ["description", "connected", "connecting"]) {
+        if (JSON.stringify((x as any)[k]) !== JSON.stringify((y as any)[k])) (o as any)[k] = (y as any)[k];
+      }
+      for (const k of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]) {
+        if (norm((x as any)[k]) !== norm((y as any)[k])) (o as any)[k] = (y as any)[k] - (x as any)[k];
+      }
+      return o;
+    },
+    "connection",
+  );
+  if (cDiff) d.connections = cDiff;
+  return d;
+}
+
+function getTypeDiffPlain(before: any, after: any): any {
+  const d: any = {};
+  for (const k of ["name", "description", "icon", "image", "folder", "unit", "stock", "isAbstract", "virtual"]) {
+    if (norm(before[k]) !== norm(after[k])) d[k] = after[k];
+  }
+  for (const k of ["location", "parent"]) {
+    if (JSON.stringify(before[k] ?? null) !== JSON.stringify(after[k] ?? null)) d[k] = after[k];
+  }
+  if (JSON.stringify(before.concepts || []) !== JSON.stringify(after.concepts || [])) d.concepts = after.concepts;
+  if (JSON.stringify(before.authors || []) !== JSON.stringify(after.authors || [])) d.authors = after.authors;
+  return d;
+}
+
+function getFileDiffPlain(b: any, a: any): any {
+  const d: any = {};
+  for (const k of ["name", "description", "remote", "size", "hash", "blob"]) {
+    if (norm(b[k]) !== norm(a[k])) d[k] = a[k];
+  }
+  if (JSON.stringify(b.folder ?? null) !== JSON.stringify(a.folder ?? null)) d.folder = a.folder;
+  return d;
+}
+
+function getFolderDiffPlain(b: any, a: any): any {
+  const d: any = {};
+  for (const k of ["name", "description", "parent"]) {
+    if (JSON.stringify(b[k] ?? null) !== JSON.stringify(a[k] ?? null)) d[k] = a[k];
+  }
+  return d;
+}
+
+function getQualityDiffPlain(b: any, a: any): any {
+  const d: any = {};
+  for (const k of ["key", "name", "description", "icon", "image", "folder", "unit"]) {
+    if (norm(b[k]) !== norm(a[k])) d[k] = a[k];
+  }
+  return d;
+}
+function getTaglikeDiffPlain(b: any, a: any, keys: string[]): any {
+  const d: any = {};
+  for (const k of keys) {
+    if (norm(b[k]) !== norm(a[k])) d[k] = a[k];
+  }
+  if (JSON.stringify(b.attributes || []) !== JSON.stringify(a.attributes || [])) {
+    d.attributes = getAttributesDiff(
+      (b.attributes || []).map((p: any) => new Attribute(p)),
+      (a.attributes || []).map((p: any) => new Attribute(p)),
+    ) as any;
+  }
+  return d;
+}
+
+const getTagDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
+const getConceptDiffPlain = getTagDiffPlain;
+const getPortDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
+const getAuthorDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
+
+/**
+ * @emoji Diff from `before` kit plain to `after` kit plain (port of `getKitDiffDict` in `semio/py`, subset).
+ */
+export function getKitDiffBetweenPlain(before: any, after: any): KitDiff {
+  const diff: any = {};
+  for (const key of [
+    "name",
+    "version",
+    "description",
+    "icon",
+    "image",
+    "remote",
+    "homepage",
+    "license",
+    "preview",
+  ]) {
+    if (norm(before[key]) !== norm(after[key])) diff[key] = after[key];
+  }
+  const typesDiff = getCollectionDiffPlain(before.types || [], after.types || [], getTypeDiffPlain, "type");
+  if (typesDiff) diff.types = typesDiff;
+  const designsDiff = getCollectionDiffPlain(
+    before.designs || [],
+    after.designs || [],
+    (b, a) => getDesignDiffPlain(b, a),
+    "design",
+  );
+  if (designsDiff) diff.designs = designsDiff;
+  const tagsDiff = getCollectionDiffPlain(before.tags || [], after.tags || [], getTagDiffPlain, "tag");
+  if (tagsDiff) diff.tags = tagsDiff;
+  const conceptsDiff = getCollectionDiffPlain(
+    before.concepts || [],
+    after.concepts || [],
+    getConceptDiffPlain,
+    "concept",
+  );
+  if (conceptsDiff) diff.concepts = conceptsDiff;
+  const portsDiff = getCollectionDiffPlain(before.ports || [], after.ports || [], getPortDiffPlain, "port");
+  if (portsDiff) diff.ports = portsDiff;
+  const filesDiff = getCollectionDiffPlain(before.files || [], after.files || [], getFileDiffPlain, "file");
+  if (filesDiff) diff.files = filesDiff;
+  const foldersDiff = getCollectionDiffPlain(
+    before.folders || [],
+    after.folders || [],
+    getFolderDiffPlain,
+    "folder",
+  );
+  if (foldersDiff) diff.folders = foldersDiff;
+  const qualitiesDiff = getCollectionDiffPlain(
+    before.qualities || [],
+    after.qualities || [],
+    getQualityDiffPlain,
+    "quality",
+  );
+  if (qualitiesDiff) diff.qualities = qualitiesDiff;
+  const authorsDiff = getCollectionDiffPlain(
+    before.authors || [],
+    after.authors || [],
+    getAuthorDiffPlain,
+    "author",
+  );
+  if (authorsDiff) diff.authors = authorsDiff;
+  if (JSON.stringify(before.attributes || []) !== JSON.stringify(after.attributes || [])) {
+    diff.attributes = getAttributesDiff(
+      (before.attributes || []).map((p: any) => new Attribute(p)),
+      (after.attributes || []).map((p: any) => new Attribute(p)),
+    ) as any;
+  }
+  return KitDiffSchema.parse(diff);
+}
+
+/**
+ * @emoji Build an inverse structural diff for local undo: `apply(apply(b,f), this) ≈ b` for moves/edits that round-trip.
+ */
+export function inverseKitDiff(beforeKit: Kit, forward: KitDiff): KitDiff {
+  const after = applyKitDiff(beforeKit, forward);
+  return getKitDiffBetweenPlain(JSON.parse(JSON.stringify(after.toPlain())), beforeKit.toPlain() as any);
+}
+
+/**
+ * @emoji `DesignDiff` between two designs (read-only, used by sketchpad overlays / diagnostics).
+ */
+export function getDesignDiff(before: Design, after: Design): DesignDiff {
+  return DesignDiffSchema.parse(getDesignDiffPlain(before.toPlain() as any, after.toPlain() as any)) as DesignDiff;
+}
+
+/** @emoji Coerce a wire DTO or `Kit` into a `Kit` class instance. */
+export function asKitInstance(kit: Kit | KitLike): Kit {
+  return kit instanceof Kit ? kit : Kit.fromPlain(KitFullDtoSchema.parse(kit as KitFullDto));
+}
+
 export class InMemoryKitStore implements KitStore {
   private kit: Kit;
   private listeners = new Set<() => void>();
-  private sync: KitSyncState = { status: "ready", dirty: false, readonly: false };
-
-  constructor(kit: Kit | KitLike) {
-    this.kit = asKitInstance(kit);
+  private sync: KitSyncState;
+  constructor(initial: Kit | KitLike) {
+    this.kit = asKitInstance(initial);
+    this.sync = { status: "ready", dirty: false, readonly: false, lastSyncedAt: new Date().toISOString() };
   }
-
   getSnapshot(): KitStoreSnapshot {
-    return { kit: this.kit, sync: this.sync };
+    return { kit: this.kit, sync: { ...this.sync } };
   }
-
   subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
-
   transact<T>(_label: string, run: () => T): T {
     return run();
   }
-
-  apply(_diff: unknown, _meta?: { origin?: string }): void {
-    this.emit();
+  apply(diff: unknown, _meta?: { origin?: string }): void {
+    this.kit = applyKitDiff(this.kit, diff as KitDiff);
+    this.sync = { ...this.sync, dirty: true };
+    this.notify();
   }
-
   replace(next: Kit, _meta?: { origin?: string }): void {
     this.kit = asKitInstance(next);
     this.sync = { ...this.sync, dirty: true };
-    this.emit();
+    this.notify();
   }
-
   async save(): Promise<void> {
     this.sync = { ...this.sync, dirty: false, lastSyncedAt: new Date().toISOString() };
-    this.emit();
+    this.notify();
   }
-
   async reload(): Promise<void> {
-    this.emit();
+    this.notify();
   }
-
   dispose(): void {
     this.listeners.clear();
   }
-
-  private emit(): void {
-    for (const listener of this.listeners) listener();
+  private notify(): void {
+    for (const l of this.listeners) l();
   }
 }
+
+export class JsonFileKitStore extends InMemoryKitStore {
+  private adapter: KitJsonFileAdapter;
+  private disposed = false;
+  constructor(kit: Kit, adapter: KitJsonFileAdapter) {
+    super(kit);
+    this.adapter = adapter;
+  }
+  static async open(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+    const raw = await adapter.read();
+    if (raw) {
+      const k = Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(raw)));
+      return new JsonFileKitStore(k, adapter);
+    }
+    const k = asKitInstance({
+      id: "kit-file",
+      name: "Unsaved",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+    return new JsonFileKitStore(k, adapter);
+  }
+  applyExternalUpdate(kit: KitFullDto) {
+    this.replace(Kit.fromPlain(kit));
+  }
+  async save() {
+    const json = JSON.stringify(this.getSnapshot().kit.toPlain());
+    await this.adapter.write(json);
+    (this as any).sync = { status: "ready", dirty: false, readonly: false } as any;
+  }
+  async reload() {
+    const raw = await this.adapter.read();
+    if (raw) this.replace(Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(raw))));
+  }
+  async dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    await super.dispose();
+  }
+}
+
+export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+  return JsonFileKitStore.open(adapter);
+}
+
+function folderPathFor(kit: Kit, folderId: string | undefined, byId: Map<string, any>): string {
+  if (!folderId) return "";
+  const chain: string[] = [];
+  let cur: string | undefined = folderId;
+  const seen = new Set<string>();
+  while (cur && !seen.has(cur)) {
+    seen.add(cur);
+    const f = byId.get(cur);
+    if (!f) break;
+    chain.unshift(f.name || f.id);
+    cur = f.parent?.id;
+  }
+  return chain.join("/");
+}
+
+function buildFolderById(kit: Kit) {
+  const m = new Map<string, any>();
+  for (const f of kit.folders || []) m.set(f.id, f);
+  return m;
+}
+
+export class FolderKitStore extends InMemoryKitStore {
+  public readonly adapter: KitFolderAdapter;
+  private disposed = false;
+  constructor(kit: Kit, adapter: KitFolderAdapter) {
+    super(kit);
+    this.adapter = adapter;
+  }
+  static async open(adapter: KitFolderAdapter, initial?: Kit | KitFullDto): Promise<FolderKitStore> {
+    const raw = await adapter.readKit();
+    if (raw && raw.byteLength) {
+      // Prefer embedded JSON in sql.js (see `kitToSqlite`); if parse fails, fall back to initial kit
+      try {
+        const initMod = (globalThis as any).initSqlJs ?? (await import(/* @vite-ignore */ "sql.js")).default;
+        const SQL = await initMod();
+        const u = new Uint8Array(raw);
+        const db = new SQL.Database(u);
+        const r = db.exec("SELECT payload FROM __semio_embedded_kit");
+        if (r.length && r[0].values?.length) {
+          const s = r[0].values[0][0] as string;
+          const k = Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(s)));
+          return new FolderKitStore(k, adapter);
+        }
+      } catch {
+        void 0;
+      }
+    }
+    if (initial) return new FolderKitStore(asKitInstance(initial as KitLike), adapter);
+    return new FolderKitStore(
+      asKitInstance({ id: "folder-kit", name: "Folder", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }),
+      adapter,
+    );
+  }
+  async save() {
+    const initMod = (globalThis as any).initSqlJs ?? (await import(/* @vite-ignore */ "sql.js")).default;
+    const SQL = await initMod();
+    const db = new SQL.Database();
+    const payload = JSON.stringify(this.getSnapshot().kit.toPlain());
+    db.run("CREATE TABLE IF NOT EXISTS __semio_embedded_kit (payload TEXT NOT NULL); DELETE FROM __semio_embedded_kit;");
+    db.run("INSERT INTO __semio_embedded_kit (payload) VALUES (?);", [payload]);
+    const out: Uint8Array = db.export();
+    await this.adapter.writeKit(out);
+    (this as any).sync = { status: "ready", dirty: false, readonly: false, lastSyncedAt: new Date().toISOString() } as any;
+  }
+  async dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    await super.dispose();
+  }
+}
+
+export async function createFolderKitStore(adapter: KitFolderAdapter, initialKit?: Kit | KitFullDto): Promise<FolderKitStore> {
+  return FolderKitStore.open(adapter, initialKit);
+}
+
+export async function createSessionKitStore(opts: { serverUrl: string }): Promise<InMemoryKitStore> {
+  const k = asKitInstance({
+    id: `session-${Generator.randomId()}`,
+    name: opts.serverUrl,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+  return new InMemoryKitStore(k);
+}
+
+function moveEntityToFolder(kit: Kit, kind: string, entityId: string, targetFolderId: string, adapter?: KitFolderAdapter) {
+  const byId = buildFolderById(kit);
+  const target = byId.get(targetFolderId);
+  if (!target) throw new Error("moveToFolder: target folder not found");
+  if (kind === "type") {
+    const t = kit.types?.find((x) => x.id === entityId);
+    if (!t) throw new Error("type not found");
+    t.folder = targetFolderId;
+  } else if (kind === "design") {
+    const t = kit.designs?.find((x) => x.id === entityId);
+    if (!t) throw new Error("design not found");
+    t.folder = targetFolderId;
+  } else if (kind === "quality") {
+    const t = kit.qualities?.find((x) => x.id === entityId);
+    if (!t) throw new Error("quality not found");
+    t.folder = targetFolderId;
+  } else if (kind === "file") {
+    const f = kit.files?.find((x) => x.id === entityId);
+    if (!f) throw new Error("file not found");
+    const oldFid = f.folder?.id;
+    f.folder = { id: targetFolderId } as any;
+    if (adapter && oldFid) {
+      const fromBase = folderPathFor(kit, oldFid, byId);
+      const toBase = folderPathFor(kit, targetFolderId, byId);
+      const p = f.name || "file";
+      void adapter.moveEntry([fromBase, p].filter(Boolean).join("/"), [toBase, p].filter(Boolean).join("/"));
+    }
+  } else if (kind === "folder") {
+    const f = kit.folders?.find((x) => x.id === entityId);
+    if (!f) throw new Error("folder not found");
+    const oldPath = [folderPathFor(kit, f.parent?.id, byId), f.name].filter(Boolean).join("/");
+    f.parent = { id: targetFolderId } as any;
+    const newPath = [folderPathFor(kit, f.parent?.id, byId), f.name].filter(Boolean).join("/");
+    if (adapter) void adapter.moveEntry(oldPath, newPath);
+  } else {
+    throw new Error(`moveToFolder: bad kind ${kind}`);
+  }
+}
+
+/**
+ * @emoji In-process `semio.kit.*` commands for `KitStore` (local mirror). WASM kits use `KitStoreClient` instead.
+ */
+export async function executeSemioKitCommand(
+  store: KitStore,
+  command: string,
+  _origin: string,
+  ...args: any[]
+): Promise<{ kitDiff?: KitDiff; diff?: any }> {
+  const k0 = store.getSnapshot().kit;
+  const before = JSON.parse(JSON.stringify(k0.toPlain()));
+  if (command === "semio.kit.moveToFolder") {
+    const [entityId, kind, targetFolder] = args;
+    const kit = asKitInstance(JSON.parse(JSON.stringify(before)) as any);
+    const a = (store as any).adapter as KitFolderAdapter | undefined;
+    moveEntityToFolder(kit, kind, entityId, targetFolder, a);
+    store.replace(kit);
+    return { kitDiff: getKitDiffBetweenPlain(before, kit.toPlain()) };
+  }
+  if (command === "semio.kit.createFolder") {
+    const [fo] = args as [any];
+    const kit = asKitInstance(JSON.parse(JSON.stringify(before)) as any);
+    if (!kit.folders) kit.folders = [];
+    kit.folders.push(fo);
+    if ((store as any).adapter?.createDirectory) {
+      const byId = buildFolderById(kit);
+      const p = folderPathFor(kit, fo.parent?.id, byId);
+      await (store as any).adapter.createDirectory(p ? `${p}/${fo.name}` : fo.name);
+    }
+    store.replace(kit);
+    return { kitDiff: getKitDiffBetweenPlain(before, kit.toPlain()) };
+  }
+  if (command === "semio.kit.updateFolder") {
+    const [fid, patch] = args;
+    const kit = asKitInstance(JSON.parse(JSON.stringify(before)) as any);
+    const f = kit.folders?.find((x) => x.id === fid);
+    if (f) {
+      if (patch?.name) {
+        const byId = buildFolderById(kit);
+        const op = folderPathFor(kit, f.parent?.id, byId);
+        const np = (op ? op + "/" : "") + (patch.name as string);
+        if ((store as any).adapter?.moveEntry) {
+          const oldP = (op ? op + "/" : "") + f.name;
+          void (store as any).adapter.moveEntry(oldP, np);
+        }
+        f.name = patch.name;
+      }
+    }
+    store.replace(kit);
+    return { kitDiff: getKitDiffBetweenPlain(before, kit.toPlain()) };
+  }
+  if (command === "semio.kit.addFile") {
+    const [file, blob] = args as [any, Blob];
+    const kit = asKitInstance(JSON.parse(JSON.stringify(before)) as any);
+    if (!kit.files) kit.files = [];
+    kit.files.push(file);
+    if ((store as any).adapter?.writeFile && blob) {
+      const byId = buildFolderById(kit);
+      const p = folderPathFor(kit, file.folder?.id, byId);
+      await (store as any).adapter.writeFile(`${p}/${file.name}`.replace(/^\/+/, ""), blob);
+    }
+    store.replace(kit);
+    return { kitDiff: getKitDiffBetweenPlain(before, kit.toPlain()) };
+  }
+  if (command === "semio.kit.import" || command === "semio.kit.export") {
+    return { kitDiff: undefined };
+  }
+  throw new Error(`executeSemioKitCommand: unsupported ${command}`);
+}
+
+/**
+ * @emoji Resolves the sql.js module (`Database`, `export`, …) for folder-kit fixtures; set `globalThis.initSqlJs` in hosts that pre-bundle wasm.
+ */
+export async function getSqlJs(): Promise<any> {
+  const g: any = globalThis as any;
+  if (typeof g.initSqlJs === "function") return g.initSqlJs();
+  const m = await import(/* @vite-ignore */ "sql.js");
+  return m.default();
+}
+
+/**
+ * @emoji Embed a JSON kit DTO in a new sql.js DB (`__semio_embedded_kit`) for folder-kit fixtures; not a full Semio native schema.
+ */
+export async function kitToSqlite(kit: unknown, db: { run: (s: string, p?: any[]) => void; export: () => Uint8Array; close: () => void }): Promise<void> {
+  const payload = JSON.stringify(kit);
+  db.run("CREATE TABLE IF NOT EXISTS __semio_embedded_kit (payload TEXT NOT NULL);");
+  db.run("DELETE FROM __semio_embedded_kit;");
+  db.run("INSERT INTO __semio_embedded_kit (payload) VALUES (?);", [payload]);
+}
+
+/** @emoji New random entity id; thin-client substitute until WASM `Semio.generateId` is always available. */
+export const id = (): string => Generator.randomId();
+
+// #endregion 🔖KitLocalMirror
+
 
 /**
  * Binary asset storage contract.
@@ -6790,6 +7560,7 @@ export type KitCommandLifecycleEvent = {
     requestId: KitCommandRequestId;
     commandKind: string;
     phase: KitCommandLifecyclePhase;
+    result?: unknown;
     error?: SetError;
   };
 };
@@ -6804,10 +7575,25 @@ export function createKitCommandRequestId(): KitCommandRequestId {
 
 /** 🧾Recognizes request lifecycle events emitted by JS kit stores. */
 export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
-  const command = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
-  if (command == null || typeof command !== "object") return false;
+  return normalizeKitCommandLifecycleEvent(event) != null;
+}
+
+/** 🧾Normalizes Rust `KitEvent::SemioKitCommand` and JS event shapes into one lifecycle envelope. */
+export function normalizeKitCommandLifecycleEvent(event: unknown): KitCommandLifecycleEvent | undefined {
+  const command = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand ?? (event as { SemioKitCommand?: unknown } | null)?.SemioKitCommand;
+  if (command == null || typeof command !== "object") return undefined;
   const value = command as Record<string, unknown>;
-  return typeof value.requestId === "string" && typeof value.commandKind === "string" && typeof value.phase === "string";
+  if (typeof value.requestId !== "string" || typeof value.commandKind !== "string" || typeof value.phase !== "string") return undefined;
+  const error = value.error && typeof value.error === "object" ? normalizeRustSetError(value.error) : undefined;
+  return {
+    semioKitCommand: {
+      requestId: value.requestId,
+      commandKind: value.commandKind,
+      phase: value.phase as KitCommandLifecyclePhase,
+      result: value.result,
+      error,
+    },
+  };
 }
 
 /** Result of [`KitStoreHandle.execute`] / [`KitStoreCommand`] (success payload is the serde `KitStoreCommandResult`). */
@@ -7036,16 +7822,6 @@ export class FallbackKitStoreClient implements KitStoreClient {
     };
   }
 
-  private emitLocal(event: KitCommandLifecycleEvent): void {
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-
   dispose() {
     this.listeners.clear();
     if (typeof this.handle?.free === "function") {
@@ -7057,125 +7833,97 @@ export class FallbackKitStoreClient implements KitStoreClient {
     }
   }
 
-  private async submitSetResult(commandKind: string, run: () => Promise<unknown> | unknown): Promise<SetResult> {
-    const requestId = createKitCommandRequestId();
-    this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "accepted" } });
+  private async submitSetResult(commandKind: string, request: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<SetResult> {
     try {
-      const got = await withTimeout(Promise.resolve(run()), this.timeoutMs, "timeout");
-      const result = await settleSetPromise(Promise.resolve(got));
-      if (result.ok) {
-        await this.getSnapshot();
-        this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "succeeded" } });
-        return { ok: true, requestId };
-      }
-      this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "failed", error: result.error } });
-      return { ok: false, error: result.error, requestId };
+      const receipt = await withTimeout(kitGraphqlSubmitCommandShell(this.gql(), commandKind, request), this.timeoutMs, "timeout");
+      return { ok: true, requestId: receipt.requestId };
     } catch {
       const error: SetError = { kind: "Timeout", message: "timeout" };
-      this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "failed", error } });
-      return { ok: false, error, requestId };
+      return { ok: false, error };
     }
   }
 
   async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    return this.submitSetResult("changeKitCommands", async () => {
-        try {
-          const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          await kitGraphqlRun(this.gql(), {
-            query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-            variables: { commands: cmds },
-          });
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: normalizeWasmThrownKitError(e) };
-        }
-      });
+    try {
+      const cmds = await withTimeout(kitGraphqlChangeKitCommandsForFieldPatch(this.gql(), kind, id, field, value), this.timeoutMs, "timeout");
+      return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } });
+    } catch (e) {
+      return { ok: false, error: normalizeWasmThrownKitError(e) };
+    }
   }
 
   async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
-    return this.submitSetResult("changeKitCommands", async () => {
-        try {
-          const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          await kitGraphqlRun(this.gql(), {
-            query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-            variables: { commands: cmds },
-          });
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: normalizeWasmThrownKitError(e) };
-        }
-      });
+    try {
+      const cmds = await withTimeout(kitGraphqlChangeKitCommandsForAddChild(this.gql(), parentKind, parentId, childKind, dto), this.timeoutMs, "timeout");
+      return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } });
+    } catch (e) {
+      return { ok: false, error: normalizeWasmThrownKitError(e) };
+    }
   }
 
   async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
-    return this.submitSetResult("changeKitCommands", async () => {
-        try {
-          const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          await kitGraphqlRun(this.gql(), {
-            query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-            variables: { commands: cmds },
-          });
-          return { ok: true };
-        } catch (e) {
-          return { ok: false, error: normalizeWasmThrownKitError(e) };
-        }
-      });
+    try {
+      const cmds = await withTimeout(kitGraphqlChangeKitCommandsForRemoveChild(this.gql(), parentKind, parentId, childKind, childId), this.timeoutMs, "timeout");
+      return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } });
+    } catch (e) {
+      return { ok: false, error: normalizeWasmThrownKitError(e) };
+    }
   }
 
   async clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult> {
-    return this.submitSetResult("clusterPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } }).then((data) => kitGraphqlFirstData(data).clusterPieces));
+    return this.submitSetResult("clusterPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } });
   }
 
   async dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult> {
-    return this.submitSetResult("dragPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`, variables: { designId, pieceIds, du, dv } }).then((data) => kitGraphqlFirstData(data).dragPieces));
+    return this.submitSetResult("dragPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`, variables: { designId, pieceIds, du, dv } });
   }
 
   async movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
-    return this.submitSetResult("movePieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`, variables: { designId, pieceIds, gap, shift, rise } }).then((data) => kitGraphqlFirstData(data).movePieces));
+    return this.submitSetResult("movePieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`, variables: { designId, pieceIds, gap, shift, rise } });
   }
 
   async fixPieces(designId: string, pieceIds: string[]): Promise<SetResult> {
-    return this.submitSetResult("fixPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`, variables: { designId, pieceIds } }).then((data) => kitGraphqlFirstData(data).fixPieces));
+    return this.submitSetResult("fixPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`, variables: { designId, pieceIds } });
   }
 
   async flattenDesign(designId: string): Promise<SetResult> {
-    return this.submitSetResult("flattenDesign", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }).then((data) => kitGraphqlFirstData(data).flattenDesign));
+    return this.submitSetResult("flattenDesign", { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } });
   }
 
   async expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
-    return this.submitSetResult("expandDesign", () => kitGraphqlRun(this.gql(), { query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`, variables: { parentDesignId, nestedDesignId } }).then((data) => kitGraphqlFirstData(data).expandDesign));
+    return this.submitSetResult("expandDesign", { query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`, variables: { parentDesignId, nestedDesignId } });
   }
 
   async deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
-    return this.submitSetResult("deleteConnection", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`, variables: { designId, connectionId } }).then((data) => kitGraphqlFirstData(data).deleteConnection));
+    return this.submitSetResult("deleteConnection", { query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`, variables: { designId, connectionId } });
   }
 
   async changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
-    return this.submitSetResult("changePieceType", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`, variables: { designId, pieceId, newTypeId } }).then((data) => kitGraphqlFirstData(data).changePieceType));
+    return this.submitSetResult("changePieceType", { query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`, variables: { designId, pieceId, newTypeId } });
   }
 
   async pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult> {
-    return this.submitSetResult("pasteDesignSelection", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`, variables: { designId, selection, plane } }).then((data) => kitGraphqlFirstData(data).pasteDesignSelection));
+    return this.submitSetResult("pasteDesignSelection", { query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`, variables: { designId, selection, plane } });
   }
 
   async createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult> {
-    return this.submitSetResult("createHangingPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`, variables: { designId, typeIds, plane } }).then((data) => kitGraphqlFirstData(data).createHangingPieces));
+    return this.submitSetResult("createHangingPieces", { query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`, variables: { designId, typeIds, plane } });
   }
 
   async createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
-    return this.submitSetResult("createConnectedPiece", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`, variables: { designId, parentPiece, parentPort, childType, childPort } }).then((data) => kitGraphqlFirstData(data).createConnectedPiece));
+    return this.submitSetResult("createConnectedPiece", { query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`, variables: { designId, parentPiece, parentPort, childType, childPort } });
   }
 
   async createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult> {
-    return this.submitSetResult("createFixedPiece", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`, variables: { designId, typeId, plane } }).then((data) => kitGraphqlFirstData(data).createFixedPiece));
+    return this.submitSetResult("createFixedPiece", { query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`, variables: { designId, typeId, plane } });
   }
 
   async undo(): Promise<SetResult> {
-    return this.submitSetResult("undo", () => kitGraphqlRun(this.gql(), { query: `mutation { undo }` }).then((data) => kitGraphqlFirstData(data).undo));
+    return this.submitSetResult("undo", { query: `mutation { undo }` });
   }
 
   async redo(): Promise<SetResult> {
-    return this.submitSetResult("redo", () => kitGraphqlRun(this.gql(), { query: `mutation { redo }` }).then((data) => kitGraphqlFirstData(data).redo));
+    return this.submitSetResult("redo", { query: `mutation { redo }` });
   }
 
   async canUndo(): Promise<boolean> {
@@ -8994,6 +9742,91 @@ export function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
   throw new Error("kitGraphql: no data in response");
 }
 
+export type KitCommandReceipt = {
+  requestId: KitCommandRequestId;
+  commandKind: string;
+  accepted: boolean;
+};
+
+/** Submits one semantic mutation through the GraphQL async command shell and returns its server-issued request id. */
+export async function kitGraphqlSubmitCommandShell(
+  handle: KitGraphqlHandle,
+  commandKind: string,
+  request: { query: string; variables?: Record<string, unknown>; operationName?: string },
+): Promise<KitCommandReceipt> {
+  const data = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }`,
+      variables: { input: { commandKind, request } },
+    }),
+  ) as { submitKitCommand?: Partial<KitCommandReceipt> };
+  const receipt = data.submitKitCommand;
+  if (!receipt || typeof receipt.requestId !== "string" || typeof receipt.commandKind !== "string" || receipt.accepted !== true) {
+    throw new Error("submitKitCommand: invalid receipt");
+  }
+  return { requestId: receipt.requestId, commandKind: receipt.commandKind, accepted: true };
+}
+
+/** Builds semantic graph commands through GraphQL so clients do not depend on WASM helper exports. */
+export async function kitGraphqlChangeKitCommandsForFieldPatch(
+  handle: KitGraphqlHandle,
+  kind: string,
+  id: string,
+  field: string,
+  value: unknown,
+): Promise<unknown> {
+  const data = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($kind: String!, $id: String!, $field: String!, $valueJson: String!) { kitStore { changeKitCommandsForFieldPatchValueJson(kind: $kind, id: $id, field: $field, valueJson: $valueJson) } }`,
+      variables: { kind, id, field, valueJson: JSON.stringify(value) },
+    }),
+  ) as { kitStore?: { changeKitCommandsForFieldPatchValueJson?: unknown } };
+  if (data.kitStore == null || !("changeKitCommandsForFieldPatchValueJson" in data.kitStore)) {
+    throw new Error("changeKitCommandsForFieldPatchValueJson: missing output");
+  }
+  return data.kitStore.changeKitCommandsForFieldPatchValueJson;
+}
+
+/** Builds semantic add-child commands through GraphQL so clients only submit unified command-shell mutations. */
+export async function kitGraphqlChangeKitCommandsForAddChild(
+  handle: KitGraphqlHandle,
+  parentKind: string,
+  parentId: string,
+  childKind: string,
+  dto: unknown,
+): Promise<unknown> {
+  const data = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $dtoJson: String!) { kitStore { changeKitCommandsForAddChildDtoJson(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, dtoJson: $dtoJson) } }`,
+      variables: { parentKind, parentId, childKind, dtoJson: JSON.stringify(dto) },
+    }),
+  ) as { kitStore?: { changeKitCommandsForAddChildDtoJson?: unknown } };
+  if (data.kitStore == null || !("changeKitCommandsForAddChildDtoJson" in data.kitStore)) {
+    throw new Error("changeKitCommandsForAddChildDtoJson: missing output");
+  }
+  return data.kitStore.changeKitCommandsForAddChildDtoJson;
+}
+
+/** Builds semantic remove-child commands through GraphQL so all writes share one async receipt surface. */
+export async function kitGraphqlChangeKitCommandsForRemoveChild(
+  handle: KitGraphqlHandle,
+  parentKind: string,
+  parentId: string,
+  childKind: string,
+  childId: string,
+): Promise<unknown> {
+  const data = kitGraphqlFirstData(
+    await kitGraphqlRun(handle, {
+      query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $childId: String!) { kitStore { changeKitCommandsForRemoveChild(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, childId: $childId) } }`,
+      variables: { parentKind, parentId, childKind, childId },
+    }),
+  ) as { kitStore?: { changeKitCommandsForRemoveChild?: unknown } };
+  if (data.kitStore == null || !("changeKitCommandsForRemoveChild" in data.kitStore)) {
+    throw new Error("changeKitCommandsForRemoveChild: missing output");
+  }
+  return data.kitStore.changeKitCommandsForRemoveChild;
+}
+
 function storePayload(cmd: unknown): { tag: string; value: unknown } {
   if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) {
     throw new Error("kit store command: expected object");
@@ -9108,7 +9941,7 @@ export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload
         const msg = JSON.parse(line) as { data?: { eventStream?: unknown } | null; errors?: unknown[] };
         if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
         if (msg.data && "eventStream" in msg.data && msg.data.eventStream !== undefined) {
-          sink(msg.data.eventStream);
+          sink(normalizeKitCommandLifecycleEvent(msg.data.eventStream) ?? msg.data.eventStream);
         }
       } catch {
         /* ignore */
@@ -9721,31 +10554,13 @@ export class KitWorkerApi {
     return this.handle;
   }
 
-  private emitLocal(event: KitCommandLifecycleEvent): void {
-    for (const fn of this.eventListeners.values()) {
-      try {
-        fn(event);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-
-  private async submitSetResult(commandKind: string, run: () => Promise<unknown> | unknown): Promise<SetResult> {
-    const requestId = createKitCommandRequestId();
-    this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "accepted" } });
+  private async submitSetResult(commandKind: string, request: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<SetResult> {
     try {
-      const result = await settleSetPromise(Promise.resolve(await run()));
-      if (result.ok) {
-        this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "succeeded" } });
-        return { ok: true, requestId };
-      }
-      this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "failed", error: result.error } });
-      return { ok: false, error: result.error, requestId };
+      const receipt = await kitGraphqlSubmitCommandShell(this.gql(), commandKind, request);
+      return { ok: true, requestId: receipt.requestId };
     } catch (e) {
       const error: SetError = { kind: "Internal", message: String(e) };
-      this.emitLocal({ semioKitCommand: { requestId, commandKind, phase: "failed", error } });
-      return { ok: false, error, requestId };
+      return { ok: false, error };
     }
   }
 
@@ -9756,30 +10571,30 @@ export class KitWorkerApi {
     this.handle = mod.KitStoreHandle.create(dto as any);
   }
   snapshot() { return this.requireHandle().snapshot(); }
-  setField(kind: string, id: string, field: string, value: unknown) {
+  async setField(kind: string, id: string, field: string, value: unknown) {
     this.requireHandle();
-    return this.submitSetResult("changeKitCommands", async () => { try { const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value); await kitGraphqlRun(this.gql(), { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } });
+    try { const cmds = await kitGraphqlChangeKitCommandsForFieldPatch(this.gql(), kind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
   }
-  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) {
+  async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) {
     this.requireHandle();
-    return this.submitSetResult("changeKitCommands", async () => { try { const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto); await kitGraphqlRun(this.gql(), { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } });
+    try { const cmds = await kitGraphqlChangeKitCommandsForAddChild(this.gql(), parentKind, parentId, childKind, dto); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
   }
-  removeChild(parentKind: string, parentId: string, childKind: string, childId: string) {
+  async removeChild(parentKind: string, parentId: string, childKind: string, childId: string) {
     this.requireHandle();
-    return this.submitSetResult("changeKitCommands", async () => { try { const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId); await kitGraphqlRun(this.gql(), { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); return { ok: true }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } });
+    try { const cmds = await kitGraphqlChangeKitCommandsForRemoveChild(this.gql(), parentKind, parentId, childKind, childId); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; }
   }
-  clusterPieces(designId: string, pieceIds: string[], clusterName: string) { this.requireHandle(); return this.submitSetResult("clusterPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } }).then((data) => kitGraphqlFirstData(data).clusterPieces)); }
-  dragPieces(designId: string, pieceIds: string[], du: number, dv: number) { this.requireHandle(); return this.submitSetResult("dragPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`, variables: { designId, pieceIds, du, dv } }).then((data) => kitGraphqlFirstData(data).dragPieces)); }
-  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) { this.requireHandle(); return this.submitSetResult("movePieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`, variables: { designId, pieceIds, gap, shift, rise } }).then((data) => kitGraphqlFirstData(data).movePieces)); }
-  fixPieces(designId: string, pieceIds: string[]) { this.requireHandle(); return this.submitSetResult("fixPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`, variables: { designId, pieceIds } }).then((data) => kitGraphqlFirstData(data).fixPieces)); }
-  flattenDesign(designId: string) { this.requireHandle(); return this.submitSetResult("flattenDesign", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }).then((data) => kitGraphqlFirstData(data).flattenDesign)); }
-  expandDesign(parentDesignId: string, nestedDesignId: string) { this.requireHandle(); return this.submitSetResult("expandDesign", () => kitGraphqlRun(this.gql(), { query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`, variables: { parentDesignId, nestedDesignId } }).then((data) => kitGraphqlFirstData(data).expandDesign)); }
-  deleteConnection(designId: string, connectionId: string) { this.requireHandle(); return this.submitSetResult("deleteConnection", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`, variables: { designId, connectionId } }).then((data) => kitGraphqlFirstData(data).deleteConnection)); }
-  changePieceType(designId: string, pieceId: string, newTypeId: string) { this.requireHandle(); return this.submitSetResult("changePieceType", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`, variables: { designId, pieceId, newTypeId } }).then((data) => kitGraphqlFirstData(data).changePieceType)); }
-  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) { this.requireHandle(); return this.submitSetResult("pasteDesignSelection", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`, variables: { designId, selection, plane } }).then((data) => kitGraphqlFirstData(data).pasteDesignSelection)); }
-  createHangingPieces(designId: string, typeIds: string[], plane: unknown) { this.requireHandle(); return this.submitSetResult("createHangingPieces", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`, variables: { designId, typeIds, plane } }).then((data) => kitGraphqlFirstData(data).createHangingPieces)); }
-  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) { this.requireHandle(); return this.submitSetResult("createConnectedPiece", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`, variables: { designId, parentPiece, parentPort, childType, childPort } }).then((data) => kitGraphqlFirstData(data).createConnectedPiece)); }
-  createFixedPiece(designId: string, typeId: string, plane: unknown) { this.requireHandle(); return this.submitSetResult("createFixedPiece", () => kitGraphqlRun(this.gql(), { query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`, variables: { designId, typeId, plane } }).then((data) => kitGraphqlFirstData(data).createFixedPiece)); }
+  clusterPieces(designId: string, pieceIds: string[], clusterName: string) { this.requireHandle(); return this.submitSetResult("clusterPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } }); }
+  dragPieces(designId: string, pieceIds: string[], du: number, dv: number) { this.requireHandle(); return this.submitSetResult("dragPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`, variables: { designId, pieceIds, du, dv } }); }
+  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) { this.requireHandle(); return this.submitSetResult("movePieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`, variables: { designId, pieceIds, gap, shift, rise } }); }
+  fixPieces(designId: string, pieceIds: string[]) { this.requireHandle(); return this.submitSetResult("fixPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`, variables: { designId, pieceIds } }); }
+  flattenDesign(designId: string) { this.requireHandle(); return this.submitSetResult("flattenDesign", { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }); }
+  expandDesign(parentDesignId: string, nestedDesignId: string) { this.requireHandle(); return this.submitSetResult("expandDesign", { query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`, variables: { parentDesignId, nestedDesignId } }); }
+  deleteConnection(designId: string, connectionId: string) { this.requireHandle(); return this.submitSetResult("deleteConnection", { query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`, variables: { designId, connectionId } }); }
+  changePieceType(designId: string, pieceId: string, newTypeId: string) { this.requireHandle(); return this.submitSetResult("changePieceType", { query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`, variables: { designId, pieceId, newTypeId } }); }
+  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) { this.requireHandle(); return this.submitSetResult("pasteDesignSelection", { query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`, variables: { designId, selection, plane } }); }
+  createHangingPieces(designId: string, typeIds: string[], plane: unknown) { this.requireHandle(); return this.submitSetResult("createHangingPieces", { query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`, variables: { designId, typeIds, plane } }); }
+  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) { this.requireHandle(); return this.submitSetResult("createConnectedPiece", { query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`, variables: { designId, parentPiece, parentPort, childType, childPort } }); }
+  createFixedPiece(designId: string, typeId: string, plane: unknown) { this.requireHandle(); return this.submitSetResult("createFixedPiece", { query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`, variables: { designId, typeId, plane } }); }
   getPiecesMetadata(designId: string) { this.requireHandle(); return settle(kitGraphqlKitDesignPiecesMetadata(this.gql(), designId)); }
   getPieces(designId: string) {
     this.requireHandle();
@@ -9806,8 +10621,8 @@ export class KitWorkerApi {
     return settle((async () => { const out = await readKit(this.asExecuteRead(), { readKitMetadataCommand: null }); if (!("readKitMetadataCommand" in out) || out.readKitMetadataCommand == null) throw new Error("readKitMetadataCommand: missing output"); return out.readKitMetadataCommand.metadata; })());
   }
   graphqlExecute(requestJson: string, onMessage: (line: string) => void) { this.requireHandle(); return this.handle.execute(requestJson, onMessage); }
-  undo() { this.requireHandle(); return this.submitSetResult("undo", () => kitGraphqlRun(this.gql(), { query: `mutation { undo }` }).then((data) => kitGraphqlFirstData(data).undo)); }
-  redo() { this.requireHandle(); return this.submitSetResult("redo", () => kitGraphqlRun(this.gql(), { query: `mutation { redo }` }).then((data) => kitGraphqlFirstData(data).redo)); }
+  undo() { this.requireHandle(); return this.submitSetResult("undo", { query: `mutation { undo }` }); }
+  redo() { this.requireHandle(); return this.submitSetResult("redo", { query: `mutation { redo }` }); }
   canUndo() { this.requireHandle(); return this.handle.canUndo(); }
   canRedo() { this.requireHandle(); return this.handle.canRedo(); }
   subscribe(cb: (ev: unknown) => void) {

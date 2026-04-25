@@ -18,7 +18,7 @@ emoji: 👤
 
 ### InMemory
 
-**Layout:** In `semio/rs`, the live in-memory `KitGraph` is updated only on the DTO-mutation path: `ChangeKitCommand` and `change_kit` helpers compute the next `KitFullDto` on an isolated `KitGraph` clone, then `KitGraph::apply_kit_mutation` `KitDiff::between` + `apply_kit_state` (full DTO re-layout) and `emit_kit_dto_reconcile_events` so the event bus and caches stay correct. Call sites that use `from_full` / `from_full_dto` on the live `KitRef` to refresh layout (e.g. WIP) must keep the same invariants: never swap DTOs on live without the twin-then-apply path.
+**Layout:** In `semio/rs`, the live in-memory `KitGraph` is updated on the DTO-mutation path: `ChangeKitCommand` (and graph helpers that delegate to it) compute the next `KitFullDto` on an isolated `KitGraph` clone, then `KitGraph::apply_kit_mutation` runs `apply_kit_state` (full re-layout) and `emit_kit_dto_reconcile_events`. A sparse path is `KitGraph::apply_kit_diff` after `KitDiff::merge_into_baseline_dto` (same invariants: one central replace + reconcile). WIP and other callers that refresh the live `KitRef` with `from_full` / `from_full_dto` must not bypass that contract.
 
 ```mermaid
 classDiagram

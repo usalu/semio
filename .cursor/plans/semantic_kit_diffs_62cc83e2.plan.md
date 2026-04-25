@@ -4,19 +4,19 @@ overview: Refactor `semio/rs` so external kit mutation enters through semantic k
 todos:
  - id: central-diff-writer
    content: Implement `KitGraph::apply_kit_diff` and route cache invalidation/event rewiring through it.
-   status: in_progress
+   status: completed
  - id: command-planner
    content: Refactor `ChangeKitCommand` and nested command implementations to produce `KitDiff` plus inverses before applying.
-   status: pending
+   status: completed
  - id: external-semantic-only
    content: Replace GraphQL custom mutation closures and other external direct write paths with semantic command variants.
-   status: pending
+   status: completed
  - id: vcs-transactions
    content: Update transaction, undo/redo, checkpoint, and backbone snapshot paths to apply central diffs only.
-   status: pending
+   status: completed
  - id: tests-verification
    content: Extend existing tests in `lib.rs` and run targeted plus full Rust test suites.
-   status: pending
+   status: completed
 isProject: false
 ---
 

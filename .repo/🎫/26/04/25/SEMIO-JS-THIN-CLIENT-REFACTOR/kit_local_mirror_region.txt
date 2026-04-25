@@ -104,10 +104,10 @@ function applyPieceDiffPlain(t: any, d: any): void {
 }
 
 function applyConnectionDiffPlain(t: any, d: any): void {
-  for (const k of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v", "description", "connecting", "connected"]) {
+  for (const k of ["description", "connecting", "connected"]) {
     if (k in d) t[k] = d[k];
   }
-  for (const k of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]) {
+  for (const k of ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const) {
     if (k in d) t[k] = (t[k] ?? 0) + (d[k] ?? 0);
   }
   if (d.attributes || t.attributes) {
@@ -203,8 +203,8 @@ function applyTagDiffPlain(t: any, d: any): void {
     applyAttributesDiffPlain(t.attributes, d.attributes);
   }
 }
-function applyConceptDiffPlain = applyTagDiffPlain;
-function applyPortDiffPlain = applyTagDiffPlain;
+const applyConceptDiffPlain = applyTagDiffPlain;
+const applyPortDiffPlain = applyTagDiffPlain;
 
 function applyFileDiffPlain(t: any, d: any): void {
   for (const k of ["name", "description", "remote", "size", "hash", "blob", "folder"]) {
@@ -235,7 +235,7 @@ function applyQualityDiffPlain(t: any, d: any): void {
     applyAttributesDiffPlain(t.attributes, d.attributes);
   }
 }
-function applyAuthorDiffPlain = applyTagDiffPlain;
+const applyAuthorDiffPlain = applyTagDiffPlain;
 
 /**
  * @emoji Mutates a plain kit DTO in-place (port of `applyKitDiffDict` in `semio/py`, subset).
@@ -316,6 +316,20 @@ function getCollectionDiffPlain(before: any[], after: any[], getItemDiff: (a: an
   return Object.keys(out).length ? out : undefined;
 }
 
+function getPieceDiffPlain(b: any, a: any): any {
+  const o: any = {};
+  for (const k of ["name", "description", "scale", "plane", "center", "color", "isHidden", "isLocked", "type", "design"]) {
+    if (JSON.stringify(b[k] ?? null) !== JSON.stringify(a[k] ?? null)) o[k] = a[k];
+  }
+  if (JSON.stringify(b.attributes || []) !== JSON.stringify(a.attributes || [])) {
+    o.attributes = getAttributesDiff(
+      (b.attributes || []).map((p: any) => new Attribute(p)),
+      (a.attributes || []).map((p: any) => new Attribute(p)),
+    ) as any;
+  }
+  return o;
+}
+
 function getDesignDiffPlain(before: any, after: any): any {
   const d: any = {};
   for (const k of [
@@ -338,7 +352,7 @@ function getDesignDiffPlain(before: any, after: any): any {
   }
   if (JSON.stringify(before.concepts || []) !== JSON.stringify(after.concepts || [])) d.concepts = after.concepts;
   if (JSON.stringify(before.authors || []) !== JSON.stringify(after.authors || [])) d.authors = after.authors;
-  const pDiff = getCollectionDiffPlain(before.pieces || [], after.pieces || [], () => ({}), "piece");
+  const pDiff = getCollectionDiffPlain(before.pieces || [], after.pieces || [], getPieceDiffPlain, "piece");
   if (pDiff) d.pieces = pDiff;
   const cDiff = getCollectionDiffPlain(
     before.connections || [],
@@ -396,10 +410,24 @@ function getQualityDiffPlain(b: any, a: any): any {
   }
   return d;
 }
-function getTagDiffPlain = getTypeDiffPlain;
-const getConceptDiffPlain = getTypeDiffPlain;
-const getPortDiffPlain = getTypeDiffPlain;
-const getAuthorDiffPlain = getTypeDiffPlain;
+function getTaglikeDiffPlain(b: any, a: any, keys: string[]): any {
+  const d: any = {};
+  for (const k of keys) {
+    if (norm(b[k]) !== norm(a[k])) d[k] = a[k];
+  }
+  if (JSON.stringify(b.attributes || []) !== JSON.stringify(a.attributes || [])) {
+    d.attributes = getAttributesDiff(
+      (b.attributes || []).map((p: any) => new Attribute(p)),
+      (a.attributes || []).map((p: any) => new Attribute(p)),
+    ) as any;
+  }
+  return d;
+}
+
+const getTagDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
+const getConceptDiffPlain = getTagDiffPlain;
+const getPortDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
+const getAuthorDiffPlain = (b: any, a: any) => getTaglikeDiffPlain(b, a, ["name", "description", "icon"]);
 
 /**
  * @emoji Diff from `before` kit plain to `after` kit plain (port of `getKitDiffDict` in `semio/py`, subset).
@@ -487,49 +515,49 @@ export function getDesignDiff(before: Design, after: Design): DesignDiff {
 }
 
 /** @emoji Coerce a wire DTO or `Kit` into a `Kit` class instance. */
-export function asKitInstance(k: KitLike): Kit {
-  return k instanceof Kit ? k : Kit.fromPlain(KitFullDtoSchema.parse(k as KitFullDto));
+export function asKitInstance(kit: Kit | KitLike): Kit {
+  return kit instanceof Kit ? kit : Kit.fromPlain(KitFullDtoSchema.parse(kit as KitFullDto));
 }
 
 export class InMemoryKitStore implements KitStore {
   private kit: Kit;
   private listeners = new Set<() => void>();
   private sync: KitSyncState;
-  private readonlyImpl = false;
-  constructor(initial: KitLike) {
+  constructor(initial: Kit | KitLike) {
     this.kit = asKitInstance(initial);
     this.sync = { status: "ready", dirty: false, readonly: false, lastSyncedAt: new Date().toISOString() };
   }
   getSnapshot(): KitStoreSnapshot {
     return { kit: this.kit, sync: { ...this.sync } };
   }
-  subscribe(listener: () => void) {
+  subscribe(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
   transact<T>(_label: string, run: () => T): T {
     return run();
   }
-  apply(diff: unknown) {
+  apply(diff: unknown, _meta?: { origin?: string }): void {
     this.kit = applyKitDiff(this.kit, diff as KitDiff);
     this.sync = { ...this.sync, dirty: true };
     this.notify();
   }
-  replace(next: Kit) {
+  replace(next: Kit, _meta?: { origin?: string }): void {
     this.kit = asKitInstance(next);
     this.sync = { ...this.sync, dirty: true };
     this.notify();
   }
-  async save() {
-    this.sync = { ...this.sync, status: "ready" };
+  async save(): Promise<void> {
+    this.sync = { ...this.sync, dirty: false, lastSyncedAt: new Date().toISOString() };
+    this.notify();
   }
-  async reload() {
-    void 0;
+  async reload(): Promise<void> {
+    this.notify();
   }
-  async dispose() {
+  dispose(): void {
     this.listeners.clear();
   }
-  private notify() {
+  private notify(): void {
     for (const l of this.listeners) l();
   }
 }
@@ -611,17 +639,15 @@ export class FolderKitStore extends InMemoryKitStore {
     if (raw && raw.byteLength) {
       // Prefer embedded JSON in sql.js (see `kitToSqlite`); if parse fails, fall back to initial kit
       try {
-        const g = (globalThis as any);
-        if (g.initSqlJs) {
-          const SQL = await g.initSqlJs();
-          const u = new Uint8Array(raw);
-          const db = new SQL.Database(u);
-          const r = db.exec("SELECT payload FROM __semio_embedded_kit");
-          if (r.length && r[0].values?.length) {
-            const s = r[0].values[0][0] as string;
-            const k = Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(s)));
-            return new FolderKitStore(k, adapter);
-          }
+        const initMod = (globalThis as any).initSqlJs ?? (await import(/* @vite-ignore */ "sql.js")).default;
+        const SQL = await initMod();
+        const u = new Uint8Array(raw);
+        const db = new SQL.Database(u);
+        const r = db.exec("SELECT payload FROM __semio_embedded_kit");
+        if (r.length && r[0].values?.length) {
+          const s = r[0].values[0][0] as string;
+          const k = Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(s)));
+          return new FolderKitStore(k, adapter);
         }
       } catch {
         void 0;
@@ -634,17 +660,15 @@ export class FolderKitStore extends InMemoryKitStore {
     );
   }
   async save() {
-    const g = (globalThis as any);
-    if (g.initSqlJs) {
-      const SQL = await g.initSqlJs();
-      const db = new SQL.Database();
-      const payload = JSON.stringify(this.getSnapshot().kit.toPlain());
-      db.run("CREATE TABLE IF NOT EXISTS __semio_embedded_kit (payload TEXT NOT NULL); DELETE FROM __semio_embedded_kit;");
-      db.run("INSERT INTO __semio_embedded_kit (payload) VALUES (?);", [payload]);
-      const out: Uint8Array = db.export();
-      await this.adapter.writeKit(out);
-    }
-    (this as any).sync = { status: "ready", dirty: false, readonly: false } as any;
+    const initMod = (globalThis as any).initSqlJs ?? (await import(/* @vite-ignore */ "sql.js")).default;
+    const SQL = await initMod();
+    const db = new SQL.Database();
+    const payload = JSON.stringify(this.getSnapshot().kit.toPlain());
+    db.run("CREATE TABLE IF NOT EXISTS __semio_embedded_kit (payload TEXT NOT NULL); DELETE FROM __semio_embedded_kit;");
+    db.run("INSERT INTO __semio_embedded_kit (payload) VALUES (?);", [payload]);
+    const out: Uint8Array = db.export();
+    await this.adapter.writeKit(out);
+    (this as any).sync = { status: "ready", dirty: false, readonly: false, lastSyncedAt: new Date().toISOString() } as any;
   }
   async dispose() {
     if (this.disposed) return;
@@ -659,7 +683,7 @@ export async function createFolderKitStore(adapter: KitFolderAdapter, initialKit
 
 export async function createSessionKitStore(opts: { serverUrl: string }): Promise<InMemoryKitStore> {
   const k = asKitInstance({
-    id: `session-${id()}`,
+    id: `session-${Generator.randomId()}`,
     name: opts.serverUrl,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -674,22 +698,15 @@ function moveEntityToFolder(kit: Kit, kind: string, entityId: string, targetFold
   if (kind === "type") {
     const t = kit.types?.find((x) => x.id === entityId);
     if (!t) throw new Error("type not found");
-    const beforeFolder = t.folder;
-    t.folder = target.name ?? target.id;
-    if (adapter) {
-      const from = beforeFolder ? `${beforeFolder}/` : "";
-      const to = (target.name ?? target.id) + "/";
-      void from;
-      void to;
-    }
+    t.folder = targetFolderId;
   } else if (kind === "design") {
     const t = kit.designs?.find((x) => x.id === entityId);
     if (!t) throw new Error("design not found");
-    t.folder = target.name ?? target.id;
+    t.folder = targetFolderId;
   } else if (kind === "quality") {
     const t = kit.qualities?.find((x) => x.id === entityId);
     if (!t) throw new Error("quality not found");
-    t.folder = target.name ?? target.id;
+    t.folder = targetFolderId;
   } else if (kind === "file") {
     const f = kit.files?.find((x) => x.id === entityId);
     if (!f) throw new Error("file not found");
@@ -699,14 +716,14 @@ function moveEntityToFolder(kit: Kit, kind: string, entityId: string, targetFold
       const fromBase = folderPathFor(kit, oldFid, byId);
       const toBase = folderPathFor(kit, targetFolderId, byId);
       const p = f.name || "file";
-      void adapter.moveEntry(`${fromBase}/${p}`.replace(/^\/+/, ""), `${toBase}/${p}`.replace(/^\/+/, ""));
+      void adapter.moveEntry([fromBase, p].filter(Boolean).join("/"), [toBase, p].filter(Boolean).join("/"));
     }
   } else if (kind === "folder") {
     const f = kit.folders?.find((x) => x.id === entityId);
     if (!f) throw new Error("folder not found");
-    const oldPath = folderPathFor(kit, f.parent?.id, byId);
+    const oldPath = [folderPathFor(kit, f.parent?.id, byId), f.name].filter(Boolean).join("/");
     f.parent = { id: targetFolderId } as any;
-    const newPath = folderPathFor(kit, f.parent?.id, byId);
+    const newPath = [folderPathFor(kit, f.parent?.id, byId), f.name].filter(Boolean).join("/");
     if (adapter) void adapter.moveEntry(oldPath, newPath);
   } else {
     throw new Error(`moveToFolder: bad kind ${kind}`);
@@ -784,12 +801,13 @@ export async function executeSemioKitCommand(
 }
 
 /**
- * @emoji Optional `sql.js` for folder-kit test fixtures; supply `initSqlJs` on `globalThis` in hosts that need it.
+ * @emoji Resolves the sql.js module (`Database`, `export`, …) for folder-kit fixtures; set `globalThis.initSqlJs` in hosts that pre-bundle wasm.
  */
 export async function getSqlJs(): Promise<any> {
   const g: any = globalThis as any;
-  if (g.initSqlJs) return g;
-  return await import(/* @vite-ignore */ "sql.js");
+  if (typeof g.initSqlJs === "function") return g.initSqlJs();
+  const m = await import(/* @vite-ignore */ "sql.js");
+  return m.default();
 }
 
 /**
@@ -801,5 +819,8 @@ export async function kitToSqlite(kit: unknown, db: { run: (s: string, p?: any[]
   db.run("DELETE FROM __semio_embedded_kit;");
   db.run("INSERT INTO __semio_embedded_kit (payload) VALUES (?);", [payload]);
 }
+
+/** @emoji New random entity id; thin-client substitute until WASM `Semio.generateId` is always available. */
+export const id = (): string => Generator.randomId();
 
 // #endregion 🔖KitLocalMirror

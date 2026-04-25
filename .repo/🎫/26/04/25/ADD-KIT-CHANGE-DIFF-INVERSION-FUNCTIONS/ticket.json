@@ -1,8 +1,9 @@
 {
   "title": "Add Kit Change Diff Inversion Functions",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "semio/rs: Every kit change command must define a function that returns a kit diff for concrete input parameters. Every kit change command must define a function that returns, for a list of kit change commands with specific input parameters, commands that perform the inverse of the command.",
+  "summary": "Added non-mutating kit change command introspection in semio/rs: ChangeKitCommand::kit_diff for single commands, ChangeKitCommand::kit_diff_many for ordered command lists, and ChangeKitCommand::inverse_commands_for_many for undo command generation without mutating the source KitGraph. Extended the existing Rust change-command tests to cover single-command diff generation, batch diff generation, inverse generation, and non-mutating behavior. Fixed stale diff merge helper references and added missing stat collection merge support so the Rust crate compiles and tests pass. Validation: cargo fmt and cargo test in semio/rs; 119 tests passed plus doc-tests.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪91beceb44b7540cea45550a72f280a34"

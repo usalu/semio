@@ -4499,6 +4499,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 /** Re-exports for hosts (e.g. sketchpad) that must not import kit domain from `@semio/js` directly. */
 export {
+  applyKitDiff,
   areDesignsInSameFamily,
   arePortsCompatible,
   areSameConnection,
