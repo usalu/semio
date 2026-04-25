@@ -114,18 +114,18 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
 - [x] 7. Checkpoint - Ensure file compiles after deletions
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Clean up entity classes (remove domain logic methods, keep OO data methods)
-  - [-] 8.1 Strip domain logic methods from entity classes (e.g., `Piece.flatPlane()`, `Piece.flatCenter()`, `Piece.delete()`, `Piece.changeType()`, `Design.deletePieces()`, etc.) while retaining `serialize`, `deserialize`, `toPlain`, `fromPlain`, `createId`, `areSameId`
+- [x] 8. Clean up entity classes (remove domain logic methods, keep OO data methods)
+  - [x] 8.1 Strip domain logic methods from entity classes (e.g., `Piece.flatPlane()`, `Piece.flatCenter()`, `Piece.delete()`, `Piece.changeType()`, `Design.deletePieces()`, etc.) while retaining `serialize`, `deserialize`, `toPlain`, `fromPlain`, `createId`, `areSameId`
     - Ensure each entity class follows the pattern defined in the design: constructor, serialize/deserialize, toPlain/fromPlain, createId/areSameId
     - Geometry classes (`Coordinate`, `Vec`, `Point`, `Vector`, `Plane`, `Camera`) retain their `rounded()` method
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [~] 8.2 Create the thin `Kit` class replacing `KitImpl`
+  - [x] 8.2 Create the thin `Kit` class replacing `KitImpl`
     - Implement `Kit` with constructor, `serialize`, `deserialize`, `toPlain`, `fromPlain`, `createId`, `areSameId` — zero domain logic
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 9.3_
 
-- [ ] 9. Create the `Semio` utility class
-  - [~] 9.1 Implement the `Semio` class with static methods delegating to WASM
+- [x] 9. Create the `Semio` utility class
+  - [x] 9.1 Implement the `Semio` class with static methods delegating to WASM
     - `Semio.normalizeName(s)` → `wasmModule.semioNormalizeName(s)`
     - `Semio.round(value, decimals)` → `wasmModule.semioRound(value, decimals)`
     - `Semio.generateId()` → `wasmModule.generateId()`
@@ -136,34 +136,34 @@ Transform `semio/js/index.ts` (~31k lines) into a pure OO thin client by: (1) de
     - `Semio.flattenDesign(kit, designId)` → `wasmModule.flattenDesign(kit, designId)`
     - _Requirements: 3.5, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13_
 
-- [ ] 10. Refactor `KitWorkerApi` from plain object to class
-  - [~] 10.1 Convert `kitWorkerApi` object to `KitWorkerApi` class
+- [x] 10. Refactor `KitWorkerApi` from plain object to class
+  - [x] 10.1 Convert `kitWorkerApi` object to `KitWorkerApi` class
     - Implement as a class with private `handle`, `eventListeners`, `nextEventListenerId`, `eventGqlStarted` fields
     - All methods delegate to `this.handle` (the `KitStoreHandle` WASM instance)
     - _Requirements: 5.5_
 
-- [ ] 11. Simplify `FallbackKitStoreClient` and `WorkerKitStoreClient`
-  - [~] 11.1 Simplify `FallbackKitStoreClient` to pure WASM delegation
+- [x] 11. Simplify `FallbackKitStoreClient` and `WorkerKitStoreClient`
+  - [x] 11.1 Simplify `FallbackKitStoreClient` to pure WASM delegation
     - Remove any local validation logic (e.g., `validateRequiredName`, `validateOptionalDisplayName`)
     - Every method is a pure delegation to `this.handle.*` with `settleSetPromise` wrapping
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.6_
 
-  - [~] 11.2 Simplify `WorkerKitStoreClient` to pure Comlink delegation
+  - [x] 11.2 Simplify `WorkerKitStoreClient` to pure Comlink delegation
     - Remove local DTO refresh logic that called `KitImpl` methods
     - Every method delegates to `this.api.*` (Comlink proxy) with timeout wrapping
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 5.6_
 
-  - [~] 11.3 Convert `createKitStoreClient` free function to a static method or companion function
+  - [x] 11.3 Convert `createKitStoreClient` free function to a static method or companion function
     - Replace `asKitInstance(opts.initialKit)` with `JSON.parse(JSON.stringify(opts.initialKit))`
     - _Requirements: 5.4, 3.10_
 
-- [ ] 12. Remove unused imports and dependencies
-  - [~] 12.1 Remove imports for deleted dependencies (`@gltf-transform/core`, `three`, `sql.js`, `jszip`, `uuid`, etc.) if no longer used after deletions
+- [x] 12. Remove unused imports and dependencies
+  - [x] 12.1 Remove imports for deleted dependencies (`@gltf-transform/core`, `three`, `sql.js`, `jszip`, `uuid`, etc.) if no longer used after deletions
     - Clean up the imports region at the top of `index.ts`
     - Remove unused dependencies from `package.json` if applicable
     - _Requirements: 1.1 through 1.20, 9.1, 9.2_
 
-- [~] 13. Checkpoint - Ensure compilation and existing tests pass after refactoring
+- [-] 13. Checkpoint - Ensure compilation and existing tests pass after refactoring
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 14. Update embedded tests to use WASM bridge

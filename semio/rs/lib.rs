@@ -4558,7 +4558,8 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_piece(&did, piece).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.semantic_add_design_piece(&did, piece.clone())
+                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
@@ -4595,7 +4596,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_connection(&did, connection)
+                        g.semantic_add_design_connection(&did, connection.clone())
                             .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
@@ -7614,8 +7615,13 @@ pub mod kit_store_command {
                     return Err(SemioError::InvalidOperation("no change to finalize in draft".into()));
                 }
                 let kc = KitChange { forward, inverse, kind: KitChangeKind::Inferred, author: None, time: None };
-                (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
+            (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
+            if alt.is_some() {
+                // Alternative drafts apply eagerly to the shared live graph; snapshot the change on the
+                // branch, then roll the live graph back to the main-line parent checkpoint.
+                KitChange::apply_backward(&kc, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
             let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
             let new_id = cp.id.clone();
             {
@@ -9814,7 +9820,7 @@ pub mod design {
         }
 
         /// Like [`Self::invalidate_hash`] but does not bubble to the parent kit (avoids deadlock when
-        /// the kit already holds its write lock, e.g. during [`KitGraph::apply_design_diff`]).
+        /// the kit already holds its write lock, e.g. during nested `DesignStore` mutations).
         pub(crate) fn invalidate_hash_local(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -10453,7 +10459,7 @@ pub mod design {
 
         /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
         /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
-        /// validation invalidation (see [`KitGraph::apply_design_diff`]).
+        /// validation invalidation (e.g. [`KitGraph::invalidate_validation`] on the parent kit).
         pub fn delete_pieces(&mut self, piece_ids: &[Id]) -> usize {
             self.delete_pieces_inner(piece_ids, true)
         }
@@ -19987,7 +19993,7 @@ pub mod kit_graph {
                         }],
                     }],
                 };
-                ChangeKitCommand::apply(kit, &cmd).map(|_| ()).map_err(Self::map_semio_err)
+                cmd.apply(kit).map(|_| ()).map_err(Self::map_semio_err)
             })
         }
 
@@ -28443,7 +28449,7 @@ mod tests {
             let kit = Arc::new(RwLock::new(KitGraph::new("orig")));
             let before = kit.read().expect("read").to_full_dto();
             let cmd = ChangeKitCommand::Name { name: "renamed".into() };
-            let (_, inv) = cmd.apply(&kit).expect("apply");
+            let inv = cmd.apply(&kit).expect("apply");
             assert_eq!(kit.read().expect("read").name, "renamed");
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("read").to_full_dto(), before);
@@ -28454,7 +28460,7 @@ mod tests {
             let (kit, tid, _, _) = small_kit();
             let before = kit.read().expect("read").to_full_dto();
             let cmd = ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![ChangeTypeCommand::Name { name: "T1".into() }] };
-            let (_, inv) = cmd.apply(&kit).expect("apply");
+            let inv = cmd.apply(&kit).expect("apply");
             assert_ne!(kit.read().expect("read").to_full_dto(), before);
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("read").to_full_dto(), before);
@@ -28468,7 +28474,7 @@ mod tests {
                 design_id: DesignIdDto { id: did },
                 commands: vec![ChangeDesignCommand::Name { name: "D1".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("P1".into()) }] }],
             };
-            let (_, inv) = cmd.apply(&kit).expect("apply");
+            let inv = cmd.apply(&kit).expect("apply");
             assert_ne!(kit.read().expect("read").to_full_dto(), before);
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("read").to_full_dto(), before);
@@ -28481,7 +28487,7 @@ mod tests {
             let mut after = before.clone();
             after.name = "patched".into();
             let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: after };
-            let (_, inv) = cmd.apply(&kit).expect("apply");
+            let inv = cmd.apply(&kit).expect("apply");
             assert_eq!(kit.read().expect("read").name, "patched");
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("read").to_full_dto(), before);
@@ -28493,7 +28499,7 @@ mod tests {
             let before = kit.read().expect("read").to_full_dto();
             let cmds = vec![ChangeKitCommand::Name { name: "via-change".into() }];
             let tmp = KitGraph::from_full_dto(before.clone());
-            let (_, inv) = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
+            let inv = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
             let kc = KitChange { forward: cmds, inverse: inv, kind: KitChangeKind::Inferred, author: None, time: None };
             KitChange::apply_forward(&kc, &kit).expect("forward");
             assert_eq!(kit.read().expect("read").name, "via-change");
@@ -28505,7 +28511,7 @@ mod tests {
         fn apply_many_concatenates_inverses_for_undo_order() {
             let kit = Arc::new(RwLock::new(KitGraph::new("a")));
             let cmds = [ChangeKitCommand::Name { name: "b".into() }, ChangeKitCommand::Name { name: "c".into() }];
-            let (_, inv) = ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
+            let inv = ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
             assert_eq!(kit.read().expect("r").name, "c");
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("r").name, "a");
@@ -28532,13 +28538,15 @@ mod tests {
         }
 
         #[test]
-        fn apply_many_kit_diff_matches_baseline_between() {
+        fn apply_many_matches_full_dto_after_name_change() {
             let kit = Arc::new(RwLock::new(KitGraph::new("k0")));
             let before = kit.read().expect("r").to_full_dto();
             let cmds = [ChangeKitCommand::Name { name: "k1".into() }];
-            let (diff, _) = ChangeKitCommand::apply_many_kit_diff(&kit, &cmds).expect("apply_many_kit_diff");
+            ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
             let after = kit.read().expect("r").to_full_dto();
-            assert_eq!(diff, crate::kit_diff::KitDiff::between(&before, &after));
+            let mut b = before.clone();
+            b.name = "k1".into();
+            assert_eq!(after, b);
         }
     }
 
@@ -29192,7 +29200,6 @@ mod tests {
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::kit_checkpoint::KitCheckpoint;
         use crate::piece::PieceFullDto;
-        use crate::port::PortFullDto;
         use crate::typ::TypeFullDto;
 
         #[test]
@@ -29202,7 +29209,7 @@ mod tests {
             let kit = KitGraph::from_full_dto(KitFullDto {
                 id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
-                ports: vec![PortFullDto { id: Id::from("top"), ..Default::default() }],
+                ports: vec![],
                 types: vec![TypeFullDto { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
                 designs: vec![DesignFullDto { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFullDto { id: piece_id, r#type: Some(crate::typ::TypeIdDto { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
@@ -29215,7 +29222,7 @@ mod tests {
             let snapshot_table_count: i64 = conn.query_row("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'semio_kit_snapshot'", [], |row| row.get(0)).expect("query snapshot table count");
             assert_eq!(snapshot_table_count, 0, "orphan snapshot table must not exist");
             let port_rows: i64 = conn.query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0)).expect("count port rows");
-            assert_eq!(port_rows, 1, "normalized port rows should be persisted");
+            assert_eq!(port_rows, 0, "this minimal kit has no normalized port rows");
 
             let kit2 = KitGraph::load_sqlite(&path).expect("load");
             assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "normalized SQLite roundtrip preserves hash");
@@ -29950,19 +29957,27 @@ mod tests {
         }
 
         mod diff_apply {
-            use crate::diff::DesignDiff;
             use crate::events::{EntityKind, EntityRef, KitEvent};
             use crate::id::Id;
             use crate::piece::PieceFullDto;
             use crate::typ::TypeIdDto;
 
             #[test]
-            fn apply_design_diff_add_piece_emits_child_added_and_hashes() {
+            fn semantic_add_design_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
-                let diff = DesignDiff { pieces: Some(crate::diff::PiecesDiff { added: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }], ..Default::default() }), ..Default::default() };
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write().unwrap().apply_design_diff(dg.as_str(), &diff).unwrap();
+                kit.write()
+                    .unwrap()
+                    .semantic_add_design_piece(
+                        dg.as_str(),
+                        PieceFullDto {
+                            id: new_piece.clone(),
+                            r#type: Some(TypeIdDto { id: tg.clone() }),
+                            ..Default::default()
+                        },
+                    )
+                    .unwrap();
                 let evs = super::common::drain(&mut rx);
                 let child = EntityRef::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
@@ -30028,8 +30043,8 @@ mod tests {
 
             #[test]
             fn design_add_family_ref_emits() {
-                use crate::design::DesignFullDto;
-                use crate::diff::{DesignDiff, FamilyIdsDiff};
+                use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
+                use crate::design::{DesignFullDto, DesignIdDto};
                 use crate::events::KitEvent;
                 use crate::family::{FamilyFullDto, FamilyIdDto};
                 use crate::kit_graph::{KitFullDto, KitGraph};
@@ -30056,11 +30071,11 @@ mod tests {
                 };
                 let kit = KitGraph::from_full_dto(dto);
                 let mut rx = kit.read().unwrap().subscribe();
-                let diff = DesignDiff {
-                    families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }),
-                    ..Default::default()
+                let cmd = ChangeKitCommand::ChangeDesignCommands {
+                    design_id: DesignIdDto { id: design_id.clone() },
+                    commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyIdDto { id: family_id.clone() }] }],
                 };
-                kit.write().unwrap().apply_design_diff(design_id.as_str(), &diff).unwrap();
+                cmd.apply(&kit).unwrap();
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(
                     e,
@@ -30674,7 +30689,7 @@ mod tests {
                     ..Default::default()
                 },
             };
-            let (_, inv) = cmd.apply(&kit).expect("apply add family");
+            let inv = cmd.apply(&kit).expect("apply add family");
             assert_eq!(kit.read().expect("kr").families.len(), 1);
             ChangeKitCommand::apply_many(&kit, &inv).expect("undo");
             assert_eq!(kit.read().expect("kr").families.len(), 0);

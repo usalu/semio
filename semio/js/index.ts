@@ -74,9 +74,6 @@ export class Generator {
 
 /**
  **/
-export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
-/**
- **/
 export const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
 /**
  **/
@@ -121,17 +118,6 @@ export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean 
   if (a === b) return true;
   if (!a || !b) return false;
   return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
-};
-
-/**
- **/
-export const generateUniqueName = (baseName: string, existingNames: string[], separator: string = " "): string => {
-  if (!existingNames.includes(baseName)) return baseName;
-  let counter = 2;
-  while (existingNames.includes(`${baseName}${separator}${counter}`)) {
-    counter++;
-  }
-  return `${baseName}${separator}${counter}`;
 };
 
 /**
@@ -1063,29 +1049,6 @@ export class Plane implements PlanePlain {
   static deserialize(json: string): Plane {
     return new Plane(PlaneSchema.parse(JSON.parse(json)));
   }
-  /** Ôù╗´©ÅConvert this plane to a three.js matrix. */
-  toMatrix(): THREE.Matrix4 {
-    const origin = new THREE.Vector3(this.origin.x, this.origin.y, this.origin.z);
-    const xAxis = new THREE.Vector3(this.xAxis.x, this.xAxis.y, this.xAxis.z);
-    const yAxis = new THREE.Vector3(this.yAxis.x, this.yAxis.y, this.yAxis.z);
-    const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
-    const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
-    return new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
-  }
-  /** Ôù╗´©ÅCreate a plane from a three.js matrix. */
-  static fromMatrix(matrix: THREE.Matrix4): Plane {
-    const origin = new THREE.Vector3();
-    const xAxis = new THREE.Vector3();
-    const yAxis = new THREE.Vector3();
-    const zAxis = new THREE.Vector3();
-    matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
-    matrix.extractBasis(xAxis, yAxis, zAxis);
-    return new Plane({
-      origin: { x: origin.x, y: origin.y, z: origin.z },
-      xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-      yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-    });
-  }
   /** Ôù╗´©ÅAverage this plane with other planes while preserving the first orientation. */
   averageWith(planes: Plane[]): Plane {
     return Plane.average([this, ...planes]) ?? this;
@@ -1146,22 +1109,6 @@ export const serializePlane = (plane: Plane): string => plane.serialize();
 /**
  **/
 export const deserializePlane = (json: string): Plane => Plane.deserialize(json);
-/**
- **/
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  return plane.toMatrix();
-};
-/**
- **/
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  return Plane.fromMatrix(matrix);
-};
-
-/**
- **/
-export const averagePlane = (planes: Plane[]): Plane | null => {
-  return Plane.average(planes);
-};
 // Ôù╗´©ÅroundPlane rounds plane components to a specified number of decimal places.
 const roundPlane = (plane: Plane): Plane => plane.rounded();
 
@@ -9643,22 +9590,6 @@ export class LiveKitRoot {
 //#region 🧵KitWorker
 // Web Worker API: loads the semio WASM module (host-configured), hosts [`KitStoreHandle`], exposes RPC via Comlink.
 
-let kitWorkerHandle: any = null;
-const kitEventListeners = new Map<number, (ev: unknown) => void>();
-let nextKitEventListenerId = 0;
-let kitEventGqlStarted = false;
-
-function kitWorkerGqlHandle(): KitGraphqlHandle {
-  if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-  return {
-    execute: (requestJson: string, onMessage: (line: string) => void) => kitWorkerHandle.execute(requestJson, onMessage),
-  };
-}
-
-function kitWorkerAsExecuteRead(): KitExecuteRead {
-  return { executeRead: (batch) => kitGraphqlExecuteRead(kitWorkerGqlHandle(), batch) };
-}
-
 async function importWasmModule(specifier: string) {
   if (specifier === "@semio/rs-wasm") {
     return import("@semio/rs-wasm");
@@ -9799,6 +9730,11 @@ export class KitWorkerApi {
 
 /** Singleton instance for backwards compatibility. */
 export const kitWorkerApi = new KitWorkerApi();
+
+/** Call in a Web Worker context to expose `kitWorkerApi` via Comlink. */
+export function bootKitWorker() {
+  Comlink.expose(kitWorkerApi);
+}
 
 //#endregion 🧵KitWorker
 

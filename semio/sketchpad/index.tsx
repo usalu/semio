@@ -15,26 +15,12 @@
 
 // #region ⛩️Imports
 
-import type {
-  Connector,
-  KitBinaryStore,
-  KitCommandContext,
-  KitCommandResult,
-  KitFileState,
-  KitFolderAdapter,
-  KitJsonFileAdapter,
-  KitStore,
-  KitStoreSnapshot,
-  Port,
-  SketchpadKitKindAvailability,
-  SketchpadKitStoreFactory,
-} from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   applyKitDiff,
   areDesignsInSameFamily,
   arePortsCompatible,
   areSameConnection,
-  Attribute,
   Author,
   AuthorId,
   buildFileTree,
@@ -44,18 +30,18 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
+  ConnectionScopeProvider,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
   createKitCommandEngineExplicitOrigin,
-  createKitFileObjectUrl,
   createSessionKitStore,
   Design,
   DesignDiff,
-  DesignShallow,
+  DesignScopeProvider,
+  DesignShallowDto,
   DiffStatus,
   executeSemioKitCommand,
-  fetchReadableKitFileBlob,
   findDesignInKit,
   findPieceInDesign,
   findRepresentation,
@@ -64,35 +50,36 @@ import {
   Folder,
   generateUniqueName,
   getDesignDiff,
-  getExistingKitFileProvider,
   getIncludedDesigns,
   getKitPorts,
-  getKitFileProvider,
-  getKitFileStoragePath,
   getKitRegistryBridge,
   getOrCreateKitFileState,
-  getReadableKitFileUrl,
-  getStoredKitFileUrls,
   ICON_WIDTH,
   Id,
   id,
   importKit,
   InMemoryKitStore,
   inverseKitDiff,
-  isBrowserReadableFileUrl,
   Kit,
   KitDiff,
   KitRegistryProvider,
-  KitShallow,
+  KitScope,
+  KitScopeContext,
+  KitShallowDto,
+  KitShellScopeProvider,
   Piece,
   PieceDiff,
   PieceId,
+  PieceScopeProvider,
   Plane,
   planeToMatrix,
   Point,
   Quality,
   QualityDiff,
+  QualityScopeProvider,
   Representation,
+  SchemaScopeContext,
+  schemaScopeForEntityId,
   selectBestRepresentation,
   File as SemioFile,
   sumQualityInDesign,
@@ -102,26 +89,11 @@ import {
   toThreeRotation,
   Type,
   TypeDiff,
-  TypeShallow,
-  Vector,
-  AuthorScopeProvider,
-  ConnectionScopeProvider,
-  DesignScopeProvider,
-  KitScope,
-  KitScopeContext,
-  KitShellScopeProvider,
-  PieceScopeProvider,
-  QualityScopeProvider,
   TypeScopeProvider,
-  schemaScopeForEntityId,
-  SchemaScopeContext,
-  useActiveKitId,
-  useAuthor,
-  useAuthorScope,
+  TypeShallowDto,
   useConnection,
-  useConnectionScope,
   useConnections,
-  useKitConnections as useKitRpcConnections,
+  useConnectionScope,
   useCreateAuthor,
   useCreateDesign,
   useCreateFolder,
@@ -133,23 +105,18 @@ import {
   useDesigns,
   useDesignScope,
   useDesignsFull,
-  useDesignsIds,
-  useDesignsMetadata,
-  useFilesFull,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
+  useFilesFull,
+  useKitStoredFileUrls as useFileUrls,
   useFixedPieceId as useFixedPieceIdFromKit,
   useIncludedDesigns as useIncludedDesignsFromKit,
-  useIsInAuthorScope,
+  useIsConnectedPiece as useIsConnectedPieceFromKit,
   useIsInDesignScope,
-  useIsInQualityScope,
   useIsInKitScope,
   useIsInTypeScope,
-  useKitSnapshotTriad,
-  usePieceFlatCenter,
-  usePieceFlatPlane,
-  useIsConnectedPiece as useIsConnectedPieceFromKit,
-  useKitStoredFileUrls as useFileUrls,
   useKitDescription,
+  useKitFileBlobUrl,
+  useKitFileUrl,
   useKitHomepage,
   useKitIcon,
   useKitImage,
@@ -158,33 +125,33 @@ import {
   useKitRegistrySafe,
   useKitRelease,
   useKitRuntimeSafe,
-  useKitFileBlobUrl,
-  useKitFileUrl,
   useKitScope,
+  useKitSnapshotTriad,
   useKitStore,
-  useParentPieceId as useParentPieceIdFromKit,
   useMoveKitArtifactToFolder,
+  useParentPieceId as useParentPieceIdFromKit,
   usePiece,
   usePieceDepth as usePieceDepthFromKit,
+  usePieceFlatPlane,
+  usePieceMetadata as usePieceMetadataFromKit,
   usePieceParentConnection as usePieceParentConnectionFromKit,
   usePieces,
-  useKitPieces as useKitRpcPieces,
-  usePieceMetadata as usePieceMetadataFromKit,
-  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
   usePieceScope,
+  usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
   useQuality,
   useQualityScope,
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
-  useType,
-  useTypeScope,
   useTagsFull,
+  useType,
   useTypes,
+  useTypeScope,
   useTypesFull,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
+  Vector,
 } from "@semio/react";
 
 import type {
@@ -366,7 +333,7 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
+import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 // `semio.kit.*` string command dispatch: engine in @semio/js; not re-exported from @semio/react.
 function useKitCommandDispatchersWithOrigin(kitStore: KitStore | null) {
@@ -6959,14 +6926,15 @@ export {
   AuthorScopeProvider,
   ConnectionScopeProvider,
   DesignScopeProvider,
+  KitScopeContext,
   PieceScopeProvider,
   QualityScopeProvider,
   TypeScopeProvider,
   useAuthor,
   useAuthorScope,
   useConnection,
-  useConnectionScope,
   useConnections,
+  useConnectionScope,
   useDesign,
   useDesignScope,
   useDesignsFull,
@@ -6981,8 +6949,8 @@ export {
   useKitScope,
   useKitSnapshotTriad,
   usePiece,
-  usePieceScope,
   usePieces,
+  usePieceScope,
   useQuality,
   useQualityScope,
   useTagsFull,
@@ -6991,7 +6959,6 @@ export {
   useTypesFull,
   useTypesIds,
   useTypesMetadata,
-  KitScopeContext,
 } from "@semio/react";
 
 // #region 🎆Piece Derived Hooks
@@ -7156,11 +7123,7 @@ function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode 
  * React provider: tab shell id + wasm {@link KitScope} for that kit.
  **/
 export const KitScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  return React.createElement(
-    KitShellScopeProvider,
-    { id: props.id },
-    React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }),
-  );
+  return React.createElement(KitShellScopeProvider, { id: props.id }, React.createElement(KitWasmRuntimeBridge, { kitId: props.id, children: props.children as any }));
 };
 
 // #endregion ⏱️Kit
@@ -13986,7 +13949,9 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
         items = (kit.qualities ?? []).filter(Boolean).map((q) => ({ id: q.id, name: q.name, icon: q.icon }));
         break;
       case "port":
-        items = getKitPorts(kit).filter(Boolean).map((i) => ({ id: i.id, name: i.name, icon: i.icon }));
+        items = getKitPorts(kit)
+          .filter(Boolean)
+          .map((i) => ({ id: i.id, name: i.name, icon: i.icon }));
         break;
       case "file":
         items = (kit.files ?? []).filter(Boolean).map((f) => ({ id: f.id, name: f.name, icon: getFileIcon(f.name), parentId: f.folder?.id }));
@@ -14363,11 +14328,13 @@ const KitDiagramInner: FC = () => {
       }
     });
 
-    getKitPorts(kit).filter(Boolean).forEach((i) => {
-      if ((!searchLower || i.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("ports"))) {
-        ids.add(i.id);
-      }
-    });
+    getKitPorts(kit)
+      .filter(Boolean)
+      .forEach((i) => {
+        if ((!searchLower || i.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("ports"))) {
+          ids.add(i.id);
+        }
+      });
 
     const diagramFoldersById = new Map((kit.folders ?? []).map((f) => [f.id, f]));
     const getDiagramFolderStoragePath = (folderId?: string): string => {
@@ -16600,16 +16567,11 @@ export function useConnectionDescription(): HookResult<string> {
 export function useClusterableGroups() {
   const designScope = useDesignScope();
   const selection = useDesignAppSelection();
-  const [groups] = useDesignClusterableGroups(
-    designScope?.id,
-    selection.pieces ?? []
-  );
+  const [groups] = useDesignClusterableGroups(designScope?.id, selection.pieces ?? []);
   return useMemo(() => {
     if (!designScope) return [] as string[][];
     if (!Array.isArray(groups) || groups.length === 0) return [];
-    return groups.map((g) =>
-      (Array.isArray(g) ? g : []).map((p) => (typeof p === "string" ? p : p.id))
-    );
+    return groups.map((g) => (Array.isArray(g) ? g : []).map((p) => (typeof p === "string" ? p : p.id)));
   }, [designScope, groups]);
 }
 
@@ -17551,7 +17513,7 @@ export class SketchpadStore {
   private readonly commandMetadata: Map<string, { user?: boolean }>;
   private cache?: SketchpadState;
   private cacheHash?: string;
-  private kitShallowsCache?: KitShallow[];
+  private kitShallowsCache?: KitShallowDto[];
   private kitShallowsVersion: number = 0;
   private kitShallowsCacheVersion: number = -1;
   private readonly kitCreatedSubscribers: Set<() => void>;
@@ -18605,13 +18567,13 @@ export class SketchpadStore {
     throw new Error(`Kit with id ${id} not found`);
   }
 
-  kitShallows(): KitShallow[] {
+  kitShallows(): KitShallowDto[] {
     if (this.kitShallowsCache && this.kitShallowsCacheVersion === this.kitShallowsVersion) {
       return this.kitShallowsCache;
     }
     const reg = getKitRegistryBridge();
     const kitIds = new Set<string>(reg ? reg.list() : []);
-    this.kitShallowsCache = Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallow);
+    this.kitShallowsCache = Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallowDto);
     this.kitShallowsCacheVersion = this.kitShallowsVersion;
     return this.kitShallowsCache;
   }
@@ -18897,9 +18859,7 @@ const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId:
   } = props;
 
   if (!stores.has(id)) {
-    const store =
-      storeProp ??
-      new SketchpadStore(id, remote, initialState, persistenceFactory, kitStoreProp, temporaryKitStoreFactory, folderKitStoreFactory, fileKitStoreFactory, remoteKitStoreFactory, Boolean(desktop));
+    const store = storeProp ?? new SketchpadStore(id, remote, initialState, persistenceFactory, kitStoreProp, temporaryKitStoreFactory, folderKitStoreFactory, fileKitStoreFactory, remoteKitStoreFactory, Boolean(desktop));
     stores.set(id, store);
 
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(initialState)) });
@@ -19539,7 +19499,7 @@ export function useHomeCommands() {
 /**
  * Hook returning shallow kit data for all kits with reactive updates.
  **/
-export function useKitShallows(): KitShallow[] {
+export function useKitShallowDtos(): KitShallowDto[] {
   const store = useSketchpadStore();
   return useSyncExternalStore(
     (onStoreChange) => {
@@ -19629,9 +19589,9 @@ export function useOpenableKitKinds(): SketchpadKitKindAvailability {
 /**
  * Hook returning kit shallows filtered by persistence kind.
  **/
-export function useFilteredKitShallows(kind?: KitKind): KitShallow[] {
+export function useFilteredKitShallowDtos(kind?: KitKind): KitShallowDto[] {
   const store = useSketchpadStore();
-  const allKits = useKitShallows();
+  const allKits = useKitShallowDtos();
   return useMemo(() => {
     if (!kind) return allKits;
     return allKits.filter((k) => {
@@ -19957,7 +19917,7 @@ export function useSketchpadCommands() {
  * Hook returning shallow kit data for all kits.
  *
  **/
-export function useKits(): KitShallow[] {
+export function useKits(): KitShallowDto[] {
   const store = useSketchpadStore();
 
   return useSyncExternalStore(
@@ -19985,8 +19945,7 @@ export function useKits(): KitShallow[] {
 function useKitCommandsById(kitId?: string) {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(kitId);
-  const kitStore =
-    runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
+  const kitStore = runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
   return useKitCommandDispatchersWithOrigin(kitStore);
 }
 
@@ -20970,7 +20929,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const kitFromScope = navbarKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
-  const kit: Kit | KitShallow | null | undefined = (kitFromScope as Kit | KitShallow | null | undefined) || kits.find((k) => k.id === kitId);
+  const kit: Kit | KitShallowDto | null | undefined = (kitFromScope as Kit | KitShallowDto | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
   const kitKindItems = [
@@ -20980,7 +20939,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     { label: <RemoteKitIcon size={16} />, id: "semio.sketchpad.navbar.breadcrumb.remote", href: "/?kind=remote" },
   ];
 
-  const filteredKits = useFilteredKitShallows(kitKind);
+  const filteredKits = useFilteredKitShallowDtos(kitKind);
   const createKitLabel = useLabel("semio.sketchpad.navbar.createKit");
   const kitItemsWithCreate = useMemo(() => {
     const items = filteredKits.map((k) => ({ label: k.name, href: `/kits/${k.id}` }));
@@ -21332,7 +21291,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     return items;
   }, [kit, kits, defaultVersionLabel, createVersionLabel, kitId]);
 
-  const homeKitsByKind = useFilteredKitShallows(homeKind || undefined);
+  const homeKitsByKind = useFilteredKitShallowDtos(homeKind || undefined);
   const homeKitsForKind = useMemo(() => {
     if (!homeKind) return [];
     const items = homeKitsByKind
@@ -21786,16 +21745,16 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
  **/
 type SearchResult = {
   type: "kit" | "design" | "type" | "quality" | "tutorial";
-  item: KitShallow | DesignShallow | TypeShallow | Quality | { id: string; name: string; description?: string };
+  item: KitShallowDto | DesignShallowDto | TypeShallowDto | Quality | { id: string; name: string; description?: string };
   kitId?: string;
 };
 /**
  * buildSearchResultPath holds the data fields for a buildSearchResultPath record.
  **/
 const buildSearchResultPath = (result: SearchResult): string => {
-  if (result.type === "kit") return `/kits/${(result.item as KitShallow).id}`;
-  if (result.type === "design") return `/kits/${result.kitId}/designs/${(result.item as DesignShallow).id}`;
-  if (result.type === "type") return `/kits/${result.kitId}/types/${(result.item as TypeShallow).id}`;
+  if (result.type === "kit") return `/kits/${(result.item as KitShallowDto).id}`;
+  if (result.type === "design") return `/kits/${result.kitId}/designs/${(result.item as DesignShallowDto).id}`;
+  if (result.type === "type") return `/kits/${result.kitId}/types/${(result.item as TypeShallowDto).id}`;
   if (result.type === "quality") return `/kits/${result.kitId}?kind=qualities&select=${(result.item as Quality).id}`;
   if (result.type === "tutorial") return `/?tutorial=${(result.item as { id: string }).id}`;
   return "";
@@ -21827,12 +21786,12 @@ const Search: FC = ({}) => {
   const searchData = useMemo(() => {
     const results: SearchResult[] = [];
     kits.forEach((kit) => {
-      results.push({ type: "kit", item: kit as KitShallow, kitId: kit.id });
+      results.push({ type: "kit", item: kit as KitShallowDto, kitId: kit.id });
       (kit.designs || []).forEach((design) => {
-        if (typeof design === "object") results.push({ type: "design", item: design as DesignShallow, kitId: kit.id });
+        if (typeof design === "object") results.push({ type: "design", item: design as DesignShallowDto, kitId: kit.id });
       });
       (kit.types || []).forEach((type) => {
-        if (typeof type === "object") results.push({ type: "type", item: type as TypeShallow, kitId: kit.id });
+        if (typeof type === "object") results.push({ type: "type", item: type as TypeShallowDto, kitId: kit.id });
       });
       (kit.qualities || []).forEach((quality) => {
         if (typeof quality === "object") results.push({ type: "quality", item: quality as Quality, kitId: kit.id });
@@ -21911,9 +21870,9 @@ const Search: FC = ({}) => {
         navigate(path);
       } else {
         const { type, item, kitId } = result;
-        if (type === "kit") navigate(`/kits/${(item as KitShallow).id}`);
-        else if (type === "design") navigate(`/kits/${kitId}/designs/${(item as DesignShallow).id}`);
-        else if (type === "type") navigate(`/kits/${kitId}/types/${(item as TypeShallow).id}`);
+        if (type === "kit") navigate(`/kits/${(item as KitShallowDto).id}`);
+        else if (type === "design") navigate(`/kits/${kitId}/designs/${(item as DesignShallowDto).id}`);
+        else if (type === "type") navigate(`/kits/${kitId}/types/${(item as TypeShallowDto).id}`);
         else if (type === "quality") navigate(`/kits/${kitId}?kind=qualities&select=${(item as Quality).id}`);
       }
     },
@@ -21956,7 +21915,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.kits.length > 0 && (
             <CommandGroup heading={kitsLabel}>
               {groupedSearchResults.kits.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`kit-${(r.item.item as KitShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`kit-${(r.item.item as KitShallowDto).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -21968,7 +21927,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.designs.length > 0 && (
             <CommandGroup heading={designsLabel}>
               {groupedSearchResults.designs.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`design-${(r.item.item as DesignShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`design-${(r.item.item as DesignShallowDto).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -21980,7 +21939,7 @@ const Search: FC = ({}) => {
           {groupedSearchResults.types.length > 0 && (
             <CommandGroup heading={typesLabel}>
               {groupedSearchResults.types.map((r: FuseResult<SearchResult>, idx: number) => (
-                <CommandItem key={`type-${(r.item.item as TypeShallow).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
+                <CommandItem key={`type-${(r.item.item as TypeShallowDto).id}-${idx}`} onSelect={() => handleSelect(r.item)}>
                   <div className="flex items-center gap-single">
                     {getIcon(r.item.type)}
                     <span>{getDisplayName(r.item)}</span>
@@ -23253,7 +23212,7 @@ const LayoutWrapper: FC = () => {
   const kitFromScope = footerKitSnap?.kit;
   const designFromScope = useDesign();
   const typeFromScope = useType();
-  const kit: Kit | KitShallow | null | undefined = (kitFromScope as Kit | KitShallow | null | undefined) || kits.find((k) => k.id === kitId);
+  const kit: Kit | KitShallowDto | null | undefined = (kitFromScope as Kit | KitShallowDto | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
   const itemId = isDesignApp || isTypeApp || isQualityApp ? thirdPart : null;
@@ -23632,7 +23591,7 @@ const LayoutWrapper: FC = () => {
     }
     return [];
   }, []);
-  const kitShallows = useKitShallows();
+  const kitShallows = useKitShallowDtos();
   const getTypeOrDesignName = useCallback(() => {
     if (!activeDragData) return null;
     if (activeDragData.type === "type") {
@@ -45208,7 +45167,7 @@ export const HomeKitSection: FC = () => {
  * SingleKitSection holds the data fields for a SingleKitSection record.
  **/
 const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
-  const kitShallows = useKitShallows();
+  const kitShallows = useKitShallowDtos();
   const kitShallow = kitShallows.find((k) => k.id === kitId);
   if (!kitShallow) {
     return (
@@ -45241,10 +45200,10 @@ const SingleKitSection: FC<{ kitId: string }> = ({ kitId }) => {
  * MultipleKitsSection holds the data fields for a MultipleKitsSection record.
  **/
 const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
-  const kitShallows = useKitShallows();
-  const kits = kitIds.map((id) => kitShallows.find((k) => k.id === id)).filter((k) => k !== undefined) as KitShallow[];
+  const kitShallows = useKitShallowDtos();
+  const kits = kitIds.map((id) => kitShallows.find((k) => k.id === id)).filter((k) => k !== undefined) as KitShallowDto[];
 
-  const getCommonValue = <T,>(getter: (kit: KitShallow) => T): T | undefined => {
+  const getCommonValue = <T,>(getter: (kit: KitShallowDto) => T): T | undefined => {
     if (kits.length === 0) return undefined;
     const firstValue = getter(kits[0]);
     const allSame = kits.every((kit) => getter(kit) === firstValue);
@@ -45727,7 +45686,7 @@ type HomeTableRow = {
   type: KitKind | "docs" | "loading";
   updatedAt: string;
   createdAt: string;
-  kit?: KitShallow;
+  kit?: KitShallowDto;
   docsPath?: string;
   icon?: string;
   isLoading?: boolean;
@@ -45906,7 +45865,7 @@ const HomeTableContent: FC = () => {
       });
     });
 
-    const kitGroups = new Map<string, KitShallow[]>();
+    const kitGroups = new Map<string, KitShallowDto[]>();
 
     kits.forEach((kit) => {
       const type = getKitKind(kit.id) || "temporary";
@@ -47248,8 +47207,8 @@ async function boot() {
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
         const parsed = JSON.parse(json);
-        const { KitSchema } = require("@semio/react");
-        const kit = KitSchema.parse(parsed);
+        const { KitFullDtoSchema } = require("@semio/react");
+        const kit = KitFullDtoSchema.parse(parsed);
         kitStore!.applyExternalUpdate(kit);
       } catch {
         /* ignore parse errors */

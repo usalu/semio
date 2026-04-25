@@ -4,13 +4,13 @@ overview: Replace kit-modifying diff paths with semantic command execution acros
 todos:
  - id: rust-command-only
    content: Refactor `semio/rs/lib.rs` so semantic commands mutate the kit directly and no mutation path applies `KitDiff` or `DesignDiff`.
-   status: in_progress
+   status: completed
  - id: rust-wire-tests
    content: Remove raw diff wire mutations and update Rust tests around semantic command application, inverse commands, and undo/redo.
-   status: pending
+   status: completed
  - id: js-client-contract
    content: Remove diff mutation methods from `KitStoreClient` and route `semio.kit.*` command execution through semantic store commands.
-   status: pending
+   status: in_progress
  - id: react-downstream
    content: Replace React piece/connection diff update hooks with semantic command or field patch calls.
    status: pending
