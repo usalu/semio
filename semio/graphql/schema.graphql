@@ -4,6 +4,7 @@ directive @oneOf on INPUT_OBJECT
 scalar DateTime
 scalar Cursor
 scalar Long
+scalar JSON
 
 schema {
   query: Query
@@ -22,17 +23,49 @@ interface Node {
   id: ID!
 }
 
+"Live kit graph root (`semio/rs` `kit_graphql::RootQuery`); all reads are pointer traversal from this node."
 type Query {
-  kitStore(input: KitStoreQueryInput!): KitStore!
+  kitStore: KitStore!
 }
 
+"Control-plane mutations: actor-queued graph writes, VCS, and backbone (`kit_graphql::RootMutation`)."
 type Mutation {
-  change(input: ChangeInput!): ChangePayload!
-  execute(input: ExecuteInput!): ExecutePayload!
+  changeKitCommands(commands: JSON!): Boolean!
+  changeKitWithInverse(commands: JSON!): JSON!
+  applyDesignDiff(designId: String!, diff: JSON!): JSON!
+  applyKitDiff(diff: JSON!): JSON!
+  clusterPieces(designId: String!, pieceIds: [String!]!, clusterName: String!): JSON!
+  dragPieces(designId: String!, pieceIds: [String!]!, du: Float!, dv: Float!): JSON!
+  movePieces(designId: String!, pieceIds: [String!]!, gap: Float!, shift: Float!, rise: Float!): JSON!
+  fixPieces(designId: String!, pieceIds: [String!]!): JSON!
+  flattenDesign(designId: String!): JSON!
+  expandDesign(parentDesignId: String!, nestedDesignId: String!): JSON!
+  deleteConnection(designId: String!, connectionId: String!): JSON!
+  changePieceType(designId: String!, pieceId: String!, newTypeId: String!): JSON!
+  pasteDesignSelection(designId: String!, selection: JSON!, plane: JSON): JSON!
+  createHangingPieces(designId: String!, typeIds: [String!]!, plane: JSON!): JSON!
+  createConnectedPiece(designId: String!, parentPiece: String!, parentPort: String!, childType: String!, childPort: String!): JSON!
+  createFixedPiece(designId: String!, typeId: String!, plane: JSON!): JSON!
+  undo: JSON!
+  redo: JSON!
+  newSession: JSON!
+  endSession(id: String!): JSON!
+  newAlternative(fromCheckpoint: String, name: String!): JSON!
+  executeSessionCommands(sessionId: String!, sessionCommands: [JSON!]!): JSON!
+  executeKitCheckpointCommands(checkpointId: String!, commands: [JSON!]!): JSON!
+  executeKitAlternativeCommands(alternativeId: String!, commands: [JSON!]!): JSON!
+  attachBackbone(config: JSON!): JSON!
+  detachBackbone: JSON!
+  setActiveCheckpoint(id: String): JSON!
+  listConflicts: JSON!
+  resolveConflict(id: String!, strategy: JSON!): JSON!
+  backboneStatus: JSON!
+  syncNow: JSON!
 }
 
+"Outbound kit events from the live graph bus (`event_stream` → `Json<KitEvent>`)."
 type Subscription {
-  eventStream(input: EventStreamInput): StoreEvent!
+  eventStream: JSON!
 }
 
 input EntityIdInput {

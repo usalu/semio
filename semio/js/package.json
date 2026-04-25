@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
+    "fast-check": "^3.23.2",
     "@semio/assets": "^1.0.0",
     "@types/node": "^25.0.8",
     "@types/sql.js": "^1.4.9",

@@ -25962,8 +25962,8 @@ pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
     use async_graphql::{
-        Context, Error, Object, Result, Schema, Subscription,
-        Json, Request, Variables,
+        Context, Enum, Error, InputObject, Object, OneofObject, Request, Result, Schema, SimpleObject, Subscription,
+        Variables, Json,
     };
     use async_stream::stream;
     use futures_channel::oneshot;
@@ -26089,6 +26089,353 @@ pub mod kit_graphql {
         }
         Ok(req)
     }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct KitStoreBatchInput {
+        client_mutation_id: Option<String>,
+        commands: Vec<KitStoreBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum KitStoreBatchCommandInput {
+        Live(LiveBatchInput),
+        Session(SessionBatchInput),
+        Checkpoint(CheckpointBatchInput),
+        Alternative(AlternativeBatchInput),
+        Backbone(BackboneBatchInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct LiveBatchInput {
+        commands: Vec<LiveBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum LiveBatchCommandInput {
+        ChangeKitCommands(ChangeKitCommandsBatchInput),
+        Design(DesignBatchInput),
+        Undo(ConfirmOnlyInput),
+        Redo(ConfirmOnlyInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ChangeKitCommandsBatchInput {
+        commands: Vec<crate::graphql_inputs::KitChangeCommandInput>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct SessionBatchInput {
+        session_id: Option<String>,
+        commands: Vec<SessionBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum SessionBatchCommandInput {
+        CreateSession(ConfirmOnlyInput),
+        EndSession(ConfirmOnlyInput),
+        CreateDraft(CreateDraftBatchInput),
+        Draft(DraftBatchInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CreateDraftBatchInput {
+        parent_checkpoint_id: Option<String>,
+        target_alternative_id: Option<String>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct DraftBatchInput {
+        draft_id: Option<String>,
+        commands: Vec<DraftBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum DraftBatchCommandInput {
+        FinalizeDraft(MessageOnlyInput),
+        AbortDraft(ConfirmOnlyInput),
+        UndoDraft(CountInput),
+        RedoDraft(CountInput),
+        StartTransaction(ConfirmOnlyInput),
+        Transaction(TransactionBatchInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct TransactionBatchInput {
+        transaction_id: Option<String>,
+        commands: Vec<TransactionBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum TransactionBatchCommandInput {
+        ChangeKitCommands(ChangeKitCommandsBatchInput),
+        FinalizeTransaction(ConfirmOnlyInput),
+        AbortTransaction(ConfirmOnlyInput),
+        UndoTransaction(CountInput),
+        RedoTransaction(CountInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CheckpointBatchInput {
+        checkpoint_id: Option<String>,
+        commands: Vec<CheckpointBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum CheckpointBatchCommandInput {
+        MarkRelease(ConfirmOnlyInput),
+        SetActive(ConfirmOnlyInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct AlternativeBatchInput {
+        alternative_id: Option<String>,
+        commands: Vec<AlternativeBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum AlternativeBatchCommandInput {
+        CreateAlternative(CreateAlternativeBatchInput),
+        UnifyAlternative(MessageOnlyInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CreateAlternativeBatchInput {
+        name: String,
+        from_checkpoint_id: Option<String>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct BackboneBatchInput {
+        commands: Vec<BackboneBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum BackboneBatchCommandInput {
+        AttachBackbone(BackboneConfigBatchInput),
+        DetachBackbone(ConfirmOnlyInput),
+        ListConflicts(ConfirmOnlyInput),
+        ResolveConflict(ResolveConflictBatchInput),
+        BackboneStatus(ConfirmOnlyInput),
+        SyncNow(ConfirmOnlyInput),
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum BackboneConfigBatchInput {
+        Dev(DevBackboneBatchInput),
+        Local(LocalBackboneBatchInput),
+        Remote(RemoteBackboneBatchInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct DevBackboneBatchInput {
+        path: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct LocalBackboneBatchInput {
+        folder: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct RemoteBackboneBatchInput {
+        url: String,
+        session_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ResolveConflictBatchInput {
+        conflict_id: String,
+        strategy: ConflictResolutionBatchInput,
+    }
+
+    #[derive(Clone, Debug, Enum, Copy, Clone, Eq, PartialEq)]
+    enum ConflictResolutionBatchInput {
+        DropWip,
+        ForceOverwriteBackbone,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct DesignBatchInput {
+        design_id: String,
+        commands: Vec<DesignBatchCommandInput>,
+    }
+
+    #[derive(Clone, Debug, OneofObject)]
+    enum DesignBatchCommandInput {
+        ClusterPieces(ClusterPiecesBatchInput),
+        DragPieces(DragPiecesBatchInput),
+        MovePieces(MovePiecesBatchInput),
+        FixPieces(PieceIdsBatchInput),
+        FlattenDesign(ConfirmOnlyInput),
+        ExpandDesign(ExpandDesignBatchInput),
+        DeleteConnection(DeleteConnectionBatchInput),
+        ChangePieceType(ChangePieceTypeBatchInput),
+        PasteDesignSelection(PasteDesignSelectionBatchInput),
+        CreateHangingPieces(CreateHangingPiecesBatchInput),
+        CreateConnectedPiece(CreateConnectedPieceBatchInput),
+        CreateFixedPiece(CreateFixedPieceBatchInput),
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ClusterPiecesBatchInput {
+        piece_ids: Vec<String>,
+        cluster_name: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct DragPiecesBatchInput {
+        piece_ids: Vec<String>,
+        du: f64,
+        dv: f64,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct MovePiecesBatchInput {
+        piece_ids: Vec<String>,
+        gap: f64,
+        shift: f64,
+        rise: f64,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct PieceIdsBatchInput {
+        piece_ids: Vec<String>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ExpandDesignBatchInput {
+        nested_design_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct DeleteConnectionBatchInput {
+        connection_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ChangePieceTypeBatchInput {
+        piece_id: String,
+        new_type_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct PasteDesignSelectionBatchInput {
+        selection: crate::graphql_inputs::DesignInput,
+        plane: Option<crate::graphql_inputs::PlaneInput>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CreateHangingPiecesBatchInput {
+        type_ids: Vec<String>,
+        plane: crate::graphql_inputs::PlaneInput,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CreateConnectedPieceBatchInput {
+        parent_piece: String,
+        parent_port: String,
+        child_type: String,
+        child_port: String,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CreateFixedPieceBatchInput {
+        type_id: String,
+        plane: crate::graphql_inputs::PlaneInput,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct ConfirmOnlyInput {
+        confirm: Option<bool>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct CountInput {
+        count: Option<i32>,
+    }
+
+    #[derive(Clone, Debug, InputObject)]
+    struct MessageOnlyInput {
+        message: String,
+    }
+
+    #[derive(Clone, Debug, Enum, Copy, Clone, Eq, PartialEq)]
+    enum KitStoreBatchResultKind {
+        ChangeKitCommands,
+        ClusterPieces,
+        DragPieces,
+        MovePieces,
+        FixPieces,
+        FlattenDesign,
+        ExpandDesign,
+        DeleteConnection,
+        ChangePieceType,
+        PasteDesignSelection,
+        CreateHangingPieces,
+        CreateConnectedPiece,
+        CreateFixedPiece,
+        Undo,
+        Redo,
+        NewSession,
+        EndSession,
+        NewDraft,
+        StartTransaction,
+        FinalizeDraft,
+        AbortDraft,
+        UndoDraft,
+        RedoDraft,
+        FinalizeTransaction,
+        AbortTransaction,
+        UndoTransaction,
+        RedoTransaction,
+        MarkRelease,
+        SetActiveCheckpoint,
+        NewAlternative,
+        UnifyAlternative,
+        AttachBackbone,
+        DetachBackbone,
+        ListConflicts,
+        ResolveConflict,
+        BackboneStatus,
+        SyncNow,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct BackboneBatchStatus {
+        attached: bool,
+        kind: Option<String>,
+        tip: Option<String>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct ConflictBatchRecord {
+        id: String,
+        backbone_tip: Option<String>,
+        reason: String,
+        created_at: String,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct KitStoreBatchResult {
+        kind: KitStoreBatchResultKind,
+        ok: Option<bool>,
+        count: Option<i32>,
+        session_id: Option<String>,
+        draft_id: Option<String>,
+        transaction_id: Option<String>,
+        checkpoint_id: Option<String>,
+        alternative_id: Option<String>,
+        backbone: Option<BackboneBatchStatus>,
+        conflicts: Option<Vec<ConflictBatchRecord>>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct KitStoreBatchPayload {
+        client_mutation_id: Option<String>,
+        results: Vec<KitStoreBatchResult>,
+    }
+
+    pub struct KitStoreMutationRoot;
 
     pub struct RootQuery;
 
@@ -26672,6 +27019,21 @@ pub mod kit_graphql {
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
 
+        /// 🌐 Same as [`change_kit_commands_for_field_patch`], but `value_json` is a JSON text blob (WASM/JS hosts avoid `JSON!` variable typing issues).
+        async fn change_kit_commands_for_field_patch_value_json(
+            &self,
+            kind: String,
+            id: String,
+            field: String,
+            value_json: String,
+        ) -> Result<Json<serde_json::Value>> {
+            let value: serde_json::Value = serde_json::from_str(&value_json).map_err(|e| Error::new(e.to_string()))?;
+            let ek = KitGraph::parse_entity_kind(&kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value)
+                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
+        }
+
         /// 🌐 Build [`ChangeKitCommand`]s to add a child entity (read-only; apply via mutations).
         async fn change_kit_commands_for_add_child(
             &self,
@@ -26683,6 +27045,22 @@ pub mod kit_graphql {
             let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto.0)
+                .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
+        }
+
+        /// 🌐 Same as [`change_kit_commands_for_add_child`], with `dto_json` as a JSON text blob.
+        async fn change_kit_commands_for_add_child_dto_json(
+            &self,
+            parent_kind: String,
+            parent_id: String,
+            child_kind: String,
+            dto_json: String,
+        ) -> Result<Json<serde_json::Value>> {
+            let dto: serde_json::Value = serde_json::from_str(&dto_json).map_err(|e| Error::new(e.to_string()))?;
+            let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
+            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto)
                 .map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
             Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
         }
@@ -27422,6 +27800,35 @@ mod tests {
             let json = kit.read().expect("read").to_json_pretty().expect("to json");
             let kit2 = KitGraph::from_json_str(&json).expect("from json");
             assert_eq!(kit.read().expect("read").hash(), kit2.read().expect("read2").hash(), "hash stable across JSON round-trip");
+        }
+    }
+
+    mod kit_graphql_smoke {
+        use std::sync::Arc;
+        use std::sync::RwLock;
+
+        use crate::kit_graph::KitGraph;
+        use crate::kit_graphql;
+
+        #[test]
+        fn query_kit_name_via_schema() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-name")));
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let out = futures_lite::future::block_on(async move {
+                let body = r#"{"query":"query { kitStore { name } }"}"#;
+                let mut req = kit_graphql::request_from_json(body).expect("json");
+                req = req.data(kit).data(tx);
+                let schema = kit_graphql::schema();
+                let resp = async_graphql::Response::from(schema.execute(req).await);
+                serde_json::to_value(resp).expect("to json")
+            });
+            let name = out
+                .get("data")
+                .and_then(|d| d.get("kitStore"))
+                .and_then(|k| k.get("name"))
+                .and_then(|n| n.as_str());
+            assert_eq!(name, Some("gql-name"));
         }
     }
 
@@ -30525,158 +30932,4 @@ mod tests {
             let g = k.read().expect("g");
             let mk = g.checkpoints.get(&cp).expect("cp").release.as_ref().expect("mk");
             let computed = mk.compute();
-            let cached = mk.computed.as_ref().expect("cached");
-            assert_eq!(&computed, cached);
-        }
-
-        #[test]
-        fn read_command_tree_returns_nested_results() {
-            let (k, tid) = make_kit_with_type();
-            let g = k.read().expect("g");
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::ReadTypeFullCommand, ReadTypeCommand::ReadTypeNameCommand] };
-            let r = cmd.execute(&*g).expect("r");
-            match r {
-                crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
-                    assert!(matches!(&results[0], ReadTypeCommandOutput::ReadTypeFullCommand { .. }));
-                    assert!(matches!(&results[1], ReadTypeCommandOutput::ReadTypeNameCommand { .. }));
-                }
-                _ => panic!(),
-            }
-            let r2 = ReadKitCommand::ReadKitFullCommand.execute(&*g).expect("r2");
-            assert!(matches!(r2, crate::read::ReadKitCommandOutput::ReadKitFullCommand { .. }));
-        }
-
-        #[test]
-        fn read_type_ports_and_name_nested() {
-            let (k, tid) = make_kit_with_type();
-            let g = k.read().expect("g");
-            let r = ReadKitCommand::ReadKitTypeCommands {
-                id: TypeIdDto { id: tid },
-                commands: vec![ReadTypeCommand::ReadTypePortsFullCommand, ReadTypeCommand::ReadTypeNameCommand],
-            }
-            .execute(&*g)
-            .expect("r");
-            match r {
-                crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
-                    assert!(matches!(&results[0], ReadTypeCommandOutput::ReadTypePortsFullCommand { .. }));
-                    assert!(matches!(&results[1], ReadTypeCommandOutput::ReadTypeNameCommand { name } if name == "T0"));
-                }
-                _ => panic!(),
-            }
-        }
-    }
-}
-
-#[cfg(all(test, target_arch = "wasm32"))]
-mod wasm_handle_tests {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    use wasm_bindgen::closure::Closure;
-    use wasm_bindgen::JsCast;
-    use wasm_bindgen_test::*;
-
-    use crate::kit_graph::KitGraph;
-    use crate::wasm::KitStoreHandle;
-
-    #[wasm_bindgen_test]
-    fn kit_store_handle_create_roundtrips_snapshot() {
-        let kit = KitGraph::new("wasm-kit-test");
-        let dto = kit.to_full_dto();
-        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
-        let snap = h.snapshot().expect("snapshot");
-        let parsed: serde_json::Value = serde_wasm_bindgen::from_value(snap).unwrap();
-        assert_eq!(parsed["name"], "wasm-kit-test");
-    }
-
-    #[wasm_bindgen_test(async)]
-    async fn kit_graphql_query_kit_store_name() {
-        crate::wasm::boot();
-        let kit = KitGraph::new("wasm-gql-name");
-        let dto = kit.to_full_dto();
-        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
-
-        let captured: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
-        let cap2 = captured.clone();
-        let closure = Closure::wrap(Box::new(move |line: wasm_bindgen::JsValue| {
-            if let Some(s) = line.as_string() {
-                cap2.borrow_mut().push(s);
-            }
-        }) as Box<dyn FnMut(wasm_bindgen::JsValue)>);
-
-        let req = r#"{"query":"query { kitStore { name } }"}"#;
-        let prom = h.execute(req, closure.as_ref().unchecked_ref());
-        closure.forget();
-        wasm_bindgen_futures::JsFuture::from(prom)
-            .await
-            .expect("graphql execute future");
-
-        let lines = captured.borrow();
-        assert!(!lines.is_empty(), "expected GraphQL stream chunk(s): {:?}", &*lines);
-        let mut saw = false;
-        for line in lines.iter() {
-            let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
-                continue;
-            };
-            if v["data"]["kitStore"]["name"] == "wasm-gql-name" {
-                saw = true;
-                break;
-            }
-        }
-        assert!(saw, "expected kitStore.name in responses: {:?}", &*lines);
-    }
-}
-
-pub use attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
-pub use author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
-pub use benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
-pub use change_command::{
-    ChangeAttributeCommand, ChangeConnectionCommand, ChangeConnectorCommand, ChangeDesignCommand, ChangeGroupCommand, ChangeKitCommand, ChangeLayerCommand, ChangePieceCommand, ChangePortCommand, ChangePropCommand, ChangeRepresentationCommand,
-    ChangeStatCommand, ChangeTypeCommand,
-};
-pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
-pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
-pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
-pub use diff::{DesignChange, DesignDiff};
-pub use error::{Result, SemioError, SetError, SetResult};
-pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
-pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
-pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
-pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
-pub use hash::{Cache, HashWriter};
-pub use id::Id;
-pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
-pub use kit_graph::KitGraph;
-pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitGraphRef, KitGraphWeak};
-#[cfg(not(target_arch = "wasm32"))]
-pub use kit_conflict_registry::ConflictRegistry;
-pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
-pub use kit_change::{KitChange, KitChangeKind};
-pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
-pub use kit_diff::KitDiff;
-pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
-pub use kit_session::{Session, SessionCommand, SessionCommandResult};
-pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};
-pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
-pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak};
-pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak};
-pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
-pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef, QualityStoreWeak};
-pub use read::{
-    DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand,
-    ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand, ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput,
-    ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand, ReadFolderCommandOutput, ReadGroupCommand,
-    ReadGroupCommandOutput, ReadKitCommand, ReadKitCommandOutput, ReadLayerCommand, ReadLayerCommandOutput, ReadLocationCommand, ReadLocationCommandOutput, ReadPieceCommand, ReadPieceCommandOutput, ReadPortCommand,
-    ReadPortCommandOutput, ReadPropCommand, ReadPropCommandOutput, ReadQualityCommand, ReadQualityCommandOutput, ReadRepresentationCommand, ReadRepresentationCommandOutput, ReadSideCommand, ReadSideCommandOutput,
-    ReadStatCommand, ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
-};
-pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
-pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak};
-pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
-pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
-pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};
+            le

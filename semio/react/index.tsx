@@ -67,10 +67,10 @@ export type {
 	KitFileState,
 	KitBinaryStore,
 	KitStoreExecuteResult,
-	BackboneConfig as KitStoreWireBackboneConfig,
-	BackboneStatusDto as KitStoreWireBackboneStatus,
-	ConflictResolution as KitStoreWireConflictResolution,
-	KitConflict as KitStoreWireKitConflict,
+	BackboneConfig,
+	BackboneStatusDto,
+	ConflictResolution,
+	KitConflict,
 } from "@semio/js";
 
 // #region ⚛️Types

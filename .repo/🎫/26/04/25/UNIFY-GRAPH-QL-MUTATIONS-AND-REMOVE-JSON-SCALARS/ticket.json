@@ -1,0 +1,10 @@
+{
+  "title": "Unify GraphQL Mutations and Remove JSON Scalars",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor semio/graphql so the schema uses explicit GraphQL kinds instead of JSON primitives, replace the fragmented mutation surface with a clean nested mutation that batches arbitrary commands without repeating shared identifiers, and adjust semio/rs plus semio/js to match. Validate with relevant tests and runtime-facing checks.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9cf2a9e5cd944590ad735fef4ed65d5a"
+  ]
+}

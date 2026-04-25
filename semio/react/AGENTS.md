@@ -16,13 +16,13 @@ bundle:
 These hooks call into `@semio/js` **`KitStoreClient`** methods that forward to **`KitStoreHandle.execute`** (and related WASM APIs). They report failures via hook-local `lastError` and **`pushSetRejection`** on the kit runtime (same path as schema write errors).
 
 - **`useBackboneStatus(pollMs?)`**: polls `backboneStatus`; `refresh()` for manual updates.
-- **`useAttachBackbone()`**: `{ attach, detach, pending, lastError }` — `attach(cfg)` uses `KitStoreWireBackboneConfig`.
+- **`useAttachBackbone()`**: `{ attach, detach, pending, lastError }` — `attach(cfg)` uses `BackboneConfig`.
 - **`useDetachBackbone()`**: `{ detach, pending, lastError }` only.
 - **`useListConflicts()`**: `{ conflicts, refresh, pending, lastError }`.
-- **`useResolveConflict()`**: `{ resolve(id, strategy), pending, lastError }` with `KitStoreWireConflictResolution`.
+- **`useResolveConflict()`**: `{ resolve(id, strategy), pending, lastError }` with `ConflictResolution`.
 - **`useSyncNow()`**: `{ sync, pending, lastError }`.
 
-Re-exported wire types: `KitStoreWireBackboneConfig`, `KitStoreWireConflictResolution`, `KitStoreWireBackboneStatus`, `KitStoreWireKitConflict`, `KitStoreExecuteResult` (from `@semio/js`).
+Re-exported wire types: `BackboneConfig`, `ConflictResolution`, `BackboneStatusDto`, `KitConflict`, `KitStoreExecuteResult` (from `@semio/js`).
 
 Per-kit UI is wrapped in **`KitScope`**. The **persistence** shape passed when opening a kit is **`KitBackboneConfig`**. Entity panels use **`DesignScope`**, **`PieceScope`**, **`TypeScope`**, and the other `*Scope` components.
 

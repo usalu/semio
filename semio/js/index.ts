@@ -8163,9 +8163,9 @@ export interface Backbone {
 }
 
 /**
- * ­ƒºáDevKitBackbone persists KitImpl changes to a single JSON file.
+ * ­ƒºáDevBackbone persists KitImpl changes to a single JSON file.
  */
-export class DevKitBackbone implements Backbone {
+export class DevBackbone implements Backbone {
   constructor(private filePath: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.filePath;
@@ -8173,9 +8173,9 @@ export class DevKitBackbone implements Backbone {
 }
 
 /**
- * ­ƒôüLocalKitBackbone persists KitImpl to folder structure with assets.
+ * ­ƒôüLocalBackbone persists KitImpl to folder structure with assets.
  */
-export class LocalKitBackbone implements Backbone {
+export class LocalBackbone implements Backbone {
   constructor(private folderPath: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.folderPath;
@@ -8183,7 +8183,7 @@ export class LocalKitBackbone implements Backbone {
 }
 
 /**
- * ­ƒîÉRemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
+ * ­ƒîÉRemoteBackbone syncs KitImpl changes to remote hub via WebSocket.
  */
 export class RemoteBackbone implements Backbone {
   constructor(private websocketUrl: string) { }
@@ -8307,7 +8307,7 @@ export const KitWireDtoSchema = z.object({
   types: z.array(z.any()),
   designs: z.array(z.any()),
 });
-export type KitDTO = z.infer<typeof KitWireDtoSchema>;
+export type KitWireDto = z.infer<typeof KitWireDtoSchema>;
 
 export interface KitSelection {
   types: KitEntityTypeId[];
@@ -8328,7 +8328,7 @@ export const KitInteractionWireSchema = z.object({
     designs: z.array(z.string()),
   }),
 });
-export type KitInteractionDTO = z.infer<typeof KitInteractionWireSchema>;
+export type KitInteractionDto = z.infer<typeof KitInteractionWireSchema>;
 
 export type InteractionStatus = TransactionStatus;
 
@@ -8389,8 +8389,8 @@ export interface KitBackbone {
   readonly kind: "local" | "dev" | "remote";
   open(input: { kitId: KitEntityUUID; sink: BackboneSink; options?: unknown }): Promise<void>;
   close(): Promise<void>;
-  importSnapshot(dto: KitDTO): Promise<void>;
-  exportSnapshot(): Promise<KitDTO>;
+  importSnapshot(dto: KitWireDto): Promise<void>;
+  exportSnapshot(): Promise<KitWireDto>;
   submitCommittedChange(change: KitChange): Promise<void>;
 }
 
@@ -11882,7 +11882,7 @@ function graphKitChangeFromLedger(c: KitChange): KitGraphChange {
 /** @alias {@link id} ÔÇö uuid v7 strings for {@link KitEntity} interactions. */
 export { id as uuidv7 };
 
-export function emptyKitWireDto(): KitDTO {
+export function emptyKitWireDto(): KitWireDto {
   const now = new Date().toISOString();
   return {
     uuid: id(),
@@ -11900,10 +11900,10 @@ export function emptyKitWireDto(): KitDTO {
     attributes: [],
     createdAt: now,
     updatedAt: now,
-  } as unknown as KitDTO;
+  } as unknown as KitWireDto;
 }
 
-function kitDataFromWireDto(dto: KitDTO): KitData {
+function kitDataFromWireDto(dto: KitWireDto): KitData {
   const d = dto as Record<string, unknown>;
   const merged = {
     ...d,
@@ -12282,7 +12282,7 @@ export class KitEntity implements SynchronizedKit {
   private readonly _seenLedgerIds = new Set<ChangeId>();
   private readonly _backboneSink: BackboneSink;
 
-  constructor(input: { dto: KitDTO; backbone?: KitBackbone }) {
+  constructor(input: { dto: KitWireDto; backbone?: KitBackbone }) {
     this._kitBackbone = input.backbone;
     this._bridge.wire(this);
     this.#inner = new KitImpl(kitDataFromWireDto(input.dto), this._bridge);
@@ -12321,7 +12321,7 @@ export class KitEntity implements SynchronizedKit {
     return this._kitBackbone;
   }
 
-  static async create(input: { dto?: KitDTO; backbone?: KitBackbone; openOptions?: unknown }): Promise<KitEntity> {
+  static async create(input: { dto?: KitWireDto; backbone?: KitBackbone; openOptions?: unknown }): Promise<KitEntity> {
     const dto = input.dto ?? (input.backbone ? await input.backbone.exportSnapshot() : emptyKitWireDto());
     const kit = new KitEntity({ dto, backbone: input.backbone });
     if (input.backbone) {
@@ -12343,13 +12343,13 @@ export class KitEntity implements SynchronizedKit {
 
   async importKit(kit: KitWire): Promise<this> {
     this._assertKitEntityReady();
-    const data = kitDataFromWireDto(kit as KitDTO);
+    const data = kitDataFromWireDto(kit as KitWireDto);
     this.#inner = new KitImpl(data, this._bridge);
     this._clearKitEntityCaches();
     this._indexes.rebuild(this);
     this._caches.rebuild(this, this._indexes);
     if (this._kitBackbone) {
-      await this._kitBackbone.importSnapshot(kit as KitDTO);
+      await this._kitBackbone.importSnapshot(kit as KitWireDto);
     }
     return this;
   }
@@ -19729,7 +19729,7 @@ export type BackboneConfig =
 export type ConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
 
 /** Payload inside `KitStoreCommandResult::BackboneStatus` (`tip` is checkpoint id when present). */
-export type KitStoreWireBackboneStatus = {
+export type BackboneStatusDto = {
   attached: boolean;
   kind?: string | null;
   tip?: string | null;
@@ -19744,7 +19744,7 @@ export type KitConflict = {
   createdAt: string;
 };
 
-function parseKitStoreBackboneStatusResult(raw: unknown): KitStoreWireBackboneStatus {
+function parseBackboneStatusDtoResult(raw: unknown): BackboneStatusDto {
   if (raw == null || typeof raw !== "object") throw new Error("backboneStatus: unexpected result");
   const o = raw as Record<string, unknown>;
   const inner = o.backboneStatus as Record<string, unknown> | undefined;
@@ -19756,7 +19756,7 @@ function parseKitStoreBackboneStatusResult(raw: unknown): KitStoreWireBackboneSt
   };
 }
 
-function parseKitStoreListConflictsResult(raw: unknown): KitConflict[] {
+function parseKitConflictsResult(raw: unknown): KitConflict[] {
   if (raw == null || typeof raw !== "object") throw new Error("listConflicts: unexpected result");
   const o = raw as Record<string, unknown>;
   const inner = o.listConflicts as { items?: unknown[] } | undefined;
@@ -19863,7 +19863,7 @@ export interface KitStoreClient {
   materializeAt(id: string): Promise<any>;
   attachBackbone(cfg: BackboneConfig): Promise<SetResult>;
   detachBackbone(): Promise<SetResult>;
-  backboneStatus(): Promise<KitStoreWireBackboneStatus>;
+  backboneStatus(): Promise<BackboneStatusDto>;
   listConflicts(): Promise<KitConflict[]>;
   resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult>;
   syncNow(): Promise<SetResult>;
@@ -19988,14 +19988,15 @@ export class FallbackKitStoreClient implements KitStoreClient {
         try {
           const plan = kitGraphqlFirstData(
             await kitGraphqlRun(this.gql(), {
-              query: `query($kind: String!, $id: String!, $field: String!, $value: JSON!) {
-                kitStore { changeKitCommandsForFieldPatch(kind: $kind, id: $id, field: $field, value: $value) }
+              query: `query($kind: String!, $id: String!, $field: String!, $valueJson: String!) {
+                kitStore { changeKitCommandsForFieldPatchValueJson(kind: $kind, id: $id, field: $field, valueJson: $valueJson) }
               }`,
-              variables: { kind, id, field, value },
+              variables: { kind, id, field, valueJson: JSON.stringify(value) },
             }),
-          ) as { kitStore?: { changeKitCommandsForFieldPatch?: unknown } };
-          const cmds = plan.kitStore?.changeKitCommandsForFieldPatch;
-          if (cmds == null) throw new Error("changeKitCommandsForFieldPatch");
+          ) as { kitStore?: { changeKitCommandsForFieldPatchValueJson?: unknown } };
+          const raw = plan.kitStore?.changeKitCommandsForFieldPatchValueJson;
+          if (raw == null) throw new Error("changeKitCommandsForFieldPatch");
+          const cmds = unwrapKitGraphqlJsonField(raw);
           return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
@@ -20010,14 +20011,15 @@ export class FallbackKitStoreClient implements KitStoreClient {
         try {
           const plan = kitGraphqlFirstData(
             await kitGraphqlRun(this.gql(), {
-              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $dto: JSON!) {
-                kitStore { changeKitCommandsForAddChild(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, dto: $dto) }
+              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $dtoJson: String!) {
+                kitStore { changeKitCommandsForAddChildDtoJson(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, dtoJson: $dtoJson) }
               }`,
-              variables: { parentKind, parentId, childKind, dto },
+              variables: { parentKind, parentId, childKind, dtoJson: JSON.stringify(dto) },
             }),
-          ) as { kitStore?: { changeKitCommandsForAddChild?: unknown } };
-          const cmds = plan.kitStore?.changeKitCommandsForAddChild;
-          if (cmds == null) throw new Error("changeKitCommandsForAddChild");
+          ) as { kitStore?: { changeKitCommandsForAddChildDtoJson?: unknown } };
+          const raw = plan.kitStore?.changeKitCommandsForAddChildDtoJson;
+          if (raw == null) throw new Error("changeKitCommandsForAddChild");
+          const cmds = unwrapKitGraphqlJsonField(raw);
           return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
@@ -20038,8 +20040,9 @@ export class FallbackKitStoreClient implements KitStoreClient {
               variables: { parentKind, parentId, childKind, childId },
             }),
           ) as { kitStore?: { changeKitCommandsForRemoveChild?: unknown } };
-          const cmds = plan.kitStore?.changeKitCommandsForRemoveChild;
-          if (cmds == null) throw new Error("changeKitCommandsForRemoveChild");
+          const raw = plan.kitStore?.changeKitCommandsForRemoveChild;
+          if (raw == null) throw new Error("changeKitCommandsForRemoveChild");
+          const cmds = unwrapKitGraphqlJsonField(raw);
           return await kitGraphqlChangeKitCommands(this.gql(), cmds);
         } catch (e) {
           return { ok: false, error: normalizeWasmThrownKitError(e) };
@@ -20168,14 +20171,8 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return this.settleMutateAndRefresh(
       kitGraphqlMutationSettle(this.gql(), {
         query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) {
-          createConnectedPiece(
-            designId: $designId
-            parentPiece: $parentPiece
-            parentPort: $parentPort
-            childType: $childType
-            childPort: $childPort
-          )
-        }`.replace(/\n/g, " "),
+          createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort)
+        }`,
         variables: { designId, parentPiece, parentPort, childType, childPort },
       }),
     );
@@ -20342,16 +20339,33 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async vcsState(): Promise<any> {
-    return await withTimeout(Promise.resolve(this.handle.vcsState()), this.timeoutMs, "timeout");
+    const d = kitGraphqlFirstData(
+      await withTimeout(kitGraphqlRun(this.gql(), { query: `query { kitStore { vcsStateJson } }` }), this.timeoutMs, "timeout"),
+    ) as { kitStore?: { vcsStateJson?: unknown } };
+    return d.kitStore?.vcsStateJson;
   }
 
   async theKitDto(): Promise<any> {
-    return await withTimeout(Promise.resolve(this.handle.theKitDto()), this.timeoutMs, "timeout");
+    const d = kitGraphqlFirstData(
+      await withTimeout(
+        kitGraphqlRun(this.gql(), { query: `query { kitStore { theKitDto } }` }),
+        this.timeoutMs,
+        "timeout",
+      ),
+    ) as { kitStore?: { theKitDto?: unknown } };
+    return d.kitStore?.theKitDto;
   }
 
   async materializeAt(id: string): Promise<any> {
-    const at = id.trim() === "" ? undefined : id;
-    return await withTimeout(Promise.resolve(this.handle.materializeAt(at)), this.timeoutMs, "timeout");
+    const checkpointId = id.trim() === "" ? null : id;
+    const d = kitGraphqlFirstData(
+      await withTimeout(
+        kitGraphqlRun(this.gql(), { query: `query($at: String) { kitStore { materializeAt(checkpointId: $at) } }`, variables: { at: checkpointId } }),
+        this.timeoutMs,
+        "timeout",
+      ),
+    ) as { kitStore?: { materializeAt?: unknown } };
+    return d.kitStore?.materializeAt;
   }
 
   async attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
@@ -20378,16 +20392,16 @@ export class FallbackKitStoreClient implements KitStoreClient {
     return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } };
   }
 
-  async backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+  async backboneStatus(): Promise<BackboneStatusDto> {
     const r = await this.execute({ backboneStatus: null });
     if (!r.ok) throw new Error(r.error.message);
-    return parseKitStoreBackboneStatusResult(r.result);
+    return parseBackboneStatusDtoResult(r.result);
   }
 
   async listConflicts(): Promise<KitConflict[]> {
     const r = await this.execute({ listConflicts: null });
     if (!r.ok) throw new Error(r.error.message);
-    return parseKitStoreListConflictsResult(r.result);
+    return parseKitConflictsResult(r.result);
   }
 
   async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
@@ -20997,16 +21011,16 @@ export class WorkerKitStoreClient implements KitStoreClient {
     return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } };
   }
 
-  async backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+  async backboneStatus(): Promise<BackboneStatusDto> {
     const r = await this.execute({ backboneStatus: null });
     if (!r.ok) throw new Error(r.error.message);
-    return parseKitStoreBackboneStatusResult(r.result);
+    return parseBackboneStatusDtoResult(r.result);
   }
 
   async listConflicts(): Promise<KitConflict[]> {
     const r = await this.execute({ listConflicts: null });
     if (!r.ok) throw new Error(r.error.message);
-    return parseKitStoreListConflictsResult(r.result);
+    return parseKitConflictsResult(r.result);
   }
 
   async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
@@ -21303,7 +21317,7 @@ export class InMemoryKitStore implements UndoableKitStore {
     });
   }
 
-  backboneStatus(): Promise<KitStoreWireBackboneStatus> {
+  backboneStatus(): Promise<BackboneStatusDto> {
     return Promise.reject(new Error("InMemoryKitStore.backboneStatus requires a WASM KitStoreHandle-backed client"));
   }
 
@@ -21773,6 +21787,36 @@ if (shouldRunEmbeddedJsTests) {
   };
 
   describe("Kit object representation (spec API)", () => {
+    it("exports rust-aligned dto and backbone names", () => {
+      expect(typeof DevBackbone).toBe("function");
+      expect(typeof LocalBackbone).toBe("function");
+      expect(typeof RemoteBackbone).toBe("function");
+
+      const backboneConfig: BackboneConfig = { dev: { path: "example.json" } };
+      const conflictResolution: ConflictResolution = { dropWip: null };
+      const backboneStatus: BackboneStatusDto = { attached: false, kind: null, tip: null };
+      const kitConflict: KitConflict = {
+        id: "conflict-1",
+        wipCheckpoint: null,
+        backboneTip: null,
+        reason: "reason",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      };
+      const kitWireDto: KitWireDto = emptyKitWireDto();
+      const kitInteractionDto: KitInteractionDto = {
+        uuid: "interaction-1",
+        label: "Test",
+        selection: { types: [], designs: [] },
+      };
+
+      expect(backboneConfig.dev?.path).toBe("example.json");
+      expect(conflictResolution.dropWip).toBeNull();
+      expect(backboneStatus.attached).toBe(false);
+      expect(kitConflict.id).toBe("conflict-1");
+      expect(kitWireDto.name).toBe("Untitled Kit");
+      expect(kitInteractionDto.selection.types).toEqual([]);
+    });
+
     it("Kit(), transactions.start (uuid v7), setActiveTransaction, findDesign/findPiece objects, connections(), piece ops, history undo", () => {
       const kit = Kit(MetabolismKit as KitData);
 
@@ -30252,6 +30296,18 @@ export async function kitGraphqlMutationSettle(
   return await settleSetPromise(Promise.resolve(v));
 }
 
+/** `JSON` scalars from `async-graphql` may be parsed objects or JSON strings; normalize for `changeKitCommands`. */
+function unwrapKitGraphqlJsonField<T>(v: T): T {
+  if (typeof v === "string") {
+    try {
+      return JSON.parse(v) as T;
+    } catch {
+      return v;
+    }
+  }
+  return v;
+}
+
 /** Apply a batch of `ChangeKitCommand` JSON values on the live graph (actor queue). */
 export async function kitGraphqlChangeKitCommands(handle: KitGraphqlHandle, commands: unknown): Promise<SetResult> {
   const root = kitGraphqlFirstData(
@@ -31005,9 +31061,19 @@ export const kitWorkerApi = {
     return settle(
       (async () => {
         try {
-          const cmds = kitWorkerHandle.changeKitCommandsForFieldPatch(kind, id, field, value);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const h = kitWorkerGqlHandle();
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(h, {
+              query: `query($kind: String!, $id: String!, $field: String!, $valueJson: String!) {
+                kitStore { changeKitCommandsForFieldPatchValueJson(kind: $kind, id: $id, field: $field, valueJson: $valueJson) }
+              }`,
+              variables: { kind, id, field, valueJson: JSON.stringify(value) },
+            }),
+          ) as { kitStore?: { changeKitCommandsForFieldPatchValueJson?: unknown } };
+          const raw = plan.kitStore?.changeKitCommandsForFieldPatchValueJson;
+          if (raw == null) throw new Error("changeKitCommandsForFieldPatch");
+          const cmds = unwrapKitGraphqlJsonField(raw);
+          return await kitGraphqlChangeKitCommands(h, cmds);
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
         }
@@ -31019,9 +31085,19 @@ export const kitWorkerApi = {
     return settle(
       (async () => {
         try {
-          const cmds = kitWorkerHandle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const h = kitWorkerGqlHandle();
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(h, {
+              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $dtoJson: String!) {
+                kitStore { changeKitCommandsForAddChildDtoJson(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, dtoJson: $dtoJson) }
+              }`,
+              variables: { parentKind, parentId, childKind, dtoJson: JSON.stringify(dto) },
+            }),
+          ) as { kitStore?: { changeKitCommandsForAddChildDtoJson?: unknown } };
+          const raw = plan.kitStore?.changeKitCommandsForAddChildDtoJson;
+          if (raw == null) throw new Error("changeKitCommandsForAddChild");
+          const cmds = unwrapKitGraphqlJsonField(raw);
+          return await kitGraphqlChangeKitCommands(h, cmds);
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
         }
@@ -31033,9 +31109,19 @@ export const kitWorkerApi = {
     return settle(
       (async () => {
         try {
-          const cmds = kitWorkerHandle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId);
-          await kitWorkerHandle.executeChangeKitCommands(cmds);
-          return { ok: true };
+          const h = kitWorkerGqlHandle();
+          const plan = kitGraphqlFirstData(
+            await kitGraphqlRun(h, {
+              query: `query($parentKind: String!, $parentId: String!, $childKind: String!, $childId: String!) {
+                kitStore { changeKitCommandsForRemoveChild(parentKind: $parentKind, parentId: $parentId, childKind: $childKind, childId: $childId) }
+              }`,
+              variables: { parentKind, parentId, childKind, childId },
+            }),
+          ) as { kitStore?: { changeKitCommandsForRemoveChild?: unknown } };
+          const raw = plan.kitStore?.changeKitCommandsForRemoveChild;
+          if (raw == null) throw new Error("changeKitCommandsForRemoveChild");
+          const cmds = unwrapKitGraphqlJsonField(raw);
+          return await kitGraphqlChangeKitCommands(h, cmds);
         } catch (e) {
           return { ok: false, error: { kind: "Internal", message: String(e) } };
         }
@@ -31044,59 +31130,123 @@ export const kitWorkerApi = {
   },
   applyDesignDiff(designId: string, diff: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.applyDesignDiff(designId, diff)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $diff: JSON!) { applyDesignDiff(designId: $designId, diff: $diff) }`,
+        variables: { designId, diff },
+      }),
+    );
   },
   applyKitDiff(diff: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.applyKitDiff(diff)));
+    return settle(kitGraphqlMutationSettle(kitWorkerGqlHandle(), { query: `mutation($diff: JSON!) { applyKitDiff(diff: $diff) }`, variables: { diff } }));
   },
   clusterPieces(designId: string, pieceIds: string[], clusterName: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.clusterPieces(designId, pieceIds, clusterName)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`,
+        variables: { designId, pieceIds, clusterName },
+      }),
+    );
   },
   dragPieces(designId: string, pieceIds: string[], du: number, dv: number) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.dragPieces(designId, pieceIds, du, dv)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`,
+        variables: { designId, pieceIds, du, dv },
+      }),
+    );
   },
   movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.movePieces(designId, pieceIds, gap, shift, rise)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`,
+        variables: { designId, pieceIds, gap, shift, rise },
+      }),
+    );
   },
   fixPieces(designId: string, pieceIds: string[]) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.fixPieces(designId, pieceIds)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`,
+        variables: { designId, pieceIds },
+      }),
+    );
   },
   flattenDesign(designId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.flattenDesign(designId)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } }),
+    );
   },
   expandDesign(parentDesignId: string, nestedDesignId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.expandDesign(parentDesignId, nestedDesignId)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`,
+        variables: { parentDesignId, nestedDesignId },
+      }),
+    );
   },
   deleteConnection(designId: string, connectionId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.deleteConnection(designId, connectionId)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`,
+        variables: { designId, connectionId },
+      }),
+    );
   },
   changePieceType(designId: string, pieceId: string, newTypeId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.changePieceType(designId, pieceId, newTypeId)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`,
+        variables: { designId, pieceId, newTypeId },
+      }),
+    );
   },
   pasteDesignSelection(designId: string, selection: unknown, plane: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.pasteDesignSelection(designId, selection, plane)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`,
+        variables: { designId, selection, plane: plane == null ? null : plane },
+      }),
+    );
   },
   createHangingPieces(designId: string, typeIds: string[], plane: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createHangingPieces(designId, typeIds, plane)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`,
+        variables: { designId, typeIds, plane },
+      }),
+    );
   },
   createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) {
+          createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort)
+        }`,
+        variables: { designId, parentPiece, parentPort, childType, childPort },
+      }),
+    );
   },
   createFixedPiece(designId: string, typeId: string, plane: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.createFixedPiece(designId, typeId, plane)));
+    return settle(
+      kitGraphqlMutationSettle(kitWorkerGqlHandle(), {
+        query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`,
+        variables: { designId, typeId, plane },
+      }),
+    );
   },
   getPiecesMetadata(designId: string) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
@@ -31180,19 +31330,21 @@ export const kitWorkerApi = {
   },
   undo() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.undo()));
+    return settle(kitGraphqlMutationSettle(kitWorkerGqlHandle(), { query: `mutation { undo }` }));
   },
   redo() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(kitWorkerHandle.redo()));
+    return settle(kitGraphqlMutationSettle(kitWorkerGqlHandle(), { query: `mutation { redo }` }));
   },
-  canUndo() {
+  async canUndo() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.canUndo();
+    const d = kitGraphqlFirstData(await kitGraphqlRun(kitWorkerGqlHandle(), { query: `query { kitStore { canUndo } }` })) as { kitStore?: { canUndo?: boolean } };
+    return d.kitStore?.canUndo === true;
   },
-  canRedo() {
+  async canRedo() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.canRedo();
+    const d = kitGraphqlFirstData(await kitGraphqlRun(kitWorkerGqlHandle(), { query: `query { kitStore { canRedo } }` })) as { kitStore?: { canRedo?: boolean } };
+    return d.kitStore?.canRedo === true;
   },
   subscribe(cb: (ev: unknown) => void) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
@@ -31233,19 +31385,29 @@ export const kitWorkerApi = {
     return await kitGraphqlExecuteRead(kitWorkerGqlHandle(), cmds);
   },
 
-  vcsState() {
+  async vcsState() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.vcsState();
+    const d = kitGraphqlFirstData(await kitGraphqlRun(kitWorkerGqlHandle(), { query: `query { kitStore { vcsStateJson } }` })) as { kitStore?: { vcsStateJson?: unknown } };
+    return d.kitStore?.vcsStateJson;
   },
 
-  theKitDto() {
+  async theKitDto() {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.theKitDto();
+    const d = kitGraphqlFirstData(await kitGraphqlRun(kitWorkerGqlHandle(), { query: `query { kitStore { theKitDto } }` })) as { kitStore?: { theKitDto?: unknown } };
+    return d.kitStore?.theKitDto;
   },
 
-  materializeAt(at: unknown) {
+  async materializeAt(at: unknown) {
     if (!kitWorkerHandle) throw new Error("KitStoreHandle not initialized");
-    return kitWorkerHandle.materializeAt(at);
+    const s = at == null ? null : String(at);
+    const checkpointId = s != null && s.trim() === "" ? null : s;
+    const d = kitGraphqlFirstData(
+      await kitGraphqlRun(kitWorkerGqlHandle(), {
+        query: `query($checkpointId: String) { kitStore { materializeAt(checkpointId: $checkpointId) } }`,
+        variables: { checkpointId },
+      }),
+    ) as { kitStore?: { materializeAt?: unknown } };
+    return d.kitStore?.materializeAt;
   },
 
   attachBackbone(config: unknown) {
