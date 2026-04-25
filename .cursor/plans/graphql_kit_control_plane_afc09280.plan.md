@@ -19,7 +19,7 @@ todos:
    status: completed
  - id: downstream-alignment
    content: Rewire semio/react, semio/sketchpad, and semio/algorithms to consume the JS GraphQL store surface only.
-   status: pending
+   status: in_progress
  - id: verification
    content: Extend existing tests and run Rust, wasm, JS, React, sketchpad, and algorithm verification commands.
    status: in_progress

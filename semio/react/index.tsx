@@ -1075,6 +1075,227 @@ function kitReadonlyTriad<T>(value: T): HookTriad<T> {
 	return [value, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
 }
 
+const EMPTY_KIT_TYPE_IDS: readonly string[] = [];
+const EMPTY_KIT_TYPES_METADATA: readonly unknown[] = [];
+const EMPTY_KIT_DESIGN_IDS: readonly string[] = [];
+const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
+
+/** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); `useSyncExternalStore` on kit client stream. */
+export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
+	const runtime = useKitRuntime();
+	const resolved = useResolvedKitIdentifier(explicitKitId);
+	const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_TYPE_IDS as readonly string[], pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+				cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_TYPE_IDS, pending: 0 };
+				onChange();
+				return () => {};
+			}
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.readTypeIds()
+					.then((ids) => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: ids,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					})
+					.catch(() => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: EMPTY_KIT_TYPE_IDS,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					});
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, runtime.kitId, resolved],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+	const status: WriteStatus =
+		!runtime.kitClient || !resolved || runtime.kitId !== resolved
+			? { kind: "readonly", pending: 0 }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
+				: { kind: "idle", pending: 0 };
+	return [snap.value, noopAsyncSet, status] as const;
+}
+
+/** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`). */
+export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
+	const runtime = useKitRuntime();
+	const resolved = useResolvedKitIdentifier(explicitKitId);
+	const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_TYPES_METADATA as readonly unknown[], pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+				cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_TYPES_METADATA, pending: 0 };
+				onChange();
+				return () => {};
+			}
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.readTypesMetadata()
+					.then((rows) => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: rows,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					})
+					.catch(() => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: EMPTY_KIT_TYPES_METADATA,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					});
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, runtime.kitId, resolved],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+	const status: WriteStatus =
+		!runtime.kitClient || !resolved || runtime.kitId !== resolved
+			? { kind: "readonly", pending: 0 }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
+				: { kind: "idle", pending: 0 };
+	return [snap.value, noopAsyncSet, status] as const;
+}
+
+/** @emoji 📌 Design ids from live kit graph (`ReadKitDesignIdsCommand`); `useSyncExternalStore` on kit client stream. */
+export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string[]> {
+	const runtime = useKitRuntime();
+	const resolved = useResolvedKitIdentifier(explicitKitId);
+	const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_DESIGN_IDS as readonly string[], pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+				cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_DESIGN_IDS, pending: 0 };
+				onChange();
+				return () => {};
+			}
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.readDesignIds()
+					.then((ids) => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: ids,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					})
+					.catch(() => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: EMPTY_KIT_DESIGN_IDS,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					});
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, runtime.kitId, resolved],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+	const status: WriteStatus =
+		!runtime.kitClient || !resolved || runtime.kitId !== resolved
+			? { kind: "readonly", pending: 0 }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
+				: { kind: "idle", pending: 0 };
+	return [snap.value, noopAsyncSet, status] as const;
+}
+
+/** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`). */
+export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
+	const runtime = useKitRuntime();
+	const resolved = useResolvedKitIdentifier(explicitKitId);
+	const cellRef = React.useRef({ version: 0, value: EMPTY_KIT_DESIGNS_METADATA as readonly unknown[], pending: 0 });
+	const subscribe = React.useCallback(
+		(onChange: () => void) => {
+			if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+				cellRef.current = { version: cellRef.current.version + 1, value: EMPTY_KIT_DESIGNS_METADATA, pending: 0 };
+				onChange();
+				return () => {};
+			}
+			const client = runtime.kitClient;
+			const run = () => {
+				const before = cellRef.current;
+				cellRef.current = { version: before.version + 1, value: before.value, pending: before.pending + 1 };
+				onChange();
+				void new LiveKitRoot(client)
+					.readDesignsMetadata()
+					.then((rows) => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: rows,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					})
+					.catch(() => {
+						const cur = cellRef.current;
+						cellRef.current = {
+							version: cur.version + 1,
+							value: EMPTY_KIT_DESIGNS_METADATA,
+							pending: Math.max(0, cur.pending - 1),
+						};
+						onChange();
+					});
+			};
+			run();
+			return client.subscribe(run);
+		},
+		[runtime.kitClient, runtime.kitId, resolved],
+	);
+	const getSnap = React.useCallback(() => cellRef.current, []);
+	const snap = React.useSyncExternalStore(subscribe, getSnap, getSnap);
+	const status: WriteStatus =
+		!runtime.kitClient || !resolved || runtime.kitId !== resolved
+			? { kind: "readonly", pending: 0 }
+			: snap.pending > 0
+				? { kind: "pending", pending: snap.pending }
+				: { kind: "idle", pending: 0 };
+	return [snap.value, noopAsyncSet, status] as const;
+}
+
 /** @emoji 📌 Full kit store snapshot triad (read-only). */
 export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitStoreSnapshot | null> {
 	const snap = useKitStoreSnapshot(explicitKitId);

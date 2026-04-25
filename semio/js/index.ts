@@ -19,14 +19,6 @@ import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
-import type { ReadCommandBatch, ReadCommandBatchResult } from "./readCommandTypes";
-import {
-  kitGraphqlExecuteRead,
-  kitGraphqlExecuteStoreCommand,
-  kitGraphqlSubscribeLoop,
-  type KitGraphqlHandle,
-} from "./kitGraphLive";
-
 // #endregion Ôø®´©ÅImports
 
 // #region ­ƒÄ×´©ÅConstants
@@ -7185,17 +7177,17 @@ const detachPieceForLocalMutation = (p: Piece | PiecePlain): Piece => {
   const design = plain.design ?? (source.design?.id ? { id: source.design.id } : undefined);
   const plane = source.plane
     ? {
-        origin: { ...source.plane.origin },
-        xAxis: { ...source.plane.xAxis },
-        yAxis: { ...source.plane.yAxis },
-      }
+      origin: { ...source.plane.origin },
+      xAxis: { ...source.plane.xAxis },
+      yAxis: { ...source.plane.yAxis },
+    }
     : undefined;
   const mirrorPlane = source.mirrorPlane
     ? {
-        origin: { ...source.mirrorPlane.origin },
-        xAxis: { ...source.mirrorPlane.xAxis },
-        yAxis: { ...source.mirrorPlane.yAxis },
-      }
+      origin: { ...source.mirrorPlane.origin },
+      xAxis: { ...source.mirrorPlane.xAxis },
+      yAxis: { ...source.mirrorPlane.yAxis },
+    }
     : undefined;
   const attributesPlain = source.attributes?.map((a: any) =>
     typeof a.toPlain === "function" ? a.toPlain() : AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain),
@@ -8174,7 +8166,7 @@ export interface Backbone {
  * ­ƒºáDevKitBackbone persists KitImpl changes to a single JSON file.
  */
 export class DevKitBackbone implements Backbone {
-  constructor(private filePath: string) {}
+  constructor(private filePath: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.filePath;
   }
@@ -8184,7 +8176,7 @@ export class DevKitBackbone implements Backbone {
  * ­ƒôüLocalKitBackbone persists KitImpl to folder structure with assets.
  */
 export class LocalKitBackbone implements Backbone {
-  constructor(private folderPath: string) {}
+  constructor(private folderPath: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.folderPath;
   }
@@ -8194,7 +8186,7 @@ export class LocalKitBackbone implements Backbone {
  * ­ƒîÉRemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
  */
 export class RemoteKitBackbone implements Backbone {
-  constructor(private websocketUrl: string) {}
+  constructor(private websocketUrl: string) { }
   async changed(_change: KitGraphChange): Promise<void> {
     void this.websocketUrl;
   }
@@ -8429,7 +8421,7 @@ type KitRuntimeTransaction = {
  * Starts named open transactions ({@link KitImpl.beginTransaction}); returns uuid-v7 ids from {@link id}.
  */
 export class KitTransactionsCoordinator {
-  constructor(private readonly host: KitImpl) {}
+  constructor(private readonly host: KitImpl) { }
 
   start(label?: string): string {
     return this.host.beginTransaction(label).id;
@@ -8440,7 +8432,7 @@ export class KitTransactionsCoordinator {
  * Undo/redo within the kitÔÇÖs {@link KitImpl.setActiveTransaction active} open transaction.
  */
 export class KitActiveTransactionSurface {
-  constructor(private readonly host: KitImpl) {}
+  constructor(private readonly host: KitImpl) { }
 
   undo(): void {
     this.host.undoWithinTransaction(this.host.requireActiveTransactionId());
@@ -10316,10 +10308,10 @@ export class KitImpl {
 
     const rawIn = opts.inboundCommitted
       ? this.#normalizeInboundTypeRemovalsToTombstones(diff, {
-          deletedByUserId: opts.inboundActor?.actorId,
-          deletedByDisplayName: opts.inboundActor?.actorDisplayName,
-          deletedInChangeId: opts.inboundActor?.changeId,
-        })
+        deletedByUserId: opts.inboundActor?.actorId,
+        deletedByDisplayName: opts.inboundActor?.actorDisplayName,
+        deletedInChangeId: opts.inboundActor?.changeId,
+      })
       : diff;
     const normalized = DiffComposer.normalize(rawIn);
 
@@ -11529,7 +11521,7 @@ export type Kit = InstanceType<typeof KitImpl>;
  * Object-oriented entry for type rows on a {@link KitImpl} (replaces removed `*TypeToKit` / `findTypeInKit` helpers).
  */
 export class KitTypesOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addType(type, opts);
@@ -11556,7 +11548,7 @@ export class KitTypesOps {
  * Object-oriented entry for design rows on a {@link KitImpl}.
  */
 export class KitDesignsOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(design: Design, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addDesign(design, opts);
@@ -11591,7 +11583,7 @@ export class KitDesignsOps {
  * Object-oriented entry for port rows on a {@link KitImpl}.
  */
 export class KitFamiliesOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(family: Family, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addFamily(family, opts);
@@ -11618,7 +11610,7 @@ export class KitFamiliesOps {
  * Object-oriented entry for file rows on a {@link KitImpl}.
  */
 export class KitFilesOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(file: File, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addFile(file, opts);
@@ -11641,7 +11633,7 @@ export class KitFilesOps {
  * Object-oriented entry for tag rows on a {@link KitImpl}.
  */
 export class KitTagsOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(tag: Tag, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addTag(tag, opts);
@@ -11664,7 +11656,7 @@ export class KitTagsOps {
  * Object-oriented entry for concept rows on a {@link KitImpl}.
  */
 export class KitConceptsOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   add(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.addConcept(concept, opts);
@@ -11687,7 +11679,7 @@ export class KitConceptsOps {
  * Object-oriented entry for top-level kit attributes.
  */
 export class KitAttributesOps {
-  constructor(private readonly kit: KitImpl) {}
+  constructor(private readonly kit: KitImpl) { }
 
   set(attribute: Attribute, opts?: KitChangeOptions): KitGraphChange {
     return this.kit.setAttribute(attribute, opts);
@@ -11725,7 +11717,7 @@ export class Transaction {
     private readonly host: KitImpl,
     readonly id: string,
     readonly label?: string,
-  ) {}
+  ) { }
 
   get status(): TransactionStatus {
     return this.host._getTransactionStatus(this.id);
@@ -11831,12 +11823,12 @@ export interface SemanticCommand {
 
 export class FlattenDesignCommand implements SemanticCommand {
   readonly type = "design.flatten";
-  constructor(public readonly designId: KitEntityDesignId) {}
+  constructor(public readonly designId: KitEntityDesignId) { }
 }
 
 export class DeletePieceCommand implements SemanticCommand {
   readonly type = "piece.delete";
-  constructor(public readonly pieceId: KitEntityPieceId) {}
+  constructor(public readonly pieceId: KitEntityPieceId) { }
 }
 
 export class ChangePieceTypeCommand implements SemanticCommand {
@@ -11844,7 +11836,7 @@ export class ChangePieceTypeCommand implements SemanticCommand {
   constructor(
     public readonly pieceId: KitEntityPieceId,
     public readonly nextTypeId: KitEntityTypeId,
-  ) {}
+  ) { }
 }
 
 function validationReportFromGraph(v: KitDiffValidationResult): ValidationReport {
@@ -12054,12 +12046,12 @@ export function createLocalBackbone(input: { path: string }): KitBackbone {
     async open() {
       void input.path;
     },
-    async close() {},
-    async importSnapshot() {},
+    async close() { },
+    async importSnapshot() { },
     async exportSnapshot() {
       return emptyKitWireDto();
     },
-    async submitCommittedChange() {},
+    async submitCommittedChange() { },
   };
 }
 
@@ -12069,12 +12061,12 @@ export function createDevBackbone(input: { jsonFilePath: string }): KitBackbone 
     async open() {
       void input.jsonFilePath;
     },
-    async close() {},
-    async importSnapshot() {},
+    async close() { },
+    async importSnapshot() { },
     async exportSnapshot() {
       return emptyKitWireDto();
     },
-    async submitCommittedChange() {},
+    async submitCommittedChange() { },
   };
 }
 
@@ -12085,12 +12077,12 @@ export function createRemoteBackbone(input: { url: string; token?: string }): Ki
       void input.url;
       void input.token;
     },
-    async close() {},
-    async importSnapshot() {},
+    async close() { },
+    async importSnapshot() { },
     async exportSnapshot() {
       return emptyKitWireDto();
     },
-    async submitCommittedChange() {},
+    async submitCommittedChange() { },
   };
 }
 
@@ -12099,14 +12091,14 @@ export class KitInteractionEntity implements KitInteraction {
     public uuid: InteractionId,
     public label: string,
     public selection: KitSelection = { types: [], designs: [] },
-  ) {}
+  ) { }
 }
 
 export class KitEntityType {
   constructor(
     private readonly _host: KitEntity,
     private readonly _type: Type,
-  ) {}
+  ) { }
 
   get id(): KitEntityTypeId {
     return this._type.id;
@@ -12121,7 +12113,7 @@ export class KitEntityPiece {
   constructor(
     private readonly _host: KitEntity,
     private readonly _piece: Piece,
-  ) {}
+  ) { }
 
   get id(): KitEntityPieceId {
     return this._piece.id;
@@ -12146,7 +12138,7 @@ export class KitEntityDesign {
   constructor(
     private readonly _host: KitEntity,
     private readonly _design: Design,
-  ) {}
+  ) { }
 
   get id(): KitEntityDesignId {
     return this._design.id;
@@ -12168,7 +12160,7 @@ export class KitEntityDesign {
 }
 
 export class KitInteractionsApi {
-  constructor(private readonly _kit: KitEntity) {}
+  constructor(private readonly _kit: KitEntity) { }
 
   start(label: string): InteractionId {
     return this._kit._inner.beginTransaction(label).id;
@@ -12961,7 +12953,7 @@ export type SemioCommandKind = "DeletePiece" | "MovePiece" | "RenamePiece" | "Re
  * Prefer passing this (or the underlying `KitImpl`) by reference instead of cloning.
  **/
 export class KitDocument {
-  constructor(public readonly root: KitImpl) {}
+  constructor(public readonly root: KitImpl) { }
   apply(diff: KitDiff): void {
     this.root.replayChangeUnchecked(diff);
   }
@@ -15172,7 +15164,7 @@ const validateIdCollectionDiff = <TItem extends { id: string }>(
 };
 
 const validateAttributesDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Attribute[], d: AttributesDiff | undefined): void => {
-  validateIdCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => {});
+  validateIdCollectionDiff(ctx, path, "attribute", base, d, (_item, _diff, _p) => { });
 };
 
 const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Prop[], qualities: Set<string>, d: PropsDiff | undefined): void => {
@@ -15391,13 +15383,13 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
   if (ctx.diff.designs) {
     ctx.diff.designs = validateIdCollectionDiff(ctx, "designs", "design", kit.designs ?? [], ctx.diff.designs, (item, ddiff, p) => validateDesignDiffNested(ctx, kit, p, item, ddiff as DesignDiff, refs));
   }
-  if (ctx.diff.tags) ctx.diff.tags = validateIdCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
-  if (ctx.diff.concepts) ctx.diff.concepts = validateIdCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
-  if (ctx.diff.families) ctx.diff.families = validateIdCollectionDiff(ctx, "families", "family", kit.families ?? [], ctx.diff.families, () => {});
+  if (ctx.diff.tags) ctx.diff.tags = validateIdCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => { });
+  if (ctx.diff.concepts) ctx.diff.concepts = validateIdCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => { });
+  if (ctx.diff.families) ctx.diff.families = validateIdCollectionDiff(ctx, "families", "family", kit.families ?? [], ctx.diff.families, () => { });
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateIdCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
-  if (ctx.diff.files) ctx.diff.files = validateIdCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => {});
+  if (ctx.diff.files) ctx.diff.files = validateIdCollectionDiff(ctx, "files", "file", kit.files ?? [], ctx.diff.files, () => { });
   if (ctx.diff.folders) {
     ctx.diff.folders = validateIdCollectionDiff(ctx, "folders", "folder", kit.folders ?? [], ctx.diff.folders, (item, fdiff, p) => {
       const par = (fdiff as FolderDiff).parent?.id ?? item.parent?.id;
@@ -15405,7 +15397,7 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
       if ((fdiff as FolderDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (fdiff as FolderDiff).attributes);
     });
   }
-  if (ctx.diff.authors) ctx.diff.authors = validateIdCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => {});
+  if (ctx.diff.authors) ctx.diff.authors = validateIdCollectionDiff(ctx, "authors", "author", kit.authors ?? [], ctx.diff.authors, () => { });
   if (ctx.diff.attributes) validateAttributesDiffNested(ctx, "kit.attributes", kit.attributes ?? [], ctx.diff.attributes);
 
   const ok = ctx.errors.length === 0;
@@ -15790,8 +15782,8 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
       const fix = semioMakeFix(ctx, `Rename port "${name}"`, () => ({
         families: familyOfPort
           ? {
-              updated: [{ family: { id: familyOfPort.id }, diff: { ports: { updated: [{ port: { id: iface.id }, diff: { name: generateUniqueName(name, allNames) } }] } } }],
-            }
+            updated: [{ family: { id: familyOfPort.id }, diff: { ports: { updated: [{ port: { id: iface.id }, diff: { name: generateUniqueName(name, allNames) } }] } } }],
+          }
           : undefined,
       }));
       problems.push({
@@ -16090,7 +16082,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
             fixes: [fix],
           });
         }
-      } catch {}
+      } catch { }
     });
   });
   return problems;
@@ -16477,7 +16469,7 @@ export const editTemporaryKit = (kit: KitLike, diff: KitDiff): KitImpl => {
  **/
 export class TransportKit {
   readonly kind = "transport" as const;
-  constructor(public kit: KitImpl) {}
+  constructor(public kit: KitImpl) { }
 }
 
 /**
@@ -16485,7 +16477,7 @@ export class TransportKit {
  **/
 export class ArchiveKit {
   readonly kind = "archive" as const;
-  constructor(public kit: KitImpl) {}
+  constructor(public kit: KitImpl) { }
 }
 
 /**
@@ -16502,7 +16494,7 @@ export interface SyncKit {
  **/
 export class DevKit implements SyncKit {
   readonly kind = "dev" as const;
-  constructor(public kit: KitImpl) {}
+  constructor(public kit: KitImpl) { }
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
@@ -16513,7 +16505,7 @@ export class DevKit implements SyncKit {
  **/
 export class LocalKit implements SyncKit {
   readonly kind = "local" as const;
-  constructor(public kit: KitImpl) {}
+  constructor(public kit: KitImpl) { }
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
@@ -16524,7 +16516,7 @@ export class LocalKit implements SyncKit {
  **/
 export class RemoteKit implements SyncKit {
   readonly kind = "remote" as const;
-  constructor(public kit: KitImpl) {}
+  constructor(public kit: KitImpl) { }
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
@@ -17857,20 +17849,20 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -17995,54 +17987,54 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = selectAll("benchmark", { columns: ["quality_id", "quality_guid"], value: row.id });
-          const qualityAttributes = selectAll("attribute", { columns: ["quality_id", "quality_guid"], value: row.id });
-          return {
-            id: row.id,
-            key: row.key,
-            name: row.name,
-            kind: row.kind || undefined,
-            defaultValue: row.default_value ?? undefined,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value ?? undefined,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value ?? undefined,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = selectAll("attribute", { columns: ["benchmark_id", "benchmark_guid"], value: b.id });
-              return {
-                id: b.id,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value ?? undefined,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value ?? undefined,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = selectAll("benchmark", { columns: ["quality_id", "quality_guid"], value: row.id });
+        const qualityAttributes = selectAll("attribute", { columns: ["quality_id", "quality_guid"], value: row.id });
+        return {
+          id: row.id,
+          key: row.key,
+          name: row.name,
+          kind: row.kind || undefined,
+          defaultValue: row.default_value ?? undefined,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value ?? undefined,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value ?? undefined,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = selectAll("attribute", { columns: ["benchmark_id", "benchmark_guid"], value: b.id });
+            return {
+              id: b.id,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value ?? undefined,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value ?? undefined,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = selectAll("file", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_id ? { id: row.folder_id } : undefined,
-          size: row.size ?? undefined,
-          hash: toUndefined(row.hash),
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        id: row.id,
+        name: row.name,
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_id ? { id: row.folder_id } : undefined,
+        size: row.size ?? undefined,
+        hash: toUndefined(row.hash),
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = selectAll("folder", { columns: ["kit_id", "kit_guid"], value: kit.id });
@@ -18058,10 +18050,10 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          id: row.id,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        id: row.id,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = selectAll("concept", { columns: ["kit_id", "kit_guid"], value: kit.id });
@@ -19320,7 +19312,7 @@ export const exportDesignRepresentation = async (kit: KitImpl, designId: string,
         if (copiedMeshes.length > 0) {
           typeMeshMap[typeId] = copiedMeshes[0];
         }
-      } catch {}
+      } catch { }
     }
   }
 
@@ -23599,9 +23591,9 @@ if (shouldRunEmbeddedJsTests) {
   describe("Sketchpad ControlTree", () => {
     it("builds nested folders from paths and applies case-insensitive filter on leaf keys", () => {
       const controls: ControlDef[] = [
-        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => {} },
-        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => {} },
-        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => {} },
+        { path: "Transform/Position/X", controlKind: "number", value: 1, onChange: () => { } },
+        { path: "Transform/Position/Y", controlKind: "number", value: 2, onChange: () => { } },
+        { path: "Appearance/Material/roughness", controlKind: "slider", value: 0.5, onChange: () => { } },
       ];
       const folderSettings = {
         Transform: { path: "Transform", order: 2 },
@@ -26842,78 +26834,78 @@ const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
   const mapIdRef = (value: any) => (value ? { id: typeof value === "string" ? value : value.id } : undefined);
   const types = Array.isArray(rawKit?.types)
     ? rawKit.types.map((entry: any) => ({
-        id: entry.id,
-        name: entry.name,
-        description: entry.description,
-        icon: entry.icon,
-        image: entry.image,
-        folder: entry.folder,
-        unit: entry.unit,
-        stock: entry.stock,
-        isAbstract: entry.isAbstract,
-        virtual: entry.virtual,
-        parent: mapIdRef(entry.parent ?? entry.parentType),
-        location: mapIdRef(entry.location),
-        connectors: entry.connectors ?? [],
-        representations: entry.representations ?? [],
-        props: entry.props ?? [],
-      }))
+      id: entry.id,
+      name: entry.name,
+      description: entry.description,
+      icon: entry.icon,
+      image: entry.image,
+      folder: entry.folder,
+      unit: entry.unit,
+      stock: entry.stock,
+      isAbstract: entry.isAbstract,
+      virtual: entry.virtual,
+      parent: mapIdRef(entry.parent ?? entry.parentType),
+      location: mapIdRef(entry.location),
+      connectors: entry.connectors ?? [],
+      representations: entry.representations ?? [],
+      props: entry.props ?? [],
+    }))
     : [];
   const designs = Array.isArray(rawKit?.designs)
     ? rawKit.designs.map((entry: any) => ({
-        id: entry.id,
-        name: entry.name,
-        description: entry.description,
-        icon: entry.icon,
-        image: entry.image,
-        folder: entry.folder,
-        unit: entry.unit,
-        isAbstract: entry.isAbstract,
-        canScale: entry.canScale,
-        canMirror: entry.canMirror,
-        parent: mapIdRef(entry.parent ?? entry.parentDesign),
-        activeLayer: mapIdRef(entry.activeLayer),
-        location: mapIdRef(entry.location),
-        pieces: (entry.pieces ?? []).map((piece: any) => ({
-          ...piece,
-          type: mapIdRef(piece.type),
-          design: mapIdRef(piece.design),
-        })),
-        connections: (entry.connections ?? []).map((connection: any) => ({
-          ...connection,
-          connected: connection.connected
-            ? {
-                piece: mapIdRef(connection.connected.piece),
-                designPiece: mapIdRef(connection.connected.designPiece),
-                connector: mapIdRef(connection.connected.connector),
-              }
-            : connection.connected,
-          connecting: connection.connecting
-            ? {
-                piece: mapIdRef(connection.connecting.piece),
-                designPiece: mapIdRef(connection.connecting.designPiece),
-                connector: mapIdRef(connection.connecting.connector),
-              }
-            : connection.connecting,
-        })),
-        layers: entry.layers ?? [],
-        groups: entry.groups ?? [],
-        stats: entry.stats ?? [],
-        props: entry.props ?? [],
-      }))
+      id: entry.id,
+      name: entry.name,
+      description: entry.description,
+      icon: entry.icon,
+      image: entry.image,
+      folder: entry.folder,
+      unit: entry.unit,
+      isAbstract: entry.isAbstract,
+      canScale: entry.canScale,
+      canMirror: entry.canMirror,
+      parent: mapIdRef(entry.parent ?? entry.parentDesign),
+      activeLayer: mapIdRef(entry.activeLayer),
+      location: mapIdRef(entry.location),
+      pieces: (entry.pieces ?? []).map((piece: any) => ({
+        ...piece,
+        type: mapIdRef(piece.type),
+        design: mapIdRef(piece.design),
+      })),
+      connections: (entry.connections ?? []).map((connection: any) => ({
+        ...connection,
+        connected: connection.connected
+          ? {
+            piece: mapIdRef(connection.connected.piece),
+            designPiece: mapIdRef(connection.connected.designPiece),
+            connector: mapIdRef(connection.connected.connector),
+          }
+          : connection.connected,
+        connecting: connection.connecting
+          ? {
+            piece: mapIdRef(connection.connecting.piece),
+            designPiece: mapIdRef(connection.connecting.designPiece),
+            connector: mapIdRef(connection.connecting.connector),
+          }
+          : connection.connecting,
+      })),
+      layers: entry.layers ?? [],
+      groups: entry.groups ?? [],
+      stats: entry.stats ?? [],
+      props: entry.props ?? [],
+    }))
     : [];
   const families = Array.isArray(rawKit?.families)
     ? rawKit.families.map((entry: any) => ({
-        id: entry.id,
-        name: entry.name,
-        description: entry.description,
-        icon: entry.icon,
-        ports: (entry.ports ?? []).map((port: any) => ({
-          ...port,
-          compatiblePorts: (port.compatiblePorts ?? []).map(mapIdRef),
-        })),
-        attributes: entry.attributes ?? [],
-      }))
+      id: entry.id,
+      name: entry.name,
+      description: entry.description,
+      icon: entry.icon,
+      ports: (entry.ports ?? []).map((port: any) => ({
+        ...port,
+        compatiblePorts: (port.compatiblePorts ?? []).map(mapIdRef),
+      })),
+      attributes: entry.attributes ?? [],
+    }))
     : [];
 
   return {
@@ -27637,7 +27629,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.kit = applyKitDiff(this.kit, change.backward);
     this.redoStack.push(change);
     this.dirty = true;
-    this.sendKitDiffToServer(change.backward).catch(() => {});
+    this.sendKitDiffToServer(change.backward).catch(() => { });
     this.notify();
   }
 
@@ -27648,7 +27640,7 @@ export class SessionKitStore implements UndoableKitStore {
     this.kit = applyKitDiff(this.kit, change.forward);
     this.undoStack.push(change);
     this.dirty = true;
-    this.sendKitDiffToServer(change.forward).catch(() => {});
+    this.sendKitDiffToServer(change.forward).catch(() => { });
     this.notify();
   }
 
@@ -28503,7 +28495,7 @@ const semioKitCommandHandlers = {
               const fileBlob = await fileResponse.blob();
               const fileName = file.path.split("/").pop() || file.path;
               files.push(new File([fileBlob], fileName));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -28582,13 +28574,13 @@ const semioKitCommandHandlers = {
                     piece.plane || (findDesignInKit(context.kit, id)?.connections ?? []).some((connection) => connection.connected.piece.id === piece.id || connection.connecting.piece.id === piece.id)
                       ? piece
                       : {
-                          ...piece,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...piece,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ],
                 },
               },
@@ -28612,13 +28604,13 @@ const semioKitCommandHandlers = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.id === candidate.id || connection.connecting.piece.id === candidate.id)
                       ? candidate
                       : {
-                          ...candidate,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...candidate,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ),
                 },
               },
@@ -29036,10 +29028,1230 @@ if (shouldRunJsBenchmarks) {
 
 // #endregion ­ƒÅï´©ÅBenchmarks
 
-// #region Read command types (generated mirror of semio/rs/read_module)
-export * from "./readCommandTypes";
-// #endregion Read command types
+//#region 📖ReadCommandTypes
+/**
+ * Read command + output types (serde **externally tagged**, `camelCase` keys).
+ * @generated by gen_read_command_types.py from ../rs/read_module.rs
+ */
 
-// #region Live kit graph (executeRead facades for React hooks)
-export * from "./kitGraphLive";
-// #endregion
+/** `{"id": string}` in JSON; all `*IdDto` use this shape. */
+export type IdDto = { readonly id: string };
+
+/** One row of `readDesignFlattenMap` (camelCase fields). */
+export type DesignFlattenMapEntryDto = {
+  readonly pieceId: string;
+  readonly plane: unknown;
+  readonly center: unknown;
+};
+
+export type ReadAttributeCommand =
+  | { readonly readAttributeFullCommand: null }
+  | { readonly readAttributeShallowCommand: null }
+  | { readonly readAttributeMetadataCommand: null }
+  | { readonly readAttributeIdCommand: null }
+  | { readonly readAttributeKeyCommand: null }
+  | { readonly readAttributeValueCommand: null }
+  | { readonly readAttributeDefinitionCommand: null }
+
+export type ReadAuthorCommand =
+  | { readonly readAuthorFullCommand: null }
+  | { readonly readAuthorShallowCommand: null }
+  | { readonly readAuthorMetadataCommand: null }
+  | { readonly readAuthorIdCommand: null }
+  | { readonly readAuthorNameCommand: null }
+  | { readonly readAuthorEmailCommand: null }
+  | { readonly readAuthorRoleCommand: null }
+  | { readonly readAuthorRankCommand: null }
+
+export type ReadBenchmarkCommand =
+  | { readonly readBenchmarkFullCommand: null }
+  | { readonly readBenchmarkShallowCommand: null }
+  | { readonly readBenchmarkMetadataCommand: null }
+  | { readonly readBenchmarkIdCommand: null }
+  | { readonly readBenchmarkNameCommand: null }
+  | { readonly readBenchmarkMinCommand: null }
+  | { readonly readBenchmarkMaxCommand: null }
+  | { readonly readBenchmarkMinExcludedCommand: null }
+  | { readonly readBenchmarkMaxExcludedCommand: null }
+
+export type ReadConceptCommand =
+  | { readonly readConceptFullCommand: null }
+  | { readonly readConceptShallowCommand: null }
+  | { readonly readConceptMetadataCommand: null }
+  | { readonly readConceptIdCommand: null }
+  | { readonly readConceptNameCommand: null }
+  | { readonly readConceptDescriptionCommand: null }
+  | { readonly readConceptOrderCommand: null }
+
+export type ReadConnectionCommand =
+  | { readonly readConnectionFullCommand: null }
+  | { readonly readConnectionShallowCommand: null }
+  | { readonly readConnectionMetadataCommand: null }
+  | { readonly readConnectionIdCommand: null }
+  | { readonly readConnectionConnectedSideMetadataCommand: null }
+  | { readonly readConnectionConnectingSideMetadataCommand: null }
+  | { readonly readConnectionConnectedSideFullCommand: null }
+  | { readonly readConnectionConnectingSideFullCommand: null }
+  | { readonly readConnectionGapCommand: null }
+  | { readonly readConnectionShiftCommand: null }
+  | { readonly readConnectionRiseCommand: null }
+  | { readonly readConnectionRotationCommand: null }
+  | { readonly readConnectionTurnCommand: null }
+  | { readonly readConnectionTiltCommand: null }
+  | { readonly readConnectionUCommand: null }
+  | { readonly readConnectionVCommand: null }
+  | { readonly readConnectionDescriptionCommand: null }
+  | { readonly readConnectionAttributesFullCommand: null }
+  | { readonly readConnectionAttributesShallowCommand: null }
+  | { readonly readConnectionChildPlaneMatrixCommand: null }
+  | { readonly readConnectionFlatSidesForChildCommand: { readonly childPieceId: IdDto } }
+  | { readonly readConnectionAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+  | { readonly readConnectionConnectedSideCommands: { readonly commands: ReadonlyArray<ReadSideCommand> } }
+  | { readonly readConnectionConnectingSideCommands: { readonly commands: ReadonlyArray<ReadSideCommand> } }
+
+export type ReadConnectorCommand =
+  | { readonly readConnectorFullCommand: null }
+  | { readonly readConnectorShallowCommand: null }
+  | { readonly readConnectorMetadataCommand: null }
+  | { readonly readConnectorIdCommand: null }
+  | { readonly readConnectorCodeCommand: null }
+  | { readonly readConnectorDescriptionCommand: null }
+  | { readonly readConnectorPortIdCommand: null }
+  | { readonly readConnectorQualitiesFullCommand: null }
+  | { readonly readConnectorQualitiesShallowCommand: null }
+  | { readonly readConnectorAttributesFullCommand: null }
+  | { readonly readConnectorAttributesShallowCommand: null }
+  | { readonly readConnectorQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readConnectorAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadDesignCommand =
+  | { readonly readDesignFullCommand: null }
+  | { readonly readDesignShallowCommand: null }
+  | { readonly readDesignMetadataCommand: null }
+  | { readonly readDesignIdCommand: null }
+  | { readonly readDesignNameCommand: null }
+  | { readonly readDesignDescriptionCommand: null }
+  | { readonly readDesignIconCommand: null }
+  | { readonly readDesignImageCommand: null }
+  | { readonly readDesignLocationCommand: null }
+  | { readonly readDesignUnitCommand: null }
+  | { readonly readDesignCreatedCommand: null }
+  | { readonly readDesignUpdatedCommand: null }
+  | { readonly readDesignKitCommand: null }
+  | { readonly readDesignFamiliesCommand: null }
+  | { readonly readDesignPiecesFullCommand: null }
+  | { readonly readDesignPiecesShallowCommand: null }
+  | { readonly readDesignConnectionsFullCommand: null }
+  | { readonly readDesignConnectionsShallowCommand: null }
+  | { readonly readDesignLayersFullCommand: null }
+  | { readonly readDesignLayersShallowCommand: null }
+  | { readonly readDesignGroupsFullCommand: null }
+  | { readonly readDesignGroupsShallowCommand: null }
+  | { readonly readDesignAuthorsFullCommand: null }
+  | { readonly readDesignAuthorsShallowCommand: null }
+  | { readonly readDesignConceptsFullCommand: null }
+  | { readonly readDesignConceptsShallowCommand: null }
+  | { readonly readDesignTagsFullCommand: null }
+  | { readonly readDesignTagsShallowCommand: null }
+  | { readonly readDesignQualitiesFullCommand: null }
+  | { readonly readDesignQualitiesShallowCommand: null }
+  | { readonly readDesignPropsFullCommand: null }
+  | { readonly readDesignPropsShallowCommand: null }
+  | { readonly readDesignAttributesFullCommand: null }
+  | { readonly readDesignAttributesShallowCommand: null }
+  | { readonly readDesignStatsFullCommand: null }
+  | { readonly readDesignStatsShallowCommand: null }
+  | { readonly readDesignFlattenMapCommand: null }
+  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignsCommand: null }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignIdsCommand: null }
+  | { readonly readDesignQualitySumCommand: { readonly qualityId: IdDto } }
+  | { readonly readDesignFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
+  | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
+  | { readonly readDesignConnectionCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConnectionCommand> } }
+  | { readonly readDesignLayerCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadLayerCommand> } }
+  | { readonly readDesignGroupCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadGroupCommand> } }
+  | { readonly readDesignAuthorCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAuthorCommand> } }
+  | { readonly readDesignConceptCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConceptCommand> } }
+  | { readonly readDesignTagCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTagCommand> } }
+  | { readonly readDesignQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readDesignPropCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPropCommand> } }
+  | { readonly readDesignAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+  | { readonly readDesignStatCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadStatCommand> } }
+
+export type ReadFamilyCommand =
+  | { readonly readFamilyFullCommand: null }
+  | { readonly readFamilyShallowCommand: null }
+  | { readonly readFamilyMetadataCommand: null }
+  | { readonly readFamilyIdCommand: null }
+  | { readonly readFamilyNameCommand: null }
+  | { readonly readFamilyDescriptionCommand: null }
+  | { readonly readFamilyIconCommand: null }
+  | { readonly readFamilyPortsFullCommand: null }
+  | { readonly readFamilyPortsShallowCommand: null }
+  | { readonly readFamilyAttributesFullCommand: null }
+  | { readonly readFamilyAttributesShallowCommand: null }
+  | { readonly readFamilyPortCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPortCommand> } }
+  | { readonly readFamilyAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadFileCommand =
+  | { readonly readFileFullCommand: null }
+  | { readonly readFileShallowCommand: null }
+  | { readonly readFileMetadataCommand: null }
+  | { readonly readFileIdCommand: null }
+  | { readonly readFileUrlCommand: null }
+  | { readonly readFileMimeCommand: null }
+  | { readonly readFileSizeCommand: null }
+  | { readonly readFileHashCommand: null }
+  | { readonly readFileDescriptionCommand: null }
+  | { readonly readFileCreatedCommand: null }
+  | { readonly readFileUpdatedCommand: null }
+
+export type ReadFolderCommand =
+  | { readonly readFolderFullCommand: null }
+  | { readonly readFolderShallowCommand: null }
+  | { readonly readFolderMetadataCommand: null }
+  | { readonly readFolderIdCommand: null }
+  | { readonly readFolderPathCommand: null }
+  | { readonly readFolderDescriptionCommand: null }
+
+export type ReadGroupCommand =
+  | { readonly readGroupFullCommand: null }
+  | { readonly readGroupShallowCommand: null }
+  | { readonly readGroupMetadataCommand: null }
+  | { readonly readGroupIdCommand: null }
+  | { readonly readGroupNameCommand: null }
+  | { readonly readGroupDescriptionCommand: null }
+  | { readonly readGroupColorCommand: null }
+  | { readonly readGroupIconCommand: null }
+  | { readonly readGroupPiecesCommand: null }
+
+export type ReadKitCommand =
+  | { readonly readKitFullCommand: null }
+  | { readonly readKitShallowCommand: null }
+  | { readonly readKitMetadataCommand: null }
+  | { readonly readKitIdCommand: null }
+  | { readonly readKitNameCommand: null }
+  | { readonly readKitDescriptionCommand: null }
+  | { readonly readKitIconCommand: null }
+  | { readonly readKitImageCommand: null }
+  | { readonly readKitPreviewCommand: null }
+  | { readonly readKitRemoteCommand: null }
+  | { readonly readKitHomepageCommand: null }
+  | { readonly readKitLicenseCommand: null }
+  | { readonly readKitUriCommand: null }
+  | { readonly readKitCreatedCommand: null }
+  | { readonly readKitUpdatedCommand: null }
+  | { readonly readKitTypesFullCommand: null }
+  | { readonly readKitTypesShallowCommand: null }
+  | { readonly readKitTypeIdsCommand: null }
+  | { readonly readKitTypesMetadataCommand: null }
+  | { readonly readKitDesignsFullCommand: null }
+  | { readonly readKitDesignsShallowCommand: null }
+  | { readonly readKitFilesFullCommand: null }
+  | { readonly readKitFilesShallowCommand: null }
+  | { readonly readKitFoldersFullCommand: null }
+  | { readonly readKitFoldersShallowCommand: null }
+  | { readonly readKitLocationsFullCommand: null }
+  | { readonly readKitLocationsShallowCommand: null }
+  | { readonly readKitFamiliesFullCommand: null }
+  | { readonly readKitFamiliesShallowCommand: null }
+  | { readonly readKitPortsFullCommand: null }
+  | { readonly readKitAuthorsFullCommand: null }
+  | { readonly readKitAuthorsShallowCommand: null }
+  | { readonly readKitConceptsFullCommand: null }
+  | { readonly readKitConceptsShallowCommand: null }
+  | { readonly readKitTagsFullCommand: null }
+  | { readonly readKitTagsShallowCommand: null }
+  | { readonly readKitQualitiesFullCommand: null }
+  | { readonly readKitQualitiesShallowCommand: null }
+  | { readonly readKitPropsFullCommand: null }
+  | { readonly readKitPropsShallowCommand: null }
+  | { readonly readKitAttributesFullCommand: null }
+  | { readonly readKitAttributesShallowCommand: null }
+  | { readonly readKitColoredConnectorsCommand: null }
+  | { readonly readKitTypeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } }
+  | { readonly readKitDesignCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadDesignCommand> } }
+  | { readonly readKitFileCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFileCommand> } }
+  | { readonly readKitFolderCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFolderCommand> } }
+  | { readonly readKitLocationCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadLocationCommand> } }
+  | { readonly readKitFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
+  | { readonly readKitPortCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPortCommand> } }
+  | { readonly readKitAuthorCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAuthorCommand> } }
+  | { readonly readKitConceptCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConceptCommand> } }
+  | { readonly readKitTagCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTagCommand> } }
+  | { readonly readKitQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readKitPropCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPropCommand> } }
+  | { readonly readKitAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadLayerCommand =
+  | { readonly readLayerFullCommand: null }
+  | { readonly readLayerShallowCommand: null }
+  | { readonly readLayerMetadataCommand: null }
+  | { readonly readLayerIdCommand: null }
+  | { readonly readLayerNameCommand: null }
+  | { readonly readLayerDescriptionCommand: null }
+  | { readonly readLayerColorCommand: null }
+  | { readonly readLayerOrderCommand: null }
+  | { readonly readLayerVisibleCommand: null }
+  | { readonly readLayerLockedCommand: null }
+
+export type ReadLocationCommand =
+  | { readonly readLocationFullCommand: null }
+  | { readonly readLocationShallowCommand: null }
+  | { readonly readLocationMetadataCommand: null }
+  | { readonly readLocationIdCommand: null }
+  | { readonly readLocationLongitudeCommand: null }
+  | { readonly readLocationLatitudeCommand: null }
+  | { readonly readLocationAltitudeCommand: null }
+  | { readonly readLocationAttributesFullCommand: null }
+  | { readonly readLocationAttributesShallowCommand: null }
+  | { readonly readLocationAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadPieceCommand =
+  | { readonly readPieceFullCommand: null }
+  | { readonly readPieceShallowCommand: null }
+  | { readonly readPieceMetadataCommand: null }
+  | { readonly readPieceIdCommand: null }
+  | { readonly readPieceNameCommand: null }
+  | { readonly readPieceDescriptionCommand: null }
+  | { readonly readPiecePlaneCommand: null }
+  | { readonly readPieceCenterCommand: null }
+  | { readonly readPieceScaleCommand: null }
+  | { readonly readPieceMirrorPlaneCommand: null }
+  | { readonly readPieceHiddenCommand: null }
+  | { readonly readPieceLockedCommand: null }
+  | { readonly readPieceColorCommand: null }
+  | { readonly readPieceTypeCommand: null }
+  | { readonly readPieceDesignCommand: null }
+  | { readonly readPiecePropsFullCommand: null }
+  | { readonly readPiecePropsShallowCommand: null }
+  | { readonly readPieceAttributesFullCommand: null }
+  | { readonly readPieceAttributesShallowCommand: null }
+  | { readonly readPieceFlatPlaneCommand: null }
+  | { readonly readPieceFlatCenterCommand: null }
+  | { readonly readPieceFlatPoseCommand: null }
+  | { readonly readPiecePathCommand: null }
+  | { readonly readPieceParentPieceIdCommand: null }
+  | { readonly readPieceParentConnectionIdCommand: null }
+  | { readonly readPieceParentConnectionFullCommand: null }
+  | { readonly readPieceParentDesignIdCommand: null }
+  | { readonly readPieceFixedCommand: null }
+  | { readonly readPieceConnectedCommand: null }
+  | { readonly readPieceAlternativesCommand: null }
+  | { readonly readPieceAlternativeTypesCommand: null }
+  | { readonly readPieceAlternativeDesignsCommand: null }
+  | { readonly readPiecePropCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPropCommand> } }
+  | { readonly readPieceAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadPortCommand =
+  | { readonly readPortFullCommand: null }
+  | { readonly readPortShallowCommand: null }
+  | { readonly readPortMetadataCommand: null }
+  | { readonly readPortIdCommand: null }
+  | { readonly readPortNameCommand: null }
+  | { readonly readPortDescriptionCommand: null }
+  | { readonly readPortIconCommand: null }
+  | { readonly readPortCompatibleFamiliesCommand: null }
+  | { readonly readPortMandatoryCommand: null }
+  | { readonly readPortTCommand: null }
+  | { readonly readPortPointCommand: null }
+  | { readonly readPortDirectionCommand: null }
+  | { readonly readPortCompatiblePortsCommand: null }
+  | { readonly readPortQualitiesFullCommand: null }
+  | { readonly readPortQualitiesShallowCommand: null }
+  | { readonly readPortAttributesFullCommand: null }
+  | { readonly readPortAttributesShallowCommand: null }
+  | { readonly readPortQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readPortAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadPropCommand =
+  | { readonly readPropFullCommand: null }
+  | { readonly readPropShallowCommand: null }
+  | { readonly readPropIdCommand: null }
+  | { readonly readPropKeyCommand: null }
+  | { readonly readPropValueCommand: null }
+  | { readonly readPropUnitCommand: null }
+  | { readonly readPropQualityIdCommand: null }
+
+export type ReadQualityCommand =
+  | { readonly readQualityFullCommand: null }
+  | { readonly readQualityShallowCommand: null }
+  | { readonly readQualityMetadataCommand: null }
+  | { readonly readQualityIdCommand: null }
+  | { readonly readQualityKeyCommand: null }
+  | { readonly readQualityValueCommand: null }
+  | { readonly readQualityUnitCommand: null }
+  | { readonly readQualityDefinitionCommand: null }
+  | { readonly readQualityDescriptionCommand: null }
+  | { readonly readQualityBenchmarksFullCommand: null }
+  | { readonly readQualityBenchmarksShallowCommand: null }
+  | { readonly readQualityBenchmarkCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadBenchmarkCommand> } }
+
+export type ReadRepresentationCommand =
+  | { readonly readRepresentationFullCommand: null }
+  | { readonly readRepresentationShallowCommand: null }
+  | { readonly readRepresentationMetadataCommand: null }
+  | { readonly readRepresentationIdCommand: null }
+  | { readonly readRepresentationUrlCommand: null }
+  | { readonly readRepresentationDescriptionCommand: null }
+  | { readonly readRepresentationFileIdCommand: null }
+  | { readonly readRepresentationTagsFullCommand: null }
+  | { readonly readRepresentationTagsShallowCommand: null }
+  | { readonly readRepresentationQualitiesFullCommand: null }
+  | { readonly readRepresentationQualitiesShallowCommand: null }
+  | { readonly readRepresentationAttributesFullCommand: null }
+  | { readonly readRepresentationAttributesShallowCommand: null }
+  | { readonly readRepresentationTagCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTagCommand> } }
+  | { readonly readRepresentationQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readRepresentationAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadSideCommand =
+  | { readonly readSideFullCommand: null }
+  | { readonly readSideShallowCommand: null }
+  | { readonly readSideMetadataCommand: null }
+  | { readonly readSideIdCommand: null }
+  | { readonly readSidePieceIdCommand: null }
+  | { readonly readSidePortIdCommand: null }
+  | { readonly readSideDesignPieceIdCommand: null }
+
+export type ReadStatCommand =
+  | { readonly readStatFullCommand: null }
+  | { readonly readStatShallowCommand: null }
+  | { readonly readStatMetadataCommand: null }
+  | { readonly readStatIdCommand: null }
+  | { readonly readStatKeyCommand: null }
+  | { readonly readStatValueCommand: null }
+  | { readonly readStatUnitCommand: null }
+  | { readonly readStatDescriptionCommand: null }
+
+export type ReadTagCommand =
+  | { readonly readTagFullCommand: null }
+  | { readonly readTagShallowCommand: null }
+  | { readonly readTagMetadataCommand: null }
+  | { readonly readTagIdCommand: null }
+  | { readonly readTagNameCommand: null }
+  | { readonly readTagOrderCommand: null }
+
+export type ReadTypeCommand =
+  | { readonly readTypeFullCommand: null }
+  | { readonly readTypeShallowCommand: null }
+  | { readonly readTypeMetadataCommand: null }
+  | { readonly readTypeIdCommand: null }
+  | { readonly readTypeNameCommand: null }
+  | { readonly readTypeDescriptionCommand: null }
+  | { readonly readTypeIconCommand: null }
+  | { readonly readTypeImageCommand: null }
+  | { readonly readTypeStockCommand: null }
+  | { readonly readTypeVirtualCommand: null }
+  | { readonly readTypeUnitCommand: null }
+  | { readonly readTypeLocationCommand: null }
+  | { readonly readTypeCreatedCommand: null }
+  | { readonly readTypeUpdatedCommand: null }
+  | { readonly readTypeFamiliesCommand: null }
+  | { readonly readTypeConnectorsFullCommand: null }
+  | { readonly readTypeConnectorsShallowCommand: null }
+  | { readonly readTypeRepresentationsFullCommand: null }
+  | { readonly readTypeRepresentationsShallowCommand: null }
+  | { readonly readTypeAuthorsFullCommand: null }
+  | { readonly readTypeAuthorsShallowCommand: null }
+  | { readonly readTypeConceptsFullCommand: null }
+  | { readonly readTypeConceptsShallowCommand: null }
+  | { readonly readTypeTagsFullCommand: null }
+  | { readonly readTypeTagsShallowCommand: null }
+  | { readonly readTypeQualitiesFullCommand: null }
+  | { readonly readTypeQualitiesShallowCommand: null }
+  | { readonly readTypePropsFullCommand: null }
+  | { readonly readTypePropsShallowCommand: null }
+  | { readonly readTypeAttributesFullCommand: null }
+  | { readonly readTypeAttributesShallowCommand: null }
+  | { readonly readTypePortsFullCommand: null }
+  | { readonly readTypeConnectorForPortIdCommand: { readonly portId: IdDto } }
+  | { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } }
+  | { readonly readTypeFamilyCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadFamilyCommand> } }
+  | { readonly readTypeConnectorCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConnectorCommand> } }
+  | { readonly readTypeRepresentationCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadRepresentationCommand> } }
+  | { readonly readTypePortCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPortCommand> } }
+  | { readonly readTypeAuthorCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAuthorCommand> } }
+  | { readonly readTypeConceptCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadConceptCommand> } }
+  | { readonly readTypeTagCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTagCommand> } }
+  | { readonly readTypeQualityCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadQualityCommand> } }
+  | { readonly readTypePropCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPropCommand> } }
+  | { readonly readTypeAttributeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadAttributeCommand> } }
+
+export type ReadAttributeCommandOutput =
+  | { readonly readAttributeFullCommand: { readonly attribute: unknown } }
+  | { readonly readAttributeShallowCommand: { readonly attribute: unknown } }
+  | { readonly readAttributeMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readAttributeIdCommand: { readonly id: IdDto } }
+  | { readonly readAttributeKeyCommand: { readonly key: string } }
+  | { readonly readAttributeValueCommand: { readonly value: string } }
+  | { readonly readAttributeDefinitionCommand: { readonly definition: (string | null | undefined) } }
+
+export type ReadAuthorCommandOutput =
+  | { readonly readAuthorFullCommand: { readonly author: unknown } }
+  | { readonly readAuthorShallowCommand: { readonly author: unknown } }
+  | { readonly readAuthorMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readAuthorIdCommand: { readonly id: IdDto } }
+  | { readonly readAuthorNameCommand: { readonly name: string } }
+  | { readonly readAuthorEmailCommand: { readonly email: string } }
+  | { readonly readAuthorRoleCommand: { readonly role: (string | null | undefined) } }
+  | { readonly readAuthorRankCommand: { readonly rank: (number | null | undefined) } }
+
+export type ReadBenchmarkCommandOutput =
+  | { readonly readBenchmarkFullCommand: { readonly benchmark: unknown } }
+  | { readonly readBenchmarkShallowCommand: { readonly benchmark: unknown } }
+  | { readonly readBenchmarkMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readBenchmarkIdCommand: { readonly id: IdDto } }
+  | { readonly readBenchmarkNameCommand: { readonly name: string } }
+  | { readonly readBenchmarkMinCommand: { readonly min: (number | null | undefined) } }
+  | { readonly readBenchmarkMaxCommand: { readonly max: (number | null | undefined) } }
+  | { readonly readBenchmarkMinExcludedCommand: { readonly minExcluded: (boolean | null | undefined) } }
+  | { readonly readBenchmarkMaxExcludedCommand: { readonly maxExcluded: (boolean | null | undefined) } }
+
+export type ReadConceptCommandOutput =
+  | { readonly readConceptFullCommand: { readonly concept: unknown } }
+  | { readonly readConceptShallowCommand: { readonly concept: unknown } }
+  | { readonly readConceptMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readConceptIdCommand: { readonly id: IdDto } }
+  | { readonly readConceptNameCommand: { readonly name: string } }
+  | { readonly readConceptDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readConceptOrderCommand: { readonly order: (number | null | undefined) } }
+
+export type ReadConnectionCommandOutput =
+  | { readonly readConnectionFullCommand: { readonly dto: unknown } }
+  | { readonly readConnectionShallowCommand: { readonly dto: unknown } }
+  | { readonly readConnectionMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readConnectionIdCommand: { readonly id: IdDto } }
+  | { readonly readConnectionConnectedSideMetadataCommand: { readonly side: unknown } }
+  | { readonly readConnectionConnectingSideMetadataCommand: { readonly side: unknown } }
+  | { readonly readConnectionConnectedSideFullCommand: { readonly side: unknown } }
+  | { readonly readConnectionConnectingSideFullCommand: { readonly side: unknown } }
+  | { readonly readConnectionGapCommand: { readonly gap: (number | null | undefined) } }
+  | { readonly readConnectionShiftCommand: { readonly shift: (number | null | undefined) } }
+  | { readonly readConnectionRiseCommand: { readonly rise: (number | null | undefined) } }
+  | { readonly readConnectionRotationCommand: { readonly rotation: (number | null | undefined) } }
+  | { readonly readConnectionTurnCommand: { readonly turn: (number | null | undefined) } }
+  | { readonly readConnectionTiltCommand: { readonly tilt: (number | null | undefined) } }
+  | { readonly readConnectionUCommand: { readonly u: (number | null | undefined) } }
+  | { readonly readConnectionVCommand: { readonly v: (number | null | undefined) } }
+  | { readonly readConnectionDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readConnectionAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readConnectionAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readConnectionChildPlaneMatrixCommand: { readonly matrix: unknown } }
+  | { readonly readConnectionFlatSidesForChildCommand: { readonly connected: unknown; readonly connecting: unknown } }
+  | { readonly readConnectionAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+  | { readonly readConnectionConnectedSideCommands: { readonly results: ReadonlyArray<ReadSideCommandOutput> } }
+  | { readonly readConnectionConnectingSideCommands: { readonly results: ReadonlyArray<ReadSideCommandOutput> } }
+
+export type ReadConnectorCommandOutput =
+  | { readonly readConnectorFullCommand: { readonly connector: unknown } }
+  | { readonly readConnectorShallowCommand: { readonly connector: unknown } }
+  | { readonly readConnectorMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readConnectorIdCommand: { readonly id: IdDto } }
+  | { readonly readConnectorCodeCommand: { readonly code: string } }
+  | { readonly readConnectorDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readConnectorPortIdCommand: { readonly port: (IdDto | null | undefined) } }
+  | { readonly readConnectorQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readConnectorQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readConnectorAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readConnectorAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readConnectorQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readConnectorAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadDesignCommandOutput =
+  | { readonly readDesignFullCommand: { readonly dto: unknown } }
+  | { readonly readDesignShallowCommand: { readonly dto: unknown } }
+  | { readonly readDesignMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readDesignIdCommand: { readonly id: IdDto } }
+  | { readonly readDesignNameCommand: { readonly name: string } }
+  | { readonly readDesignDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readDesignIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readDesignImageCommand: { readonly image: (string | null | undefined) } }
+  | { readonly readDesignLocationCommand: { readonly location: (IdDto | null | undefined) } }
+  | { readonly readDesignUnitCommand: { readonly unit: (string | null | undefined) } }
+  | { readonly readDesignCreatedCommand: { readonly created: (string | null | undefined) } }
+  | { readonly readDesignUpdatedCommand: { readonly updated: (string | null | undefined) } }
+  | { readonly readDesignKitCommand: { readonly kit: (IdDto | null | undefined) } }
+  | { readonly readDesignFamiliesCommand: { readonly families: ReadonlyArray<IdDto> } }
+  | { readonly readDesignPiecesFullCommand: { readonly pieces: ReadonlyArray<unknown> } }
+  | { readonly readDesignPiecesShallowCommand: { readonly pieces: ReadonlyArray<unknown> } }
+  | { readonly readDesignConnectionsFullCommand: { readonly connections: ReadonlyArray<unknown> } }
+  | { readonly readDesignConnectionsShallowCommand: { readonly connections: ReadonlyArray<unknown> } }
+  | { readonly readDesignLayersFullCommand: { readonly layers: ReadonlyArray<unknown> } }
+  | { readonly readDesignLayersShallowCommand: { readonly layers: ReadonlyArray<unknown> } }
+  | { readonly readDesignGroupsFullCommand: { readonly groups: ReadonlyArray<unknown> } }
+  | { readonly readDesignGroupsShallowCommand: { readonly groups: ReadonlyArray<unknown> } }
+  | { readonly readDesignAuthorsFullCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readDesignAuthorsShallowCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readDesignConceptsFullCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readDesignConceptsShallowCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readDesignTagsFullCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readDesignTagsShallowCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readDesignQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readDesignQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readDesignPropsFullCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readDesignPropsShallowCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readDesignAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readDesignAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readDesignStatsFullCommand: { readonly stats: ReadonlyArray<unknown> } }
+  | { readonly readDesignStatsShallowCommand: { readonly stats: ReadonlyArray<unknown> } }
+  | { readonly readDesignFlattenMapCommand: { readonly entries: ReadonlyArray<unknown> } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly groups: ReadonlyArray<ReadonlyArray<IdDto>> } }
+  | { readonly readDesignIncludedDesignsCommand: { readonly designs: ReadonlyArray<unknown> } }
+  | {
+    readonly readDesignReplaceableCatalogCommand: {
+      readonly types: ReadonlyArray<IdDto>;
+      readonly designs: ReadonlyArray<IdDto>;
+    };
+  }
+  | { readonly readDesignIncludedDesignIdsCommand: { readonly designIds: ReadonlyArray<IdDto> } }
+  | { readonly readDesignQualitySumCommand: { readonly sum: number } }
+  | { readonly readDesignFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
+  | { readonly readDesignPieceCommands: { readonly results: ReadonlyArray<ReadPieceCommandOutput> } }
+  | { readonly readDesignConnectionCommands: { readonly results: ReadonlyArray<ReadConnectionCommandOutput> } }
+  | { readonly readDesignLayerCommands: { readonly results: ReadonlyArray<ReadLayerCommandOutput> } }
+  | { readonly readDesignGroupCommands: { readonly results: ReadonlyArray<ReadGroupCommandOutput> } }
+  | { readonly readDesignAuthorCommands: { readonly results: ReadonlyArray<ReadAuthorCommandOutput> } }
+  | { readonly readDesignConceptCommands: { readonly results: ReadonlyArray<ReadConceptCommandOutput> } }
+  | { readonly readDesignTagCommands: { readonly results: ReadonlyArray<ReadTagCommandOutput> } }
+  | { readonly readDesignQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readDesignPropCommands: { readonly results: ReadonlyArray<ReadPropCommandOutput> } }
+  | { readonly readDesignAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+  | { readonly readDesignStatCommands: { readonly results: ReadonlyArray<ReadStatCommandOutput> } }
+
+export type ReadFamilyCommandOutput =
+  | { readonly readFamilyFullCommand: { readonly family: unknown } }
+  | { readonly readFamilyShallowCommand: { readonly family: unknown } }
+  | { readonly readFamilyMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readFamilyIdCommand: { readonly id: IdDto } }
+  | { readonly readFamilyNameCommand: { readonly name: string } }
+  | { readonly readFamilyDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readFamilyIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readFamilyPortsFullCommand: { readonly ports: ReadonlyArray<unknown> } }
+  | { readonly readFamilyPortsShallowCommand: { readonly ports: ReadonlyArray<unknown> } }
+  | { readonly readFamilyAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readFamilyAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readFamilyPortCommands: { readonly results: ReadonlyArray<ReadPortCommandOutput> } }
+  | { readonly readFamilyAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadFileCommandOutput =
+  | { readonly readFileFullCommand: { readonly file: unknown } }
+  | { readonly readFileShallowCommand: { readonly file: unknown } }
+  | { readonly readFileMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readFileIdCommand: { readonly id: IdDto } }
+  | { readonly readFileUrlCommand: { readonly url: string } }
+  | { readonly readFileMimeCommand: { readonly mime: (string | null | undefined) } }
+  | { readonly readFileSizeCommand: { readonly size: (number | null | undefined) } }
+  | { readonly readFileHashCommand: { readonly hash: (string | null | undefined) } }
+  | { readonly readFileDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readFileCreatedCommand: { readonly created: (string | null | undefined) } }
+  | { readonly readFileUpdatedCommand: { readonly updated: (string | null | undefined) } }
+
+export type ReadFolderCommandOutput =
+  | { readonly readFolderFullCommand: { readonly folder: unknown } }
+  | { readonly readFolderShallowCommand: { readonly folder: unknown } }
+  | { readonly readFolderMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readFolderIdCommand: { readonly id: IdDto } }
+  | { readonly readFolderPathCommand: { readonly path: string } }
+  | { readonly readFolderDescriptionCommand: { readonly description: (string | null | undefined) } }
+
+export type ReadGroupCommandOutput =
+  | { readonly readGroupFullCommand: { readonly group: unknown } }
+  | { readonly readGroupShallowCommand: { readonly group: unknown } }
+  | { readonly readGroupMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readGroupIdCommand: { readonly id: IdDto } }
+  | { readonly readGroupNameCommand: { readonly name: string } }
+  | { readonly readGroupDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readGroupColorCommand: { readonly color: (string | null | undefined) } }
+  | { readonly readGroupIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readGroupPiecesCommand: { readonly pieces: ReadonlyArray<IdDto> } }
+
+export type ReadKitCommandOutput =
+  | { readonly readKitFullCommand: { readonly kit: unknown } }
+  | { readonly readKitShallowCommand: { readonly kit: unknown } }
+  | { readonly readKitMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readKitIdCommand: { readonly id: IdDto } }
+  | { readonly readKitNameCommand: { readonly name: string } }
+  | { readonly readKitDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readKitIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readKitImageCommand: { readonly image: (string | null | undefined) } }
+  | { readonly readKitPreviewCommand: { readonly preview: (string | null | undefined) } }
+  | { readonly readKitRemoteCommand: { readonly remote: (string | null | undefined) } }
+  | { readonly readKitHomepageCommand: { readonly homepage: (string | null | undefined) } }
+  | { readonly readKitLicenseCommand: { readonly license: (string | null | undefined) } }
+  | { readonly readKitUriCommand: { readonly uri: (string | null | undefined) } }
+  | { readonly readKitCreatedCommand: { readonly created: (string | null | undefined) } }
+  | { readonly readKitUpdatedCommand: { readonly updated: (string | null | undefined) } }
+  | { readonly readKitTypesFullCommand: { readonly types: ReadonlyArray<unknown> } }
+  | { readonly readKitTypesShallowCommand: { readonly types: ReadonlyArray<unknown> } }
+  | { readonly readKitTypeIdsCommand: { readonly typeIds: ReadonlyArray<IdDto> } }
+  | { readonly readKitTypesMetadataCommand: { readonly types: ReadonlyArray<unknown> } }
+  | { readonly readKitDesignsFullCommand: { readonly designs: ReadonlyArray<unknown> } }
+  | { readonly readKitDesignsShallowCommand: { readonly designs: ReadonlyArray<unknown> } }
+  | { readonly readKitFilesFullCommand: { readonly files: ReadonlyArray<unknown> } }
+  | { readonly readKitFilesShallowCommand: { readonly files: ReadonlyArray<unknown> } }
+  | { readonly readKitFoldersFullCommand: { readonly folders: ReadonlyArray<unknown> } }
+  | { readonly readKitFoldersShallowCommand: { readonly folders: ReadonlyArray<unknown> } }
+  | { readonly readKitLocationsFullCommand: { readonly locations: ReadonlyArray<unknown> } }
+  | { readonly readKitLocationsShallowCommand: { readonly locations: ReadonlyArray<unknown> } }
+  | { readonly readKitFamiliesFullCommand: { readonly families: ReadonlyArray<unknown> } }
+  | { readonly readKitFamiliesShallowCommand: { readonly families: ReadonlyArray<unknown> } }
+  | { readonly readKitPortsFullCommand: { readonly ports: ReadonlyArray<unknown> } }
+  | { readonly readKitAuthorsFullCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readKitAuthorsShallowCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readKitConceptsFullCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readKitConceptsShallowCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readKitTagsFullCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readKitTagsShallowCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readKitQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readKitQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readKitPropsFullCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readKitPropsShallowCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readKitAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readKitAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readKitColoredConnectorsCommand: { readonly rows: ReadonlyArray<unknown> } }
+  | { readonly readKitTypeCommands: { readonly results: ReadonlyArray<ReadTypeCommandOutput> } }
+  | { readonly readKitDesignCommands: { readonly results: ReadonlyArray<ReadDesignCommandOutput> } }
+  | { readonly readKitFileCommands: { readonly results: ReadonlyArray<ReadFileCommandOutput> } }
+  | { readonly readKitFolderCommands: { readonly results: ReadonlyArray<ReadFolderCommandOutput> } }
+  | { readonly readKitLocationCommands: { readonly results: ReadonlyArray<ReadLocationCommandOutput> } }
+  | { readonly readKitFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
+  | { readonly readKitPortCommands: { readonly results: ReadonlyArray<ReadPortCommandOutput> } }
+  | { readonly readKitAuthorCommands: { readonly results: ReadonlyArray<ReadAuthorCommandOutput> } }
+  | { readonly readKitConceptCommands: { readonly results: ReadonlyArray<ReadConceptCommandOutput> } }
+  | { readonly readKitTagCommands: { readonly results: ReadonlyArray<ReadTagCommandOutput> } }
+  | { readonly readKitQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readKitPropCommands: { readonly results: ReadonlyArray<ReadPropCommandOutput> } }
+  | { readonly readKitAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadLayerCommandOutput =
+  | { readonly readLayerFullCommand: { readonly layer: unknown } }
+  | { readonly readLayerShallowCommand: { readonly layer: unknown } }
+  | { readonly readLayerMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readLayerIdCommand: { readonly id: IdDto } }
+  | { readonly readLayerNameCommand: { readonly name: string } }
+  | { readonly readLayerDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readLayerColorCommand: { readonly color: (string | null | undefined) } }
+  | { readonly readLayerOrderCommand: { readonly order: (number | null | undefined) } }
+  | { readonly readLayerVisibleCommand: { readonly visible: (boolean | null | undefined) } }
+  | { readonly readLayerLockedCommand: { readonly locked: (boolean | null | undefined) } }
+
+export type ReadLocationCommandOutput =
+  | { readonly readLocationFullCommand: { readonly location: unknown } }
+  | { readonly readLocationShallowCommand: { readonly location: unknown } }
+  | { readonly readLocationMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readLocationIdCommand: { readonly id: IdDto } }
+  | { readonly readLocationLongitudeCommand: { readonly longitude: number } }
+  | { readonly readLocationLatitudeCommand: { readonly latitude: number } }
+  | { readonly readLocationAltitudeCommand: { readonly altitude: (number | null | undefined) } }
+  | { readonly readLocationAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readLocationAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readLocationAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadPieceCommandOutput =
+  | { readonly readPieceFullCommand: { readonly dto: unknown } }
+  | { readonly readPieceShallowCommand: { readonly dto: unknown } }
+  | { readonly readPieceMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readPieceIdCommand: { readonly id: IdDto } }
+  | { readonly readPieceNameCommand: { readonly name: (string | null | undefined) } }
+  | { readonly readPieceDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readPiecePlaneCommand: { readonly plane: (unknown | null | undefined) } }
+  | { readonly readPieceCenterCommand: { readonly center: (unknown | null | undefined) } }
+  | { readonly readPieceScaleCommand: { readonly scale: (number | null | undefined) } }
+  | { readonly readPieceMirrorPlaneCommand: { readonly mirrorPlane: (unknown | null | undefined) } }
+  | { readonly readPieceHiddenCommand: { readonly hidden: (boolean | null | undefined) } }
+  | { readonly readPieceLockedCommand: { readonly locked: (boolean | null | undefined) } }
+  | { readonly readPieceColorCommand: { readonly color: (string | null | undefined) } }
+  | { readonly readPieceTypeCommand: { readonly type: (IdDto | null | undefined) } }
+  | { readonly readPieceDesignCommand: { readonly design: (IdDto | null | undefined) } }
+  | { readonly readPiecePropsFullCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readPiecePropsShallowCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readPieceAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readPieceAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readPieceFlatPlaneCommand: { readonly flatPlane: unknown } }
+  | { readonly readPieceFlatCenterCommand: { readonly flatCenter: unknown } }
+  | { readonly readPieceFlatPoseCommand: { readonly flatPose: unknown } }
+  | { readonly readPiecePathCommand: { readonly path: ReadonlyArray<IdDto> } }
+  | { readonly readPieceParentPieceIdCommand: { readonly parentPiece: (IdDto | null | undefined) } }
+  | { readonly readPieceParentConnectionIdCommand: { readonly parentConnection: (IdDto | null | undefined) } }
+  | { readonly readPieceParentConnectionFullCommand: { readonly connection: unknown } }
+  | { readonly readPieceParentDesignIdCommand: { readonly parentDesign: IdDto } }
+  | { readonly readPieceFixedCommand: { readonly fixed: unknown } }
+  | { readonly readPieceConnectedCommand: { readonly connected: unknown } }
+  | { readonly readPieceAlternativesCommand: { readonly alternatives: unknown } }
+  | { readonly readPieceAlternativeTypesCommand: { readonly types: ReadonlyArray<IdDto> } }
+  | { readonly readPieceAlternativeDesignsCommand: { readonly designs: ReadonlyArray<IdDto> } }
+  | { readonly readPiecePropCommands: { readonly results: ReadonlyArray<ReadPropCommandOutput> } }
+  | { readonly readPieceAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadPortCommandOutput =
+  | { readonly readPortFullCommand: { readonly port: unknown } }
+  | { readonly readPortShallowCommand: { readonly port: unknown } }
+  | { readonly readPortMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readPortIdCommand: { readonly id: IdDto } }
+  | { readonly readPortNameCommand: { readonly name: string } }
+  | { readonly readPortDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readPortIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readPortCompatibleFamiliesCommand: { readonly families: ReadonlyArray<IdDto> } }
+  | { readonly readPortMandatoryCommand: { readonly mandatory: (boolean | null | undefined) } }
+  | { readonly readPortTCommand: { readonly t: (number | null | undefined) } }
+  | { readonly readPortPointCommand: { readonly point: (unknown | null | undefined) } }
+  | { readonly readPortDirectionCommand: { readonly direction: (unknown | null | undefined) } }
+  | { readonly readPortCompatiblePortsCommand: { readonly compatiblePorts: ReadonlyArray<IdDto> } }
+  | { readonly readPortQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readPortQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readPortAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readPortAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readPortQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readPortAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadPropCommandOutput =
+  | { readonly readPropFullCommand: { readonly prop: unknown } }
+  | { readonly readPropShallowCommand: { readonly prop: unknown } }
+  | { readonly readPropIdCommand: { readonly id: IdDto } }
+  | { readonly readPropKeyCommand: { readonly key: string } }
+  | { readonly readPropValueCommand: { readonly value: string } }
+  | { readonly readPropUnitCommand: { readonly unit: (string | null | undefined) } }
+  | { readonly readPropQualityIdCommand: { readonly quality: (IdDto | null | undefined) } }
+
+export type ReadQualityCommandOutput =
+  | { readonly readQualityFullCommand: { readonly quality: unknown } }
+  | { readonly readQualityShallowCommand: { readonly quality: unknown } }
+  | { readonly readQualityMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readQualityIdCommand: { readonly id: IdDto } }
+  | { readonly readQualityKeyCommand: { readonly key: string } }
+  | { readonly readQualityValueCommand: { readonly value: (string | null | undefined) } }
+  | { readonly readQualityUnitCommand: { readonly unit: (string | null | undefined) } }
+  | { readonly readQualityDefinitionCommand: { readonly definition: (string | null | undefined) } }
+  | { readonly readQualityDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readQualityBenchmarksFullCommand: { readonly benchmarks: ReadonlyArray<unknown> } }
+  | { readonly readQualityBenchmarksShallowCommand: { readonly benchmarks: ReadonlyArray<unknown> } }
+  | { readonly readQualityBenchmarkCommands: { readonly results: ReadonlyArray<ReadBenchmarkCommandOutput> } }
+
+export type ReadRepresentationCommandOutput =
+  | { readonly readRepresentationFullCommand: { readonly representation: unknown } }
+  | { readonly readRepresentationShallowCommand: { readonly representation: unknown } }
+  | { readonly readRepresentationMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readRepresentationIdCommand: { readonly id: IdDto } }
+  | { readonly readRepresentationUrlCommand: { readonly url: string } }
+  | { readonly readRepresentationDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readRepresentationFileIdCommand: { readonly file: (IdDto | null | undefined) } }
+  | { readonly readRepresentationTagsFullCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationTagsShallowCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readRepresentationTagCommands: { readonly results: ReadonlyArray<ReadTagCommandOutput> } }
+  | { readonly readRepresentationQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readRepresentationAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+export type ReadSideCommandOutput =
+  | { readonly readSideFullCommand: { readonly side: unknown } }
+  | { readonly readSideShallowCommand: { readonly side: unknown } }
+  | { readonly readSideMetadataCommand: { readonly side: unknown } }
+  | { readonly readSideIdCommand: { readonly id: IdDto } }
+  | { readonly readSidePieceIdCommand: { readonly piece: IdDto } }
+  | { readonly readSidePortIdCommand: { readonly port: (IdDto | null | undefined) } }
+  | { readonly readSideDesignPieceIdCommand: { readonly designPiece: (IdDto | null | undefined) } }
+
+export type ReadStatCommandOutput =
+  | { readonly readStatFullCommand: { readonly stat: unknown } }
+  | { readonly readStatShallowCommand: { readonly stat: unknown } }
+  | { readonly readStatMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readStatIdCommand: { readonly id: IdDto } }
+  | { readonly readStatKeyCommand: { readonly key: string } }
+  | { readonly readStatValueCommand: { readonly value: string } }
+  | { readonly readStatUnitCommand: { readonly unit: (string | null | undefined) } }
+  | { readonly readStatDescriptionCommand: { readonly description: (string | null | undefined) } }
+
+export type ReadTagCommandOutput =
+  | { readonly readTagFullCommand: { readonly tag: unknown } }
+  | { readonly readTagShallowCommand: { readonly tag: unknown } }
+  | { readonly readTagMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readTagIdCommand: { readonly id: IdDto } }
+  | { readonly readTagNameCommand: { readonly name: string } }
+  | { readonly readTagOrderCommand: { readonly order: (number | null | undefined) } }
+
+export type ReadTypeCommandOutput =
+  | { readonly readTypeFullCommand: { readonly dto: unknown } }
+  | { readonly readTypeShallowCommand: { readonly dto: unknown } }
+  | { readonly readTypeMetadataCommand: { readonly metadata: unknown } }
+  | { readonly readTypeIdCommand: { readonly id: IdDto } }
+  | { readonly readTypeNameCommand: { readonly name: string } }
+  | { readonly readTypeDescriptionCommand: { readonly description: (string | null | undefined) } }
+  | { readonly readTypeIconCommand: { readonly icon: (string | null | undefined) } }
+  | { readonly readTypeImageCommand: { readonly image: (string | null | undefined) } }
+  | { readonly readTypeStockCommand: { readonly stock: (number | null | undefined) } }
+  | { readonly readTypeVirtualCommand: { readonly virtual: (boolean | null | undefined) } }
+  | { readonly readTypeUnitCommand: { readonly unit: (string | null | undefined) } }
+  | { readonly readTypeLocationCommand: { readonly location: (IdDto | null | undefined) } }
+  | { readonly readTypeCreatedCommand: { readonly created: (string | null | undefined) } }
+  | { readonly readTypeUpdatedCommand: { readonly updated: (string | null | undefined) } }
+  | { readonly readTypeFamiliesCommand: { readonly families: ReadonlyArray<IdDto> } }
+  | { readonly readTypeConnectorsFullCommand: { readonly connectors: ReadonlyArray<unknown> } }
+  | { readonly readTypeConnectorsShallowCommand: { readonly connectors: ReadonlyArray<unknown> } }
+  | { readonly readTypeRepresentationsFullCommand: { readonly representations: ReadonlyArray<unknown> } }
+  | { readonly readTypeRepresentationsShallowCommand: { readonly representations: ReadonlyArray<unknown> } }
+  | { readonly readTypeAuthorsFullCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readTypeAuthorsShallowCommand: { readonly authors: ReadonlyArray<unknown> } }
+  | { readonly readTypeConceptsFullCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readTypeConceptsShallowCommand: { readonly concepts: ReadonlyArray<unknown> } }
+  | { readonly readTypeTagsFullCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readTypeTagsShallowCommand: { readonly tags: ReadonlyArray<unknown> } }
+  | { readonly readTypeQualitiesFullCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readTypeQualitiesShallowCommand: { readonly qualities: ReadonlyArray<unknown> } }
+  | { readonly readTypePropsFullCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readTypePropsShallowCommand: { readonly props: ReadonlyArray<unknown> } }
+  | { readonly readTypeAttributesFullCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readTypeAttributesShallowCommand: { readonly attributes: ReadonlyArray<unknown> } }
+  | { readonly readTypePortsFullCommand: { readonly ports: ReadonlyArray<unknown> } }
+  | { readonly readTypeConnectorForPortIdCommand: { readonly connector: (unknown | null | undefined) } }
+  | { readonly readTypeBestRepresentationCommand: { readonly representation: (unknown | null | undefined) } }
+  | { readonly readTypeFamilyCommands: { readonly results: ReadonlyArray<ReadFamilyCommandOutput> } }
+  | { readonly readTypeConnectorCommands: { readonly results: ReadonlyArray<ReadConnectorCommandOutput> } }
+  | { readonly readTypeRepresentationCommands: { readonly results: ReadonlyArray<ReadRepresentationCommandOutput> } }
+  | { readonly readTypePortCommands: { readonly results: ReadonlyArray<ReadPortCommandOutput> } }
+  | { readonly readTypeAuthorCommands: { readonly results: ReadonlyArray<ReadAuthorCommandOutput> } }
+  | { readonly readTypeConceptCommands: { readonly results: ReadonlyArray<ReadConceptCommandOutput> } }
+  | { readonly readTypeTagCommands: { readonly results: ReadonlyArray<ReadTagCommandOutput> } }
+  | { readonly readTypeQualityCommands: { readonly results: ReadonlyArray<ReadQualityCommandOutput> } }
+  | { readonly readTypePropCommands: { readonly results: ReadonlyArray<ReadPropCommandOutput> } }
+  | { readonly readTypeAttributeCommands: { readonly results: ReadonlyArray<ReadAttributeCommandOutput> } }
+
+/** Externally-tagged `ReadKitCommand` JSON keys (camelCase). */
+export const ALL_READ_KIT_COMMAND_KEYS = ['readKitFullCommand', 'readKitShallowCommand', 'readKitMetadataCommand', 'readKitIdCommand', 'readKitNameCommand', 'readKitDescriptionCommand', 'readKitIconCommand', 'readKitImageCommand', 'readKitPreviewCommand', 'readKitRemoteCommand', 'readKitHomepageCommand', 'readKitLicenseCommand', 'readKitUriCommand', 'readKitCreatedCommand', 'readKitUpdatedCommand', 'readKitTypesFullCommand', 'readKitTypesShallowCommand', 'readKitTypeIdsCommand', 'readKitTypesMetadataCommand', 'readKitDesignsFullCommand', 'readKitDesignsShallowCommand', 'readKitFilesFullCommand', 'readKitFilesShallowCommand', 'readKitFoldersFullCommand', 'readKitFoldersShallowCommand', 'readKitLocationsFullCommand', 'readKitLocationsShallowCommand', 'readKitFamiliesFullCommand', 'readKitFamiliesShallowCommand', 'readKitPortsFullCommand', 'readKitAuthorsFullCommand', 'readKitAuthorsShallowCommand', 'readKitConceptsFullCommand', 'readKitConceptsShallowCommand', 'readKitTagsFullCommand', 'readKitTagsShallowCommand', 'readKitQualitiesFullCommand', 'readKitQualitiesShallowCommand', 'readKitPropsFullCommand', 'readKitPropsShallowCommand', 'readKitAttributesFullCommand', 'readKitAttributesShallowCommand', 'readKitColoredConnectorsCommand', 'readKitTypeCommands', 'readKitDesignCommands', 'readKitFileCommands', 'readKitFolderCommands', 'readKitLocationCommands', 'readKitFamilyCommands', 'readKitPortCommands', 'readKitAuthorCommands', 'readKitConceptCommands', 'readKitTagCommands', 'readKitQualityCommands', 'readKitPropCommands', 'readKitAttributeCommands'] as const;
+export type AllReadKitCommandKey = (typeof ALL_READ_KIT_COMMAND_KEYS)[number];
+
+export type ReadRootCommand = ReadKitCommand;
+export type ReadCommandBatch = ReadonlyArray<ReadKitCommand>;
+export type ReadCommandBatchResult = ReadonlyArray<ReadKitCommandOutput>;
+
+//#endregion 📖ReadCommandTypes
+
+//#region 🔖KitGraphqlWire
+/**
+ * `executeRead` facades: wires nested `readKit*Commands` JSON batches so
+ * @semio/react hooks can read domain state without duplicating path wiring.
+ * GraphQL: reads go through `kitStore.readKitCommands`; VCS/backbone through `kitStoreExecute`.
+ */
+
+/** WASM [`KitStoreHandle::execute`] shape: streams JSON-stringified GraphQL responses. */
+export type KitGraphqlHandle = {
+  execute(requestJson: string, onMessage: (line: string) => void): Promise<void>;
+};
+
+export async function kitGraphqlRun(
+  handle: KitGraphqlHandle,
+  body: { query: string; variables?: Record<string, unknown>; operationName?: string },
+): Promise<unknown[]> {
+  const out: unknown[] = [];
+  await handle.execute(JSON.stringify(body), (line: string) => {
+    out.push(JSON.parse(line));
+  });
+  return out;
+}
+
+export function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
+  for (const m of msgs) {
+    if (m == null || typeof m !== "object") continue;
+    const r = m as { data?: Record<string, unknown> | null; errors?: readonly { message?: string }[] };
+    if (Array.isArray(r.errors) && r.errors.length > 0) {
+      throw new Error(r.errors[0]?.message ?? "GraphQL error");
+    }
+    if (r.data != null && typeof r.data === "object") {
+      return r.data as Record<string, unknown>;
+    }
+  }
+  throw new Error("kitGraphql: no data in response");
+}
+
+export async function kitGraphqlExecuteRead(handle: KitGraphqlHandle, batch: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+  const q = `query ($batch: JSON!) { kitStore { readKitCommands(batch: $batch) } }`;
+  const msgs = await kitGraphqlRun(handle, { query: q, variables: { batch: [...batch] } });
+  const data = kitGraphqlFirstData(msgs);
+  const store = data.kitStore as Record<string, unknown> | undefined;
+  const inner = store?.readKitCommands;
+  if (!Array.isArray(inner)) throw new Error("readKitCommands: expected array");
+  return inner as ReadCommandBatchResult;
+}
+
+export async function kitGraphqlExecuteStoreCommand(handle: KitGraphqlHandle, cmd: unknown): Promise<unknown> {
+  const q = `mutation ($command: JSON!) { kitStoreExecute(command: $command) }`;
+  const msgs = await kitGraphqlRun(handle, { query: q, variables: { command: cmd } });
+  const data = kitGraphqlFirstData(msgs);
+  if (!("kitStoreExecute" in data)) throw new Error("kitGraphql: missing kitStoreExecute");
+  return data.kitStoreExecute;
+}
+
+/** Fan-out kit events from `subscription { eventStream }`; cancel stops invoking `sink` (underlying stream may continue). */
+export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload: unknown) => void): () => void {
+  let cancelled = false;
+  void handle
+    .execute(JSON.stringify({ query: "subscription { eventStream }" }), (line: string) => {
+      if (cancelled) return;
+      try {
+        const msg = JSON.parse(line) as { data?: { eventStream?: unknown } | null; errors?: unknown[] };
+        if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
+        if (msg.data && "eventStream" in msg.data && msg.data.eventStream !== undefined) {
+          sink(msg.data.eventStream);
+        }
+      } catch {
+        /* ignore */
+      }
+    })
+    .catch(() => { });
+  return () => {
+    cancelled = true;
+  };
+}
+
+//#endregion 🔖KitGraphqlWire
+
+//#region 🔖KitGraphLive
+
+/** Any client exposing `executeRead` (e.g. `KitStoreClient`). */
+export type KitExecuteRead = {
+  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
+};
+
+export function idDto(id: string): IdDto {
+  return { id };
+}
+
+function assertSingleResult(results: ReadCommandBatchResult): ReadKitCommandOutput {
+  if (results.length !== 1) {
+    throw new Error(`read batch: expected 1 result, got ${results.length}`);
+  }
+  return results[0]!;
+}
+
+/** Top-level `ReadKitCommand` (single item batch). */
+export async function readKit(
+  client: KitExecuteRead,
+  command: ReadKitCommand
+): Promise<ReadKitCommandOutput> {
+  return assertSingleResult(await client.executeRead([command]));
+}
+
+export async function readKitDesign(
+  client: KitExecuteRead,
+  designId: string,
+  command: ReadDesignCommand
+): Promise<ReadDesignCommandOutput> {
+  const out = await readKit(client, {
+    readKitDesignCommands: {
+      id: idDto(designId),
+      commands: [command],
+    },
+  });
+  if (!("readKitDesignCommands" in out) || out.readKitDesignCommands == null) {
+    throw new Error("read path: expected readKitDesignCommands");
+  }
+  return out.readKitDesignCommands.results[0]!;
+}
+
+export async function readKitDesignPiece(
+  client: KitExecuteRead,
+  designId: string,
+  pieceId: string,
+  command: ReadPieceCommand
+): Promise<ReadPieceCommandOutput> {
+  const d0 = await readKitDesign(client, designId, {
+    readDesignPieceCommands: {
+      id: idDto(pieceId),
+      commands: [command],
+    },
+  });
+  if (!("readDesignPieceCommands" in d0) || d0.readDesignPieceCommands == null) {
+    throw new Error("read path: expected readDesignPieceCommands");
+  }
+  return d0.readDesignPieceCommands.results[0]!;
+}
+
+export async function readKitType(
+  client: KitExecuteRead,
+  typeId: string,
+  command: ReadTypeCommand
+): Promise<ReadTypeCommandOutput> {
+  const out = await readKit(client, {
+    readKitTypeCommands: {
+      id: idDto(typeId),
+      commands: [command],
+    },
+  });
+  if (!("readKitTypeCommands" in out) || out.readKitTypeCommands == null) {
+    throw new Error("read path: expected readKitTypeCommands");
+  }
+  return out.readKitTypeCommands.results[0]!;
+}
+
+/** `executeRead` for one piece field (nested `readKitDesign` -> `readDesignPiece` -> field). */
+export class LivePieceView {
+  constructor(
+    private readonly client: KitExecuteRead,
+    readonly designId: string,
+    readonly pieceId: string
+  ) { }
+
+  read(command: ReadPieceCommand): Promise<ReadPieceCommandOutput> {
+    return readKitDesignPiece(this.client, this.designId, this.pieceId, command);
+  }
+
+  async readFlatPlane(): Promise<unknown> {
+    const out = await this.read({ readPieceFlatPlaneCommand: null });
+    if (!("readPieceFlatPlaneCommand" in out) || out.readPieceFlatPlaneCommand == null) {
+      throw new Error("readPieceFlatPlaneCommand: missing output");
+    }
+    return out.readPieceFlatPlaneCommand.flatPlane;
+  }
+
+  async readFlatCenter(): Promise<unknown> {
+    const out = await this.read({ readPieceFlatCenterCommand: null });
+    if (!("readPieceFlatCenterCommand" in out) || out.readPieceFlatCenterCommand == null) {
+      throw new Error("readPieceFlatCenterCommand: missing output");
+    }
+    return out.readPieceFlatCenterCommand.flatCenter;
+  }
+
+  async readParentConnectionFull(): Promise<unknown | null | undefined> {
+    const out = await this.read({ readPieceParentConnectionFullCommand: null });
+    if (!("readPieceParentConnectionFullCommand" in out) || out.readPieceParentConnectionFullCommand == null) {
+      throw new Error("readPieceParentConnectionFullCommand: missing output");
+    }
+    return out.readPieceParentConnectionFullCommand.connection;
+  }
+}
+
+/** `executeRead` for design-scoped fields (e.g. clusterable groups, quality sum). */
+export class LiveDesignView {
+  constructor(
+    private readonly client: KitExecuteRead,
+    readonly designId: string
+  ) { }
+
+  read(command: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
+    return readKitDesign(this.client, this.designId, command);
+  }
+
+  async readClusterableGroups(selection: ReadonlyArray<string>): Promise<ReadonlyArray<ReadonlyArray<IdDto>>> {
+    const out = await this.read({
+      readDesignClusterableGroupsCommand: { selection: selection.map(idDto) },
+    });
+    if (!("readDesignClusterableGroupsCommand" in out) || out.readDesignClusterableGroupsCommand == null) {
+      throw new Error("readDesignClusterableGroupsCommand: missing output");
+    }
+    return out.readDesignClusterableGroupsCommand.groups;
+  }
+
+  async readIncludedDesigns(): Promise<ReadonlyArray<unknown>> {
+    const out = await this.read({ readDesignIncludedDesignsCommand: null });
+    if (!("readDesignIncludedDesignsCommand" in out) || out.readDesignIncludedDesignsCommand == null) {
+      throw new Error("readDesignIncludedDesignsCommand: missing output");
+    }
+    return out.readDesignIncludedDesignsCommand.designs;
+  }
+
+  async readQualitySum(qualityId: string): Promise<number> {
+    const out = await this.read({
+      readDesignQualitySumCommand: { qualityId: idDto(qualityId) },
+    });
+    if (!("readDesignQualitySumCommand" in out) || out.readDesignQualitySumCommand == null) {
+      throw new Error("readDesignQualitySumCommand: missing output");
+    }
+    return out.readDesignQualitySumCommand.sum;
+  }
+
+  async readReplaceableCatalog(selection: ReadonlyArray<string>): Promise<{ types: string[]; designs: string[] }> {
+    const out = await this.read({
+      readDesignReplaceableCatalogCommand: { selection: selection.map(idDto) },
+    });
+    if (!("readDesignReplaceableCatalogCommand" in out) || out.readDesignReplaceableCatalogCommand == null) {
+      throw new Error("readDesignReplaceableCatalogCommand: missing output");
+    }
+    const row = out.readDesignReplaceableCatalogCommand;
+    return {
+      types: row.types.map((t) => t.id),
+      designs: row.designs.map((d) => d.id),
+    };
+  }
+
+  async readIncludedDesignIds(): Promise<string[]> {
+    const out = await this.read({ readDesignIncludedDesignIdsCommand: null });
+    if (!("readDesignIncludedDesignIdsCommand" in out) || out.readDesignIncludedDesignIdsCommand == null) {
+      throw new Error("readDesignIncludedDesignIdsCommand: missing output");
+    }
+    return out.readDesignIncludedDesignIdsCommand.designIds.map((d) => d.id);
+  }
+}
+
+export class LiveTypeView {
+  constructor(
+    private readonly client: KitExecuteRead,
+    readonly typeId: string
+  ) { }
+
+  read(command: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
+    return readKitType(this.client, this.typeId, command);
+  }
+
+  async readBestRepresentation(tagIds: ReadonlyArray<string>): Promise<unknown | null | undefined> {
+    const out = await this.read({
+      readTypeBestRepresentationCommand: { tagIds: [...tagIds] },
+    });
+    if (!("readTypeBestRepresentationCommand" in out) || out.readTypeBestRepresentationCommand == null) {
+      throw new Error("readTypeBestRepresentationCommand: missing output");
+    }
+    return out.readTypeBestRepresentationCommand.representation;
+  }
+}
+
+/**
+ * Root of live read facades. Construct with a `KitStoreClient` and navigate
+ * `piece` / `design` / `type` for `executeRead` calls.
+ */
+export class LiveKitRoot {
+  constructor(readonly client: KitExecuteRead) { }
+
+  piece(designId: string, pieceId: string): LivePieceView {
+    return new LivePieceView(this.client, designId, pieceId);
+  }
+
+  design(designId: string): LiveDesignView {
+    return new LiveDesignView(this.client, designId);
+  }
+
+  type(typeId: string): LiveTypeView {
+    return new LiveTypeView(this.client, typeId);
+  }
+
+  /** @emoji 📌 Type ids in kit graph order (`ReadKitTypeIdsCommand`). */
+  async readTypeIds(): Promise<readonly string[]> {
+    const out = await readKit(this.client, { readKitTypeIdsCommand: null });
+    if (!("readKitTypeIdsCommand" in out) || out.readKitTypeIdsCommand == null) {
+      throw new Error("readKitTypeIdsCommand: missing output");
+    }
+    return out.readKitTypeIdsCommand.typeIds.map((r) => r.id);
+  }
+
+  /** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`). */
+  async readTypesMetadata(): Promise<ReadonlyArray<unknown>> {
+    const out = await readKit(this.client, { readKitTypesMetadataCommand: null });
+    if (!("readKitTypesMetadataCommand" in out) || out.readKitTypesMetadataCommand == null) {
+      throw new Error("readKitTypesMetadataCommand: missing output");
+    }
+    return out.readKitTypesMetadataCommand.types;
+  }
+
+  async readColoredConnectors(): Promise<ReadonlyArray<unknown>> {
+    const out = await readKit(this.client, { readKitColoredConnectorsCommand: null });
+    if (!("readKitColoredConnectorsCommand" in out) || out.readKitColoredConnectorsCommand == null) {
+      throw new Error("readKitColoredConnectorsCommand: missing output");
+    }
+    return out.readKitColoredConnectorsCommand.rows;
+  }
+}
+
+//#endregion 🔖KitGraphLive

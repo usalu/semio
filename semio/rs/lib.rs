@@ -107,8 +107,16 @@ pub enum ReadKitCommand {
     ReadKitUpdatedCommand,
     ReadKitTypesFullCommand,
     ReadKitTypesShallowCommand,
+    /// Stable type id list (kit graph order).
+    ReadKitTypeIdsCommand,
+    /// Per-type metadata rows (no full type payload).
+    ReadKitTypesMetadataCommand,
     ReadKitDesignsFullCommand,
     ReadKitDesignsShallowCommand,
+    /// Stable design id list (kit graph order).
+    ReadKitDesignIdsCommand,
+    /// Per-design metadata rows (no full design payload).
+    ReadKitDesignsMetadataCommand,
     ReadKitFilesFullCommand,
     ReadKitFilesShallowCommand,
     ReadKitFoldersFullCommand,
@@ -167,8 +175,12 @@ pub enum ReadKitCommandOutput {
     ReadKitUpdatedCommand { updated: Option<String> },
     ReadKitTypesFullCommand { types: Vec<TypeFullDto> },
     ReadKitTypesShallowCommand { types: Vec<TypeShallowDto> },
+    ReadKitTypeIdsCommand { r#type_ids: Vec<TypeIdDto> },
+    ReadKitTypesMetadataCommand { types: Vec<TypeMetadataDto> },
     ReadKitDesignsFullCommand { designs: Vec<DesignFullDto> },
     ReadKitDesignsShallowCommand { designs: Vec<DesignShallowDto> },
+    ReadKitDesignIdsCommand { design_ids: Vec<DesignIdDto> },
+    ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadataDto> },
     ReadKitFilesFullCommand { files: Vec<FileFullDto> },
     ReadKitFilesShallowCommand { files: Vec<FileShallowDto> },
     ReadKitFoldersFullCommand { folders: Vec<FolderFullDto> },
@@ -1200,10 +1212,10 @@ fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeStoreRef> {
     g.attributes.iter().find(|a| a.read().map(|a| a.id == *id).unwrap_or(false)).cloned()
 }
 
-fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
+pub(crate) fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
     g.types.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
 }
-fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
+pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
     g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
 }
 fn type_all_ports(t: &TypeStore) -> Vec<PortFullDto> {
@@ -1982,7 +1994,7 @@ fn color_string_for_id_text(text: &str) -> String {
     VARI[i][j].to_string()
 }
 
-fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
+pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
     let mut out: Vec<KitColoredConnectorRowDto> = Vec::new();
     for t in &g.types {
         let Ok(tr) = t.read() else { continue };
@@ -2005,7 +2017,7 @@ fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
     out
 }
 
-fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
+pub(crate) fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
     use std::collections::{HashMap, HashSet};
     if selected.len() < 2 {
         return vec![];
@@ -2056,7 +2068,7 @@ fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
     vec![]
 }
 
-fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
+pub(crate) fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
     use std::collections::HashSet;
     let mut design_ids: HashSet<Id> = HashSet::new();
     for conn in &d.connections {
@@ -2102,14 +2114,14 @@ fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
     out
 }
 
-fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
+pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
     design_included_infos(d)
         .into_iter()
         .map(|i| crate::design::DesignIdDto { id: i.design_id })
         .collect()
 }
 
-fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
+pub(crate) fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
     use std::collections::HashMap;
     let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g
         .types
@@ -2363,8 +2375,20 @@ impl ReadKitCommand {
             ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
             ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
             ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand {
+                r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() })).collect(),
+            },
+            ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand {
+                types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata_dto())).collect(),
+            },
             ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect() },
             ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect() },
+            ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand {
+                design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).collect(),
+            },
+            ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand {
+                designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata_dto())).collect(),
+            },
             ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
             ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
             ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
@@ -25956,6 +25980,9 @@ pub mod kit_graphql {
     use crate::kit_graph::{KitGraph, KitGraphRef};
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::piece::PieceStoreRef;
+    use crate::kit_alternative::KitAlternativeCommand;
+    use crate::kit_checkpoint::KitCheckpointCommand;
+    use crate::kit_session::SessionCommand;
     use crate::read::{DesignFlattenMapEntryDto, ReadKitCommand};
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
@@ -26082,24 +26109,154 @@ pub mod kit_graphql {
             Ok(true)
         }
 
-        /// Structured [`KitStoreCommand`] / VCS dispatch (waits for actor).
-        async fn kit_store_execute(&self, ctx: &Context<'_>, command: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
+        async fn new_session(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::NewSession).await
+        }
+        async fn end_session(&self, ctx: &Context<'_>, id: String) -> Result<Json<serde_json::Value>> {
+            run_kit_store(
+                ctx,
+                KitStoreCommand::EndSession {
+                    id: Id::from(id.as_str()),
+                },
+            )
+            .await
+        }
+        async fn new_alternative(
+            &self,
+            ctx: &Context<'_>,
+            from_checkpoint: Option<String>,
+            name: String,
+        ) -> Result<Json<serde_json::Value>> {
+            run_kit_store(
+                ctx,
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint: from_checkpoint.map(|s| Id::from(s.as_str())),
+                    name,
+                },
+            )
+            .await
+        }
+        async fn execute_session_commands(
+            &self,
+            ctx: &Context<'_>,
+            session_id: String,
+            session_commands: Vec<Json<serde_json::Value>>,
+        ) -> Result<Json<serde_json::Value>> {
+            let mut sc: Vec<SessionCommand> = Vec::with_capacity(session_commands.len());
+            for v in session_commands {
+                sc.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("session command: {e}")))?);
+            }
+            run_kit_store(
+                ctx,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: Id::from(session_id.as_str()),
+                    commands: sc,
+                },
+            )
+            .await
+        }
+        async fn execute_kit_checkpoint_commands(
+            &self,
+            ctx: &Context<'_>,
+            checkpoint_id: String,
+            commands: Vec<Json<serde_json::Value>>,
+        ) -> Result<Json<serde_json::Value>> {
+            let mut c: Vec<KitCheckpointCommand> = Vec::with_capacity(commands.len());
+            for v in commands {
+                c.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("checkpoint command: {e}")))?);
+            }
+            run_kit_store(
+                ctx,
+                KitStoreCommand::ExecuteKitCheckpointCommands {
+                    id: Id::from(checkpoint_id.as_str()),
+                    commands: c,
+                },
+            )
+            .await
+        }
+        async fn execute_kit_alternative_commands(
+            &self,
+            ctx: &Context<'_>,
+            alternative_id: String,
+            commands: Vec<Json<serde_json::Value>>,
+        ) -> Result<Json<serde_json::Value>> {
+            let mut c: Vec<KitAlternativeCommand> = Vec::with_capacity(commands.len());
+            for v in commands {
+                c.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("alternative command: {e}")))?);
+            }
+            run_kit_store(
+                ctx,
+                KitStoreCommand::ExecuteKitAlternativeCommands {
+                    id: Id::from(alternative_id.as_str()),
+                    commands: c,
+                },
+            )
+            .await
+        }
+        async fn attach_backbone(&self, ctx: &Context<'_>, config: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
+            let cfg: crate::kit_backbone_wire::BackboneConfig =
+                serde_json::from_value(config.0).map_err(|e| Error::new(format!("attach back bone: {e}")))?;
+            run_kit_store(ctx, KitStoreCommand::AttachBackbone { config: cfg }).await
+        }
+        async fn detach_backbone(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::DetachBackbone).await
+        }
+        async fn set_active_checkpoint(&self, ctx: &Context<'_>, id: Option<String>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(
+                ctx,
+                KitStoreCommand::SetActiveCheckpoint {
+                    id: id.map(|s| Id::from(s.as_str())),
+                },
+            )
+            .await
+        }
+        async fn list_conflicts(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::ListConflicts).await
+        }
+        async fn resolve_conflict(
+            &self,
+            ctx: &Context<'_>,
+            id: String,
+            strategy: Json<serde_json::Value>,
+        ) -> Result<Json<serde_json::Value>> {
+            let st: crate::kit_backbone_wire::ConflictResolution =
+                serde_json::from_value(strategy.0).map_err(|e| Error::new(format!("strategy: {e}")))?;
+            run_kit_store(
+                ctx,
+                KitStoreCommand::ResolveConflict {
+                    id: Id::from(id.as_str()),
+                    strategy: st,
+                },
+            )
+            .await
+        }
+        async fn backbone_status(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::BackboneStatus).await
+        }
+        async fn sync_now(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+            run_kit_store(ctx, KitStoreCommand::SyncNow).await
+        }
+        async fn kit_store_batch(&self, ctx: &Context<'_>, commands: Vec<Json<serde_json::Value>>) -> Result<Json<serde_json::Value>> {
+            let mut inner: Vec<KitStoreCommand> = Vec::with_capacity(commands.len());
+            for v in commands {
+                inner.push(serde_json::from_value(v.0).map_err(|e| Error::new(format!("batch command: {e}")))?);
+            }
+            run_kit_store(
+                ctx,
+                KitStoreCommand::Batch { commands: inner },
+            )
+            .await
+        }
+
+        /// Single [`KitStoreCommand`] JSON (same shape as each element of `kitStoreBatch`); for `kitStoreExecute` in JS.
+        async fn kit_store_execute(
+            &self,
+            ctx: &Context<'_>,
+            command: Json<serde_json::Value>,
+        ) -> Result<Json<serde_json::Value>> {
             let cmd: KitStoreCommand =
                 serde_json::from_value(command.0).map_err(|e| Error::new(format!("kit_store_execute: {e}")))?;
-            let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
-            let (reply_tx, reply_rx) = oneshot::channel();
-            tx.send(GraphWork::KitStoreCommand {
-                command: cmd,
-                reply: reply_tx,
-            })
-            .await
-            .map_err(|e| Error::new(format!("execute queue: {e}")))?;
-            let res = reply_rx
-                .await
-                .map_err(|_| Error::new("kit actor dropped"))?
-                .map_err(Error::new)?;
-            let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-            Ok(Json(v))
+            run_kit_store(ctx, cmd).await
         }
     }
 
@@ -26133,6 +26290,41 @@ pub mod kit_graphql {
 
     pub fn schema() -> &'static GqlSchema {
         SCHEMA.get_or_init(|| Schema::build(RootQuery, RootMutation, RootSubscription).finish())
+    }
+
+    /// 🌐 Encodes a [`KitStoreCommandResult`] the same way as the legacy `kitStoreExecute` JSON boundary.
+    async fn run_kit_store(ctx: &Context<'_>, command: KitStoreCommand) -> Result<Json<serde_json::Value>> {
+        let tx: &async_channel::Sender<GraphWork> = ctx.data()?;
+        let (reply_tx, reply_rx) = oneshot::channel();
+        tx.send(GraphWork::KitStoreCommand { command, reply: reply_tx })
+            .await
+            .map_err(|e| Error::new(format!("execute queue: {e}")))?;
+        let res = reply_rx
+            .await
+            .map_err(|_| Error::new("kit actor dropped"))?
+            .map_err(Error::new)?;
+        let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+        Ok(Json(v))
+    }
+
+    /// 🌐 Row for `Design.replaceableCatalog`.
+    pub struct ReplaceableCatalogNode {
+        /// 🌐
+        pub type_ids: Vec<String>,
+        /// 🌐
+        pub design_ids: Vec<String>,
+    }
+
+    #[Object(name = "ReplaceableCatalog")]
+    impl ReplaceableCatalogNode {
+        /// 🌐
+        async fn type_ids(&self) -> Result<Vec<String>> {
+            Ok(self.type_ids.clone())
+        }
+        /// 🌐
+        async fn design_ids(&self) -> Result<Vec<String>> {
+            Ok(self.design_ids.clone())
+        }
     }
 
     /// 🌐 Thin GraphQL wrapper around [`KitGraphRef`] (required for `async-graphql` orphan rules).
@@ -26179,6 +26371,59 @@ pub mod kit_graphql {
 
         async fn designs(&self) -> Result<Vec<DesignNode>> {
             Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignNode).collect())
+        }
+
+        /// 🌐 Kit-level type ids in live graph order.
+        async fn type_ids(&self) -> Result<Vec<String>> {
+            let g = lock_graph(&self.0)?;
+            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect())
+        }
+        /// 🌐 Per-type metadata rows.
+        async fn types_metadata(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let m: Vec<crate::typ::TypeMetadataDto> = g
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
+        }
+        /// 🌐 Kit-level design ids in live graph order.
+        async fn design_ids(&self) -> Result<Vec<String>> {
+            let g = lock_graph(&self.0)?;
+            Ok(g
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|r| r.id.to_string()))
+                .collect())
+        }
+        /// 🌐 Per-design metadata rows.
+        async fn designs_metadata(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let m: Vec<crate::design::DesignMetadataDto> = g
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto()))
+                .collect();
+            Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
+        }
+        /// 🌐 Colored connector index rows.
+        async fn colored_connectors(&self) -> Result<Json<serde_json::Value>> {
+            let g = lock_graph(&self.0)?;
+            let rows = crate::read::kit_colored_connector_rows(&*g);
+            Ok(Json(serde_json::to_value(&rows).map_err(|e| Error::new(e.to_string()))?))
+        }
+        /// 🌐 Resolve a design by id from the live graph.
+        async fn design_for_id(&self, id: String) -> Result<Option<DesignNode>> {
+            let g = lock_graph(&self.0)?;
+            let did = Id::from(id.as_str());
+            Ok(crate::read::kit_design(&*g, &did).map(DesignNode))
+        }
+        /// 🌐 Resolve a type by id from the live graph.
+        async fn type_for_id(&self, id: String) -> Result<Option<TypeNode>> {
+            let g = lock_graph(&self.0)?;
+            let tid = Id::from(id.as_str());
+            Ok(crate::read::kit_type(&*g, &tid).map(TypeNode))
         }
 
         /// Full kit DTO snapshot (materialized live graph).
@@ -26326,13 +26571,19 @@ pub mod kit_graphql {
             Ok(Json(serde_json::to_value(&out).map_err(|e| Error::new(e.to_string()))?))
         }
 
-        /// Bridge: run read-command batch against the **live** graph (migrating callers should prefer field resolvers).
+        /// Batched read commands (`@semio/js` `readKitCommands` query); `batch` is a JSON array of read commands.
         async fn read_kit_commands(&self, batch: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let commands: Vec<ReadKitCommand> =
-                serde_json::from_value(batch.0).map_err(|e| Error::new(format!("read_kit_commands: {e}")))?;
+            let items: Vec<ReadKitCommand> = match batch.0 {
+                serde_json::Value::Array(a) => a
+                    .into_iter()
+                    .map(|v| serde_json::from_value(v).map_err(|e| Error::new(format!("read_kit_commands item: {e}"))))
+                    .collect::<Result<Vec<_>, _>>()?,
+                _ => return Err(Error::new("readKitCommands: expected JSON array")),
+            };
             let g = lock_graph(&self.0)?;
-            let results = ReadKitCommand::execute_many(&*g, &commands).map_err(|e| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&results).map_err(|e| Error::new(e.to_string()))?))
+            let results = ReadKitCommand::execute_many(&*g, &items).map_err(|e| Error::new(format!("{e:?}")))?;
+            let v = serde_json::to_value(&results).map_err(|e| Error::new(e.to_string()))?;
+            Ok(Json(v))
         }
     }
 
@@ -26384,6 +26635,55 @@ pub mod kit_graphql {
             rows.sort_by(|a, b| a.piece_id.as_str().cmp(b.piece_id.as_str()));
             Ok(Json(rows))
         }
+
+        async fn piece_for_id(&self, id: String) -> Result<Option<PieceNode>> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            Ok(d.piece(id.as_str()).map(PieceNode))
+        }
+        async fn clusterable_groups(&self, selection: Vec<String>) -> Result<Vec<Vec<String>>> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
+            let g = crate::read::design_clusterable_groups(&*d, &ids);
+            Ok(g.into_iter()
+                .map(|grp: Vec<Id>| grp.into_iter().map(|i| i.to_string()).collect::<Vec<_>>())
+                .collect())
+        }
+        async fn quality_sum(&self, ctx: &Context<'_>, quality_id: String) -> Result<f64> {
+            let gref: &KitGraphRef = ctx.data()?;
+            let g = lock_graph(gref)?;
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let qid = Id::from(quality_id.as_str());
+            Ok(crate::read::design_sum_quality(&*d, &*g, &qid))
+        }
+        async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalogNode> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
+            let alts = d.replaceable_catalog_candidates(&ids);
+            Ok(ReplaceableCatalogNode {
+                type_ids: alts
+                    .types
+                    .iter()
+                    .filter_map(|t| t.read().ok().map(|r| r.id.to_string()))
+                    .collect(),
+                design_ids: alts
+                    .designs
+                    .iter()
+                    .filter_map(|x| x.read().ok().map(|r| r.id.to_string()))
+                    .collect(),
+            })
+        }
+        async fn included_designs(&self) -> Result<Json<serde_json::Value>> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let v = crate::read::design_included_infos(&*d);
+            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+        }
+        async fn included_design_ids(&self) -> Result<Vec<String>> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            Ok(crate::read::design_included_design_ids(&*d)
+                .into_iter()
+                .map(|x| x.id.to_string())
+                .collect())
+        }
     }
 
     #[Object(name = "Piece")]
@@ -26419,6 +26719,20 @@ pub mod kit_graphql {
 
         async fn scale(&self) -> Result<Option<f64>> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
+        }
+
+        /// 🌐 Full parent connection DTO when the piece is linked through a connection.
+        async fn parent_connection_full(&self) -> Result<Option<Json<serde_json::Value>>> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            let c = p
+                .parent_connection
+                .as_ref()
+                .and_then(|w| w.upgrade())
+                .and_then(|c| c.read().ok().map(|c| c.to_full_dto()));
+            match c {
+                Some(dto) => Ok(Some(Json(serde_json::to_value(&dto).map_err(|e| Error::new(e.to_string()))?))),
+                None => Ok(None),
+            }
         }
     }
 
@@ -26458,6 +26772,17 @@ pub mod kit_graphql {
                 .cloned()
                 .map(RepresentationNode)
                 .collect())
+        }
+
+        /// 🌐 Best matching representation for tag selection.
+        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<Json<serde_json::Value>>> {
+            let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
+            let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
+            let r = t.best_representation_for_tag_ids(&ids);
+            match r {
+                Some(dto) => Ok(Some(Json(serde_json::to_value(&dto).map_err(|e| Error::new(e.to_string()))?))),
+                None => Ok(None),
+            }
         }
     }
 

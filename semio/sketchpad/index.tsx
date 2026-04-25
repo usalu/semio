@@ -133,6 +133,8 @@ import {
   useDesigns as useDesignsFromKit,
   useDesignScope,
   useDesignsFull,
+  useDesignsIds,
+  useDesignsMetadata,
   useFilesFull,
   useExplodeableDesignNodes as useExplodeableDesignNodeIdsFromKit,
   useFixedPieceId as useFixedPieceIdFromKit,
@@ -6968,6 +6970,8 @@ export {
   useDesign,
   useDesignScope,
   useDesignsFull,
+  useDesignsIds,
+  useDesignsMetadata,
   useFilesFull,
   useIsInAuthorScope,
   useIsInDesignScope,
@@ -6985,6 +6989,8 @@ export {
   useType,
   useTypeScope,
   useTypesFull,
+  useTypesIds,
+  useTypesMetadata,
   KitScopeContext,
 } from "@semio/react";
 

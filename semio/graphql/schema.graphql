@@ -29,8 +29,23 @@ type Query {
 type Mutation {
   """Apply `ChangeKitCommand` batch on the live graph (actor queue)."""
   changeKitCommands(commands: JSON!): Boolean!
-  """Structured `KitStoreCommand` / VCS / backbone dispatch (actor queue)."""
-  kitStoreExecute(command: JSON!): JSON!
+
+  """VCS: `KitStoreCommand::NewSession` (returns tagged `KitStoreCommandResult` JSON)."""
+  newSession: JSON!
+  endSession(id: String!): JSON!
+  newAlternative(fromCheckpoint: String, name: String!): JSON!
+  executeSessionCommands(sessionId: String!, sessionCommands: [JSON!]!): JSON!
+  executeKitCheckpointCommands(checkpointId: String!, commands: [JSON!]!): JSON!
+  executeKitAlternativeCommands(alternativeId: String!, commands: [JSON!]!): JSON!
+
+  attachBackbone(config: JSON!): JSON!
+  detachBackbone: JSON!
+  setActiveCheckpoint(id: String): JSON!
+  listConflicts: JSON!
+  resolveConflict(id: String!, strategy: JSON!): JSON!
+  backboneStatus: JSON!
+  syncNow: JSON!
+  kitStoreBatch(commands: [JSON!]!): JSON!
 }
 
 type Subscription {
@@ -43,11 +58,19 @@ type KitStore {
   description: String
   types: [Type!]!
   designs: [Design!]!
+  """Ordered type ids in kit graph order (replaces `readKitTypeIds` batch)."""
+  typeIds: [String!]!
+  typesMetadata: JSON!
+  """Ordered design ids in kit graph order (`ReadKitDesignIdsCommand`)."""
+  designIds: [String!]!
+  designsMetadata: JSON!
+  coloredConnectors: JSON!
   liveFullDto: JSON!
   theKitDto: JSON!
   materializeAt(checkpointId: String): JSON!
   vcsStateJson: JSON!
-  readKitCommands(batch: JSON!): JSON!
+  designForId(id: String!): Design
+  typeForId(id: String!): Type
 }
 
 type Design {
@@ -57,6 +80,12 @@ type Design {
   pieces: [Piece!]!
   connections: [Connection!]!
   flattenMap: JSON!
+  pieceForId(id: String!): Piece
+  clusterableGroups(selection: [String!]!): [[String!]!]!
+  qualitySum(qualityId: String!): Float!
+  replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
+  includedDesigns: JSON!
+  includedDesignIds: [String!]!
 }
 
 type Piece {
@@ -67,6 +96,7 @@ type Piece {
   flatCenter: JSON!
   flatPose: JSON!
   scale: Float
+  parentConnectionFull: JSON
 }
 
 type Type {
@@ -75,6 +105,7 @@ type Type {
   description: String
   connectors: [Connector!]!
   representations: [Representation!]!
+  bestRepresentation(tagIds: [String!]!): JSON
 }
 
 type Connector {
@@ -99,4 +130,9 @@ type Connection {
   u: Float
   v: Float
   description: String
+}
+
+type ReplaceableCatalog {
+  typeIds: [String!]!
+  designIds: [String!]!
 }
