@@ -1124,6 +1124,11 @@ export const KitDataScopeContext = React.createContext<KitReadScope>(theKitReadS
 export function useKitDataScope(): KitReadScope {
   return React.useContext(KitDataScopeContext);
 }
+
+/** @internal Dependency token so read hooks re-subscribe when {@link KitDataScopeContext} changes. */
+function useKitDataScopeKey(): string {
+  return kitReadScopeKey(useKitDataScope());
+}
 /** @emoji 📌 Current {@link SchemaScope} from nearest entity scope provider (TypeScope, DesignScope, …). */
 export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 
@@ -1482,6 +1487,7 @@ export function useIsInKitScope(): boolean {
 export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
   const subscribe = React.useCallback(
     (onStoreChange: () => void) => {
       if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
@@ -1489,14 +1495,14 @@ export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapsho
       }
       return () => {};
     },
-    [runtime, effectiveKitId],
+    [runtime, effectiveKitId, scopeKey],
   );
   const getSnapshot = React.useCallback(() => {
     if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
-      return runtime.snapshot;
+      return runtime.store.getSnapshot();
     }
     return null;
-  }, [runtime, effectiveKitId]);
+  }, [runtime, effectiveKitId, scopeKey]);
   return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
@@ -1715,7 +1721,7 @@ export function KitScope({
     if (!st) return;
     let cancelled = false;
     let client: KitStoreClient | null = null;
-    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback() }).then((c) => {
+    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback(), readScope: kitReadScopeProp }).then((c) => {
       if (cancelled) {
         releaseSemioKitCommandFacade(c);
         c.dispose();

@@ -1642,7 +1642,20 @@ export type KitStoreClient = SemioKitBridge & {
   resolveConflict(id: string, strategy: ConflictResolution): Promise<unknown>;
   syncNow(): Promise<unknown>;
   kitGraphql(): LiveKitRoot;
-  subscribe(cb: (ev?: unknown) => void): () => void;
+  subscribe(cb: (ev: KitEvent) => void): () => void;
+  readPieceFlatPlane(designId: string, pieceId: string): Promise<unknown>;
+  readPieceFlatCenter(designId: string, pieceId: string): Promise<unknown>;
+  readPieceParentConnectionFull(designId: string, pieceId: string): Promise<unknown>;
+  readDesignIncludedDesigns(designId: string): Promise<unknown>;
+  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<unknown>;
+  readDesignQualitySum(designId: string, qualityId: string): Promise<number>;
+  readTypeBestRepresentation(typeId: string, tagIds: readonly string[]): Promise<unknown>;
+  readColoredConnectors(): Promise<readonly unknown[]>;
+  readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]>;
+  readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]>;
+  readDesignIncludedDesignIds(designId: string): Promise<readonly string[]>;
+  /** @emoji 🧭 Switch materialized read DTO / GraphQL root (matches {@link WasmKitStoreClient.setKitReadScope}; no-op in fallback). */
+  setKitReadScope(scope: KitReadScope): void;
   dispose(): void;
 };
 
@@ -2035,7 +2048,7 @@ export function kitEventAffectsKitColoredConnectorsRead(ev: unknown): boolean {
 // #region 📦WasmKitStoreClient
 
 export class WasmKitStoreClient implements KitStoreClient {
-  private readonly listeners = new Set<(ev?: unknown) => void>();
+  private readonly listeners = new Set<(ev: KitEvent) => void>();
   private readonly offKit: () => void;
   private lastDto: Record<string, unknown> = {};
   /** @emoji 🧭 Active read scope for {@link getPieces} / view-store DTO materialization. */
@@ -2046,17 +2059,19 @@ export class WasmKitStoreClient implements KitStoreClient {
     readScope: KitReadScope = theKitReadScope,
   ) {
     this.kitReadScope = readScope;
-    this.offKit = this.ks.subscribe(() => {
+    this.offKit = this.ks.subscribe((ev: KitEvent) => {
       void this.refreshDtoFromStore();
-      for (const l of this.listeners) l(undefined);
+      for (const l of this.listeners) l(ev);
     });
     void this.refreshDtoFromStore();
   }
 
   setKitReadScope(scope: KitReadScope): void {
     this.kitReadScope = scope;
-    void this.refreshDtoFromStore();
-    for (const l of this.listeners) l(undefined);
+    void this.refreshDtoFromStore().then(() => {
+      const ev = { Changed: null } as KitEvent;
+      for (const l of this.listeners) l(ev);
+    });
   }
 
   private async refreshDtoFromStore(): Promise<void> {
@@ -2082,7 +2097,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return s;
   }
 
-  subscribe(cb: (ev?: unknown) => void): () => void {
+  subscribe(cb: (ev: KitEvent) => void): () => void {
     this.listeners.add(cb);
     return () => {
       this.listeners.delete(cb);
@@ -2097,6 +2112,68 @@ export class WasmKitStoreClient implements KitStoreClient {
 
   kitGraphql(): LiveKitRoot {
     return new LiveKitRoot(this.ks, this.kitReadScope);
+  }
+
+  readPieceFlatPlane(designId: string, pieceId: string): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope).piece(designId, pieceId).readFlatPlane();
+  }
+
+  readPieceFlatCenter(designId: string, pieceId: string): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope).piece(designId, pieceId).readFlatCenter();
+  }
+
+  readPieceParentConnectionFull(designId: string, pieceId: string): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .piece(designId, pieceId)
+      .readParentConnectionFull()
+      .then((x) => x ?? undefined);
+  }
+
+  readDesignIncludedDesigns(designId: string): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .design(designId)
+      .readIncludedDesigns()
+      .then((v) => (Array.isArray(v) ? v : []));
+  }
+
+  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .design(designId)
+      .readClusterableGroups(selection)
+      .then((v) => (Array.isArray(v) ? v : []));
+  }
+
+  readDesignQualitySum(designId: string, qualityId: string): Promise<number> {
+    return new LiveKitRoot(this.ks, this.kitReadScope).design(designId).readQualitySum(qualityId);
+  }
+
+  readTypeBestRepresentation(typeId: string, tagIds: readonly string[]): Promise<unknown> {
+    return new LiveKitRoot(this.ks, this.kitReadScope).type(typeId).readBestRepresentation(tagIds);
+  }
+
+  readColoredConnectors(): Promise<readonly unknown[]> {
+    return new LiveKitRoot(this.ks, this.kitReadScope).readColoredConnectors();
+  }
+
+  readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .design(designId)
+      .readReplaceableCatalog(selection)
+      .then((v) => v.types);
+  }
+
+  readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .design(designId)
+      .readReplaceableCatalog(selection)
+      .then((v) => v.designs);
+  }
+
+  readDesignIncludedDesignIds(designId: string): Promise<readonly string[]> {
+    return new LiveKitRoot(this.ks, this.kitReadScope)
+      .design(designId)
+      .readIncludedDesignIds()
+      .then((v) => (Array.isArray(v) ? v : []));
   }
 
   submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
@@ -2227,7 +2304,7 @@ export class WasmKitStoreClient implements KitStoreClient {
 }
 
 class FallbackKitClient implements KitStoreClient {
-  private readonly listeners = new Set<(ev?: unknown) => void>();
+  private readonly listeners = new Set<(ev: KitEvent) => void>();
   constructor(private readonly kit: KitFullDto) {}
 
   getDto(): Record<string, unknown> {
@@ -2238,7 +2315,7 @@ class FallbackKitClient implements KitStoreClient {
     return this.getDto();
   }
 
-  subscribe(cb: (ev?: unknown) => void): () => void {
+  subscribe(cb: (ev: KitEvent) => void): () => void {
     this.listeners.add(cb);
     return () => {
       this.listeners.delete(cb);
@@ -2254,7 +2331,60 @@ class FallbackKitClient implements KitStoreClient {
   }
 
   private notify(): void {
-    for (const l of this.listeners) l({});
+    const ev = { Changed: null } as KitEvent;
+    for (const l of this.listeners) l(ev);
+  }
+
+  readPieceFlatPlane(_designId: string, _pieceId: string): Promise<unknown> {
+    void _designId;
+    void _pieceId;
+    return Promise.resolve(undefined);
+  }
+  readPieceFlatCenter(_designId: string, _pieceId: string): Promise<unknown> {
+    void _designId;
+    void _pieceId;
+    return Promise.resolve(undefined);
+  }
+  readPieceParentConnectionFull(_designId: string, _pieceId: string): Promise<unknown> {
+    void _designId;
+    void _pieceId;
+    return Promise.resolve(undefined);
+  }
+  readDesignIncludedDesigns(_designId: string): Promise<unknown> {
+    void _designId;
+    return Promise.resolve([]);
+  }
+  readDesignClusterableGroups(_designId: string, _selection: readonly string[]): Promise<unknown> {
+    void _designId;
+    void _selection;
+    return Promise.resolve([]);
+  }
+  readDesignQualitySum(_designId: string, _qualityId: string): Promise<number> {
+    void _designId;
+    void _qualityId;
+    return Promise.resolve(0);
+  }
+  readTypeBestRepresentation(_typeId: string, _tagIds: readonly string[]): Promise<unknown> {
+    void _typeId;
+    void _tagIds;
+    return Promise.resolve(undefined);
+  }
+  readColoredConnectors(): Promise<readonly unknown[]> {
+    return Promise.resolve([]);
+  }
+  readDesignReplaceableCatalogTypes(_designId: string, _selection: readonly string[]): Promise<readonly string[]> {
+    void _designId;
+    void _selection;
+    return Promise.resolve([]);
+  }
+  readDesignReplaceableCatalogDesigns(_designId: string, _selection: readonly string[]): Promise<readonly string[]> {
+    void _designId;
+    void _selection;
+    return Promise.resolve([]);
+  }
+  readDesignIncludedDesignIds(_designId: string): Promise<readonly string[]> {
+    void _designId;
+    return Promise.resolve([]);
   }
 
   async submitChangeKitCommands(_commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
@@ -2363,6 +2493,10 @@ class FallbackKitClient implements KitStoreClient {
   }
   async syncNow(): Promise<unknown> {
     return {};
+  }
+
+  setKitReadScope(_scope: KitReadScope): void {
+    void _scope;
   }
 }
 

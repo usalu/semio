@@ -220,7 +220,7 @@ async fn post_graphql(
     .await
     {
         Ok(r) => r,
-        Err(e) => return bad_request(e),
+        Err(e) => return bad_request(format!("{e:?}")),
     };
     match serde_json::to_value(&resp) {
         Ok(v) => axum::Json(v).into_response(),
@@ -228,7 +228,7 @@ async fn post_graphql(
     }
 }
 
-fn get_graphiql() -> impl IntoResponse {
+async fn get_graphiql() -> Html<String> {
     let html: String = graphiql_source("/graphql", None);
     Html(html)
 }

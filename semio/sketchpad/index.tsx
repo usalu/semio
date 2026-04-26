@@ -7360,7 +7360,7 @@ export type FeedbackKind = "bug" | "idea";
 /**
  * Kind of app context for feedback submission.
  **/
-export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "quality" | "docs" | "feedback";
+export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "docs" | "feedback";
 /**
  * Form data shape for feedback submissions.
  **/
@@ -11468,6 +11468,7 @@ const KitCreateActions: FC = () => {
   const { run: runCreatePort } = useCreatePort();
   const { run: runCreateFolder } = useCreateFolder();
   const sketchpadCommands = useSketchpadCommands();
+  const [setSelectionAction] = useKitAppSetSelection();
 
   const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
   const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
@@ -11516,7 +11517,7 @@ const KitCreateActions: FC = () => {
         };
         void runCreateQuality(newQuality as unknown);
         setKindActive("qualities");
-        sketchpadCommands.navigateToQuality(kit.id, newQuality.id);
+        setSelectionAction?.({ qualities: [newQuality.key] });
         break;
       }
       case "ports": {
@@ -13078,7 +13079,8 @@ const AppContent: FC = () => {
           name: uniqueName,
         };
         void runCreateQuality(newQuality as unknown);
-        sketchpadCommands.navigateToQuality(kit.id, newQuality.id);
+        setKind("qualities");
+        setSelectionAction?.({ qualities: [newQuality.key] });
         break;
       }
       case "ports": {
@@ -13204,7 +13206,8 @@ const AppContent: FC = () => {
           return;
         }
         if (row.kind === "qualities") {
-          sketchpadCommands.navigateToQuality(kit.id, (row.data as Quality).key);
+          setKind("qualities");
+          setSelectionAction?.({ qualities: [(row.data as Quality).key] });
           return;
         }
         return;
@@ -13330,9 +13333,12 @@ const AppContent: FC = () => {
 
       if (row.kind === "designs") sketchpadCommands.navigateToDesign(kit.id, (row.data as Design).id);
       else if (row.kind === "types") sketchpadCommands.navigateToType(kit.id, (row.data as Type).id);
-      else if (row.kind === "qualities") sketchpadCommands.navigateToQuality(kit.id, (row.data as Quality).key);
+      else if (row.kind === "qualities") {
+        setKind("qualities");
+        setSelectionAction?.({ qualities: [(row.data as Quality).key] });
+      }
     },
-    [kit.id, sketchpadCommands],
+    [kit.id, sketchpadCommands, setKind, setSelectionAction],
   );
 
   const handleSortClick = (column: "artifact" | "kind" | "authors" | "updatedAt" | "createdAt") => {
@@ -19612,7 +19618,7 @@ export function useSketchpadCommands() {
         }
       },
       navigateToQuality: (kit: Id, quality: Id) => {
-        const path = `/kits/${kit}/qualities/${quality}`;
+        const path = `/kits/${kit}?kind=qualities&select=${quality}`;
 
         const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
         if (globalNavigate) {
@@ -20002,7 +20008,7 @@ async function loadAppConfigs() {
   if (appConfigsLoadPromise) return appConfigsLoadPromise;
   appConfigsLoadPromise = (async () => {
     // ⚙️All modules are now consolidated in this file, register configs directly.
-    const configs = [homeConfig, kitConfig, typeConfig, qualityConfig, designConfig, docsConfig, feedbackConfig];
+    const configs = [homeConfig, kitConfig, typeConfig, designConfig, docsConfig, feedbackConfig];
     for (const config of configs) {
       if (!config) continue;
       appRegistry.register(config as AppConfig);
@@ -20647,13 +20653,12 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
   const thirdPart = pathParts[3];
   const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
-  const itemId = isDesignApp || isTypeApp || isQualityApp ? thirdPart : null;
+  const itemId = isDesignApp || isTypeApp ? thirdPart : null;
 
-  const filteredKind = kitId && !isDesignApp && !isTypeApp && !isQualityApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
-  const filteredName = kitId && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("name") : null;
+  const filteredKind = kitId && !isDesignApp && !isTypeApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitId && !isDesignApp && !isTypeApp ? searchParams.get("name") : null;
 
-  const isKitApp = kitId && !isDesignApp && !isTypeApp && !isQualityApp;
+  const isKitApp = kitId && !isDesignApp && !isTypeApp;
 
   const [navbarKitSnap] = useKitSnapshotTriad();
   const kitFromScope = navbarKitSnap?.kit;
@@ -20697,11 +20702,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
     if (!kit?.types) return [];
     return (kit.types as any[]).filter((t): t is Type => typeof t === "object" && t.id !== undefined);
   }, [kit?.types]);
-
-  const allQualities: Quality[] = useMemo(() => {
-    if (!kit?.qualities) return [];
-    return (kit.qualities as any[]).filter((q): q is Quality => typeof q === "object" && q.id !== undefined);
-  }, [kit?.qualities]);
 
   const allFolders: Folder[] = useMemo(() => {
     if (!kit?.folders) return [];
@@ -20850,8 +20850,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
 
   const design = designFromScope || (isDesignApp ? allDesigns.find((d) => d.id === itemId) : undefined);
   const type = typeFromScope || (isTypeApp ? allTypes.find((t) => t.id === itemId) : undefined);
-  const quality = isQualityApp ? allQualities.find((q) => q.id === itemId) : undefined;
-
   const designFolderChain = useMemo(() => {
     if (!design || typeof design !== "object" || !("parent" in design)) return [];
     const designObj = design as Design;
@@ -21421,50 +21419,6 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
           handleCreateChild("semio.sketchpad.navbar.type", type as Type, true);
         } else navigate(href);
       },
-    });
-  }
-
-  if (isQualityApp && quality) {
-    const versionIndex = breadcrumbItems.findIndex((item) => item.id === "semio.sketchpad.navbar.kitVersion");
-    if (versionIndex !== -1) {
-      breadcrumbItems[versionIndex] = {
-        ...breadcrumbItems[versionIndex],
-        options: artifactKinds,
-        onNavigate: (href) => navigate(href),
-      };
-    }
-
-    breadcrumbItems.push({
-      id: "semio.sketchpad.navbar.breadcrumb.qualities",
-      content: (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(`/kits/${kitId}?kind=qualities`);
-          }}
-          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
-        >
-          Qualities
-        </button>
-      ),
-    });
-    breadcrumbItems.push({
-      id: "semio.sketchpad.navbar.quality",
-      content: (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            navigate(`/kits/${kitId}?kind=qualities&key=${encodeURIComponent(quality.key)}&select=${quality.id}`);
-          }}
-          className="text-foreground transition-colors px-single flex items-center gap-single h-full hover:bg-hover-base cursor-selectable"
-        >
-          {quality.name}
-        </button>
-      ),
     });
   }
 
@@ -22935,8 +22889,7 @@ const LayoutWrapper: FC = () => {
   const thirdPart = pathParts[3];
   const isDesignApp = isKitsPath && secondPart === "designs" && thirdPart && isUuidPattern(thirdPart);
   const isTypeApp = isKitsPath && secondPart === "types" && thirdPart && isUuidPattern(thirdPart);
-  const isQualityApp = isKitsPath && secondPart === "qualities" && thirdPart && isUuidPattern(thirdPart);
-  const isKitApp = kitId && !isDesignApp && !isTypeApp && !isQualityApp;
+  const isKitApp = kitId && !isDesignApp && !isTypeApp;
 
   const [footerKitSnap] = useKitSnapshotTriad();
   const kitFromScope = footerKitSnap?.kit;
@@ -22945,7 +22898,7 @@ const LayoutWrapper: FC = () => {
   const kit: Kit | KitShallowDto | null | undefined = (kitFromScope as Kit | KitShallowDto | null | undefined) || kits.find((k) => k.id === kitId);
   const kitKind = useKitKind(kitId || "");
 
-  const itemId = isDesignApp || isTypeApp || isQualityApp ? thirdPart : null;
+  const itemId = isDesignApp || isTypeApp ? thirdPart : null;
   const allDesigns: Design[] = useMemo(() => {
     if (!kit?.designs) return [];
     return (kit.designs as any[]).filter((d): d is Design => typeof d === "object" && d.id !== undefined);
@@ -22972,8 +22925,8 @@ const LayoutWrapper: FC = () => {
   const homeKind = !isKitsPath || pathParts.length === 1 ? (searchParams.get("kind") as KitKind | null) : null;
   const homeName = !isKitsPath || pathParts.length === 1 ? searchParams.get("name") : null;
   const homeVersion = !isKitsPath || pathParts.length === 1 ? searchParams.get("version") : null;
-  const filteredKind = kitId && !isDesignApp && !isTypeApp && !isQualityApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
-  const filteredName = kitId && !isDesignApp && !isTypeApp && !isQualityApp ? searchParams.get("name") : null;
+  const filteredKind = kitId && !isDesignApp && !isTypeApp ? (searchParams.get("kind") as "designs" | "types" | "qualities" | "files" | "authors" | null) : null;
+  const filteredName = kitId && !isDesignApp && !isTypeApp ? searchParams.get("name") : null;
 
   const upTarget = useMemo(() => {
     const pathWithoutQuery = currentPath.split("?")[0];
@@ -23012,10 +22965,6 @@ const LayoutWrapper: FC = () => {
       return `/kits/${kitId}?kind=types`;
     }
 
-    if (isQualityApp) {
-      return `/kits/${kitId}?kind=qualities`;
-    }
-
     if (isKitApp) {
       if (filteredKind) {
         const kitObj = kit && typeof kit === "object" && "name" in kit ? (kit as Kit) : null;
@@ -23047,7 +22996,7 @@ const LayoutWrapper: FC = () => {
     }
 
     return pathWithoutQuery.split("/").slice(0, -1).join("/") || "/";
-  }, [currentPath, isDesignApp, isTypeApp, isQualityApp, isKitApp, design, type, kitId, filteredKind, filteredName, kitKind, kit, homeKind, homeName, homeVersion]);
+  }, [currentPath, isDesignApp, isTypeApp, isKitApp, design, type, kitId, filteredKind, filteredName, kitKind, kit, homeKind, homeName, homeVersion]);
   const isAtRoot = currentPath === "/" || (currentPath === "/kits" && !kitId);
   const fullscreenToggleId = isFullscreen ? "semio.sketchpad.navbar.exitFullscreen" : "semio.sketchpad.navbar.fullscreen";
 
@@ -23421,8 +23370,6 @@ const LayoutWrapper: FC = () => {
                           return <BasicChatPanel id="semio.sketchpad.app.design.chat" title="Design" />;
                         case "type":
                           return <BasicChatPanel id="semio.sketchpad.app.type.chat" title="Type" />;
-                        case "quality":
-                          return <BasicChatPanel id="semio.sketchpad.app.quality.chat" title="Quality" />;
                         case "docs":
                           return <BasicChatPanel id="semio.sketchpad.app.docs.chat" title="Docs" />;
                         default:
@@ -23488,12 +23435,6 @@ const LayoutWrapper: FC = () => {
                               <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.type.settings.content", label: null, content: <TypeSettingsContent /> }]} />
                             </TreeStateProvider>
                           );
-                        case "quality":
-                          return (
-                            <TreeStateProvider>
-                              <Tree className="min-w-0 overflow-hidden p-double" sections={[{ id: "semio.sketchpad.app.quality.settings.content", label: null, content: <QualitySettingsContent /> }]} />
-                            </TreeStateProvider>
-                          );
                         case "docs":
                           return (
                             <TreeStateProvider>
@@ -23535,7 +23476,7 @@ const LayoutWrapper: FC = () => {
                 return undefined;
               })()}
               toolbar={
-                panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (
+                panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "docs" ? (
                   toolbarSections.length > 0 ? (
                     <div role="toolbar" id="semio.sketchpad.toolbar" className="pointer-events-none absolute bottom-1.5 left-0 right-0 h-[40px] w-full max-w-full px-2">
                       <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2 pointer-events-none" aria-hidden />
@@ -42701,43 +42642,6 @@ const QualityApp: FC<QualityAppProps> = () => {
 
 // #endregion 🖲️QualityApp
 
-// #region ⏱️Config
-// Quality app route, panel, and path matching configuration MUST be exported.
-
-/**
- * Quality app configuration for routing, panels, and path matching.
- **/
-export const qualityConfig: AppConfig = {
-  id: "quality",
-  component: QualityApp,
-  routeSegments: [
-    {
-      path: "kits/:kit",
-      paramName: "kit",
-      scopeProvider: KitScopeProvider,
-    },
-    {
-      path: "qualities/:quality",
-      paramName: "quality",
-      scopeProvider: QualityScopeProvider,
-    },
-  ],
-  getPanels: (): PanelDefinition[] => [
-    createPanelDefinition(PanelKind.WORKBENCH, "semio.sketchpad.navbar.panelToggle.workbench.show"),
-    createPanelDefinition(PanelKind.TOOLS, "semio.sketchpad.navbar.panelToggle.tools.show"),
-    createPanelDefinition(PanelKind.TOOLBAR, "semio.sketchpad.navbar.panelToggle.toolbar.show"),
-    createPanelDefinition(PanelKind.STATS, "semio.sketchpad.navbar.panelToggle.stats.show"),
-    createPanelDefinition(PanelKind.DETAILS, "semio.sketchpad.navbar.panelToggle.details.show"),
-  ],
-  matchesPath: (pathParts: string[]) => {
-    const isUuidPattern = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-    return pathParts.length === 4 && pathParts[0] === "kits" && isUuidPattern(pathParts[1]) && pathParts[2] === "qualities" && isUuidPattern(pathParts[3]);
-  },
-  order: 40,
-};
-
-// #endregion ⏱️Config
-
 // #endregion ⏱️Quality
 
 // 🔷#region 🗄️Docs
@@ -46346,7 +46250,6 @@ const FeedbackForm: FC = () => {
     { value: "kit", label: t("semio.sketchpad.app.feedback.appOption.kit.label.normal", "Kit") },
     { value: "design", label: t("semio.sketchpad.app.feedback.appOption.design.label.normal", "Design") },
     { value: "type", label: t("semio.sketchpad.app.feedback.appOption.type.label.normal", "Type") },
-    { value: "quality", label: t("semio.sketchpad.app.feedback.appOption.quality.label.normal", "Quality") },
     { value: "docs", label: t("semio.sketchpad.app.feedback.appOption.docs.label.normal", "Docs") },
     { value: "feedback", label: t("semio.sketchpad.app.feedback.appOption.feedback.label.normal", "Feedback") },
   ];
@@ -46620,7 +46523,6 @@ appRegistry.register(docsConfig);
 appRegistry.register(feedbackConfig);
 appRegistry.register(homeConfig);
 appRegistry.register(kitConfig);
-appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
 // #region 🔒VscodeAdapter
@@ -48166,6 +48068,20 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         expect(visibility.rightSidePanel ?? false).toBe(false);
         expect(visibility.details ?? false).toBe(false);
       }
+    });
+
+    test("Sketchpad machine docs app panel defaults match docs store and selector", () => {
+      const actor = createActor(sketchpadMachine, { input: { id: "embedded-docs-defaults" } });
+      actor.start();
+      const fromMachine = actor.getSnapshot().context.docsApp.panelVisibility;
+      const fromStore = new DocsAppStore({} as SketchpadStore).snapshot().panelVisibility;
+      expect(fromMachine.leftSidePanel).toBe(fromStore.leftSidePanel);
+      expect(fromMachine.rightSidePanel).toBe(fromStore.rightSidePanel);
+      expect(fromMachine.details).toBe(fromStore.details);
+      expect(selectDocsAppPanelVisibility({ context: actor.getSnapshot().context })).toEqual(fromMachine);
+      actor.send({ type: "DOCS.TOGGLE_PANEL", panel: "details" } as SketchpadEvent);
+      expect(selectDocsAppPanelVisibility({ context: actor.getSnapshot().context }).details).toBe(true);
+      actor.stop();
     });
 
     test("Development Server Loopback Binding", async () => {

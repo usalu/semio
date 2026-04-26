@@ -1,6 +1,6 @@
 //! Integration: `semio-store` HTTP (GraphQL + `POST /install`).
 
-use std::io::{BufRead, BufReader, Write as _};
+use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 
 use semio::change_command::ChangeKitCommand;
@@ -8,7 +8,7 @@ use semio::id::Id;
 use semio::kit::KitFullDto;
 use serde_json::{json, Value};
 
-fn spawn_server() -> Result<(std::process::Child, u16, String), Box<dyn std::error::Error>> {
+fn spawn_server() -> Result<(std::process::Child, u16, String), Box<dyn std::error::Error + Send + Sync>> {
     let exe = std::path::Path::new(env!("CARGO_BIN_EXE_semio-store"));
     let mut child = Command::new(exe)
         .env("SEMIO_STORE_PORT", "0")

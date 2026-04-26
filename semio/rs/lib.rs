@@ -26606,7 +26606,7 @@ pub mod io {
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
-    use async_graphql::{Context, Enum, Error, InputObject, InputValueError, InputValueResult, Object, OneofObject, Request, Result, Scalar, ScalarType, Schema, SimpleObject, Subscription, Value, Variables};
+    use async_graphql::{Context, Enum, Error, InputObject, InputValueError, InputValueResult, Json, Object, OneofObject, Request, Result, Scalar, ScalarType, Schema, SimpleObject, Subscription, Value, Variables};
     use async_stream::stream;
     use futures_channel::oneshot;
     use futures_util::Stream;
@@ -26648,17 +26648,15 @@ pub mod kit_graphql {
         }
     }
 
-    /// 📣 Same serde wire as the kit event bus; GraphQL scalar name is not `JSON`.
-    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    /// 📣 Same wire as the kit event bus; GraphQL scalar (output; not accepted as input variables).
+    #[derive(Clone, Debug, serde::Serialize)]
     #[serde(transparent)]
     pub struct GqlKitEvent(pub KitEvent);
 
     #[Scalar(name = "KitEvent")]
     impl ScalarType for GqlKitEvent {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json().map_err(|_| InputValueError::custom("KitEvent: expected JSON value"))?;
-            let ev: KitEvent = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlKitEvent(ev))
+        fn parse(_value: Value) -> InputValueResult<Self> {
+            Err(InputValueError::custom("KitEvent is output-only"))
         }
 
         fn to_value(&self) -> Value {
@@ -27208,19 +27206,6 @@ pub mod kit_graphql {
         results: Vec<KitStoreBatchResult>,
     }
 
-    #[derive(Clone, Debug, InputObject)]
-    struct KitCommandShellInput {
-        command_kind: String,
-        request: Json<serde_json::Value>,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct KitCommandReceipt {
-        request_id: String,
-        command_kind: String,
-        accepted: bool,
-    }
-
     /// GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum KitReadScopeInput {
@@ -27298,62 +27283,24 @@ pub mod kit_graphql {
 
     #[Object(name = "Mutation")]
     impl RootMutation {
-        /// 🌐 Run shell [`dispatch_shell_command`] in the current request (result body); use `submitKitCommand` for async `SemioKitCommand` events.
-        async fn kit_command_shell(
-            &self,
-            ctx: &Context<'_>,
-            command_kind: String,
-            request: Json<serde_json::Value>,
-        ) -> Result<Json<serde_json::Value>> {
+        /// Control-plane kit mutations (batched commands, VCS, design canvas).
+        async fn kit_store(&self) -> KitStoreMutation {
+            KitStoreMutation
+        }
+    }
+
+    /// 🌐 Nested GraphQL mutation namespace for kit store command batches.
+    pub struct KitStoreMutation;
+
+    #[Object(name = "KitStoreMutation")]
+    impl KitStoreMutation {
+        /// Batched control-plane writes (VCS, live graph, design canvas); replaces the former `submitKitCommand` shell.
+        async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
             let shell = KitShellCtx { graph, tx, vcs };
-            let vars = shell_variables(&request.0);
-            let v = dispatch_shell_command(&shell, &command_kind, &vars).await?;
-            Ok(Json(v))
-        }
-
-        /// Submit any semantic kit mutation through one asynchronous shell.
-        async fn submit_kit_command(&self, ctx: &Context<'_>, input: KitCommandShellInput) -> Result<KitCommandReceipt> {
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
-            let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
-            let request_id = Id::new_v7().to_string();
-            emit_command_shell_event(&graph, &request_id, &input.command_kind, "accepted", None, None);
-            spawn_command_shell(
-                graph,
-                tx,
-                vcs,
-                request_id.clone(),
-                input.command_kind.clone(),
-                input.request.0,
-            );
-            Ok(KitCommandReceipt {
-                request_id,
-                command_kind: input.command_kind,
-                accepted: true,
-            })
-        }
-    }
-
-    fn emit_command_shell_event(
-        graph: &KitGraphRef,
-        request_id: &str,
-        command_kind: &str,
-        phase: &str,
-        result: Option<serde_json::Value>,
-        error: Option<serde_json::Value>,
-    ) {
-        let bus = graph.read().ok().map(|g| g.event_bus.clone());
-        if let Some(bus) = bus {
-            bus.emit(KitEvent::SemioKitCommand {
-                request_id: request_id.to_string(),
-                command_kind: command_kind.to_string(),
-                phase: phase.to_string(),
-                result,
-                error,
-            });
+            execute_batch(&shell, input).await
         }
     }
 
@@ -27412,480 +27359,6 @@ pub mod kit_graphql {
                 .await
                 .map_err(|e| Error::new(format!("change queue: {e}")))?;
             reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
-        }
-    }
-
-    fn shell_variables(request: &serde_json::Value) -> serde_json::Value {
-        request
-            .get("variables")
-            .cloned()
-            .unwrap_or_else(|| serde_json::json!({}))
-    }
-
-    async fn run_command_shell_request(
-        graph: KitGraphRef,
-        tx: async_channel::Sender<GraphWork>,
-        vcs: GraphQlVcsOverride,
-        request_id: String,
-        command_kind: String,
-        request: serde_json::Value,
-    ) {
-        let shell = KitShellCtx {
-            graph: graph.clone(),
-            tx: tx.clone(),
-            vcs,
-        };
-        let vars = shell_variables(&request);
-        match dispatch_shell_command(&shell, command_kind.as_str(), &vars).await {
-            Ok(response_value) => {
-                emit_command_shell_event(&graph, &request_id, &command_kind, "succeeded", Some(response_value), None);
-            }
-            Err(e) => {
-                emit_command_shell_event(
-                    &graph,
-                    &request_id,
-                    &command_kind,
-                    "failed",
-                    None,
-                    Some(serde_json::json!({ "kind": "Internal", "message": e.message })),
-                );
-            }
-        }
-    }
-
-    async fn dispatch_shell_command(shell: &KitShellCtx, command_kind: &str, vars: &serde_json::Value) -> Result<serde_json::Value, Error> {
-        match command_kind {
-                "changeKitCommands" => {
-                    let commands_val = vars
-                        .get("commands")
-                        .cloned()
-                        .ok_or_else(|| Error::new("changeKitCommands: missing commands"))?;
-                    let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands_val).map_err(|e| Error::new(format!("changeKitCommands: {e}")))?;
-                    shell.run_graph_change(cmds).await?;
-                    Ok(serde_json::json!({ "data": { "changeKitCommands": true } }))
-                }
-                "changeKitWithInverse" => {
-                    let commands_val = vars
-                        .get("commands")
-                        .cloned()
-                        .ok_or_else(|| Error::new("changeKitWithInverse: missing commands"))?;
-                    let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands_val).map_err(|e| Error::new(format!("changeKitWithInverse: {e}")))?;
-                    let (kind, inverse) = shell.run_change_kit_with_inverse(cmds).await?;
-                    Ok(serde_json::json!({ "data": { "changeKitWithInverse": { "kind": kind, "inverse": inverse } } }))
-                }
-                "clusterPieces" => {
-                    let design_id = vars
-                        .get("designId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("clusterPieces: designId"))?
-                        .to_string();
-                    let piece_ids = vars
-                        .get("pieceIds")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("clusterPieces: pieceIds"))?
-                        .iter()
-                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>();
-                    let cluster_name = vars
-                        .get("clusterName")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("clusterPieces: clusterName"))?
-                        .to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::cluster_pieces(&g, &design_id, piece_ids, cluster_name)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "clusterPieces": { "ok": true } } }))
-                }
-                "dragPieces" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("dragPieces: designId"))?.to_string();
-                    let piece_ids = vars
-                        .get("pieceIds")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("dragPieces: pieceIds"))?
-                        .iter()
-                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>();
-                    let du = vars.get("du").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("dragPieces: du"))?;
-                    let dv = vars.get("dv").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("dragPieces: dv"))?;
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::drag_pieces(&g, &design_id, piece_ids, du, dv)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "dragPieces": { "ok": true } } }))
-                }
-                "movePieces" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("movePieces: designId"))?.to_string();
-                    let piece_ids = vars
-                        .get("pieceIds")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("movePieces: pieceIds"))?
-                        .iter()
-                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>();
-                    let gap = vars.get("gap").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: gap"))?;
-                    let shift = vars.get("shift").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: shift"))?;
-                    let rise = vars.get("rise").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: rise"))?;
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::move_pieces(&g, &design_id, piece_ids, gap, shift, rise)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "movePieces": { "ok": true } } }))
-                }
-                "fixPieces" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("fixPieces: designId"))?.to_string();
-                    let piece_ids = vars
-                        .get("pieceIds")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("fixPieces: pieceIds"))?
-                        .iter()
-                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::fix_pieces(&g, &design_id, piece_ids)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "fixPieces": { "ok": true } } }))
-                }
-                "flattenDesign" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("flattenDesign: designId"))?.to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::flatten_design_apply(&g, &design_id)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "flattenDesign": { "ok": true } } }))
-                }
-                "expandDesign" => {
-                    let parent_design_id = vars
-                        .get("parentDesignId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("expandDesign: parentDesignId"))?
-                        .to_string();
-                    let nested_design_id = vars
-                        .get("nestedDesignId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("expandDesign: nestedDesignId"))?
-                        .to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::expand_nested_design(&g, &parent_design_id, &nested_design_id)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "expandDesign": { "ok": true } } }))
-                }
-                "deleteConnection" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("deleteConnection: designId"))?.to_string();
-                    let connection_id = vars
-                        .get("connectionId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("deleteConnection: connectionId"))?
-                        .to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::delete_connection_in_design(&g, &design_id, &connection_id)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "deleteConnection": { "ok": true } } }))
-                }
-                "changePieceType" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changePieceType: designId"))?.to_string();
-                    let piece_id = vars.get("pieceId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changePieceType: pieceId"))?.to_string();
-                    let new_type_id = vars
-                        .get("newTypeId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("changePieceType: newTypeId"))?
-                        .to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::change_piece_type(&g, &design_id, &piece_id, &new_type_id)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "changePieceType": { "ok": true } } }))
-                }
-                "pasteDesignSelection" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("pasteDesignSelection: designId"))?.to_string();
-                    let selection = vars.get("selection").cloned().ok_or_else(|| Error::new("pasteDesignSelection: selection"))?;
-                    let pl: Option<Plane> = match vars.get("plane") {
-                        None | Some(serde_json::Value::Null) => None,
-                        Some(v) => Some(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("plane: {e}")))?),
-                    };
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::paste_design_selection(&g, &design_id, selection, pl)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "pasteDesignSelection": { "ok": true } } }))
-                }
-                "createHangingPieces" => {
-                    let design_id = vars
-                        .get("designId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("createHangingPieces: designId"))?
-                        .to_string();
-                    let type_ids = vars
-                        .get("typeIds")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("createHangingPieces: typeIds"))?
-                        .iter()
-                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>();
-                    let plane: Plane = serde_json::from_value(vars.get("plane").cloned().ok_or_else(|| Error::new("createHangingPieces: plane"))?)
-                        .map_err(|e| Error::new(format!("plane: {e}")))?;
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&g, &design_id, type_ids, plane)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "createHangingPieces": { "ok": true } } }))
-                }
-                "createConnectedPiece" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createConnectedPiece: designId"))?.to_string();
-                    let parent_piece = vars
-                        .get("parentPiece")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("createConnectedPiece: parentPiece"))?
-                        .to_string();
-                    let parent_port = vars
-                        .get("parentPort")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("createConnectedPiece: parentPort"))?
-                        .to_string();
-                    let child_type = vars
-                        .get("childType")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("createConnectedPiece: childType"))?
-                        .to_string();
-                    let child_port = vars
-                        .get("childPort")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("createConnectedPiece: childPort"))?
-                        .to_string();
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || {
-                            KitGraph::create_connected_piece(&g, &design_id, &parent_piece, &parent_port, &child_type, &child_port)
-                        }))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "createConnectedPiece": { "ok": true } } }))
-                }
-                "createFixedPiece" => {
-                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createFixedPiece: designId"))?.to_string();
-                    let type_id = vars.get("typeId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createFixedPiece: typeId"))?.to_string();
-                    let plane: Plane = serde_json::from_value(vars.get("plane").cloned().ok_or_else(|| Error::new("createFixedPiece: plane"))?)
-                        .map_err(|e| Error::new(format!("plane: {e}")))?;
-                    let g = shell.graph.clone();
-                    shell
-                        .run_custom_set_result(Box::new(move || KitGraph::create_fixed_piece(&g, &design_id, &type_id, plane)))
-                        .await?;
-                    Ok(serde_json::json!({ "data": { "createFixedPiece": { "ok": true } } }))
-                }
-                "changeKitCommandsForFieldPatch" => {
-                    let kind = vars.get("kind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: kind"))?;
-                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: id"))?;
-                    let field = vars.get("field").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: field"))?;
-                    let value: serde_json::Value = vars.get("value").cloned().ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: value"))?;
-                    let ek = KitGraph::parse_entity_kind(kind).map_err(|e| Error::new(e.to_string()))?;
-                    let g = shell.graph.clone();
-                    let cmds = KitGraph::change_kit_commands_for_field_patch(&g, ek, id, field, value).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "changeKitCommandsForFieldPatch": cmds } }))
-                }
-                "changeKitCommandsForAddChild" => {
-                    let parent_kind = vars.get("parentKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: parentKind"))?;
-                    let parent_id = vars.get("parentId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: parentId"))?;
-                    let child_kind = vars.get("childKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: childKind"))?;
-                    let dto: serde_json::Value = vars.get("dto").cloned().ok_or_else(|| Error::new("changeKitCommandsForAddChild: dto"))?;
-                    let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| Error::new(e.to_string()))?;
-                    let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| Error::new(e.to_string()))?;
-                    let g = shell.graph.clone();
-                    let cmds = KitGraph::change_kit_commands_for_add_child(&g, pk, parent_id, ck, dto).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "changeKitCommandsForAddChild": cmds } }))
-                }
-                "changeKitCommandsForRemoveChild" => {
-                    let parent_kind = vars.get("parentKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: parentKind"))?;
-                    let parent_id = vars.get("parentId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: parentId"))?;
-                    let child_kind = vars.get("childKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: childKind"))?;
-                    let child_id = vars.get("childId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: childId"))?;
-                    let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| Error::new(e.to_string()))?;
-                    let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| Error::new(e.to_string()))?;
-                    let g = shell.graph.clone();
-                    let cmds = KitGraph::change_kit_commands_for_remove_child(&g, pk, parent_id, ck, child_id).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "changeKitCommandsForRemoveChild": cmds } }))
-                }
-                "undo" => {
-                    let g = shell.graph.clone();
-                    shell.run_custom_set_result(Box::new(move || KitGraph::undo(&g))).await?;
-                    Ok(serde_json::json!({ "data": { "undo": { "ok": true } } }))
-                }
-                "redo" => {
-                    let g = shell.graph.clone();
-                    shell.run_custom_set_result(Box::new(move || KitGraph::redo(&g))).await?;
-                    Ok(serde_json::json!({ "data": { "redo": { "ok": true } } }))
-                }
-                "attachBackbone" => {
-                    let config_val = vars.get("config").cloned().ok_or_else(|| Error::new("attachBackbone: config"))?;
-                    let cfg: crate::kit_backbone_wire::BackboneConfig =
-                        serde_json::from_value(config_val).map_err(|e| Error::new(format!("attachBackbone: {e}")))?;
-                    let res = shell.run_vcs_command(KitStoreCommand::AttachBackbone { config: cfg }).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "attachBackbone": v } }))
-                }
-                "detachBackbone" => {
-                    let res = shell.run_vcs_command(KitStoreCommand::DetachBackbone).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "detachBackbone": v } }))
-                }
-                "backboneStatus" => {
-                    let res = shell.run_vcs_command(KitStoreCommand::BackboneStatus).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "backboneStatus": v } }))
-                }
-                "listConflicts" => {
-                    let res = shell.run_vcs_command(KitStoreCommand::ListConflicts).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "listConflicts": v } }))
-                }
-                "resolveConflict" => {
-                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("resolveConflict: id"))?;
-                    let strategy_val = vars.get("strategy").cloned().ok_or_else(|| Error::new("resolveConflict: strategy"))?;
-                    let st: crate::kit_backbone_wire::ConflictResolution =
-                        serde_json::from_value(strategy_val).map_err(|e| Error::new(format!("resolveConflict strategy: {e}")))?;
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::ResolveConflict {
-                            id: Id::from(id),
-                            strategy: st,
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "resolveConflict": v } }))
-                }
-                "syncNow" => {
-                    let res = shell.run_vcs_command(KitStoreCommand::SyncNow).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "syncNow": v } }))
-                }
-                "newSession" => {
-                    let res = shell.run_vcs_command(KitStoreCommand::NewSession).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "newSession": v } }))
-                }
-                "endSession" => {
-                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("endSession: id"))?;
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::EndSession {
-                            id: Id::from(id),
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "endSession": v } }))
-                }
-                "newAlternative" => {
-                    let from_checkpoint = vars
-                        .get("fromCheckpoint")
-                        .and_then(|v| if v.is_null() { None } else { v.as_str().map(Id::from) });
-                    let name = vars.get("name").and_then(|v| v.as_str()).ok_or_else(|| Error::new("newAlternative: name"))?.to_string();
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::NewAlternative {
-                            from_checkpoint,
-                            name,
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "newAlternative": v } }))
-                }
-                "setActiveCheckpoint" => {
-                    let id = vars.get("id").and_then(|v| if v.is_null() { None } else { v.as_str().map(Id::from) });
-                    let res = shell.run_vcs_command(KitStoreCommand::SetActiveCheckpoint { id }).await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "setActiveCheckpoint": v } }))
-                }
-                "executeSessionCommands" => {
-                    let session_id = vars.get("sessionId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("executeSessionCommands: sessionId"))?;
-                    let sc_arr = vars
-                        .get("sessionCommands")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("executeSessionCommands: sessionCommands"))?;
-                    let mut sc: Vec<SessionCommand> = Vec::with_capacity(sc_arr.len());
-                    for v in sc_arr {
-                        sc.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("session command: {e}")))?);
-                    }
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: Id::from(session_id),
-                            commands: sc,
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "executeSessionCommands": v } }))
-                }
-                "executeKitCheckpointCommands" => {
-                    let checkpoint_id = vars
-                        .get("checkpointId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("executeKitCheckpointCommands: checkpointId"))?;
-                    let c_arr = vars
-                        .get("commands")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("executeKitCheckpointCommands: commands"))?;
-                    let mut c: Vec<KitCheckpointCommand> = Vec::with_capacity(c_arr.len());
-                    for v in c_arr {
-                        c.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("checkpoint command: {e}")))?);
-                    }
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteKitCheckpointCommands {
-                            id: Id::from(checkpoint_id),
-                            commands: c,
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "executeKitCheckpointCommands": v } }))
-                }
-                "executeKitAlternativeCommands" => {
-                    let alternative_id = vars
-                        .get("alternativeId")
-                        .and_then(|v| v.as_str())
-                        .ok_or_else(|| Error::new("executeKitAlternativeCommands: alternativeId"))?;
-                    let c_arr = vars
-                        .get("commands")
-                        .and_then(|v| v.as_array())
-                        .ok_or_else(|| Error::new("executeKitAlternativeCommands: commands"))?;
-                    let mut c: Vec<KitAlternativeCommand> = Vec::with_capacity(c_arr.len());
-                    for v in c_arr {
-                        c.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("alternative command: {e}")))?);
-                    }
-                    let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteKitAlternativeCommands {
-                            id: Id::from(alternative_id),
-                            commands: c,
-                        })
-                        .await?;
-                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "executeKitAlternativeCommands": v } }))
-                }
-                "batch" => {
-                    let input_val = vars.get("input").cloned().ok_or_else(|| Error::new("batch: input"))?;
-                    let input: KitStoreBatchInput = serde_json::from_value(input_val).map_err(|e| Error::new(format!("batch input: {e}")))?;
-                    let payload = execute_batch(&shell, input).await?;
-                    let v = serde_json::to_value(&payload).map_err(|e| Error::new(e.to_string()))?;
-                    Ok(serde_json::json!({ "data": { "kitStore": { "batch": v } } }))
-                }
-                other => Err(Error::new(format!("submitKitCommand: unknown commandKind {other}"))),
-        }
-    }
-
-    fn spawn_command_shell(
-        graph: KitGraphRef,
-        tx: async_channel::Sender<GraphWork>,
-        vcs: GraphQlVcsOverride,
-        request_id: String,
-        command_kind: String,
-        request: serde_json::Value,
-    ) {
-        let fut = run_command_shell_request(graph, tx, vcs, request_id, command_kind, request);
-        #[cfg(target_arch = "wasm32")]
-        wasm_bindgen_futures::spawn_local(fut);
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            std::thread::Builder::new()
-                .name("semio-graphql-command-shell".to_string())
-                .spawn(move || {
-                    let _ = futures_lite::future::block_on(fut);
-                })
-                .expect("spawn kit graphql command shell");
         }
     }
 
@@ -28595,18 +28068,18 @@ pub mod kit_graphql {
     pub struct RootSubscription;
 
     /// Pin-boxed stream (avoid `impl Stream + Send`: async-graphql derive keeps only the last trait bound).
-    type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<Json<KitEvent>, Error>> + Send>>;
+    type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<GqlKitEvent, Error>> + Send>>;
 
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
-        /// Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`).
+        /// Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
         async fn event_stream(&self, ctx: &Context<'_>) -> Result<KitEventSubscriptionStream> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let mut rx = lock_graph(&graph)?.subscribe();
             Ok(Box::pin(stream! {
                 loop {
                     match rx.recv().await {
-                        Ok(ev) => yield Ok(Json(ev)),
+                        Ok(ev) => yield Ok(GqlKitEvent(ev)),
                         Err(async_broadcast::RecvError::Closed) => break,
                         Err(async_broadcast::RecvError::Overflowed(_)) => {}
                     }
@@ -28676,6 +28149,168 @@ pub mod kit_graphql {
     #[derive(Clone)]
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
+    // #subregion GqlValueObjects
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlPoint3 {
+        x: f64,
+        y: f64,
+        z: f64,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlVector3 {
+        x: f64,
+        y: f64,
+        z: f64,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlPlaneObject {
+        origin: GqlPoint3,
+        x_axis: GqlVector3,
+        y_axis: GqlVector3,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlCoordinate3 {
+        x: f64,
+        y: f64,
+        z: f64,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlPoseObject {
+        plane: GqlPlaneObject,
+        center: GqlCoordinate3,
+    }
+
+    fn gql_point3(p: &crate::geom::Point) -> GqlPoint3 {
+        GqlPoint3 { x: p.x, y: p.y, z: p.z }
+    }
+    fn gql_vector3(v: &crate::geom::Vector) -> GqlVector3 {
+        GqlVector3 { x: v.x, y: v.y, z: v.z }
+    }
+    fn gql_plane_object(p: &Plane) -> GqlPlaneObject {
+        GqlPlaneObject {
+            origin: gql_point3(&p.origin),
+            x_axis: gql_vector3(&p.x_axis),
+            y_axis: gql_vector3(&p.y_axis),
+        }
+    }
+    fn gql_coord3(c: &crate::geom::Coordinate) -> GqlCoordinate3 {
+        GqlCoordinate3 { x: c.x, y: c.y, z: c.z }
+    }
+    fn gql_pose_object(p: &crate::piece::PoseFullDto) -> GqlPoseObject {
+        GqlPoseObject {
+            plane: gql_plane_object(&p.plane),
+            center: gql_coord3(&p.center),
+        }
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct GqlIdOnly {
+        id: String,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct TypeMetadataObject {
+        id: String,
+        name: String,
+        description: Option<String>,
+        icon: Option<String>,
+        image: Option<String>,
+        stock: Option<i64>,
+        type_virtual: Option<bool>,
+        unit: Option<String>,
+        location: Option<GqlIdOnly>,
+        created: Option<String>,
+        updated: Option<String>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct DesignMetadataObject {
+        id: String,
+        name: String,
+        description: Option<String>,
+        icon: Option<String>,
+        image: Option<String>,
+        location: Option<GqlIdOnly>,
+        unit: Option<String>,
+        created: Option<String>,
+        updated: Option<String>,
+        kit: Option<GqlIdOnly>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct KitColoredConnectorObject {
+        type_id: GqlIdOnly,
+        connector_id: GqlIdOnly,
+        color: String,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct KitMetadataObject {
+        id: String,
+        name: String,
+        description: Option<String>,
+        icon: Option<String>,
+        image: Option<String>,
+        preview: Option<String>,
+        remote: Option<String>,
+        homepage: Option<String>,
+        license: Option<String>,
+        uri: Option<String>,
+        created: Option<String>,
+        updated: Option<String>,
+        version: Option<String>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsCheckpointGql {
+        id: String,
+        parent: Option<String>,
+        message: Option<String>,
+        time: Option<String>,
+        authors: Vec<String>,
+        hash: String,
+        is_release: bool,
+        change_count: usize,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsAlternativeGql {
+        id: String,
+        name: String,
+        root: String,
+        checkpoints: Vec<String>,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsDraftGql {
+        id: String,
+        parent_checkpoint: Option<String>,
+        target_alternative: Option<String>,
+        finalized_transaction_count: usize,
+        redo_transaction_count: usize,
+        open_transaction_id: Option<String>,
+        can_undo: bool,
+        can_redo: bool,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsSessionGql {
+        id: String,
+        drafts: Vec<VcsDraftGql>,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsRootGql {
+        id: String,
+        name: String,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
+    struct VcsStateGql {
+        the_kit_head: Option<String>,
+        root: VcsRootGql,
+        checkpoints: Vec<VcsCheckpointGql>,
+        alternatives: Vec<VcsAlternativeGql>,
+        sessions: Vec<VcsSessionGql>,
+        the_kit_line: Vec<String>,
+    }
+    // #endregion
+
     #[Object(name = "KitStore")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
@@ -28730,127 +28365,127 @@ pub mod kit_graphql {
         }
 
         /// 🌐 Per-type metadata rows.
-        async fn types_metadata(&self) -> Result<Json<serde_json::Value>> {
+        async fn types_metadata(&self) -> Result<Vec<TypeMetadataObject>> {
             let g = lock_graph(&self.0)?;
-            let m: Vec<crate::typ::TypeMetadataDto> = g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto())).collect();
-            Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
+            let out: Vec<TypeMetadataObject> = g
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto()))
+                .map(|m| TypeMetadataObject {
+                    id: m.id.to_string(),
+                    name: m.name,
+                    description: m.description,
+                    icon: m.icon,
+                    image: m.image,
+                    stock: m.stock,
+                    type_virtual: m.virtual_,
+                    unit: m.unit,
+                    location: m.location.map(|l| GqlIdOnly { id: l.id.to_string() }),
+                    created: m.created,
+                    updated: m.updated,
+                })
+                .collect();
+            Ok(out)
         }
         /// 🌐 Per-design metadata rows.
-        async fn designs_metadata(&self) -> Result<Json<serde_json::Value>> {
+        async fn designs_metadata(&self) -> Result<Vec<DesignMetadataObject>> {
             let g = lock_graph(&self.0)?;
-            let m: Vec<crate::design::DesignMetadataDto> = g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto())).collect();
-            Ok(Json(serde_json::to_value(&m).map_err(|e| Error::new(e.to_string()))?))
+            let out: Vec<DesignMetadataObject> = g
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto()))
+                .map(|m| DesignMetadataObject {
+                    id: m.id.to_string(),
+                    name: m.name,
+                    description: m.description,
+                    icon: m.icon,
+                    image: m.image,
+                    location: m.location.map(|l| GqlIdOnly { id: l.id.to_string() }),
+                    unit: m.unit,
+                    created: m.created,
+                    updated: m.updated,
+                    kit: m.kit.map(|k| GqlIdOnly { id: k.id.to_string() }),
+                })
+                .collect();
+            Ok(out)
         }
         /// 🌐 Colored connector index rows.
-        async fn colored_connectors(&self) -> Result<Json<serde_json::Value>> {
+        async fn colored_connectors(&self) -> Result<Vec<KitColoredConnectorObject>> {
             let g = lock_graph(&self.0)?;
             let rows = crate::read::kit_colored_connector_rows(&*g);
-            Ok(Json(serde_json::to_value(&rows).map_err(|e| Error::new(e.to_string()))?))
+            Ok(rows
+                .into_iter()
+                .map(|r| KitColoredConnectorObject {
+                    type_id: GqlIdOnly { id: r.type_id.id.to_string() },
+                    connector_id: GqlIdOnly { id: r.connector_id.id.to_string() },
+                    color: r.color,
+                })
+                .collect())
         }
 
         /// Full kit DTO snapshot (materialized live graph).
-        async fn live_full_dto(&self) -> Result<Json<crate::kit_graph::KitFullDto>> {
-            Ok(Json(lock_graph(&self.0)?.to_full_dto()))
+        async fn live_full_dto(&self) -> Result<GqlKitFullSnapshot> {
+            Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.to_full_dto()))
         }
 
         /// `the_kit` line DTO (committed main line).
-        async fn the_kit_dto(&self) -> Result<Json<crate::kit_graph::KitFullDto>> {
-            Ok(Json(lock_graph(&self.0)?.the_kit_dto()))
+        async fn the_kit_dto(&self) -> Result<GqlKitFullSnapshot> {
+            Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.the_kit_dto()))
         }
 
-        async fn materialize_at(&self, checkpoint_id: Option<String>) -> Result<Json<crate::kit_graph::KitFullDto>> {
+        async fn materialize_at(&self, checkpoint_id: Option<String>) -> Result<GqlKitFullSnapshot> {
             let opt = checkpoint_id.map(|s| Id::from(s.as_str()));
-            Ok(Json(lock_graph(&self.0)?.materialize_at(opt.as_ref())))
+            Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.materialize_at(opt.as_ref())))
         }
 
-        /// 🌐 Same JSON as [`KitGraph::get_kit_json`] (kit metadata DTO).
-        async fn kit_metadata_json(&self) -> Result<Json<serde_json::Value>> {
-            let g = lock_graph(&self.0)?;
-            g.get_kit_json().map(Json).map_err(|e| Error::new(format!("{e:?}")))
+        /// 🌐 Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
+        async fn kit_metadata(&self) -> Result<KitMetadataObject> {
+            let m = lock_graph(&self.0)?.to_metadata_dto();
+            Ok(KitMetadataObject {
+                id: m.id.to_string(),
+                name: m.name,
+                description: m.description,
+                icon: m.icon,
+                image: m.image,
+                preview: m.preview,
+                remote: m.remote,
+                homepage: m.homepage,
+                license: m.license,
+                uri: m.uri,
+                created: m.created,
+                updated: m.updated,
+                version: m.version,
+            })
         }
 
-        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]).
-        async fn designs_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
+        async fn designs_shallow(&self) -> Result<GqlDesignShallowList> {
             let g = lock_graph(&self.0)?;
             let v: Vec<_> = g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+            Ok(GqlDesignShallowList(v))
         }
 
         /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
-        async fn types_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+        async fn types_shallow(&self) -> Result<GqlTypeShallowList> {
             let g = lock_graph(&self.0)?;
             let v: Vec<_> = g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+            Ok(GqlTypeShallowList(v))
         }
 
         /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
-        async fn authors_shallow_json(&self) -> Result<Json<serde_json::Value>> {
+        async fn authors_shallow(&self) -> Result<GqlAuthorShallowList> {
             let g = lock_graph(&self.0)?;
             let v: Vec<_> = g.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+            Ok(GqlAuthorShallowList(v))
         }
 
-        /// Opaque JSON VCS tree (same shape as `vcsState` WASM helper).
-        async fn vcs_state_json(&self) -> Result<Json<serde_json::Value>> {
+        /// Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
+        async fn vcs_state(&self) -> Result<VcsStateGql> {
             let g = lock_graph(&self.0)?;
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsCheckpoint {
-                id: String,
-                parent: Option<String>,
-                message: Option<String>,
-                time: Option<String>,
-                authors: Vec<String>,
-                hash: String,
-                is_release: bool,
-                change_count: usize,
-            }
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsAlternative {
-                id: String,
-                name: String,
-                root: String,
-                checkpoints: Vec<String>,
-            }
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsDraft {
-                id: String,
-                parent_checkpoint: Option<String>,
-                target_alternative: Option<String>,
-                finalized_transaction_count: usize,
-                redo_transaction_count: usize,
-                open_transaction_id: Option<String>,
-                can_undo: bool,
-                can_redo: bool,
-            }
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsSession {
-                id: String,
-                drafts: Vec<VcsDraft>,
-            }
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsRoot {
-                id: String,
-                name: String,
-            }
-            #[derive(serde::Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct VcsState {
-                the_kit_head: Option<String>,
-                root: VcsRoot,
-                checkpoints: Vec<VcsCheckpoint>,
-                alternatives: Vec<VcsAlternative>,
-                sessions: Vec<VcsSession>,
-                the_kit_line: Vec<String>,
-            }
-            let mut checkpoints: Vec<VcsCheckpoint> = g
+            let mut checkpoints: Vec<VcsCheckpointGql> = g
                 .checkpoints
                 .values()
-                .map(|c| VcsCheckpoint {
+                .map(|c| VcsCheckpointGql {
                     id: c.id.to_string(),
                     parent: c.parent.as_ref().map(|p| p.to_string()),
                     message: c.message.clone(),
@@ -28862,20 +28497,25 @@ pub mod kit_graphql {
                 })
                 .collect();
             checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut alternatives: Vec<VcsAlternative> = g
+            let mut alternatives: Vec<VcsAlternativeGql> = g
                 .alternatives
                 .values()
-                .map(|a| VcsAlternative { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
+                .map(|a| VcsAlternativeGql {
+                    id: a.id.to_string(),
+                    name: a.name.clone(),
+                    root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(),
+                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
+                })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut sessions: Vec<VcsSession> = g
+            let mut sessions: Vec<VcsSessionGql> = g
                 .sessions
                 .values()
                 .map(|s| {
-                    let mut drafts: Vec<VcsDraft> = s
+                    let mut drafts: Vec<VcsDraftGql> = s
                         .drafts
                         .values()
-                        .map(|d| VcsDraft {
+                        .map(|d| VcsDraftGql {
                             id: d.id.to_string(),
                             parent_checkpoint: d.parent_checkpoint.as_ref().map(|p| p.to_string()),
                             target_alternative: d.target_alternative.as_ref().map(|t| t.to_string()),
@@ -28887,13 +28527,23 @@ pub mod kit_graphql {
                         })
                         .collect();
                     drafts.sort_by(|a, b| a.id.cmp(&b.id));
-                    VcsSession { id: s.id.to_string(), drafts }
+                    VcsSessionGql { id: s.id.to_string(), drafts }
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
-            let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
-            let out = VcsState { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRoot { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line };
-            Ok(Json(serde_json::to_value(&out).map_err(|e| Error::new(e.to_string()))?))
+            let the_kit_line: Vec<String> = g
+                .the_kit_head
+                .as_ref()
+                .map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect())
+                .unwrap_or_default();
+            Ok(VcsStateGql {
+                the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
+                root: VcsRootGql { id: g.initial.id.to_string(), name: g.initial.name.clone() },
+                checkpoints,
+                alternatives,
+                sessions,
+                the_kit_line,
+            })
         }
     }
 
