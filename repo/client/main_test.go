@@ -50,7 +50,7 @@ func findTestRepoRoot(start string) string {
 			continue
 		}
 		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "cli", "main.go")); err == nil {
+			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
 				return dir
 			}
 			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
@@ -494,9 +494,9 @@ func TestCodexEditorProviderConfigureMergesMcpServers(t *testing.T) {
 	if err := os.MkdirAll(codexTemplateDir, 0755); err != nil {
 		t.Fatalf("failed to create repo codex dir: %v", err)
 	}
-	repoCliDir := filepath.Join(repoRoot, "repo", "cli")
-	if err := os.MkdirAll(repoCliDir, 0755); err != nil {
-		t.Fatalf("failed to create repo cli dir: %v", err)
+	repoClientDir := filepath.Join(repoRoot, "repo", "client")
+	if err := os.MkdirAll(repoClientDir, 0755); err != nil {
+		t.Fatalf("failed to create repo client dir: %v", err)
 	}
 	semioEngineDir := filepath.Join(repoRoot, "semio", "engine")
 	if err := os.MkdirAll(semioEngineDir, 0755); err != nil {
@@ -1217,7 +1217,7 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 
 func TestNormalizeTicketFileInput(t *testing.T) {
 	absRoot := GetRootDir()
-	filePath := filepath.ToSlash(filepath.Join("repo", "cli", "main.go"))
+	filePath := filepath.ToSlash(filepath.Join("repo", "client", "main.go"))
 	absPath := filepath.Join(absRoot, filePath)
 	fileID := FileHeaderId(filePath)
 	fileUri := buildFileUriFromPath(filePath)
@@ -3764,7 +3764,7 @@ func TestDefinitionKindTestIsValid(t *testing.T) {
 
 func TestBuildDefinitionIDTestKind(t *testing.T) {
 
-	labFileID := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileLab) + "maintest"
+	labFileID := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client" + emojiText(EmojiFileLab) + "maintest"
 
 	id := buildDefinitionID(labFileID, nil, "TestSomething", DefinitionKindImplementation)
 	testEmoji := emojiText(EmojiDefinitionTest)
@@ -3782,7 +3782,7 @@ func TestBuildDefinitionIDTestKind(t *testing.T) {
 		t.Errorf("buildDefinitionID for helperFunc in lab file should contain impl emoji %q, got %q", implEmoji, id2)
 	}
 
-	codeFileID := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiFileCode) + "main"
+	codeFileID := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client" + emojiText(EmojiFileCode) + "main"
 	id3 := buildDefinitionID(codeFileID, nil, "TestSomething", DefinitionKindImplementation)
 	if !strings.Contains(id3, implEmoji) {
 		t.Errorf("buildDefinitionID for TestSomething in code file should contain impl emoji %q, got %q", implEmoji, id3)
@@ -6954,7 +6954,7 @@ func TestGetArtifactID_Bundle(t *testing.T) {
 	}{
 		{"library bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 		{"schema bundle", map[string]interface{}{"name": "repo/graphql", "kind": "schema"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql"},
-		{"binary bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
+		{"binary bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"site bundle", map[string]interface{}{"name": "semio/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "desktop"},
@@ -7196,7 +7196,7 @@ func TestGetArtifactID_Ticket(t *testing.T) {
 }
 
 func TestGetArtifactID_Drafts(t *testing.T) {
-	parentId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"
+	parentId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"
 	id := GetArtifactID("drafts", map[string]interface{}{"parentId": parentId})
 	expected := parentId + emojiText(EmojiDrafts)
 	if id != expected {
@@ -7205,7 +7205,7 @@ func TestGetArtifactID_Drafts(t *testing.T) {
 }
 
 func TestGetArtifactID_Draft(t *testing.T) {
-	parentId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"
+	parentId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"
 	id := GetArtifactID("draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": parentId})
 	expected := parentId + emojiText(EmojiDraft) + "newarchitecture"
 	if id != expected {
@@ -7813,32 +7813,32 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 			t.Errorf("bundle child %s %q: id %q should start with bundle id %q", ek, c.Label, childId, expectedBundleId)
 		}
 	}
-	var cliBundle *TreeNode
+	var clientBundle *TreeNode
 	for _, c := range semioRepoTechnology.Children {
 		if c.Kind == TreeNodeBundle {
 			bId := GetArtifactID("bundle", c.Data)
-			if strings.HasSuffix(bId, emojiText(EmojiBundleBinary)+"cli") {
-				cliBundle = c
+			if strings.HasSuffix(bId, emojiText(EmojiBundleBinary)+"client") {
+				clientBundle = c
 				break
 			}
 		}
 	}
-	if cliBundle == nil {
+	if clientBundle == nil {
 		t.Fatal("repo/client bundle not found")
 	}
-	cliBundleId := GetArtifactID("bundle", cliBundle.Data)
-	expectedCliBundleId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"
-	if cliBundleId != expectedCliBundleId {
-		t.Errorf("repo/client bundle id: expected %q, got %q", expectedCliBundleId, cliBundleId)
+	clientBundleId := GetArtifactID("bundle", clientBundle.Data)
+	expectedClientBundleId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"
+	if clientBundleId != expectedClientBundleId {
+		t.Errorf("repo/client bundle id: expected %q, got %q", expectedClientBundleId, clientBundleId)
 	}
-	for _, c := range cliBundle.Children {
+	for _, c := range clientBundle.Children {
 		ek := treeNodeKindToEntityKind(c.Kind)
 		if ek == "" {
 			continue
 		}
 		childId := GetArtifactID(ek, c.Data)
-		if !strings.HasPrefix(childId, expectedCliBundleId) {
-			t.Errorf("bundle child %s %q: id %q should start with bundle id %q", ek, c.Label, childId, expectedCliBundleId)
+		if !strings.HasPrefix(childId, expectedClientBundleId) {
+			t.Errorf("bundle child %s %q: id %q should start with bundle id %q", ek, c.Label, childId, expectedClientBundleId)
 		}
 	}
 	verifyTreeHierarchy(t, tree, "")
@@ -8047,7 +8047,7 @@ func TestBundleListIDs(t *testing.T) {
 		"semio/docs":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
 		"semio/play":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
 		"semio/assets":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
+		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
 		"repo/vscode":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩") + "vscode",
@@ -8264,7 +8264,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		"semio/assets":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
 		"semio/desktop": emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
 		"semio/docs":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
+		"repo/client":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/vscode":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩") + "vscode",
 	}
@@ -8454,7 +8454,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"bundles under technology", "bundles", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles)},
 		{"library bundle semio/js", "bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 		{"schema bundle semio/graphql", "bundle", map[string]interface{}{"name": "semio/graphql", "kind": "schema"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql"},
-		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
+		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"},
 		{"ui bundle repo/vscode", "bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle coda/examples", "bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"assets bundle semio/assets", "bundle", map[string]interface{}{"name": "semio/assets", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
@@ -8485,7 +8485,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTickets)},
 		{"section tickets", "tickets", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiTickets)},
 		{"ticket Introduce Key Guid Uri Mechanism", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad"}, emojiText(EmojiGoal) + "r26021" + emojiText(EmojiGoal) + "runningsketchpad" + emojiText(EmojiTicket) + "introducekeyguidurimechanism"},
-		{"draft New Architecture", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli" + emojiText(EmojiDraft) + "newarchitecture"},
+		{"draft New Architecture", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "client" + emojiText(EmojiDraft) + "newarchitecture"},
 		{"todo Introduce Proper Sync Mechanism", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiDefinitionImpl) + "createsketchpadstore" + emojiText(EmojiTodo) + "introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
 		{"specific policy Only One Store", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
@@ -15385,7 +15385,7 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(templateDir, "enhance.tpl"), []byte("Prompt={{ .prompt }}"), 0644); err != nil {
 		t.Fatalf("write template: %v", err)
 	}
-	otherDir := filepath.Join(repoRoot, "repo", "cli")
+	otherDir := filepath.Join(repoRoot, "repo", "client")
 	if err := os.MkdirAll(otherDir, 0755); err != nil {
 		t.Fatalf("mkdir other dir: %v", err)
 	}
@@ -15411,17 +15411,17 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 
 func TestFindRepoRootPrefersMonorepoMarkerOverLocalGoMod(t *testing.T) {
 	monoRoot := t.TempDir()
-	cliDir := filepath.Join(monoRoot, "repo", "cli")
-	if err := os.MkdirAll(cliDir, 0755); err != nil {
+	clientDir := filepath.Join(monoRoot, "repo", "client")
+	if err := os.MkdirAll(clientDir, 0755); err != nil {
 		t.Fatalf("mkdir cli dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(cliDir, "main.go"), []byte("package main"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(clientDir, "main.go"), []byte("package main"), 0644); err != nil {
 		t.Fatalf("write main.go: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(cliDir, "go.mod"), []byte("module example.com/cli"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(clientDir, "go.mod"), []byte("module example.com/client"), 0644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
-	got := findRepoRoot(cliDir)
+	got := findRepoRoot(clientDir)
 	if got != monoRoot {
 		t.Fatalf("expected monorepo root %q, got %q", monoRoot, got)
 	}
@@ -15429,19 +15429,19 @@ func TestFindRepoRootPrefersMonorepoMarkerOverLocalGoMod(t *testing.T) {
 
 func TestGetCacheDirUsesMonorepoRoot(t *testing.T) {
 	monoRoot := t.TempDir()
-	cliDir := filepath.Join(monoRoot, "repo", "cli")
-	if err := os.MkdirAll(cliDir, 0755); err != nil {
+	clientDir := filepath.Join(monoRoot, "repo", "client")
+	if err := os.MkdirAll(clientDir, 0755); err != nil {
 		t.Fatalf("mkdir cli dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(cliDir, "main.go"), []byte("package main"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(clientDir, "main.go"), []byte("package main"), 0644); err != nil {
 		t.Fatalf("write main.go: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(cliDir, "go.mod"), []byte("module example.com/cli"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(clientDir, "go.mod"), []byte("module example.com/client"), 0644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
 	oldRoot := rootDir
 	defer func() { SetRootDir(oldRoot) }()
-	SetRootDir(cliDir)
+	SetRootDir(clientDir)
 	cacheDir := getCacheDir()
 	wantPrefix := filepath.Join(monoRoot, ".repo", "cache") + string(os.PathSeparator)
 	if !strings.HasPrefix(cacheDir, wantPrefix) {
@@ -22615,6 +22615,71 @@ func TestMoveTicketPlanIntoFolderFile(t *testing.T) {
 	}
 	if ticket.Plan.Local != "outside.md" {
 		t.Fatalf("Local = %q", ticket.Plan.Local)
+	}
+}
+
+func TestMoveTicketPlanIntoFolderSpecDir(t *testing.T) {
+	tmp := t.TempDir()
+	ticketDir := filepath.Join(tmp, "ticket")
+	if err := os.MkdirAll(ticketDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	specRoot := filepath.Join(tmp, "my-spec")
+	if err := os.MkdirAll(filepath.Join(specRoot, "nested"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specRoot, "a.md"), []byte("a"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specRoot, "nested", "b.md"), []byte("b"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ticket := &Ticket{FolderPath: ticketDir, Plan: &TicketPlan{Source: specRoot, Client: "kiro", ID: "my-spec"}}
+	if err := moveTicketPlanIntoFolder(ticket); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(specRoot); !os.IsNotExist(err) {
+		t.Fatalf("source spec dir should be gone: %v", err)
+	}
+	destRoot := filepath.Join(ticketDir, "my-spec")
+	if b, err := os.ReadFile(filepath.Join(destRoot, "a.md")); err != nil || string(b) != "a" {
+		t.Fatalf("a.md: %v %q", err, b)
+	}
+	if b, err := os.ReadFile(filepath.Join(destRoot, "nested", "b.md")); err != nil || string(b) != "b" {
+		t.Fatalf("nested/b.md: %v %q", err, b)
+	}
+	if ticket.Plan.Source != "" {
+		t.Fatalf("expected empty Source, got %q", ticket.Plan.Source)
+	}
+	if ticket.Plan.Local != "my-spec" {
+		t.Fatalf("Local = %q", ticket.Plan.Local)
+	}
+}
+
+func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
+	tmp := t.TempDir()
+	planDir := filepath.Join(tmp, ".cursor", "plans")
+	if err := os.MkdirAll(planDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	id := "fe75d494"
+	planFile := filepath.Join(planDir, "kit_store_backbone_generalization_"+id+".plan.md")
+	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldRoot := rootDir
+	rootDir = tmp
+	defer func() { rootDir = oldRoot }()
+
+	ticket := &Ticket{}
+	if err := ApplyTicketPlanFromIDs(ticket, McpClientCursor, id, ""); err != nil {
+		t.Fatal(err)
+	}
+	if ticket.Plan == nil || ticket.Plan.ID != id || ticket.Plan.Client != "cursor" {
+		t.Fatalf("plan: %+v", ticket.Plan)
+	}
+	if filepath.Clean(ticket.Plan.Source) != filepath.Clean(planFile) {
+		t.Fatalf("source %q want %q", ticket.Plan.Source, planFile)
 	}
 }
 

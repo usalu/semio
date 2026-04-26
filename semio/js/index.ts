@@ -301,6 +301,10 @@ export type ChangeKitCommandWire =
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } }
   | { readonly image: { readonly image?: string | null } }
+  | { readonly addType: { readonly type: TypePlain } }
+  | { readonly removeType: { readonly typeId: KitIdWire } }
+  | { readonly addDesign: { readonly design: DesignPlain } }
+  | { readonly removeDesign: { readonly designId: KitIdWire } }
   | { readonly changeDesignCommands: { readonly designId: KitIdWire; readonly commands: readonly ChangeDesignCommandWire[] } }
   | { readonly changeTypeCommands: { readonly typeId: KitIdWire; readonly commands: readonly ChangeTypeCommandWire[] } }
   | { readonly changeFamilyCommands: { readonly familyId: KitIdWire; readonly commands: readonly ChangeFamilyCommandWire[] } }
@@ -313,6 +317,20 @@ export type ChangeKitCommandWire =
   | { readonly changeKitPortCommands: { readonly portId: KitIdWire; readonly commands: readonly ChangePortCommandWire[] } }
   | { readonly addFamily: { readonly family: FamilyPlain } }
   | { readonly removeFamily: { readonly familyId: KitIdWire } }
+  | { readonly addFolder: { readonly folder: FolderPlain } }
+  | { readonly removeFolder: { readonly folderId: KitIdWire } }
+  | { readonly addAuthor: { readonly author: AuthorPlain } }
+  | { readonly removeAuthor: { readonly authorId: KitIdWire } }
+  | { readonly addConcept: { readonly concept: ConceptPlain } }
+  | { readonly removeConcept: { readonly conceptId: KitIdWire } }
+  | { readonly addTag: { readonly tag: TagPlain } }
+  | { readonly removeTag: { readonly tagId: KitIdWire } }
+  | { readonly addQuality: { readonly quality: QualityPlain } }
+  | { readonly removeQuality: { readonly qualityId: KitIdWire } }
+  | { readonly addKitProp: { readonly prop: PropPlain } }
+  | { readonly removeKitProp: { readonly propId: KitIdWire } }
+  | { readonly addKitAttribute: { readonly attribute: AttributePlain } }
+  | { readonly removeKitAttribute: { readonly id: KitIdWire } }
   | { readonly addFile: { readonly file: FilePlain } }
   | { readonly removeFile: { readonly fileId: KitIdWire } };
 
@@ -902,55 +920,6 @@ export class KitStore {
     });
   }
 
-  async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    try {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($k: String!, $id: String!, $f: String!, $vj: String!) { kitStore { changeKitCommandsForFieldPatchValueJson(kind: $k, id: $id, field: $f, valueJson: $vj) } }`,
-          variables: { k: entityKind, id, f: field, vj: JSON.stringify(value) },
-        }),
-      );
-      const cmds = (data.kitStore as { changeKitCommandsForFieldPatchValueJson?: unknown }).changeKitCommandsForFieldPatchValueJson;
-      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
-    } catch (e) {
-      return { ok: false, error: normalizeWasmThrownKitError(e) };
-    }
-  }
-
-  async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
-    try {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($pk: String!, $pid: String!, $ck: String!, $dj: String!) { kitStore { changeKitCommandsForAddChildDtoJson(parentKind: $pk, parentId: $pid, childKind: $ck, dtoJson: $dj) } }`,
-          variables: { pk: parentKind, pid: parentId, ck: childKind, dj: JSON.stringify(dto) },
-        }),
-      );
-      const cmds = (data.kitStore as { changeKitCommandsForAddChildDtoJson?: unknown }).changeKitCommandsForAddChildDtoJson;
-      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
-    } catch (e) {
-      return { ok: false, error: normalizeWasmThrownKitError(e) };
-    }
-  }
-
-  async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
-    try {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($pk: String!, $pid: String!, $ck: String!, $cid: String!) { kitStore { changeKitCommandsForRemoveChild(parentKind: $pk, parentId: $pid, childKind: $ck, childId: $cid) } }`,
-          variables: { pk: parentKind, pid: parentId, ck: childKind, cid: childId },
-        }),
-      );
-      const cmds = (data.kitStore as { changeKitCommandsForRemoveChild?: unknown }).changeKitCommandsForRemoveChild;
-      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
-    } catch (e) {
-      return { ok: false, error: normalizeWasmThrownKitError(e) };
-    }
-  }
-
-  async changeKitCommands(commands: unknown): Promise<SetResult> {
-    return this.submitShell("changeKitCommands", { variables: { commands } });
-  }
-
   async changeKitWithInverse(commands: unknown): Promise<{ kind: string; inverse: unknown }> {
     const raw = await this.submitShellJson("changeKitWithInverse", { commands });
     const inner = (raw as { data?: { changeKitWithInverse?: { kind: string; inverse: unknown } } })?.data?.changeKitWithInverse;
@@ -1075,10 +1044,14 @@ export class KitStore {
 
   async read(batch: ReadWireBatch): Promise<ReadWireBatchResult> {
     this.ensureAlive();
-    const typed = batch as unknown as ReadCommandBatch;
     const out: ReadKitCommandOutput[] = [];
-    for (const c of typed) out.push(await this.mapReadCommand(c));
+    for (const c of batch) out.push(await this.mapReadCommand(c));
     return out;
+  }
+
+  /** @emoji 🧾 Apply typed `ChangeKitCommand` batch via `submitKitCommand` → shell `changeKitCommands` (no planner queries). */
+  async submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+    return this.submitShell("changeKitCommands", { variables: { commands: [...commands] } });
   }
 
   private async mapReadCommand(c: ReadKitCommand): Promise<ReadKitCommandOutput> {
@@ -1513,13 +1486,8 @@ export type WriteStatus =
 export type KitCommandContext = Record<string, unknown>;
 export type KitCommandResult = Record<string, unknown>;
 
-export type KitTypedShellCommand = {
-  readonly kind: "setEntityField";
-  readonly entityKind: string;
-  readonly id: string;
-  readonly field: string;
-  readonly value: unknown;
-};
+/** @emoji 🧾 Typed kit mutation envelope for React facades (shell `changeKitCommands` only). */
+export type KitTypedShellCommand = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
 
 export type KitCommandFacade = { runMutation(cmd: KitTypedShellCommand): Promise<SetResult> };
 
@@ -1549,9 +1517,7 @@ export type KitStoreClient = SemioKitBridge & {
     childPort: string,
   ): Promise<SetResult>;
   createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
-  patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult>;
-  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
-  removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
+  submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult>;
   undo(): Promise<SetResult>;
   redo(): Promise<SetResult>;
   canUndo(): Promise<boolean>;
@@ -1631,7 +1597,7 @@ class LivePiece {
     private readonly pieceId: string,
   ) {}
 
-  private run(cmd: Readonly<Record<string, unknown>>): Promise<ReadWireBatch> {
+  private run(cmd: ReadPieceCommand): Promise<ReadWireBatchResult> {
     const batch: ReadWireBatch = [
       {
         readKitDesignCommands: {
@@ -1664,7 +1630,7 @@ class LiveDesign {
     private readonly designId: string,
   ) {}
 
-  private run(cmd: Readonly<Record<string, unknown>>): Promise<ReadWireBatch> {
+  private run(cmd: ReadDesignCommand): Promise<ReadWireBatchResult> {
     return this.ks.read([{ readKitDesignCommands: { id: { id: this.designId }, commands: [cmd] } }]);
   }
 
@@ -1675,14 +1641,14 @@ class LiveDesign {
   }
 
   readClusterableGroups(selection: readonly string[]): Promise<unknown> {
-    const cmd: Readonly<Record<string, unknown>> = {
+    const cmd: ReadDesignCommand = {
       readDesignClusterableGroupsCommand: { selection: selection.map((id) => ({ id })) },
     };
     return this.run(cmd).then((out) => (firstDesignResult(out, "readDesignClusterableGroupsCommand") as { groups?: unknown } | undefined)?.groups);
   }
 
   readQualitySum(qualityId: string): Promise<number> {
-    const cmd: Readonly<Record<string, unknown>> = { readDesignQualitySumCommand: { qualityId: { id: qualityId } } };
+    const cmd: ReadDesignCommand = { readDesignQualitySumCommand: { qualityId: { id: qualityId } } };
     return this.run(cmd).then((out) => {
       const s = (firstDesignResult(out, "readDesignQualitySumCommand") as { sum?: number } | undefined)?.sum;
       return typeof s === "number" && !Number.isNaN(s) ? s : 0;
@@ -1690,7 +1656,7 @@ class LiveDesign {
   }
 
   readReplaceableCatalog(selection: readonly string[]): Promise<{ types: string[]; designs: string[] }> {
-    const cmd: Readonly<Record<string, unknown>> = {
+    const cmd: ReadDesignCommand = {
       readDesignReplaceableCatalogCommand: { selection: selection.map((id) => ({ id })) },
     };
     return this.run(cmd).then((out) => {
@@ -1970,16 +1936,8 @@ export class WasmKitStoreClient implements KitStoreClient {
     return new LiveKitRoot(this.ks);
   }
 
-  patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    return this.ks.patchEntityField(entityKind, id, field, value);
-  }
-
-  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
-    return this.ks.addChild(parentKind, parentId, childKind, dto);
-  }
-
-  removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
-    return this.ks.removeChild(parentKind, parentId, childKind, childId);
+  submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+    return this.ks.submitChangeKitCommands(commands);
   }
 
   clusterPieces(designId: string, pieceIds: readonly string[], clusterName: string): Promise<SetResult> {
@@ -2136,21 +2094,8 @@ class FallbackKitClient implements KitStoreClient {
     for (const l of this.listeners) l({});
   }
 
-  async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    void entityKind;
-    void id;
-    void field;
-    void value;
-    this.notify();
-    return { ok: true };
-  }
-
-  async addChild(): Promise<SetResult> {
-    this.notify();
-    return { ok: true };
-  }
-
-  async removeChild(): Promise<SetResult> {
+  async submitChangeKitCommands(_commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+    void _commands;
     this.notify();
     return { ok: true };
   }
@@ -2273,8 +2218,8 @@ export function acquireSemioKitCommandFacade(client: KitStoreClient): KitCommand
   if (!f) {
     f = {
       runMutation: async (cmd: KitTypedShellCommand): Promise<SetResult> => {
-        if (cmd.kind !== "setEntityField") return { ok: false, error: { kind: "NotSupported", message: "command" } };
-        return client.patchEntityField(cmd.entityKind, cmd.id, cmd.field, cmd.value);
+        if (cmd.kind !== "changeKitCommands") return { ok: false, error: { kind: "NotSupported", message: "command" } };
+        return client.submitChangeKitCommands(cmd.commands);
       },
     };
     facades.set(client, f);
@@ -2301,8 +2246,9 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
   if (!bridge) return { ok: false, error: "no kit bridge" };
   if (command === "semio.kit.undo") return bridge.undo();
   if (command === "semio.kit.redo") return bridge.redo();
-  if (command === "semio.kit.addFile" && args[0] && args[1]) {
-    return bridge.addChild("Kit", String((bridge.getDto() as { id?: string }).id ?? ""), "File", args[0]);
+  if (command === "semio.kit.addFile" && args[0]) {
+    const file = FileSchema.parse(args[0]);
+    return bridge.submitChangeKitCommands([{ addFile: { file } }]);
   }
   void args;
   return { ok: false, error: `unhandled ${command}` };
@@ -3886,7 +3832,12 @@ export class KitEntityStore {
   }
 
   async patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField(this.entityKind, this.id, field, value);
+    void field;
+    void value;
+    return Promise.resolve({
+      ok: false,
+      error: { kind: "NotSupported", message: "use typed KitStore.submitChangeKitCommands or entity store methods" },
+    });
   }
 
   subscribe(handler: (e: KitEvent) => void): Unsubscribe {
@@ -3983,7 +3934,9 @@ export class DesignStore {
   }
 
   setName(name: string): Promise<SetResult> {
-    return this.root.patchEntityField("Design", this.id, "name", name);
+    return this.root.submitChangeKitCommands([
+      { changeDesignCommands: { designId: { id: this.id }, commands: [{ name: { name } }] } },
+    ]);
   }
 
   cluster(pieceIds: readonly string[], name: string): Promise<SetResult> {
@@ -4027,11 +3980,16 @@ export class DesignStore {
   }
 
   addPiece(dto: PiecePlain): Promise<SetResult> {
-    return this.root.addChild("Design", this.id, "Piece", dto);
+    const piece = PieceSchema.parse(dto);
+    return this.root.submitChangeKitCommands([
+      { changeDesignCommands: { designId: { id: this.id }, commands: [{ addPiece: { piece } }] } },
+    ]);
   }
 
   removePiece(pieceId: string): Promise<SetResult> {
-    return this.root.removeChild("Design", this.id, "Piece", pieceId);
+    return this.root.submitChangeKitCommands([
+      { changeDesignCommands: { designId: { id: this.id }, commands: [{ removePiece: { pieceId: { id: pieceId } } }] } },
+    ]);
   }
 }
 
@@ -4083,23 +4041,49 @@ export class TypeStore {
   }
 
   setName(name: string): Promise<SetResult> {
-    return this.root.patchEntityField("Type", this.id, "name", name);
+    return this.root.submitChangeKitCommands([
+      { changeTypeCommands: { typeId: { id: this.id }, commands: [{ name: { name } }] } },
+    ]);
   }
 
   addRepresentation(dto: unknown): Promise<SetResult> {
-    return this.root.addChild("Type", this.id, "Representation", dto);
+    const representation = RepresentationSchema.parse(dto);
+    return this.root.submitChangeKitCommands([
+      { changeTypeCommands: { typeId: { id: this.id }, commands: [{ addRepresentation: { representation } }] } },
+    ]);
   }
 
   addConnector(dto: unknown): Promise<SetResult> {
-    return this.root.addChild("Type", this.id, "Connector", dto);
+    const connector = ConnectorSchema.parse(dto);
+    return this.root.submitChangeKitCommands([
+      { changeTypeCommands: { typeId: { id: this.id }, commands: [{ addConnector: { connector } }] } },
+    ]);
   }
 
   addProp(dto: unknown): Promise<SetResult> {
-    return this.root.addChild("Type", this.id, "Prop", dto);
+    const prop = PropSchema.parse(dto);
+    return this.root.submitChangeKitCommands([
+      { changeTypeCommands: { typeId: { id: this.id }, commands: [{ addTypeProp: { prop } }] } },
+    ]);
   }
 
   removeChild(childKind: string, childId: string): Promise<SetResult> {
-    return this.root.removeChild("Type", this.id, childKind, childId);
+    if (childKind === "Representation") {
+      return this.root.submitChangeKitCommands([
+        { changeTypeCommands: { typeId: { id: this.id }, commands: [{ removeRepresentation: { id: { id: childId } } }] } },
+      ]);
+    }
+    if (childKind === "Connector") {
+      return this.root.submitChangeKitCommands([
+        { changeTypeCommands: { typeId: { id: this.id }, commands: [{ removeConnector: { connectorId: { id: childId } } }] } },
+      ]);
+    }
+    if (childKind === "Prop") {
+      return this.root.submitChangeKitCommands([
+        { changeTypeCommands: { typeId: { id: this.id }, commands: [{ removeTypeProp: { propId: { id: childId } } }] } },
+      ]);
+    }
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `removeChild: ${childKind}` } });
   }
 }
 
@@ -4132,35 +4116,43 @@ export class PieceStore {
   }
 
   setPlane(plane: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "plane", plane);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ plane: { plane } }])]);
   }
 
   setCenter(center: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "center", center);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ center: { center } }])]);
   }
 
   setScale(scale: number): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "scale", scale);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ scale: { scale } }])]);
   }
 
   setColor(color: string): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "color", color);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ color: { color } }])]);
   }
 
   hide(isHidden: boolean): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "isHidden", isHidden);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ hidden: { hidden: isHidden } }])]);
   }
 
   lock(isLocked: boolean): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, "isLocked", isLocked);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ locked: { locked: isLocked } }])]);
   }
 
   addProp(dto: unknown): Promise<SetResult> {
-    return this.root.addChild("Piece", this.id, "Prop", dto);
+    const prop = PropSchema.parse(dto);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ addProp: { prop } }])]);
   }
 
   patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Piece", this.id, field, value);
+    if (field === "name") return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ name: { name: String(value) } }])]);
+    if (field === "description")
+      return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ description: { description: value as string | null } }])]);
+    if (field === "type" || field === "typeId")
+      return this.root.submitChangeKitCommands([
+        kitWireChangeDesignPiece(this.designId, this.id, [{ type: { typeId: value && typeof value === "object" && "id" in (value as object) ? (value as { id: string }) : { id: String(value) } } }]),
+      ]);
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `piece field: ${field}` } });
   }
 }
 
@@ -4193,23 +4185,23 @@ export class ConnectionStore {
   }
 
   setGap(gap: number): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, "gap", gap);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ gap: { value: gap } }])]);
   }
 
   setShift(shift: number): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, "shift", shift);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ shift: { value: shift } }])]);
   }
 
   setRotation(rotation: number): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, "rotation", rotation);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ rotation: { value: rotation } }])]);
   }
 
   setTilt(tilt: number): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, "tilt", tilt);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ tilt: { value: tilt } }])]);
   }
 
   setTurn(turn: number): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, "turn", turn);
+    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ turn: { value: turn } }])]);
   }
 
   delete(): Promise<SetResult> {
@@ -4217,7 +4209,12 @@ export class ConnectionStore {
   }
 
   patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Connection", this.id, field, value);
+    if (field === "rise") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ rise: { value: Number(value) } }])]);
+    if (field === "description")
+      return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ description: { value: value as string | null } }])]);
+    if (field === "u" || field === "x") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ x: { value: Number(value) } }])]);
+    if (field === "v" || field === "y") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ y: { value: Number(value) } }])]);
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `connection field: ${field}` } });
   }
 }
 
@@ -4249,11 +4246,21 @@ export class FamilyStore {
   }
 
   setName(name: string): Promise<SetResult> {
-    return this.root.patchEntityField("Family", this.id, "name", name);
+    return this.root.submitChangeKitCommands([
+      { changeFamilyCommands: { familyId: { id: this.id }, commands: [{ name: { name } }] } },
+    ]);
   }
 
   patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Family", this.id, field, value);
+    if (field === "description")
+      return this.root.submitChangeKitCommands([
+        { changeFamilyCommands: { familyId: { id: this.id }, commands: [{ description: { description: value as string | null } }] } },
+      ]);
+    if (field === "icon")
+      return this.root.submitChangeKitCommands([
+        { changeFamilyCommands: { familyId: { id: this.id }, commands: [{ icon: { icon: value as string | null } }] } },
+      ]);
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `family field: ${field}` } });
   }
 }
 
@@ -4285,7 +4292,18 @@ export class FileStore {
   }
 
   patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("File", this.id, field, value);
+    const fid = { id: this.id };
+    if (field === "url") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ url: { url: String(value) } }] } }]);
+    if (field === "mime") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ mime: { mime: value as string | null } }] } }]);
+    if (field === "size") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ size: { size: value as number | null } }] } }]);
+    if (field === "hash") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ hash: { hash: value as string | null } }] } }]);
+    if (field === "description")
+      return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ description: { description: value as string | null } }] } }]);
+    if (field === "created" || field === "createdAt")
+      return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ created: { created: value as string | null } }] } }]);
+    if (field === "updated" || field === "updatedAt")
+      return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ updated: { updated: value as string | null } }] } }]);
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `file field: ${field}` } });
   }
 }
 
@@ -4317,7 +4335,11 @@ export class FolderStore {
   }
 
   patchField(field: string, value: unknown): Promise<SetResult> {
-    return this.root.patchEntityField("Folder", this.id, field, value);
+    const folderId = { id: this.id };
+    if (field === "path") return this.root.submitChangeKitCommands([{ changeFolderCommands: { folderId, commands: [{ path: { path: String(value) } }] } }]);
+    if (field === "description")
+      return this.root.submitChangeKitCommands([{ changeFolderCommands: { folderId, commands: [{ description: { description: value as string | null } }] } }]);
+    return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `folder field: ${field}` } });
   }
 }
 // #endregion EntityKitStores

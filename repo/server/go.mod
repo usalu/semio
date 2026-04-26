@@ -3,8 +3,8 @@ module github.com/usalu/semio/repo/server
 go 1.25.0
 
 require (
-	github.com/usalu/semio/repo/go v0.0.0-00010101000000-000000000000
-	modernc.org/sqlite v1.47.0
+	github.com/usalu/semio/repo/go v0.0.0
+	modernc.org/sqlite v1.48.2
 )
 
 replace github.com/usalu/semio/repo/go => ../go

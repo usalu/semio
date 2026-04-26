@@ -1706,6 +1706,54 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 ###
 
 repo:
+
+---
+
+./repo:
+Create custom mcp servers for every ide that expose native integrations.
+The descriptions for every tool call and resource MUST be with native ide terminology and MUST NOT leak any other ides. The instruction MUST feel like .repo is native in all the systems.
+The descriptions for every tool call MUST NOT describe what the tool does but MUST describe exclusively when the tool MUST be used.
+Every integration includes:
+
+- native ticket integration
+- native agent hook integration
+
+semio/cursor/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the file to the ticket folder.
+e.g. the plan `.cursor/plans/kit_store_backbone_generalization_fe75d494.plan.md` has the id `fe75d494`
+
+semio/kiro/main.go
+Add an optional spec id to ticket open and ticket reopen.
+On ticket close move all files and folders from the spec folder to the ticket folder
+e.g. the spec `.kiro\specs\semio-js-thin-client-refactor\**` has the id `semio-js-thin-client-refactor`
+
+For the others research where the memory files are tracked and then use the same mechanism as the others. This differs per operating system because the files are not part of the repository.
+
+semio/copilot/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Copilot memory folder to the ticket folder.
+e.g. the plan `~/.copilot/projects/<project-name>/memory/<id>.md` (macOS/Linux) or `%USERPROFILE%\.copilot\projects\<project-name>\memory\<id>.md` (Windows) has the id `<id>`
+
+semio/claude/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Claude plans folder to the ticket folder.
+e.g. the plan `~/.claude/plans/<id>.md` (macOS/Linux) or `%USERPROFILE%\.claude\plans\<id>.md` (Windows) has the id `<id>`
+
+semio/codex/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Codex memory folder to the ticket folder.
+e.g. the plan `~/.codex/memory/<project-name>/<id>.md` (macOS/Linux) or `%USERPROFILE%\.codex\memory\<project-name>\<id>.md` (Windows) has the id `<id>`
+
+---
+
+Refactor the repo/cli/main.go into three files:
+repo/client/main.go // all shared code client code
+repo/cli/main.go // all cli code (cobra etc)
+repo/mcp/main.go // all mcp code
+
+---
+
 Every single definition MUST have a unique emoji and a non-generic description. Currently there are missing, wrong, random emojis, same for description.
 Check the complete monorepo manually and dont solve the problem with creating new scripts that again randomly automate generic emojis or descriptions. Dont stop until all programming languages are completed.
 
@@ -6041,11 +6089,30 @@ Here some policies for js/semio:
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
   If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
 
-### ⌨️cli
+### ⌨️client
 
 ####
 
-repo cli:
+repo client:
+
+---
+
+Add a loc command that shows three metrics: loc, edited loc (cummulative over all commits), added loc (cummulative over all commits), removed loc (cummulative over all commits) for the five languages.
+Exclude .repo and gitignored folders.
+
+Use cloc for the total loc. Use git diffs for differences.
+
+e.g. on windows: cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust
+
+Optionally add a --history flag that shows how the loc changed over the dev branch `⛳wip`
+Make sure that it doesnt need alter the current directly to calculate the history.
+Enable --byContributors to show the contributions of a contributor (derived from git first author)
+When both flag are present combined them to only show the history of the contributor.
+
+Make sure to render it nice with colored terminal for humans, nice markdown for llms, and json for apis.
+
+---
+
 The .repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc
 
 Dont create new event.json files for the session events but add them directly to session.json as event array.

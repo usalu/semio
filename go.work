@@ -3,7 +3,12 @@ go 1.25.0
 use (
 	./coda/blnbo/go
 	./coda/programming/go
+	./repo/claude
 	./repo/client
+	./repo/codex
+	./repo/copilot
+	./repo/cursor
+	./repo/kiro
 	./repo/mcp
 	./repo/server
 	./semio/go

@@ -10,13 +10,21 @@
 import {
   acquireSemioKitCommandFacade,
   applyKitClientSnapshotToLocalStore,
+  AuthorSchema,
+  ConceptSchema,
+  ConnectionSchema,
+  ConnectorSchema,
   createFolderKitStore,
   createJsonFileKitStore,
   createKitCommandEngine,
   createKitStoreClient,
   createKitCommandEngineExplicitOrigin,
   createSessionKitStore,
+  DesignSchema,
   executeSemioKitCommand,
+  FamilySchema,
+  FileSchema,
+  FolderSchema,
   getSemioKitDesignReadStore,
   getSemioKitLiveReadStore,
   getSemioKitShallowListReadStore,
@@ -30,7 +38,6 @@ import {
   LiveKitRoot,
   releaseSemioKitCommandFacade,
   type KitCommandFacade,
-  type KitStoreClient,
   type KitStoreReadSnap,
   type KitTypedShellCommand,
   type WriteStatus,
@@ -67,21 +74,36 @@ import {
   importKitToPlain,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
+  kitWireChangeDesignConnection,
+  kitWireChangeDesignPiece,
   Kit,
   KitEntityStore,
   Piece,
+  PieceSchema,
   PieceStore,
   Plane,
   Point,
+  PropSchema,
   Quality,
+  QualitySchema,
   Representation,
+  RepresentationSchema,
   Tag,
+  TagSchema,
   TOLERANCE,
   Type,
+  TypeSchema,
   TypeStore,
   Vector,
 } from "@semio/js";
-import type { SetError, SetResult } from "@semio/js";
+import type {
+  ChangeConnectionCommandWire,
+  ChangeKitCommandWire,
+  ChangePieceCommandWire,
+  KitStoreClient,
+  SetError,
+  SetResult,
+} from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
@@ -193,6 +215,186 @@ export type SchemaScope = {
 function runKitTypedMutation(ks: KitCommandFacade | null, cmd: KitTypedShellCommand): Promise<SetResult> {
   if (!ks) return Promise.resolve({ ok: false, error: { kind: "Internal", message: "no kit command facade" } });
   return ks.runMutation(cmd);
+}
+
+async function submitKitChangeCommands(client: KitStoreClient | null, commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+  if (!client) return { ok: false, error: { kind: "Internal", message: "no kit client" } };
+  return client.submitChangeKitCommands(commands);
+}
+
+type KitSnapDesign = { id: string; pieces?: readonly { id?: string }[]; connections?: readonly { id?: string }[] };
+
+async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, kind: "Piece" | "Connection", entityId: string): Promise<string | null> {
+  const snap = (await client.getSnapshot()) as { designs?: readonly KitSnapDesign[] };
+  for (const d of snap.designs ?? []) {
+    if (kind === "Piece" && d.pieces?.some((p) => String(p.id) === entityId)) return d.id;
+    if (kind === "Connection" && d.connections?.some((c) => String(c.id) === entityId)) return d.id;
+  }
+  return null;
+}
+
+function piecePatchToWireCommands(patch: Record<string, unknown>): ChangePieceCommandWire[] {
+  const out: ChangePieceCommandWire[] = [];
+  if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
+  if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
+  if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
+  if ("center" in patch) out.push({ center: { center: patch.center } });
+  if ("scale" in patch) out.push({ scale: { scale: typeof patch.scale === "number" ? patch.scale : Number(patch.scale) } });
+  if ("mirrorPlane" in patch) out.push({ mirrorPlane: { mirrorPlane: patch.mirrorPlane } });
+  if ("hidden" in patch) out.push({ hidden: { hidden: Boolean(patch.hidden) } });
+  if ("isHidden" in patch) out.push({ hidden: { hidden: Boolean(patch.isHidden) } });
+  if ("locked" in patch) out.push({ locked: { locked: Boolean(patch.locked) } });
+  if ("isLocked" in patch) out.push({ locked: { locked: Boolean(patch.isLocked) } });
+  if ("color" in patch) out.push({ color: { color: patch.color == null ? null : String(patch.color) } });
+  if ("type" in patch) {
+    const t = patch.type;
+    const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
+    out.push({ type: { typeId: { id: tid } } });
+  }
+  return out;
+}
+
+function connectionPatchToWireCommands(patch: Record<string, unknown>): ChangeConnectionCommandWire[] {
+  const out: ChangeConnectionCommandWire[] = [];
+  const num = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
+  const opt = (v: unknown): number | null => (v == null ? null : num(v));
+  if ("gap" in patch) out.push({ gap: { value: opt(patch.gap) } });
+  if ("shift" in patch) out.push({ shift: { value: opt(patch.shift) } });
+  if ("rise" in patch) out.push({ rise: { value: opt(patch.rise) } });
+  if ("rotation" in patch) out.push({ rotation: { value: opt(patch.rotation) } });
+  if ("turn" in patch) out.push({ turn: { value: opt(patch.turn) } });
+  if ("tilt" in patch) out.push({ tilt: { value: opt(patch.tilt) } });
+  if ("x" in patch) out.push({ x: { value: opt(patch.x) } });
+  if ("y" in patch) out.push({ y: { value: opt(patch.y) } });
+  if ("u" in patch) out.push({ x: { value: opt(patch.u) } });
+  if ("v" in patch) out.push({ y: { value: opt(patch.v) } });
+  if ("description" in patch) out.push({ description: { value: patch.description == null ? null : String(patch.description) } });
+  return out;
+}
+
+/** @emoji 🧾 Map one schema entity field to `ChangeKitCommandWire[]` (empty = no-op). `designId` required for Piece/Connection. */
+function buildSchemaEntityChangeCommands(
+  typeName: string,
+  entityId: string,
+  dataKey: string,
+  value: unknown,
+  designId: string | null,
+): readonly ChangeKitCommandWire[] {
+  const idw = { id: entityId };
+  if (typeName === "Kit") {
+    if (dataKey === "name") return [{ name: { name: String(value) } }];
+    if (dataKey === "description") return [{ description: { description: value == null ? null : String(value) } }];
+    if (dataKey === "icon") return [{ icon: { icon: value == null ? null : String(value) } }];
+    if (dataKey === "image") return [{ image: { image: value == null ? null : String(value) } }];
+    return [];
+  }
+  if (typeName === "Author") {
+    if (dataKey === "name") return [{ changeAuthorCommands: { authorId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "email") return [{ changeAuthorCommands: { authorId: idw, commands: [{ email: { email: String(value) } }] } }];
+    if (dataKey === "role") return [{ changeAuthorCommands: { authorId: idw, commands: [{ role: { role: value == null ? null : String(value) } }] } }];
+    if (dataKey === "rank") return [{ changeAuthorCommands: { authorId: idw, commands: [{ rank: { rank: value == null ? null : Number(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Type") {
+    if (dataKey === "name") return [{ changeTypeCommands: { typeId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeTypeCommands: { typeId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "icon") return [{ changeTypeCommands: { typeId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
+    if (dataKey === "image") return [{ changeTypeCommands: { typeId: idw, commands: [{ image: { image: value == null ? null : String(value) } }] } }];
+    if (dataKey === "stock") return [{ changeTypeCommands: { typeId: idw, commands: [{ stock: { stock: value == null ? null : Number(value) } }] } }];
+    if (dataKey === "virtual" || dataKey === "typeVirtual" || dataKey === "isAbstract")
+      return [{ changeTypeCommands: { typeId: idw, commands: [{ typeVirtual: { value: value == null ? null : Boolean(value) } }] } }];
+    if (dataKey === "unit") return [{ changeTypeCommands: { typeId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Design") {
+    if (dataKey === "name") return [{ changeDesignCommands: { designId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeDesignCommands: { designId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "icon") return [{ changeDesignCommands: { designId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
+    if (dataKey === "image") return [{ changeDesignCommands: { designId: idw, commands: [{ image: { image: value == null ? null : String(value) } }] } }];
+    if (dataKey === "unit") return [{ changeDesignCommands: { designId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Quality") {
+    if (dataKey === "key") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ key: { key: String(value) } }] } }];
+    if (dataKey === "value") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ value: { value: value == null ? null : String(value) } }] } }];
+    if (dataKey === "unit") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
+    if (dataKey === "definition") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ definition: { definition: value == null ? null : String(value) } }] } }];
+    if (dataKey === "description") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Port") {
+    if (dataKey === "name") return [{ changeKitPortCommands: { portId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeKitPortCommands: { portId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "icon") return [{ changeKitPortCommands: { portId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Tag") {
+    if (dataKey === "name") return [{ changeTagCommands: { tagId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "order" || dataKey === "orderIndex") return [{ changeTagCommands: { tagId: idw, commands: [{ order: { order: value == null ? null : Number(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Concept") {
+    if (dataKey === "name") return [{ changeConceptCommands: { conceptId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeConceptCommands: { conceptId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "order" || dataKey === "orderIndex") return [{ changeConceptCommands: { conceptId: idw, commands: [{ order: { order: value == null ? null : Number(value) } }] } }];
+    return [];
+  }
+  if (typeName === "File") {
+    if (dataKey === "url") return [{ changeFileCommands: { fileId: idw, commands: [{ url: { url: String(value) } }] } }];
+    if (dataKey === "mime") return [{ changeFileCommands: { fileId: idw, commands: [{ mime: { mime: value == null ? null : String(value) } }] } }];
+    if (dataKey === "size") return [{ changeFileCommands: { fileId: idw, commands: [{ size: { size: value == null ? null : Number(value) } }] } }];
+    if (dataKey === "hash") return [{ changeFileCommands: { fileId: idw, commands: [{ hash: { hash: value == null ? null : String(value) } }] } }];
+    if (dataKey === "description") return [{ changeFileCommands: { fileId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "created" || dataKey === "createdAt")
+      return [{ changeFileCommands: { fileId: idw, commands: [{ created: { created: value == null ? null : String(value) } }] } }];
+    if (dataKey === "updated" || dataKey === "updatedAt")
+      return [{ changeFileCommands: { fileId: idw, commands: [{ updated: { updated: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Folder") {
+    if (dataKey === "path") return [{ changeFolderCommands: { folderId: idw, commands: [{ path: { path: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeFolderCommands: { folderId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Family") {
+    if (dataKey === "name") return [{ changeFamilyCommands: { familyId: idw, commands: [{ name: { name: String(value) } }] } }];
+    if (dataKey === "description") return [{ changeFamilyCommands: { familyId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
+    if (dataKey === "icon") return [{ changeFamilyCommands: { familyId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
+    return [];
+  }
+  if (typeName === "Piece") {
+    if (!designId) return [];
+    if (dataKey === "name") return [kitWireChangeDesignPiece(designId, entityId, [{ name: { name: String(value) } }])];
+    if (dataKey === "description") return [kitWireChangeDesignPiece(designId, entityId, [{ description: { description: value == null ? null : String(value) } }])];
+    if (dataKey === "plane") return [kitWireChangeDesignPiece(designId, entityId, [{ plane: { plane: value } }])];
+    if (dataKey === "center") return [kitWireChangeDesignPiece(designId, entityId, [{ center: { center: value } }])];
+    if (dataKey === "scale") return [kitWireChangeDesignPiece(designId, entityId, [{ scale: { scale: Number(value) } }])];
+    if (dataKey === "mirrorPlane") return [kitWireChangeDesignPiece(designId, entityId, [{ mirrorPlane: { mirrorPlane: value } }])];
+    if (dataKey === "isHidden" || dataKey === "hidden") return [kitWireChangeDesignPiece(designId, entityId, [{ hidden: { hidden: Boolean(value) } }])];
+    if (dataKey === "isLocked" || dataKey === "locked") return [kitWireChangeDesignPiece(designId, entityId, [{ locked: { locked: Boolean(value) } }])];
+    if (dataKey === "color") return [kitWireChangeDesignPiece(designId, entityId, [{ color: { color: value == null ? null : String(value) } }])];
+    if (dataKey === "type" || dataKey === "typeId") {
+      const t = value;
+      const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
+      return [kitWireChangeDesignPiece(designId, entityId, [{ type: { typeId: { id: tid } } }])];
+    }
+    return [];
+  }
+  if (typeName === "Connection") {
+    if (!designId) return [];
+    const dk = connectionDiffWireKeyForDataKey(dataKey);
+    if (dk === "gap") return [kitWireChangeDesignConnection(designId, entityId, [{ gap: { value: Number(value) } }])];
+    if (dk === "shift") return [kitWireChangeDesignConnection(designId, entityId, [{ shift: { value: Number(value) } }])];
+    if (dk === "rise") return [kitWireChangeDesignConnection(designId, entityId, [{ rise: { value: Number(value) } }])];
+    if (dk === "rotation") return [kitWireChangeDesignConnection(designId, entityId, [{ rotation: { value: Number(value) } }])];
+    if (dk === "turn") return [kitWireChangeDesignConnection(designId, entityId, [{ turn: { value: Number(value) } }])];
+    if (dk === "tilt") return [kitWireChangeDesignConnection(designId, entityId, [{ tilt: { value: Number(value) } }])];
+    if (dk === "x") return [kitWireChangeDesignConnection(designId, entityId, [{ x: { value: Number(value) } }])];
+    if (dk === "y") return [kitWireChangeDesignConnection(designId, entityId, [{ y: { value: Number(value) } }])];
+    if (dataKey === "description") return [kitWireChangeDesignConnection(designId, entityId, [{ description: { value: value == null ? null : String(value) } }])];
+    return [];
+  }
+  return [];
 }
 
 export type KitRuntimeContextValue = {
@@ -368,22 +570,22 @@ function connectionDiffWireKeyForDataKey(dataKey: string): string {
   return dataKey;
 }
 
-/** @emoji 🧾 Single field/fragment routed through {@link KitCommandFacade.runMutation} (WASM shell, no local graph replace). */
+/** @emoji 🧾 Single schema field routed through {@link KitStoreClient.submitChangeKitCommands} (typed wire, no planner queries). */
 async function writeKitClientSchemaField(
-  kitCommands: KitCommandFacade,
+  kitClient: KitStoreClient,
   typeName: string,
   dataKey: string,
   value: unknown,
   entityId: string,
 ): Promise<SetResult> {
-  if (typeName === "Piece" && dataKey !== "name" && dataKey !== "color") {
-    return kitCommands.runMutation({ kind: "setEntityField", entityKind: "Piece", id: entityId, field: "__patch", value: { [dataKey]: value } as any });
+  let designId: string | null = null;
+  if (typeName === "Piece" || typeName === "Connection") {
+    designId = await resolveDesignIdForPieceOrConnection(kitClient, typeName, entityId);
+    if (!designId) return { ok: false, error: { kind: "NotFound", message: `no design for ${typeName} ${entityId}` } };
   }
-  if (typeName === "Connection") {
-    const w = connectionDiffWireKeyForDataKey(dataKey);
-    return kitCommands.runMutation({ kind: "setEntityField", entityKind: "Connection", id: entityId, field: "__patch", value: { [w]: value } as any });
-  }
-  return kitCommands.runMutation({ kind: "setEntityField", entityKind: typeName, id: entityId, field: dataKey, value });
+  const cmds = buildSchemaEntityChangeCommands(typeName, entityId, dataKey, value, designId);
+  if (cmds.length === 0) return { ok: false, error: { kind: "NotSupported", message: `${typeName}.${dataKey}` } };
+  return kitClient.submitChangeKitCommands(cmds);
 }
 
 function noop(): void {}
@@ -1587,7 +1789,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
 
   const setFieldValue = React.useCallback(
     async (typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
-      if (!kitClient || !kitCommandStore) {
+      if (!kitClient) {
         const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
         pushSetRejection(e);
         return { ok: false, error: e };
@@ -1613,16 +1815,16 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
         pushSetRejection(e);
         return { ok: false, error: e };
       }
-      const r = await writeKitClientSchemaField(kitCommandStore, typeName, key, val, entityId);
+      const r = await writeKitClientSchemaField(kitClient, typeName, key, val, entityId);
       if (!r.ok) pushSetRejection(r.error);
       return r;
     },
-    [kitClient, kitCommandStore, store, snapshot.sync.readonly, pushSetRejection],
+    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const setObjectValue = React.useCallback(
     async (typeName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
-      if (!kitClient || !kitCommandStore) {
+      if (!kitClient) {
         const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
         pushSetRejection(e);
         return { ok: false, error: e };
@@ -1648,7 +1850,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
         if (!isWritableField(currentState, typeName, fn, idValue, scope)) continue;
         const dataKey = getFieldDataKey(typeName, fn);
         const v = (nextObj as any)?.[dataKey];
-        const r = await writeKitClientSchemaField(kitCommandStore, typeName, dataKey, v, entityId);
+        const r = await writeKitClientSchemaField(kitClient, typeName, dataKey, v, entityId);
         if (!r.ok) {
           pushSetRejection(r.error);
           return r;
@@ -1656,7 +1858,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
       }
       return { ok: true } as const;
     },
-    [kitClient, kitCommandStore, store, snapshot.sync.readonly, pushSetRejection],
+    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const activeKitId = kitIdProp ?? snapshot.kit?.id;
@@ -2644,7 +2846,48 @@ function useKitAddToKit(childKind: string): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.addChild("Kit", kg, childKind, dto);
+      let cmds: readonly ChangeKitCommandWire[];
+      try {
+        switch (childKind) {
+          case "Family":
+            cmds = [{ addFamily: { family: FamilySchema.parse(dto) } }];
+            break;
+          case "Author":
+            cmds = [{ addAuthor: { author: AuthorSchema.parse(dto) } }];
+            break;
+          case "Concept":
+            cmds = [{ addConcept: { concept: ConceptSchema.parse(dto) } }];
+            break;
+          case "Tag":
+            cmds = [{ addTag: { tag: TagSchema.parse(dto) } }];
+            break;
+          case "Quality":
+            cmds = [{ addQuality: { quality: QualitySchema.parse(dto) } }];
+            break;
+          case "File":
+            cmds = [{ addFile: { file: FileSchema.parse(dto) } }];
+            break;
+          case "Folder":
+            cmds = [{ addFolder: { folder: FolderSchema.parse(dto) } }];
+            break;
+          case "Type":
+            cmds = [{ addType: { type: TypeSchema.parse(dto) } }];
+            break;
+          case "Design":
+            cmds = [{ addDesign: { design: DesignSchema.parse(dto) } }];
+            break;
+          default: {
+            const e: SetError = { kind: "NotSupported", message: `add to kit: ${childKind}` };
+            setStatus({ kind: "error", pending: 0, lastError: e });
+            return { ok: false, error: e } as const;
+          }
+        }
+      } catch (err) {
+        const e: SetError = { kind: "InvalidValue", message: String(err) };
+        setStatus({ kind: "error", pending: 0, lastError: e });
+        return { ok: false, error: e } as const;
+      }
+      const r = await runtime.kitClient.submitChangeKitCommands(cmds);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2678,7 +2921,42 @@ function useKitRemoveFromKit(childKind: string): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.removeChild("Kit", kg, childKind, childId);
+      let cmds: readonly ChangeKitCommandWire[];
+      switch (childKind) {
+        case "Family":
+          cmds = [{ removeFamily: { familyId: { id: childId } } }];
+          break;
+        case "Author":
+          cmds = [{ removeAuthor: { authorId: { id: childId } } }];
+          break;
+        case "Concept":
+          cmds = [{ removeConcept: { conceptId: { id: childId } } }];
+          break;
+        case "Tag":
+          cmds = [{ removeTag: { tagId: { id: childId } } }];
+          break;
+        case "Quality":
+          cmds = [{ removeQuality: { qualityId: { id: childId } } }];
+          break;
+        case "File":
+          cmds = [{ removeFile: { fileId: { id: childId } } }];
+          break;
+        case "Folder":
+          cmds = [{ removeFolder: { folderId: { id: childId } } }];
+          break;
+        case "Type":
+          cmds = [{ removeType: { typeId: { id: childId } } }];
+          break;
+        case "Design":
+          cmds = [{ removeDesign: { designId: { id: childId } } }];
+          break;
+        default: {
+          const e: SetError = { kind: "NotSupported", message: `remove from kit: ${childKind}` };
+          setStatus({ kind: "error", pending: 0, lastError: e });
+          return { ok: false, error: e } as const;
+        }
+      }
+      const r = await runtime.kitClient.submitChangeKitCommands(cmds);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2709,7 +2987,9 @@ export const useUpdateAuthor = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Author", id: authorId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Author", authorId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2741,7 +3021,9 @@ export const useUpdateType = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Type", id: typeId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Type", typeId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2773,7 +3055,9 @@ export const useUpdateDesign = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Design", id: designId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Design", designId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2805,7 +3089,9 @@ export const useUpdateQuality = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Quality", id: qualityId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Quality", qualityId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2837,7 +3123,9 @@ export const useUpdatePort = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Port", id: portId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Port", portId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2869,7 +3157,9 @@ export const useUpdateTag = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Tag", id: tagId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Tag", tagId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2904,7 +3194,9 @@ export const useUpdateFile = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: fileId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("File", fileId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2936,7 +3228,9 @@ export const useUpdateFolder = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Folder", id: folderId, field, value });
+        const cmds = buildSchemaEntityChangeCommands("Folder", folderId, field, value, null);
+        if (!cmds.length) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2965,13 +3259,14 @@ export function useMoveToFolder(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: fileId, field: "folder", value: targetFolderId });
-      if (!r.ok) {
-        runtime.pushSetRejection(r.error);
-        setStatus({ kind: "error", pending: 0, lastError: r.error });
-        return r;
-      }
-      setStatus({ kind: "idle", pending: 0 });
+      void fileId;
+      void targetFolderId;
+      const r: SetResult = {
+        ok: false,
+        error: { kind: "NotSupported", message: "file.folder move is not mapped to ChangeKitCommand yet" },
+      };
+      runtime.pushSetRejection(r.error);
+      setStatus({ kind: "error", pending: 0, lastError: r.error });
       return r;
     },
     [runtime],
@@ -3254,7 +3549,9 @@ export function useDeletePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.removeChild("Design", designId, "Piece", pieceId);
+      const r = await runtime.kitClient.submitChangeKitCommands([
+        { changeDesignCommands: { designId: { id: designId }, commands: [{ removePiece: { pieceId: { id: pieceId } } }] } },
+      ]);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3282,7 +3579,9 @@ export function useCreatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.addChild("Design", designId, "Piece", piece);
+      const r = await runtime.kitClient.submitChangeKitCommands([
+        { changeDesignCommands: { designId: { id: designId }, commands: [{ addPiece: { piece: PieceSchema.parse(piece) } }] } },
+      ]);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3352,7 +3651,9 @@ export function useAddConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.addChild("Design", designId, "Connection", connection);
+      const r = await runtime.kitClient.submitChangeKitCommands([
+        { changeDesignCommands: { designId: { id: designId }, commands: [{ addConnection: { connection: ConnectionSchema.parse(connection) } }] } },
+      ]);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
