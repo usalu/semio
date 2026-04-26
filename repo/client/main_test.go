@@ -10261,7 +10261,7 @@ func TestMarkdownOutput(t *testing.T) {
 		{
 			name:        "Ticket Tree MD",
 			args:        []string{"search", "--only-ticket"},
-			wantMarkers: []string{"- [", "](repo://y/"},
+			wantMarkers: []string{"- [", "](repo://ticket/"},
 		},
 		{
 			name:        "Goal Tree MD",
@@ -10271,7 +10271,7 @@ func TestMarkdownOutput(t *testing.T) {
 		{
 			name:        "Ticket List MD",
 			args:        []string{"list", "--only-ticket"},
-			wantMarkers: []string{"- [", "](repo://y/"},
+			wantMarkers: []string{"- [", "](repo://ticket/"},
 		},
 	}
 

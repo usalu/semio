@@ -569,9 +569,9 @@ export class KitStore {
   }
 
   /**
-   * @emoji 🧭 `submitKitCommand` + await `succeeded`/`failed` on the kit event bus. Subscribes **before** the mutation so WASM cannot deliver the outcome before the listener exists (single-thread / microtask ordering).
+   * @emoji 🧭 `submitKitCommand` + await `succeeded`/`failed` on the kit event bus. `shellPayload` is JSON stored in `KitCommandShellInput.request`; dispatch reads `request.variables` (same shape as a nested GraphQL body’s `variables` object).
    */
-  private async submitShell(commandKind: string, request: { query: string; variables?: Record<string, unknown> }): Promise<SetResult> {
+  private async submitShell(commandKind: string, shellPayload: Record<string, unknown>): Promise<SetResult> {
     this.ensureAlive();
     const maxBuffered = 64;
     const buffered: KitCommandLifecycleEvent[] = [];
@@ -618,7 +618,7 @@ export class KitStore {
           const data = kitGraphqlData(
             await this.gqlRun({
               query: `mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }`,
-              variables: { input: { commandKind, request } },
+              variables: { input: { commandKind, request: shellPayload } },
             }),
           );
           const receipt = (data as { submitKitCommand?: Partial<KitCommandReceipt> }).submitKitCommand;
@@ -635,6 +635,71 @@ export class KitStore {
     });
   }
 
+  /** @emoji 🧭 Like {@link submitShell} but resolves with `semioKitCommand.result` JSON from the succeeded event (for VCS / inverse / backbone payloads). */
+  private async submitShellJson(commandKind: string, shellVariables: Record<string, unknown>): Promise<unknown> {
+    const shellPayload = { variables: shellVariables };
+    this.ensureAlive();
+    const maxBuffered = 64;
+    const buffered: KitCommandLifecycleEvent[] = [];
+    let targetRequestId: string | null = null;
+    let settled = false;
+    return await new Promise<unknown>((resolve, reject) => {
+      const finishOk = (v: unknown) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(tid);
+        off();
+        resolve(v);
+      };
+      const finishErr = (err: SetError) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(tid);
+        off();
+        reject(new Error(err.message));
+      };
+      const drainForRequestId = (rid: string) => {
+        for (const ev of buffered) {
+          const row = ev.semioKitCommand;
+          if (row.requestId !== rid) continue;
+          if (row.phase === "succeeded") finishOk(row.result ?? null);
+          else if (row.phase === "failed")
+            finishErr(row.error ?? { kind: "Internal", message: "kit command failed" });
+        }
+      };
+      const tid = setTimeout(() => {
+        finishErr({
+          kind: "Timeout",
+          message: `kit command ${targetRequestId ?? "?"}: no succeeded/failed event`,
+        });
+      }, this.timeoutMs);
+      const off = this.subscribe((ev) => {
+        if (!isKitCommandLifecycleEvent(ev)) return;
+        if (buffered.length < maxBuffered) buffered.push(ev);
+        if (targetRequestId !== null) drainForRequestId(targetRequestId);
+      });
+      void (async () => {
+        try {
+          const data = kitGraphqlData(
+            await this.gqlRun({
+              query: `mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }`,
+              variables: { input: { commandKind, request: shellPayload } },
+            }),
+          );
+          const receipt = (data as { submitKitCommand?: Partial<KitCommandReceipt> }).submitKitCommand;
+          if (!receipt || typeof receipt.requestId !== "string" || receipt.accepted !== true) {
+            finishErr({ kind: "Internal", message: "submitKitCommand: invalid receipt" });
+            return;
+          }
+          targetRequestId = receipt.requestId;
+          drainForRequestId(targetRequestId);
+        } catch (e) {
+          finishErr({ kind: "Internal", message: String(e) });
+        }
+      })();
+    });
+  }
+
   async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
     try {
       const data = kitGraphqlData(
@@ -644,10 +709,7 @@ export class KitStore {
         }),
       );
       const cmds = (data.kitStore as { changeKitCommandsForFieldPatchValueJson?: unknown }).changeKitCommandsForFieldPatchValueJson;
-      return this.submitShell("changeKitCommands", {
-        query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-        variables: { commands: cmds },
-      });
+      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
     } catch (e) {
       return { ok: false, error: normalizeWasmThrownKitError(e) };
     }
@@ -662,10 +724,7 @@ export class KitStore {
         }),
       );
       const cmds = (data.kitStore as { changeKitCommandsForAddChildDtoJson?: unknown }).changeKitCommandsForAddChildDtoJson;
-      return this.submitShell("changeKitCommands", {
-        query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-        variables: { commands: cmds },
-      });
+      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
     } catch (e) {
       return { ok: false, error: normalizeWasmThrownKitError(e) };
     }
@@ -680,91 +739,61 @@ export class KitStore {
         }),
       );
       const cmds = (data.kitStore as { changeKitCommandsForRemoveChild?: unknown }).changeKitCommandsForRemoveChild;
-      return this.submitShell("changeKitCommands", {
-        query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`,
-        variables: { commands: cmds },
-      });
+      return this.submitShell("changeKitCommands", { variables: { commands: cmds } });
     } catch (e) {
       return { ok: false, error: normalizeWasmThrownKitError(e) };
     }
   }
 
   async changeKitCommands(commands: unknown): Promise<SetResult> {
-    return this.submitShell("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands } });
+    return this.submitShell("changeKitCommands", { variables: { commands } });
   }
 
   async changeKitWithInverse(commands: unknown): Promise<{ kind: string; inverse: unknown }> {
-    const data = kitGraphqlData(
-      await this.gqlRun({ query: `mutation($commands: JSON!) { changeKitWithInverse(commands: $commands) }`, variables: { commands } }),
-    );
-    return (data as { changeKitWithInverse?: { kind: string; inverse: unknown } }).changeKitWithInverse as { kind: string; inverse: unknown };
+    const raw = await this.submitShellJson("changeKitWithInverse", { commands });
+    const inner = (raw as { data?: { changeKitWithInverse?: { kind: string; inverse: unknown } } })?.data?.changeKitWithInverse;
+    if (!inner || typeof inner.kind !== "string") throw new Error("changeKitWithInverse: missing payload in shell result");
+    return inner;
   }
 
   async clusterPieces(designId: string, pieceIds: readonly string[], clusterName: string): Promise<SetResult> {
-    return this.submitShell("clusterPieces", {
-      query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`,
-      variables: { designId, pieceIds: [...pieceIds], clusterName },
-    });
+    return this.submitShell("clusterPieces", { variables: { designId, pieceIds: [...pieceIds], clusterName } });
   }
 
   async dragPieces(designId: string, pieceIds: readonly string[], du: number, dv: number): Promise<SetResult> {
-    return this.submitShell("dragPieces", {
-      query: `mutation($designId: String!, $pieceIds: [String!]!, $du: Float!, $dv: Float!) { dragPieces(designId: $designId, pieceIds: $pieceIds, du: $du, dv: $dv) }`,
-      variables: { designId, pieceIds: [...pieceIds], du, dv },
-    });
+    return this.submitShell("dragPieces", { variables: { designId, pieceIds: [...pieceIds], du, dv } });
   }
 
   async movePieces(designId: string, pieceIds: readonly string[], gap: number, shift: number, rise: number): Promise<SetResult> {
-    return this.submitShell("movePieces", {
-      query: `mutation($designId: String!, $pieceIds: [String!]!, $gap: Float!, $shift: Float!, $rise: Float!) { movePieces(designId: $designId, pieceIds: $pieceIds, gap: $gap, shift: $shift, rise: $rise) }`,
-      variables: { designId, pieceIds: [...pieceIds], gap, shift, rise },
-    });
+    return this.submitShell("movePieces", { variables: { designId, pieceIds: [...pieceIds], gap, shift, rise } });
   }
 
   async fixPieces(designId: string, pieceIds: readonly string[]): Promise<SetResult> {
-    return this.submitShell("fixPieces", {
-      query: `mutation($designId: String!, $pieceIds: [String!]!) { fixPieces(designId: $designId, pieceIds: $pieceIds) }`,
-      variables: { designId, pieceIds: [...pieceIds] },
-    });
+    return this.submitShell("fixPieces", { variables: { designId, pieceIds: [...pieceIds] } });
   }
 
   async flattenDesign(designId: string): Promise<SetResult> {
-    return this.submitShell("flattenDesign", { query: `mutation($designId: String!) { flattenDesign(designId: $designId) }`, variables: { designId } });
+    return this.submitShell("flattenDesign", { variables: { designId } });
   }
 
   async expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
-    return this.submitShell("expandDesign", {
-      query: `mutation($parentDesignId: String!, $nestedDesignId: String!) { expandDesign(parentDesignId: $parentDesignId, nestedDesignId: $nestedDesignId) }`,
-      variables: { parentDesignId, nestedDesignId },
-    });
+    return this.submitShell("expandDesign", { variables: { parentDesignId, nestedDesignId } });
   }
 
   async deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
-    return this.submitShell("deleteConnection", {
-      query: `mutation($designId: String!, $connectionId: String!) { deleteConnection(designId: $designId, connectionId: $connectionId) }`,
-      variables: { designId, connectionId },
-    });
+    return this.submitShell("deleteConnection", { variables: { designId, connectionId } });
   }
 
   async changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
-    return this.submitShell("changePieceType", {
-      query: `mutation($designId: String!, $pieceId: String!, $newTypeId: String!) { changePieceType(designId: $designId, pieceId: $pieceId, newTypeId: $newTypeId) }`,
-      variables: { designId, pieceId, newTypeId },
-    });
+    return this.submitShell("changePieceType", { variables: { designId, pieceId, newTypeId } });
   }
 
   async pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult> {
-    return this.submitShell("pasteDesignSelection", {
-      query: `mutation($designId: String!, $selection: JSON!, $plane: JSON) { pasteDesignSelection(designId: $designId, selection: $selection, plane: $plane) }`,
-      variables: { designId, selection, plane },
-    });
+    return this.submitShell("pasteDesignSelection", { variables: { designId, selection, plane } });
   }
 
   async createHangingPieces(designId: string, typeIds: readonly string[], plane: unknown): Promise<SetResult> {
-    return this.submitShell("createHangingPieces", {
-      query: `mutation($designId: String!, $typeIds: [String!]!, $plane: JSON!) { createHangingPieces(designId: $designId, typeIds: $typeIds, plane: $plane) }`,
-      variables: { designId, typeIds: [...typeIds], plane },
-    });
+    return this.submitShell("createHangingPieces", { variables: { designId, typeIds: [...typeIds], plane } });
   }
 
   async createConnectedPiece(
@@ -774,59 +803,49 @@ export class KitStore {
     childType: string,
     childPort: string,
   ): Promise<SetResult> {
-    return this.submitShell("createConnectedPiece", {
-      query: `mutation($designId: String!, $parentPiece: String!, $parentPort: String!, $childType: String!, $childPort: String!) { createConnectedPiece(designId: $designId, parentPiece: $parentPiece, parentPort: $parentPort, childType: $childType, childPort: $childPort) }`,
-      variables: { designId, parentPiece, parentPort, childType, childPort },
-    });
+    return this.submitShell("createConnectedPiece", { variables: { designId, parentPiece, parentPort, childType, childPort } });
   }
 
   async createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult> {
-    return this.submitShell("createFixedPiece", {
-      query: `mutation($designId: String!, $typeId: String!, $plane: JSON!) { createFixedPiece(designId: $designId, typeId: $typeId, plane: $plane) }`,
-      variables: { designId, typeId, plane },
-    });
+    return this.submitShell("createFixedPiece", { variables: { designId, typeId, plane } });
   }
 
   async undo(): Promise<SetResult> {
-    return this.submitShell("undo", { query: `mutation { undo }` });
+    return this.submitShell("undo", { variables: {} });
   }
 
   async redo(): Promise<SetResult> {
-    return this.submitShell("redo", { query: `mutation { redo }` });
+    return this.submitShell("redo", { variables: {} });
   }
 
   async attachBackbone(cfg: BackboneConfig): Promise<unknown> {
-    const data = kitGraphqlData(
-      await this.gqlRun({ query: `mutation($config: JSON!) { attachBackbone(config: $config) }`, variables: { config: cfg } }),
-    );
-    return (data as { attachBackbone?: unknown }).attachBackbone;
+    const raw = await this.submitShellJson("attachBackbone", { config: cfg });
+    return (raw as { data?: { attachBackbone?: unknown } })?.data?.attachBackbone;
   }
 
   async detachBackbone(): Promise<unknown> {
-    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { detachBackbone }` }));
-    return (data as { detachBackbone?: unknown }).detachBackbone;
+    const raw = await this.submitShellJson("detachBackbone", {});
+    return (raw as { data?: { detachBackbone?: unknown } })?.data?.detachBackbone;
   }
 
   async backboneStatus(): Promise<BackboneStatusDto> {
-    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { backboneStatus }` }));
-    return (data as { backboneStatus?: BackboneStatusDto }).backboneStatus ?? {};
+    const raw = await this.submitShellJson("backboneStatus", {});
+    return ((raw as { data?: { backboneStatus?: BackboneStatusDto } })?.data?.backboneStatus ?? {}) as BackboneStatusDto;
   }
 
   async listConflicts(): Promise<unknown> {
-    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { listConflicts }` }));
-    return (data as { listConflicts?: unknown }).listConflicts;
+    const raw = await this.submitShellJson("listConflicts", {});
+    return (raw as { data?: { listConflicts?: unknown } })?.data?.listConflicts;
   }
 
   async resolveConflict(id: string, strategy: ConflictResolution): Promise<unknown> {
-    const data = kitGraphqlData(
-      await this.gqlRun({ query: `mutation($id: String!, $strategy: JSON!) { resolveConflict(id: $id, strategy: $strategy) }`, variables: { id, strategy } }),
-    );
-    return (data as { resolveConflict?: unknown }).resolveConflict;
+    const raw = await this.submitShellJson("resolveConflict", { id, strategy });
+    return (raw as { data?: { resolveConflict?: unknown } })?.data?.resolveConflict;
   }
 
   async syncNow(): Promise<unknown> {
-    const data = kitGraphqlData(await this.gqlRun({ query: `mutation { syncNow }` }));
-    return (data as { syncNow?: unknown }).syncNow;
+    const raw = await this.submitShellJson("syncNow", {});
+    return (raw as { data?: { syncNow?: unknown } })?.data?.syncNow;
   }
 
   /**

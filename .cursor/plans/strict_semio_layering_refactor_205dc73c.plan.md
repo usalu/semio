@@ -4,10 +4,10 @@ overview: Refactor the `semio/rs` → `semio/js` → `semio/react` → `semio/sk
 todos:
  - id: rs_shell
    content: "rs: collapse RootMutation to single submitKitCommand and add new semantic ChangeKitCommand variants (cluster/drag/move/fix/flatten/expand/deleteConnection/changePieceType/paste/createHanging/createConnected/createFixed)"
-   status: in_progress
+   status: completed
  - id: rs_diff
    content: "rs: replace apply_kit_mutation(before, after) with single apply_kit_diff(diff); enforce forward_diff + inverse_for contract on every ChangeKitCommand variant"
-   status: pending
+   status: in_progress
  - id: rs_backbone
    content: "rs: add Memory backbone variant; move attach/detach/status/listConflicts/resolveConflict/syncNow into submitKitCommand shell with event-delivered outcomes"
    status: pending

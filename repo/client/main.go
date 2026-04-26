@@ -6868,7 +6868,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #region 🎊Query Cache
 // Local Bleve index under .repo/cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
 // 📌cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
-const cacheSchemaVersion = 2
+const cacheSchemaVersion = 3
 
 // 💿cacheMeta holds the data fields for a cacheMeta record.
 type cacheMeta struct {
@@ -6881,6 +6881,7 @@ type cacheMeta struct {
 	PointersHash      string            `json:"PointersHash"`
 	SubWorkingHash    string            `json:"SubWorkingHash"`
 	Fingerprint       string            `json:"Fingerprint"`
+	IncludeSections   bool              `json:"IncludeSections"`
 }
 
 // 💾getCacheDir holds the data fields for a getCacheDir record.
@@ -7399,6 +7400,10 @@ func loadTreeCache() (*TreeNode, *cacheMeta, error) {
 
 // 🏢BuildMonorepoTreeCached holds the data fields for a BuildMonorepoTreeCached record.
 func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
+	var buildOpts TreeBuildOptions
+	if len(opts) > 0 {
+		buildOpts = opts[0]
+	}
 	repoRoot := GetRootDir()
 
 	// Acquire a directory-based lock so only one CLI process builds the tree at a time.
@@ -7423,11 +7428,12 @@ func BuildMonorepoTreeCached(ctx context.Context, opts ...TreeBuildOptions) *Tre
 	defer os.RemoveAll(lockPath)
 
 	fp, newMeta := computeCompositeFingerprint(repoRoot)
+	newMeta.IncludeSections = buildOpts.IncludeSections
 	cached, cachedMeta, err := loadTreeCache()
-	if err == nil && cachedMeta.Fingerprint == fp {
+	if err == nil && cachedMeta.Fingerprint == fp && cachedMeta.IncludeSections == buildOpts.IncludeSections {
 		return cached
 	}
-	tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+	tree := BuildMonorepoTree(ctx, buildOpts)
 	saveTreeCache(tree, newMeta)
 	return tree
 }

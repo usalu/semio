@@ -1,5 +1,5 @@
 // #region 🧲Header
-// VCS: typed GraphQL mutations (`newSession`, `executeSessionCommands`, …) via `kitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` stream.
+// VCS: `submitKitCommand` shell (`newSession`, `batch`, …) via `storybookKitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` / `subscribe`.
 // Also hosts the 🌳KitTreeGraph window renderer so both the button grid and the GitKraken-style
 // history live next to the VCS domain model (single source of truth for wiring-to-store).
 // #endregion
@@ -118,7 +118,10 @@ export const HistoryControls: React.FC<{
 }> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg, onInspectCheckpoint }) => {
   const gqlHandle = (): StorybookKitGraphqlHandle => {
     if (!handle) throw new Error("KitStore handle not ready");
-    return { execute: (requestJson: string) => handle.execute(requestJson) };
+    return {
+      execute: (requestJson: string) => handle.execute(requestJson),
+      subscribe: (requestJson: string, onEvent: (msg: string) => void) => handle.subscribe(requestJson, onEvent),
+    };
   };
 
   const ex = (label: string, o: object) => {
