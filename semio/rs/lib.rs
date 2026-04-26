@@ -6553,6 +6553,104 @@ pub mod kit_draft {
         Nothing,
     }
 }
+/// ## 📍KitReadScope: canonical wire for which view of the kit to run [`crate::read::ReadKitCommand`]s against.
+pub mod kit_read_scope {
+    use crate::error::{Result, SemioError};
+    use crate::id::Id;
+    use crate::kit_change::KitChange;
+    use crate::kit_graph::KitGraph;
+    use crate::kit_graph::KitGraphRef;
+    use serde::{Deserialize, Serialize};
+
+    /// 🧭 Names exactly one of: the committed mainline, a checkpoint, an alternative tip, a draft, or the open transaction within a draft.
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitReadScope {
+        TheKit,
+        Checkpoint {
+            #[serde(rename = "checkpointId")]
+            checkpoint_id: Id,
+        },
+        Alternative {
+            #[serde(rename = "alternativeId")]
+            alternative_id: Id,
+        },
+        Draft {
+            #[serde(rename = "sessionId")]
+            session_id: Id,
+            #[serde(rename = "draftId")]
+            draft_id: Id,
+        },
+        Transaction {
+            #[serde(rename = "sessionId")]
+            session_id: Id,
+            #[serde(rename = "draftId")]
+            draft_id: Id,
+            #[serde(rename = "transactionId")]
+            transaction_id: Id,
+        },
+    }
+
+    /// 🧮 Materialize a throwaway graph: draft `before` + finalized transaction stack + the open transaction’s current `changes` (if any), matching the live WIP.
+    fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
+        let d = {
+            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+            g.sessions
+                .get(session_id)
+                .and_then(|s| s.draft(draft_id))
+                .ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?
+                .clone()
+        };
+        d.materialize_working_graph()
+    }
+
+    /// 🧮 Same as [`materialize_draft_working_graph`] but verify `transaction_id` matches the open transaction (reads follow live undo/redo within that transaction).
+    fn materialize_transaction_read_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
+        {
+            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+            let d = g
+                .sessions
+                .get(session_id)
+                .and_then(|s| s.draft(draft_id))
+                .ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
+            let _ = d
+                .open_transaction_ref(transaction_id)
+                .ok_or_else(|| SemioError::InvalidOperation("read scope: transaction is not the open transaction".into()))?;
+        }
+        materialize_draft_working_graph(kit, session_id, draft_id)
+    }
+
+    /// ↪️ Resolves a [`KitReadScope`] to a `KitGraphRef` suitable for [`ReadKitCommand::execute_many`].
+    pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
+        let g0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+        let view = match scope {
+            KitReadScope::TheKit => g0.materialize_graph_at(g0.the_kit_head.as_ref()),
+            KitReadScope::Checkpoint { checkpoint_id } => g0.materialize_graph_at(Some(checkpoint_id)),
+            KitReadScope::Alternative { alternative_id } => {
+                let tip = g0.alternative_tip(alternative_id);
+                let at = match tip.as_ref() {
+                    Some(t) => Some(t),
+                    None => g0.the_kit_head.as_ref(),
+                };
+                g0.materialize_graph_at(at)
+            }
+            KitReadScope::Draft { session_id, draft_id } => {
+                drop(g0);
+                return materialize_draft_working_graph(kit, session_id, draft_id);
+            }
+            KitReadScope::Transaction {
+                session_id,
+                draft_id,
+                transaction_id,
+            } => {
+                drop(g0);
+                return materialize_transaction_read_graph(kit, session_id, draft_id, transaction_id);
+            }
+        };
+        drop(g0);
+        Ok(view)
+    }
+}
 pub mod kit_session {
     //! Client session: owns drafts.
     use serde::{Deserialize, Serialize};
@@ -6560,6 +6658,7 @@ pub mod kit_session {
 
     use crate::id::Id;
     use crate::kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+    use crate::kit_read_scope::KitReadScope;
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]

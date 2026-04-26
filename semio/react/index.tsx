@@ -224,7 +224,8 @@ async function submitKitChangeCommands(client: KitStoreClient | null, commands: 
 
 type KitSnapDesign = { id: string; pieces?: readonly { id?: string }[]; connections?: readonly { id?: string }[] };
 
-async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, kind: "Piece" | "Connection", entityId: string): Promise<string | null> {
+async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, kind: string, entityId: string): Promise<string | null> {
+  if (kind !== "Piece" && kind !== "Connection") return null;
   const snap = (await client.getSnapshot()) as { designs?: readonly KitSnapDesign[] };
   for (const d of snap.designs ?? []) {
     if (kind === "Piece" && d.pieces?.some((p) => String(p.id) === entityId)) return d.id;
@@ -286,6 +287,14 @@ function buildSchemaEntityChangeCommands(
     if (dataKey === "description") return [{ description: { description: value == null ? null : String(value) } }];
     if (dataKey === "icon") return [{ icon: { icon: value == null ? null : String(value) } }];
     if (dataKey === "image") return [{ image: { image: value == null ? null : String(value) } }];
+    if (dataKey === "version" || dataKey === "release") return [{ version: { version: value == null ? null : String(value) } }];
+    if (dataKey === "homepage") return [{ homepage: { homepage: value == null ? null : String(value) } }];
+    if (dataKey === "license") return [{ license: { license: value == null ? null : String(value) } }];
+    if (dataKey === "preview") return [{ preview: { preview: value == null ? null : String(value) } }];
+    if (dataKey === "remote") return [{ remote: { remote: value == null ? null : String(value) } }];
+    if (dataKey === "uri") return [{ uri: { uri: value == null ? null : String(value) } }];
+    if (dataKey === "created" || dataKey === "createdAt") return [{ created: { created: value == null ? null : String(value) } }];
+    if (dataKey === "updated" || dataKey === "updatedAt") return [{ updated: { updated: value == null ? null : String(value) } }];
     return [];
   }
   if (typeName === "Author") {
@@ -3277,7 +3286,7 @@ export function useMoveToFolder(): {
 export type KitArtifactFolderKind = "type" | "design" | "quality" | "file" | "folder";
 
 /**
- * Move a kit artifact into a folder (or to root) — same behavior as sketchpad `semio.kit.moveToFolder` / kit commands, implemented with {@link KitStoreClient.patchEntityField}.
+ * Move a kit artifact into a folder (or to root) — not yet mapped to typed {@link KitStoreClient.submitChangeKitCommands}.
  */
 export function useMoveKitArtifactToFolder(): {
   run: (artifactKind: KitArtifactFolderKind, artifactId: string, folderId: string | null) => Promise<SetResult>;
@@ -3293,42 +3302,15 @@ export function useMoveKitArtifactToFolder(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      try {
-        let r: SetResult;
-        switch (artifactKind) {
-          case "type":
-            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Type", id: String(artifactId), field: "folder", value: folderId });
-            break;
-          case "design":
-            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Design", id: String(artifactId), field: "folder", value: folderId });
-            break;
-          case "quality":
-            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Quality", id: String(artifactId), field: "folder", value: folderId });
-            break;
-          case "file":
-            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: String(artifactId), field: "folder", value: folderId ? { id: folderId } : null });
-            break;
-          case "folder":
-            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Folder", id: String(artifactId), field: "parent", value: folderId ? { id: folderId } : null });
-            break;
-          default: {
-            const e: SetError = { kind: "InvalidValue", message: `unknown artifact kind: ${artifactKind}` };
-            setStatus({ kind: "error", pending: 0, lastError: e });
-            return { ok: false, error: e } as const;
-          }
-        }
-        if (!r.ok) {
-          runtime.pushSetRejection(r.error);
-          setStatus({ kind: "error", pending: 0, lastError: r.error });
-          return r;
-        }
-        setStatus({ kind: "idle", pending: 0 });
-        return r;
-      } catch (e) {
-        const err: SetError = { kind: "InvalidValue", message: e instanceof Error ? e.message : String(e) };
-        setStatus({ kind: "error", pending: 0, lastError: err });
-        return { ok: false, error: err } as const;
-      }
+      void artifactId;
+      void folderId;
+      const r: SetResult = {
+        ok: false,
+        error: { kind: "NotSupported", message: `move kit artifact folder: ${artifactKind} (not wired to ChangeKitCommand yet)` },
+      };
+      runtime.pushSetRejection(r.error);
+      setStatus({ kind: "error", pending: 0, lastError: r.error });
+      return r;
     },
     [runtime],
   );
@@ -3681,7 +3663,12 @@ export function useUpdatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Piece", id: pieceId, field: "__patch", value: patch });
+      const pcmds = piecePatchToWireCommands(patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {});
+      if (pcmds.length === 0) {
+        setStatus({ kind: "idle", pending: 0 });
+        return { ok: true } as const;
+      }
+      const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignPiece(designId, pieceId, pcmds)]);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3710,7 +3697,9 @@ export function useUpdatePieces(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Piece", id: u.id, field: "__patch", value: u.diff });
+        const pcmds = piecePatchToWireCommands(u.diff && typeof u.diff === "object" && u.diff !== null ? (u.diff as Record<string, unknown>) : {});
+        if (pcmds.length === 0) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignPiece(designId, u.id, pcmds)]);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3739,7 +3728,12 @@ export function useUpdateConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Connection", id: connectionId, field: "__patch", value: patch });
+      const ccmds = connectionPatchToWireCommands(patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {});
+      if (ccmds.length === 0) {
+        setStatus({ kind: "idle", pending: 0 });
+        return { ok: true } as const;
+      }
+      const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignConnection(designId, connectionId, ccmds)]);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3768,7 +3762,9 @@ export function useUpdateConnections(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Connection", id: u.id, field: "__patch", value: u.diff });
+        const ccmds = connectionPatchToWireCommands(u.diff && typeof u.diff === "object" && u.diff !== null ? (u.diff as Record<string, unknown>) : {});
+        if (ccmds.length === 0) continue;
+        const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignConnection(designId, u.id, ccmds)]);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -4939,7 +4935,19 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         }
         setPending((p) => p + 1);
         setLastErr(undefined);
-        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: rustTarget.kind, id: rustTarget.id, field: rustTarget.field, value: resolved });
+        let designId: string | null = null;
+        if (rustTarget.kind === "Piece" || rustTarget.kind === "Connection") {
+          designId = await resolveDesignIdForPieceOrConnection(runtime.kitClient, rustTarget.kind, rustTarget.id);
+        }
+        const cmds = buildSchemaEntityChangeCommands(rustTarget.kind, rustTarget.id, rustTarget.field, resolved, designId);
+        if (!cmds.length) {
+          setPending((p) => p - 1);
+          const e: SetError = { kind: "NotSupported", message: `${rustTarget.kind}.${rustTarget.field}` };
+          setLastErr(e);
+          runtime.pushSetRejection(e);
+          return { ok: false, error: e };
+        }
+        const r = await submitKitChangeCommands(runtime.kitClient, cmds);
         setPending((p) => p - 1);
         if (!r.ok) {
           setLastErr(r.error);
@@ -16163,18 +16171,29 @@ if (shouldRunReactEmbeddedTests) {
     ({
       getDto: () => kitJsonFromStore(store),
       getSnapshot: async () => kitJsonFromStore(store),
-      patchEntityField: async (kind: string, id: string, field: string, value: unknown) => {
+      submitChangeKitCommands: async (commands) => {
         const kit = kitJsonFromStore(store) as Record<string, unknown>;
-        if (kind !== "Kit" || kit.id !== id) return { ok: false, error: { kind: "NotFound", message: `${kind} ${id}` } };
-        if (field === "name" && String(value ?? "").trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
-        const key = field === "version" ? "version" : field;
-        if (value == null) delete kit[key];
-        else kit[key] = value;
+        for (const cmd of commands) {
+          const c = cmd as Record<string, unknown>;
+          if ("name" in c && c.name && typeof c.name === "object") {
+            const nm = String((c.name as { name?: string }).name ?? "");
+            if (nm.trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
+            kit.name = nm;
+          }
+          if ("description" in c && c.description && typeof c.description === "object")
+            kit.description = (c.description as { description?: string | null }).description;
+          if ("icon" in c && c.icon && typeof c.icon === "object") kit.icon = (c.icon as { icon?: string | null }).icon;
+          if ("image" in c && c.image && typeof c.image === "object") kit.image = (c.image as { image?: string | null }).image;
+          if ("version" in c && c.version && typeof c.version === "object") kit.version = (c.version as { version?: string | null }).version;
+          if ("homepage" in c && c.homepage && typeof c.homepage === "object") kit.homepage = (c.homepage as { homepage?: string | null }).homepage;
+          if ("license" in c && c.license && typeof c.license === "object") kit.license = (c.license as { license?: string | null }).license;
+        }
         store.replace(asKitInstance(kit));
         return { ok: true };
       },
-      addChild: async () => ({ ok: true }),
-      removeChild: async () => ({ ok: true }),
+      kitGraphql: () => {
+        throw new Error("kitGraphql not available in embedded test client");
+      },
       clusterPieces: async () => ({ ok: true }),
       dragPieces: async () => ({ ok: true }),
       movePieces: async () => ({ ok: true }),
@@ -16198,6 +16217,12 @@ if (shouldRunReactEmbeddedTests) {
       redo: async () => ({ ok: true }),
       canUndo: async () => false,
       canRedo: async () => false,
+      backboneStatus: async () => ({}),
+      attachBackbone: async () => ({}),
+      detachBackbone: async () => ({}),
+      listConflicts: async () => [],
+      resolveConflict: async () => ({}),
+      syncNow: async () => ({}),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
       dispose: () => {},
     }) as KitStoreClient;
@@ -16480,9 +16505,10 @@ if (shouldRunReactEmbeddedTests) {
       const stub: import("@semio/js").KitStoreClient = {
         getDto: () => store.getSnapshot().kit.toJSON(),
         getSnapshot: async () => store.getSnapshot().kit.toJSON(),
-        patchEntityField: async () => ({ ok: true }) as const,
-        addChild: async () => ({ ok: true }) as const,
-        removeChild: async () => ({ ok: true }) as const,
+        submitChangeKitCommands: async () => ({ ok: true }) as const,
+        kitGraphql: () => {
+          throw new Error("no gql");
+        },
         clusterPieces: async () => ({ ok: false, error: { kind: "InvalidValue", message: "stub-cluster" } }),
         dragPieces: async () => ({ ok: true }) as const,
         movePieces: async () => ({ ok: true }) as const,
@@ -16502,6 +16528,16 @@ if (shouldRunReactEmbeddedTests) {
         getTypes: async () => [],
         getAuthors: async () => [],
         getKitMetadata: async () => ({}),
+        undo: async () => ({ ok: true }) as const,
+        redo: async () => ({ ok: true }) as const,
+        canUndo: async () => false,
+        canRedo: async () => false,
+        backboneStatus: async () => ({}),
+        attachBackbone: async () => ({}),
+        detachBackbone: async () => ({}),
+        listConflicts: async () => [],
+        resolveConflict: async () => ({}),
+        syncNow: async () => ({}),
         subscribe: () => () => {},
         dispose: () => {},
       };

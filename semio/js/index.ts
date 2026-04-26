@@ -301,6 +301,14 @@ export type ChangeKitCommandWire =
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } }
   | { readonly image: { readonly image?: string | null } }
+  | { readonly preview: { readonly preview?: string | null } }
+  | { readonly remote: { readonly remote?: string | null } }
+  | { readonly homepage: { readonly homepage?: string | null } }
+  | { readonly license: { readonly license?: string | null } }
+  | { readonly uri: { readonly uri?: string | null } }
+  | { readonly created: { readonly created?: string | null } }
+  | { readonly updated: { readonly updated?: string | null } }
+  | { readonly version: { readonly version?: string | null } }
   | { readonly addType: { readonly type: TypePlain } }
   | { readonly removeType: { readonly typeId: KitIdWire } }
   | { readonly addDesign: { readonly design: DesignPlain } }

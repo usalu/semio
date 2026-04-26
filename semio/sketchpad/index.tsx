@@ -323,40 +323,6 @@ import {
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
-// #region 🖱️SketchpadLocalSelection
-/** @emoji 🖱️ UI-only ids for focus/selection; kit authority stays in rs (strict layering plan §5). */
-type SketchpadLocalSelectionState = { activeKitId: string | undefined; selectedEntityIds: readonly string[] };
-let _sketchpadLocalSelection: SketchpadLocalSelectionState = { activeKitId: undefined, selectedEntityIds: [] };
-const _sketchpadLocalSelectionListeners = new Set<() => void>();
-function _emitSketchpadLocalSelection(): void {
-  _sketchpadLocalSelectionListeners.forEach((l) => l());
-}
-/** @internal Call when the focused kit tab changes; does not read or write kit DTOs. */
-export function setSketchpadLocalActiveKitId(kitId: string | undefined): void {
-  if (_sketchpadLocalSelection.activeKitId === kitId) return;
-  _sketchpadLocalSelection = { ..._sketchpadLocalSelection, activeKitId: kitId };
-  _emitSketchpadLocalSelection();
-}
-/** @internal Replace diagram / panel selection ids only. */
-export function setSketchpadLocalSelectedEntityIds(ids: readonly string[]): void {
-  _sketchpadLocalSelection = { ..._sketchpadLocalSelection, selectedEntityIds: ids };
-  _emitSketchpadLocalSelection();
-}
-export function subscribeSketchpadLocalSelection(cb: () => void): () => void {
-  _sketchpadLocalSelectionListeners.add(cb);
-  return () => {
-    _sketchpadLocalSelectionListeners.delete(cb);
-  };
-}
-export function getSketchpadLocalSelectionSnapshot(): SketchpadLocalSelectionState {
-  return _sketchpadLocalSelection;
-}
-/** @emoji 🖱️ Subscribe to local selection only (contrast: {@link useKitStore} for rs-backed kit). */
-export function useSketchpadLocalSelection(): SketchpadLocalSelectionState {
-  return useSyncExternalStore(subscribeSketchpadLocalSelection, getSketchpadLocalSelectionSnapshot, getSketchpadLocalSelectionSnapshot);
-}
-// #endregion 🖱️SketchpadLocalSelection
-
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import {
@@ -7526,6 +7492,11 @@ export interface SketchpadUiState {
 }
 
 /**
+ * @emoji 🖱️ UI-only ids for focus/selection; kit authority stays in rs (strict layering plan §5).
+ **/
+export type SketchpadLocalSelectionState = { activeKitId: string | undefined; selectedEntityIds: readonly string[] };
+
+/**
  * Context state shape for the sketchpad XState machine.
  **/
 export interface SketchpadContext {
@@ -7534,6 +7505,9 @@ export interface SketchpadContext {
 
   /** Navbar, side panels, footer, drag/drop, interaction origin. */
   ui: SketchpadUiState;
+
+  /** UI-only selection ids; not persisted with sketchpad shell persistence. */
+  localSelection: SketchpadLocalSelectionState;
 
   /** Ordered tab list for open kits (mirrors {@link getKitRegistryBridge}().list() after registration). */
   openKitGuids: Id[];
@@ -7707,7 +7681,10 @@ export type SketchpadEvent =
   /** Kit tab / shell: ordered open kit ids and UI navigation focus (data lives in {@link getKitRegistryBridge}). */
   | { type: "UI.OPEN_KIT.PUSH"; kitId: Id }
   | { type: "UI.OPEN_KIT.CLOSE"; kitId: Id }
-  | { type: "UI.OPEN_KIT.ACTIVATE"; kitId: Id };
+  | { type: "UI.OPEN_KIT.ACTIVATE"; kitId: Id }
+  /** Local diagram/panel selection ids only (not kit DTO state). */
+  | { type: "UI.LOCAL_SELECTION.SET_ACTIVE_KIT"; kitId: string | undefined }
+  | { type: "UI.LOCAL_SELECTION.SET_ENTITY_IDS"; entityIds: readonly string[] };
 
 // #endregion ⚙️Types
 
@@ -8665,6 +8642,16 @@ export const sketchpadMachine = setup({
       if (reg) reg.setActiveKit(event.kitId);
       return { activeKitGuid: event.kitId };
     }),
+
+    uiLocalSelectionSetActiveKit: assign(({ context, event }) => {
+      if (event.type !== "UI.LOCAL_SELECTION.SET_ACTIVE_KIT") return {};
+      if (context.localSelection.activeKitId === event.kitId) return {};
+      return { localSelection: { ...context.localSelection, activeKitId: event.kitId } };
+    }),
+    uiLocalSelectionSetEntityIds: assign(({ context, event }) => {
+      if (event.type !== "UI.LOCAL_SELECTION.SET_ENTITY_IDS") return {};
+      return { localSelection: { ...context.localSelection, selectedEntityIds: event.entityIds } };
+    }),
   },
 }).createMachine({
   id: "sketchpad",
@@ -8713,6 +8700,7 @@ export const sketchpadMachine = setup({
     ui: createDefaultSketchpadUiState(),
     openKitGuids: [],
     activeKitGuid: undefined,
+    localSelection: { activeKitId: undefined, selectedEntityIds: [] },
   }),
   on: {
     NAVIGATE: {
@@ -8792,6 +8780,8 @@ export const sketchpadMachine = setup({
     "UI.OPEN_KIT.PUSH": { actions: "uiOpenKitPush" },
     "UI.OPEN_KIT.CLOSE": { actions: "uiOpenKitClose" },
     "UI.OPEN_KIT.ACTIVATE": { actions: "uiOpenKitActivate" },
+    "UI.LOCAL_SELECTION.SET_ACTIVE_KIT": { actions: "uiLocalSelectionSetActiveKit" },
+    "UI.LOCAL_SELECTION.SET_ENTITY_IDS": { actions: "uiLocalSelectionSetEntityIds" },
     "*": { actions: "dispatchAppEvent" },
   },
   states: {

@@ -8,6 +8,7 @@ use (
 	./repo/codex
 	./repo/copilot
 	./repo/cursor
+	./repo/go
 	./repo/kiro
 	./repo/mcp
 	./repo/server
