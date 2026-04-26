@@ -1,5 +1,5 @@
 // #region 🧲Header
-// WASM `KitStore` bridge for `@semio/react`: `KitStoreClient`, `LiveKitRoot`, read hubs, command facade; kit DTO/entity graph merged from former `kitEntities.ts` (`🧩KitEntitiesMerged`).
+// WASM `KitStore` bridge for `@semio/react` (subpath `@semio/js/kitWasmBridge`): `KitStoreClient`, `LiveKitRoot`, read hubs, command facade; kit DTO/entity graph merged from former `kitEntities.ts` (`🧩KitEntitiesMerged`).
 // 2026 Ueli Saluz <ueli@semio-tech.com> — GNU LGPL-3.0 or later
 // #endregion 🧲Header
 
@@ -13,7 +13,7 @@ import {
   type ReadWireBatch,
   type SetError,
   type SetResult,
-} from "@semio/js";
+} from "./index.js";
 import { z } from "zod";
 // #endregion 📥Imports
 

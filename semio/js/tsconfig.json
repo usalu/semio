@@ -39,6 +39,9 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@semio/rs-wasm": [
+        "../rs/pkg/semio.d.ts"
+      ],
       "@semio/js": [
         "."
       ],
@@ -66,7 +69,8 @@
     }
   },
   "include": [
-    "index.ts"
+    "index.ts",
+    "kitWasmBridge.ts"
   ],
   "exclude": [
     "node_modules",

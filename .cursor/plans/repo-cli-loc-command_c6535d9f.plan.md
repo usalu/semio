@@ -4,22 +4,22 @@ overview: Add a new `loc` subcommand to the repo CLI that reports current LOC (v
 todos:
  - id: wire-cmd
    content: Add locCommand() in main.go with cobra wiring, --history, --byContributors, --branch, --languages flags, and register it in NewRoot.
-   status: in_progress
+   status: completed
  - id: cloc-runner
    content: Implement runCloc() to invoke `cloc [<ref>] --vcs=git --exclude-dir=.repo --include-lang=... --json` and parse per-language LOC.
-   status: pending
+   status: completed
  - id: git-numstat
    content: Implement walkGitNumstat() over `git log --no-merges --numstat --first-parent --pretty=...` with extension-based language classification, .repo/gitignore exclusion, and per-author tagging.
-   status: pending
+   status: completed
  - id: aggregate
    content: Implement aggregateSnapshot() and buildHistory() to combine cloc totals with cumulative diff metrics, optionally split by contributor and time.
-   status: pending
+   status: completed
  - id: renderers
    content: Implement renderLocJSON, renderLocMarkdown, and renderLocText (with ANSI colors + TTY detection) and dispatch on config.Format.
-   status: pending
+   status: completed
  - id: tests
    content: Extend main_test.go with TestLocCommand covering classification, numstat parsing, aggregation, all three renderers, and CLI flag wiring (with fake git/cloc binaries).
-   status: pending
+   status: completed
 isProject: false
 ---
 

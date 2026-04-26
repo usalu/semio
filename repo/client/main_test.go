@@ -22617,3 +22617,87 @@ func TestMoveTicketPlanIntoFolderFile(t *testing.T) {
 		t.Fatalf("Local = %q", ticket.Plan.Local)
 	}
 }
+
+func TestLocCommand(t *testing.T) {
+	langs := locMakeLangSet([]string{"TypeScript", "Go", "C#", "Python", "Rust"})
+	t.Run("classify language", func(t *testing.T) {
+		if got := locClassifyLanguage("a/b/foo.ts", langs); got != "TypeScript" {
+			t.Fatalf("ts: got %q", got)
+		}
+		if got := locClassifyLanguage("x.mtsx", langs); got != "TypeScript" {
+			t.Fatalf("mtsx: got %q", got)
+		}
+		if got := locClassifyLanguage("pkg/m.go", langs); got != "Go" {
+			t.Fatalf("go: got %q", got)
+		}
+		if got := locClassifyLanguage("noext", langs); got != "" {
+			t.Fatalf("noext: got %q", got)
+		}
+	})
+	t.Run("parse numstat", func(t *testing.T) {
+		oldR := GetRootDir()
+		td := t.TempDir()
+		_ = os.WriteFile(filepath.Join(td, ".gitignore"), []byte("# test\n"), 0o644)
+		SetRootDir(td)
+		defer SetRootDir(oldR)
+		raw := "COMMIT\t" + strings.Repeat("a", 8) + "\tAlice\ta@x\t1600000000\n3\t1\tlib/main.go\n-\t-\tbin/legacy\n2\t0\tc.cs\n"
+		out, err := locParseNumstatLog(raw, langs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(out) != 1 {
+			t.Fatalf("commits %d", len(out))
+		}
+		p := out[0].Delta["Go"]
+		if p.Added != 3 || p.Removed != 1 {
+			t.Fatalf("go delta %+v", p)
+		}
+		p2 := out[0].Delta["C#"]
+		if p2.Added != 2 {
+			t.Fatalf("cs %+v", p2)
+		}
+		// 0,0 and binary - skipped above
+	})
+	t.Run("merge cumulative and cloc", func(t *testing.T) {
+		c := map[string]LocCumulative{"Go": {Added: 10, Removed: 2}}
+		cloc := map[string]int{"Go": 100, "TypeScript": 0}
+		got := locMergeCumulativeClocEx(c, cloc, []string{"Go", "TypeScript", "C#", "Python", "Rust"})
+		if got["Go"].Loc != 100 || got["Go"].Edited != 12 || got["TypeScript"].Loc != 0 {
+			t.Fatalf("%+v", got["Go"])
+		}
+	})
+	t.Run("render markdown", func(t *testing.T) {
+		r := &LocReport{
+			Snapshot: map[string]LocLangStats{
+				"Go": {Loc: 1, Edited: 2, Added: 1, Removed: 1},
+			},
+		}
+		var b strings.Builder
+		renderLocMarkdown(&b, r, false, false)
+		s := b.String()
+		if !strings.Contains(s, "Go") || !strings.Contains(s, "| 1 |") {
+			t.Fatalf("markdown: %q", s)
+		}
+	})
+	t.Run("text no ansi for pipe", func(t *testing.T) {
+		r := &LocReport{Snapshot: map[string]LocLangStats{"Go": {Loc: 1, Edited: 0, Added: 0, Removed: 0}}}
+		var b strings.Builder
+		renderLocText(&b, r, false, false, false)
+		if strings.ContainsRune(b.String(), '\x1b') {
+			t.Fatal("unexpected ansi")
+		}
+	})
+	t.Run("root has loc", func(t *testing.T) {
+		root, _ := NewRootWithConfig(testEngineFactory)
+		var found *cobra.Command
+		for _, c := range root.Commands() {
+			if c.Name() == "loc" {
+				found = c
+				break
+			}
+		}
+		if found == nil {
+			t.Fatal("no loc")
+		}
+	})
+}

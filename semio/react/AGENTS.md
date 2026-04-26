@@ -14,7 +14,7 @@ bundle:
 - **Up**: `semio/sketchpad` (and other hosts) import **only** `@semio/react` for kit hooks, command facades, and DTO helpers re-exported here.
 - **Down**: this package uses **`@semio/js`** for `KitStore` / `KitStoreClient` and wire types. You MUST NOT import `semio/rs` or raw WASM from React code. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
 
-Kit domain logic and caching remain in **`semio/rs`**; the merged legacy entity region in `kitWasmClient.ts` exists only as a **temporary UI/DTO bridge** and MUST shrink over time.
+Kit domain logic and caching remain in **`semio/rs`**; the merged legacy entity region in **`@semio/js/kitWasmBridge`** exists only as a **temporary UI/DTO bridge** and MUST shrink over time.
 
 ## Hooks and external store
 

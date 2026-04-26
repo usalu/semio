@@ -34,7 +34,7 @@ import {
   type KitStoreReadSnap,
   type KitTypedShellCommand,
   type WriteStatus,
-} from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
 import {
   asKitInstance,
   Attribute,
@@ -80,7 +80,7 @@ import {
   Type,
   TypeStore,
   Vector,
-} from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
 import type { SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
@@ -100,7 +100,7 @@ function isKitCommandLifecycleEvent(event: unknown): event is {
 // #endregion 🧾KitEventGuards
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, SetError, SetResult } from "@semio/js";
-export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "./kitWasmClient";
+export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "@semio/js/kitWasmBridge";
 export type {
   KitStoreExecuteResult,
   KitDesignReadKind,
@@ -109,8 +109,8 @@ export type {
   KitTypedShellCommand,
   KitViewCatalogKey,
   WriteStatus,
-} from "./kitWasmClient";
-export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
+export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js/kitWasmBridge";
 
 // #region ⚛️Types
 
@@ -123,7 +123,7 @@ export {
   SemioKitLiveReadStore,
   SemioKitShallowListReadStore,
   SemioKitViewStore,
-} from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
 export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
 /** Read-only async-backed value + {@link WriteStatus} (no setter). */
 export type HookRead<T> = readonly [T | undefined, WriteStatus];
@@ -4623,7 +4623,7 @@ export {
   TOLERANCE,
   Type,
   Vector,
-} from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
 export { KitStore } from "@semio/js";
 export type { ReadWireBatch, ReadWireBatchResult, ReadWireItem } from "@semio/js";
 export type {
@@ -4655,9 +4655,9 @@ export type {
   QualityDiff,
   TypeDiff,
   TypeShallowDto,
-} from "./kitWasmClient";
-export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "./kitWasmClient";
-export type { KitCommandContext, KitCommandResult } from "./kitWasmClient";
+} from "@semio/js/kitWasmBridge";
+export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js/kitWasmBridge";
+export type { KitCommandContext, KitCommandResult } from "@semio/js/kitWasmBridge";
 
 export function useJSON(idValue?: string): HookTriad<any> {
   return useSchemaObjectState("JSON", idValue);
@@ -15750,7 +15750,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance } = await import("./kitWasmClient");
+  const { InMemoryKitStore, asKitInstance } = await import("@semio/js/kitWasmBridge");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -16026,7 +16026,7 @@ if (shouldRunReactEmbeddedTests) {
       const emit = (event: any) => {
         for (const listener of listeners) listener(event);
       };
-      const stub: import("./kitWasmClient").KitStoreClient = {
+      const stub: import("@semio/js/kitWasmBridge").KitStoreClient = {
         ...createTestKitClient(store),
         subscribe: (cb: (ev: any) => void) => {
           listeners.add(cb);
@@ -16076,7 +16076,7 @@ if (shouldRunReactEmbeddedTests) {
         ],
       });
       const store = new InMemoryKitStore(kit);
-      const stub: import("./kitWasmClient").KitStoreClient = {
+      const stub: import("@semio/js/kitWasmBridge").KitStoreClient = {
         getDto: () => store.getSnapshot().kit.toJSON(),
         getSnapshot: async () => store.getSnapshot().kit.toJSON(),
         patchEntityField: async () => ({ ok: true }) as const,

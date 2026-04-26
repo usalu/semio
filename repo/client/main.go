@@ -8300,27 +8300,6 @@ type locCumulativePair struct {
 	Added, Removed int
 }
 
-// 🔧locCumulative runs numstat and aggregates cumulative metrics.
-// 🧮 locCumulative returns flat cumulatives, optional per-contributor cumulatives, and all commits in order.
-func locCumulative(path string, languages []string, byContrib bool) ([]locRawCommit, map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
-	commits, err := locWalkGitLog(path, languages, "")
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	cum, byC, err := locCumulativeFromRaw(commits, languages, byContrib)
-	return commits, cum, byC, err
-}
-
-// 🔧locCumulativeBranch walks only commits on the given branch.
-// 🧮 locCumulativeBranch runs the same as locCumulative but for a ref.
-func locCumulativeBranch(path string, languages []string, byContrib bool, ref string) ([]locRawCommit, map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
-	commits, err := locWalkGitLog(path, languages, ref)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return locCumulativeFromRaw(commits, languages, byContrib)
-}
-
 func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib bool) (map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
 	langW := locMakeLangSet(languages)
 	cum := make(map[string]locCumulativePair)
@@ -8483,9 +8462,9 @@ func runCloc(repoRoot, ref string, languages []string) (map[string]int, error) {
 	langList := strings.Join(languages, ",")
 	var args []string
 	if ref == "" {
-		args = []string{".", "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json", "--json-add-indent=0"}
+		args = []string{".", "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json"}
 	} else {
-		args = []string{ref, "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json", "--json-add-indent=0"}
+		args = []string{ref, "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json"}
 	}
 	stdout, stderr, code := ExecCommand(exe, args, repoRoot)
 	if code != 0 {
@@ -8906,6 +8885,8 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "cloc --include-lang; limits numstat by extension")
 	return cmd
 }
+
+// #endregion 🔢LOC Command
 
 // #region ⏲️Mermaid
 // 🧜Mermaid diagram generation for LOC visualizations as treemap-beta strings.

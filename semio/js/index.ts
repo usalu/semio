@@ -1111,6 +1111,17 @@ export class KitStore {
 
 // #endregion 📦KitStore
 
+// #region 🧰OpenKit
+
+/**
+ * @emoji 🧰 Convenience alias for {@link KitStore.open}.
+ */
+export async function openKit(initialKit: KitFullDto, opts?: KitStoreOpenOptions): Promise<KitStore> {
+  return KitStore.open(initialKit, opts);
+}
+
+// #endregion 🧰OpenKit
+
 // #region 🧪EmbeddedTests
 if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");

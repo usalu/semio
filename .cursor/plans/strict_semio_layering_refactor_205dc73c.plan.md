@@ -16,7 +16,7 @@ todos:
    status: pending
  - id: react_thin
    content: "react: delete kitWasmClient.ts; shrink index.tsx to scopes + useSyncExternalStore reads + useCallback mutations; move domain types/classes to @semio/js"
-   status: pending
+   status: in_progress
  - id: sketchpad_clean
    content: "sketchpad: remove all *KitStore host instantiations and kit registry; open kits via useAttachBackbone({memory|dev|local|remote}); keep only local selection state"
    status: pending
