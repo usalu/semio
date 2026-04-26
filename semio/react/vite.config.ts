@@ -9,9 +9,15 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
+import path from "path";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg"),
+    },
+  },
   test: {
     name: "semio-react",
     environment: "jsdom",

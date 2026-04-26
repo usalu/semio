@@ -7,22 +7,22 @@ todos:
    status: completed
  - id: rust-write-scope
    content: Add Rust write scope and enforce draft/transaction ownership for every ChangeKitCommand execution.
-   status: in_progress
+   status: completed
  - id: graphql-typed-scope
    content: Replace untyped GraphQL command JSON writes with typed scoped command inputs and lifecycle events.
-   status: pending
+   status: completed
  - id: js-scoped-store
    content: Refactor JS KitStore to own active read/write scopes and expose only scoped command APIs.
-   status: pending
+   status: completed
  - id: react-scope-hooks
    content: Refactor React providers/hooks so reads and writes depend on explicit kit/draft/transaction/entity scopes.
-   status: pending
+   status: completed
  - id: sketchpad-command-routing
    content: Route all Sketchpad kit CRUD through scoped React commands and remove local kit mutation paths.
-   status: pending
+   status: completed
  - id: tests-validation
    content: Extend existing tests and run layered Rust, JS, React, Sketchpad, and Playwright validation.
-   status: pending
+   status: completed
 isProject: false
 ---
 

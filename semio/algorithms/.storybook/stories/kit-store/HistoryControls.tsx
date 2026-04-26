@@ -1,5 +1,5 @@
 // #region 🧲Header
-// VCS: `submitKitCommand` shell (`newSession`, `batch`, …) via `storybookKitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` / `subscribe`.
+// VCS: `kitStore.batch` (`newSession`, `batch`, …) via `storybookKitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` / `subscribe`.
 // Also hosts the 🌳KitTreeGraph window renderer so both the button grid and the GitKraken-style
 // history live next to the VCS domain model (single source of truth for wiring-to-store).
 // #endregion

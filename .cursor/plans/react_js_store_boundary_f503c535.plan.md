@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: js-store-api
    content: Move command wire construction, live reads, lifecycle event typing, and RxJS-backed subscriptions behind clean semio/js store methods.
-   status: in_progress
+   status: completed
  - id: react-thin-hooks
    content: Refactor semio/react hooks to call only JS store promise methods and subscribe methods, removing command wire and LiveKitRoot knowledge.
-   status: pending
+   status: completed
  - id: package-boundaries
    content: Remove direct React package aliases/dependencies that imply @semio/rs-wasm, RxJS, or command-schema ownership.
-   status: pending
+   status: completed
  - id: tests-validation
    content: Extend existing embedded JS/React tests and run package build/test validation.
-   status: pending
+   status: completed
  - id: close-ticket
    content: Close the repo ticket with summary and touched files after validation.
-   status: pending
+   status: completed
 isProject: false
 ---
 

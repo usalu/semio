@@ -38,11 +38,16 @@ for (const definition of ["type KitStore", "type Query", "type Mutation", "type 
 const queryBody = definitionBody("type Query");
 assertSchema(queryBody.includes("kitStore: KitStore!") && queryBody.includes("kitReadScope(scope: KitReadScopeInput!): KitStore!"), "Query MUST expose Rust kit store roots");
 const mutationBody = definitionBody("type Mutation");
-assertSchema(mutationBody.includes("submitKitCommand(input: KitCommandShellInput!): KitCommandReceipt!"), "Mutation MUST expose the Rust command shell");
+assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
+const kitStoreMutationBody = definitionBody("type KitStoreMutation");
+assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreBatchInput!): KitStoreBatchPayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
 const subscriptionBody = definitionBody("type Subscription");
 assertSchema(subscriptionBody.includes("eventStream: JSON!"), "Subscription MUST expose the Rust event stream");
 const kitBody = definitionBody("type KitStore");
-assertSchema(kitBody.includes("liveFullDto: JSON!") && kitBody.includes("typeIds: [String!]!") && kitBody.includes("designByDtoId(id: String!): Design"), "KitStore MUST expose the current semio/rs live graph API");
+assertSchema(
+  kitBody.includes("liveFullDto: KitFullSnapshot!") && kitBody.includes("typeIds: [String!]!") && kitBody.includes("designByDtoId(id: String!): Design"),
+  "KitStore MUST expose the current semio/rs live graph API",
+);
 const typeBody = definitionBody("type Type");
 assertSchema(typeBody.includes("connectors: [Connector!]!") && typeBody.includes("representations: [Representation!]!"), "Type MUST expose the Rust catalog handles");
 const designBody = definitionBody("type Design");

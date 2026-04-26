@@ -26900,6 +26900,9 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum LiveBatchCommandInput {
+        ChangeKitCommands(ChangeKitCommandsBatchInput),
+        Design(DesignBatchInput),
+        ChangeKitWithInverse(ChangeKitCommandsBatchInput),
         /// 🧾 WIP graph undo stack only (not draft/transaction scoped).
         Undo(ConfirmOnlyInput),
         /// 🧾 WIP graph redo stack only (not draft/transaction scoped).
@@ -27364,6 +27367,18 @@ pub mod kit_graphql {
             reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
         }
 
+        async fn run_change_kit_with_inverse(
+            &self,
+            commands: Vec<ChangeKitCommand>,
+        ) -> Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), Error> {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            self.tx
+                .send(GraphWork::ChangeKitWithInverse { commands, reply: reply_tx })
+                .await
+                .map_err(|e| Error::new(format!("change queue: {e}")))?;
+            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
+        }
+
         async fn run_custom_set_result(&self, run: Box<dyn FnOnce() -> crate::error::SetResult + Send>) -> Result<(), Error> {
             let (reply_tx, reply_rx) = oneshot::channel();
             self.tx
@@ -27394,14 +27409,6 @@ pub mod kit_graphql {
                 .map_err(|e| Error::new(format!("{e:?}")))
         }
 
-        async fn run_change_kit_with_inverse(&self, commands: Vec<ChangeKitCommand>) -> Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), Error> {
-            let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx
-                .send(GraphWork::ChangeKitWithInverse { commands, reply: reply_tx })
-                .await
-                .map_err(|e| Error::new(format!("change queue: {e}")))?;
-            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
-        }
     }
 
     async fn execute_batch(shell: &KitShellCtx, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
@@ -27616,11 +27623,12 @@ pub mod kit_graphql {
                     shell.run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
                 }
                 DesignBatchCommandInput::CreateConnectedPiece(input) => {
-                    shell.run_custom_set_result(Box::new(move || {
-                        KitGraph::create_connected_piece(
-                            &graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port,
-                        )
-                    })).await?;
+                    shell
+                        .run_custom_set_result(Box::new(move || {
+                            KitGraph::create_connected_piece(
+                                &graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port,
+                            )
+                        })).await?;
                 }
                 DesignBatchCommandInput::CreateFixedPiece(input) => {
                     let plane = plane_from_input(input.plane);
@@ -29390,7 +29398,7 @@ mod tests {
                                         { "draft": { "commands": [
                                             { "startTransaction": { "confirm": true } },
                                             { "transaction": { "commands": [
-                                                { "changeKitCommands": { "commands": [{ "name": "gql-shell-after" }] } }
+                                                { "changeKitCommands": { "commands": [{ "name": { "name": "gql-shell-after" } }] } }
                                             ]}}
                                         ]}}
                                     ]

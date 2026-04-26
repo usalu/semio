@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: audit-json
    content: Audit all schema-visible `Json` and `serde_json::Value` usage in `kit_graphql`.
-   status: in_progress
+   status: completed
  - id: typed-graph
    content: Introduce explicit graph node, connection, geometry, event, and command GraphQL shapes.
-   status: pending
+   status: completed
  - id: resolvers
    content: Wire typed resolvers to `KitGraphRef`, `KitStore`, and existing command execution paths.
-   status: pending
+   status: completed
  - id: schema-tests
    content: Update existing schema tests to reject generated JSON scalar usage.
-   status: pending
+   status: completed
  - id: verify-close
    content: Regenerate schema, run relevant tests, inspect SDL, and close the ticket.
-   status: pending
+   status: completed
 isProject: false
 ---
 

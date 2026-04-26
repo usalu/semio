@@ -104,13 +104,13 @@ import {
   TypeStore,
   Vector,
 } from "@semio/js";
-import type { KitChildEntityKind, KitReadScope, KitStoreClient, SetError, SetResult } from "@semio/js";
+import type { KitChildEntityKind, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, SetError, SetResult } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
 export { kitReadScopeKey, kitReadScopeToGraphQLInput, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
@@ -1445,6 +1445,8 @@ export type KitScopeProps = {
   kitClient?: KitStoreClient | null;
   /** @emoji 🧭 Initial {@link KitReadScope} for `createKitStoreClient` / read materialization (default main line). */
   kitReadScope?: KitReadScope;
+  /** @emoji 🧭 When set, pins {@link KitStoreClient.setKitWriteScope} for batched kit mutations (omit to auto-bootstrap per gesture). */
+  kitWriteScope?: KitWriteScope | null;
   backbone?: KitBackboneConfig;
   initialKit?: KitLike;
   children: ReactNode;
@@ -1456,6 +1458,7 @@ export function KitScope({
   kitId: kitIdProp,
   kitClient: kitClientProp,
   kitReadScope: kitReadScopeProp = theKitReadScope,
+  kitWriteScope: kitWriteScopeProp,
   backbone,
   initialKit,
   children,
@@ -1519,6 +1522,12 @@ export function KitScope({
     if (!kitClient) return;
     kitClient.setKitReadScope(kitReadScopeProp);
   }, [kitClient, kitReadScopeProp]);
+
+  React.useEffect(() => {
+    if (!kitClient) return;
+    if (kitWriteScopeProp === undefined) return;
+    kitClient.setKitWriteScope(kitWriteScopeProp);
+  }, [kitClient, kitWriteScopeProp]);
 
   if (kitIdProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
   if (!store) return React.createElement(React.Fragment, null, fallback);
@@ -15937,6 +15946,10 @@ if (shouldRunReactEmbeddedTests) {
       listConflicts: async () => [],
       resolveConflict: async () => ({}),
       syncNow: async () => ({}),
+      getKitWriteScope: () => null,
+      setKitWriteScope: () => {},
+      finalizeKitWriteTransaction: async () => ({ ok: true }),
+      abortKitWriteTransaction: async () => ({ ok: true }),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
       setKitReadScope: (_s: import("@semio/js").KitReadScope) => {},
       dispose: () => {},
@@ -16234,6 +16247,10 @@ if (shouldRunReactEmbeddedTests) {
       const stub: import("@semio/js").KitStoreClient = {
         getDto: () => store.getSnapshot().kit.toJSON(),
         getSnapshot: async () => store.getSnapshot().kit.toJSON(),
+        getKitWriteScope: () => null,
+        setKitWriteScope: () => {},
+        finalizeKitWriteTransaction: async () => ({ ok: true }) as const,
+        abortKitWriteTransaction: async () => ({ ok: true }) as const,
         submitChangeKitCommands: async () => ({ ok: true }) as const,
         kitGraphql: () => {
           throw new Error("no gql");

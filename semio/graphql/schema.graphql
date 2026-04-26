@@ -146,6 +146,14 @@ type Design {
 	"""
 	pieceByDtoId(id: String!): Piece
 	connections: [Connection!]!
+	"""
+	🌐 `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
+	"""
+	piecesFull: PieceFullList!
+	"""
+	🌐 `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
+	"""
+	connectionsFull: ConnectionFullList!
 	flattenMap: [DesignFlattenMapEntryObject!]!
 	clusterableGroups(selection: [String!]!): [[String!]!]!
 	qualitySum(qualityId: String!): Float!
@@ -425,10 +433,22 @@ type KitStoreBatchResult {
 	alternativeId: String
 	backbone: BackboneBatchStatus
 	conflicts: [ConflictBatchRecord!]
+	"""
+	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+	"""
+	changeKind: String
+	"""
+	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
+	"""
+	inverse: [ChangeKitCommand!]
 }
 
 enum KitStoreBatchResultKind {
 	CHANGE_KIT_COMMANDS
+	"""
+	🧾 Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
+	"""
+	CHANGE_KIT_WITH_INVERSE
 	CLUSTER_PIECES
 	DRAG_PIECES
 	MOVE_PIECES
@@ -476,7 +496,14 @@ type KitStoreMutation {
 input LiveBatchCommandInput @oneOf {
 	changeKitCommands: ChangeKitCommandsBatchInput
 	design: DesignBatchInput
+	changeKitWithInverse: ChangeKitCommandsBatchInput
+	"""
+	🧾 WIP graph undo stack only (not draft/transaction scoped).
+	"""
 	undo: ConfirmOnlyInput
+	"""
+	🧾 WIP graph redo stack only (not draft/transaction scoped).
+	"""
 	redo: ConfirmOnlyInput
 }
 
@@ -523,6 +550,8 @@ type Piece {
 	"""
 	parentConnection: Connection
 }
+
+scalar PieceFullList
 
 input PieceIdsBatchInput {
 	pieceIds: [String!]!
@@ -609,6 +638,14 @@ type Subscription {
 
 input TransactionBatchCommandInput @oneOf {
 	changeKitCommands: ChangeKitCommandsBatchInput
+	"""
+	🧾 Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
+	"""
+	changeKitWithInverse: ChangeKitCommandsBatchInput
+	"""
+	🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
+	"""
+	design: DesignBatchInput
 	finalizeTransaction: ConfirmOnlyInput
 	abortTransaction: ConfirmOnlyInput
 	undoTransaction: CountInput
