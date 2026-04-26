@@ -8244,11 +8244,11 @@ type LocReport struct {
 
 // 💿LocHistoryEntry: one commit step on the time series; Languages xor ByContributors.
 type LocHistoryEntry struct {
-	SHA            string                               `json:"sha"`
-	Date           string                               `json:"date"`
-	Author         string                               `json:"author,omitempty"`
-	Languages      map[string]LocLangStats              `json:"languages,omitempty"`
-	ByContributors map[string]map[string]LocLangStats  `json:"byContributors,omitempty"`
+	SHA            string                             `json:"sha"`
+	Date           string                             `json:"date"`
+	Author         string                             `json:"author,omitempty"`
+	Languages      map[string]LocLangStats            `json:"languages,omitempty"`
+	ByContributors map[string]map[string]LocLangStats `json:"byContributors,omitempty"`
 }
 
 // 💿locRawCommit holds a single parsed commit and its per-language line deltas.
@@ -44030,7 +44030,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 	cliIndex := -1
 	for i, field := range fields {
 		base := filepath.Base(field)
-		if base == "cli" || base == "cli.exe" {
+		if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" {
 			cliIndex = i
 			break
 		}
@@ -44040,7 +44040,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 			if fields[i] == "go" && fields[i+1] == "run" {
 				for j := i + 2; j < len(fields); j++ {
 					base := filepath.Base(fields[j])
-					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/client" || fields[j] == "repo/client" {
+					if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" || fields[j] == "./repo/mcp" || fields[j] == "repo/mcp" {
 						cliIndex = j
 						break
 					}

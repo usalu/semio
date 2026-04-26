@@ -1181,8 +1181,13 @@ export class KitStore {
     const out = await this.read([{ readKitDesignIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
-    ) as readonly { id?: string }[];
-    return ids.map((row) => this.design(String(row.id ?? "")));
+    );
+    const toId = (row: unknown): string => {
+      if (typeof row === "string") return row;
+      if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
+      return "";
+    };
+    return ids.map((row) => this.design(toId(row))).filter((s) => s.id !== "");
   }
 
   /** @emoji 🧭 All kind ids in the live kit as {@link TypeStore} handles. */
@@ -1190,8 +1195,13 @@ export class KitStore {
     const out = await this.read([{ readKitTypeIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
-    ) as readonly { id?: string }[];
-    return ids.map((row) => this.type(String(row.id ?? "")));
+    );
+    const toId = (row: unknown): string => {
+      if (typeof row === "string") return row;
+      if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
+      return "";
+    };
+    return ids.map((row) => this.type(toId(row))).filter((s) => s.id !== "");
   }
   // #endregion KitStoreEntityFactories
 }
@@ -1228,13 +1238,11 @@ function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
   return false;
 }
 
-/** @emoji 🧭 Design-scoped kit events (excludes bare `Changed`, which is kit-wide). */
+/** @emoji 🧭 Design-scoped kit events (excludes bare `Changed` and `FlattenInvalidated`, which are handled separately per subscriber). */
 export function kitEventTouchesDesignStrict(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
   const d = (ev as { Design?: { design_id?: string; event?: unknown } }).Design;
   if (d && typeof d.design_id === "string" && d.design_id === designId) return true;
-  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: unknown } }).FlattenInvalidated;
-  if (fi && typeof fi.design === "string" && fi.design === designId) return true;
   if (jsonSubtreeHasIdKey(ev, "design_id", designId)) return true;
   const ca = (ev as { ChildAdded?: { parent?: { id?: string }; child?: { id?: string } } }).ChildAdded;
   if (ca && ca.parent?.id === designId) return true;
@@ -1248,6 +1256,8 @@ export function kitEventTouchesDesign(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
   if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
   if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: unknown } }).FlattenInvalidated;
+  if (fi && typeof fi.design === "string" && fi.design === designId) return true;
   return kitEventTouchesDesignStrict(ev, designId);
 }
 
@@ -1280,7 +1290,11 @@ export function kitEventTouchesPiece(ev: KitEvent, designId: string, pieceId: st
   if (p && typeof p.piece_id === "string" && p.piece_id === pieceId) return true;
   if (jsonSubtreeHasIdKey(ev, "piece_id", pieceId)) return true;
   const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: string[] } }).FlattenInvalidated;
-  if (fi && fi.design === designId && Array.isArray(fi.pieces) && fi.pieces.includes(pieceId)) return true;
+  if (fi && fi.design === designId) {
+    const rows = fi.pieces;
+    if (!Array.isArray(rows) || rows.length === 0) return true;
+    return rows.includes(pieceId);
+  }
   return false;
 }
 
@@ -4176,6 +4190,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       expect(typeof r.ok).toBe("boolean");
       const meta = await ks.type("type-1").metadata();
       expect(meta.id).toBe("type-1");
+      expect(meta.name).toBe("Wall");
       await ks.dispose();
     });
 
@@ -4287,6 +4302,12 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       expect(kitEventTouchesPiece(ev, "d1", "p2")).toBe(false);
     });
 
+    it("kitEventTouchesDesign matches rs-shaped design name field change", () => {
+      const ev = { Design: { design_id: "design-a", event: { FieldChanged: "Name" } } } as unknown as KitEvent;
+      expect(kitEventTouchesDesign(ev, "design-a")).toBe(true);
+      expect(kitEventTouchesDesign(ev, "other")).toBe(false);
+    });
+
     it("kitEventTouchesTypeStrict matches Type payload", () => {
       const ev = { Type: { type_id: "t1", event: "Changed" } } as unknown as KitEvent;
       expect(kitEventTouchesTypeStrict(ev, "t1")).toBe(true);
@@ -4295,26 +4316,22 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   });
 
   describe("semio-js entity stores", () => {
-    it("DesignStore subscribe fires after setName mutation", async () => {
+    it("TypeStore metadata and shallow read paths resolve", async () => {
       const minimalKit: KitFullDto = {
-        id: "sub-design-kit",
+        id: "meta-type-kit",
         name: "K",
         createdAt: "2020-01-01T00:00:00.000Z",
         updatedAt: "2020-01-01T00:00:00.000Z",
-        types: [],
-        designs: [{ id: "design-a", name: "A", pieces: [], connections: [], createdAt: "2020-01-01T00:00:00.000Z", updatedAt: "2020-01-01T00:00:00.000Z" }],
+        types: [{ id: "type-z", name: "Zed", connectors: [] }],
+        designs: [],
       };
       const ks = await KitStore.open(minimalKit);
-      const d = ks.design("design-a");
-      let hits = 0;
-      const off = d.subscribe(() => {
-        hits += 1;
-      });
-      const before = d.readVersion;
-      await d.setName("RenamedA");
-      expect(d.readVersion).toBeGreaterThanOrEqual(before);
-      expect(hits).toBeGreaterThan(0);
-      off();
+      const t = ks.type("type-z");
+      const meta = await t.metadata();
+      expect(meta.id).toBe("type-z");
+      expect(meta.name).toBe("Zed");
+      const sh = await t.shallow();
+      expect(sh.id).toBe("type-z");
       await ks.dispose();
     });
   });

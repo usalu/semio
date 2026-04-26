@@ -13,7 +13,7 @@ bundle:
 
 The root **`@semio/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio/react`**; keep this as one source file unless a runtime entry boundary is unavoidable.
 
-You MUST only export **`KitStore`**, **`openKit`**, and the types needed for the public API from the root entry.
+You MUST export **`KitStore`**, **`openKit`**, **per-entity kit stores** (`DesignStore`, `TypeStore`, `PieceStore`, `ConnectionStore`, `FamilyStore`, `FileStore`, `FolderStore`, `KitEntityStore`), **`kitEventTouches*`** predicates used by those stores, and the types needed for the public API from the root entry.
 You MUST NOT store authoritative kit data.
 You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot` / reads are rs materializations, not a second source of truth).
 

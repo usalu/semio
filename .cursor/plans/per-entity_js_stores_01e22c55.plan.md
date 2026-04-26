@@ -4,22 +4,22 @@ overview: "Replace the stub entity classes in `semio/js/index.ts` with real per-
 todos:
  - id: kitstore-factories
    content: Add KitStore.design/type/piece/connection/family/file/folder factories + designs()/types() list methods using existing read paths
-   status: in_progress
+   status: completed
  - id: design-type-stores
    content: Replace DesignStore and TypeStore stubs with full read/mutate/subscribe implementations delegating to KitStore
-   status: pending
+   status: completed
  - id: piece-connection-stores
    content: Implement PieceStore and ConnectionStore with designId scope + event filter
-   status: pending
+   status: completed
  - id: remaining-stores
    content: Implement FamilyStore, FileStore, FolderStore, KitEntityStore minimal viable API + subscribe
-   status: pending
+   status: completed
  - id: event-filter-tests
    content: Add kitEventTouches* helper region + extend embedded vitest for stores and subscription filtering
-   status: pending
+   status: completed
  - id: agents-embedded-migrate
    content: Update semio/js/AGENTS.md export note if needed; migrate embedded tests off public patchEntityField where replaced
-   status: pending
+   status: completed
 isProject: false
 ---
 
