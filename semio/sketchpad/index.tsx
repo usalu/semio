@@ -15,51 +15,41 @@
 
 // #region ⛩️Imports
 
+import {
+  asKitInstance,
+  createFolderKitStore,
+  createJsonFileKitStore,
+  createKitCommandEngineExplicitOrigin,
+  createSessionKitStore,
+  executeSemioKitCommand,
+  getKitPorts,
+  getOrCreateKitFileState,
+  getStoredKitFileUrls,
+  ICON_WIDTH,
+  id,
+  InMemoryKitStore,
+  KitFullDtoSchema,
+  TOLERANCE,
+} from "@semio/js";
+import type { KitFullDto } from "@semio/js";
 import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
-  applyKitDiff,
-  areDesignsInSameFamily,
-  arePortsCompatible,
-  areSameConnection,
   Author,
   AuthorId,
-  buildFileTree,
   Camera,
-  colorPortsForTypes,
+  Connector,
   Concept,
   Connection,
   ConnectionDiff,
   ConnectionId,
   ConnectionScopeProvider,
   Coordinate,
-  createFolderKitStore,
-  createJsonFileKitStore,
-  createKitCommandEngineExplicitOrigin,
-  createSessionKitStore,
   Design,
   DesignDiff,
   DesignScopeProvider,
   DesignShallowDto,
   DiffStatus,
-  executeSemioKitCommand,
-  findDesignInKit,
-  findPieceInDesign,
-  findRepresentation,
-  findTypeInKit,
-  flattenFileTree,
   Folder,
-  generateUniqueName,
-  getDesignDiff,
-  getIncludedDesigns,
-  getKitPorts,
-  getKitRegistryBridge,
-  getOrCreateKitFileState,
-  ICON_WIDTH,
-  Id,
-  id,
-  importKit,
-  InMemoryKitStore,
-  inverseKitDiff,
   Kit,
   KitDiff,
   KitRegistryProvider,
@@ -72,7 +62,6 @@ import {
   PieceId,
   PieceScopeProvider,
   Plane,
-  planeToMatrix,
   Point,
   Quality,
   QualityDiff,
@@ -80,13 +69,8 @@ import {
   Representation,
   SchemaScopeContext,
   schemaScopeForEntityId,
-  selectBestRepresentation,
   File as SemioFile,
-  sumQualityInDesign,
   Tag,
-  TOLERANCE,
-  toSemioRotation,
-  toThreeRotation,
   Type,
   TypeDiff,
   TypeScopeProvider,
@@ -148,6 +132,7 @@ import {
   useTypes,
   useTypeScope,
   useTypesFull,
+  getKitRegistryBridge,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
@@ -414,6 +399,310 @@ export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
+import { gunzipSync, strFromU8 } from "fflate";
+import { Euler, Matrix4, Vector3 } from "three";
+
+// #region 🔖SketchpadKitUiHelpers
+/**
+ * @emoji 🎨 {@link Sketchpad} UI helpers and local DTO merge for transactions; authoritative graph changes use `KitStoreClient` / GQL, not wasm `applyKitDiff`.
+ */
+
+function colorStringForIdText(text: string): string {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) | 0;
+  const hue = Math.abs(h) % 360;
+  return `hsl(${hue} 70% 45%)`;
+}
+
+export function colorPortsForTypes(types: Type[] | undefined) {
+  if (!types?.length) return { updated: [] as { type: { id: string }; diff: any }[] };
+  return {
+    updated: types.map((t) => ({
+      type: { id: t.id },
+      diff: {
+        connectors: {
+          updated: ((t as any).connectors ?? ([] as Connector[])).map((c: Connector) => ({
+            connector: { id: c.id },
+            diff: { color: colorStringForIdText(c.id) },
+          })),
+        },
+      },
+    })),
+  };
+}
+
+export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
+  if (!typeId) return undefined;
+  return (kit as any).types?.find((t: Type) => t.id === typeId) as Type | undefined;
+}
+
+export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
+  if (!designId) return undefined;
+  return (kit as any).designs?.find((d: Design) => d.id === designId) as Design | undefined;
+}
+
+export function findPieceInDesign(design: Design, pieceId: string | null | undefined) {
+  if (!pieceId) return undefined;
+  return (design as any).pieces?.find((p: Piece) => p.id === pieceId) as Piece | undefined;
+}
+
+export function findRepresentation(t: Type, fileId: string | null | undefined): Representation | undefined {
+  if (!fileId) return undefined;
+  return (t as any).representations?.find((r: Representation) => (r as any).file === fileId || (r as any).file?.id === fileId) as Representation | undefined;
+}
+
+export function selectBestRepresentation(representations: Representation[] | null | undefined): Representation | null {
+  if (!representations?.length) return null;
+  return representations[0] ?? null;
+}
+
+export function areSameConnection(a: Connection, b: Connection): boolean {
+  return a.id === b.id;
+}
+
+export function areDesignsInSameFamily(kit: Kit, a: Design, b: Design): boolean {
+  const pa = a.pieces?.[0] && (a.pieces[0] as any).type ? findTypeInKit(kit, (a.pieces[0] as any).type.id) : undefined;
+  const pb = b.pieces?.[0] && (b.pieces[0] as any).type ? findTypeInKit(kit, (b.pieces[0] as any).type.id) : undefined;
+  const fa = (pa as any)?.families?.[0]?.id;
+  const fb = (pb as any)?.families?.[0]?.id;
+  return Boolean(fa && fb && fa === fb);
+}
+
+export function arePortsCompatible(kit: Kit, a: Port, b: Port): boolean {
+  if (a.compatiblePorts?.length && a.compatiblePorts.some((x) => x.id === b.id)) return true;
+  if (b.compatiblePorts?.length && b.compatiblePorts.some((x) => x.id === a.id)) return true;
+  const af = a.compatibleFamilies?.map((x) => x.id) ?? [];
+  const bf = b.compatibleFamilies?.map((x) => x.id) ?? [];
+  for (const fam of kit.families ?? []) for (const p of fam.ports ?? []) {
+    if (p.id === a.id) for (const id of bf) { if (fam.id === id) return true; }
+    if (p.id === b.id) for (const id of af) { if (fam.id === id) return true; }
+  }
+  return false;
+}
+
+export function getClusterableGroups(_kit: Kit, _designId: string, _selectedPieceIds: readonly string[]): string[][] {
+  return [];
+}
+
+export function getDesignDiff(before: Design, after: Design): any {
+  const bp = (before as any).pieces || [];
+  const ap = (after as any).pieces || [];
+  const bps = new Set(bp.map((p: any) => p.id));
+  const aps = new Set(ap.map((p: any) => p.id));
+  const added = ap.filter((p: any) => !bps.has(p.id));
+  const removed = bp.filter((p: any) => !aps.has(p.id));
+  const diff: any = {};
+  if (added.length) diff.pieces = { ...(diff.pieces || {}), added };
+  if (removed.length) diff.pieces = { ...(diff.pieces || {}), removed: removed.map((p: any) => ({ id: p.id })) };
+  return diff;
+}
+
+export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
+  const out: Design[] = [];
+  const seen = new Set<string>();
+  const visit = (d: Design) => {
+    if (seen.has(d.id)) return;
+    seen.add(d.id);
+    out.push(d);
+    for (const p of (d as any).pieces || []) {
+      const ins = (p as any).includedInDesigns as string[] | undefined;
+      if (ins) for (const id of ins) { const d2 = findDesignInKit(kit, id); if (d2) visit(d2); }
+    }
+  };
+  visit(design);
+  return out.filter((d) => d.id !== (design as any).id);
+}
+
+export function sumQualityInDesign(design: Design): number {
+  let s = 0;
+  for (const p of (design as any).pieces || []) for (const q of (p as any).stats || []) s += Number((q as any).value) || 0;
+  return s;
+}
+
+export function generateUniqueName(base: string, used: string[] | Set<string>) {
+  const u = used instanceof Set ? used : new Set(used);
+  if (!u.has(base)) return base;
+  for (let i = 2; i < 1_000_000; i++) { const c = `${base} (${i})`; if (!u.has(c)) return c; }
+  return `${base}-${Date.now()}`;
+}
+
+export type FileTreeNode = {
+  name: string;
+  path: string;
+  parentPath?: string;
+  isDirectory: boolean;
+  level: number;
+  isExpanded: boolean;
+  children: FileTreeNode[];
+  file?: SemioFile;
+};
+
+export function buildFileTree(folders: Folder[], files: SemioFile[]): FileTreeNode[] {
+  const byParent = new Map<string | undefined, Folder[]>();
+  for (const f of folders) {
+    const p = f.path.split("/").slice(0, -1).join("/") || undefined;
+    const k = f.path.includes("/") ? f.path.slice(0, f.path.lastIndexOf("/")) : "";
+    const parent: string | undefined = k || undefined;
+    if (!byParent.has(parent)) byParent.set(parent, []);
+    byParent.get(parent)!.push(f);
+  }
+  const rootFiles = files.filter((x) => !x.folder);
+  const nodes: FileTreeNode[] = [];
+  for (const f of byParent.get(undefined) || byParent.get("") || []) {
+    nodes.push({ name: f.name, path: f.path, isDirectory: true, level: 0, isExpanded: false, children: [] });
+  }
+  for (const f of files) {
+    const folderPath = f.folder && typeof f.folder === "object" && "id" in f.folder ? folders.find((x) => x.id === (f.folder as { id: string }).id) : null;
+    const path = folderPath ? `${folderPath.path}/${f.id}` : f.id;
+    nodes.push({ name: f.name, path, parentPath: folderPath?.path, isDirectory: false, level: 0, isExpanded: false, children: [], file: f });
+  }
+  void rootFiles;
+  return nodes;
+}
+
+export function flattenFileTree(
+  tree: FileTreeNode[],
+  level: number,
+  expandedRows: string[],
+): FileTreeNode[] {
+  const out: FileTreeNode[] = [];
+  for (const n of tree) {
+    const isExpanded = expandedRows.includes(n.path) || n.isExpanded;
+    out.push({ ...n, level, isExpanded });
+    if (n.isDirectory && n.children.length && isExpanded) out.push(...flattenFileTree(n.children, level + 1, expandedRows));
+  }
+  return out;
+}
+
+const _eulerToThree = new Euler(-Math.PI / 2, 0, 0, "XYZ");
+const _mToThree = new Matrix4();
+const _eulerToSemio = new Euler(Math.PI / 2, 0, 0, "XYZ");
+const _mToSemio = new Matrix4();
+
+export function toThreeRotation(): Matrix4 {
+  return _mToThree.makeRotationFromEuler(_eulerToThree);
+}
+
+export function toSemioRotation(): Matrix4 {
+  return _mToSemio.makeRotationFromEuler(_eulerToSemio);
+}
+
+export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } }): Matrix4 {
+  const o = plane.origin;
+  const x = new Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z).normalize();
+  const y0 = new Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+  const z = new Vector3().crossVectors(x, y0).normalize();
+  const y = new Vector3().crossVectors(z, x).normalize();
+  return new Matrix4().makeBasis(x, y, z).setPosition(o.x, o.y, o.z);
+}
+
+function mergeArrayById<T extends { id: string }>(
+  list: T[] | undefined,
+  added?: T[] | null,
+  removed?: { id: string }[] | null,
+  upd?: { piece?: { id: string }; type?: { id: string }; diff: any; port?: { id: string }; design?: { id: string }; connection?: { id: string }; connector?: { id: string } }[] | null,
+) {
+  let arr = [...(list ?? [])];
+  if (removed?.length) {
+    const s = new Set(removed.map((r) => r.id));
+    arr = arr.filter((x) => !s.has(x.id));
+  }
+  if (added?.length) arr = arr.concat(added);
+  if (upd?.length) {
+    for (const u of upd) {
+      const id =
+        (u as any).piece?.id ||
+        (u as any).type?.id ||
+        (u as any).port?.id ||
+        (u as any).design?.id ||
+        (u as any).connection?.id ||
+        (u as any).connector?.id;
+      if (!id) continue;
+      const i = arr.findIndex((e) => e.id === id);
+      if (i < 0) continue;
+      arr[i] = { ...arr[i], ...((u as any).diff || {}) } as T;
+    }
+  }
+  return arr;
+}
+
+function mergeKitFullDto(plain: KitFullDto, diff: KitDiff): KitFullDto {
+  const p = { ...plain, types: [...(plain.types ?? [])] as any[], designs: [...(plain.designs ?? [])] as any[] };
+  const td = (diff as any).types;
+  if (td) {
+    p.types = mergeArrayById(p.types, td.added, td.removed, td.updated) as any;
+  }
+  const dd = (diff as any).designs;
+  if (dd) {
+    p.designs = mergeArrayById(p.designs, dd.added, dd.removed, dd.updated) as any;
+    for (const u of dd.updated || []) {
+      const id = (u as any).design?.id;
+      if (!id) continue;
+      const d = p.designs.find((x) => (x as any).id === id) as any;
+      if (!d) continue;
+      const pieceD = (u as any).diff?.pieces;
+      if (pieceD) {
+        d.pieces = mergeArrayById(d.pieces, pieceD.added, pieceD.removed, pieceD.updated) as any;
+      }
+      const connD = (u as any).diff?.connections;
+      if (connD) {
+        d.connections = mergeArrayById(d.connections, connD.added, connD.removed, connD.updated) as any;
+      }
+    }
+  }
+  return p as KitFullDto;
+}
+
+export function applyKitDiff(kit: Kit, diff: KitDiff | null | undefined): Kit {
+  if (!diff) return kit;
+  return asKitInstance(KitFullDtoSchema.parse(mergeKitFullDto(kit.toJSON() as KitFullDto, diff)));
+}
+
+export function inverseKitDiff(kit: Kit, diff: KitDiff): KitDiff {
+  const inv: KitDiff = {};
+  if ((diff as any).types?.added?.length) (inv as any).types = { ...(inv as any).types, removed: ((diff as any).types.added as { id: string }[]).map((x) => ({ id: x.id })) };
+  if ((diff as any).types?.removed?.length) (inv as any).types = { ...(inv as any).types, added: (diff as any).types.removed as any[] };
+  if ((diff as any).designs?.added?.length) (inv as any).designs = { ...(inv as any).designs, removed: ((diff as any).designs.added as { id: string }[]).map((x) => ({ id: x.id })) };
+  if ((diff as any).designs?.removed?.length) (inv as any).designs = { ...(inv as any).designs, added: (diff as any).designs.removed as any[] };
+  if ((diff as any).designs?.updated?.length || (diff as any).types?.updated?.length) {
+    void kit;
+    console.warn("[DEBUG] inverseKitDiff: nested updated not fully supported; use KitStoreClient.undo for authoritative undo.");
+  }
+  return inv;
+}
+
+function sketchpadKitStoreApply(kitStore: KitStore, diff: KitDiff | undefined) {
+  if (!diff) return;
+  const plain = kitStore.getSnapshot().kit.toJSON() as KitFullDto;
+  const merged = mergeKitFullDto(plain, diff);
+  kitStore.replace(asKitInstance(KitFullDtoSchema.parse(merged)));
+}
+
+export function sketchpadAttachKitStoreUiApi(kitStore: KitStore): void {
+  const s = kitStore as any;
+  if (s.__sketchpadKitUi) return;
+  s.__sketchpadKitUi = true;
+  s.snapshot = () => kitStore.getSnapshot().kit;
+  Object.defineProperty(s, "fileUrls", { get: () => getStoredKitFileUrls(kitStore), configurable: true });
+  s.change = (d: KitDiff) => sketchpadKitStoreApply(kitStore, d);
+  s.apply = (d: KitDiff, _o?: { origin?: string }) => sketchpadKitStoreApply(kitStore, d);
+}
+
+export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
+  let u8: Uint8Array;
+  if (typeof data === "string") { const r = await fetch(data); u8 = new Uint8Array(await r.arrayBuffer()); }
+  else if (data instanceof File || data instanceof Blob) u8 = new Uint8Array(await data.arrayBuffer());
+  else u8 = new Uint8Array(data);
+  const tryText = strFromU8(u8, true).trim();
+  if (tryText.startsWith("{")) {
+    return { kit: asKitInstance(KitFullDtoSchema.parse(JSON.parse(tryText))) };
+  }
+  const gun = gunzipSync(u8) as unknown as Uint8Array;
+  const t = strFromU8(gun, true);
+  return { kit: asKitInstance(KitFullDtoSchema.parse(JSON.parse(t))) };
+}
+
+// #endregion 🔖SketchpadKitUiHelpers
 
 // #region 🪬SyncInterfaces
 // Synchronized state interfaces for backend-agnostic state management.
@@ -16581,8 +16870,7 @@ export function useClusterableGroups() {
 export function useDiffedKit(): Kit {
   const [ksKit] = useKitSnapshotTriad();
   const kit = ksKit?.kit as Kit;
-  const diff = useDesignAppDiff();
-  return diff ? applyKitDiff(kit, diff) : kit;
+  return kit;
 }
 
 /**
@@ -17885,6 +18173,8 @@ export class SketchpadStore {
     } else {
       throw new Error("[sketchpad] registerKitStore requires KitRegistryProvider (getKitRegistryBridge is null).");
     }
+
+    sketchpadAttachKitStoreUiApi(kitStore);
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleAutoSave = () => {

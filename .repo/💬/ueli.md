@@ -26,6 +26,20 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ### 🦀 rs
 
+We have different backbones:
+
+- dev backbone (complete embedded json file)
+- local backbone (.semio/kit.db sqlite file for all data excluding files and .semio/blobs/BLOBHASH.EXT for files.)
+- remote backbone (stub for bidirectional connection to semio/hub)
+  We have three in-memory kit graphs:
+- wip (current)
+- merged (testbed for applying changes from wip to authorative)
+- authorative (from backbone)
+  We have a coordinator task that on changes clears the merged graph, pulls the authorative and tries to apply the changes from wip. On success it proposes the changes to the server. On conflicts it saves the conflicts.
+  How would you architect the backbones?
+
+---
+
 We want to add support for backbones (persisted out-of-process kit graphs).
 Requirements:
 

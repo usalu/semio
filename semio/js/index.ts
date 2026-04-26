@@ -12,7 +12,6 @@
 // #region Imports
 // External dependency imports MUST be declared here.
 import { z } from "zod";
-import { Matrix4, Vector3 } from "three";
 // #endregion Imports
 
 // #region Constants
@@ -912,7 +911,11 @@ export class InMemoryKitStore implements KitStore {
   /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: Kit) { this._kit = seed; }
-  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  getSnapshot(): KitStoreSnapshot {
+    const c = (this as InMemoryKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
+    return { kit, sync: DEFAULT_KIT_SYNC };
+  }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) { try { l(); } catch { /* ignore */ } } }
 }
@@ -931,7 +934,11 @@ export class JsonFileKitStore implements KitStore {
     const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(json)));
     return new JsonFileKitStore(adapter, seed);
   }
-  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  getSnapshot(): KitStoreSnapshot {
+    const c = (this as JsonFileKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
+    return { kit, sync: DEFAULT_KIT_SYNC };
+  }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void this.adapter.write(JSON.stringify(kit.toJSON())); }
 }
@@ -949,7 +956,11 @@ export class FolderKitStore implements KitStore {
     }
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }
-  getSnapshot(): KitStoreSnapshot { return { kit: this._kit, sync: DEFAULT_KIT_SYNC }; }
+  getSnapshot(): KitStoreSnapshot {
+    const c = (this as FolderKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
+    return { kit, sync: DEFAULT_KIT_SYNC };
+  }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void (async () => { try { const enc = new TextEncoder().encode(JSON.stringify(kit.toJSON())); await this.adapter.writeKit(enc); } catch { /* ignore */ } })(); }
 }
@@ -2313,255 +2324,11 @@ export const kitWorkerApi = new KitWorkerApi();
 export function bootKitWorker() { Comlink.expose(kitWorkerApi); }
 //#endregion KitWorker
 
-// #region KitHostDomain
-// @emoji 🧾 Kit diff merge, string commands, and UI helpers. Rust owns full graph semantics; this layer mirrors `merge_into_baseline` and command routing for hosts.
 
-/** @emoji 🧾 String-command context / result (sketchpad bridge). */
+// #region KitCommandWire
+/** @emoji 🧾 String-command context / result (hosts route shell commands; graph mutations are wasm GraphQL only). */
 export type KitCommandContext = { kind: "semio.kitCommand"; command: string; origin: string; args: unknown[] };
 export type KitCommandResult = { ok: boolean; requestId?: string; error?: { message: string }; kitDiff?: KitDiff; result?: unknown };
-
-function colorStringForIdText(text: string): string {
-  if (!text) return "var(--foreground)";
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) hash = (hash << 5) - hash + text.charCodeAt(i);
-  const VARI = [
-    "color-mix(in srgb, var(--accent) 85%, var(--base) 15%)",
-    "color-mix(in srgb, var(--accent) 60%, var(--foreground) 40%)",
-    "color-mix(in srgb, var(--status-success) 70%, var(--base) 30%)",
-    "color-mix(in srgb, var(--status-info) 60%, var(--foreground) 40%)",
-  ];
-  return VARI[Math.abs(hash) % VARI.length]!;
-}
-
-export function colorPortsForTypes(types: Type[] | undefined): { updated: Array<{ type: { id: string }; diff: { connectors?: { updated?: Array<{ connector: { id: string }; diff: { color?: string } }> } } }> } {
-  const updated: any[] = [];
-  for (const t of types ?? []) {
-    const connUp: any[] = [];
-    for (const c of t.connectors ?? []) {
-      const key = c.port && typeof c.port === "object" && "id" in c.port ? (c.port as any).id : c.id;
-      connUp.push({ connector: { id: c.id }, diff: { color: colorStringForIdText(String(key)) } });
-    }
-    if (connUp.length) updated.push({ type: { id: t.id }, diff: { connectors: { updated: connUp } } });
-  }
-  return { updated };
-}
-
-function mergePlainIntoTypeFull(typePlain: any, diff: any): void {
-  if (diff == null) return;
-  for (const [k, v] of Object.entries(diff)) {
-    if (k === "connectors" && v && typeof v === "object") {
-      const c = v as any;
-      if (c.updated) for (const u of c.updated) { const tr = (typePlain.connectors as any[] | undefined) ?? (typePlain.connectors = []); const i = tr.findIndex((x: any) => x.id === u.connector?.id); if (i >= 0) Object.assign(tr[i], u.diff ?? {}); }
-      if (c.added) (typePlain.connectors as any[]).push(...(c.added as any[]));
-    } else if (k !== "connectors" && v !== undefined) (typePlain as any)[k] = v;
-  }
-}
-
-function mergePlainIntoDesignFull(dsgn: any, diff: any): void {
-  if (diff == null) return;
-  for (const [k, v] of Object.entries(diff)) {
-    if (k === "pieces" && v && typeof v === "object") { const c = v as any; if (c.updated) for (const u of c.updated) { const arr = (dsgn.pieces as any[] | undefined) ?? (dsgn.pieces = []); const i = arr.findIndex((x) => x.id === u.piece?.id); if (i >= 0) Object.assign(arr[i], u.diff ?? {}); } if (c.added) (dsgn.pieces as any[]).push(...c.added); if (c.removed) dsgn.pieces = (dsgn.pieces as any[]).filter((p) => !c.removed.some((r: any) => r.id === p.id)); }
-    else if (k === "connections" && v && typeof v === "object") { const c = v as any; if (c.updated) for (const u of c.updated) { const arr = (dsgn.connections as any[] | undefined) ?? (dsgn.connections = []); const i = arr.findIndex((x) => x.id === u.connection?.id); if (i >= 0) Object.assign(arr[i], u.diff ?? {}); } if (c.added) (dsgn.connections as any[]).push(...c.added); if (c.removed) dsgn.connections = (dsgn.connections as any[]).filter((p) => !c.removed.some((r: any) => r.id === p.id)); }
-    else if (v !== undefined) (dsgn as any)[k] = v;
-  }
-}
-
-/** @emoji 🧾 Sparse DTO materialization: Rust `KitDiff::merge_into_baseline_dto` (subset, plain JSON). */
-export function applyKitDiff(kit: Kit, diff: KitDiff | unknown): Kit {
-  const k = JSON.parse(JSON.stringify(kit.toPlain())) as any;
-  const d = diff as any;
-  if (d == null) return asKitInstance(k);
-  if (d.name != null) k.name = d.name;
-  for (const field of ["description", "icon", "image", "preview", "remote", "homepage", "license", "uri", "version"]) {
-    if (d[field] !== undefined) k[field] = d[field] === null ? undefined : d[field];
-  }
-  if (d.types) {
-    for (const r of d.types.removed ?? []) k.types = (k.types ?? []).filter((t: any) => t.id !== r.id);
-    for (const u of d.types.updated ?? []) { const tid = (u as any).id?.id ?? (u as any).typeId; const t = (k.types ?? []).find((x: any) => x.id === tid); if (t) mergePlainIntoTypeFull(t, (u as any).diff); }
-    for (const a of d.types.added ?? []) (k.types ??= []).push(a);
-  }
-  if (d.designs) {
-    for (const r of d.designs.removed ?? []) k.designs = (k.designs ?? []).filter((x: any) => x.id !== r.id);
-    for (const u of d.designs.updated ?? []) {
-      const id = (u as any).designId ?? (u as any).design?.id;
-      const dsgn = (k.designs ?? []).find((x: any) => x.id === id);
-      if (dsgn) mergePlainIntoDesignFull(dsgn, (u as any).diff);
-    }
-    for (const a of d.designs.added ?? []) (k.designs ??= []).push(a);
-  }
-  if (d.files) {
-    for (const r of d.files.removed ?? []) k.files = (k.files ?? []).filter((x: any) => x.id !== r.id);
-    for (const u of d.files.updated ?? []) { const f = (k.files ?? []).find((x: any) => x.id === (u as any).id?.id); if (f) Object.assign(f, (u as any).diff); }
-    for (const a of d.files.added ?? []) (k.files ??= []).push(a);
-  }
-  if (d.folders) {
-    for (const r of d.folders.removed ?? []) k.folders = (k.folders ?? []).filter((x: any) => x.id !== r.id);
-    for (const u of d.folders.updated ?? []) { const f = (k.folders ?? []).find((x: any) => x.id === (u as any).id?.id); if (f) Object.assign(f, (u as any).diff); }
-    for (const a of d.folders.added ?? []) (k.folders ??= []).push(a);
-  }
-  return asKitInstance(k);
-}
-
-function kitDiffBetweenPlain(before: any, after: any): any {
-  const o: any = {};
-  if (before.name !== after.name) o.name = after.name;
-  if (before.types !== after.types) o.types = { updated: (after.types ?? []).map((t: any) => ({ type: { id: t.id }, diff: t })) };
-  if (before.designs !== after.designs) o.designs = { updated: (after.designs ?? []).map((d: any) => ({ design: { id: d.id }, diff: d })) };
-  return o;
-}
-
-export function inverseKitDiff(kit: Kit, diff: KitDiff | unknown): KitDiff {
-  const after = applyKitDiff(kit, diff);
-  return kitDiffBetweenPlain(after.toPlain(), kit.toPlain()) as any;
-}
-
-export function findTypeInKit(kit: Kit, typeId: string | undefined | null): Type | undefined {
-  if (!typeId) return undefined;
-  return (kit.types ?? []).find((t) => t.id === typeId);
-}
-
-export function findDesignInKit(kit: Kit, designId: string | undefined | null): Design | undefined {
-  if (!designId) return undefined;
-  return (kit.designs ?? []).find((d) => d.id === designId);
-}
-
-export function findPieceInDesign(design: Design | null | undefined, pieceId: string | undefined | null) {
-  if (!design || !pieceId) return undefined;
-  return (design.pieces ?? []).find((p) => p.id === pieceId);
-}
-
-export function findRepresentation(reps: Representation[] | null | undefined, id: string | undefined) {
-  if (!reps || !id) return undefined;
-  return reps.find((r) => r.id === id);
-}
-
-export function selectBestRepresentation(representations: Representation[] | null | undefined, tagIds: readonly string[] | null | undefined): Representation | undefined {
-  const r = representations ?? [];
-  if (!r.length) return undefined;
-  if (tagIds && tagIds.length) {
-    for (const x of r) { const tags = (x as any).tags as string[] | undefined; if (tags && tagIds.some((t) => tags.includes(t))) return x; }
-  }
-  return r[0];
-}
-
-export function generateUniqueName(base: string, existing: readonly string[], separator: string = " "): string {
-  if (!base.trim()) return existing.length ? `${separator}${1}`.replace(separator, "") : "1";
-  if (!existing.includes(base)) return base;
-  let n = 1;
-  let cand = base;
-  while (existing.includes(cand) || n < 1_000_000) { n += 1; cand = `${base}${separator}(${n})`; }
-  return cand;
-}
-
-export function areSameConnection(a: any, b: any): boolean {
-  if (a == null || b == null) return a === b;
-  if (typeof a === "string" || typeof b === "string") return String(a) === String(b);
-  if (a.id && b.id) return a.id === b.id;
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-export function areDesignsInSameFamily(kit: Kit, aId: string, bId: string): boolean {
-  const da = findDesignInKit(kit, aId);
-  const db = findDesignInKit(kit, bId);
-  const fa = (da as any)?.families as Array<{ id: string }> | undefined;
-  const fb = (db as any)?.families as Array<{ id: string }> | undefined;
-  if (!fa || !fb) return false;
-  const s = new Set(fa.map((x) => x.id));
-  return fb.some((x) => s.has(x.id));
-}
-
-export function arePortsCompatible(a: Port, b: Port, allPorts: Port[] | null | undefined): boolean {
-  if (a == null || b == null) return false;
-  if (a.id === b.id) return true;
-  if ((a as any).compatiblePorts?.some?.((p: { id: string }) => p.id === b.id)) return true;
-  if ((a as any).compatibleFamilies?.length && (b as any).compatibleFamilies?.length) {
-    const f = new Set((a as any).compatibleFamilies.map((x: { id: string }) => x.id));
-    if ((b as any).compatibleFamilies.some((x: { id: string }) => f.has(x.id))) return true;
-  }
-  return false;
-}
-
-export function getClusterableGroups(_kit: Kit, _designId: string, _selectedPieceIds: readonly string[]): string[][] {
-  return [];
-}
-
-export function getDesignDiff(before: Design, after: Design): any {
-  const b = before as any; const a = after as any;
-  const o: any = {};
-  for (const key of Object.keys(a)) { if (JSON.stringify(b[key]) !== JSON.stringify(a[key])) o[key] = a[key]; }
-  return o;
-}
-
-export function getIncludedDesigns(design: Design | null | undefined): any[] {
-  if (!design || !(design as any).connections) return [];
-  const ids = new Set<string>();
-  for (const c of (design as any).connections) {
-    const c0 = c?.connected?.designPiece?.id; const c1 = c?.connecting?.designPiece?.id;
-    if (c0) ids.add(c0);
-    if (c1) ids.add(c1);
-  }
-  return Array.from(ids).map((id) => ({ id, designId: id, type: "connected" as const, center: null, plane: null, externalConnections: (design as any).connections.filter((x: any) => (x?.connected?.designPiece?.id === id || x?.connecting?.designPiece?.id === id)) }));
-}
-
-export function sumQualityInDesign(kit: Kit, designId: string, qualityId: string): number {
-  const d = findDesignInKit(kit, designId);
-  if (!d) return 0;
-  let sum = 0;
-  for (const p of d.pieces ?? []) {
-    for (const pr of p.props ?? []) { if ((pr as any).quality?.id === qualityId) { const v = parseFloat(String((pr as any).value ?? "0")); if (!isNaN(v)) sum += v; } }
-    const t = p.type && typeof p.type === "object" ? (p.type as any).id : p.type;
-    if (t) { const type = findTypeInKit(kit, t as string); for (const pr of type?.props ?? []) { if ((pr as any).quality?.id === qualityId) { const v = parseFloat(String((pr as any).value ?? "0")); if (!isNaN(v)) sum += v; } } }
-  }
-  return sum;
-}
-
-export function buildFileTree(folders: Folder[] | null | undefined, files: any[] | null | undefined) {
-  return { name: "root" as const, children: (folders ?? []).map((f) => ({ name: f.name, id: f.id, children: [] as any[] })), files: (files ?? []).map((f) => ({ name: f.name, id: f.id })) };
-}
-
-export function flattenFileTree(node: any, _depth: number, expanded: Set<string> | readonly string[] | null | undefined): any[] {
-  const exp = expanded instanceof Set ? expanded : new Set(expanded ?? []);
-  const out: any[] = [];
-  function w(n: any, d: number) {
-    if (!n) return;
-    out.push({ ...n, depth: d, expanded: exp.has(n.id) });
-    for (const c of n.children ?? []) w(c, d + 1);
-  }
-  w(node, 0);
-  return out;
-}
-
-export function planeToMatrix(plane: Plane | any) {
-  const o = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-  const x = new Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z).normalize();
-  const y = new Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z).normalize();
-  const z = new Vector3().crossVectors(x, y);
-  const m = new Matrix4();
-  m.makeBasis(x, y, z);
-  m.setPosition(o);
-  return m;
-}
-
-export function toThreeRotation() { const m = new Matrix4(); m.makeRotationX(-Math.PI / 2); return m; }
-export function toSemioRotation() { const m = new Matrix4(); m.makeRotationX(Math.PI / 2); return m; }
-
-export type FileTreeNode = { name: string; id?: string; children?: FileTreeNode[]; files?: any[]; depth?: number; expanded?: boolean };
-
-/** @emoji 🧾 Inflate kit.zip: root kit.json or first nested json with kit id. */
-export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
-  const { unzip, strFromU8 } = await import("fflate");
-  let u8: Uint8Array;
-  if (typeof data === "string") { const f = await fetch(data); u8 = new Uint8Array(await f.arrayBuffer()); }
-  else if (data instanceof Blob) u8 = new Uint8Array(await data.arrayBuffer());
-  else u8 = new Uint8Array(data);
-  const files = unzip(u8) as Record<string, Uint8Array>;
-  const keys = Object.keys(files);
-  let json: string | null = null;
-  for (const k of keys) { if (k.toLowerCase().endsWith("kit.json") || k.endsWith("kit.json")) { json = strFromU8(files[k]!); break; } }
-  if (json == null) for (const k of keys) { if (k.toLowerCase().endsWith(".json")) { try { const s = strFromU8(files[k]!); const p = JSON.parse(s) as any; if (p && p.id && p.name) { json = s; break; } } catch { /* ignore */ } } }
-  if (json == null) throw new Error("importKit: no kit json in zip");
-  return { kit: asKitInstance(JSON.parse(json)) };
-}
 
 async function getOrAttachKitStoreClient(kitStore: KitStore): Promise<KitStoreClient> {
   const x = (kitStore as any).__semioKitClient as KitStoreClient | undefined;
@@ -2573,12 +2340,13 @@ async function getOrAttachKitStoreClient(kitStore: KitStore): Promise<KitStoreCl
   return c;
 }
 
-/** @emoji 🧾 `semio.kit.*` / `semio.kitApp.*` bridge over `KitStoreClient` + local store sync. */
+/** @emoji 🧾 `semio.kit.*` / `semio.kitApp.*` bridge: {@link KitStoreClient} GraphQL mutations only (no DTO diff apply in JS). */
 export async function executeSemioKitCommand(kitStore: KitStore, command: string, origin: string, ...args: any[]): Promise<KitCommandResult> {
   const kid = kitStore.getSnapshot().kit.id;
   const client = await getOrAttachKitStoreClient(kitStore);
   let r: SetResult | undefined;
-  if (command === "semio.kit.moveToFolder" && args.length >= 3) { const [artifactId, kind, folderId] = [args[0], args[1], args[2]]; const fk = String(kind);
+  if (command === "semio.kit.moveToFolder" && args.length >= 3) {
+    const [artifactId, kind, folderId] = [args[0], args[1], args[2]]; const fk = String(kind);
     if (fk === "type") r = await client.setField("Type", artifactId, "folder", folderId);
     else if (fk === "design") r = await client.setField("Design", artifactId, "folder", folderId);
     else if (fk === "quality") r = await client.setField("Quality", artifactId, "folder", folderId);
@@ -2605,7 +2373,7 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   else return { ok: false, error: { message: `unhandled command ${command}` } };
   await applyKitClientSnapshotToLocalStore(client, kitStore);
   if (!r) return { ok: false, error: { message: "no result" } };
-  return { ok: r?.ok === true, requestId: (r as any)?.requestId, error: (r as any).ok ? undefined : { message: String((r as any)?.error?.message ?? "command failed") } };
+  return { ok: (r as any).ok === true, requestId: (r as any)?.requestId, error: (r as any).ok ? undefined : { message: String((r as any)?.error?.message ?? "command failed") } };
 }
 
 export function createKitCommandEngineExplicitOrigin(kitStore: KitStore) {
@@ -2616,9 +2384,8 @@ export function createKitCommandEngineExplicitOrigin(kitStore: KitStore) {
     createAuthor: (origin: string, body: any) => executeSemioKitCommand(kitStore, "semio.kit.addChildAuthor", origin, body),
   };
 }
-
 export const createKitCommandEngine = createKitCommandEngineExplicitOrigin;
-// #endregion KitHostDomain
+// #endregion KitCommandWire
 
 // #region EmbeddedTests
 if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
