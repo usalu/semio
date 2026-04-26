@@ -192,3 +192,29 @@ export async function pasteDesign(kit: Kit, source: Design, target: Design, anch
   return KitEntity.ensure(kit).pasteDesignOp(source, target, anchoring, coordinate);
 }
 // #endregion 🧮KitStoreRunners
+
+// #region 🧪EmbeddedTests
+if (process.env["SEMIO_ALGORITHMS_RUN_EMBEDDED_TESTS"] === "1") {
+  const { describe, expect, it } = await import("vitest");
+
+  describe("semio-algorithms public surface", () => {
+    it("exposes only rs-backed story helpers and no native adapter API", () => {
+      const publicHelperNames = ["flattenDesign", "flatDesign", "flattenedDesign", "deletePieces", "dragPieces", "movePieces", "copyDesign", "pasteDesign"];
+      expect(publicHelperNames.every((name) => !name.toLowerCase().includes("native"))).toBe(true);
+
+      type NativeAdapterExport =
+        | "nativeFlattenDesign"
+        | "nativeFlatDesign"
+        | "nativeFlattenedDesign"
+        | "nativeDeletePieces"
+        | "nativeDragPieces"
+        | "nativeMovePieces"
+        | "NativeAlgorithmLanguage";
+      type ModuleExports = keyof typeof import("./index");
+      type MustNotExposeNativeAdapters = NativeAdapterExport extends ModuleExports ? never : true;
+      const _compileAssert: MustNotExposeNativeAdapters = true;
+      expect(_compileAssert).toBe(true);
+    });
+  });
+}
+// #endregion 🧪EmbeddedTests

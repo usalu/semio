@@ -1,0 +1,13 @@
+{
+  "title": "Remove Native Algorithm Adapters",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Remove all native adapters from semio/algorithms. The new architecture uses semio/rs as the single source of truth and re-exports it through semio/js, semio/react, and semio/ui. Refactor existing files and tests without legacy support.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1383"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪59b86c82c1184d0495935d1dc40b7b02"
+  ]
+}

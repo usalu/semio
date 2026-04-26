@@ -83,6 +83,15 @@ Here are the specs of our system:
 
 ---
 
+### 🟨js
+
+We have an async backend that has CQRS Dual-Bus Actor Model.
+Every request is fire-and-forget and returns an id.
+There MUST be no state on the store and every read is a request to the backend.
+There is an event stream that returns results which contain the information.
+Now we want to implement a clean Typescript Store class.
+How would you architect this?
+
 ## 🧰repo
 
 repo:
@@ -792,6 +801,8 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ### 🧮algorithms
 
 semio algorithms:
+
+Remove all native adapters. The new architecture uses semio/rs as single-source of truth and just rexports it with semio/js, semio/react, semio/ui
 
 When starting session then draft then transaction and then sending multiple kit changes, then transaction undo should revert the last kit change. When refreshing the live snapshot it still shows the new value and doesnt revert.
 

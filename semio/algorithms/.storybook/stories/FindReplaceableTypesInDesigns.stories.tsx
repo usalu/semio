@@ -152,7 +152,6 @@ const DEFAULT_LAYOUT = {
 };
 
 function FindReplaceableTypesInDesignsFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatSourceDesign, setFlatSourceDesign] = React.useState<Design | null>(null);
   const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>(selectionPieceIds);
@@ -162,13 +161,13 @@ function FindReplaceableTypesInDesignsFrame() {
     let cancelled = false;
     setFlatSourceDesign(null);
     void (async () => {
-      const flatSrc = await nativeFlatDesign(kit, rawDesign.id, language);
+      const flatSrc = await flatDesign(kit, rawDesign.id);
       if (!cancelled) setFlatSourceDesign(flatSrc);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   const design = (flatSourceDesign ?? rawDesign) as Design;
 
@@ -181,9 +180,9 @@ function FindReplaceableTypesInDesignsFrame() {
       selectedConnectionIds,
       onSelectedConnectionIdsChange: setSelectedConnectionIds,
       outputDesign: design,
-      error: !flatSourceDesign ? `Loading design (${language})…` : undefined,
+      error: !flatSourceDesign ? "Loading design…" : undefined,
     }),
-    [design, flatSourceDesign, kit, language, selectedConnectionIds, selectedPieceIds],
+    [design, flatSourceDesign, kit, selectedConnectionIds, selectedPieceIds],
   );
 
   return <AlgorithmApp id="find-replaceable-types-in-designs" label="Find Replaceable Types In Designs" windows={WINDOWS} defaultLayout={DEFAULT_LAYOUT} context={context} className="h-full w-full" />;

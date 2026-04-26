@@ -219,9 +219,16 @@ function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycl
 
 function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
   if (raw == null || typeof raw !== "object") return undefined;
-  if (isKitCommandLifecycleEvent({ semioKitCommand: (raw as { semioKitCommand?: unknown }).semioKitCommand ?? (raw as { SemioKitCommand?: unknown }).SemioKitCommand })) {
-    const command =
-      (raw as { semioKitCommand?: unknown }).semioKitCommand ?? (raw as { SemioKitCommand?: unknown }).SemioKitCommand;
+  const top = raw as Record<string, unknown>;
+  /** serde externally-tagged enum: `{ "SemioKitCommand": { requestId, ... } }` */
+  const lifecycleWrapper: unknown =
+    top.semioKitCommand !== undefined
+      ? raw
+      : top.SemioKitCommand !== undefined
+        ? { semioKitCommand: top.SemioKitCommand }
+        : raw;
+  if (isKitCommandLifecycleEvent({ semioKitCommand: (lifecycleWrapper as { semioKitCommand?: unknown }).semioKitCommand })) {
+    const command = (lifecycleWrapper as { semioKitCommand: unknown }).semioKitCommand;
     const value = command as Record<string, unknown>;
     const requestIdRaw = value.requestId;
     if (typeof requestIdRaw !== "string" || typeof value.commandKind !== "string" || typeof value.phase !== "string") return undefined;
@@ -561,6 +568,42 @@ export class KitStore {
     return Boolean((data.kitStore as { canRedo?: boolean }).canRedo);
   }
 
+  /**
+   * @emoji 🧭 Await `semio/rs` command lifecycle on the shared event bus: `submitKitCommand` returns a `requestId` immediately; `succeeded` / `failed` arrive asynchronously (see `emit_command_shell_event` in `semio/rs`).
+   */
+  private waitForKitCommandOutcome(requestId: KitCommandRequestId): Promise<SetResult> {
+    this.ensureAlive();
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (r: SetResult) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(tid);
+        off();
+        resolve(r);
+      };
+      const tid = setTimeout(() => {
+        finish({
+          ok: false,
+          error: { kind: "Timeout", message: `kit command ${requestId}: no succeeded/failed event` },
+          requestId,
+        });
+      }, this.timeoutMs);
+      const off = this.subscribe((ev) => {
+        if (!isKitCommandLifecycleEvent(ev)) return;
+        const row = ev.semioKitCommand;
+        if (row.requestId !== requestId) return;
+        if (row.phase === "succeeded") finish({ ok: true, requestId: row.requestId });
+        else if (row.phase === "failed")
+          finish({
+            ok: false,
+            error: row.error ?? { kind: "Internal", message: "kit command failed" },
+            requestId: row.requestId,
+          });
+      });
+    });
+  }
+
   private async submitShell(commandKind: string, request: { query: string; variables?: Record<string, unknown> }): Promise<SetResult> {
     try {
       const data = kitGraphqlData(
@@ -572,7 +615,7 @@ export class KitStore {
       const receipt = (data as { submitKitCommand?: Partial<KitCommandReceipt> }).submitKitCommand;
       if (!receipt || typeof receipt.requestId !== "string" || receipt.accepted !== true)
         throw new Error("submitKitCommand: invalid receipt");
-      return { ok: true, requestId: receipt.requestId };
+      return await this.waitForKitCommandOutcome(receipt.requestId);
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }

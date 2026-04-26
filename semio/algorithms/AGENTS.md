@@ -11,9 +11,7 @@ bundle:
 
 ## Strict layering (algorithms Storybook)
 
-For in-browser **TypeScript** algorithm paths, prefer **`@semio/js` `KitStore`** (then GraphQL → `semio/rs`) for kit reads/writes. For **UI** and shared DTO shapes, use **`@semio/react`** re-exports — do not skip react when the surface is hook-oriented.
-
-Native REST / stdin bridges MUST target **`semio/rs`** implementations, not duplicated graph math in TypeScript.
+All algorithm story paths use **`@semio/js` `KitStore`** as the browser-facing `semio/rs` re-export for kit reads/writes. For **UI** and shared DTO shapes, use **`@semio/react`** and **`@semio/ui`** re-exports.
 
 ## 🕸️ Systems
 
@@ -32,7 +30,6 @@ Native REST / stdin bridges MUST target **`semio/rs`** implementations, not dupl
 ## 🛠️ Mechanisms
 
 - **AlgorithmApp Shell**: Standardized golden-layout configuration that wires context state to specialized windows (VecInput, PiecesSelectionInput, etc.).
-- **Language Provider**: Storybook global decorator that injects the selected implementation language into the algorithm context.
-- **Native Rust bridge** ([`native-bridges/rs`](native-bridges/rs)): stdin JSON ops against the **`semio`** crate use **`KitGraph` / `KitGraphRef`** (in-memory graph); `flatten` calls **`KitGraph::flatten_design_async`**. This matches the split where **`KitStore`** names the async control plane in `semio-store`, not the graph handle.
+- **Single Source Runner**: Storybook helpers call `@semio/js` `KitStore`, which re-exports the `semio/rs` WASM implementation. Do not add native bridge, REST, stdin, or multi-language adapter paths here.
 
 ## 📛 Entities
