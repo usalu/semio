@@ -2923,7 +2923,7 @@ pub mod change_command {
             family_id: FamilyIdDto,
             commands: Vec<ChangeFamilyCommand>,
         },
-        // --- design-canvas / layout batch (semantic: twin + one [`KitGraph::apply_kit_mutation`]) ---
+        // --- design-canvas / layout batch (semantic: twin + one [`KitGraph::apply_kit_diff`]) ---
         /// 🧩 Cluster selected pieces into a new nested design; inverse is prior [`Self::ReplaceKitFromFullDto`] when state changes.
         ClusterPieces {
             design_id: DesignIdDto,
@@ -3792,16 +3792,15 @@ pub mod change_command {
             Ok((d, inv))
         }
 
-        /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_mutation`].
+        /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_diff`].
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             let twin = KitGraph::from_full_dto(b0.clone());
             let inv = self.apply_mutation(&twin)?;
             let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
             if a != b0 {
-                let b0_apply = b0.clone();
-                let a_apply = a.clone();
-                KitGraph::with_undo(kit, || KitGraph::apply_kit_mutation(kit, &b0_apply, &a_apply).map(|_| ())).map_err(SemioError::from)?;
+                let diff = crate::kit_diff::KitDiff::between(&b0, &a);
+                KitGraph::with_undo(kit, || KitGraph::apply_kit_diff(kit, &diff).map(|_| ())).map_err(SemioError::from)?;
             }
             Ok(inv)
         }
@@ -3820,9 +3819,8 @@ pub mod change_command {
             }
             let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
             if a != b0 {
-                let b0_apply = b0.clone();
-                let a_apply = a.clone();
-                KitGraph::with_undo(kit, || KitGraph::apply_kit_mutation(kit, &b0_apply, &a_apply).map(|_| ())).map_err(SemioError::from)?;
+                let diff = crate::kit_diff::KitDiff::between(&b0, &a);
+                KitGraph::with_undo(kit, || KitGraph::apply_kit_diff(kit, &diff).map(|_| ())).map_err(SemioError::from)?;
             }
             let mut out = Vec::new();
             for g in groups.into_iter().rev() {
@@ -6644,6 +6642,8 @@ pub mod kit_backbone_wire {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum BackboneConfig {
+        /// In-process only: no persistence; attach/detach are bookkeeping no-ops for shell/tests.
+        Memory,
         Dev { path: String },
         Local { folder: String },
         Remote { url: String, session_id: String },
@@ -6936,14 +6936,30 @@ pub mod backbone {
     }
 
     pub enum BackboneKind {
+        Memory(MemoryBackbone),
         Dev(DevBackbone),
         Local(LocalBackbone),
         Remote(RemoteBackbone),
     }
 
+    /// No-op backbone: coordinator keeps slot filled; `persist_full` accepts without I/O.
+    #[derive(Clone, Debug, Default)]
+    pub struct MemoryBackbone;
+
+    impl BackboneDriver for MemoryBackbone {
+        fn pull(&self) -> Result<BackboneSnapshot> {
+            Err(SemioError::InvalidOperation("memory backbone has no snapshot source".into()))
+        }
+
+        fn persist_full(&self, _proposed: &BackboneSnapshot) -> Result<ProposeOutcome> {
+            Ok(ProposeOutcome::Accepted)
+        }
+    }
+
     impl BackboneKind {
         pub fn from_config(cfg: &BackboneConfig) -> Result<Self> {
             match cfg {
+                BackboneConfig::Memory => Ok(Self::Memory(MemoryBackbone)),
                 BackboneConfig::Dev { path } => Ok(Self::Dev(DevBackbone::new(PathBuf::from(path)))),
                 BackboneConfig::Local { folder } => Ok(Self::Local(LocalBackbone::new(PathBuf::from(folder)))),
                 BackboneConfig::Remote { url, session_id } => Ok(Self::Remote(RemoteBackbone::new(url.clone(), session_id.clone()))),
@@ -6952,6 +6968,7 @@ pub mod backbone {
 
         pub fn pull(&self) -> Result<BackboneSnapshot> {
             match self {
+                Self::Memory(m) => m.pull(),
                 Self::Dev(d) => d.pull(),
                 Self::Local(l) => l.pull(),
                 Self::Remote(r) => r.pull(),
@@ -6960,6 +6977,7 @@ pub mod backbone {
 
         pub fn persist_full(&self, proposed: &BackboneSnapshot) -> Result<ProposeOutcome> {
             match self {
+                Self::Memory(m) => m.persist_full(proposed),
                 Self::Dev(d) => d.persist_full(proposed),
                 Self::Local(l) => l.persist_full(proposed),
                 Self::Remote(r) => r.persist_full(proposed),
@@ -6975,6 +6993,7 @@ pub mod backbone {
 
         pub fn kind_name(&self) -> &'static str {
             match self {
+                Self::Memory(_) => "memory",
                 Self::Dev(_) => "dev",
                 Self::Local(_) => "local",
                 Self::Remote(_) => "remote",
@@ -7505,8 +7524,13 @@ pub mod kit_store_command {
         /// Locks the kit store internally as needed.
         pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
             match self {
-                KitStoreCommand::AttachBackbone { .. }
-                | KitStoreCommand::DetachBackbone
+                KitStoreCommand::AttachBackbone { config } => match config {
+                    crate::kit_backbone_wire::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
+                    _ => Err(SemioError::InvalidOperation(
+                        "backbone attach (dev/local/remote) must be run via kit_store::KitStore::execute (semio-store control plane)".into(),
+                    )),
+                },
+                KitStoreCommand::DetachBackbone
                 | KitStoreCommand::SetActiveCheckpoint { .. }
                 | KitStoreCommand::ListConflicts
                 | KitStoreCommand::ResolveConflict { .. }
@@ -18865,22 +18889,11 @@ pub mod kit_graph {
         }
 
         /// Central content write: replace materialized kit DTO, preserving `event_bus` and VCS/undo.
-        /// [`Self::apply_kit_mutation`] is the preferred public path when you have before/after DTOs.
         pub fn apply_kit_state(kit: &KitGraphRef, after: KitFullDto) -> SetResult {
             Self::replace_from_full_dto(kit, after)
         }
 
-        /// One-pass apply from a before/after pair: returns the [`crate::kit_diff::KitDiff`] and updates live.
-        pub fn apply_kit_mutation(kit: &KitGraphRef, before: &KitFullDto, after: &KitFullDto) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
-            let d = crate::kit_diff::KitDiff::between(before, after);
-            if *before != *after {
-                Self::apply_kit_state(kit, after.clone())?;
-                crate::event_wire::emit_kit_dto_reconcile_events(kit, before, after);
-            }
-            Ok(d)
-        }
-
-        /// 🧩 Central sparse path: materialize `before + diff` in-DTO, then one [`apply_kit_mutation`] (hash / validation / graph bus, reconcile events).
+        /// 🧩 Sole mutating entry for kit content from a structural diff: merge into current DTO snapshot, replace graph, reconcile events.
         pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
             if diff.is_empty() {
                 return Ok(crate::kit_diff::KitDiff::default());
@@ -18888,7 +18901,11 @@ pub mod kit_graph {
             let b0 = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto();
             let mut a = b0.clone();
             diff.merge_into_baseline_dto(&mut a);
-            Self::apply_kit_mutation(kit, &b0, &a)
+            if b0 != a {
+                Self::apply_kit_state(kit, a.clone())?;
+                crate::event_wire::emit_kit_dto_reconcile_events(kit, &b0, &a);
+            }
+            Ok(crate::kit_diff::KitDiff::between(&b0, &a))
         }
 
         /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
@@ -26540,6 +26557,8 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum BackboneConfigBatchInput {
+        /// Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
+        Memory(ConfirmOnlyInput),
         Dev(DevBackboneBatchInput),
         Local(LocalBackboneBatchInput),
         Remote(RemoteBackboneBatchInput),
@@ -27897,6 +27916,7 @@ pub mod kit_graphql {
             match command {
                 BackboneBatchCommandInput::AttachBackbone(config) => {
                     let config = match config {
+                        BackboneConfigBatchInput::Memory(_) => crate::kit_backbone_wire::BackboneConfig::Memory,
                         BackboneConfigBatchInput::Dev(v) => crate::kit_backbone_wire::BackboneConfig::Dev { path: v.path },
                         BackboneConfigBatchInput::Local(v) => crate::kit_backbone_wire::BackboneConfig::Local { folder: v.folder },
                         BackboneConfigBatchInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },

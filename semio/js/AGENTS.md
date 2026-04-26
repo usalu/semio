@@ -18,7 +18,7 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 ## Strict layering
 
 - **Up** (toward UI): `semio/react` imports this package for `KitStore` + wire types.
-- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs`. No imports from `semio/react` or `semio/sketchpad`.
+- **Down** (toward domain): this package speaks **only GraphQL** into `semio/rs`. No imports from `semio/react` or `semio/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
 
 ## Bidirectional actor model
 

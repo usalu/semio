@@ -660,6 +660,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(hookCommand(factory, &config))
 	root.AddCommand(mermaidCommand(factory, &config))
+	root.AddCommand(locCommand(factory, &config))
 	root.AddCommand(technologyCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(analyzeCommand(factory, &config))
@@ -8177,6 +8178,733 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 	request := Request{Command: CmdGraphQL, Args: payloadBytes, RepoRoot: config.Repo, Verbose: config.Verbose}
 	stream := engine.Run(ctx, request)
 	return renderStream(cmd, config, stream)
+}
+
+// #region 🔢LOC Command
+// 📈locDefaultBranch: dev walk branch (⛳ wip).
+// 📈locDefaultLanguageList: cloc + git line classification.
+const locDefaultBranch = "⛳wip"
+
+// 💿LocLangStats holds the data fields for a line-of-code per-language metrics record.
+type LocLangStats struct {
+	Loc     int `json:"loc"`
+	Edited  int `json:"edited"`
+	Added   int `json:"added"`
+	Removed int `json:"removed"`
+}
+
+// 💿LocReport: JSON payload for `loc` output and rendering.
+type LocReport struct {
+	Snapshot       map[string]LocLangStats            `json:"snapshot"`
+	ByContributors map[string]map[string]LocLangStats `json:"byContributors,omitempty"`
+	History        []LocHistoryEntry                  `json:"history,omitempty"`
+	Branch         string                             `json:"branch,omitempty"`
+}
+
+// 💿LocHistoryEntry: one commit step on the time series; Languages xor ByContributors.
+type LocHistoryEntry struct {
+	SHA            string                               `json:"sha"`
+	Date           string                               `json:"date"`
+	Author         string                               `json:"author,omitempty"`
+	Languages      map[string]LocLangStats              `json:"languages,omitempty"`
+	ByContributors map[string]map[string]LocLangStats  `json:"byContributors,omitempty"`
+}
+
+// 💿locRawCommit holds a single parsed commit and its per-language line deltas.
+type locRawCommit struct {
+	SHA        string
+	WhenUnix   int64
+	Author     string
+	AuthorMail string
+	Delta      map[string]locPair
+}
+
+// 💿locPair: added/removed in one file change.
+type locPair struct{ Added, Removed int }
+
+// 🔧locContributorAlias maps git author to canonical id via first-author resolution.
+// 👤 locContributorAlias resolves first-author to contributor alias.
+func locContributorAlias(name, email string) string {
+	author := strings.TrimSpace(name)
+	em := strings.TrimSpace(email)
+	if em != "" {
+		author = fmt.Sprintf("%s <%s>", author, em)
+	}
+	if author == "" {
+		return "unknown"
+	}
+	return FindAndUpdateContributor(author)
+}
+
+// 🪷 locPathSkipped returns true for paths that must not be counted (.repo, gitignore).
+// 🗂️ locPathSkipped filters repo-internal and gitignored relative paths.
+func locPathSkipped(relPath string) bool {
+	rel := normalizeRepoPath(relPath)
+	rel = filepath.ToSlash(rel)
+	if rel == "" {
+		return true
+	}
+	if rel == ".repo" || strings.HasPrefix(rel, ".repo/") {
+		return true
+	}
+	return isIgnoredByGitignore(rel)
+}
+
+// 🏷️ locClassifyLanguage classifies a repo-relative path to a cloc language name, else "".
+func locClassifyLanguage(path string, langs map[string]bool) string {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".ts", ".tsx", ".cts", ".mts", ".mtsx":
+		if langs["TypeScript"] {
+			return "TypeScript"
+		}
+	case ".go":
+		if langs["Go"] {
+			return "Go"
+		}
+	case ".cs":
+		if langs["C#"] {
+			return "C#"
+		}
+	case ".py":
+		if langs["Python"] {
+			return "Python"
+		}
+	case ".rs":
+		if langs["Rust"] {
+			return "Rust"
+		}
+	}
+	return ""
+}
+
+func locMakeLangSet(languages []string) map[string]bool {
+	m := make(map[string]bool, len(languages))
+	for _, l := range languages {
+		m[strings.TrimSpace(l)] = true
+	}
+	return m
+}
+
+func locZeroSnapshot(langs map[string]bool) map[string]LocLangStats {
+	s := make(map[string]LocLangStats)
+	for l := range langs {
+		s[l] = LocLangStats{}
+	}
+	return s
+}
+
+// 🔧locCumulativePair holds running added/removed per key.
+// 📊 locCumulativePair: running sums for a dimension (language or contributor+language).
+type locCumulativePair struct {
+	Added, Removed int
+}
+
+// 🔧locCumulative runs numstat and aggregates cumulative metrics.
+// 🧮 locCumulative returns flat cumulatives, optional per-contributor cumulatives, and all commits in order.
+func locCumulative(path string, languages []string, byContrib bool) ([]locRawCommit, map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
+	commits, err := locWalkGitLog(path, languages, "")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	cum, byC, err := locCumulativeFromRaw(commits, languages, byContrib)
+	return commits, cum, byC, err
+}
+
+// 🔧locCumulativeBranch walks only commits on the given branch.
+// 🧮 locCumulativeBranch runs the same as locCumulative but for a ref.
+func locCumulativeBranch(path string, languages []string, byContrib bool, ref string) ([]locRawCommit, map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
+	commits, err := locWalkGitLog(path, languages, ref)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return locCumulativeFromRaw(commits, languages, byContrib)
+}
+
+func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib bool) (map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
+	langW := locMakeLangSet(languages)
+	cum := make(map[string]locCumulativePair)
+	for l := range langW {
+		cum[l] = locCumulativePair{}
+	}
+	var byCont map[string]map[string]locCumulativePair
+	if byContrib {
+		byCont = make(map[string]map[string]locCumulativePair)
+	}
+	for _, c := range commits {
+		alias := locContributorAlias(c.Author, c.AuthorMail)
+		if byContrib {
+			if byCont[alias] == nil {
+				byCont[alias] = make(map[string]locCumulativePair)
+				for l := range langW {
+					byCont[alias][l] = locCumulativePair{}
+				}
+			}
+		}
+		for l, p := range c.Delta {
+			if !langW[l] {
+				continue
+			}
+			agg := cum[l]
+			agg.Added += p.Added
+			agg.Removed += p.Removed
+			cum[l] = agg
+			if byContrib {
+				agg2 := byCont[alias][l]
+				agg2.Added += p.Added
+				agg2.Removed += p.Removed
+				byCont[alias][l] = agg2
+			}
+		}
+	}
+	return cum, byCont, nil
+}
+
+// 🔗 locMergeCumulativeCloc materializes a per-language LocLangStats snapshot.
+func locMergeCumulativeCloc(c map[string]locCumulativePair, clocData map[string]int, languages []string) map[string]LocLangStats {
+	langW := locMakeLangSet(languages)
+	out := locZeroSnapshot(langW)
+	for l := range langW {
+		st := out[l]
+		st.Loc = clocData[l]
+		if cp, ok := c[l]; ok {
+			st.Added = cp.Added
+			st.Removed = cp.Removed
+			st.Edited = cp.Added + cp.Removed
+		}
+		out[l] = st
+	}
+	return out
+}
+
+// 💿LocCumulative: exported for tests; mirrors locCumulativePair from numstat.
+type LocCumulative struct{ Added, Removed int }
+
+// 🔗 locMergeCumulativeClocEx wraps locMergeCumulativeCloc for exported LocCumulative maps.
+// 🔗 locMergeCumulativeClocEx builds LocLangStats from a LocCumulative map.
+func locMergeCumulativeClocEx(c map[string]LocCumulative, clocData map[string]int, languages []string) map[string]LocLangStats {
+	m := make(map[string]locCumulativePair, len(c))
+	for k, v := range c {
+		m[k] = locCumulativePair{Added: v.Added, Removed: v.Removed}
+	}
+	return locMergeCumulativeCloc(m, clocData, languages)
+}
+
+// 🔧 locWalkGitLog returns commits oldest-first; ref empty means from HEAD, else limit to that ref.
+// 📜 locWalkGitLog runs `git log --numstat` and parses the stream.
+func locWalkGitLog(repo string, languages []string, ref string) ([]locRawCommit, error) {
+	langW := locMakeLangSet(languages)
+	// COMMIT%09%H%09%aN%09%aE%09%at
+	pretty := "COMMIT%x09%H%x09%aN%x09%aE%x09%at"
+	args := []string{
+		"-C", repo, "log", "--no-merges", "--numstat", "--first-parent", "--reverse",
+		"--pretty=format:" + pretty,
+	}
+	if ref != "" {
+		args = append(args, ref)
+	}
+	stdout, stderr, code := ExecCommand("git", args, repo)
+	if code != 0 {
+		return nil, fmt.Errorf("git log failed: %s", strings.TrimSpace(stderr))
+	}
+	return locParseNumstatLog(stdout, langW)
+}
+
+// 🧩 locParseNumstatLog breaks numstat + COMMIT-pretty output into per-commit records.
+// 🧩 locParseNumstatLog is exported for unit tests.
+func locParseNumstatLog(stdout string, langW map[string]bool) ([]locRawCommit, error) {
+	var out []locRawCommit
+	lines := strings.Split(stdout, "\n")
+	var cur *locRawCommit
+	for _, line := range lines {
+		line = strings.TrimRight(line, "\r")
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "COMMIT") {
+			fields := strings.SplitN(line, "\t", 5)
+			if len(fields) < 5 {
+				continue
+			}
+			if cur != nil {
+				out = append(out, *cur)
+			}
+			sha := fields[1]
+			authorName := fields[2]
+			authorMail := fields[3]
+			ts, _ := strconv.ParseInt(fields[4], 10, 64)
+			cur = &locRawCommit{SHA: sha, Author: authorName, AuthorMail: authorMail, WhenUnix: ts, Delta: make(map[string]locPair)}
+			continue
+		}
+		if cur == nil {
+			continue
+		}
+		parts := strings.SplitN(line, "\t", 3)
+		if len(parts) < 3 {
+			continue
+		}
+		if parts[0] == "-" || parts[1] == "-" {
+			continue
+		}
+		added, err1 := strconv.Atoi(parts[0])
+		removed, err2 := strconv.Atoi(parts[1])
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		relpath := parts[2]
+		if loPathSkipped := locPathSkipped(relpath); loPathSkipped {
+			continue
+		}
+		lang := locClassifyLanguage(relpath, langW)
+		if lang == "" {
+			continue
+		}
+		d := cur.Delta[lang]
+		d.Added += added
+		d.Removed += removed
+		cur.Delta[lang] = d
+	}
+	if cur != nil {
+		out = append(out, *cur)
+	}
+	return out, nil
+}
+
+// 🔧 lookPathCloc locates a cloc executable in PATH.
+func lookPathCloc() (string, error) { return exec.LookPath("cloc") }
+
+// 🧮 runCloc: ref "" = working tree; ref non-empty = that git tree-ish (cloc vcs+git, no checkout).
+// 🧮 runCloc produces per language `code` line counts (cloc JSON).
+func runCloc(repoRoot, ref string, languages []string) (map[string]int, error) {
+	exe, err := lookPathCloc()
+	if err != nil {
+		return nil, fmt.Errorf("cloc: not in PATH: %w", err)
+	}
+	langList := strings.Join(languages, ",")
+	var args []string
+	if ref == "" {
+		args = []string{".", "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json", "--json-add-indent=0"}
+	} else {
+		args = []string{ref, "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json", "--json-add-indent=0"}
+	}
+	stdout, stderr, code := ExecCommand(exe, args, repoRoot)
+	if code != 0 {
+		return nil, fmt.Errorf("cloc: %s", strings.TrimSpace(stderr))
+	}
+	return locParseClocJSON(stdout, languages)
+}
+
+// 🧩 locParseClocJSON maps cloc JSON to language -> code line count.
+func locParseClocJSON(raw string, languages []string) (map[string]int, error) {
+	var root map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &root); err != nil {
+		return nil, fmt.Errorf("cloc json: %w", err)
+	}
+	wanted := locMakeLangSet(languages)
+	out := make(map[string]int, len(languages))
+	for l := range wanted {
+		chunk, ok := root[l]
+		if !ok {
+			out[l] = 0
+			continue
+		}
+		var o struct {
+			Code int `json:"code"`
+		}
+		_ = json.Unmarshal(chunk, &o)
+		out[l] = o.Code
+	}
+	return out, nil
+}
+
+// 🔧 locCumulativeToStats builds LocLangStats (loc=0) from pairs for contributor view.
+// 📦 locCumulativeToStats flattens cum pairs into per-language added/removed/edited.
+func locCumulativeToStats(cum map[string]locCumulativePair, languages []string) map[string]LocLangStats {
+	langW := locMakeLangSet(languages)
+	out := locZeroSnapshot(langW)
+	for l := range langW {
+		st := out[l]
+		if p, ok := cum[l]; ok {
+			st.Added = p.Added
+			st.Removed = p.Removed
+			st.Edited = p.Added + p.Removed
+		}
+		out[l] = st
+	}
+	return out
+}
+
+// 🔧 locByContributorsToSnapshot builds a contributor -> language -> stats map; loc=0 in leaf rows.
+// 🧩 locByContributorsToSnapshot builds contributor breakdown from by-contrib cumulative pairs.
+func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, languages []string) map[string]map[string]LocLangStats {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]map[string]LocLangStats, len(m))
+	for alias, lp := range m {
+		out[alias] = locCumulativeToStats(lp, languages)
+	}
+	return out
+}
+
+// 🔧 locIsLastCommitOfDayUTC returns true for last commit in runs when calendar day (UTC) changes.
+func locIsLastCommitOfDayUTC(commits []locRawCommit, i int) bool {
+	if i == len(commits)-1 {
+		return true
+	}
+	day0 := time.Unix(commits[i].WhenUnix, 0).UTC().Format("2006-01-02")
+	day1 := time.Unix(commits[i+1].WhenUnix, 0).UTC().Format("2006-01-02")
+	return day0 != day1
+}
+
+// 🔧 locBuildHistory: running totals + cloc at sampled commits. verbose samples every step.
+// 📅 locBuildHistory assembles the optional --history time series.
+func locBuildHistory(repo string, languages []string, byContrib, verbose bool, commits []locRawCommit) ([]LocHistoryEntry, error) {
+	langW := locMakeLangSet(languages)
+	running := make(map[string]locCumulativePair)
+	for l := range langW {
+		running[l] = locCumulativePair{}
+	}
+	byContRun := make(map[string]map[string]locCumulativePair)
+	if byContrib {
+		byContRun = make(map[string]map[string]locCumulativePair)
+	}
+	var hist []LocHistoryEntry
+	var lastCloc map[string]int
+	for i, c := range commits {
+		alias := locContributorAlias(c.Author, c.AuthorMail)
+		if byContrib {
+			if byContRun[alias] == nil {
+				byContRun[alias] = make(map[string]locCumulativePair)
+				for l := range langW {
+					byContRun[alias][l] = locCumulativePair{}
+				}
+			}
+		}
+		for l, p := range c.Delta {
+			if !langW[l] {
+				continue
+			}
+			agg := running[l]
+			agg.Added += p.Added
+			agg.Removed += p.Removed
+			running[l] = agg
+			if byContrib {
+				a2 := byContRun[alias][l]
+				a2.Added += p.Added
+				a2.Removed += p.Removed
+				byContRun[alias][l] = a2
+			}
+		}
+		needCloc := verbose || i == 0 || i+1 == len(commits) || lastCloc == nil || locIsLastCommitOfDayUTC(commits, i)
+		if needCloc {
+			m, err := runCloc(repo, c.SHA, languages)
+			if err != nil {
+				return nil, err
+			}
+			lastCloc = m
+		}
+		if lastCloc == nil {
+			z := make(map[string]int, len(languages))
+			for _, l := range languages {
+				l = strings.TrimSpace(l)
+				z[l] = 0
+			}
+			lastCloc = z
+		}
+		iso := time.Unix(c.WhenUnix, 0).UTC().Format(time.RFC3339)
+		authorKey := locContributorAlias(c.Author, c.AuthorMail)
+		entry := LocHistoryEntry{SHA: c.SHA, Date: iso, Author: authorKey}
+		if byContrib {
+			row := make(map[string]map[string]LocLangStats, len(byContRun))
+			for a, m2 := range byContRun {
+				row[a] = locCumulativeToStats(m2, languages)
+			}
+			entry.ByContributors = row
+		} else {
+			merged := locMergeCumulativeCloc(running, lastCloc, languages)
+			entry.Languages = merged
+		}
+		hist = append(hist, entry)
+	}
+	return hist, nil
+}
+
+// 🫡 runLocCommand runs `loc` and prints using global --format.
+func runLocCommand(cmd *cobra.Command, config *Config, languages []string, history, byContrib bool, historyBranch string) error {
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	repoRoot := config.Repo
+	if strings.TrimSpace(repoRoot) == "" {
+		if wd, err := os.Getwd(); err == nil {
+			repoRoot = findRepoRoot(wd)
+		} else {
+			repoRoot = "."
+		}
+	} else {
+		repoRoot = findRepoRoot(repoRoot)
+	}
+	SetRootDir(repoRoot)
+	logRef := ""
+	if history {
+		if strings.TrimSpace(historyBranch) == "" {
+			historyBranch = locDefaultBranch
+		}
+		logRef = historyBranch
+	}
+	commits, err := locWalkGitLog(repoRoot, languages, logRef)
+	if err != nil {
+		return err
+	}
+	cum, byC, _ := locCumulativeFromRaw(commits, languages, byContrib)
+	if cum == nil {
+		cum = make(map[string]locCumulativePair)
+	}
+	cl, err := runCloc(repoRoot, "", languages)
+	if err != nil {
+		return err
+	}
+	snap := locMergeCumulativeCloc(cum, cl, languages)
+	rep := LocReport{Snapshot: snap, Branch: ""}
+	if logRef != "" {
+		rep.Branch = logRef
+	}
+	if byContrib {
+		rep.ByContributors = locByContributorsToSnapshot(byC, languages)
+	}
+	if history {
+		h, err := locBuildHistory(repoRoot, languages, byContrib, verbose, commits)
+		if err != nil {
+			return err
+		}
+		rep.History = h
+	}
+	out := cmd.OutOrStdout()
+	if config.IsJSON() {
+		enc := json.NewEncoder(out)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(map[string]LocReport{"loc": rep}); err != nil {
+			return err
+		}
+		return nil
+	}
+	if config.IsMarkdown() {
+		renderLocMarkdown(out, &rep, history, byContrib)
+		return nil
+	}
+	isTTY := false
+	if f, ok := out.(*os.File); ok {
+		if st, e := f.Stat(); e == nil {
+			if (st.Mode() & os.ModeCharDevice) != 0 {
+				isTTY = true
+			}
+		}
+	}
+	if os.Getenv("NO_COLOR") != "" {
+		isTTY = false
+	}
+	renderLocText(out, &rep, history, byContrib, isTTY)
+	return nil
+}
+
+// 📤 renderLocMarkdown outputs GitHub-flavoured tables for `loc`.
+func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
+	fmt.Fprintln(w, "## LOC")
+	fmt.Fprintln(w, locMarkdownTable("Snapshot", r.Snapshot, true))
+	if byContrib && len(r.ByContributors) > 0 {
+		keys := make([]string, 0, len(r.ByContributors))
+		for a := range r.ByContributors {
+			keys = append(keys, a)
+		}
+		sort.Strings(keys)
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, "## By contributor")
+		for _, a := range keys {
+			s := r.ByContributors[a]
+			fmt.Fprintln(w, "")
+			fmt.Fprintf(w, "### %s\n\n", a)
+			fmt.Fprintln(w, locMarkdownTable("", s, false))
+		}
+	}
+	if withHistory && len(r.History) > 0 {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, "## History (", r.Branch, ")")
+		if byContrib {
+			for _, e := range r.History {
+				short := e.SHA
+				if len(short) > 7 {
+					short = short[:7]
+				}
+				fmt.Fprintln(w, "")
+				fmt.Fprintf(w, "#### %s  %s  %s\n", short, e.Date, e.Author)
+				acs := make([]string, 0, len(e.ByContributors))
+				for a := range e.ByContributors {
+					acs = append(acs, a)
+				}
+				sort.Strings(acs)
+				for _, a := range acs {
+					if e.ByContributors == nil {
+						break
+					}
+					s := e.ByContributors[a]
+					fmt.Fprintln(w, "")
+					fmt.Fprintf(w, "- **%s**\n\n", a)
+					fmt.Fprintln(w, locMarkdownTable("", s, false))
+				}
+			}
+		} else {
+			for _, e := range r.History {
+				fmt.Fprintln(w, "")
+				short := e.SHA
+				if len(short) > 7 {
+					short = short[:7]
+				}
+				fmt.Fprintf(w, "#### %s  %s\n\n", short, e.Date)
+				if e.Languages != nil {
+					fmt.Fprintln(w, locMarkdownTable("", e.Languages, true))
+				}
+			}
+		}
+	}
+}
+
+// 📤 locMarkdownTable renders a GH-flavoured pipe table; withLoc false omits the loc column.
+func locMarkdownTable(title string, rows map[string]LocLangStats, withLoc bool) string {
+	langs := make([]string, 0, len(rows))
+	for l := range rows {
+		langs = append(langs, l)
+	}
+	sort.Strings(langs)
+	var b strings.Builder
+	if title != "" {
+		b.WriteString("### " + title + "\n\n")
+	}
+	if withLoc {
+		b.WriteString("| Language | loc | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: |\n")
+	} else {
+		b.WriteString("| Language | edited | added | removed |\n| --- | ---: | ---: | ---: |\n")
+	}
+	for _, l := range langs {
+		st := rows[l]
+		if withLoc {
+			b.WriteString(fmt.Sprintf("| %s | %d | %d | %d | %d |\n", l, st.Loc, st.Edited, st.Added, st.Removed))
+		} else {
+			b.WriteString(fmt.Sprintf("| %s | %d | %d | %d |\n", l, st.Edited, st.Added, st.Removed))
+		}
+	}
+	return b.String()
+}
+
+// 🔤 renderLocText prints a colored fixed-width table for TTY; plain for pipes.
+func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool) {
+	locTextTable(w, "Snapshot", r.Snapshot, isTTY, true)
+	if byContrib && len(r.ByContributors) > 0 {
+		ks := make([]string, 0, len(r.ByContributors))
+		for a := range r.ByContributors {
+			ks = append(ks, a)
+		}
+		sort.Strings(ks)
+		for _, a := range ks {
+			s := r.ByContributors[a]
+			fmt.Fprintln(w, "")
+			fmt.Fprintln(w, colorize("Contributor: "+a, ColorBlue, isTTY))
+			locTextTable(w, "", s, isTTY, false)
+		}
+	}
+	if withHistory && len(r.History) > 0 {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, colorize("History: "+r.Branch, ColorBold, isTTY))
+		if byContrib {
+			for _, e := range r.History {
+				short := e.SHA
+				if len(short) > 7 {
+					short = short[:7]
+				}
+				fmt.Fprintln(w, colorize(short+"  "+e.Date, ColorDim, isTTY), e.Author)
+				if e.ByContributors == nil {
+					continue
+				}
+				acs := make([]string, 0, len(e.ByContributors))
+				for a := range e.ByContributors {
+					acs = append(acs, a)
+				}
+				sort.Strings(acs)
+				for _, a := range acs {
+					fmt.Fprint(w, "  ")
+					fmt.Fprintln(w, colorize(a, ColorBlue, isTTY))
+					locTextTable(w, "  ", e.ByContributors[a], isTTY, false)
+				}
+			}
+		} else {
+			for _, e := range r.History {
+				short := e.SHA
+				if len(short) > 7 {
+					short = short[:7]
+				}
+				fmt.Fprintln(w, colorize(short, ColorDim, isTTY), e.Date)
+				locTextTable(w, "", e.Languages, isTTY, true)
+			}
+		}
+	}
+}
+
+// 🔤 locTextTable prints a simple aligned table; title may be a prefix.
+func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY, withLoc bool) {
+	keys := make([]string, 0, len(rows))
+	for l := range rows {
+		keys = append(keys, l)
+	}
+	sort.Strings(keys)
+	if title != "" && !strings.HasPrefix(title, "  ") {
+		fmt.Fprintln(w, colorize(title, ColorBold, isTTY))
+	}
+	if len(keys) == 0 {
+		return
+	}
+	if withLoc {
+		fmt.Fprintf(w, "%-16s%10s%10s%10s%10s\n", "Language", "loc", "edited", "added", "removed")
+	} else {
+		fmt.Fprintf(w, "%-16s%10s%10s%10s\n", "Language", "edited", "added", "removed")
+	}
+	for _, l := range keys {
+		s := rows[l]
+		if withLoc {
+			fmt.Fprintf(w, "%-16s%10d%10d%10d%10d\n", l, s.Loc, s.Edited, s.Added, s.Removed)
+		} else {
+			fmt.Fprintf(w, "%-16s%10d%10d%10d\n", l, s.Edited, s.Added, s.Removed)
+		}
+	}
+}
+
+// 🔢 locCommand wires the `loc` Cobra subcommand.
+func locCommand(factory EngineFactory, config *Config) *cobra.Command {
+	_ = factory
+	cmd := &cobra.Command{
+		Use:   "loc",
+		Short: "Line counts and cumulative edits (cloc + git) for the five main languages",
+		Args:  cobra.NoArgs,
+		RunE: func(c *cobra.Command, args []string) error {
+			langs, _ := c.Flags().GetStringSlice("languages")
+			if len(langs) == 0 {
+				langs = []string{"TypeScript", "Go", "C#", "Python", "Rust"}
+			}
+			h, _ := c.Flags().GetBool("history")
+			by, _ := c.Flags().GetBool("by-contributors")
+			br, _ := c.Flags().GetString("branch")
+			if h {
+				if strings.TrimSpace(br) == "" {
+					br = locDefaultBranch
+				}
+			} else {
+				br = ""
+			}
+			return runLocCommand(c, config, langs, h, by, br)
+		},
+	}
+	cmd.Flags().Bool("history", false, "Per-commit time series; walks --branch (default: "+locDefaultBranch+") without checkout")
+	cmd.Flags().Bool("by-contributors", false, "Break down cumulative line deltas by first author (FindAndUpdateContributor alias)")
+	cmd.Flags().String("branch", locDefaultBranch, "With --history: git ref to log (default dev branch). Ignored when --history is false")
+	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "cloc --include-lang; limits numstat by extension")
+	return cmd
 }
 
 // #region ⏲️Mermaid

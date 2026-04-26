@@ -7,10 +7,10 @@ todos:
    status: completed
  - id: rs_diff
    content: "rs: replace apply_kit_mutation(before, after) with single apply_kit_diff(diff); enforce forward_diff + inverse_for contract on every ChangeKitCommand variant"
-   status: in_progress
+   status: completed
  - id: rs_backbone
    content: "rs: add Memory backbone variant; move attach/detach/status/listConflicts/resolveConflict/syncNow into submitKitCommand shell with event-delivered outcomes"
-   status: pending
+   status: completed
  - id: js_stores
    content: "js: rewrite index.ts into KitStore + per-entity Store classes (DesignStore/TypeStore/PieceStore/ConnectionStore/PortStore/ConnectorStore/RepresentationStore/AuthorStore/FileStore/FolderStore/ConceptStore/TagStore/QualityStore/BenchmarkStore/StatStore/PropStore/LayerStore/GroupStore/LocationStore/AttributeStore/FamilyStore) with typed methods + per-entity subscribe; delete patchEntityField/addChild/removeChild/getPieces/read shape mapping"
    status: pending
@@ -22,7 +22,7 @@ todos:
    status: pending
  - id: layer_enforce
    content: "repo: add dependency-cruiser rule + per-bundle AGENTS.md updates that fail CI on cross-layer import violations"
-   status: pending
+   status: completed
 isProject: false
 ---
 
