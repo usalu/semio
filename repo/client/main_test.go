@@ -367,7 +367,7 @@ exit 0
 		if !strings.Contains(configText, "\"command\": \"go\"") {
 			t.Fatalf("expected Windsurf MCP config to keep the portable go command, got:\n%s", configData)
 		}
-		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/cli\",\n        \"mcp\"\n      ]") {
+		if !strings.Contains(configText, "\"args\": [\n        \"run\",\n        \"./repo/mcp\"\n      ]") {
 			t.Fatalf("expected Windsurf MCP config to keep portable repo args, got:\n%s", configData)
 		}
 
@@ -386,7 +386,7 @@ exit 0
 		if !strings.Contains(codexText, `command = "go"`) {
 			t.Fatalf("expected Codex MCP config to keep the portable go command, got:\n%s", codexData)
 		}
-		if !strings.Contains(codexText, `args = ["run", "./repo/cli", "mcp"]`) {
+		if !strings.Contains(codexText, `args = ["run", "./repo/mcp"]`) {
 			t.Fatalf("expected Codex MCP config to keep portable repo args, got:\n%s", codexData)
 		}
 		if !strings.Contains(codexText, fmt.Sprintf("cwd = %q", repoRoot)) {
@@ -508,7 +508,7 @@ personality = "ignored-template-value"
 
 [mcp_servers.repo]
 command = "go"
-args = ["run", "./repo/cli", "mcp"]
+args = ["run", "./repo/mcp"]
 enabled = true
 
 [mcp_servers.semio]
@@ -551,7 +551,7 @@ enabled = true
 	if !strings.Contains(text, `command = "go"`) {
 		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
 	}
-	if !strings.Contains(text, `args = ["run", "./repo/cli", "mcp"]`) {
+	if !strings.Contains(text, `args = ["run", "./repo/mcp"]`) {
 		t.Fatalf("expected repo args to stay portable, got:\n%s", text)
 	}
 	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {

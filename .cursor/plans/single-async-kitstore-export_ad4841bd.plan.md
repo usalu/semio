@@ -7,10 +7,10 @@ todos:
    status: completed
  - id: wire-types
    content: "Write `🔌WireTypes` region: handwritten TS for KitFullDto, every GraphQL Input/Output, KitEvent, SetError/SetResult, Read/Write/Backbone/Conflict types"
-   status: in_progress
+   status: completed
  - id: graphql-worker
    content: Implement `🪜GraphQLWorker` (per-store dedicated Worker, string-only postMessage, request-id demultiplexing into RxJS Subjects)
-   status: pending
+   status: completed
  - id: graphql-helpers
    content: "Implement private typesafe `🧰GraphQL` helpers: `mutation<T>`, `query<T>`, `subscription<T>` over the worker"
    status: pending
@@ -31,13 +31,13 @@ todos:
    status: pending
  - id: migrate-others
    content: Migrate `sites/play`, `desktop`, `vscode`, `3dm/ui`, `algorithms` (delete `nativeAlgorithmAdapter.ts`), and `ui` + storybook stories to the new API
-   status: pending
+   status: completed
  - id: tests
    content: Extend `🧪EmbeddedTests` to cover the new `KitStore` end-to-end; run `npm test` in `semio/js`, `semio/react`, `semio/sketchpad` and fix until green
    status: pending
  - id: close-ticket
    content: Close ticket with summary and full file list
-   status: pending
+   status: cancelled
 isProject: false
 ---
 
