@@ -26743,6 +26743,23 @@ pub mod kit_graphql {
             Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
         }
     }
+
+    /// 🧾 Vec [`PieceFullDto`] wire (GraphQL name is not `JSON`).
+    #[derive(Clone, Debug)]
+    struct GqlPieceFullList(Vec<crate::piece::PieceFullDto>);
+
+    #[Scalar(name = "PieceFullList")]
+    impl ScalarType for GqlPieceFullList {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json()?;
+            let a: Vec<crate::piece::PieceFullDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlPieceFullList(a))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+        }
+    }
     // #endregion
 
     /// 🌐 Optional native [`crate::kit_store::KitStore`]: when present (e.g. semio-store), `run_vcs_command` uses [`crate::kit_store::KitStore::execute`] (coordinator + backbone). Otherwise the graph actor uses [`KitStoreCommand::execute`] on the WIP graph only.
@@ -26939,6 +26956,8 @@ pub mod kit_graphql {
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum TransactionBatchCommandInput {
         ChangeKitCommands(ChangeKitCommandsBatchInput),
+        /// 🧾 Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
+        ChangeKitWithInverse(ChangeKitCommandsBatchInput),
         /// 🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
         Design(DesignBatchInput),
         FinalizeTransaction(ConfirmOnlyInput),
@@ -27151,6 +27170,8 @@ pub mod kit_graphql {
     #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchResultKind {
         ChangeKitCommands,
+        /// 🧾 Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
+        ChangeKitWithInverse,
         ClusterPieces,
         DragPieces,
         MovePieces,
@@ -27215,6 +27236,10 @@ pub mod kit_graphql {
         alternative_id: Option<String>,
         backbone: Option<BackboneBatchStatus>,
         conflicts: Option<Vec<ConflictBatchRecord>>,
+        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+        change_kind: Option<String>,
+        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
+        inverse: Option<Vec<GqlChangeKitCommand>>,
     }
 
     #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
@@ -27379,14 +27404,6 @@ pub mod kit_graphql {
         }
     }
 
-    fn plane_from_input(input: PlaneInputBatch) -> Plane {
-        Plane {
-            origin: crate::geom::Point { x: input.origin.x, y: input.origin.y, z: input.origin.z },
-            x_axis: crate::geom::Vector { x: input.x_axis.x, y: input.x_axis.y, z: input.x_axis.z },
-            y_axis: crate::geom::Vector { x: input.y_axis.x, y: input.y_axis.y, z: input.y_axis.z },
-        }
-    }
-
     async fn execute_batch(shell: &KitShellCtx, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
         let mut results = Vec::new();
         for command in input.commands {
@@ -27450,9 +27467,67 @@ pub mod kit_graphql {
         }
     }
 
+    /// 🧾 `KitChangeKind` as a single GraphQL `String` (unit variants serialize as JSON string; [`KitChangeKind::Other`] is the raw label).
+    fn kit_change_kind_gql(k: &crate::kit_change::KitChangeKind) -> String {
+        match k {
+            crate::kit_change::KitChangeKind::Other(s) => s.clone(),
+            o => {
+                let v = serde_json::to_value(o).ok();
+                v.and_then(|x| x.as_str().map(|s| s.to_string())).unwrap_or_else(|| format!("{o:?}"))
+            }
+        }
+    }
+
+    fn plane_from_input(input: PlaneInputBatch) -> Plane {
+        Plane {
+            origin: crate::geom::Point { x: input.origin.x, y: input.origin.y, z: input.origin.z },
+            x_axis: crate::geom::Vector { x: input.x_axis.x, y: input.x_axis.y, z: input.x_axis.z },
+            y_axis: crate::geom::Vector { x: input.y_axis.x, y: input.y_axis.y, z: input.y_axis.z },
+        }
+    }
+
     async fn execute_live_batch(shell: &KitShellCtx, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
+                LiveBatchCommandInput::ChangeKitCommands(change) => {
+                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
+                    let count = commands.len() as i32;
+                    shell.run_graph_change(commands).await?;
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ChangeKitCommands,
+                        ok: Some(true),
+                        count: Some(count),
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                        change_kind: None,
+                        inverse: None,
+                    });
+                }
+                LiveBatchCommandInput::ChangeKitWithInverse(change) => {
+                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
+                    let (k, inv) = shell.run_change_kit_with_inverse(commands).await?;
+                    let inv_gql: Vec<GqlChangeKitCommand> = inv.into_iter().map(GqlChangeKitCommand).collect();
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ChangeKitWithInverse,
+                        ok: Some(true),
+                        count: None,
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: None,
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                        change_kind: Some(kit_change_kind_gql(&k)),
+                        inverse: Some(inv_gql),
+                    });
+                }
+                LiveBatchCommandInput::Design(design) => execute_design_batch(shell, design, results).await?,
                 LiveBatchCommandInput::Undo(_) => {
                     let graph = shell.graph.clone();
                     shell.run_custom_set_result(Box::new(move || KitGraph::undo(&graph))).await?;
@@ -27467,6 +27542,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 LiveBatchCommandInput::Redo(_) => {
@@ -27483,6 +27560,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
             }
@@ -27537,20 +27616,38 @@ pub mod kit_graphql {
                     shell.run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
                 }
                 DesignBatchCommandInput::CreateConnectedPiece(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::create_connected_piece(&graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port))).await?;
+                    shell.run_custom_set_result(Box::new(move || {
+                        KitGraph::create_connected_piece(
+                            &graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port,
+                        )
+                    })).await?;
                 }
                 DesignBatchCommandInput::CreateFixedPiece(input) => {
                     let plane = plane_from_input(input.plane);
                     shell.run_custom_set_result(Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane))).await?;
                 }
             }
-            results.push(KitStoreBatchResult { kind, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
+            results.push(KitStoreBatchResult {
+                kind,
+                ok: Some(true),
+                count: None,
+                session_id: None,
+                draft_id: None,
+                transaction_id: None,
+                checkpoint_id: None,
+                alternative_id: None,
+                backbone: None,
+                conflicts: None,
+                change_kind: None,
+                inverse: None,
+            });
         }
         Ok(())
     }
 
     async fn execute_session_batch(shell: &KitShellCtx, batch: SessionBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut session_id = batch.session_id.map(|id| Id::from(id.as_str()));
+        let mut last_draft_id: Option<Id> = None;
         for command in batch.commands {
             match command {
                 SessionBatchCommandInput::CreateSession(_) => {
@@ -27571,6 +27668,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 SessionBatchCommandInput::EndSession(_) => {
@@ -27590,6 +27689,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 SessionBatchCommandInput::CreateDraft(input) => {
@@ -27608,6 +27709,7 @@ pub mod kit_graphql {
                         },
                         _ => return Err(Error::new("expected ExecuteSessionCommands result")),
                     };
+                    last_draft_id = Some(draft_id.clone());
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::NewDraft,
                         ok: Some(true),
@@ -27619,10 +27721,15 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
-                SessionBatchCommandInput::Draft(draft_batch) => {
+                SessionBatchCommandInput::Draft(mut draft_batch) => {
                     let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
+                    if draft_batch.draft_id.is_none() {
+                        draft_batch.draft_id = last_draft_id.as_ref().map(|id| id.to_string());
+                    }
                     execute_draft_batch(shell, sid, draft_batch, results).await?;
                 }
             }
@@ -27665,6 +27772,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 DraftBatchCommandInput::AbortDraft(_) => {
@@ -27681,6 +27790,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 DraftBatchCommandInput::UndoDraft(input) => {
@@ -27703,6 +27814,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 DraftBatchCommandInput::RedoDraft(input) => {
@@ -27725,6 +27838,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 DraftBatchCommandInput::StartTransaction(_) => {
@@ -27755,6 +27870,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 DraftBatchCommandInput::Transaction(tx_batch) => {
@@ -27795,7 +27912,99 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
+                }
+                TransactionBatchCommandInput::ChangeKitWithInverse(change) => {
+                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
+                    let count = commands.len() as i32;
+                    let k = ChangeKitCommand::batch_kind(&commands);
+                    let view = crate::kit_read_scope::resolve_read_graph(
+                        &shell.graph,
+                        &crate::kit_read_scope::KitReadScope::Transaction {
+                            session_id: session_id.clone(),
+                            draft_id: draft_id.clone(),
+                            transaction_id: txid.clone(),
+                        },
+                    )
+                    .map_err(|e| Error::new(e.to_string()))?;
+                    let inv = ChangeKitCommand::inverse_commands_for_many(&view, &commands).map_err(|e| Error::new(format!("{e:?}")))?;
+                    let inv_gql: Vec<GqlChangeKitCommand> = inv.into_iter().map(GqlChangeKitCommand).collect();
+                    shell.run_vcs_command(
+                        KitStoreCommand::ExecuteSessionCommands {
+                            id: session_id.clone(),
+                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                                id: draft_id.clone(),
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                    id: txid.clone(),
+                                    commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
+                                }],
+                            }],
+                        },
+                    )
+                    .await?;
+                    results.push(KitStoreBatchResult {
+                        kind: KitStoreBatchResultKind::ChangeKitWithInverse,
+                        ok: Some(true),
+                        count: Some(count),
+                        session_id: None,
+                        draft_id: None,
+                        transaction_id: Some(txid.to_string()),
+                        checkpoint_id: None,
+                        alternative_id: None,
+                        backbone: None,
+                        conflicts: None,
+                        change_kind: Some(kit_change_kind_gql(&k)),
+                        inverse: Some(inv_gql),
+                    });
+                }
+                TransactionBatchCommandInput::Design(design_batch) => {
+                    let design_id = design_batch.design_id.clone();
+                    for sub in design_batch.commands {
+                        let kind = match &sub {
+                            DesignBatchCommandInput::ClusterPieces(_) => KitStoreBatchResultKind::ClusterPieces,
+                            DesignBatchCommandInput::DragPieces(_) => KitStoreBatchResultKind::DragPieces,
+                            DesignBatchCommandInput::MovePieces(_) => KitStoreBatchResultKind::MovePieces,
+                            DesignBatchCommandInput::FixPieces(_) => KitStoreBatchResultKind::FixPieces,
+                            DesignBatchCommandInput::FlattenDesign(_) => KitStoreBatchResultKind::FlattenDesign,
+                            DesignBatchCommandInput::ExpandDesign(_) => KitStoreBatchResultKind::ExpandDesign,
+                            DesignBatchCommandInput::DeleteConnection(_) => KitStoreBatchResultKind::DeleteConnection,
+                            DesignBatchCommandInput::ChangePieceType(_) => KitStoreBatchResultKind::ChangePieceType,
+                            DesignBatchCommandInput::CreateHangingPieces(_) => KitStoreBatchResultKind::CreateHangingPieces,
+                            DesignBatchCommandInput::CreateConnectedPiece(_) => KitStoreBatchResultKind::CreateConnectedPiece,
+                            DesignBatchCommandInput::CreateFixedPiece(_) => KitStoreBatchResultKind::CreateFixedPiece,
+                        };
+                        let commands = design_batch_command_to_change_kit_commands(&design_id, sub)?;
+                        let count = commands.len() as i32;
+                        shell.run_vcs_command(
+                            KitStoreCommand::ExecuteSessionCommands {
+                                id: session_id.clone(),
+                                commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                                    id: draft_id.clone(),
+                                    commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                        id: txid.clone(),
+                                        commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
+                                    }],
+                                }],
+                            },
+                        )
+                        .await?;
+                        results.push(KitStoreBatchResult {
+                            kind,
+                            ok: Some(true),
+                            count: Some(count),
+                            session_id: None,
+                            draft_id: None,
+                            transaction_id: Some(txid.to_string()),
+                            checkpoint_id: None,
+                            alternative_id: None,
+                            backbone: None,
+                            conflicts: None,
+                            change_kind: None,
+                            inverse: None,
+                        });
+                    }
                 }
                 TransactionBatchCommandInput::FinalizeTransaction(_) => {
                     shell.run_vcs_command(
@@ -27819,6 +28028,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 TransactionBatchCommandInput::AbortTransaction(_) => {
@@ -27843,6 +28054,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 TransactionBatchCommandInput::UndoTransaction(_) => {
@@ -27867,6 +28080,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 TransactionBatchCommandInput::RedoTransaction(_) => {
@@ -27891,6 +28106,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
             }
@@ -27916,6 +28133,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 CheckpointBatchCommandInput::SetActive(_) => {
@@ -27934,6 +28153,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
             }
@@ -27963,6 +28184,8 @@ pub mod kit_graphql {
                         alternative_id: Some(id_string),
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 AlternativeBatchCommandInput::UnifyAlternative(input) => {
@@ -27979,6 +28202,8 @@ pub mod kit_graphql {
                         alternative_id: alternative_id.clone().map(|id| id.to_string()),
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
             }
@@ -28011,6 +28236,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 BackboneBatchCommandInput::DetachBackbone(_) => {
@@ -28029,6 +28256,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 BackboneBatchCommandInput::ListConflicts(_) => {
@@ -28048,6 +28277,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: Some(conflicts),
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 BackboneBatchCommandInput::ResolveConflict(input) => {
@@ -28070,6 +28301,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 BackboneBatchCommandInput::BackboneStatus(_) => {
@@ -28088,6 +28321,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: Some(BackboneBatchStatus { attached, kind, tip: tip.map(|id| id.to_string()) }),
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
                 BackboneBatchCommandInput::SyncNow(_) => {
@@ -28106,6 +28341,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
+                        change_kind: None,
+                        inverse: None,
                     });
                 }
             }
@@ -28657,6 +28894,20 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
         }
 
+        /// 🌐 `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
+        async fn pieces_full(&self) -> Result<GqlPieceFullList> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let v: Vec<_> = d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
+            Ok(GqlPieceFullList(v))
+        }
+
+        /// 🌐 `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
+        async fn connections_full(&self) -> Result<GqlConnectionFullList> {
+            let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let v: Vec<_> = d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
+            Ok(GqlConnectionFullList(v))
+        }
+
         async fn flatten_map(&self) -> Result<Vec<DesignFlattenMapEntryObject>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
@@ -29080,13 +29331,14 @@ mod tests {
 
         use crate::kit_graph::KitGraph;
         use crate::kit_graphql;
-        use crate::change_command::ChangeKitCommand;
-        use crate::events::KitEvent;
 
         #[test]
         fn generated_schema_sdl_matches_semio_graphql_schema() {
             let checked_in = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("graphql").join("schema.graphql")).expect("read semio/graphql/schema.graphql");
-            assert_eq!(kit_graphql::schema_sdl(), checked_in, "run `npx nx build semio/graphql` to regenerate semio/graphql/schema.graphql from semio/rs");
+            let s = kit_graphql::schema_sdl();
+            assert!(!s.contains("scalar JSON"), "SDL must not declare generic JSON; use named scalars");
+            assert!(!s.contains("JSON!"), "SDL must not use JSON output fields");
+            assert_eq!(s, checked_in, "run `npx nx build semio/graphql` to regenerate semio/graphql/schema.graphql from semio/rs");
         }
 
         #[test]
@@ -29121,17 +29373,31 @@ mod tests {
         }
 
         #[test]
-        fn submit_kit_command_returns_request_id_and_emits_result_event() {
+        fn kit_store_batch_scoped_change_kit_commands_updates_name() {
             let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-shell-before")));
-            let mut events = kit.read().expect("read").subscribe();
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
-            let command_json = serde_json::to_value(vec![ChangeKitCommand::Name { name: "gql-shell-after".into() }]).expect("command json");
-            let shell_request = serde_json::json!({ "variables": { "commands": command_json } });
             let out = futures_lite::future::block_on(async {
                 let body = serde_json::json!({
-                    "query": "mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }",
-                    "variables": { "input": { "commandKind": "changeKitCommands", "request": shell_request } }
+                    "query": "mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind ok } } } }",
+                    "variables": {
+                        "input": {
+                            "commands": [{
+                                "session": {
+                                    "commands": [
+                                        { "createSession": { "confirm": true } },
+                                        { "createDraft": {} },
+                                        { "draft": { "commands": [
+                                            { "startTransaction": { "confirm": true } },
+                                            { "transaction": { "commands": [
+                                                { "changeKitCommands": { "commands": [{ "name": "gql-shell-after" }] } }
+                                            ]}}
+                                        ]}}
+                                    ]
+                                }
+                            }]
+                        }
+                    }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
                 req = req
@@ -29141,22 +29407,18 @@ mod tests {
                 let schema = kit_graphql::schema();
                 serde_json::to_value(async_graphql::Response::from(schema.execute(req).await)).expect("to json")
             });
-            let request_id = out.get("data").and_then(|d| d.get("submitKitCommand")).and_then(|r| r.get("requestId")).and_then(|v| v.as_str()).expect("request id").to_string();
-            assert!(!request_id.is_empty());
-
-            let mut seen_succeeded = false;
-            for _ in 0..50 {
-                while let Ok(event) = events.try_recv() {
-                    if matches!(event, KitEvent::SemioKitCommand { request_id: ref id, phase: ref p, .. } if id == &request_id && p == "succeeded") {
-                        seen_succeeded = true;
-                    }
-                }
-                if seen_succeeded {
-                    break;
-                }
-                std::thread::sleep(std::time::Duration::from_millis(10));
-            }
-            assert!(seen_succeeded, "expected succeeded event for {request_id}");
+            let errs = out.get("errors");
+            assert!(errs.is_none() || errs.unwrap().as_array().map(|a| a.is_empty()).unwrap_or(false), "{out:?}");
+            let kinds: Vec<String> = out
+                .pointer("/data/kitStore/batch/results")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            assert!(kinds.iter().any(|k| k == "CHANGE_KIT_COMMANDS"), "{kinds:?}");
             assert_eq!(kit.read().expect("read").name, "gql-shell-after");
         }
     }

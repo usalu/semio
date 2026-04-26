@@ -409,6 +409,338 @@ export function kitWireChangeDesignConnection(
   };
 }
 
+const __kid = (x: string): { readonly id: string } => ({ id: x });
+
+/** @emoji 🧾 Maps schema/UI data keys onto connection wire keys (`u`→`x`, `v`→`y`). */
+export function connectionDiffWireKeyForDataKey(dataKey: string): string {
+  if (dataKey === "u") return "x";
+  if (dataKey === "v") return "y";
+  return dataKey;
+}
+
+/** @emoji 🧾 Converts a piece field patch into nested `changePieceCommands` wire entries. */
+export function piecePatchToWireCommands(patch: Record<string, unknown>): ChangePieceCommandWire[] {
+  const out: ChangePieceCommandWire[] = [];
+  if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
+  if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
+  if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
+  if ("center" in patch) out.push({ center: { center: patch.center } });
+  if ("scale" in patch) out.push({ scale: { scale: typeof patch.scale === "number" ? patch.scale : Number(patch.scale) } });
+  if ("mirrorPlane" in patch) out.push({ mirrorPlane: { mirrorPlane: patch.mirrorPlane } });
+  if ("hidden" in patch) out.push({ hidden: { hidden: Boolean(patch.hidden) } });
+  if ("isHidden" in patch) out.push({ hidden: { hidden: Boolean(patch.isHidden) } });
+  if ("locked" in patch) out.push({ locked: { locked: Boolean(patch.locked) } });
+  if ("isLocked" in patch) out.push({ locked: { locked: Boolean(patch.isLocked) } });
+  if ("color" in patch) out.push({ color: { color: patch.color == null ? null : String(patch.color) } });
+  if ("type" in patch) {
+    const t = patch.type;
+    const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
+    out.push({ type: { typeId: { id: tid } } });
+  }
+  return out;
+}
+
+/** @emoji 🧾 Converts a connection field patch into nested `changeConnectionCommands` wire entries. */
+export function connectionPatchToWireCommands(patch: Record<string, unknown>): ChangeConnectionCommandWire[] {
+  const out: ChangeConnectionCommandWire[] = [];
+  const num = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
+  const opt = (v: unknown): number | null => (v == null ? null : num(v));
+  if ("gap" in patch) out.push({ gap: { value: opt(patch.gap) } });
+  if ("shift" in patch) out.push({ shift: { value: opt(patch.shift) } });
+  if ("rise" in patch) out.push({ rise: { value: opt(patch.rise) } });
+  if ("rotation" in patch) out.push({ rotation: { value: opt(patch.rotation) } });
+  if ("turn" in patch) out.push({ turn: { value: opt(patch.turn) } });
+  if ("tilt" in patch) out.push({ tilt: { value: opt(patch.tilt) } });
+  if ("x" in patch) out.push({ x: { value: opt(patch.x) } });
+  if ("y" in patch) out.push({ y: { value: opt(patch.y) } });
+  if ("u" in patch) out.push({ x: { value: opt(patch.u) } });
+  if ("v" in patch) out.push({ y: { value: opt(patch.v) } });
+  if ("description" in patch) out.push({ description: { value: patch.description == null ? null : String(patch.description) } });
+  return out;
+}
+
+/**
+ * @emoji 🧾 Maps a schema entity + field to `changeKitCommands` wires for `submitChangeKitCommands` (React + kit shell).
+ * `designId` is required for Piece/Connection; otherwise pass `null`.
+ */
+export function buildSchemaEntityChangeCommands(
+  kind: string,
+  id: string,
+  field: string,
+  value: unknown,
+  designId: string | null,
+): readonly ChangeKitCommandWire[] {
+  switch (kind) {
+    case "Kit": {
+      if (field === "name") return [{ name: { name: String(value ?? "") } } as const];
+      if (field === "description") return [{ description: { description: (value as string) ?? null } } as const];
+      if (field === "icon") return [{ icon: { icon: (value as string) ?? null } } as const];
+      if (field === "image") return [{ image: { image: (value as string) ?? null } } as const];
+      if (field === "homepage") return [{ homepage: { homepage: (value as string) ?? null } } as const];
+      if (field === "license") return [{ license: { license: (value as string) ?? null } } as const];
+      if (field === "version" || field === "release") return [{ version: { version: (value as string) ?? null } } as const];
+      if (field === "preview") return [{ preview: { preview: (value as string) ?? null } } as const];
+      if (field === "remote") return [{ remote: { remote: (value as string) ?? null } } as const];
+      if (field === "uri") return [{ uri: { uri: (value as string) ?? null } } as const];
+      return [];
+    }
+    case "Type": {
+      const inner = oneChangeTypeCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeTypeCommands: { typeId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Design": {
+      const inner = oneChangeDesignCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeDesignCommands: { designId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Author": {
+      const inner = oneChangeAuthorCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeAuthorCommands: { authorId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Tag": {
+      const inner = oneChangeTagCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeTagCommands: { tagId: __kid(id), commands: [inner] } } as const];
+    }
+    case "File": {
+      const inner = oneChangeFileCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeFileCommands: { fileId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Folder": {
+      const inner = oneChangeFolderCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeFolderCommands: { folderId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Quality": {
+      const inner = oneChangeQualityCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeKitQualityCommands: { qualityId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Port": {
+      const inner = oneChangePortCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeKitPortCommands: { portId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Concept": {
+      const inner = oneChangeConceptCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeConceptCommands: { conceptId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Family": {
+      const inner = oneChangeFamilyCommandForField(field, value);
+      if (!inner) return [];
+      return [{ changeFamilyCommands: { familyId: __kid(id), commands: [inner] } } as const];
+    }
+    case "Piece": {
+      if (!designId) return [];
+      if (field === "name") return [kitWireChangeDesignPiece(designId, id, [{ name: { name: String(value) } }])];
+      if (field === "description")
+        return [kitWireChangeDesignPiece(designId, id, [{ description: { description: value == null ? null : String(value) } }])];
+      if (field === "plane") return [kitWireChangeDesignPiece(designId, id, [{ plane: { plane: value } }])];
+      if (field === "center") return [kitWireChangeDesignPiece(designId, id, [{ center: { center: value } }])];
+      if (field === "scale") return [kitWireChangeDesignPiece(designId, id, [{ scale: { scale: Number(value) } }])];
+      if (field === "mirrorPlane") return [kitWireChangeDesignPiece(designId, id, [{ mirrorPlane: { mirrorPlane: value } }])];
+      if (field === "isHidden" || field === "hidden") return [kitWireChangeDesignPiece(designId, id, [{ hidden: { hidden: Boolean(value) } }])];
+      if (field === "isLocked" || field === "locked") return [kitWireChangeDesignPiece(designId, id, [{ locked: { locked: Boolean(value) } }])];
+      if (field === "color") return [kitWireChangeDesignPiece(designId, id, [{ color: { color: value == null ? null : String(value) } }])];
+      if (field === "type" || field === "typeId") {
+        const t = value;
+        const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
+        return [kitWireChangeDesignPiece(designId, id, [{ type: { typeId: { id: tid } } }])];
+      }
+      return [];
+    }
+    case "Connection": {
+      if (!designId) return [];
+      const dk = connectionDiffWireKeyForDataKey(field);
+      if (dk === "gap") return [kitWireChangeDesignConnection(designId, id, [{ gap: { value: Number(value) } }])];
+      if (dk === "shift") return [kitWireChangeDesignConnection(designId, id, [{ shift: { value: Number(value) } }])];
+      if (dk === "rise") return [kitWireChangeDesignConnection(designId, id, [{ rise: { value: Number(value) } }])];
+      if (dk === "rotation") return [kitWireChangeDesignConnection(designId, id, [{ rotation: { value: Number(value) } }])];
+      if (dk === "turn") return [kitWireChangeDesignConnection(designId, id, [{ turn: { value: Number(value) } }])];
+      if (dk === "tilt") return [kitWireChangeDesignConnection(designId, id, [{ tilt: { value: Number(value) } }])];
+      if (dk === "x") return [kitWireChangeDesignConnection(designId, id, [{ x: { value: Number(value) } }])];
+      if (dk === "y") return [kitWireChangeDesignConnection(designId, id, [{ y: { value: Number(value) } }])];
+      if (field === "description")
+        return [kitWireChangeDesignConnection(designId, id, [{ description: { value: value == null ? null : String(value) } }])];
+      return [];
+    }
+    default:
+      return [];
+  }
+}
+
+function oneChangeTypeCommandForField(field: string, value: unknown): ChangeTypeCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
+  if (field === "image") return { image: { image: (value as string) ?? null } } as const;
+  if (field === "stock") return { stock: { stock: (value as number) ?? null } } as const;
+  if (field === "typeVirtual" || field === "virtual") return { typeVirtual: { value: (value as boolean) ?? null } } as const;
+  if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangeDesignCommandForField(field: string, value: unknown): ChangeDesignCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
+  if (field === "image") return { image: { image: (value as string) ?? null } } as const;
+  if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangeAuthorCommandForField(field: string, value: unknown): ChangeAuthorCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "email") return { email: { email: String(value ?? "") } } as const;
+  if (field === "role") return { role: { role: (value as string) ?? null } } as const;
+  if (field === "rank") return { rank: { rank: (value as number) ?? null } } as const;
+  return null;
+}
+function oneChangeTagCommandForField(field: string, value: unknown): ChangeTagCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "order" || field === "orderIndex") return { order: { order: (value as number) ?? null } } as const;
+  return null;
+}
+function oneChangeFileCommandForField(field: string, value: unknown): ChangeFileCommandWire | null {
+  if (field === "url") return { url: { url: String(value ?? "") } } as const;
+  if (field === "mime") return { mime: { mime: (value as string) ?? null } } as const;
+  if (field === "size") return { size: { size: (value as number) ?? null } } as const;
+  if (field === "hash") return { hash: { hash: (value as string) ?? null } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "created" || field === "createdAt") return { created: { created: (value as string) ?? null } } as const;
+  if (field === "updated" || field === "updatedAt") return { updated: { updated: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangeFolderCommandForField(field: string, value: unknown): ChangeFolderCommandWire | null {
+  if (field === "path") return { path: { path: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangeQualityCommandForField(field: string, value: unknown): ChangeKitQualityCommandWire | null {
+  if (field === "key") return { key: { key: String(value ?? "") } } as const;
+  if (field === "value") return { value: { value: (value as string) ?? null } } as const;
+  if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
+  if (field === "definition") return { definition: { definition: (value as string) ?? null } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangePortCommandForField(field: string, value: unknown): ChangePortCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
+  return null;
+}
+function oneChangeConceptCommandForField(field: string, value: unknown): ChangeConceptCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "order") return { order: { order: (value as number) ?? null } } as const;
+  return null;
+}
+function oneChangeFamilyCommandForField(field: string, value: unknown): ChangeFamilyCommandWire | null {
+  if (field === "name") return { name: { name: String(value ?? "") } } as const;
+  if (field === "description") return { description: { description: (value as string) ?? null } } as const;
+  if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
+  return null;
+}
+
+/** @emoji 🧾 Shorthand for `client.submitChangeKitCommands` (shell / React). */
+export async function submitKitChangeCommands(
+  client: KitStoreClient,
+  commands: readonly ChangeKitCommandWire[],
+): Promise<SetResult> {
+  return client.submitChangeKitCommands(commands);
+}
+
+/** @emoji 🧾 Locates the parent design id for a piece or connection via the materialized kit snapshot. */
+export async function resolveDesignIdForPieceOrConnection(
+  client: KitStoreClient,
+  entityKind: string,
+  entityId: string,
+): Promise<string | null> {
+  const snap = (await client.getSnapshot()) as Record<string, unknown>;
+  if (entityKind === "Piece") return __findDesignIdForPieceInKitDto(snap, entityId);
+  if (entityKind === "Connection") return __findDesignIdForConnectionInKitDto(snap, entityId);
+  return null;
+}
+
+/** @emoji 🧾 Applies a piece field patch under one design (wire construction stays in JS). */
+export async function kitStoreClientUpdatePiece(
+  client: KitStoreClient,
+  designId: string,
+  pieceId: string,
+  patch: unknown,
+): Promise<SetResult> {
+  const rec = patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {};
+  const pcmds = piecePatchToWireCommands(rec);
+  if (!pcmds.length) return { ok: true };
+  return client.submitChangeKitCommands([kitWireChangeDesignPiece(designId, pieceId, pcmds)]);
+}
+
+/** @emoji 🧾 Applies a connection field patch under one design (wire construction stays in JS). */
+export async function kitStoreClientUpdateConnection(
+  client: KitStoreClient,
+  designId: string,
+  connectionId: string,
+  patch: unknown,
+): Promise<SetResult> {
+  const rec = patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {};
+  const ccmds = connectionPatchToWireCommands(rec);
+  if (!ccmds.length) return { ok: true };
+  return client.submitChangeKitCommands([kitWireChangeDesignConnection(designId, connectionId, ccmds)]);
+}
+
+function __findDesignIdForPieceInKitDto(kit: Record<string, unknown>, pieceId: string): string | null {
+  const designs = kit.designs;
+  if (!Array.isArray(designs)) return null;
+  for (const d of designs) {
+    if (d == null || typeof d !== "object") continue;
+    const o = d as { id?: string; pieces?: readonly unknown[] };
+    const p = o.pieces;
+    if (Array.isArray(p) && p.some((x) => x && typeof x === "object" && (x as { id?: string }).id === pieceId)) return String(o.id ?? "");
+  }
+  return null;
+}
+function __findDesignIdForConnectionInKitDto(kit: Record<string, unknown>, connectionId: string): string | null {
+  const designs = kit.designs;
+  if (!Array.isArray(designs)) return null;
+  for (const d of designs) {
+    if (d == null || typeof d !== "object") continue;
+    const o = d as { id?: string; connections?: readonly unknown[] };
+    const c = o.connections;
+    if (Array.isArray(c) && c.some((x) => x && typeof x === "object" && (x as { id?: string }).id === connectionId)) return String(o.id ?? "");
+  }
+  return null;
+}
+
+/**
+ * @emoji 🧾 Writes a single field on a top-level or nested entity via `changeKitCommands` (React / kit shell).
+ * `key` is the DTO / schema data key (e.g. `name`, `icon`).
+ */
+export async function writeKitStoreClientSchemaField(
+  client: KitStoreClient,
+  typeName: string,
+  key: string,
+  value: unknown,
+  entityId: string,
+): Promise<SetResult> {
+  const bridge = client as { getDto?: () => unknown };
+  const root = (typeof bridge.getDto === "function" ? (bridge.getDto() as Record<string, unknown>) : {}) ?? {};
+  let designId: string | null = null;
+  if (typeName === "Piece") designId = __findDesignIdForPieceInKitDto(root, entityId);
+  if (typeName === "Connection") designId = __findDesignIdForConnectionInKitDto(root, entityId);
+  const cmds = buildSchemaEntityChangeCommands(
+    typeName,
+    entityId,
+    key,
+    value,
+    typeName === "Piece" || typeName === "Connection" ? designId : null,
+  );
+  if (!cmds.length) return { ok: false, error: { kind: "NotSupported", message: `${typeName}.${key}` } };
+  return client.submitChangeKitCommands(cmds);
+}
+
 // #endregion 🔖ChangeKitCommandWire
 
 // #endregion 🔌WireTypes
@@ -3647,6 +3979,132 @@ export type DesignShallow = z.infer<typeof DesignShallowSchema>;
 // Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to semio/rs (Requirement 3.7)
 // #endregion Design
 
+// #region 🧾KitStoreClientChildCommands
+
+/** @emoji 🧾 Child DTO kinds for kit-root add/remove commands (port rows use type-scoped flows, not top-level add). */
+export type KitChildEntityKind =
+  | "Family"
+  | "Author"
+  | "Concept"
+  | "Tag"
+  | "Quality"
+  | "File"
+  | "Folder"
+  | "Type"
+  | "Design"
+  | "Port";
+
+/** @emoji 🧾 Parses `dto` with the matching zod schema and runs `add*` kit wires. */
+export async function kitStoreClientAddChildByKind(client: KitStoreClient, childKind: string, dto: unknown): Promise<SetResult> {
+  let cmds: readonly ChangeKitCommandWire[];
+  try {
+    switch (childKind) {
+      case "Family":
+        cmds = [{ addFamily: { family: FamilySchema.parse(dto) } }];
+        break;
+      case "Author":
+        cmds = [{ addAuthor: { author: AuthorSchema.parse(dto) } }];
+        break;
+      case "Concept":
+        cmds = [{ addConcept: { concept: ConceptSchema.parse(dto) } }];
+        break;
+      case "Tag":
+        cmds = [{ addTag: { tag: TagSchema.parse(dto) } }];
+        break;
+      case "Quality":
+        cmds = [{ addQuality: { quality: QualitySchema.parse(dto) } }];
+        break;
+      case "File":
+        cmds = [{ addFile: { file: FileSchema.parse(dto) } }];
+        break;
+      case "Folder":
+        cmds = [{ addFolder: { folder: FolderSchema.parse(dto) } }];
+        break;
+      case "Type":
+        cmds = [{ addType: { type: TypeSchema.parse(dto) } }];
+        break;
+      case "Design":
+        cmds = [{ addDesign: { design: DesignSchema.parse(dto) } }];
+        break;
+      case "Port":
+        return { ok: false, error: { kind: "NotSupported", message: "add Port: use type-scoped kit commands" } };
+      default:
+        return { ok: false, error: { kind: "NotSupported", message: `add to kit: ${childKind}` } };
+    }
+  } catch (err) {
+    return { ok: false, error: { kind: "InvalidValue", message: String(err) } };
+  }
+  return client.submitChangeKitCommands(cmds);
+}
+
+/** @emoji 🧾 Emits matching `remove*` kit wire for a kit-root child id. */
+export async function kitStoreClientRemoveChildByKind(client: KitStoreClient, childKind: string, childId: string): Promise<SetResult> {
+  const idw = { id: childId };
+  let cmds: readonly ChangeKitCommandWire[];
+  switch (childKind) {
+    case "Family":
+      cmds = [{ removeFamily: { familyId: idw } }];
+      break;
+    case "Author":
+      cmds = [{ removeAuthor: { authorId: idw } }];
+      break;
+    case "Concept":
+      cmds = [{ removeConcept: { conceptId: idw } }];
+      break;
+    case "Tag":
+      cmds = [{ removeTag: { tagId: idw } }];
+      break;
+    case "Quality":
+      cmds = [{ removeQuality: { qualityId: idw } }];
+      break;
+    case "File":
+      cmds = [{ removeFile: { fileId: idw } }];
+      break;
+    case "Folder":
+      cmds = [{ removeFolder: { folderId: idw } }];
+      break;
+    case "Type":
+      cmds = [{ removeType: { typeId: idw } }];
+      break;
+    case "Design":
+      cmds = [{ removeDesign: { designId: idw } }];
+      break;
+    case "Port":
+      return { ok: false, error: { kind: "NotSupported", message: "remove Port: use type-scoped kit commands" } };
+    default:
+      return { ok: false, error: { kind: "NotSupported", message: `remove from kit: ${childKind}` } };
+  }
+  return client.submitChangeKitCommands(cmds);
+}
+
+/** @emoji 🧾 Adds a piece under a design (`addPiece` wire). */
+export async function kitStoreClientAddPiece(client: KitStoreClient, designId: string, piece: unknown): Promise<SetResult> {
+  return client.submitChangeKitCommands([
+    { changeDesignCommands: { designId: { id: designId }, commands: [{ addPiece: { piece: PieceSchema.parse(piece) } }] } },
+  ]);
+}
+
+/** @emoji 🧾 Removes a piece from a design (`removePiece` wire). */
+export async function kitStoreClientRemovePiece(client: KitStoreClient, designId: string, pieceId: string): Promise<SetResult> {
+  return client.submitChangeKitCommands([
+    { changeDesignCommands: { designId: { id: designId }, commands: [{ removePiece: { pieceId: { id: pieceId } } }] } },
+  ]);
+}
+
+/** @emoji 🧾 Adds a connection under a design (`addConnection` wire). */
+export async function kitStoreClientAddConnection(client: KitStoreClient, designId: string, connection: unknown): Promise<SetResult> {
+  return client.submitChangeKitCommands([
+    {
+      changeDesignCommands: {
+        designId: { id: designId },
+        commands: [{ addConnection: { connection: ConnectionSchema.parse(connection) } }],
+      },
+    },
+  ]);
+}
+
+// #endregion 🧾KitStoreClientChildCommands
+
 // #region Kit
 export const KitKindSchema = z.enum(["dev", "local", "archive", "remote", "transport"]);
 export type KitKind = z.infer<typeof KitKindSchema>;
@@ -4824,6 +5282,40 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       const sh = await t.shallow();
       expect(sh.id).toBe("type-z");
       await ks.dispose();
+    });
+  });
+
+  describe("semio-js kit store wire helpers", () => {
+    it("piecePatchToWireCommands maps plane and type ref", () => {
+      const cmds = piecePatchToWireCommands({ plane: { x: 1 }, type: { id: "t1" } });
+      expect(cmds.length).toBe(2);
+      expect(cmds.some((c) => "plane" in c)).toBe(true);
+      expect(cmds.some((c) => "type" in c && (c as { type: { typeId: { id: string } } }).type.typeId.id === "t1")).toBe(true);
+    });
+
+    it("connectionDiffWireKeyForDataKey maps u to x", () => {
+      expect(connectionDiffWireKeyForDataKey("u")).toBe("x");
+      expect(connectionDiffWireKeyForDataKey("gap")).toBe("gap");
+    });
+
+    it("buildSchemaEntityChangeCommands returns nested piece wire with design id", () => {
+      const cmds = buildSchemaEntityChangeCommands("Piece", "p1", "color", "#fff", "d1");
+      expect(cmds.length).toBe(1);
+      expect(cmds[0]).toMatchObject({
+        changeDesignCommands: { designId: { id: "d1" } },
+      });
+    });
+
+    it("kitStoreClientUpdatePiece forwards to submitChangeKitCommands", async () => {
+      let last: readonly ChangeKitCommandWire[] | undefined;
+      const client = {
+        submitChangeKitCommands: async (cs: readonly ChangeKitCommandWire[]) => {
+          last = cs;
+          return { ok: true as const };
+        },
+      } as unknown as KitStoreClient;
+      await kitStoreClientUpdatePiece(client, "d1", "p1", { name: "N" });
+      expect(last?.length).toBe(1);
     });
   });
 }

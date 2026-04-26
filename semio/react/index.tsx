@@ -39,6 +39,8 @@ import {
   kitEventAffectsPieceLiveRead,
   kitEventAffectsReplaceableCatalogRead,
   kitEventAffectsTypeScopedRead,
+  resolveDesignIdForPieceOrConnection,
+  submitKitChangeCommands,
   kitStoreClientAddChildByKind,
   kitStoreClientAddConnection,
   kitStoreClientAddPiece,
@@ -1660,7 +1662,7 @@ export function KitScope({
         if (!isWritableField(currentState, typeName, fn, idValue, scope)) continue;
         const dataKey = getFieldDataKey(typeName, fn);
         const v = (nextObj as any)?.[dataKey];
-        const r = await writeKitClientSchemaField(kitClient, typeName, dataKey, v, entityId);
+        const r = await writeKitStoreClientSchemaField(kitClient, typeName, dataKey, v, entityId);
         if (!r.ok) {
           pushSetRejection(r.error);
           return r;
@@ -2659,48 +2661,7 @@ function useKitAddToKit(childKind: string): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      let cmds: readonly ChangeKitCommandWire[];
-      try {
-        switch (childKind) {
-          case "Family":
-            cmds = [{ addFamily: { family: FamilySchema.parse(dto) } }];
-            break;
-          case "Author":
-            cmds = [{ addAuthor: { author: AuthorSchema.parse(dto) } }];
-            break;
-          case "Concept":
-            cmds = [{ addConcept: { concept: ConceptSchema.parse(dto) } }];
-            break;
-          case "Tag":
-            cmds = [{ addTag: { tag: TagSchema.parse(dto) } }];
-            break;
-          case "Quality":
-            cmds = [{ addQuality: { quality: QualitySchema.parse(dto) } }];
-            break;
-          case "File":
-            cmds = [{ addFile: { file: FileSchema.parse(dto) } }];
-            break;
-          case "Folder":
-            cmds = [{ addFolder: { folder: FolderSchema.parse(dto) } }];
-            break;
-          case "Type":
-            cmds = [{ addType: { type: TypeSchema.parse(dto) } }];
-            break;
-          case "Design":
-            cmds = [{ addDesign: { design: DesignSchema.parse(dto) } }];
-            break;
-          default: {
-            const e: SetError = { kind: "NotSupported", message: `add to kit: ${childKind}` };
-            setStatus({ kind: "error", pending: 0, lastError: e });
-            return { ok: false, error: e } as const;
-          }
-        }
-      } catch (err) {
-        const e: SetError = { kind: "InvalidValue", message: String(err) };
-        setStatus({ kind: "error", pending: 0, lastError: e });
-        return { ok: false, error: e } as const;
-      }
-      const r = await runtime.kitClient.submitChangeKitCommands(cmds);
+      const r = await kitStoreClientAddChildByKind(runtime.kitClient, childKind, dto);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2734,42 +2695,7 @@ function useKitRemoveFromKit(childKind: string): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      let cmds: readonly ChangeKitCommandWire[];
-      switch (childKind) {
-        case "Family":
-          cmds = [{ removeFamily: { familyId: { id: childId } } }];
-          break;
-        case "Author":
-          cmds = [{ removeAuthor: { authorId: { id: childId } } }];
-          break;
-        case "Concept":
-          cmds = [{ removeConcept: { conceptId: { id: childId } } }];
-          break;
-        case "Tag":
-          cmds = [{ removeTag: { tagId: { id: childId } } }];
-          break;
-        case "Quality":
-          cmds = [{ removeQuality: { qualityId: { id: childId } } }];
-          break;
-        case "File":
-          cmds = [{ removeFile: { fileId: { id: childId } } }];
-          break;
-        case "Folder":
-          cmds = [{ removeFolder: { folderId: { id: childId } } }];
-          break;
-        case "Type":
-          cmds = [{ removeType: { typeId: { id: childId } } }];
-          break;
-        case "Design":
-          cmds = [{ removeDesign: { designId: { id: childId } } }];
-          break;
-        default: {
-          const e: SetError = { kind: "NotSupported", message: `remove from kit: ${childKind}` };
-          setStatus({ kind: "error", pending: 0, lastError: e });
-          return { ok: false, error: e } as const;
-        }
-      }
-      const r = await runtime.kitClient.submitChangeKitCommands(cmds);
+      const r = await kitStoreClientRemoveChildByKind(runtime.kitClient, childKind, childId);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3335,9 +3261,7 @@ export function useDeletePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.submitChangeKitCommands([
-        { changeDesignCommands: { designId: { id: designId }, commands: [{ removePiece: { pieceId: { id: pieceId } } }] } },
-      ]);
+      const r = await kitStoreClientRemovePiece(runtime.kitClient, designId, pieceId);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3365,9 +3289,7 @@ export function useCreatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.submitChangeKitCommands([
-        { changeDesignCommands: { designId: { id: designId }, commands: [{ addPiece: { piece: PieceSchema.parse(piece) } }] } },
-      ]);
+      const r = await kitStoreClientAddPiece(runtime.kitClient, designId, piece);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3437,9 +3359,7 @@ export function useAddConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.submitChangeKitCommands([
-        { changeDesignCommands: { designId: { id: designId }, commands: [{ addConnection: { connection: ConnectionSchema.parse(connection) } }] } },
-      ]);
+      const r = await kitStoreClientAddConnection(runtime.kitClient, designId, connection);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3467,12 +3387,7 @@ export function useUpdatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const pcmds = piecePatchToWireCommands(patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {});
-      if (pcmds.length === 0) {
-        setStatus({ kind: "idle", pending: 0 });
-        return { ok: true } as const;
-      }
-      const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignPiece(designId, pieceId, pcmds)]);
+      const r = await kitStoreClientUpdatePiece(runtime.kitClient, designId, pieceId, patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3501,9 +3416,7 @@ export function useUpdatePieces(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const pcmds = piecePatchToWireCommands(u.diff && typeof u.diff === "object" && u.diff !== null ? (u.diff as Record<string, unknown>) : {});
-        if (pcmds.length === 0) continue;
-        const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignPiece(designId, u.id, pcmds)]);
+        const r = await kitStoreClientUpdatePiece(runtime.kitClient, designId, u.id, u.diff);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3532,12 +3445,7 @@ export function useUpdateConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const ccmds = connectionPatchToWireCommands(patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {});
-      if (ccmds.length === 0) {
-        setStatus({ kind: "idle", pending: 0 });
-        return { ok: true } as const;
-      }
-      const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignConnection(designId, connectionId, ccmds)]);
+      const r = await kitStoreClientUpdateConnection(runtime.kitClient, designId, connectionId, patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3566,9 +3474,7 @@ export function useUpdateConnections(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const ccmds = connectionPatchToWireCommands(u.diff && typeof u.diff === "object" && u.diff !== null ? (u.diff as Record<string, unknown>) : {});
-        if (ccmds.length === 0) continue;
-        const r = await submitKitChangeCommands(runtime.kitClient, [kitWireChangeDesignConnection(designId, u.id, ccmds)]);
+        const r = await kitStoreClientUpdateConnection(runtime.kitClient, designId, u.id, u.diff);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3901,8 +3807,7 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<
 }
 
 /**
- * Flattened piece plane from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatPlaneCommand`).
- * Subscribes with `useSyncExternalStore` to kit client notifications; async read fills the external cell.
+ * Flattened piece plane from the kit store read path (`readPieceFlatPlaneCommand`), subscribed via JS live-read store.
  */
 export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
@@ -3918,7 +3823,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readFlatPlane(),
+        () => c.readPieceFlatPlane(d, p),
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
@@ -3938,9 +3843,7 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
   return [snap.data, status] as const;
 }
 
-/**
- * Flattened piece center from `semio/rs` via {@link LiveKitRoot} (`readPieceFlatCenterCommand`).
- */
+/** Flattened piece center from the kit store read path (`readPieceFlatCenterCommand`). */
 export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
   const key = `pfc:${designId ?? ""}:${pieceId ?? ""}`;
@@ -3955,7 +3858,7 @@ export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRea
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readFlatCenter(),
+        () => c.readPieceFlatCenter(d, p),
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
@@ -4013,7 +3916,7 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).piece(d, p).readParentConnectionFull().then((x) => x ?? undefined),
+        () => c.readPieceParentConnectionFull(d, p),
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
@@ -4046,7 +3949,7 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
       const d = designId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).design(d).readIncludedDesigns().then((v) => (Array.isArray(v) ? v : [])),
+        () => c.readDesignIncludedDesigns(d).then((v) => (Array.isArray(v) ? v : [])),
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
         onChange,
       );
@@ -4085,7 +3988,7 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
       const s = selection ?? [];
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).design(d).readClusterableGroups(s).then((v) => (Array.isArray(v) ? v : [])),
+        () => c.readDesignClusterableGroups(d, s).then((v) => (Array.isArray(v) ? v : [])),
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
@@ -4121,11 +4024,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
       const q = qualityId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () =>
-          new LiveKitRoot(c.kitGraphql())
-            .design(d)
-            .readQualitySum(q)
-            .then((v) => (typeof v === "number" && !Number.isNaN(v) ? v : 0)),
+        () => c.readDesignQualitySum(d, q).then((v) => (typeof v === "number" && !Number.isNaN(v) ? v : 0)),
         (ev) => kitEventAffectsDesignQualitySumRead(ev, d, q),
         onChange,
       );
@@ -4165,7 +4064,7 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
       const tg = tags;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).type(t).readBestRepresentation(tg),
+        () => c.readTypeBestRepresentation(t, tg),
         (ev) => kitEventAffectsTypeScopedRead(ev, t),
         onChange,
       );
@@ -4198,7 +4097,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
       const c = runtime.kitClient;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).readColoredConnectors().then((v) => (Array.isArray(v) ? v : [])),
+        () => c.readColoredConnectors().then((v) => (Array.isArray(v) ? v : [])),
         kitEventAffectsKitColoredConnectorsRead,
         onChange,
       );
@@ -4235,7 +4134,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
       const s = sel;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).design(d).readReplaceableCatalog(s).then((v) => v.types),
+        () => c.readDesignReplaceableCatalogTypes(d, s),
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
@@ -4272,7 +4171,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
       const s = sel;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).design(d).readReplaceableCatalog(s).then((v) => v.designs),
+        () => c.readDesignReplaceableCatalogDesigns(d, s),
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
@@ -4306,7 +4205,7 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
       const d = designId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => new LiveKitRoot(c.kitGraphql()).design(d).readIncludedDesignIds().then((v) => (Array.isArray(v) ? v : [])),
+        () => c.readDesignIncludedDesignIds(d).then((v) => (Array.isArray(v) ? v : [])),
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
         onChange,
       );
@@ -15995,6 +15894,17 @@ if (shouldRunReactEmbeddedTests) {
         store.replace(asKitInstance(kit));
         return { ok: true };
       },
+      readPieceFlatPlane: async () => undefined,
+      readPieceFlatCenter: async () => undefined,
+      readPieceParentConnectionFull: async () => undefined,
+      readDesignIncludedDesigns: async () => [],
+      readDesignClusterableGroups: async () => [],
+      readDesignQualitySum: async () => 0,
+      readTypeBestRepresentation: async () => undefined,
+      readColoredConnectors: async () => [],
+      readDesignReplaceableCatalogTypes: async () => [],
+      readDesignReplaceableCatalogDesigns: async () => [],
+      readDesignIncludedDesignIds: async () => [],
       kitGraphql: () => {
         throw new Error("kitGraphql not available in embedded test client");
       },
@@ -16072,6 +15982,20 @@ if (shouldRunReactEmbeddedTests) {
       const r = await setName!("");
       expect(r.ok).toBe(false);
       await waitFor(() => expect(lastStatus?.kind).toBe("error"));
+    });
+
+    it("embedded kit client stub exposes read promise methods used by live-read hooks", async () => {
+      const kit = asKitInstance({
+        id: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      const store = new InMemoryKitStore(kit);
+      const c = createTestKitClient(store);
+      expect(typeof c.readPieceFlatPlane).toBe("function");
+      expect(typeof c.readDesignIncludedDesigns).toBe("function");
+      expect(typeof c.readDesignReplaceableCatalogTypes).toBe("function");
     });
 
     it("kit metadata hooks write through the kit client", async () => {
