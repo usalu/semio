@@ -15,7 +15,7 @@
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   asKitInstance,
   attachSketchpadKitReadShell,
@@ -6446,10 +6446,10 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
-function scheduleAuthoritativeKitUndo(kitStore: KitStore) {
+function scheduleAuthoritativeKitUndo(kitStore: KitHostStore) {
   void executeSemioKitCommand(kitStore, "semio.kit.undo", "semio.sketchpad.transaction.undo");
 }
-function scheduleAuthoritativeKitRedo(kitStore: KitStore) {
+function scheduleAuthoritativeKitRedo(kitStore: KitHostStore) {
   void executeSemioKitCommand(kitStore, "semio.kit.redo", "semio.sketchpad.transaction.redo");
 }
 
@@ -6468,7 +6468,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
     super(parent, syncMap, transact);
   }
 
-  abstract kit(): KitStore;
+  abstract kit(): KitHostStore;
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
@@ -6788,7 +6788,7 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
     this.parentStore = parent;
   }
 
-  abstract kit(): KitStore;
+  abstract kit(): KitHostStore;
 
   abortTransaction(): void {
     if (this.isTransactionActive) {
@@ -17607,7 +17607,7 @@ export class SketchpadStore {
   private readonly designAppCreatedSubscribers: Set<() => void>;
   private readonly designAppDeletedSubscribers: Set<() => void>;
   private readonly tutorialStoreInstance: any;
-  private readonly injectedKitStore?: KitStore;
+  private readonly injectedKitStore?: KitHostStore;
   private readonly temporaryKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly folderKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly fileKitStoreFactory?: SketchpadKitStoreFactory;
@@ -17622,7 +17622,7 @@ export class SketchpadStore {
     remote?: RemoteProviders,
     initialState?: ExtendedInitialState,
     persistenceFactory?: PersistenceFactory,
-    injectedKitStore?: KitStore,
+    injectedKitStore?: KitHostStore,
     temporaryKitStoreFactory?: SketchpadKitStoreFactory,
     folderKitStoreFactory?: SketchpadKitStoreFactory,
     fileKitStoreFactory?: SketchpadKitStoreFactory,
@@ -17912,7 +17912,7 @@ export class SketchpadStore {
     return this.cache;
   };
 
-  private inferKitPersistenceKind = (kitStore: KitStore): KitKind => {
+  private inferKitPersistenceKind = (kitStore: KitHostStore): KitKind => {
     const existingKind = (kitStore as any).__semioKitPersistenceKind as KitKind | undefined;
     if (existingKind) {
       return existingKind;
@@ -17927,7 +17927,7 @@ export class SketchpadStore {
     return "temporary";
   };
 
-  private getKitPersistenceSource = (kitStore: KitStore): InitialStateKit["source"] | undefined => {
+  private getKitPersistenceSource = (kitStore: KitHostStore): InitialStateKit["source"] | undefined => {
     const source = (kitStore as any).__semioKitPersistenceSource as InitialStateKit["source"] | undefined;
     if (!source || typeof source !== "object") return undefined;
     if (source.kind === "folder" || source.kind === "file" || source.kind === "remote") {
@@ -17943,7 +17943,7 @@ export class SketchpadStore {
     return createMemoryFileProvider();
   };
 
-  private registerKitStore = async (kitStore: KitStore, kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
+  private registerKitStore = async (kitStore: KitHostStore, kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
     const registeredKit = kitStore.getSnapshot().kit;
     if (this.hasKit(registeredKit.id)) {
       return;
@@ -17995,7 +17995,7 @@ export class SketchpadStore {
     }
   };
 
-  private createBackedKitStore = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<{ kitStore: KitStore; kind: KitKind; source?: InitialStateKit["source"] }> => {
+  private createBackedKitStore = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<{ kitStore: KitHostStore; kind: KitKind; source?: InitialStateKit["source"] }> => {
     const localKitStoreFactory = this.folderKitStoreFactory ?? this.fileKitStoreFactory;
     if (kind === "remote" && this.remoteKitStoreFactory) {
       const remoteKit = source?.kind === "remote" && source.url ? ({ ...kit, name: source.url } as Kit) : kit;
@@ -18135,7 +18135,7 @@ export class SketchpadStore {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               };
-              let loadKitStore: KitStore;
+              let loadKitStore: KitHostStore;
               try {
                 loadKitStore = this.kitStore(kitId);
               } catch {
@@ -18634,11 +18634,11 @@ export class SketchpadStore {
     return Boolean(getKitRegistryBridge()?.get(id));
   }
 
-  kit(id: string): KitStore {
+  kit(id: string): KitHostStore {
     return this.kitStore(id);
   }
 
-  kitStore(id: string): KitStore {
+  kitStore(id: string): KitHostStore {
     const fromReg = getKitRegistryBridge()?.get(id)?.store;
     if (fromReg) {
       return fromReg;
@@ -18898,7 +18898,7 @@ function getDefaultSketchpadScopeId(): string {
 type SketchpadScopeProviderProps = {
   id?: string;
   store?: SketchpadStore;
-  kitStore?: KitStore;
+  kitStore?: KitHostStore;
   remote?: RemoteProviders;
   persistenceFactory?: PersistenceFactory;
   temporaryKitStoreFactory?: SketchpadKitStoreFactory;
@@ -23956,7 +23956,7 @@ const Sketchpad = ({
 }: {
   id?: string;
   store?: SketchpadStore;
-  kitStore?: KitStore;
+  kitStore?: KitHostStore;
   remote?: RemoteProviders;
   persistenceFactory?: PersistenceFactory;
   temporaryKitStoreFactory?: SketchpadKitStoreFactory;
@@ -24594,7 +24594,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     }
   }
 
-  kit(): KitStore {
+  kit(): KitHostStore {
     return this.parent.kit(this.syncMap.get("kit") as string);
   }
 
@@ -26714,7 +26714,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     });
   }
 
-  kit(): KitStore {
+  kit(): KitHostStore {
     return this.parentStore.kit(this.kitId);
   }
 
@@ -41347,7 +41347,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     };
   }
 
-  kit(): KitStore {
+  kit(): KitHostStore {
     return this.parentStore.kit(this.Id.kit);
   }
 
@@ -46918,7 +46918,7 @@ async function boot() {
         return createJsonFileKitStore(adapter);
       }
       // Fallback: file input (read-only, no write-back)
-      return new Promise<KitStore>((resolve, reject) => {
+      return new Promise<KitHostStore>((resolve, reject) => {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".json";
@@ -54915,7 +54915,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const jsonStore = await createJsonFileKitStore(makeJsonAdapter(makeDragKit()));
       const folderAdapter = makeFolderAdapter(makeDragKit());
       const folderStore = await createFolderKitStore(folderAdapter, makeDragKit());
-      const stores: Array<{ label: string; store: KitStore }> = [
+      const stores: Array<{ label: string; store: KitHostStore }> = [
         { label: "temporary", store: temporaryStore },
         { label: "file", store: jsonStore },
         { label: "folder", store: folderStore },
@@ -55016,7 +55016,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           apply: () => {},
           replace: () => {},
           transact: (_label: string, run: () => unknown) => run(),
-        }) as unknown as KitStore;
+        }) as unknown as KitHostStore;
       const folderFactory: SketchpadKitStoreFactory = async (kit) => {
         const source = (kit as any).__semioKitPersistenceSource as InitialStateKit["source"] | undefined;
         folderFactoryCalls.push(source?.path ?? "");
@@ -55071,7 +55071,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           apply: () => {},
           replace: () => {},
           transact: (_label: string, run: () => unknown) => run(),
-        }) as unknown as KitStore;
+        }) as unknown as KitHostStore;
       const folderFactory: SketchpadKitStoreFactory = async () => {
         folderFactoryCallCount += 1;
         return createFakeKitStore({ id: id(), name: "Unexpected Prompted Folder Kit", types: [], designs: [] });

@@ -54,7 +54,7 @@ import {
   type KitFolderAdapter,
   type KitJsonFileAdapter,
   type KitLike,
-  type KitStore,
+  type KitHostStore,
   type KitStoreClient,
   type KitStoreReadSnap,
   type KitHostStoreSnapshot,
@@ -69,7 +69,7 @@ import * as React from "react";
 
 // #endregion ⚛️Imports
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinaryStore, KitConflict, KitFileState, KitStoreExecuteResult } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinaryStore, KitConflict, KitFileState, KitHostStore, KitHostStoreSnapshot, KitStoreExecuteResult } from "@semio/js";
 
 // #region ⚛️Types
 
@@ -151,7 +151,7 @@ export type SchemaScope = {
 };
 
 export type KitRuntimeContextValue = {
-  store: KitStore;
+  store: KitHostStore;
   snapshot: KitHostStoreSnapshot;
   state: IndexedSchemaState;
   recentEvents: SchemaPropertyEvent[];
@@ -171,7 +171,7 @@ export type KitRuntimeContextValue = {
 export type KitPersistenceInfo = { kind: "temporary" | "file" | "folder" | "remote"; path?: string; url?: string };
 
 /** @emoji 📌Desktop / webview: inject folder/file/session kit store creation (shell owns I/O). */
-export type SketchpadKitStoreFactory = (kit: Kit) => KitStore | Promise<KitStore>;
+export type SketchpadKitStoreFactory = (kit: Kit) => KitHostStore | Promise<KitHostStore>;
 
 export type SketchpadKitKindAvailability = {
   temporary: boolean;
@@ -810,7 +810,7 @@ async function createNodeFolderAdapter(folderPath: string) {
   };
 }
 
-async function createStoreFromBackbone(backbone: KitBackboneConfig | undefined, initialKit?: KitLike): Promise<KitStore> {
+async function createStoreFromBackbone(backbone: KitBackboneConfig | undefined, initialKit?: KitLike): Promise<KitHostStore> {
   const resolvedBackbone = backbone?.kind ? backbone : ({ kind: "memory", initialKit } as MemoryBackboneConfig);
   if (resolvedBackbone.kind === "memory") {
     const seed = resolvedBackbone.initialKit ?? initialKit ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
@@ -834,7 +834,7 @@ async function createStoreFromBackbone(backbone: KitBackboneConfig | undefined, 
 }
 
 /** @emoji 📌Derives file/folder/remote/temporary from backbone or store constructor. */
-function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: KitStore }): KitPersistenceInfo {
+function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: KitHostStore }): KitPersistenceInfo {
   const b = init.backbone;
   if (b && "kind" in b) {
     if (b.kind === "memory" || b.kind === undefined) return { kind: "temporary" };
@@ -862,7 +862,7 @@ export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 // #region KitRegistry
 
 export type KitRegistryEntry = {
-  store: KitStore;
+  store: KitHostStore;
   kitClient: KitStoreClient;
   refs: number;
   /** @emoji 📌How this kit is persisted; derived at {@link KitRegistryValue.open} time. */
@@ -873,7 +873,7 @@ export type KitRegistryValue = {
   activeKitId: string | undefined;
   setActiveKit: (id: string | undefined) => void;
   /** @emoji 📌Open or bump refcount for a kit. */
-  open: (id: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitStore; kitClient?: KitStoreClient }) => Promise<void>;
+  open: (id: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient }) => Promise<void>;
   /** @emoji 📌In-memory kit; returns new id. */
   openTemporary: (initialKit?: KitLike) => Promise<string>;
   /** @emoji 📌Json-file store from adapter. */
@@ -889,7 +889,7 @@ export type KitRegistryValue = {
 };
 
 type RegistryRow = {
-  store: KitStore;
+  store: KitHostStore;
   kitClient: KitStoreClient;
   refs: number;
   unsub: () => void;
@@ -912,7 +912,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
   const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
 
   const open = React.useCallback(
-    async (kitId: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitStore; kitClient?: KitStoreClient }) => {
+    async (kitId: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient }) => {
       const cur = rowsRef.current.get(kitId);
       if (cur) {
         cur.refs += 1;
@@ -926,7 +926,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
         const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
-        (store as any).__semioKitClient = kitClient;
+        (store as any).__semioKitBridge = kitClient;
         const unsub = kitClient.subscribe(() => {
           void applyKitClientSnapshotToLocalStore(kitClient, store);
         });
@@ -948,7 +948,12 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       row.refs -= 1;
       if (row.refs <= 0) {
         row.unsub();
-        try { delete (row.store as any).__semioKitClient; } catch { /* ignore */ }
+        try {
+          (row.store as any).__semioKitBridgeUnsub?.();
+          delete (row.store as any).__semioKitBridgeUnsub;
+          delete (row.store as any).__semioKitBridge;
+          delete (row.store as any).__semioKitClient;
+        } catch { /* ignore */ }
         row.kitClient.dispose();
         rowsRef.current.delete(kitId);
         setActiveKitId((cur) => (cur === kitId ? undefined : cur));
@@ -1100,7 +1105,7 @@ export function useIsInKitScope(): boolean {
 /**
  * @emoji 📌 Live {@link KitHostStoreSnapshot} for the resolved kit when it matches the current {@link KitRuntimeContext}.
  */
-export function useKitHostStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
+export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
   const subscribe = React.useCallback(
@@ -1246,40 +1251,40 @@ export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly u
 
 /** @emoji 📌 Full kit store snapshot triad (read-only). */
 export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitHostStoreSnapshot | null> {
-  const snap = useKitHostStoreSnapshot(explicitKitId);
+  const snap = useKitStoreSnapshot(explicitKitId);
   return kitReadonlyTriad(snap);
 }
 
 /** @emoji 📌 Kit `types` array from live store snapshot (RS-backed). */
 export function useTypesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitHostStoreSnapshot(explicitKitId);
+  const snap = useKitStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.types;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `designs` array from live store snapshot (RS-backed). */
 export function useDesignsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitHostStoreSnapshot(explicitKitId);
+  const snap = useKitStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.designs;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `files` array from live store snapshot (RS-backed). */
 export function useFilesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitHostStoreSnapshot(explicitKitId);
+  const snap = useKitStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.files;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `tags` array from live store snapshot (RS-backed). */
 export function useTagsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitHostStoreSnapshot(explicitKitId);
+  const snap = useKitStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.tags;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 export type KitScopeProps = {
-  store?: KitStore;
+  store?: KitHostStore;
   /** When set with <KitRegistryProvider>, uses the registry entry for this kit (warm WASM worker). */
   kitId?: string;
   /** When provided (e.g. from registry), skips creating a new worker client. */
@@ -1297,7 +1302,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
   }
   const registryEntry = kitIdProp && registry ? registry.get(kitIdProp) : undefined;
 
-  const [internalStore, setInternalStore] = React.useState<KitStore | null>(externalStore ?? null);
+  const [internalStore, setInternalStore] = React.useState<KitHostStore | null>(externalStore ?? null);
   const [kitClientState, setKitClientState] = React.useState<KitStoreClient | null>(kitClientProp ?? null);
 
   React.useEffect(() => {
@@ -4064,7 +4069,7 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
 
 // #endregion 🎛️KitStoreClient command hooks
 
-export function useKitStore(): HookTriad<KitStore> {
+export function useKitStore(): HookTriad<KitHostStore> {
   const runtime = useKitRuntime();
   return [runtime.store, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
@@ -4296,7 +4301,7 @@ export function useKitBinary(): {
 }
 
 /**
- * @emoji 📌Live `KitFileState` (provider URLs, blobs, object URLs) for the current `KitStore`.
+ * @emoji 📌Live `KitFileState` (provider URLs, blobs, object URLs) for the current `KitHostStore`.
  */
 export function useKitFileState(): HookTriad<KitFileState> {
   const [kitStore] = useKitStore();
@@ -4379,9 +4384,9 @@ export function useActiveKitGuid(): string | undefined {
 }
 
 /**
- * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitStore} for legacy design-store selectors; graph mutations use {@link executeSemioKitCommand} only.
+ * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitHostStore} for legacy design-store selectors; graph mutations use {@link executeSemioKitCommand} only.
  */
-export function attachSketchpadKitReadShell(kitStore: KitStore): void {
+export function attachSketchpadKitReadShell(kitStore: KitHostStore): void {
   const s = kitStore as any;
   if (s.__sketchpadKitUi) return;
   s.__sketchpadKitUi = true;
@@ -4389,12 +4394,12 @@ export function attachSketchpadKitReadShell(kitStore: KitStore): void {
   Object.defineProperty(s, "fileUrls", { get: () => getStoredKitFileUrls(kitStore), configurable: true });
 }
 
-/** @emoji 🧾 Memoized {@link createKitCommandEngineExplicitOrigin} for a host {@link KitStore} (null when no store). */
-export function useKitCommandEngineExplicitOrigin(kitStore: KitStore | null): ReturnType<typeof createKitCommandEngineExplicitOrigin> | null {
+/** @emoji 🧾 Memoized {@link createKitCommandEngineExplicitOrigin} for a host {@link KitHostStore} (null when no store). */
+export function useKitCommandEngineExplicitOrigin(kitStore: KitHostStore | null): ReturnType<typeof createKitCommandEngineExplicitOrigin> | null {
   return React.useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
 }
 
-/** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitStore} + registry list changes. */
+/** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes. */
 export function useOpenKitShallows(): KitShallowDto[] {
   const reg = useKitRegistry();
   const idsKey = reg.list().slice().sort().join("|");
@@ -4575,8 +4580,9 @@ export type {
   KitFolderAdapter,
   KitJsonFileAdapter,
   KitShallowDto,
-  KitStore,
+  KitHostStore,
   KitHostStoreSnapshot,
+  KitStore,
   PieceDiff,
   PieceId,
   Port,
@@ -15678,13 +15684,13 @@ if (shouldRunReactEmbeddedTests) {
   const { act, render, waitFor } = await import("@testing-library/react");
   const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
 
-  const kitJsonFromStore = (store: KitStore) => {
-    const host = store as KitStore & { _kit?: { toJSON: () => unknown } };
-    if ((store as any).__semioKitClient && host._kit) return host._kit.toJSON();
+  const kitJsonFromStore = (store: KitHostStore) => {
+    const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
+    if (((store as any).__semioKitBridge || (store as any).__semioKitClient) && host._kit) return host._kit.toJSON();
     return store.getSnapshot().kit.toJSON();
   };
 
-  const createTestKitClient = (store: KitStore): KitStoreClient =>
+  const createTestKitClient = (store: KitHostStore): KitStoreClient =>
     ({
       getDto: () => kitJsonFromStore(store),
       getSnapshot: async () => kitJsonFromStore(store),

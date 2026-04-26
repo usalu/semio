@@ -7,22 +7,22 @@ todos:
    status: completed
  - id: rename-host-store
    content: Rename snapshot-backed host persistence store types away from the public `KitStore` name.
-   status: in_progress
+   status: completed
  - id: typed-execute
    content: Introduce typed command/result/request receipt maps around the single Rust execute boundary.
    status: pending
  - id: store-facades
    content: Implement stateless `KitStore` plus domain facades as the only public semio/js store API.
-   status: in_progress
+   status: completed
  - id: remove-backbone-js
    content: Remove backbone command/details from semio/js public APIs and leave attachment ownership in semio/rs.
    status: pending
  - id: react-hooks
    content: Update React hooks to use typed facades and request lifecycle events.
-   status: pending
+   status: completed
  - id: tests
    content: Extend existing Rust, JS, and React tests and run focused validation.
-   status: pending
+   status: completed
 isProject: false
 ---
 

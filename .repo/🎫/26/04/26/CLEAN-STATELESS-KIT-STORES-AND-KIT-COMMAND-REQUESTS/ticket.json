@@ -1,9 +1,9 @@
 {
   "title": "Clean Stateless Kit Stores And Kit Command Requests",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Implement stateless semio/js stores (KitStore, DesignStore, TypeStore facades) that only track task ids; single typed execute to semio/rs; extend Rust KitStoreHandle.execute so every call allocates a task id and emits lifecycle events; remove setField and any from public JS boundary; update semio/react hooks for taskId; extend existing tests.",
-  "summary": "Aligned kit command shell with the existing request/response model: correlation uses requestId everywhere (Rust SemioKitCommand, submitKitCommand receipt, JS SetResult / KitCommandLifecycleEvent / kitGraphqlSubmitCommandShell). Removed taskId-style naming from the TS boundary (KitCommandRequestId + createKitCommandRequestId). WASM KitStoreHandle.execute stays a plain GraphQL stream without an outer task envelope; added StreamExt for stream.next. executeSemioKitCommand and React embedded test clients now call patchEntityField instead of setField. Rust kit_graphql_smoke test expects requestId. Verified: cargo test kit_graphql_smoke, npm test in semio/js and semio/react.",
+  "summary": "Added KitBackboneWireShim types (BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict) and stateless KitStore facade over SemioKitBridge with requestId lifecycle tracking, resolveSemioKitBridge, and createKitStore. Wired getOrAttachSemioKitBridge + executeSemioKitCommand + command engine to KitHostStore and __semioKitBridge. Migrated semio/react and semio/sketchpad to KitHostStore / KitHostStoreSnapshot; registry attaches bridge on __semioKitBridge; read-store getters accept bridge or facade. Restored useKitStoreSnapshot hook name after snapshot rename. JS (141) and React (11) embedded tests plus tsc pass for js, react, sketchpad.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪1be43ce81c274d37854618a32ec63860",
