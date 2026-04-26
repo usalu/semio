@@ -124,10 +124,50 @@ export type KitConflict = {
   createdAt: string;
 };
 
-/** @emoji 🔌 One read batch entry; exact keys are owned by `semio/rs` kit store wire (not duplicated as TS unions here). */
-export type ReadWireItem = Readonly<Record<string, unknown>>;
-export type ReadWireBatch = readonly ReadWireItem[];
-export type ReadWireBatchResult = readonly ReadWireItem[];
+/** @emoji 🪪 Id DTO on GraphQL read/write wires (`{ "id": "…" }`, camelCase from rs). */
+export type KitIdWire = { readonly id: string };
+
+/** @emoji 🧾 One read command in a `KitStore.read` batch (matches `semio/rs` read kit wire, serde camelCase). */
+export type ReadPieceCommand =
+  | { readonly readPieceFlatPlaneCommand: null }
+  | { readonly readPieceFlatCenterCommand: null }
+  | { readonly readPieceParentConnectionFullCommand: null };
+
+export type ReadDesignCommand =
+  | { readonly readDesignPiecesFullCommand: null }
+  | { readonly readDesignConnectionsFullCommand: null }
+  | { readonly readDesignPieceCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadPieceCommand> } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<KitIdWire> } }
+  | { readonly readDesignIncludedDesignsCommand: null }
+  | { readonly readDesignQualitySumCommand: { readonly qualityId: KitIdWire } }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<KitIdWire> } }
+  | { readonly readDesignIncludedDesignIdsCommand: null };
+
+export type ReadTypeCommand = { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } };
+
+export type ReadKitCommand =
+  | { readonly readKitFullCommand: null }
+  | { readonly readKitShallowCommand: null }
+  | { readonly readKitMetadataCommand: null }
+  | { readonly readKitTypeIdsCommand: null }
+  | { readonly readKitDesignIdsCommand: null }
+  | { readonly readKitTypesMetadataCommand: null }
+  | { readonly readKitDesignsMetadataCommand: null }
+  | { readonly readKitTypesShallowCommand: null }
+  | { readonly readKitDesignsShallowCommand: null }
+  | { readonly readKitAuthorsShallowCommand: null }
+  | { readonly readKitColoredConnectorsCommand: null }
+  | { readonly readKitDesignCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadDesignCommand> } }
+  | { readonly readKitTypeCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadTypeCommand> } };
+
+/** @emoji 🧾 Batch input for {@link KitStore.read}. */
+export type ReadWireBatch = readonly ReadKitCommand[];
+
+/** @emoji 🧾 One command’s read output object (per-command payload shape from rs). */
+export type ReadKitCommandOutput = Readonly<Record<string, unknown>>;
+
+/** @emoji 🧾 Batch output from {@link KitStore.read}. */
+export type ReadWireBatchResult = readonly ReadKitCommandOutput[];
 
 /** @emoji 📣 Subscription payload: GraphQL wraps `KitEvent` as JSON. */
 export type KitEvent = Readonly<Record<string, unknown>>;
@@ -147,51 +187,172 @@ export type KitStoreOpenOptions = {
   workerFactory?: () => Worker;
 };
 
+// #region 🔖ChangeKitCommandWire
+/** @emoji 🧾 `ChangePieceCommand` JSON (externally tagged, camelCase variant keys) for `submitKitCommand` → `changeKitCommands`. */
+export type ChangePieceCommandWire =
+  | { readonly name: { readonly name?: string | null } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly plane: { readonly plane?: unknown } }
+  | { readonly center: { readonly center?: unknown } }
+  | { readonly scale: { readonly scale?: number | null } }
+  | { readonly mirrorPlane: { readonly mirrorPlane?: unknown } }
+  | { readonly hidden: { readonly hidden?: boolean | null } }
+  | { readonly locked: { readonly locked?: boolean | null } }
+  | { readonly color: { readonly color?: string | null } }
+  | { readonly type: { readonly typeId?: KitIdWire | null } }
+  | { readonly addProp: { readonly prop: PropPlain } }
+  | { readonly removeProp: { readonly propId: KitIdWire } }
+  | { readonly addAttribute: { readonly attribute: AttributePlain } }
+  | { readonly removeAttribute: { readonly id: KitIdWire } };
+
+/** @emoji 🧾 `ChangeConnectionCommand` JSON for nested design commands. */
+export type ChangeConnectionCommandWire =
+  | { readonly gap: { readonly value?: number | null } }
+  | { readonly shift: { readonly value?: number | null } }
+  | { readonly rise: { readonly value?: number | null } }
+  | { readonly rotation: { readonly value?: number | null } }
+  | { readonly turn: { readonly value?: number | null } }
+  | { readonly tilt: { readonly value?: number | null } }
+  | { readonly x: { readonly value?: number | null } }
+  | { readonly y: { readonly value?: number | null } }
+  | { readonly description: { readonly value?: string | null } }
+  | { readonly addConnectionAttribute: { readonly attribute: AttributePlain } }
+  | { readonly removeConnectionAttribute: { readonly id: KitIdWire } };
+
+/** @emoji 🧾 Nested `ChangeDesignCommand` entries. */
+export type ChangeDesignCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly icon: { readonly icon?: string | null } }
+  | { readonly image: { readonly image?: string | null } }
+  | { readonly unit: { readonly unit?: string | null } }
+  | { readonly addPiece: { readonly piece: PiecePlain } }
+  | { readonly removePiece: { readonly pieceId: KitIdWire } }
+  | { readonly addConnection: { readonly connection: ConnectionPlain } }
+  | { readonly removeConnection: { readonly connectionId: KitIdWire } }
+  | { readonly changePieceCommands: { readonly pieceId: KitIdWire; readonly commands: readonly ChangePieceCommandWire[] } }
+  | { readonly changeConnectionCommands: { readonly connectionId: KitIdWire; readonly commands: readonly ChangeConnectionCommandWire[] } };
+
+/** @emoji 🧾 Nested `ChangeTypeCommand` entries used by stores / React. */
+export type ChangeTypeCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly icon: { readonly icon?: string | null } }
+  | { readonly image: { readonly image?: string | null } }
+  | { readonly stock: { readonly stock?: number | null } }
+  | { readonly typeVirtual: { readonly value?: boolean | null } }
+  | { readonly unit: { readonly unit?: string | null } }
+  | { readonly addRepresentation: { readonly representation: RepresentationPlain } }
+  | { readonly removeRepresentation: { readonly id: KitIdWire } }
+  | { readonly addConnector: { readonly connector: ConnectorPlain } }
+  | { readonly removeConnector: { readonly connectorId: KitIdWire } }
+  | { readonly addTypeProp: { readonly prop: PropPlain } }
+  | { readonly removeTypeProp: { readonly propId: KitIdWire } };
+
+/** @emoji 🧾 `ChangeFamilyCommand` JSON. */
+export type ChangeFamilyCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly icon: { readonly icon?: string | null } };
+
+export type ChangeFileCommandWire =
+  | { readonly url: { readonly url: string } }
+  | { readonly mime: { readonly mime?: string | null } }
+  | { readonly size: { readonly size?: number | null } }
+  | { readonly hash: { readonly hash?: string | null } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly created: { readonly created?: string | null } }
+  | { readonly updated: { readonly updated?: string | null } };
+
+export type ChangeFolderCommandWire =
+  | { readonly path: { readonly path: string } }
+  | { readonly description: { readonly description?: string | null } };
+
+export type ChangeAuthorCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly email: { readonly email: string } }
+  | { readonly role: { readonly role?: string | null } }
+  | { readonly rank: { readonly rank?: number | null } };
+
+export type ChangeConceptCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly order: { readonly order?: number | null } };
+
+export type ChangeTagCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly order: { readonly order?: number | null } };
+
+export type ChangeKitQualityCommandWire =
+  | { readonly key: { readonly key: string } }
+  | { readonly value: { readonly value?: string | null } }
+  | { readonly unit: { readonly unit?: string | null } }
+  | { readonly definition: { readonly definition?: string | null } }
+  | { readonly description: { readonly description?: string | null } };
+
+export type ChangePortCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly icon: { readonly icon?: string | null } };
+
+/** @emoji 🧾 Top-level `ChangeKitCommand` JSON for `changeKitCommands` shell variables. */
+export type ChangeKitCommandWire =
+  | { readonly name: { readonly name: string } }
+  | { readonly description: { readonly description?: string | null } }
+  | { readonly icon: { readonly icon?: string | null } }
+  | { readonly image: { readonly image?: string | null } }
+  | { readonly changeDesignCommands: { readonly designId: KitIdWire; readonly commands: readonly ChangeDesignCommandWire[] } }
+  | { readonly changeTypeCommands: { readonly typeId: KitIdWire; readonly commands: readonly ChangeTypeCommandWire[] } }
+  | { readonly changeFamilyCommands: { readonly familyId: KitIdWire; readonly commands: readonly ChangeFamilyCommandWire[] } }
+  | { readonly changeFileCommands: { readonly fileId: KitIdWire; readonly commands: readonly ChangeFileCommandWire[] } }
+  | { readonly changeFolderCommands: { readonly folderId: KitIdWire; readonly commands: readonly ChangeFolderCommandWire[] } }
+  | { readonly changeAuthorCommands: { readonly authorId: KitIdWire; readonly commands: readonly ChangeAuthorCommandWire[] } }
+  | { readonly changeConceptCommands: { readonly conceptId: KitIdWire; readonly commands: readonly ChangeConceptCommandWire[] } }
+  | { readonly changeTagCommands: { readonly tagId: KitIdWire; readonly commands: readonly ChangeTagCommandWire[] } }
+  | { readonly changeKitQualityCommands: { readonly qualityId: KitIdWire; readonly commands: readonly ChangeKitQualityCommandWire[] } }
+  | { readonly changeKitPortCommands: { readonly portId: KitIdWire; readonly commands: readonly ChangePortCommandWire[] } }
+  | { readonly addFamily: { readonly family: FamilyPlain } }
+  | { readonly removeFamily: { readonly familyId: KitIdWire } }
+  | { readonly addFile: { readonly file: FilePlain } }
+  | { readonly removeFile: { readonly fileId: KitIdWire } };
+
+/** @emoji 🧾 Wrap nested piece commands under one design id. */
+export function kitWireChangeDesignPiece(
+  designId: string,
+  pieceId: string,
+  commands: readonly ChangePieceCommandWire[],
+): ChangeKitCommandWire {
+  return {
+    changeDesignCommands: {
+      designId: { id: designId },
+      commands: [{ changePieceCommands: { pieceId: { id: pieceId }, commands: [...commands] } }],
+    },
+  };
+}
+
+/** @emoji 🧾 Wrap nested connection commands under one design id. */
+export function kitWireChangeDesignConnection(
+  designId: string,
+  connectionId: string,
+  commands: readonly ChangeConnectionCommandWire[],
+): ChangeKitCommandWire {
+  return {
+    changeDesignCommands: {
+      designId: { id: designId },
+      commands: [{ changeConnectionCommands: { connectionId: { id: connectionId }, commands: [...commands] } }],
+    },
+  };
+}
+
+// #endregion 🔖ChangeKitCommandWire
+
 // #endregion 🔌WireTypes
 
 // #region 🪢InternalReadWire
-/** @emoji 🪢 Internal typing for `KitStore.read` implementation only (mirrors rs wire, not public API). */
-
-type IdDto = { readonly id: string };
-
-type ReadPieceCommand =
-  | { readonly readPieceFlatPlaneCommand: null }
-  | { readonly readPieceFlatCenterCommand: null }
-  | { readonly readPieceParentConnectionFullCommand: null };
-
-type ReadDesignCommand =
-  | { readonly readDesignPiecesFullCommand: null }
-  | { readonly readDesignConnectionsFullCommand: null }
-  | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
-  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<IdDto> } }
-  | { readonly readDesignIncludedDesignsCommand: null }
-  | { readonly readDesignQualitySumCommand: { readonly qualityId: IdDto } }
-  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<IdDto> } }
-  | { readonly readDesignIncludedDesignIdsCommand: null };
-
-type ReadTypeCommand = { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } };
-
-type ReadKitCommand =
-  | { readonly readKitFullCommand: null }
-  | { readonly readKitShallowCommand: null }
-  | { readonly readKitMetadataCommand: null }
-  | { readonly readKitTypeIdsCommand: null }
-  | { readonly readKitDesignIdsCommand: null }
-  | { readonly readKitTypesMetadataCommand: null }
-  | { readonly readKitDesignsMetadataCommand: null }
-  | { readonly readKitTypesShallowCommand: null }
-  | { readonly readKitDesignsShallowCommand: null }
-  | { readonly readKitAuthorsShallowCommand: null }
-  | { readonly readKitColoredConnectorsCommand: null }
-  | { readonly readKitDesignCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadDesignCommand> } }
-  | { readonly readKitTypeCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } };
-
-type ReadKitCommandOutput = Readonly<Record<string, unknown>>;
-type ReadDesignCommandOutput = Readonly<Record<string, unknown>>;
-type ReadPieceCommandOutput = Readonly<Record<string, unknown>>;
-type ReadTypeCommandOutput = Readonly<Record<string, unknown>>;
-
-type ReadCommandBatch = ReadonlyArray<ReadKitCommand>;
+/** @emoji 🪢 Aliases for `KitStore.read` mapper outputs. */
+type ReadDesignCommandOutput = ReadKitCommandOutput;
+type ReadPieceCommandOutput = ReadKitCommandOutput;
+type ReadTypeCommandOutput = ReadKitCommandOutput;
 // #endregion 🪢InternalReadWire
 
 // #region 🧰GraphqlUtil

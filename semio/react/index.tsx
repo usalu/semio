@@ -1083,6 +1083,106 @@ export function useKitRegistrySafe(): KitRegistryValue | null {
   return React.useContext(KitRegistryContext);
 }
 
+/**
+ * @emoji 📦 Host root for kit scopes: delegates to {@link KitRegistryProvider}. Pass `initialKit` for future eager `openKit` bootstrap (thin hooks plan).
+ */
+export function KitStoreProvider({
+  children,
+  initialKit: _initialKit,
+}: {
+  children: ReactNode;
+  /** Reserved: seed kit DTO when the JS `openKit` surface owns the worker (WIP). */
+  initialKit?: KitLike;
+}): React.ReactElement {
+  void _initialKit;
+  return React.createElement(KitRegistryProvider, null, children);
+}
+
+// #region 🖊️SketchpadDefaultKitFactories
+/** @emoji 📄 Browser SPA: pick a `.json` kit via File System Access API or a read-only file input fallback. */
+export function createDefaultBrowserSketchpadFileKitStoreFactory(): SketchpadKitStoreFactory {
+  return async (_kit: Kit) => {
+    if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
+      const [fileHandle] = await (window as any).showOpenFilePicker({
+        types: [
+          {
+            description: "Semio Kit JSON",
+            accept: { "application/json": [".json"] },
+          },
+        ],
+      });
+      const adapter: KitJsonFileAdapter = {
+        read: async () => {
+          const file = await fileHandle.getFile();
+          return file.text();
+        },
+        write: async (json: string) => {
+          const writable = await fileHandle.createWritable();
+          await writable.write(json);
+          await writable.close();
+        },
+      };
+      return createJsonFileKitStore(adapter);
+    }
+    return new Promise<KitHostStore>((resolve, reject) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) {
+          reject(new Error("No file selected"));
+          return;
+        }
+        const text = await file.text();
+        const adapter: KitJsonFileAdapter = {
+          read: async () => text,
+          write: async (_json: string) => {
+            console.warn("[semio/react] File System Access API not available; kit cannot be saved to the original file.");
+          },
+        };
+        resolve(await createJsonFileKitStore(adapter));
+      };
+      input.oncancel = () => reject(new Error("File picker cancelled"));
+      input.click();
+    });
+  };
+}
+
+/** @emoji 🌐 Browser SPA: remote kit via session transport; `kit.name` must hold the server URL. */
+export function createDefaultBrowserSketchpadRemoteKitStoreFactory(): SketchpadKitStoreFactory {
+  return async (kit: Kit) => {
+    const serverUrl = kit.name;
+    if (!serverUrl) throw new Error("No server URL provided for remote kit");
+    return createSessionKitStore({
+      serverUrl,
+    });
+  };
+}
+
+/** @emoji 🧩 VS Code webview: JSON read/write via extension `postMessage` and injected `__SEMIO_KIT_JSON__`. */
+export function createVscodeWebviewSketchpadFileKitStoreFactory(vscodeApi: { postMessage: (msg: unknown) => void }): SketchpadKitStoreFactory {
+  return async (kit: Kit) => {
+    const adapter: KitJsonFileAdapter = {
+      read: async () => {
+        if (typeof window === "undefined") {
+          return JSON.stringify((kit as any).toJSON?.() ?? kit);
+        }
+        const injected = (window as any).__SEMIO_KIT_JSON__;
+        if (injected == null) {
+          return JSON.stringify((kit as any).toJSON?.() ?? kit);
+        }
+        return typeof injected === "string" ? injected : JSON.stringify(injected);
+      },
+      write: async (json: string) => {
+        vscodeApi.postMessage({ kind: "kit.save", content: json });
+      },
+    };
+    return createJsonFileKitStore(adapter);
+  };
+}
+// #endregion 🖊️SketchpadDefaultKitFactories
+
 // #endregion KitRegistry
 
 function useKitRuntime(): KitRuntimeContextValue {

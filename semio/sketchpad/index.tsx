@@ -15,7 +15,7 @@
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostStore, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   asKitInstance,
   attachSketchpadKitReadShell,
@@ -29,9 +29,12 @@ import {
   ConnectionId,
   ConnectionScopeProvider,
   Coordinate,
+  createDefaultBrowserSketchpadFileKitStoreFactory,
+  createDefaultBrowserSketchpadRemoteKitStoreFactory,
   createFolderKitStore,
   createJsonFileKitStore,
-  createSessionKitStore,
+  createVscodeWebviewSketchpadFileKitStoreFactory,
+  InMemoryKitStore,
   Design,
   DesignDiff,
   DesignScopeProvider,
@@ -44,12 +47,10 @@ import {
   getOrCreateKitFileState,
   ICON_WIDTH,
   id,
-  importKitToPlain,
-  InMemoryKitStore,
   Kit,
   KitDiff,
   KitFullDtoSchema,
-  KitRegistryProvider,
+  KitStoreProvider,
   KitScope,
   KitScopeContext,
   KitShallowDto,
@@ -139,6 +140,7 @@ import {
   useUpdateType,
   Vector,
 } from "@semio/react";
+import { gunzipSync } from "fflate";
 
 import type {
   ConnectionLineComponentProps,
@@ -320,6 +322,40 @@ import {
   WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+
+// #region 🖱️SketchpadLocalSelection
+/** @emoji 🖱️ UI-only ids for focus/selection; kit authority stays in rs (strict layering plan §5). */
+type SketchpadLocalSelectionState = { activeKitId: string | undefined; selectedEntityIds: readonly string[] };
+let _sketchpadLocalSelection: SketchpadLocalSelectionState = { activeKitId: undefined, selectedEntityIds: [] };
+const _sketchpadLocalSelectionListeners = new Set<() => void>();
+function _emitSketchpadLocalSelection(): void {
+  _sketchpadLocalSelectionListeners.forEach((l) => l());
+}
+/** @internal Call when the focused kit tab changes; does not read or write kit DTOs. */
+export function setSketchpadLocalActiveKitId(kitId: string | undefined): void {
+  if (_sketchpadLocalSelection.activeKitId === kitId) return;
+  _sketchpadLocalSelection = { ..._sketchpadLocalSelection, activeKitId: kitId };
+  _emitSketchpadLocalSelection();
+}
+/** @internal Replace diagram / panel selection ids only. */
+export function setSketchpadLocalSelectedEntityIds(ids: readonly string[]): void {
+  _sketchpadLocalSelection = { ..._sketchpadLocalSelection, selectedEntityIds: ids };
+  _emitSketchpadLocalSelection();
+}
+export function subscribeSketchpadLocalSelection(cb: () => void): () => void {
+  _sketchpadLocalSelectionListeners.add(cb);
+  return () => {
+    _sketchpadLocalSelectionListeners.delete(cb);
+  };
+}
+export function getSketchpadLocalSelectionSnapshot(): SketchpadLocalSelectionState {
+  return _sketchpadLocalSelection;
+}
+/** @emoji 🖱️ Subscribe to local selection only (contrast: {@link useKitStore} for rs-backed kit). */
+export function useSketchpadLocalSelection(): SketchpadLocalSelectionState {
+  return useSyncExternalStore(subscribeSketchpadLocalSelection, getSketchpadLocalSelectionSnapshot, getSketchpadLocalSelectionSnapshot);
+}
+// #endregion 🖱️SketchpadLocalSelection
 
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -579,10 +615,23 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
 }
 
 /**
- * @emoji 📦 Decode gzip/JSON (or {@link importKitToPlain} from `@semio/react`) into a {@link Kit} instance; does not mutate a store.
+ * @emoji 📦 Decode gzip-or-JSON kit bytes into a {@link Kit} instance; does not mutate a store (strict layering: no `@semio/js` import here).
  */
 export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
-  const plain = await importKitToPlain(data);
+  let bytes: Uint8Array;
+  if (typeof data === "string") {
+    const res = await fetch(data);
+    bytes = new Uint8Array(await res.arrayBuffer());
+  } else if (data instanceof ArrayBuffer) {
+    bytes = new Uint8Array(data);
+  } else {
+    bytes = new Uint8Array(await data.arrayBuffer());
+  }
+  if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    bytes = gunzipSync(bytes);
+  }
+  const text = new TextDecoder().decode(bytes);
+  const plain = KitFullDtoSchema.parse(JSON.parse(text));
   return { kit: asKitInstance(Kit.fromPlain(plain)) };
 }
 
@@ -7271,7 +7320,7 @@ export function useReplacableDesigns(piece: Piece): Design[] {
 
 /**
  * Wraps children with {@link KitScope} from `@semio/react` so command/query hooks work.
- * The kit is already registered in {@link KitRegistryProvider} from {@link SketchpadStore.registerKitStore}.
+ * The kit is already registered in {@link KitStoreProvider} via {@link SketchpadStore}'s registry open path.
  */
 function KitWasmRuntimeBridge(props: { kitId: string; children: React.ReactNode }): React.ReactElement {
   const { kitId, children } = props;
@@ -17607,7 +17656,6 @@ export class SketchpadStore {
   private readonly designAppCreatedSubscribers: Set<() => void>;
   private readonly designAppDeletedSubscribers: Set<() => void>;
   private readonly tutorialStoreInstance: any;
-  private readonly injectedKitStore?: KitHostStore;
   private readonly temporaryKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly folderKitStoreFactory?: SketchpadKitStoreFactory;
   private readonly fileKitStoreFactory?: SketchpadKitStoreFactory;
@@ -17622,7 +17670,6 @@ export class SketchpadStore {
     remote?: RemoteProviders,
     initialState?: ExtendedInitialState,
     persistenceFactory?: PersistenceFactory,
-    injectedKitStore?: KitHostStore,
     temporaryKitStoreFactory?: SketchpadKitStoreFactory,
     folderKitStoreFactory?: SketchpadKitStoreFactory,
     fileKitStoreFactory?: SketchpadKitStoreFactory,
@@ -17632,7 +17679,6 @@ export class SketchpadStore {
     this.id = id;
     this.remote = remote;
     this.persistenceFactory = persistenceFactory;
-    this.injectedKitStore = injectedKitStore;
     this.temporaryKitStoreFactory = temporaryKitStoreFactory;
     this.folderKitStoreFactory = folderKitStoreFactory;
     this.fileKitStoreFactory = fileKitStoreFactory;
@@ -17776,19 +17822,6 @@ export class SketchpadStore {
       }
     }
 
-    // When an injected KitStore is provided, register its kit in the store.
-    // This allows Sketchpad to boot from an externally-provided KitStore
-    // instead of creating an InMemoryKitStore internally.
-    if (this.injectedKitStore) {
-      const kitSnapshot = this.injectedKitStore.getSnapshot();
-      const kit = kitSnapshot.kit;
-      if (!this.hasKit(kit.id)) {
-        const inferredKitKind = this.inferKitPersistenceKind(this.injectedKitStore);
-        void (async () => {
-          await this.registerKitStore(this.injectedKitStore!, inferredKitKind);
-        })();
-      }
-    }
   }
 
   setActor = (actor: SketchpadActorRef) => {
@@ -17943,29 +17976,14 @@ export class SketchpadStore {
     return createMemoryFileProvider();
   };
 
-  private registerKitStore = async (kitStore: KitHostStore, kind: KitKind, source?: InitialStateKit["source"]): Promise<void> => {
-    const registeredKit = kitStore.getSnapshot().kit;
-    if (this.hasKit(registeredKit.id)) {
-      return;
-    }
+  /** @emoji 🔗 Wire autosave + file providers after {@link getKitRegistryBridge} has opened the kit. */
+  private wireRegistryKitStore = (kitStore: KitHostStore, kind: KitKind, source?: InitialStateKit["source"]): void => {
     (kitStore as any).__semioKitPersistenceKind = kind;
     if (source) {
       (kitStore as any).__semioKitPersistenceSource = source;
     }
     getOrCreateKitFileState(kitStore).providerFactory = this.resolveKitFileProviderFactory(kind);
-    const kid = registeredKit.id;
-    const reg = getKitRegistryBridge();
-    if (reg) {
-      try {
-        await reg.open(kid, { store: kitStore });
-      } catch (e) {
-        console.error(`[sketchpad] KitRegistry open failed for ${kid}`, e);
-        throw e;
-      }
-    } else {
-      throw new Error("[sketchpad] registerKitStore requires KitRegistryProvider (getKitRegistryBridge is null).");
-    }
-
+    const kid = kitStore.getSnapshot().kit.id;
     attachSketchpadKitReadShell(kitStore);
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -17995,61 +18013,56 @@ export class SketchpadStore {
     }
   };
 
-  private createBackedKitStore = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<{ kitStore: KitHostStore; kind: KitKind; source?: InitialStateKit["source"] }> => {
-    const localKitStoreFactory = this.folderKitStoreFactory ?? this.fileKitStoreFactory;
-    if (kind === "remote" && this.remoteKitStoreFactory) {
-      const remoteKit = source?.kind === "remote" && source.url ? ({ ...kit, name: source.url } as Kit) : kit;
-      return {
-        kitStore: await this.remoteKitStoreFactory(remoteKit),
-        kind: "remote",
-        source: source?.kind === "remote" ? source : undefined,
-      };
+  /** @emoji 🔗 Open via {@link KitRegistryValue}; prefer `backbone` / built-in `openJsonFile` over passing a pre-built host store. */
+  private openKitInRegistry = async (
+    kitId: string,
+    init: Parameters<KitRegistryValue["open"]>[1],
+    kind: KitKind,
+    source?: InitialStateKit["source"],
+  ): Promise<void> => {
+    const reg = getKitRegistryBridge();
+    if (!reg) {
+      throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
     }
-    if (kind === "folder" && this.folderKitStoreFactory) {
-      return {
-        kitStore: await this.folderKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit),
-        kind: "folder",
-        source,
-      };
+    if (reg.get(kitId)) {
+      return;
     }
-    if (kind === "file" && this.fileKitStoreFactory) {
-      return {
-        kitStore: await this.fileKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit),
-        kind: "file",
-        source,
-      };
+    try {
+      await reg.open(kitId, init);
+    } catch (e) {
+      console.error(`[sketchpad] KitRegistry open failed for ${kitId}`, e);
+      throw e;
     }
-    if (kind === "temporary" && this.temporaryKitStoreFactory) {
-      return {
-        kitStore: await this.temporaryKitStoreFactory(kit),
-        kind: "temporary",
-      };
+    const row = reg.get(kitId);
+    if (!row) {
+      throw new Error(`[sketchpad] registry open produced no row for ${kitId}`);
     }
-    if (interactive && localKitStoreFactory) {
-      const inferredKind = this.folderKitStoreFactory ? "folder" : "file";
-      return {
-        kitStore: await localKitStoreFactory(kit),
-        kind: inferredKind,
-      };
+    this.wireRegistryKitStore(row.store, kind, source);
+  };
+
+  private openJsonFileInRegistry = async (
+    kitId: string,
+    adapter: KitJsonFileAdapter,
+    kind: KitKind,
+    source?: InitialStateKit["source"],
+  ): Promise<void> => {
+    const reg = getKitRegistryBridge();
+    if (!reg) {
+      throw new Error("[sketchpad] KitStoreProvider / KitRegistryProvider required (getKitRegistryBridge is null).");
     }
-    return {
-      kitStore: new InMemoryKitStore(kit),
-      kind: "temporary",
-      remote: false,
-    };
+    if (reg.get(kitId)) {
+      return;
+    }
+    await reg.openJsonFile(kitId, adapter);
+    const row = reg.get(kitId);
+    if (!row) {
+      throw new Error(`[sketchpad] registry openJsonFile produced no row for ${kitId}`);
+    }
+    this.wireRegistryKitStore(row.store, kind, source);
   };
 
   supportedKitKinds = (): SketchpadKitKindAvailability => {
     const hasConfiguredKitStoreFactories = Boolean(this.temporaryKitStoreFactory || this.folderKitStoreFactory || this.fileKitStoreFactory || this.remoteKitStoreFactory);
-    if (!hasConfiguredKitStoreFactories && this.injectedKitStore) {
-      const inferredKitKind = this.inferKitPersistenceKind(this.injectedKitStore);
-      return {
-        temporary: inferredKitKind === "temporary",
-        file: inferredKitKind === "file",
-        folder: inferredKitKind === "folder",
-        remote: inferredKitKind === "remote",
-      };
-    }
     return {
       temporary: hasConfiguredKitStoreFactories ? Boolean(this.temporaryKitStoreFactory) : true,
       file: Boolean(this.fileKitStoreFactory),
@@ -18060,10 +18073,6 @@ export class SketchpadStore {
 
   availableKitKinds = (): SketchpadKitKindAvailability => {
     const supportedKitKinds = this.supportedKitKinds();
-    const hasConfiguredKitStoreFactories = Boolean(this.temporaryKitStoreFactory || this.folderKitStoreFactory || this.fileKitStoreFactory || this.remoteKitStoreFactory);
-    if (!hasConfiguredKitStoreFactories && this.injectedKitStore) {
-      return supportedKitKinds;
-    }
     return {
       temporary: supportedKitKinds.temporary,
       file: false,
@@ -18073,9 +18082,55 @@ export class SketchpadStore {
   };
 
   createKit = async (kit: Kit, kind?: KitKind, source?: InitialStateKit["source"], interactive: boolean = true): Promise<Id> => {
-    const createdKitStore = await this.createBackedKitStore(kit, kind, source, interactive);
-    await this.registerKitStore(createdKitStore.kitStore, createdKitStore.kind, createdKitStore.source);
-    return createdKitStore.kitStore.getSnapshot().kit.id;
+    const localKitStoreFactory = this.folderKitStoreFactory ?? this.fileKitStoreFactory;
+    const regKind = kind ?? "temporary";
+
+    if (regKind === "remote" && this.remoteKitStoreFactory) {
+      const remoteKit = source?.kind === "remote" && source.url ? ({ ...kit, name: source.url } as Kit) : kit;
+      const kitStore = await this.remoteKitStoreFactory(remoteKit);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, { store: kitStore }, "remote", source?.kind === "remote" ? source : undefined);
+      return kid;
+    }
+    if (regKind === "folder" && this.folderKitStoreFactory) {
+      const kitStore = await this.folderKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, { store: kitStore }, "folder", source);
+      return kid;
+    }
+    if (regKind === "file" && this.fileKitStoreFactory) {
+      const kitStore = await this.fileKitStoreFactory(Object.assign({}, kit, { __semioKitPersistenceSource: source }) as Kit);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, { store: kitStore }, "file", source);
+      return kid;
+    }
+    if (regKind === "temporary" && this.temporaryKitStoreFactory) {
+      const kitStore = await this.temporaryKitStoreFactory(kit);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, { store: kitStore }, "temporary");
+      return kid;
+    }
+    if (regKind === "file" && !this.fileKitStoreFactory) {
+      await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary");
+      return kit.id;
+    }
+    if (regKind === "folder" && !this.folderKitStoreFactory) {
+      await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary");
+      return kit.id;
+    }
+    if (regKind === "remote" && !this.remoteKitStoreFactory) {
+      await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary");
+      return kit.id;
+    }
+    if (interactive && localKitStoreFactory) {
+      const inferredKind: KitKind = this.folderKitStoreFactory ? "folder" : "file";
+      const kitStore = await localKitStoreFactory(kit);
+      const kid = kitStore.getSnapshot().kit.id;
+      await this.openKitInRegistry(kid, { store: kitStore }, inferredKind);
+      return kid;
+    }
+    await this.openKitInRegistry(kit.id, { backbone: { kind: "memory", initialKit: kit }, initialKit: kit as any }, "temporary");
+    return kit.id;
   };
 
   openKit = async (kind: string, serverUrl?: string): Promise<Id> => {
@@ -18085,14 +18140,14 @@ export class SketchpadStore {
         const factory = this.folderKitStoreFactory;
         if (!factory) throw new Error("Folder kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        await this.registerKitStore(kitStore, "folder", this.getKitPersistenceSource(kitStore));
+        await this.openKitInRegistry(kitStore.getSnapshot().kit.id, { store: kitStore }, "folder", this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.id;
       }
       case "file": {
         const factory = this.fileKitStoreFactory;
         if (!factory) throw new Error("File kit store not available in this environment");
         const kitStore = await factory(dummyKit);
-        await this.registerKitStore(kitStore, "file", this.getKitPersistenceSource(kitStore));
+        await this.openKitInRegistry(kitStore.getSnapshot().kit.id, { store: kitStore }, "file", this.getKitPersistenceSource(kitStore));
         return kitStore.getSnapshot().kit.id;
       }
       case "remote": {
@@ -18100,7 +18155,7 @@ export class SketchpadStore {
         if (!factory) throw new Error("Remote kit store not available in this environment");
         const remoteKit: Kit = { ...dummyKit, name: serverUrl ?? "" };
         const kitStore = await factory(remoteKit);
-        await this.registerKitStore(kitStore, "remote", this.getKitPersistenceSource(kitStore) ?? { kind: "remote", url: serverUrl ?? "" });
+        await this.openKitInRegistry(kitStore.getSnapshot().kit.id, { store: kitStore }, "remote", this.getKitPersistenceSource(kitStore) ?? { kind: "remote", url: serverUrl ?? "" });
         return kitStore.getSnapshot().kit.id;
       }
       default:
@@ -18898,7 +18953,6 @@ function getDefaultSketchpadScopeId(): string {
 type SketchpadScopeProviderProps = {
   id?: string;
   store?: SketchpadStore;
-  kitStore?: KitHostStore;
   remote?: RemoteProviders;
   persistenceFactory?: PersistenceFactory;
   temporaryKitStoreFactory?: SketchpadKitStoreFactory;
@@ -18912,7 +18966,7 @@ type SketchpadScopeProviderProps = {
 };
 
 /**
- * Mounts {@link SketchpadStore} only after {@link KitRegistryProvider} is active (see {@link getKitRegistryBridge}).
+ * Mounts {@link SketchpadStore} only after {@link KitStoreProvider} is active (see {@link getKitRegistryBridge}).
  */
 const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId: string; hydratedInitialState: ExtendedInitialState | undefined; configsReady: boolean }> = (props) => {
   const {
@@ -18924,7 +18978,6 @@ const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId:
     store: storeProp,
     remote,
     persistenceFactory,
-    kitStore: kitStoreProp,
     temporaryKitStoreFactory,
     folderKitStoreFactory,
     fileKitStoreFactory,
@@ -18933,7 +18986,7 @@ const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId:
   } = props;
 
   if (!stores.has(id)) {
-    const store = storeProp ?? new SketchpadStore(id, remote, initialState, persistenceFactory, kitStoreProp, temporaryKitStoreFactory, folderKitStoreFactory, fileKitStoreFactory, remoteKitStoreFactory, Boolean(desktop));
+    const store = storeProp ?? new SketchpadStore(id, remote, initialState, persistenceFactory, temporaryKitStoreFactory, folderKitStoreFactory, fileKitStoreFactory, remoteKitStoreFactory, Boolean(desktop));
     stores.set(id, store);
 
     const actor = createSketchpadActor({ id, initialState: mergeSketchpadState(mergeSketchpadState(store.snapshot(), readSketchpadStateFromLocalStorage(id)), toSketchpadInitialState(initialState)) });
@@ -19004,10 +19057,10 @@ export const SketchpadScopeProvider: FC<SketchpadScopeProviderProps> = (props) =
     const hydrateInitialState = async () => {
       try {
         let persistedKits: InitialStateKit[] | undefined;
-        if (props.desktop && !props.kitStore) {
+        if (props.desktop) {
           clearSketchpadKitSnapshotsInBrowserStorage(id);
           persistedKits = undefined;
-        } else if (!props.kitStore) {
+        } else {
           persistedKits = (await readSketchpadKitsFromIndexedDb(id)) ?? readSketchpadKitsFromLocalStorage(id);
         }
         if (cancelled) return;
@@ -19027,14 +19080,14 @@ export const SketchpadScopeProvider: FC<SketchpadScopeProviderProps> = (props) =
     return () => {
       cancelled = true;
     };
-  }, [id, props.initialState, props.kitStore, props.desktop]);
+  }, [id, props.initialState, props.desktop]);
 
   if (!persistedKitsReady) {
     return <SketchpadStartupFallback />;
   }
 
   return React.createElement(
-    KitRegistryProvider,
+    KitStoreProvider,
     null,
     React.createElement(SketchpadScopeWithKitRegistry, {
       ...props,
@@ -23939,10 +23992,12 @@ const SketchpadContent: FC = () => {
 /**
  * Sketchpad holds the data fields for a Sketchpad record.
  **/
+/**
+ * Host shell: persistence is opened via {@link useAttachBackbone} from `@semio/react` inside kit UI (WIP until JS stores land); factories here only bridge pickers → registry.
+ */
 const Sketchpad = ({
   id,
   store,
-  kitStore,
   remote,
   persistenceFactory,
   temporaryKitStoreFactory,
@@ -23956,7 +24011,6 @@ const Sketchpad = ({
 }: {
   id?: string;
   store?: SketchpadStore;
-  kitStore?: KitHostStore;
   remote?: RemoteProviders;
   persistenceFactory?: PersistenceFactory;
   temporaryKitStoreFactory?: SketchpadKitStoreFactory;
@@ -23978,11 +24032,10 @@ const Sketchpad = ({
 
   const routerContent = (
     <GlobalNavigationBridge>
-      <KitRegistryProvider>
+      <KitStoreProvider>
         <SketchpadScopeProvider
           id={id}
           store={store}
-          kitStore={kitStore}
           remote={remote}
           persistenceFactory={persistenceFactory}
           temporaryKitStoreFactory={temporaryKitStoreFactory}
@@ -23998,7 +24051,7 @@ const Sketchpad = ({
             <SketchpadContent />
           </SketchpadInteractionBridge>
         </SketchpadScopeProvider>
-      </KitRegistryProvider>
+      </KitStoreProvider>
     </GlobalNavigationBridge>
   );
 
@@ -46839,120 +46892,41 @@ appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
 // #region 🔒VscodeAdapter
-// 🔄VS Code webview adapter for JsonFileKitStore. Bridges file I/O via postMessage.
+/** VS Code webview: extension injects `__SEMIO_VSCODE_API__` before scripts; kit JSON lives in `__SEMIO_KIT_JSON__`. */
 const isVscodeWebview = typeof globalThis !== "undefined" && typeof (globalThis as any).window !== "undefined" && typeof (globalThis as any).window.__SEMIO_VSCODE_API__ !== "undefined";
-
-function createVscodeAdapter(): KitJsonFileAdapter {
-  const vscodeApi = (window as any).__SEMIO_VSCODE_API__;
-  return {
-    read: async () => (window as any).__SEMIO_KIT_JSON__ ?? null,
-    write: async (json: string) => {
-      vscodeApi.postMessage({ kind: "kit.save", content: json });
-    },
-  };
-}
-
-function createVscodeFileKitStoreFactory(): SketchpadKitStoreFactory {
-  const vscodeApi = (window as any).__SEMIO_VSCODE_API__;
-  return async (kit) => {
-    const adapter: KitJsonFileAdapter = {
-      read: async () => JSON.stringify(kit),
-      write: async (json: string) => {
-        vscodeApi.postMessage({ kind: "kit.save", content: json });
-      },
-    };
-    return createJsonFileKitStore(adapter);
-  };
-}
 // #endregion 🔒VscodeAdapter
 
-const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);
-
+/**
+ * Future host flow (strict layering §5.2): `const attach = useAttachBackbone(); await attach({ dev: { filePath } }); await attach({ local: { folderPath } }); await attach({ remote: { serverUrl } });`
+ * — implemented in `@semio/react` once per-entity JS stores land; sketchpad stays picker/factory → registry until then.
+ */
 async function boot() {
-  let kitStore = undefined;
-  let fileKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
-  let remoteKitStoreFactory: SketchpadKitStoreFactory | undefined = undefined;
+  let fileKitStoreFactory: SketchpadKitStoreFactory | undefined;
+  let remoteKitStoreFactory: SketchpadKitStoreFactory | undefined;
+  let vscodeInitial: ExtendedInitialState | undefined;
+
   if (isVscodeWebview) {
-    const adapter = createVscodeAdapter();
-    kitStore = await createJsonFileKitStore(adapter);
-    fileKitStoreFactory = createVscodeFileKitStoreFactory();
-    // Listen for external updates from the VS Code extension host.
+    const vscodeApi = (window as any).__SEMIO_VSCODE_API__;
+    fileKitStoreFactory = createVscodeWebviewSketchpadFileKitStoreFactory(vscodeApi);
+    const raw = (window as any).__SEMIO_KIT_JSON__;
+    if (raw != null) {
+      const dto = KitFullDtoSchema.parse(typeof raw === "string" ? JSON.parse(raw) : raw);
+      vscodeInitial = { kits: [{ kit: asKitInstance(Kit.fromPlain(dto)), kind: "file", source: { kind: "file", path: "vscode-webview" } }] };
+    }
     (window as any).__SEMIO_ON_EXTERNAL_UPDATE__ = (json: string) => {
       try {
-        const parsed = JSON.parse(json);
-        const { KitFullDtoSchema } = require("@semio/react");
-        const kit = KitFullDtoSchema.parse(parsed);
-        kitStore!.applyExternalUpdate(kit);
+        const reg = getKitRegistryBridge();
+        const kid = reg?.list()?.[0];
+        if (!kid) return;
+        const st = reg.get(kid)?.store as { applyExternalUpdate?: (k: unknown) => void } | undefined;
+        st?.applyExternalUpdate?.(KitFullDtoSchema.parse(JSON.parse(json)));
       } catch {
         /* ignore parse errors */
       }
     };
-    // Auto-save is handled centrally by SketchpadStore.registerKitStore.
   } else {
-    // #region 🗃️BrowserFileKitStoreFactory
-    // Browser file kit store factory using File System Access API for synchronized JSON kit files.
-    // Specs: Uses showOpenFilePicker when available (Chromium browsers) to open .json kit files.
-    // Falls back to <input type="file"> for read-only import in other browsers.
-    // The File System Access API allows read/write synchronization back to the file.
-    fileKitStoreFactory = (async (_kit: Kit) => {
-      if (typeof window !== "undefined" && "showOpenFilePicker" in window) {
-        const [fileHandle] = await (window as any).showOpenFilePicker({
-          types: [
-            {
-              description: "Semio Kit JSON",
-              accept: { "application/json": [".json"] },
-            },
-          ],
-        });
-        const adapter: KitJsonFileAdapter = {
-          read: async () => {
-            const file = await fileHandle.getFile();
-            return file.text();
-          },
-          write: async (json: string) => {
-            const writable = await fileHandle.createWritable();
-            await writable.write(json);
-            await writable.close();
-          },
-        };
-        return createJsonFileKitStore(adapter);
-      }
-      // Fallback: file input (read-only, no write-back)
-      return new Promise<KitHostStore>((resolve, reject) => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-        input.onchange = async (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (!file) {
-            reject(new Error("No file selected"));
-            return;
-          }
-          const text = await file.text();
-          const adapter: KitJsonFileAdapter = {
-            read: async () => text,
-            write: async (_json: string) => {
-              console.warn("[Home] File System Access API not available. Kit changes cannot be saved to the original file.");
-            },
-          };
-          resolve(await createJsonFileKitStore(adapter));
-        };
-        input.oncancel = () => reject(new Error("File picker cancelled"));
-        input.click();
-      });
-    }) as SketchpadKitStoreFactory;
-    // #endregion 🗃️BrowserFileKitStoreFactory
-
-    // #region 🌐BrowserRemoteKitStoreFactory
-    // Browser remote kit store factory connecting to a semio/server via SessionKitStore.
-    // Specs: The server URL is passed in kit.name by the openKit command.
-    // Creates a SessionKitStore that connects via HTTP+WS for real-time synchronized editing.
-    remoteKitStoreFactory = (async (kit: Kit) => {
-      const serverUrl = kit.name;
-      if (!serverUrl) throw new Error("No server URL provided for remote kit");
-      return createSessionKitStore({ serverUrl });
-    }) as SketchpadKitStoreFactory;
-    // #endregion 🌐BrowserRemoteKitStoreFactory
+    fileKitStoreFactory = createDefaultBrowserSketchpadFileKitStoreFactory();
+    remoteKitStoreFactory = createDefaultBrowserSketchpadRemoteKitStoreFactory();
   }
 
   const rootElement = document.getElementById("root");
@@ -46962,7 +46936,7 @@ async function boot() {
 
   getOrCreateDomRoot(rootElement).render(
     <div className="h-screen w-screen">
-      <Sketchpad kitStore={kitStore} temporaryKitStoreFactory={isVscodeWebview ? undefined : temporaryKitStoreFactory} fileKitStoreFactory={fileKitStoreFactory} remoteKitStoreFactory={remoteKitStoreFactory} />
+      <Sketchpad initialState={vscodeInitial} fileKitStoreFactory={fileKitStoreFactory} remoteKitStoreFactory={remoteKitStoreFactory} />
     </div>,
   );
 }
@@ -46986,6 +46960,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   const { fileURLToPath } = await import(/* @vite-ignore */ "node" + ":url");
   const viteConfigSpecifier = ["./vite", "config.ts"].join(".");
   const { default: defineSketchpadViteConfig } = await import(/* @vite-ignore */ viteConfigSpecifier);
+  const { renderToString } = await import("react-dom/server");
+  renderToString(React.createElement(KitStoreProvider, null, React.createElement("div")));
 
   test.use({
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4181",
@@ -55043,9 +55019,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         },
         undefined,
         undefined,
-        undefined,
         folderFactory,
         fileFactory,
+        undefined,
       );
 
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -55091,8 +55067,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         },
         undefined,
         undefined,
-        undefined,
         folderFactory,
+        undefined,
+        undefined,
       );
 
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -55115,7 +55092,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         const localId = id();
         const remoteFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
         const folderFactory: SketchpadKitStoreFactory = async (kit) => new InMemoryKitStore(kit);
-        const store = new SketchpadStore(scopeId, undefined, undefined, undefined, undefined, undefined, folderFactory, undefined, remoteFactory, true);
+        const store = new SketchpadStore(scopeId, undefined, undefined, undefined, undefined, folderFactory, undefined, remoteFactory, true);
         await store.createKit({ id: remoteId, name: "Session Kit", types: [], designs: [] }, "remote", { kind: "remote", url: "http://127.0.0.1:9" });
         await store.createKit({ id: localId, name: "Folder Kit", types: [], designs: [] }, "folder", { kind: "folder", path: "/tmp/metabolism" });
         await new Promise((resolve) => setTimeout(resolve, 400));

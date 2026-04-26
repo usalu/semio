@@ -28146,46 +28146,6 @@ pub mod kit_graphql {
             Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(TypeNode))
         }
 
-        /// 🌐 Build [`ChangeKitCommand`]s for a field write (read-only; apply via `submitKitCommand` / shell `changeKitCommands` or `changeKitWithInverse`).
-        async fn change_kit_commands_for_field_patch(&self, kind: String, id: String, field: String, value: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let ek = KitGraph::parse_entity_kind(&kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value.0).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Same as [`change_kit_commands_for_field_patch`], but `value_json` is a JSON text blob (WASM/JS hosts avoid `JSON!` variable typing issues).
-        async fn change_kit_commands_for_field_patch_value_json(&self, kind: String, id: String, field: String, value_json: String) -> Result<Json<serde_json::Value>> {
-            let value: serde_json::Value = serde_json::from_str(&value_json).map_err(|e| Error::new(e.to_string()))?;
-            let ek = KitGraph::parse_entity_kind(&kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_field_patch(&self.0, ek, &id, &field, value).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Build [`ChangeKitCommand`]s to add a child entity (read-only; apply via mutations).
-        async fn change_kit_commands_for_add_child(&self, parent_kind: String, parent_id: String, child_kind: String, dto: Json<serde_json::Value>) -> Result<Json<serde_json::Value>> {
-            let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto.0).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Same as [`change_kit_commands_for_add_child`], with `dto_json` as a JSON text blob.
-        async fn change_kit_commands_for_add_child_dto_json(&self, parent_kind: String, parent_id: String, child_kind: String, dto_json: String) -> Result<Json<serde_json::Value>> {
-            let dto: serde_json::Value = serde_json::from_str(&dto_json).map_err(|e| Error::new(e.to_string()))?;
-            let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_add_child(&self.0, pk, &parent_id, ck, dto).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Build [`ChangeKitCommand`]s to remove a child (read-only; apply via mutations).
-        async fn change_kit_commands_for_remove_child(&self, parent_kind: String, parent_id: String, child_kind: String, child_id: String) -> Result<Json<serde_json::Value>> {
-            let pk = KitGraph::parse_entity_kind(&parent_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let ck = KitGraph::parse_entity_kind(&child_kind).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            let cmds = KitGraph::change_kit_commands_for_remove_child(&self.0, pk, &parent_id, ck, &child_id).map_err(|e: crate::error::SetError| Error::new(e.to_string()))?;
-            Ok(Json(serde_json::to_value(&cmds).map_err(|e| Error::new(e.to_string()))?))
-        }
-
         async fn description(&self) -> Result<Option<String>> {
             Ok(lock_graph(&self.0)?.description.clone())
         }

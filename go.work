@@ -4,6 +4,7 @@ use (
 	./coda/blnbo/go
 	./coda/programming/go
 	./repo/client
+	./repo/mcp
 	./repo/server
 	./semio/go
 )

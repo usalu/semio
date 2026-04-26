@@ -2104,11 +2104,11 @@ func TestFileHeaderId(t *testing.T) {
 	}{
 		{"code ts", "semio/js/src/index.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
 		{"code tsx", "semio/js/src/App.tsx", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
-		{"code go", "repo/client/client.go", "🧰repo⌨️cli" + emojiText(EmojiFileCode) + "cli"},
+		{"code go", "repo/client/client.go", "🧰repo⌨️client" + emojiText(EmojiFileCode) + "client"},
 		{"code cs", "semio/gh/Semio.cs", "👤semio🐙gh" + emojiText(EmojiFileCode) + "semio"},
 		{"code py", "semio/engine/main.py", "👤semio⚙️engine" + emojiText(EmojiFileCode) + "main"},
 		{"test ts", "semio/js/src/index.test.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
-		{"test go", "repo/client/client_test.go", "🧰repo⌨️cli" + emojiText(EmojiFileLab) + "clitest"},
+		{"test go", "repo/client/client_test.go", "🧰repo⌨️client" + emojiText(EmojiFileLab) + "clienttest"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
