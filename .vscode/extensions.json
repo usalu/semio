@@ -33,7 +33,6 @@
     "openai.chatgpt",
     "mermaidchart.vscode-mermaid-chart",
     "gruntfuggly.todo-tree",
-    "jebbs.plantuml",
     "jock.svg"
   ],
   "unwantedRecommendations": []

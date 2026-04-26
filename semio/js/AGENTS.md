@@ -11,7 +11,7 @@ bundle:
 
 `semio/js` is a **thin GraphQL client** to `semio/rs` (`KitStoreHandle` over a dedicated Worker, or inline handle in Node tests). It exposes **`KitStore`**, **`openKit`**, plus wire types required for method signatures.
 
-The **`@semio/js/kitWasmBridge`** subpath holds zod/UI DTO helpers consumed by **`@semio/react`**; the root entry MUST NOT import that module (avoids cycles).
+The root **`@semio/js`** entry holds the WASM transport plus zod/UI DTO helpers consumed by **`@semio/react`**; keep this as one source file unless a runtime entry boundary is unavoidable.
 
 You MUST only export **`KitStore`**, **`openKit`**, and the types needed for the public API from the root entry.
 You MUST NOT store authoritative kit data.

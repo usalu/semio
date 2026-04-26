@@ -4,10 +4,6 @@
   "name": "@semio/js",
   "version": "0.1.0",
   "type": "module",
-  "exports": {
-    ".": "./index.ts",
-    "./kitWasmBridge": "./kitWasmBridge.ts"
-  },
   "scripts": {
     "build": "tsc --noEmit",
     "test": "cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run",
@@ -38,5 +34,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "js/play"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "exports": {
+    ".": "./index.ts"
+  }
 }
