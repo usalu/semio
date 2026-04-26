@@ -12,6 +12,7 @@ import {
   asKitInstance,
   createFolderKitStore,
   createJsonFileKitStore,
+  createKitCommandEngineExplicitOrigin,
   createKitFileObjectUrl,
   createKitStoreClient,
   createSessionKitStore,
@@ -35,6 +36,7 @@ import {
   kitEventAffectsTypeScopedRead,
   getStoredKitFileUrls,
   id,
+  importKitToPlain,
   InMemoryKitStore,
   isKitCommandLifecycleEvent,
   isBrowserReadableFileUrl,
@@ -56,6 +58,7 @@ import {
   type KitStoreClient,
   type KitStoreReadSnap,
   type KitStoreSnapshot,
+  type KitShallowDto,
   type SetError,
   type SetResult,
   type Type,
@@ -905,7 +908,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
   const rowsRef = React.useRef(new Map<string, RegistryRow>());
   const loadingRef = React.useRef(new Set<string>());
   const errRef = React.useRef(new Map<string, Error>());
-  const [, bump] = React.useReducer((x: number) => x + 1, 0);
+  const [registryEpoch, bump] = React.useReducer((x: number) => x + 1, 0);
   const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
 
   const open = React.useCallback(
@@ -998,7 +1001,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         return "idle";
       },
     }),
-    [activeKitId, open, close, bump],
+    [activeKitId, open, close, registryEpoch],
   );
 
   _semioKitRegistryBridge = value;
@@ -4375,6 +4378,59 @@ export function useActiveKitGuid(): string | undefined {
   return r?.activeKitId ?? fromProvider;
 }
 
+/**
+ * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitStore} for legacy design-store selectors; graph mutations use {@link executeSemioKitCommand} only.
+ */
+export function attachSketchpadKitReadShell(kitStore: KitStore): void {
+  const s = kitStore as any;
+  if (s.__sketchpadKitUi) return;
+  s.__sketchpadKitUi = true;
+  s.snapshot = () => kitStore.getSnapshot().kit;
+  Object.defineProperty(s, "fileUrls", { get: () => getStoredKitFileUrls(kitStore), configurable: true });
+}
+
+/** @emoji 🧾 Memoized {@link createKitCommandEngineExplicitOrigin} for a host {@link KitStore} (null when no store). */
+export function useKitCommandEngineExplicitOrigin(kitStore: KitStore | null): ReturnType<typeof createKitCommandEngineExplicitOrigin> | null {
+  return React.useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
+}
+
+/** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitStore} + registry list changes. */
+export function useOpenKitShallows(): KitShallowDto[] {
+  const reg = useKitRegistry();
+  const idsKey = reg.list().slice().sort().join("|");
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const unsubs: (() => void)[] = [];
+    for (const kid of reg.list()) {
+      const ent = reg.get(kid);
+      if (ent) unsubs.push(ent.store.subscribe(() => setTick((t) => t + 1)));
+    }
+    return () => unsubs.forEach((u) => u());
+  }, [reg, idsKey]);
+  return React.useMemo(
+    () =>
+      reg
+        .list()
+        .map((kid) => reg.get(kid))
+        .filter((e): e is KitRegistryEntry => e != null)
+        .map((e) => e.store.getSnapshot().kit as KitShallowDto),
+    [reg, idsKey, tick],
+  );
+}
+
+/** @emoji 📌 True when {@link KitRegistryValue} holds the kit id (updates when kits open/close). */
+export function useRegistryHasKit(kitId: string): boolean {
+  const ids = useOpenKitGuids();
+  return ids.includes(kitId);
+}
+
+/** @emoji 📌 Persistence kind for a registry kit (undefined if not open). */
+export function useRegistryKitPersistenceKind(kitId: string): KitPersistenceInfo["kind"] | undefined {
+  const reg = useKitRegistrySafe();
+  const idsKey = (reg?.list() ?? []).slice().sort().join("|");
+  return React.useMemo(() => reg?.get(kitId)?.persistence.kind, [reg, kitId, idsKey]);
+}
+
 /** @emoji 📌Alias hooks for explicit "by id" call sites. */
 export const useAuthorById = useAuthorTriad;
 export const useQualityById = useQualityTriad;
@@ -4460,6 +4516,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 /** Re-exports of `@semio/js` wire/DTO surface; sketchpad UI helpers (find*, plane*, importKit, …) live in `@semio/sketchpad`. */
 export {
   applyKitClientSnapshotToLocalStore,
+  asKitInstance,
   Attribute,
   Author,
   Camera,
@@ -4486,6 +4543,7 @@ export {
   getStoredKitFileUrls,
   ICON_WIDTH,
   id,
+  importKitToPlain,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
   Kit,
@@ -15620,12 +15678,18 @@ if (shouldRunReactEmbeddedTests) {
   const { act, render, waitFor } = await import("@testing-library/react");
   const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
 
+  const kitJsonFromStore = (store: KitStore) => {
+    const host = store as KitStore & { _kit?: { toJSON: () => unknown } };
+    if ((store as any).__semioKitClient && host._kit) return host._kit.toJSON();
+    return store.getSnapshot().kit.toJSON();
+  };
+
   const createTestKitClient = (store: KitStore): KitStoreClient =>
     ({
-      getDto: () => store.getSnapshot().kit.toJSON(),
-      getSnapshot: async () => store.getSnapshot().kit.toJSON(),
+      getDto: () => kitJsonFromStore(store),
+      getSnapshot: async () => kitJsonFromStore(store),
       setField: async (kind: string, id: string, field: string, value: unknown) => {
-        const kit = store.getSnapshot().kit.toJSON();
+        const kit = kitJsonFromStore(store) as Record<string, unknown>;
         if (kind !== "Kit" || kit.id !== id) return { ok: false, error: { kind: "NotFound", message: `${kind} ${id}` } };
         if (field === "name" && String(value ?? "").trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
         const key = field === "version" ? "version" : field;
@@ -15837,6 +15901,40 @@ if (shouldRunReactEmbeddedTests) {
         expect(openIds).toContain("k-open");
         expect(active).toBe("k-open");
       });
+    });
+  });
+
+  describe("useOpenKitShallows + useRegistryHasKit + useRegistryKitPersistenceKind", () => {
+    it("reflects registry kit snapshots and persistence kind", async () => {
+      const kit = asKitInstance({
+        id: "k-shallow",
+        name: "ShallowK",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      const store = new InMemoryKitStore(kit);
+      const kitClient = createTestKitClient(store);
+      let shallows: KitShallowDto[] = [];
+      let hasKit = false;
+      let pkind: KitPersistenceInfo["kind"] | undefined;
+      function Probe() {
+        shallows = useOpenKitShallows();
+        hasKit = useRegistryHasKit("k-shallow");
+        pkind = useRegistryKitPersistenceKind("k-shallow");
+        return null;
+      }
+      const { unmount } = render(React.createElement(KitRegistryProvider, null, React.createElement(Probe)));
+      const b = getKitRegistryBridge();
+      expect(b).not.toBeNull();
+      await b!.open("k-shallow", { store, kitClient });
+      await waitFor(() => expect(b!.list()).toContain("k-shallow"));
+      await waitFor(() => {
+        expect(hasKit).toBe(true);
+        expect(pkind).toBe("temporary");
+        expect(shallows.some((s) => s.id === "k-shallow" && s.name === "ShallowK")).toBe(true);
+      });
+      unmount();
+      await waitFor(() => expect(getKitRegistryBridge()).toBeNull());
     });
   });
 

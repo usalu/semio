@@ -9,6 +9,9 @@ bundle:
 
 # 🧾 Specification
 
+All semio domain logic MUST exclusively be defined in `semio/rs`.
+All kit state caching MUST exclusively be defined in `semio/rs`.
+
 ## 🕸️ Systems
 
 ## 🧮 Algorithms

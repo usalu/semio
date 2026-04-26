@@ -1534,9 +1534,14 @@ export type ReadCommandBatchResult = ReadonlyArray<ReadKitCommandOutput>;
 export type KitGraphqlHandle = { execute(requestJson: string, onMessage: (line: string) => void): Promise<void> };
 export type KitCommandReceipt = { requestId: KitCommandRequestId; commandKind: string; accepted: boolean };
 
+/** @emoji 🔗 Sole raw invoke of {@link KitStoreHandle.execute} for streaming NDJSON (queries, mutations, subscriptions). */
+export function runKitStoreHandleExecute(handle: KitGraphqlHandle, requestJson: string, onMessage: (line: string) => void): Promise<void> {
+  return handle.execute(requestJson, onMessage);
+}
+
 export async function kitGraphqlRun(handle: KitGraphqlHandle, body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown[]> {
   const out: unknown[] = [];
-  await handle.execute(JSON.stringify(body), (line: string) => { out.push(JSON.parse(line)); });
+  await runKitStoreHandleExecute(handle, JSON.stringify(body), (line: string) => { out.push(JSON.parse(line)); });
   return out;
 }
 
@@ -1590,7 +1595,7 @@ export async function kitGraphqlExecuteStoreCommand(handle: KitGraphqlHandle, cm
 
 export function kitGraphqlSubscribeLoop(handle: KitGraphqlHandle, sink: (payload: unknown) => void): () => void {
   let cancelled = false;
-  void handle.execute(JSON.stringify({ query: "subscription { eventStream }" }), (line: string) => {
+  void runKitStoreHandleExecute(handle, JSON.stringify({ query: "subscription { eventStream }" }), (line: string) => {
     if (cancelled) return;
     try { const msg = JSON.parse(line) as { data?: { eventStream?: unknown } | null; errors?: unknown[] }; if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return; if (msg.data && "eventStream" in msg.data && msg.data.eventStream !== undefined) sink(normalizeKitCommandLifecycleEvent(msg.data.eventStream) ?? msg.data.eventStream); } catch { /* ignore */ }
   }).catch(() => { });
@@ -2312,7 +2317,7 @@ export class KitWorkerApi {
   redo() { this.requireHandle(); return this.submitSetResult("redo", { query: `mutation { redo }` }); }
   canUndo() { return this.requireHandle().canUndo(); }
   canRedo() { return this.requireHandle().canRedo(); }
-  graphqlExecute(requestJson: string, onMessage: (line: string) => void) { this.requireHandle(); return this.handle.execute(requestJson, onMessage); }
+  graphqlExecute(requestJson: string, onMessage: (line: string) => void) { this.requireHandle(); return runKitStoreHandleExecute(this.gql(), requestJson, onMessage); }
   subscribe(cb: (ev: unknown) => void) { this.requireHandle(); const proxy = Comlink.proxy(cb); const id = this.nextEventListenerId++; const forward = (payload: unknown) => { try { proxy(payload); } catch { /* ignore */ } }; this.eventListeners.set(id, forward); if (!this.eventGqlStarted) { this.eventGqlStarted = true; kitGraphqlSubscribeLoop(this.gql(), (payload) => { for (const fn of this.eventListeners.values()) fn(payload); }); } return () => { this.eventListeners.delete(id); if (this.eventListeners.size === 0) this.eventGqlStarted = false; }; }
   async execute(cmd: unknown) { this.requireHandle(); try { const result = await kitGraphqlExecuteStoreCommand(this.gql(), cmd); return { ok: true, result }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   async executeRead(cmds: ReadCommandBatch) { this.requireHandle(); return await kitGraphqlExecuteRead(this.gql(), cmds); }
@@ -2415,6 +2420,8 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   } else if (command === "semio.kit.patchDesigns" && args[0]) {
     const updates = args[0] as { design: { id: string }; diff: any }[];
     r = await runSetChain(updates.map((u) => () => client.setField("Design", u.design.id, "__patch", u.diff)));
+  } else if (command === "semio.kit.patchQuality" && args.length >= 2) {
+    r = await client.setField("Quality", String(args[0]), "__patch", args[1]);
   } else if (command === "semio.kit.addDesignPiece" && args.length >= 2) {
     r = await client.addChild("Design", String(args[0]), "Piece", args[1]);
   } else if (command === "semio.kit.addDesignPieces" && args.length >= 2) {
@@ -2534,6 +2541,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       it("exports bridge classes", () => { expect(typeof FallbackKitStoreClient).toBe("function"); expect(typeof WorkerKitStoreClient).toBe("function"); expect(typeof KitWorkerApi).toBe("function"); });
       it("exports Semio utility class", () => { expect(typeof Semio).toBe("function"); expect(typeof Semio.normalizeName).toBe("function"); expect(typeof Semio.round).toBe("function"); expect(typeof Semio.generateId).toBe("function"); });
       it("exports constants", () => { expect(typeof ICON_WIDTH).toBe("number"); expect(ICON_WIDTH).toBe(50); expect(typeof TOLERANCE).toBe("number"); expect(TOLERANCE).toBe(1e-5); });
+      it("exports runKitStoreHandleExecute as the raw KitStoreHandle.execute adapter", () => { expect(typeof runKitStoreHandleExecute).toBe("function"); });
       it("does NOT export deleted domain logic", async () => {
         const mod = await import("./index.ts") as Record<string, unknown>;
         const denylist = ["KitImpl", "KitEntity", "KitEntityIndexes", "KitEntityCaches", "hashKit", "hashType", "hashDesign", "hashPiece", "hashConnection", "computeChildPlane", "flattenPlacementWalkDesignOrderRoots", "validateKitGraphDiff", "expandSemanticCommandToDiff", "Generator", "SeededRandom", "round", "jaccard", "deepEqual", "arraysEqual", "toArray", "areConnectorsCompatible", "isFixedPiece", "findPiece", "findConnection", "mergeDesigns", "orientDesign"];

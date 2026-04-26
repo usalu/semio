@@ -15,26 +15,10 @@
 
 // #region ⛩️Imports
 
+import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
   asKitInstance,
-  createFolderKitStore,
-  createJsonFileKitStore,
-  createKitCommandEngineExplicitOrigin,
-  createSessionKitStore,
-  executeSemioKitCommand,
-  getKitPorts,
-  getOrCreateKitFileState,
-  getStoredKitFileUrls,
-  ICON_WIDTH,
-  id,
-  importKitToPlain,
-  InMemoryKitStore,
-  KitFullDtoSchema,
-  TOLERANCE,
-} from "@semio/js";
-import type { KitFullDto } from "@semio/js";
-import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitStore, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
-import {
+  attachSketchpadKitReadShell,
   Author,
   AuthorId,
   Camera,
@@ -45,14 +29,26 @@ import {
   ConnectionId,
   ConnectionScopeProvider,
   Coordinate,
+  createFolderKitStore,
+  createJsonFileKitStore,
+  createSessionKitStore,
   Design,
   DesignDiff,
   DesignScopeProvider,
   DesignShallowDto,
   DiffStatus,
+  executeSemioKitCommand,
   Folder,
+  getKitPorts,
+  getKitRegistryBridge,
+  getOrCreateKitFileState,
+  ICON_WIDTH,
+  id,
+  importKitToPlain,
+  InMemoryKitStore,
   Kit,
   KitDiff,
+  KitFullDtoSchema,
   KitRegistryProvider,
   KitScope,
   KitScopeContext,
@@ -72,6 +68,7 @@ import {
   schemaScopeForEntityId,
   File as SemioFile,
   Tag,
+  TOLERANCE,
   Type,
   TypeDiff,
   TypeScopeProvider,
@@ -99,6 +96,7 @@ import {
   useIsInDesignScope,
   useIsInKitScope,
   useIsInTypeScope,
+  useKitCommandEngineExplicitOrigin,
   useKitDescription,
   useKitFileBlobUrl,
   useKitFileUrl,
@@ -114,6 +112,7 @@ import {
   useKitSnapshotTriad,
   useKitStore,
   useMoveKitArtifactToFolder,
+  useOpenKitShallows,
   useParentPieceId as useParentPieceIdFromKit,
   usePiece,
   usePieceDepth as usePieceDepthFromKit,
@@ -125,6 +124,8 @@ import {
   usePiecesMetadataMap as usePiecesMetadataRecordFromKit,
   useQuality,
   useQualityScope,
+  useRegistryHasKit,
+  useRegistryKitPersistenceKind,
   useReplacableDesigns as useReplacableDesignIdsFromKit,
   useReplacableTypes as useReplacableTypeIdsFromKit,
   useResolvedKitIdentifier,
@@ -133,7 +134,6 @@ import {
   useTypes,
   useTypeScope,
   useTypesFull,
-  getKitRegistryBridge,
   useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
@@ -320,11 +320,6 @@ import {
   WindowKind,
 } from "@semio/ui";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-
-// `semio.kit.*` string command dispatch: engine in @semio/js; not re-exported from @semio/react.
-function useKitCommandDispatchersWithOrigin(kitStore: KitStore | null) {
-  return useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
-}
 
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -584,18 +579,7 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
 }
 
 /**
- * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitStore} for {@link DesignStore} / legacy selectors (graph mutations: {@link executeSemioKitCommand} only).
- */
-export function sketchpadAttachKitReadShell(kitStore: KitStore): void {
-  const s = kitStore as any;
-  if (s.__sketchpadKitUi) return;
-  s.__sketchpadKitUi = true;
-  s.snapshot = () => kitStore.getSnapshot().kit;
-  Object.defineProperty(s, "fileUrls", { get: () => getStoredKitFileUrls(kitStore), configurable: true });
-}
-
-/**
- * @emoji 📦 Decode gzip/JSON (or {@link @semio/js} `importKitToPlain`) into a {@link Kit} instance; does not mutate a store.
+ * @emoji 📦 Decode gzip/JSON (or {@link importKitToPlain} from `@semio/react`) into a {@link Kit} instance; does not mutate a store.
  */
 export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
   const plain = await importKitToPlain(data);
@@ -17612,9 +17596,6 @@ export class SketchpadStore {
   private readonly commandMetadata: Map<string, { user?: boolean }>;
   private cache?: SketchpadState;
   private cacheHash?: string;
-  private kitShallowsCache?: KitShallowDto[];
-  private kitShallowsVersion: number = 0;
-  private kitShallowsCacheVersion: number = -1;
   private readonly kitCreatedSubscribers: Set<() => void>;
   private readonly kitDeletedSubscribers: Set<() => void>;
   private readonly kitAppCreatedSubscribers: Set<() => void>;
@@ -17985,7 +17966,7 @@ export class SketchpadStore {
       throw new Error("[sketchpad] registerKitStore requires KitRegistryProvider (getKitRegistryBridge is null).");
     }
 
-    sketchpadAttachKitReadShell(kitStore);
+    attachSketchpadKitReadShell(kitStore);
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleAutoSave = () => {
@@ -18002,13 +17983,11 @@ export class SketchpadStore {
       }
     };
     kitStore.subscribe(() => {
-      this.kitShallowsVersion++;
       this.schedulePersistKitsToStorage();
       scheduleAutoSave();
     });
     scheduleAutoSave();
 
-    this.kitShallowsVersion++;
     this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
     if (this.actor) {
       this.actor.send({ type: "UI.OPEN_KIT.PUSH", kitId: kid } as any);
@@ -18260,7 +18239,6 @@ export class SketchpadStore {
       }
     });
     getKitRegistryBridge()?.close(id);
-    this.kitShallowsVersion++;
     this.schedulePersistKitsToStorage();
     this.kitDeletedSubscribers.forEach((subscriber) => subscriber());
     this.actor?.send({ type: "UI.OPEN_KIT.CLOSE", kitId: id } as any);
@@ -18669,14 +18647,9 @@ export class SketchpadStore {
   }
 
   kitShallows(): KitShallowDto[] {
-    if (this.kitShallowsCache && this.kitShallowsCacheVersion === this.kitShallowsVersion) {
-      return this.kitShallowsCache;
-    }
     const reg = getKitRegistryBridge();
     const kitIds = new Set<string>(reg ? reg.list() : []);
-    this.kitShallowsCache = Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallowDto);
-    this.kitShallowsCacheVersion = this.kitShallowsVersion;
-    return this.kitShallowsCache;
+    return Array.from(kitIds, (kid) => this.kitStore(kid).getSnapshot().kit as KitShallowDto);
   }
 
   hasKitApp(kitApp: KitAppId): boolean {
@@ -19602,79 +19575,34 @@ export function useHomeCommands() {
  * Hook returning shallow kit data for all kits with reactive updates.
  **/
 export function useKitShallowDtos(): KitShallowDto[] {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const unsubscribeCreated = store.onKitCreated(onStoreChange);
-      const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
-      const unsubscribers = store.kitShallows().map((kitShallow) => {
-        const kitStore = store.kit(kitShallow.id);
-        return kitStore.subscribe(() => {
-          onStoreChange();
-        });
-      });
-      return () => {
-        unsubscribeCreated();
-        unsubscribeDeleted();
-        unsubscribers.forEach((unsub) => unsub());
-      };
-    },
-    () => store.kitShallows(),
-  );
+  return useOpenKitShallows();
 }
 
 /**
  * Hook returning whether a kit with the given id exists.
  **/
 export function useHasKit(kitId: string): boolean {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const unsubscribeCreated = store.onKitCreated(onStoreChange);
-      const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
-      return () => {
-        unsubscribeCreated();
-        unsubscribeDeleted();
-      };
-    },
-    () => store.hasKit(kitId),
-  );
+  return useRegistryHasKit(kitId);
 }
 
 /**
  * Hook returning the persistence kind of a kit.
  **/
 export function useKitKind(kitId: string): KitKind | undefined {
-  const store = useSketchpadStore();
-  const hasKit = useHasKit(kitId);
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      if (!hasKit) return () => {};
-      const kitStore = store.kit(kitId);
-      return kitStore.subscribe(() => {
-        onStoreChange();
-      });
-    },
-    () => {
-      if (!hasKit) return undefined;
-      const kitStore = store.kit(kitId);
-      return kitStore.kitKind;
-    },
-  );
+  return useRegistryKitPersistenceKind(kitId);
 }
 
 /**
  * Hook returning a callback to get the persistence kind of any kit.
  **/
 export function useGetKitKind(): (kitId: string) => KitKind | undefined {
-  const store = useSketchpadStore();
+  const reg = useKitRegistrySafe();
   return useCallback(
-    (kitId: string) => {
-      if (!store.hasKit(kitId)) return undefined;
-      const kitStore = store.kit(kitId);
-      return kitStore.kitKind;
+    (kid: string) => {
+      if (!reg?.get(kid)) return undefined;
+      return reg.get(kid)!.persistence.kind;
     },
-    [store],
+    [reg],
   );
 }
 
@@ -19692,15 +19620,12 @@ export function useOpenableKitKinds(): SketchpadKitKindAvailability {
  * Hook returning kit shallows filtered by persistence kind.
  **/
 export function useFilteredKitShallowDtos(kind?: KitKind): KitShallowDto[] {
-  const store = useSketchpadStore();
+  const reg = useKitRegistrySafe();
   const allKits = useKitShallowDtos();
   return useMemo(() => {
     if (!kind) return allKits;
-    return allKits.filter((k) => {
-      const ks = store.kit(k.id);
-      return ks.kitKind === kind;
-    });
-  }, [allKits, kind, store]);
+    return allKits.filter((k) => reg?.get(k.id)?.persistence.kind === kind);
+  }, [allKits, kind, reg]);
 }
 
 /**
@@ -20020,26 +19945,7 @@ export function useSketchpadCommands() {
  *
  **/
 export function useKits(): KitShallowDto[] {
-  const store = useSketchpadStore();
-
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const unsubscribeCreated = store.onKitCreated(onStoreChange);
-      const unsubscribeDeleted = store.onKitDeleted(onStoreChange);
-      const unsubscribers = store.kitShallows().map((kitShallow) => {
-        const kitStore = store.kit(kitShallow.id);
-        return kitStore.subscribe(() => {
-          onStoreChange();
-        });
-      });
-      return () => {
-        unsubscribeCreated();
-        unsubscribeDeleted();
-        unsubscribers.forEach((unsub) => unsub());
-      };
-    },
-    () => store.kitShallows(),
-  );
+  return useOpenKitShallows();
 }
 /**
  * Hook returning kit command dispatchers for a specific kit by id.
@@ -20048,7 +19954,7 @@ function useKitCommandsById(kitId?: string) {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(kitId);
   const kitStore = runtime && effectiveKitId && String(runtime.kitId ?? "") === String(effectiveKitId) ? runtime.store : null;
-  return useKitCommandDispatchersWithOrigin(kitStore);
+  return useKitCommandEngineExplicitOrigin(kitStore);
 }
 
 // #endregion 🎏Sketchpad
@@ -41554,7 +41460,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     }
     if (result.qualityDiff) {
       const qid = this.Id.quality;
-      const kitRes = await executeSemioKitCommand(kitStore, "semio.kit.setField", origin ?? "semio.qualityApp", "Quality", qid, "__patch", result.qualityDiff);
+      const kitRes = await executeSemioKitCommand(kitStore, "semio.kit.patchQuality", origin ?? "semio.qualityApp", qid, result.qualityDiff);
       if (kitRes.ok) {
         (result as any).kitCommandApplied = true;
       }
