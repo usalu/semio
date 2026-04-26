@@ -1,0 +1,11 @@
+{
+  "title": "Clean Stateless Kit Stores And Kit Command Requests",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Implement stateless semio/js stores (KitStore, DesignStore, TypeStore facades) that only track task ids; single typed execute to semio/rs; extend Rust KitStoreHandle.execute so every call allocates a task id and emits lifecycle events; remove setField and any from public JS boundary; update semio/react hooks for taskId; extend existing tests.",
+  "summary": "Aligned kit command shell with the existing request/response model: correlation uses requestId everywhere (Rust SemioKitCommand, submitKitCommand receipt, JS SetResult / KitCommandLifecycleEvent / kitGraphqlSubmitCommandShell). Removed taskId-style naming from the TS boundary (KitCommandRequestId + createKitCommandRequestId). WASM KitStoreHandle.execute stays a plain GraphQL stream without an outer task envelope; added StreamExt for stream.next. executeSemioKitCommand and React embedded test clients now call patchEntityField instead of setField. Rust kit_graphql_smoke test expects requestId. Verified: cargo test kit_graphql_smoke, npm test in semio/js and semio/react.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1be43ce81c274d37854618a32ec63860"
+  ]
+}

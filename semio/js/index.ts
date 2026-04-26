@@ -1143,16 +1143,18 @@ export type KitDiff = z.infer<typeof KitDiffSchema>;
 
 export type SetErrorKind = "IllegalName" | "NameTooLong" | "InvalidUrl" | "InvalidValue" | "DuplicateId" | "NotFound" | "CyclicReference" | "PortFamilyMismatch" | "Readonly" | "Disposed" | "Timeout" | "LockPoisoned" | "Internal" | "NotSupported";
 export type SetError = { kind: SetErrorKind; message: string; field?: string; entity?: { kind: string; id: string } };
+/** @emoji 🪪 Correlates {@link KitEvent} `SemioKitCommand` lifecycle (`requestId` on the wire). */
 export type KitCommandRequestId = string;
-export type SetResult = ({ ok: true; requestId?: KitCommandRequestId } | { ok: false; error: SetError; requestId?: KitCommandRequestId });
-export type KitCommandLifecyclePhase = "accepted" | "succeeded" | "failed";
-export type KitCommandLifecycleEvent = { semioKitCommand: { requestId: KitCommandRequestId; commandKind: string; phase: KitCommandLifecyclePhase; result?: unknown; error?: SetError } };
 
 let nextKitCommandRequestSerial = 0;
 export function createKitCommandRequestId(): KitCommandRequestId {
   nextKitCommandRequestSerial += 1;
-  return `kit-command-${Date.now().toString(36)}-${nextKitCommandRequestSerial.toString(36)}`;
+  return `kit-cmd-req-${Date.now().toString(36)}-${nextKitCommandRequestSerial.toString(36)}`;
 }
+
+export type SetResult = ({ ok: true; requestId?: KitCommandRequestId } | { ok: false; error: SetError; requestId?: KitCommandRequestId });
+export type KitCommandLifecyclePhase = "accepted" | "succeeded" | "failed";
+export type KitCommandLifecycleEvent = { semioKitCommand: { requestId: KitCommandRequestId; commandKind: string; phase: KitCommandLifecyclePhase; result?: unknown; error?: SetError } };
 
 export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
   return normalizeKitCommandLifecycleEvent(event) != null;
@@ -1162,9 +1164,10 @@ export function normalizeKitCommandLifecycleEvent(event: unknown): KitCommandLif
   const command = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand ?? (event as { SemioKitCommand?: unknown } | null)?.SemioKitCommand;
   if (command == null || typeof command !== "object") return undefined;
   const value = command as Record<string, unknown>;
-  if (typeof value.requestId !== "string" || typeof value.commandKind !== "string" || typeof value.phase !== "string") return undefined;
-  const error = value.error && typeof value.error === "object" ? normalizeRustSetError(value.error) : undefined;
-  return { semioKitCommand: { requestId: value.requestId, commandKind: value.commandKind, phase: value.phase as KitCommandLifecyclePhase, result: value.result, error } };
+  const requestIdRaw = value.requestId;
+  if (typeof requestIdRaw !== "string" || typeof value.commandKind !== "string" || typeof value.phase !== "string") return undefined;
+  const error = value.error && typeof value.error === "object" ? normalizeRustSetError(value.error as Record<string, unknown>) : undefined;
+  return { semioKitCommand: { requestId: requestIdRaw, commandKind: value.commandKind, phase: value.phase as KitCommandLifecyclePhase, result: value.result, error } };
 }
 
 export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: SetError };
@@ -1196,10 +1199,11 @@ function parseKitStoreListConflictsResult(raw: unknown): KitConflict[] {
 export type WriteStatus = { kind: "idle"; pending: 0; lastError?: undefined } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError } | { kind: "readonly"; pending: 0 };
 export type HookTriad<T> = readonly [T, (next: T | ((prev: T) => T)) => Promise<SetResult>, WriteStatus];
 
-export function normalizeRustSetError(raw: any): SetError {
-  if (!raw || typeof raw !== "object") return { kind: "Internal", message: "invalid error payload" };
-  const kind = typeof raw.kind === "string" ? (raw.kind as SetErrorKind) : "Internal";
-  const message = typeof raw.message === "string" ? raw.message : JSON.stringify(raw);
+export function normalizeRustSetError(raw: unknown): SetError {
+  if (raw == null || typeof raw !== "object") return { kind: "Internal", message: "invalid error payload" };
+  const o = raw as Record<string, unknown>;
+  const kind = typeof o.kind === "string" ? (o.kind as SetErrorKind) : "Internal";
+  const message = typeof o.message === "string" ? o.message : JSON.stringify(raw);
   return { kind, message };
 }
 
@@ -1212,18 +1216,19 @@ export function normalizeWasmThrownKitError(err: unknown): SetError {
 }
 
 export function settleSetPromise(p: Promise<unknown>): Promise<SetResult> {
-  return p.then((v: any) => {
-    if (v && typeof v === "object" && v.ok === true) return { ok: true } as const;
-    if (v && typeof v === "object" && v.ok === false && v.error) return { ok: false, error: normalizeRustSetError(v.error) } as const;
-    return { ok: false, error: { kind: "Internal", message: "unexpected setField result" } } as const;
+  return p.then((v: unknown) => {
+    if (v && typeof v === "object" && (v as { ok?: unknown }).ok === true) return { ok: true } as const;
+    if (v && typeof v === "object" && (v as { ok?: unknown }).ok === false && (v as { error?: unknown }).error) return { ok: false, error: normalizeRustSetError((v as { error: unknown }).error) } as const;
+    return { ok: false, error: { kind: "Internal", message: "unexpected patchEntityField result" } } as const;
   });
 }
 
 /** Boundary contract consumed by @semio/react and sketchpad. */
 export interface KitStoreClient {
-  getDto(): any;
-  getSnapshot(): Promise<any>;
-  setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult>;
+  getDto(): Kit;
+  getSnapshot(): Promise<Kit>;
+  /** @emoji 🔧 Field-level patch encoded by wasm then submitted as a `changeKitCommands` GraphQL task. */
+  patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult>;
   addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
   clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
@@ -1294,7 +1299,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   private gql(): KitGraphqlHandle { return { execute: (requestJson: string, onMessage: (line: string) => void) => this.handle.execute(requestJson, onMessage) }; }
   kitGraphql(): KitGraphqlHandle { return this.gql(); }
-  getDto() { return this.cached; }
+  getDto(): Kit { return asKitInstance(this.cached as KitLike); }
 
   async getSnapshot() {
     try { this.cached = await withTimeout(Promise.resolve(this.handle.snapshot()), this.timeoutMs, "snapshot timeout"); } catch { /* keep cached */ }
@@ -1317,8 +1322,8 @@ export class FallbackKitStoreClient implements KitStoreClient {
     catch { const error: SetError = { kind: "Timeout", message: "timeout" }; return { ok: false, error }; }
   }
 
-  async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    try { const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); }
+  async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
+    try { const cmds = this.handle.changeKitCommandsForFieldPatch(entityKind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); }
     catch (e) { return { ok: false, error: normalizeWasmThrownKitError(e) }; }
   }
   async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
@@ -1382,7 +1387,7 @@ export class WorkerKitStoreClient implements KitStoreClient {
   kitGraphql(): KitGraphqlHandle {
     return { execute: async (requestJson: string, onMessage: (line: string) => void) => { const Comlink = await import("comlink"); await this.api.graphqlExecute(requestJson, Comlink.proxy(onMessage)); } };
   }
-  getDto() { return this.cached; }
+  getDto(): Kit { return asKitInstance(this.cached as KitLike); }
   async getSnapshot() { try { this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "snapshot timeout"); } catch { /* keep cached */ } return this.cached; }
   subscribe(cb: (ev: any) => void): () => void {
     this.listeners.add(cb);
@@ -1399,7 +1404,7 @@ export class WorkerKitStoreClient implements KitStoreClient {
     catch { return { ok: false, error: { kind: "Timeout", message: "timeout" } }; }
   }
 
-  async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> { return this.wrapMutation(() => this.api.setField(kind, id, field, value)); }
+  async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> { return this.wrapMutation(() => this.api.patchEntityField(entityKind, id, field, value)); }
   async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> { return this.wrapMutation(() => this.api.addChild(parentKind, parentId, childKind, dto)); }
   async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> { return this.wrapMutation(() => this.api.removeChild(parentKind, parentId, childKind, childId)); }
   async clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult> { return this.wrapMutation(() => this.api.clusterPieces(designId, pieceIds, clusterName)); }
@@ -2298,7 +2303,7 @@ export class KitWorkerApi {
   private async submitSetResult(commandKind: string, request: { query: string; variables?: Record<string, unknown> }): Promise<SetResult> { try { const receipt = await kitGraphqlSubmitCommandShell(this.gql(), commandKind, request); return { ok: true, requestId: receipt.requestId }; } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   async init(wasmSpecifier: string, dto: unknown) { const mod = await importWasmModule(wasmSpecifier); if (typeof mod.default === "function") await mod.default(); if (typeof mod.boot === "function") mod.boot(); this.handle = mod.KitStoreHandle.create(dto as any); }
   snapshot() { return this.requireHandle().snapshot(); }
-  setField(kind: string, id: string, field: string, value: unknown) { this.requireHandle(); try { const cmds = this.handle.changeKitCommandsForFieldPatch(kind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
+  patchEntityField(entityKind: string, id: string, field: string, value: unknown) { this.requireHandle(); try { const cmds = this.handle.changeKitCommandsForFieldPatch(entityKind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) { this.requireHandle(); try { const cmds = this.handle.changeKitCommandsForAddChild(parentKind, parentId, childKind, dto); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string) { this.requireHandle(); try { const cmds = this.handle.changeKitCommandsForRemoveChild(parentKind, parentId, childKind, childId); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); } catch (e) { return { ok: false, error: { kind: "Internal", message: String(e) } }; } }
   clusterPieces(designId: string, pieceIds: string[], clusterName: string) { this.requireHandle(); return this.submitSetResult("clusterPieces", { query: `mutation($designId: String!, $pieceIds: [String!]!, $clusterName: String!) { clusterPieces(designId: $designId, pieceIds: $pieceIds, clusterName: $clusterName) }`, variables: { designId, pieceIds, clusterName } }); }
@@ -2379,7 +2384,7 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   const client = await getOrAttachKitStoreClient(kitStore);
   let r: SetResult | undefined;
   if (command === "semio.kit.setField" && args.length >= 4) {
-    r = await client.setField(String(args[0]), String(args[1]), String(args[2]), args[3]);
+    r = await client.patchEntityField(String(args[0]), String(args[1]), String(args[2]), args[3]);
   } else if (command === "semio.kit.replaceFromFullDto" && args[0] != null) {
     const ex = await client.execute({ batch: { commands: [{ replaceKitFromFullDto: { dto: args[0] } }] } } as any);
     if (!ex.ok) return { ok: false, error: { message: String((ex as any).error?.message ?? "replaceFromFullDto") } };
@@ -2416,12 +2421,12 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
     r = await runSetChain((args[0] as string[]).map((did) => () => client.removeChild("Kit", kid, "Design", did)));
   } else if (command === "semio.kit.patchTypes" && args[0]) {
     const updates = args[0] as { type: { id: string }; diff: any }[];
-    r = await runSetChain(updates.map((u) => () => client.setField("Type", u.type.id, "__patch", u.diff)));
+    r = await runSetChain(updates.map((u) => () => client.patchEntityField("Type", u.type.id, "__patch", u.diff)));
   } else if (command === "semio.kit.patchDesigns" && args[0]) {
     const updates = args[0] as { design: { id: string }; diff: any }[];
-    r = await runSetChain(updates.map((u) => () => client.setField("Design", u.design.id, "__patch", u.diff)));
+    r = await runSetChain(updates.map((u) => () => client.patchEntityField("Design", u.design.id, "__patch", u.diff)));
   } else if (command === "semio.kit.patchQuality" && args.length >= 2) {
-    r = await client.setField("Quality", String(args[0]), "__patch", args[1]);
+    r = await client.patchEntityField("Quality", String(args[0]), "__patch", args[1]);
   } else if (command === "semio.kit.addDesignPiece" && args.length >= 2) {
     r = await client.addChild("Design", String(args[0]), "Piece", args[1]);
   } else if (command === "semio.kit.addDesignPieces" && args.length >= 2) {
@@ -2443,19 +2448,19 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
     const designId = String(args[0]);
     r = await runSetChain((args[1] as string[]).map((cid) => () => client.deleteConnection(designId, cid)));
   } else if (command === "semio.kit.patchPiece" && args.length >= 2) {
-    r = await client.setField("Piece", String(args[0]), "__patch", args[1]);
+    r = await client.patchEntityField("Piece", String(args[0]), "__patch", args[1]);
   } else if (command === "semio.kit.patchPieces" && args[0]) {
     r = await runSetChain(
       (args[0] as { piece: { id: string }; diff: any }[]).map(
-        (u) => () => client.setField("Piece", u.piece.id, "__patch", u.diff),
+        (u) => () => client.patchEntityField("Piece", u.piece.id, "__patch", u.diff),
       ),
     );
   } else if (command === "semio.kit.patchConnection" && args.length >= 2) {
-    r = await client.setField("Connection", String(args[0]), "__patch", args[1]);
+    r = await client.patchEntityField("Connection", String(args[0]), "__patch", args[1]);
   } else if (command === "semio.kit.patchConnectionMany" && args[0]) {
     r = await runSetChain(
       (args[0] as { id: string; diff: any }[]).map(
-        (u) => () => client.setField("Connection", u.id, "__patch", u.diff),
+        (u) => () => client.patchEntityField("Connection", u.id, "__patch", u.diff),
       ),
     );
   } else if (command === "semio.kit.clusterPieces" && args.length >= 3) {
@@ -2482,17 +2487,17 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
     r = await client.createFixedPiece(String(args[0]), String(args[1]), args[2]);
   } else if (command === "semio.kit.moveToFolder" && args.length >= 3) {
     const [artifactId, kind, folderId] = [args[0], args[1], args[2]]; const fk = String(kind);
-    if (fk === "type") r = await client.setField("Type", artifactId, "folder", folderId);
-    else if (fk === "design") r = await client.setField("Design", artifactId, "folder", folderId);
-    else if (fk === "quality") r = await client.setField("Quality", artifactId, "folder", folderId);
-    else if (fk === "file") r = await client.setField("File", artifactId, "folder", folderId ? { id: folderId } : null);
-    else if (fk === "folder") r = await client.setField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
+    if (fk === "type") r = await client.patchEntityField("Type", artifactId, "folder", folderId);
+    else if (fk === "design") r = await client.patchEntityField("Design", artifactId, "folder", folderId);
+    else if (fk === "quality") r = await client.patchEntityField("Quality", artifactId, "folder", folderId);
+    else if (fk === "file") r = await client.patchEntityField("File", artifactId, "folder", folderId ? { id: folderId } : null);
+    else if (fk === "folder") r = await client.patchEntityField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
     else return { ok: false, error: { message: `moveToFolder: unknown kind ${fk}` } };
   } else if (command === "semio.kit.createFolder" && args[0]) {
     r = await client.addChild("Kit", kid, "Folder", args[0]);
   } else if (command === "semio.kit.updateFolder" && args.length >= 2) {
     r = { ok: true };
-    for (const [f, v] of Object.entries(args[1] as any)) { r = await client.setField("Folder", String(args[0]), f, v); if (!r.ok) break; }
+    for (const [f, v] of Object.entries(args[1] as any)) { r = await client.patchEntityField("Folder", String(args[0]), f, v); if (!r.ok) break; }
   } else if (command === "semio.kit.addFile" && args[0]) {
     r = await client.addChild("Kit", kid, "File", args[0]);
   } else if (command === "semio.kit.import" && args[0]) { void (await fetch(String(args[0])).then((x) => x.json()).catch(() => null)); r = { ok: true } as any; }
@@ -2577,7 +2582,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         expect(client).toBeInstanceOf(FallbackKitStoreClient);
         const commandEvents: KitCommandLifecycleEvent[] = [];
         const unsubscribe = client.subscribe((event) => { if (isKitCommandLifecycleEvent(event)) commandEvents.push(event); });
-        const setResult = await client.setField("Type", "type-1", "name", "BigWall");
+        const setResult = await client.patchEntityField("Type", "type-1", "name", "BigWall");
         expect(typeof setResult.ok).toBe("boolean");
         expect(setResult.requestId === undefined || typeof setResult.requestId === "string").toBe(true);
         const types = await client.getTypes();

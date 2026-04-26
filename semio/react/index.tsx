@@ -321,7 +321,7 @@ function connectionDiffWireKeyForDataKey(dataKey: string): string {
   return dataKey;
 }
 
-/** @emoji 🧾 Single field/fragment routed to `KitStoreClient.setField` (WASM change commands, no local graph replace). */
+/** @emoji 🧾 Single field/fragment routed to `KitStoreClient.patchEntityField` (WASM change commands, no local graph replace). */
 async function writeKitClientSchemaField(
   kitClient: KitStoreClient,
   typeName: string,
@@ -330,13 +330,13 @@ async function writeKitClientSchemaField(
   entityId: string,
 ): Promise<SetResult> {
   if (typeName === "Piece" && dataKey !== "name" && dataKey !== "color") {
-    return kitClient.setField("Piece", entityId, "__patch", { [dataKey]: value } as any);
+    return kitClient.patchEntityField("Piece", entityId, "__patch", { [dataKey]: value } as any);
   }
   if (typeName === "Connection") {
     const w = connectionDiffWireKeyForDataKey(dataKey);
-    return kitClient.setField("Connection", entityId, "__patch", { [w]: value } as any);
+    return kitClient.patchEntityField("Connection", entityId, "__patch", { [w]: value } as any);
   }
-  return kitClient.setField(typeName, entityId, dataKey, value);
+  return kitClient.patchEntityField(typeName, entityId, dataKey, value);
 }
 
 function noop(): void {}
@@ -2545,7 +2545,7 @@ export const useUpdateAuthor = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Author", authorId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Author", authorId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2577,7 +2577,7 @@ export const useUpdateType = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Type", typeId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Type", typeId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2609,7 +2609,7 @@ export const useUpdateDesign = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Design", designId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Design", designId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2641,7 +2641,7 @@ export const useUpdateQuality = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Quality", qualityId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Quality", qualityId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2673,7 +2673,7 @@ export const useUpdatePort = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Port", portId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Port", portId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2705,7 +2705,7 @@ export const useUpdateTag = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Tag", tagId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Tag", tagId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2740,7 +2740,7 @@ export const useUpdateFile = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("File", fileId, field, value);
+        const r = await runtime.kitClient.patchEntityField("File", fileId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2772,7 +2772,7 @@ export const useUpdateFolder = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.setField("Folder", folderId, field, value);
+        const r = await runtime.kitClient.patchEntityField("Folder", folderId, field, value);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2801,7 +2801,7 @@ export function useMoveToFolder(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.setField("File", fileId, "folder", targetFolderId);
+      const r = await runtime.kitClient.patchEntityField("File", fileId, "folder", targetFolderId);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2818,7 +2818,7 @@ export function useMoveToFolder(): {
 export type KitArtifactFolderKind = "type" | "design" | "quality" | "file" | "folder";
 
 /**
- * Move a kit artifact into a folder (or to root) — same behavior as sketchpad `semio.kit.moveToFolder` / kit commands, implemented with {@link KitStoreClient.setField}.
+ * Move a kit artifact into a folder (or to root) — same behavior as sketchpad `semio.kit.moveToFolder` / kit commands, implemented with {@link KitStoreClient.patchEntityField}.
  */
 export function useMoveKitArtifactToFolder(): {
   run: (artifactKind: KitArtifactFolderKind, artifactId: string, folderId: string | null) => Promise<SetResult>;
@@ -2838,19 +2838,19 @@ export function useMoveKitArtifactToFolder(): {
         let r: SetResult;
         switch (artifactKind) {
           case "type":
-            r = await runtime.kitClient.setField("Type", artifactId, "folder", folderId);
+            r = await runtime.kitClient.patchEntityField("Type", artifactId, "folder", folderId);
             break;
           case "design":
-            r = await runtime.kitClient.setField("Design", artifactId, "folder", folderId);
+            r = await runtime.kitClient.patchEntityField("Design", artifactId, "folder", folderId);
             break;
           case "quality":
-            r = await runtime.kitClient.setField("Quality", artifactId, "folder", folderId);
+            r = await runtime.kitClient.patchEntityField("Quality", artifactId, "folder", folderId);
             break;
           case "file":
-            r = await runtime.kitClient.setField("File", artifactId, "folder", folderId ? { id: folderId } : null);
+            r = await runtime.kitClient.patchEntityField("File", artifactId, "folder", folderId ? { id: folderId } : null);
             break;
           case "folder":
-            r = await runtime.kitClient.setField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
+            r = await runtime.kitClient.patchEntityField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
             break;
           default: {
             const e: SetError = { kind: "InvalidValue", message: `unknown artifact kind: ${artifactKind}` };
@@ -3216,7 +3216,7 @@ export function useUpdatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.setField("Piece", pieceId, "__patch", patch);
+      const r = await runtime.kitClient.patchEntityField("Piece", pieceId, "__patch", patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3245,7 +3245,7 @@ export function useUpdatePieces(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runtime.kitClient.setField("Piece", u.id, "__patch", u.diff);
+        const r = await runtime.kitClient.patchEntityField("Piece", u.id, "__patch", u.diff);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3274,7 +3274,7 @@ export function useUpdateConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.setField("Connection", connectionId, "__patch", patch);
+      const r = await runtime.kitClient.patchEntityField("Connection", connectionId, "__patch", patch);
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3303,7 +3303,7 @@ export function useUpdateConnections(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runtime.kitClient.setField("Connection", u.id, "__patch", u.diff);
+        const r = await runtime.kitClient.patchEntityField("Connection", u.id, "__patch", u.diff);
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -4474,7 +4474,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         }
         setPending((p) => p + 1);
         setLastErr(undefined);
-        const r = await runtime.kitClient.setField(rustTarget.kind, rustTarget.id, rustTarget.field, resolved);
+        const r = await runtime.kitClient.patchEntityField(rustTarget.kind, rustTarget.id, rustTarget.field, resolved);
         setPending((p) => p - 1);
         if (!r.ok) {
           setLastErr(r.error);
@@ -15688,7 +15688,7 @@ if (shouldRunReactEmbeddedTests) {
     ({
       getDto: () => kitJsonFromStore(store),
       getSnapshot: async () => kitJsonFromStore(store),
-      setField: async (kind: string, id: string, field: string, value: unknown) => {
+      patchEntityField: async (kind: string, id: string, field: string, value: unknown) => {
         const kit = kitJsonFromStore(store) as Record<string, unknown>;
         if (kind !== "Kit" || kit.id !== id) return { ok: false, error: { kind: "NotFound", message: `${kind} ${id}` } };
         if (field === "name" && String(value ?? "").trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
@@ -16005,7 +16005,7 @@ if (shouldRunReactEmbeddedTests) {
       const stub: import("@semio/js").KitStoreClient = {
         getDto: () => store.getSnapshot().kit.toJSON(),
         getSnapshot: async () => store.getSnapshot().kit.toJSON(),
-        setField: async () => ({ ok: true }) as const,
+        patchEntityField: async () => ({ ok: true }) as const,
         addChild: async () => ({ ok: true }) as const,
         removeChild: async () => ({ ok: true }) as const,
         clusterPieces: async () => ({ ok: false, error: { kind: "InvalidValue", message: "stub-cluster" } }),
