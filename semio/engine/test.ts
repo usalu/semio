@@ -31,22 +31,23 @@ const definitionBody = (definition: string): string => {
 
 const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
 const disallowed = "leg" + "acy";
-assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add backward-only compatibility field names in identifiers");
-for (const definition of ["type KitStore", "type KitSession", "type KitChangeCandidate", "type KitConflict", "type Type", "type Design", "type Port", "type Piece", "type Connection"]) {
-  assertSchema(definitionBody(definition).includes("hash: Hash!"), `${definition} MUST expose a computed hash`);
+assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add compatibility-only field names in identifiers or generated descriptions");
+for (const definition of ["type KitStore", "type Query", "type Mutation", "type Subscription", "type Type", "type Design", "type Piece", "type Connection"]) {
+  definitionBody(definition);
 }
-assertSchema(!/\bFamily\b/.test(graphqlSchema), "semio GraphQL schema MUST NOT expose Family because semio/rs has no Family DTO");
-const kitBody = definitionBody("type Kit");
-assertSchema(!/\n  (families|ports):/.test(kitBody), "Kit MUST NOT expose kit-level families or ports");
-assertSchema(kitBody.includes("version: String") && kitBody.includes("uri: String") && kitBody.includes("props: [Prop!]!"), "Kit MUST expose Rust KitFullDto version, uri, and props fields");
+const queryBody = definitionBody("type Query");
+assertSchema(queryBody.includes("kitStore: KitStore!") && queryBody.includes("kitReadScope(scope: KitReadScopeInput!): KitStore!"), "Query MUST expose Rust kit store roots");
+const mutationBody = definitionBody("type Mutation");
+assertSchema(mutationBody.includes("submitKitCommand(input: KitCommandShellInput!): KitCommandReceipt!"), "Mutation MUST expose the Rust command shell");
+const subscriptionBody = definitionBody("type Subscription");
+assertSchema(subscriptionBody.includes("eventStream: JSON!"), "Subscription MUST expose the Rust event stream");
+const kitBody = definitionBody("type KitStore");
+assertSchema(kitBody.includes("liveFullDto: JSON!") && kitBody.includes("typeIds: [String!]!") && kitBody.includes("designByDtoId(id: String!): Design"), "KitStore MUST expose the current semio/rs live graph API");
 const typeBody = definitionBody("type Type");
-assertSchema(typeBody.includes("ports: [Port!]!"), "Type MUST own ports to match semio/rs TypeFullDto");
-assertSchema(!typeBody.includes("parent:"), "Type MUST NOT expose removed parent links");
-assertSchema(!definitionBody("type Design").includes("parent:"), "Design MUST NOT expose removed parent links");
-const coordinateBody = definitionBody("type Coordinate");
-assertSchema(coordinateBody.includes("x: Float!") && coordinateBody.includes("y: Float!") && coordinateBody.includes("z: Float!"), "Coordinate MUST be the Rust 3D coordinate shape");
-assertSchema(graphqlSchema.includes("union KitInteractionRecord"), "semio GraphQL schema MUST expose dedicated kit interaction records");
-assertSchema(graphqlSchema.includes("replacementTypeCandidates"), "semio GraphQL schema MUST expose computed replacement type candidates");
+assertSchema(typeBody.includes("connectors: [Connector!]!") && typeBody.includes("representations: [Representation!]!"), "Type MUST expose the Rust catalog handles");
+const designBody = definitionBody("type Design");
+assertSchema(designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalog!"), "Design MUST expose computed semio/rs graph operations");
+assertSchema(graphqlSchema.includes("input KitReadScopeInput @oneOf"), "semio GraphQL schema MUST expose Rust read scopes as one-of input");
 
 execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
   cwd: __dirname,

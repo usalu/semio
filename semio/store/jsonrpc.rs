@@ -22,6 +22,7 @@ use semio::kit_store::KitStore;
 use semio::kit_store_command::KitStoreCommand;
 use semio::kit_change::KitChangeKind;
 use semio::read::ReadKitCommand;
+use semio::kit_read_scope::{self, KitReadScope};
 
 type DispatchRes = std::result::Result<Value, (i32, String)>;
 
@@ -515,13 +516,20 @@ fn run_method(
     }
     if method == "kit.executeReadKitCommands" {
         let o = p_obj(&params)?;
+        let scope: KitReadScope = serde_json::from_value(
+            o.get("scope")
+                .ok_or_else(|| e32602("missing scope"))?
+                .clone(),
+        )
+        .map_err(e32000)?;
         let commands: Vec<ReadKitCommand> = serde_json::from_value(
             o.get("cmds")
                 .ok_or_else(|| e32602("missing cmds"))?
                 .clone(),
         )
         .map_err(e32000)?;
-        let g = k.read().map_err(|_| e32000("lock"))?;
+        let view = kit_read_scope::resolve_read_graph(k, &scope).map_err(e32000)?;
+        let g = view.read().map_err(|_| e32000("lock"))?;
         let results = ReadKitCommand::execute_many(&*g, &commands).map_err(e32000)?;
         return Ok(serde_json::to_value(&results).map_err(e32000)?);
     }

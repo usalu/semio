@@ -7520,6 +7520,8 @@ export interface SketchpadContext {
   designApps: Record<string, DesignAppState>;
   qualityApps: Record<string, QualityAppState>;
   feedbackApp: FeedbackAppState;
+  /** Docs shell + section state; authoritative for docs panel chrome alongside {@link DocsAppStore}. */
+  docsApp: DocsAppState;
   tutorial: TutorialState;
 
   backgroundOperations: Record<string, { type: string; status: "pending" | "running" | "completed" | "failed"; error?: string }>;
@@ -7663,6 +7665,8 @@ export type SketchpadEvent =
   | { type: "FEEDBACK.SET_SUBMITTING"; isSubmitting: boolean }
   | { type: "FEEDBACK.SET_SUBMITTED"; isSubmitted: boolean }
   | { type: "FEEDBACK.SET_ERROR"; error: string | undefined }
+  // Docs app shell (single global docs route)
+  | { type: "DOCS.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   // UI shell (sketchpad machine only — not persisted)
   | { type: "UI.ORIGIN.SET"; origin: string }
   | { type: "UI.FOCUS.SET_ITEMS"; items: FocusItem[] }
@@ -8685,6 +8689,11 @@ export const sketchpadMachine = setup({
       isSubmitted: false,
       error: undefined,
     },
+    docsApp: {
+      panelVisibility: { leftSidePanel: false, rightSidePanel: false, details: false },
+      selection: undefined,
+      sectionStates: {},
+    },
     tutorial: {
       activeTutorial: undefined,
       currentStepIndex: 0,
@@ -8858,6 +8867,10 @@ export const selectHomeApp = (state: { context: SketchpadContext }) => state.con
  * Selector returning the home app panel visibility.
  **/
 export const selectHomePanelVisibility = (state: { context: SketchpadContext }) => state.context.homeApp.panelVisibility;
+/**
+ * Selector returning the docs app panel visibility (machine authority for docs chrome).
+ **/
+export const selectDocsAppPanelVisibility = (state: { context: SketchpadContext }) => state.context.docsApp.panelVisibility;
 /**
  * Selector returning the home app selection.
  **/
@@ -9600,6 +9613,63 @@ export type SketchpadState$ = { context: SketchpadContext };
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
 // #endregion ❄️Actor Types
+
+// #region 🎈SketchpadRuntime
+// @emoji 🎯 Single runtime surface: imperative dispatch + local selection hooks (machine-backed).
+
+/**
+ * @emoji 🎯 Resolve the primary sketchpad actor for imperative calls outside React (e.g. bridge code).
+ **/
+function primarySketchpadActorOrUndefined(): SketchpadActorRef | undefined {
+  const preferred = actors.get("semio.sketchpad");
+  if (preferred) return preferred;
+  const first = actors.values().next();
+  return first.done ? undefined : first.value;
+}
+
+/** @internal Call when the focused kit tab changes; does not read or write kit DTOs. */
+export function setSketchpadLocalActiveKitId(kitId: string | undefined): void {
+  primarySketchpadActorOrUndefined()?.send({ type: "UI.LOCAL_SELECTION.SET_ACTIVE_KIT", kitId });
+}
+
+/** @internal Replace diagram / panel selection ids only. */
+export function setSketchpadLocalSelectedEntityIds(ids: readonly string[]): void {
+  primarySketchpadActorOrUndefined()?.send({ type: "UI.LOCAL_SELECTION.SET_ENTITY_IDS", entityIds: ids });
+}
+
+/**
+ * @emoji 🖱️ Subscribe to local selection only (contrast: {@link useKitStore} for rs-backed kit).
+ **/
+export function useSketchpadLocalSelection(): SketchpadLocalSelectionState {
+  const actor = useContext(SketchpadActorContext);
+  if (!actor) {
+    return { activeKitId: undefined, selectedEntityIds: [] };
+  }
+  return useSelector(actor, (s) => s.context.localSelection);
+}
+
+/**
+ * @emoji 🧭 Minimal probe events for {@link Snapshot#can}; keys match {@link SketchpadEvent} discriminators where possible.
+ **/
+const SKETCHPAD_CAPABILITY_PROBES = {
+  SET_THEME: { type: "SET_THEME" as const, theme: Theme.SYSTEM },
+  SET_LANGUAGE: { type: "SET_LANGUAGE" as const, language: "en" },
+  SET_DEVICE: { type: "SET_DEVICE" as const, device: "desktop" as Device },
+  SET_MODE: { type: "SET_MODE" as const, mode: Mode.USER },
+  SET_EXPERTISE: { type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL },
+  TOGGLE_FULLSCREEN: { type: "TOGGLE_FULLSCREEN" as const },
+} as const satisfies Record<string, SketchpadEvent>;
+
+/**
+ * @emoji 🧭 Whether the machine accepts a probe event (same transition table as real sends).
+ **/
+function useSketchpadMachineCan(probe: SketchpadEvent): boolean {
+  const actor = useContext(SketchpadActorContext);
+  if (!actor) return false;
+  return useSelector(actor, (s) => s.can(probe as Parameters<typeof s.can>[0]));
+}
+
+// #endregion 🎈SketchpadRuntime
 
 // #endregion 📮Machine
 
@@ -15149,7 +15219,12 @@ const MultiWindowApp: FC = () => {
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
 
-  const storedWindowLayout = useSyncDeep<any, any>(store, (s: KitAppState | null) => s?.windowLayout);
+  const windowLayoutFromMachine = useMemo(() => {
+    if (!kitId) return () => undefined as any;
+    const inner = createKitWindowLayoutSelector(kitId);
+    return (snap: { context: SketchpadContext }) => inner(snap);
+  }, [kitId]);
+  const storedWindowLayout = useSelector(actor, windowLayoutFromMachine);
 
   const defaultLayout = useMemo(
     () => ({
@@ -15344,15 +15419,18 @@ const MultiWindowApp: FC = () => {
  *MUST provide the current filter string and a setter.
  **/
 export function useKitAppFilterSearch(): HookResult<string> {
-  const store = useKitAppStore();
-  const filterSearch = useSyncDeep(store, (s: KitAppState | null) => s?.filterSearch ?? "") || "";
-  const setFilterSearch = useCallback(
-    (value: string) => {
-      store?.change({ filterSearch: value });
-    },
-    [store],
-  );
-  return [filterSearch, setFilterSearch, !!store];
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const kitId = kitScope?.id ?? "";
+  const filterSearchSelector = useMemo(() => createKitFilterSearchSelector(kitId), [kitId]);
+  const filterSearch = useSelector(actor, filterSearchSelector) ?? "";
+  const filterProbe = useMemo(() => ({ type: "KIT.SET_FILTER" as const, kitId, search: "" }), [kitId]);
+  const canSet = useSketchpadMachineCan(filterProbe);
+  const setFilterSearch = useMemo(() => {
+    if (!canSet || !kitId) return undefined;
+    return (value: string) => actor.send({ type: "KIT.SET_FILTER", kitId, search: value });
+  }, [actor, kitId, canSet]);
+  return conditionalHookResult(Boolean(kitId) && canSet, filterSearch, setFilterSearch);
 }
 
 /**
@@ -15444,16 +15522,21 @@ const ToolbarCommandButton: FC<ToolbarCommandButtonProps> = ({ id, icon, text, d
 
 export const KitToolbarHistory: FC = () => {
   const store = useKitAppStore();
-  const canUndo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canUndo() ?? false,
-    () => false,
-  );
-  const canRedo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canRedo() ?? false,
-    () => false,
-  );
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  useEffect(() => {
+    if (!store) {
+      setCanUndo(false);
+      setCanRedo(false);
+      return;
+    }
+    const tick = () => {
+      setCanUndo(store.canUndo());
+      setCanRedo(store.canRedo());
+    };
+    tick();
+    return store.onChangedDeep(tick);
+  }, [store]);
   const { undo, redo } = useKitAppCommands();
 
   return (
@@ -19108,8 +19191,12 @@ export function useSketchpadStore(id?: string): SketchpadStore {
 /**
  * Hook returning the sketchpad state with optional selector.
  **/
-export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState | null {
-  return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : (identitySelector as any));
+export function useSketchpad<T>(selector?: (state: SketchpadState) => T, _id?: string): T | SketchpadState | null {
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => {
+    const state = snapshot.context.sketchpad;
+    return selector ? selector(state) : (state as unknown as T);
+  });
 }
 
 /**
@@ -19125,16 +19212,16 @@ export function useNavigation(): string {
  **/
 export function useAppType(): AppKind {
   const navigation = useNavigation();
-  const apps = useSyncExternalStore(
-    useCallback((cb) => appRegistry.subscribe(cb), []),
-    () => appRegistry.getAllApps(),
-  );
-
+  const [appsTick, setAppsTick] = useState(0);
+  useEffect(() => {
+    return appRegistry.subscribe(() => setAppsTick((t) => t + 1));
+  }, []);
   return useMemo(() => {
+    void appsTick;
     const pathParts = navigation.split("/").filter((p: string) => p);
     const app = appRegistry.getAppForPath(pathParts);
     return app?.id ?? "home";
-  }, [navigation, apps]);
+  }, [navigation, appsTick]);
 }
 
 /**
@@ -19152,8 +19239,7 @@ export function getAppTypeFromPath(path: string): AppKind {
 export function useTheme(): HookResult<Theme> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_THEME" as const, theme: Theme.LIGHT }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.SET_THEME);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (theme: Theme) => actor.send({ type: "SET_THEME", theme });
@@ -19167,8 +19253,7 @@ export function useTheme(): HookResult<Theme> {
 export function useLanguage(): HookResult<string> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_LANGUAGE" as const, language: "en" }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.SET_LANGUAGE);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (language: string) => actor.send({ type: "SET_LANGUAGE", language });
@@ -19182,8 +19267,7 @@ export function useLanguage(): HookResult<string> {
 export function useDevice(): HookResult<Device> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectDevice(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_DEVICE" as const, device: "desktop" as Device }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.SET_DEVICE);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (device: Device) => actor.send({ type: "SET_DEVICE", device });
@@ -19197,8 +19281,7 @@ export function useDevice(): HookResult<Device> {
 export function useMode(): HookResult<Mode> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_MODE" as const, mode: Mode.USER }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.SET_MODE);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (mode: Mode) => actor.send({ type: "SET_MODE", mode });
@@ -19212,8 +19295,7 @@ export function useMode(): HookResult<Mode> {
 export function useExpertise(): HookResult<Expertise> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "SET_EXPERTISE" as const, expertise: Expertise.NORMAL }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.SET_EXPERTISE);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (expertise: Expertise) => actor.send({ type: "SET_EXPERTISE", expertise });
@@ -19227,8 +19309,7 @@ export function useExpertise(): HookResult<Expertise> {
 export function useFullscreen(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
-  const canSetEvent = useMemo(() => ({ type: "TOGGLE_FULLSCREEN" as const }), []);
-  const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
+  const canSet = useSketchpadMachineCan(SKETCHPAD_CAPABILITY_PROBES.TOGGLE_FULLSCREEN);
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (_value: boolean) => actor.send({ type: "TOGGLE_FULLSCREEN" });
@@ -19302,14 +19383,16 @@ export function useNavigationHistory(): {
     return h?.length ? h : ["/"];
   });
   const currentIndex = useSelector(actor, (snapshot) => snapshot.context.sketchpad.navigationHistoryIndex ?? 0);
+  const canGoBack = useSketchpadMachineCan({ type: "NAVIGATE_BACK" });
+  const canGoForward = useSketchpadMachineCan({ type: "NAVIGATE_FORWARD" });
   return useMemo(
     () => ({
       history,
       currentIndex,
-      canGoBack: currentIndex > 0,
-      canGoForward: currentIndex < history.length - 1,
+      canGoBack,
+      canGoForward,
     }),
-    [history, currentIndex],
+    [history, currentIndex, canGoBack, canGoForward],
   );
 }
 
@@ -19696,8 +19779,6 @@ export function useAppPanelVisibility(): PanelVisibility {
   const kitId = pathMatch?.[1];
   const itemId = pathMatch?.[3];
 
-  const docsPanelVisibility = useSyncExternalStore(subscribeDocsPanelVisibility, getDocsPanelVisibilitySnapshot, getDocsPanelVisibilitySnapshot);
-
   const selector = useMemo(() => {
     switch (appType) {
       case "home":
@@ -19715,21 +19796,15 @@ export function useAppPanelVisibility(): PanelVisibility {
         if (kitId && itemId) return createQualityPanelVisibilitySelector(kitId, itemId);
         return () => defaultPanelVisibility;
       case "docs":
-        return () => docsPanelVisibility;
+        return selectDocsAppPanelVisibility;
       case "feedback":
         return (snapshot: any) => snapshot.context.feedbackApp?.panelVisibility ?? defaultPanelVisibility;
       default:
         return () => defaultPanelVisibility;
     }
-  }, [appType, kitId, itemId, docsPanelVisibility]);
+  }, [appType, kitId, itemId]);
 
-  const panelVisibility = useSelector(actor, selector);
-
-  if (appType === "docs") {
-    return docsPanelVisibility;
-  }
-
-  return panelVisibility;
+  return useSelector(actor, selector);
 }
 
 /**
@@ -19817,7 +19892,7 @@ export function useAppCommands() {
       case "docs":
         return {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
-            updateDocsPanelVisibilityState((prev) => getNextPanelVisibilityFromToggle(prev, panelKey));
+            actor.send({ type: "DOCS.TOGGLE_PANEL", panel: panelKey } as any);
           },
           execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
@@ -29506,16 +29581,21 @@ export const DesignSelectSettings: FC = () => {
 
 export const DesignHistorySettings: FC = () => {
   const store = useDesignStore() as DesignStore | null;
-  const canUndo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canUndo() ?? false,
-    () => false,
-  );
-  const canRedo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canRedo() ?? false,
-    () => false,
-  );
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  useEffect(() => {
+    if (!store) {
+      setCanUndo(false);
+      setCanRedo(false);
+      return;
+    }
+    const tick = () => {
+      setCanUndo(store.canUndo());
+      setCanRedo(store.canRedo());
+    };
+    tick();
+    return store.onChangedDeep(tick);
+  }, [store]);
   const { undo, redo } = useDesignAppCommands();
   return (
     <ToolbarGroup>
@@ -41610,10 +41690,18 @@ export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, 
  *The hook MUST be called within a quality app scope.
  **/
 export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: QualityAppId): T | QualityAppState | null {
-  const store = useQualityAppStore(identitySelector, id);
-  if (!store) return null;
-  const selectedSelector = selector || identitySelector;
-  return useSyncDeep<QualityAppState>(store as any, selectedSelector as (value: QualityAppState) => QualityAppState);
+  const actor = useSketchpadActor();
+  const kitScope = useKitScope();
+  const qualityScope = useQualityScope();
+  const resolvedKitId = kitScope?.id ?? id?.kit;
+  const resolvedQualityId = qualityScope?.id ?? id?.quality;
+  const appSelector = useMemo(() => {
+    if (!resolvedKitId || !resolvedQualityId) return () => null as T | QualityAppState | null;
+    const base = createQualityAppSelector(resolvedKitId, resolvedQualityId);
+    const sel = selector ?? identitySelector;
+    return (snap: { context: SketchpadContext }) => sel(base(snap));
+  }, [resolvedKitId, resolvedQualityId, selector]);
+  return useSelector(actor, appSelector as any);
 }
 
 /**
@@ -42508,16 +42596,21 @@ export const QualitySelectSettings: FC = () => {
 
 export const QualityHistorySettings: FC = () => {
   const store = useQualityAppStore() as QualityAppStore | null;
-  const canUndo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canUndo() ?? false,
-    () => false,
-  );
-  const canRedo = useSyncExternalStore(
-    (listener) => (store ? store.onChangedDeep(listener) : () => {}),
-    () => store?.canRedo() ?? false,
-    () => false,
-  );
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  useEffect(() => {
+    if (!store) {
+      setCanUndo(false);
+      setCanRedo(false);
+      return;
+    }
+    const tick = () => {
+      setCanUndo(store.canUndo());
+      setCanRedo(store.canRedo());
+    };
+    tick();
+    return store.onChangedDeep(tick);
+  }, [store]);
   const { undo, redo } = useQualityAppCommands();
   return (
     <ToolbarGroup>
@@ -44051,6 +44144,15 @@ const docsAppPlugin: AppPlugin = {
 if (typeof window !== "undefined") {
   registerAppPlugin(docsAppPlugin);
   registerDocsRegistry(docsRegistry);
+
+  registerEventHandler("DOCS.TOGGLE_PANEL", {
+    action: (context: any, event: any) => ({
+      docsApp: {
+        ...context.docsApp,
+        panelVisibility: getNextPanelVisibilityFromToggle(context.docsApp.panelVisibility, event.panel),
+      },
+    }),
+  });
 }
 
 // #endregion 🔧Docs App Plugin Registration

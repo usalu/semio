@@ -4,10 +4,10 @@ overview: Refactor sketchpad UI state so one internal Store section owns the glo
 todos:
  - id: ticket-workflow
    content: Use repo ticket workflow before edits and associate this refactor with the appropriate sketchpad/layering goal.
-   status: in_progress
+   status: completed
  - id: store-section
    content: Consolidate state-management definitions in one Store section inside semio/sketchpad/index.tsx.
-   status: pending
+   status: in_progress
  - id: single-machine
    content: Make the sketchpad machine the only authority for sketchpad and app UI state.
    status: pending

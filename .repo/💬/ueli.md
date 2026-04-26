@@ -1410,6 +1410,9 @@ Requirements:
 
 semio/store:
 
+The code is outdated and semio/rs now uses graphql. Expose a graphql api instead of json rpc.
+Add a dev command that start graphiql to launch.json
+
 Create a new rust binary (new bundle) that imports from semio/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
 Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
 
@@ -1493,6 +1496,22 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+---
+
+Refactor state managment to be clean hooks such as
+You MUST use one Store section where you
+
+- One global state machine for sketchpad and all apps.
+- The consumers of the hooks MUST NOT know anything about xstate.
+- Derive canSet\* from transition property from the state machine
+
+e.g.
+
+- No XState duplicates
+- No useSyncDeep, useSyncExternalStore, etc
+
+---
 
 Get everything running again.
 Requirements:

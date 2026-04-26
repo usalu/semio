@@ -1,0 +1,10 @@
+{
+  "title": "Add Semio Graphql Schema Build Command",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "semio/graphql: Add a build command that takes the schema from semio/rs and overwrites the schema.graphql file.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪88b123f16af14a02ac458b8f3c375146"
+  ]
+}

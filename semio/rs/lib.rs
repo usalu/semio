@@ -2,7 +2,7 @@
 #![allow(clippy::new_without_default)]
 
 /// Exhaustive read-only kit graph commands; each variant maps to a typed [`ReadKitCommandOutput`].
-/// Executed against the **live** [`kit_graph::KitGraph`] (see `ReadKitCommand::execute` / `execute_many`).
+/// Executed against a **scoped** materialized [`kit_graph::KitGraph`] (see [`crate::kit_read_scope::resolve_read_graph`] and `ReadKitCommand::execute` / `execute_many`).
 pub mod read {
     #![allow(clippy::result_large_err)]
     // Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
@@ -6392,7 +6392,10 @@ pub mod kit_draft {
     use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
+    use crate::kit_change::KitChange;
     use crate::kit_graph::KitFullDto;
+    use crate::kit_graph::KitGraph;
+    use crate::kit_graph::KitGraphRef;
     use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
 
@@ -6486,6 +6489,22 @@ pub mod kit_draft {
         pub fn can_redo_draft(&self) -> bool {
             !self.redo_transactions.is_empty()
         }
+
+        /// 🧮 Throwaway materialization of the draft’s working state (base + finalized transactions + open transaction), for scoped reads.
+        pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphRef> {
+            let k = KitGraph::from_full_dto(self.before.clone());
+            for tx in &self.transactions {
+                for ch in &tx.changes {
+                    KitChange::apply_forward(ch, &k).map_err(|e| crate::error::SemioError::InvalidOperation(e.to_string()))?;
+                }
+            }
+            if let Some(ot) = &self.open_transaction {
+                for ch in &ot.changes {
+                    KitChange::apply_forward(ch, &k).map_err(|e| crate::error::SemioError::InvalidOperation(e.to_string()))?;
+                }
+            }
+            Ok(k)
+        }
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -6557,8 +6576,6 @@ pub mod kit_draft {
 pub mod kit_read_scope {
     use crate::error::{Result, SemioError};
     use crate::id::Id;
-    use crate::kit_change::KitChange;
-    use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
     use serde::{Deserialize, Serialize};
 
@@ -6591,9 +6608,11 @@ pub mod kit_read_scope {
         },
     }
 
+    use crate::kit_draft::Draft as KitDraft;
+
     /// 🧮 Materialize a throwaway graph: draft `before` + finalized transaction stack + the open transaction’s current `changes` (if any), matching the live WIP.
     fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
-        let d = {
+        let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             g.sessions
                 .get(session_id)
@@ -6699,6 +6718,7 @@ pub mod kit_session {
     #[serde(rename_all = "camelCase")]
     pub enum SessionCommand {
         ReadKitCommands {
+            scope: KitReadScope,
             commands: Vec<ReadKitCommand>,
         },
         NewDraft {
@@ -7466,6 +7486,7 @@ pub mod kit_store_command {
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
     use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
+    use crate::kit_read_scope::{self, KitReadScope};
     use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
@@ -7515,6 +7536,7 @@ pub mod kit_store_command {
     #[serde(rename_all = "camelCase")]
     pub enum KitStoreCommand {
         ReadKitCommands {
+            scope: KitReadScope,
             commands: Vec<ReadKitCommand>,
         },
         NewSession,
@@ -7642,9 +7664,10 @@ pub mod kit_store_command {
                     }
                     Ok(KitStoreCommandResult::Batch { results: out })
                 }
-                KitStoreCommand::ReadKitCommands { commands } => {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let results = ReadKitCommand::execute_many(&*g, &commands)?;
+                KitStoreCommand::ReadKitCommands { scope, commands } => {
+                    let view = kit_read_scope::resolve_read_graph(kit, &scope)?;
+                    let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let results = ReadKitCommand::execute_many(&*gr, &commands)?;
                     Ok(KitStoreCommandResult::ReadKitCommands { results })
                 }
                 KitStoreCommand::NewSession => {
@@ -7700,9 +7723,10 @@ pub mod kit_store_command {
         /// Execute a session-scoped command against `kit[sid]`.
         pub fn execute(self, kit: &KitGraphRef, sid: &Id) -> Result<SessionCommandResult> {
             match self {
-                SessionCommand::ReadKitCommands { commands } => {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let results = ReadKitCommand::execute_many(&*g, &commands)?;
+                SessionCommand::ReadKitCommands { scope, commands } => {
+                    let view = kit_read_scope::resolve_read_graph(kit, &scope)?;
+                    let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let results = ReadKitCommand::execute_many(&*gr, &commands)?;
                     Ok(SessionCommandResult::ReadKitCommands { results })
                 }
                 SessionCommand::NewDraft { checkpoint_id, alternative_id } => {
@@ -7739,8 +7763,13 @@ pub mod kit_store_command {
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let results = ReadKitCommand::execute_many(&*g, &commands)?;
+                    let sc = KitReadScope::Draft {
+                        session_id: sid.clone(),
+                        draft_id: did.clone(),
+                    };
+                    let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
+                    let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let results = ReadKitCommand::execute_many(&*gr, &commands)?;
                     Ok(KitDraftCommandResult::ReadKitCommands { results })
                 }
                 KitDraftCommand::StartTransaction => {
@@ -7879,8 +7908,14 @@ pub mod kit_store_command {
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let results = ReadKitCommand::execute_many(&*g, &commands)?;
+                    let sc = KitReadScope::Transaction {
+                        session_id: sid.clone(),
+                        draft_id: did.clone(),
+                        transaction_id: txid.clone(),
+                    };
+                    let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
+                    let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let results = ReadKitCommand::execute_many(&*gr, &commands)?;
                     Ok(TransactionCommandResult::ReadKitCommands { results })
                 }
                 TransactionCommand::ChangeKitCommands { commands: chs } => {
@@ -11748,7 +11783,7 @@ pub mod diff {
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
     use crate::connector::{ConnectorFullDto, ConnectorIdDto};
     use crate::design::DesignFullDto;
-    use crate::family::FamilyIdDto;
+    use crate::family::{FamilyFullDto, FamilyIdDto};
     use crate::file::{FileFullDto, FileIdDto};
     use crate::folder::{FolderFullDto, FolderIdDto};
     use crate::geom::{Coordinate, Plane, Point, Vector};
@@ -13028,6 +13063,77 @@ pub mod diff {
         }
     }
 
+    // --- Family (kit-level [`FamilyFullDto`]) ---
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FamilyDiff {
+        pub name: Option<String>,
+        pub description: Option<Option<String>>,
+        pub icon: Option<Option<String>>,
+        #[serde(default)]
+        pub ports: Option<PortsDiff>,
+        #[serde(default)]
+        pub attributes: Option<AttributesDiff>,
+    }
+
+    impl FamilyDiff {
+        pub fn is_empty(&self) -> bool {
+            self.name.is_none()
+                && self.description.is_none()
+                && self.icon.is_none()
+                && self.ports.as_ref().map_or(true, |p| p.is_empty())
+                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            Self {
+                name: merge_opt(&self.name, &b.name),
+                description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
+                icon: merge_opt_nested(&self.icon, &b.icon, |_, y| y.clone()),
+                ports: merge_opt_nested(&self.ports, &b.ports, |x, y| x.merge(y)),
+                attributes: merge_opt_nested(&self.attributes, &b.attributes, |x, y| x.merge(y)),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FamilyDiffUpdate {
+        pub id: FamilyIdDto,
+        #[serde(flatten)]
+        pub diff: FamilyDiff,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FamiliesDiff {
+        #[serde(default)]
+        pub removed: Vec<FamilyIdDto>,
+        #[serde(default)]
+        pub updated: Vec<FamilyDiffUpdate>,
+        #[serde(default)]
+        pub added: Vec<FamilyFullDto>,
+    }
+
+    impl FamiliesDiff {
+        pub fn is_empty(&self) -> bool {
+            self.removed.is_empty() && self.updated.is_empty() && self.added.is_empty()
+        }
+        pub fn merge(&self, b: &Self) -> Self {
+            let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
+            removed.sort_by(|x, y| x.id.cmp(&y.id));
+            removed.dedup_by(|x, y| x.id == y.id);
+            let mut m: HashMap<Id, FamilyDiffUpdate> = HashMap::new();
+            for u in &self.updated {
+                m.insert(u.id.id.clone(), u.clone());
+            }
+            for u in &b.updated {
+                let e = m.entry(u.id.id.clone()).or_insert_with(|| FamilyDiffUpdate { id: u.id.clone(), diff: FamilyDiff::default() });
+                e.diff = e.diff.merge(&u.diff);
+            }
+            Self { removed, updated: m.into_values().collect(), added: [self.added.as_slice(), b.added.as_slice()].concat() }
+        }
+    }
+
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FolderDiff {
@@ -14077,6 +14183,29 @@ pub mod diff {
         d
     }
 
+    /// 🏠 Delta between two kit-level [`FamilyFullDto`] snapshots (ports + attributes nested like files).
+    pub fn family_full_delta(b: &FamilyFullDto, a: &FamilyFullDto) -> FamilyDiff {
+        let mut d = FamilyDiff::default();
+        if b.name != a.name {
+            d.name = Some(a.name.clone());
+        }
+        if b.description != a.description {
+            d.description = Some(a.description.clone());
+        }
+        if b.icon != a.icon {
+            d.icon = Some(a.icon.clone());
+        }
+        let pd = ports_between(&b.ports, &a.ports);
+        if !pd.is_empty() {
+            d.ports = Some(pd);
+        }
+        let at = attributes_between(&b.attributes, &a.attributes);
+        if !at.is_empty() {
+            d.attributes = Some(at);
+        }
+        d
+    }
+
     pub fn folder_full_delta(b: &FolderFullDto, a: &FolderFullDto) -> FolderDiff {
         let mut d = FolderDiff::default();
         if b.path != a.path {
@@ -14340,6 +14469,24 @@ pub mod diff {
         }
         if let Some(v) = &d.updated {
             fd.updated = v.clone();
+        }
+    }
+
+    pub fn merge_family_diff_into_full(fd: &mut FamilyFullDto, d: &FamilyDiff) {
+        if let Some(v) = &d.name {
+            fd.name = v.clone();
+        }
+        if let Some(v) = &d.description {
+            fd.description = v.clone();
+        }
+        if let Some(v) = &d.icon {
+            fd.icon = v.clone();
+        }
+        if let Some(p) = &d.ports {
+            merge_ports_diff_into_vec(&mut fd.ports, p);
+        }
+        if let Some(a) = &d.attributes {
+            merge_attributes_coll_into_vec(&mut fd.attributes, a);
         }
     }
 
@@ -14739,7 +14886,8 @@ pub mod kit_diff {
     use crate::author::{AuthorFullDto, AuthorIdDto};
     use crate::concept::ConceptIdDto;
     use crate::design::{DesignFullDto, DesignIdDto};
-    use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
+    use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FamiliesDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
+    use crate::family::FamilyIdDto;
     use crate::file::FileIdDto;
     use crate::folder::FolderIdDto;
     use crate::id::Id;
@@ -14806,6 +14954,8 @@ pub mod kit_diff {
         #[serde(default)]
         pub types: Option<TypesDiff>,
         #[serde(default)]
+        pub families: Option<FamiliesDiff>,
+        #[serde(default)]
         pub designs: Option<DesignsDiff>,
         #[serde(default)]
         pub files: Option<FilesDiff>,
@@ -14844,6 +14994,7 @@ pub mod kit_diff {
                 && self.created.is_none()
                 && self.updated.is_none()
                 && self.types.as_ref().map_or(true, |x| x.is_empty())
+                && self.families.as_ref().map_or(true, |x| x.is_empty())
                 && self.designs.as_ref().map_or(true, |x| x.is_empty())
                 && self.files.as_ref().map_or(true, |x| x.is_empty())
                 && self.folders.as_ref().map_or(true, |x| x.is_empty())
@@ -14869,6 +15020,7 @@ pub mod kit_diff {
                 created: merge_opt_nested(&self.created, &b.created, |_, y| y.clone()),
                 updated: merge_opt_nested(&self.updated, &b.updated, |_, y| y.clone()),
                 types: merge_opt_nested(&self.types, &b.types, |x, y| x.merge(y)),
+                families: merge_opt_nested(&self.families, &b.families, |x, y| x.merge(y)),
                 designs: merge_opt_nested(&self.designs, &b.designs, |x, y| x.merge(y)),
                 files: merge_opt_nested(&self.files, &b.files, |x, y| x.merge(y)),
                 folders: merge_opt_nested(&self.folders, &b.folders, |x, y| x.merge(y)),
@@ -14934,6 +15086,17 @@ pub mod kit_diff {
                     }
                 }
                 k.types.extend(t.added.iter().cloned());
+            }
+            if let Some(f) = &self.families {
+                for r in &f.removed {
+                    k.families.retain(|x| x.id != r.id);
+                }
+                for u in &f.updated {
+                    if let Some(x) = k.families.iter_mut().find(|x| x.id == u.id.id) {
+                        crate::diff::merge_family_diff_into_full(x, &u.diff);
+                    }
+                }
+                k.families.extend(f.added.iter().cloned());
             }
             if let Some(d) = &self.designs {
                 for r in &d.removed {
@@ -15070,6 +15233,28 @@ pub mod kit_diff {
                 });
                 if d.types.as_ref().unwrap().is_empty() {
                     d.types = None;
+                }
+            }
+            let (a_fam, r_fam, m_fam) = diff_id_vec(&before.families, &after.families, |t| &t.id);
+            if !a_fam.is_empty() || !r_fam.is_empty() || !m_fam.is_empty() {
+                d.families = Some(FamiliesDiff {
+                    removed: r_fam.iter().map(|i| FamilyIdDto { id: i.clone() }).collect(),
+                    updated: m_fam
+                        .iter()
+                        .filter_map(|full| {
+                            let b = before.families.iter().find(|t| t.id == full.id)?;
+                            let df = crate::diff::family_full_delta(b, full);
+                            if df.is_empty() {
+                                None
+                            } else {
+                                Some(crate::diff::FamilyDiffUpdate { id: FamilyIdDto { id: full.id.clone() }, diff: df })
+                            }
+                        })
+                        .collect(),
+                    added: a_fam,
+                });
+                if d.families.as_ref().unwrap().is_empty() {
+                    d.families = None;
                 }
             }
             let bm: HashMap<Id, &DesignFullDto> = before.designs.iter().map(|x| (x.id.clone(), x)).collect();
@@ -26898,6 +27083,61 @@ pub mod kit_graphql {
         accepted: bool,
     }
 
+    /// GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
+    enum KitReadScopeInput {
+        TheKit(ConfirmOnlyInput),
+        Checkpoint(KitReadScopeCheckpointInput),
+        Alternative(KitReadScopeAlternativeInput),
+        Draft(KitReadScopeDraftInput),
+        Transaction(KitReadScopeTransactionInput),
+    }
+
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
+    struct KitReadScopeCheckpointInput {
+        checkpoint_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
+    struct KitReadScopeAlternativeInput {
+        alternative_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
+    struct KitReadScopeDraftInput {
+        session_id: String,
+        draft_id: String,
+    }
+
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
+    struct KitReadScopeTransactionInput {
+        session_id: String,
+        draft_id: String,
+        transaction_id: String,
+    }
+
+    fn kit_read_scope_from_gql(scope: KitReadScopeInput) -> std::result::Result<crate::kit_read_scope::KitReadScope, Error> {
+        use crate::kit_read_scope::KitReadScope as R;
+        Ok(match scope {
+            KitReadScopeInput::TheKit(_) => R::TheKit,
+            KitReadScopeInput::Checkpoint(c) => R::Checkpoint {
+                checkpoint_id: Id::from(c.checkpoint_id.as_str()),
+            },
+            KitReadScopeInput::Alternative(a) => R::Alternative {
+                alternative_id: Id::from(a.alternative_id.as_str()),
+            },
+            KitReadScopeInput::Draft(d) => R::Draft {
+                session_id: Id::from(d.session_id.as_str()),
+                draft_id: Id::from(d.draft_id.as_str()),
+            },
+            KitReadScopeInput::Transaction(t) => R::Transaction {
+                session_id: Id::from(t.session_id.as_str()),
+                draft_id: Id::from(t.draft_id.as_str()),
+                transaction_id: Id::from(t.transaction_id.as_str()),
+            },
+        })
+    }
+
     pub struct RootQuery;
 
     #[Object(name = "Query")]
@@ -26905,6 +27145,14 @@ pub mod kit_graphql {
         /// Live kit graph root (strong handles: nested fields return the same in-memory `Arc` stores).
         async fn kit_store(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
             Ok(KitStoreNode(ctx.data::<KitGraphRef>()?.clone()))
+        }
+
+        /// Materialized kit view for **scoped** reads (the kit, checkpoint, alternative, draft, or open transaction), matching [`KitReadScope`].
+        async fn kit_read_scope(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
+            let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let rs = kit_read_scope_from_gql(scope)?;
+            let view = crate::kit_read_scope::resolve_read_graph(&g, &rs).map_err(|e| Error::new(e.to_string()))?;
+            Ok(KitStoreNode(view))
         }
     }
 
@@ -28144,7 +28392,7 @@ pub mod kit_graphql {
 
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
-        /// Broadcast [`KitEvent`] stream (same bus as legacy `KitStoreHandle::subscribe`).
+        /// Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`).
         async fn event_stream(&self, ctx: &Context<'_>) -> Result<KitEventSubscriptionStream> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let mut rx = lock_graph(&graph)?.subscribe();
@@ -28166,6 +28414,11 @@ pub mod kit_graphql {
 
     pub fn schema() -> &'static GqlSchema {
         SCHEMA.get_or_init(|| Schema::build(RootQuery, RootMutation, RootSubscription).finish())
+    }
+
+    /// 🔗Return the canonical GraphQL SDL generated from the Rust control plane.
+    pub fn schema_sdl() -> String {
+        schema().sdl()
     }
 
     /// 🌐 Row for `Design.replaceableCatalog`.
@@ -28330,7 +28583,7 @@ pub mod kit_graphql {
             Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
         }
 
-        /// Opaque JSON VCS tree (same shape as legacy `vcsState` WASM helper).
+        /// Opaque JSON VCS tree (same shape as `vcsState` WASM helper).
         async fn vcs_state_json(&self) -> Result<Json<serde_json::Value>> {
             let g = lock_graph(&self.0)?;
             #[derive(serde::Serialize)]
@@ -28869,6 +29122,23 @@ mod tests {
         use crate::kit_graphql;
         use crate::change_command::ChangeKitCommand;
         use crate::events::KitEvent;
+
+        #[test]
+        fn generated_schema_sdl_matches_semio_graphql_schema() {
+            let checked_in = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("graphql").join("schema.graphql")).expect("read semio/graphql/schema.graphql");
+            assert_eq!(kit_graphql::schema_sdl(), checked_in, "run `npx nx build semio/graphql` to regenerate semio/graphql/schema.graphql from semio/rs");
+        }
+
+        #[test]
+        #[ignore = "writes the generated SDL to SEMIO_GRAPHQL_SCHEMA_OUT"]
+        fn export_semio_graphql_schema_file() {
+            let out = std::env::var("SEMIO_GRAPHQL_SCHEMA_OUT").expect("SEMIO_GRAPHQL_SCHEMA_OUT");
+            let path = std::path::PathBuf::from(out);
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent).expect("create schema output parent");
+            }
+            std::fs::write(path, kit_graphql::schema_sdl()).expect("write generated GraphQL schema");
+        }
 
         #[test]
         fn query_kit_name_via_schema() {
@@ -31352,7 +31622,7 @@ mod tests {
         #[test]
         fn kit_store_command_json_batch_roundtrip() {
             let v = serde_json::json!([{
-                "readKitCommands": { "commands": [{ "readKitFullCommand": null }] }
+                "readKitCommands": { "scope": { "theKit": null }, "commands": [{ "readKitFullCommand": null }] }
             }]);
             let cmds: Vec<KitStoreCommand> = serde_json::from_value(v).expect("de");
             assert!(matches!(&cmds[0], KitStoreCommand::ReadKitCommands { .. }));

@@ -160,7 +160,46 @@ export type ReadKitCommand =
   | { readonly readKitDesignCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadDesignCommand> } }
   | { readonly readKitTypeCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadTypeCommand> } };
 
-/** @emoji 🧾 Batch input for {@link KitStore.read}. */
+/**
+ * @emoji 🧭 Which materialized kit view read commands run against (matches `semio/rs` `KitReadScope` / GraphQL oneof `KitReadScopeInput`).
+ * Use `theKitReadScope` for the main live line.
+ */
+export type KitReadScope =
+  | { readonly theKit: null }
+  | { readonly checkpoint: { readonly checkpointId: string } }
+  | { readonly alternative: { readonly alternativeId: string } }
+  | { readonly draft: { readonly sessionId: string; readonly draftId: string } }
+  | { readonly transaction: { readonly sessionId: string; readonly draftId: string; readonly transactionId: string } };
+
+/** @emoji 🧭 Main committed kit line (default read scope). */
+export const theKitReadScope: KitReadScope = { theKit: null };
+
+/** @emoji 🧪 Stable string for cache keys (sorted JSON of the GraphQL oneof payload). */
+export function kitReadScopeKey(scope: KitReadScope): string {
+  return JSON.stringify(kitReadScopeToGraphQLInput(scope));
+}
+
+/** @emoji 🧾 `KitReadScopeInput` object for async-graphql (camelCase, `theKit` uses `ConfirmOnlyInput`). */
+export function kitReadScopeToGraphQLInput(scope: KitReadScope): Record<string, unknown> {
+  if ("theKit" in scope) return { theKit: { confirm: true } };
+  if ("checkpoint" in scope) return { checkpoint: { checkpointId: scope.checkpoint.checkpointId } };
+  if ("alternative" in scope) return { alternative: { alternativeId: scope.alternative.alternativeId } };
+  if ("draft" in scope) return { draft: { sessionId: scope.draft.sessionId, draftId: scope.draft.draftId } };
+  const t = scope as Extract<KitReadScope, { transaction: unknown }>;
+  return {
+    transaction: {
+      sessionId: t.transaction.sessionId,
+      draftId: t.transaction.draftId,
+      transactionId: t.transaction.transactionId,
+    },
+  };
+}
+
+function isTheKitReadScope(s: KitReadScope): boolean {
+  return "theKit" in s;
+}
+
+/** @emoji 🧾 Batch input for {@link KitStore.read} (per-command, same for all entries in a batch). */
 export type ReadWireBatch = readonly ReadKitCommand[];
 
 /** @emoji 🧾 One command’s read output object (per-command payload shape from rs). */
@@ -707,9 +746,20 @@ export class KitStore {
     if (this.disposed) throw new Error("KitStore disposed");
   }
 
+  private readScopeVars(scope: KitReadScope, extra: Record<string, unknown> = {}): Record<string, unknown> {
+    return { scope: kitReadScopeToGraphQLInput(scope), ...extra };
+  }
+
   private async gqlRun(body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown> {
     this.ensureAlive();
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
+  }
+
+  private async gqlRunWithReadScope(
+    scope: KitReadScope,
+    body: { query: string; variables?: Record<string, unknown> | undefined; operationName?: string },
+  ): Promise<unknown> {
+    return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? {}) });
   }
 
   /** @emoji 📣 Subscribe to kit GraphQL subscription events (RxJS-free public surface). */
@@ -770,6 +820,19 @@ export class KitStore {
     const data = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { theKitDto } }` }));
     const j = (data.kitStore as { theKitDto?: unknown })?.theKitDto;
     return j as KitFullDto;
+  }
+
+  /** @emoji 🧾 Full DTO for a {@link KitReadScope} (the kit line uses the WASM snapshot; other scopes use `kitReadScope` materialization). */
+  async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<Record<string, unknown>> {
+    if (isTheKitReadScope(scope)) {
+      return (await this.snapshot()) as Record<string, unknown>;
+    }
+    const data = kitGraphqlData(
+      await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { liveFullDto } }` }),
+    ) as { kitReadScope?: { liveFullDto?: unknown } | null };
+    const j = data.kitReadScope?.liveFullDto;
+    if (j && typeof j === "object" && !Array.isArray(j)) return j as Record<string, unknown>;
+    return {};
   }
 
   async materializeAt(checkpointId: string): Promise<KitFullDto> {
@@ -1050,10 +1113,10 @@ export class KitStore {
     return [];
   }
 
-  async read(batch: ReadWireBatch): Promise<ReadWireBatchResult> {
+  async read(scope: KitReadScope, batch: ReadWireBatch): Promise<ReadWireBatchResult> {
     this.ensureAlive();
     const out: ReadKitCommandOutput[] = [];
-    for (const c of batch) out.push(await this.mapReadCommand(c));
+    for (const c of batch) out.push(await this.mapReadCommand(scope, c));
     return out;
   }
 
