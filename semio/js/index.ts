@@ -258,8 +258,13 @@ export type ReadKitCommandOutput = Readonly<Record<string, unknown>>;
 /** @emoji 🧾 Batch output from {@link KitStore.read}. */
 export type ReadWireBatchResult = readonly ReadKitCommandOutput[];
 
-/** @emoji 📣 Subscription payload: GraphQL wraps `KitEvent` as JSON. */
-export type KitEvent = Readonly<Record<string, unknown>>;
+/** @emoji 📣 GraphQL `KitEvent` scalar + synthetic invalidation rows used by {@link WasmKitStoreClient}. */
+export type KitEvent = Readonly<
+  | { readonly Changed: null }
+  | { readonly ValidationInvalidated: null }
+  | KitCommandLifecycleEvent
+  | Record<string, unknown>
+>;
 
 /** @emoji 🧾 Optional filter for {@link KitStore.subscribeFiltered}. */
 export type KitEventFilter = (event: KitEvent) => boolean;
@@ -876,16 +881,23 @@ export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandL
   return typeof v.requestId === "string" && typeof v.commandKind === "string" && typeof v.phase === "string";
 }
 
+function __normalizeTopLevelKitEventWire(raw: unknown): unknown {
+  if (raw === "Changed") return { Changed: null };
+  if (raw === "ValidationInvalidated") return { ValidationInvalidated: null };
+  return raw;
+}
+
 function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
-  if (raw == null || typeof raw !== "object") return undefined;
-  const top = raw as Record<string, unknown>;
+  const raw0 = __normalizeTopLevelKitEventWire(raw);
+  if (raw0 == null || typeof raw0 !== "object") return undefined;
+  const top = raw0 as Record<string, unknown>;
   /** serde externally-tagged enum: `{ "SemioKitCommand": { requestId, ... } }` */
   const lifecycleWrapper: unknown =
     top.semioKitCommand !== undefined
-      ? raw
+      ? raw0
       : top.SemioKitCommand !== undefined
         ? { semioKitCommand: top.SemioKitCommand }
-        : raw;
+        : raw0;
   if (isKitCommandLifecycleEvent({ semioKitCommand: (lifecycleWrapper as { semioKitCommand?: unknown }).semioKitCommand })) {
     const command = (lifecycleWrapper as { semioKitCommand: unknown }).semioKitCommand;
     const value = command as Record<string, unknown>;
@@ -905,7 +917,7 @@ function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
       },
     };
   }
-  return raw as KitEvent;
+  return raw0 as KitEvent;
 }
 
 type KitGraphqlHandle = { execute(requestJson: string): Promise<string> };
@@ -1184,6 +1196,22 @@ export class KitStore {
     return () => {
       sub.unsubscribe();
     };
+  }
+
+  /** @emoji 📣 Fires only after coalescing wire `Changed` / synthetic `{ Changed: null }` rows. */
+  subscribeRootInvalidation(handler: () => void): Unsubscribe {
+    return this.subscribeFiltered(
+      (ev) => typeof ev === "object" && ev !== null && "Changed" in ev && (ev as { Changed?: unknown }).Changed === null,
+      () => handler(),
+    );
+  }
+
+  /** @emoji 📣 Kit command lifecycle scalar rows (`semioKitCommand` / `SemioKitCommand`). */
+  subscribeSemioKitCommandLifecycle(handler: (row: KitCommandLifecycleEvent["semioKitCommand"]) => void): Unsubscribe {
+    return this.subscribeFiltered(
+      (ev) => isKitCommandLifecycleEvent(ev),
+      (ev) => handler((ev as KitCommandLifecycleEvent).semioKitCommand),
+    );
   }
 
   private startSubscriptionLoop(): void {
@@ -2067,6 +2095,50 @@ export class KitStore {
     };
     return ids.map((row) => this.type(toId(row), scope)).filter((s) => s.id !== "");
   }
+
+  /** @emoji 🧾 Design row id strings from `readKitDesignIdsCommand` (no {@link DesignStore} allocation). */
+  async designRowIds(scope: KitReadScope = theKitReadScope): Promise<readonly string[]> {
+    const out = await this.read(scope, [{ readKitDesignIdsCommand: null }]);
+    const ids = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
+    );
+    const toId = (row: unknown): string => {
+      if (typeof row === "string") return row;
+      if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
+      return "";
+    };
+    return ids.map((row) => toId(row)).filter((s) => s !== "");
+  }
+
+  /** @emoji 🧾 Kind row id strings from `readKitTypeIdsCommand` (no {@link TypeStore} allocation). */
+  async kindRowIds(scope: KitReadScope = theKitReadScope): Promise<readonly string[]> {
+    const out = await this.read(scope, [{ readKitTypeIdsCommand: null }]);
+    const ids = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
+    );
+    const toId = (row: unknown): string => {
+      if (typeof row === "string") return row;
+      if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
+      return "";
+    };
+    return ids.map((row) => toId(row)).filter((s) => s !== "");
+  }
+
+  /** @emoji 🧾 Per-kind metadata rows (`readKitTypesMetadataCommand`). */
+  async kindMetadataRows(scope: KitReadScope = theKitReadScope): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitTypesMetadataCommand: null }]);
+    return kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitTypesMetadataCommand?: { types?: unknown } }).readKitTypesMetadataCommand?.types,
+    );
+  }
+
+  /** @emoji 🧾 Per-design metadata rows (`readKitDesignsMetadataCommand`). */
+  async designMetadataRows(scope: KitReadScope = theKitReadScope): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitDesignsMetadataCommand: null }]);
+    return kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitDesignsMetadataCommand?: { designs?: unknown } }).readKitDesignsMetadataCommand?.designs,
+    );
+  }
   // #endregion KitStoreEntityFactories
 }
 
@@ -2217,9 +2289,10 @@ export type KitCommandContext = Record<string, unknown>;
 export type KitCommandResult = Record<string, unknown>;
 
 /** @emoji 🧾 Typed kit mutation envelope for React facades (`kitStore.batch` transaction `changeKitCommands`). */
-export type KitTypedShellCommand = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
+type KitTypedShellCommand = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
 
-export type KitCommandFacade = { runMutation(cmd: KitTypedShellCommand): Promise<SetResult> };
+/** @emoji 🧾 Typed `changeKitCommands` batch facade for React shells (opaque to string command routers). */
+export type SemioKitCommandFacade = { runMutation(cmd: KitTypedShellCommand): Promise<SetResult> };
 
 export type KitStoreReadSnap = { readonly version: number; readonly data: unknown; readonly pending: number };
 
@@ -2759,40 +2832,31 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   readPieceFlatPlane(designId: string, pieceId: string): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope).piece(designId, pieceId).readFlatPlane();
+    return this.ks.piece(designId, pieceId, this.kitReadScope).readFlatPlane();
   }
 
   readPieceFlatCenter(designId: string, pieceId: string): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope).piece(designId, pieceId).readFlatCenter();
+    return this.ks.piece(designId, pieceId, this.kitReadScope).readFlatCenter();
   }
 
   readPieceParentConnectionFull(designId: string, pieceId: string): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .piece(designId, pieceId)
-      .readParentConnectionFull()
-      .then((x) => x ?? undefined);
+    return this.ks.piece(designId, pieceId, this.kitReadScope).readParentConnectionFull();
   }
 
   readDesignIncludedDesigns(designId: string): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .design(designId)
-      .readIncludedDesigns()
-      .then((v) => (Array.isArray(v) ? v : []));
+    return this.ks.design(designId, this.kitReadScope).readIncludedDesigns();
   }
 
   readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .design(designId)
-      .readClusterableGroups(selection)
-      .then((v) => (Array.isArray(v) ? v : []));
+    return this.ks.design(designId, this.kitReadScope).readClusterableGroups(selection);
   }
 
   readDesignQualitySum(designId: string, qualityId: string): Promise<number> {
-    return new LiveKitRoot(this.ks, this.kitReadScope).design(designId).readQualitySum(qualityId);
+    return this.ks.design(designId, this.kitReadScope).readQualitySum(qualityId);
   }
 
   readTypeBestRepresentation(typeId: string, tagIds: readonly string[]): Promise<unknown> {
-    return new LiveKitRoot(this.ks, this.kitReadScope).type(typeId).readBestRepresentation(tagIds);
+    return this.ks.type(typeId, this.kitReadScope).readBestRepresentation(tagIds);
   }
 
   readColoredConnectors(): Promise<readonly unknown[]> {
@@ -2800,24 +2864,15 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .design(designId)
-      .readReplaceableCatalog(selection)
-      .then((v) => v.types);
+    return this.ks.design(designId, this.kitReadScope).readReplaceableCatalogTypes(selection);
   }
 
   readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .design(designId)
-      .readReplaceableCatalog(selection)
-      .then((v) => v.designs);
+    return this.ks.design(designId, this.kitReadScope).readReplaceableCatalogDesigns(selection);
   }
 
   readDesignIncludedDesignIds(designId: string): Promise<readonly string[]> {
-    return new LiveKitRoot(this.ks, this.kitReadScope)
-      .design(designId)
-      .readIncludedDesignIds()
-      .then((v) => (Array.isArray(v) ? v : []));
+    return this.ks.design(designId, this.kitReadScope).readIncludedDesignIds();
   }
 
   submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
@@ -2945,6 +3000,13 @@ export class WasmKitStoreClient implements KitStoreClient {
   syncNow(): Promise<unknown> {
     return this.ks.syncNow();
   }
+}
+
+/** @emoji 🧾 Resolves the live {@link KitStore} behind a WASM {@link KitStoreClient}, or null for fallback clients. */
+export function kitStoreFromKitStoreClient(client: KitStoreClient): KitStore | null {
+  if (client instanceof WasmKitStoreClient) return client.internalKs();
+  const probe = client as { internalKs?: () => KitStore };
+  return probe.internalKs?.() ?? null;
 }
 
 class FallbackKitClient implements KitStoreClient {
@@ -3168,9 +3230,9 @@ export async function createKitStoreClient(opts: { initialKit: KitFullDto; force
   return c;
 }
 
-const facades = new WeakMap<KitStoreClient, KitCommandFacade>();
+const facades = new WeakMap<KitStoreClient, SemioKitCommandFacade>();
 
-export function acquireSemioKitCommandFacade(client: KitStoreClient): KitCommandFacade {
+export function acquireSemioKitCommandFacade(client: KitStoreClient): SemioKitCommandFacade {
   let f = facades.get(client);
   if (!f) {
     f = {
@@ -3186,29 +3248,6 @@ export function acquireSemioKitCommandFacade(client: KitStoreClient): KitCommand
 
 export function releaseSemioKitCommandFacade(client: KitStoreClient): void {
   facades.delete(client);
-}
-
-export function createKitCommandEngineExplicitOrigin(_store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
-  return {
-    execute: async (..._args: unknown[]) => ({ ok: false, error: "use KitStoreClient" }),
-  };
-}
-
-export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof createKitCommandEngineExplicitOrigin> {
-  return createKitCommandEngineExplicitOrigin(store);
-}
-
-export async function executeSemioKitCommand(store: KitHostStore, command: string, _origin: string, ...args: unknown[]): Promise<unknown> {
-  const bridge = (store as { __semioKitBridge?: KitStoreClient }).__semioKitBridge;
-  if (!bridge) return { ok: false, error: "no kit bridge" };
-  if (command === "semio.kit.undo") return bridge.undo();
-  if (command === "semio.kit.redo") return bridge.redo();
-  if (command === "semio.kit.addFile" && args[0]) {
-    const file = FileSchema.parse(args[0]);
-    return bridge.submitChangeKitCommands([{ addFile: { file } }]);
-  }
-  void args;
-  return { ok: false, error: `unhandled ${command}` };
 }
 
 // #endregion 📦WasmKitStoreClient
@@ -5017,6 +5056,50 @@ export class DesignStore {
     return this.root.connection(this.id, connectionId, this.readScope);
   }
 
+  /** @emoji 🧾 Live design graph reads routed like {@link LiveDesign}. */
+  private liveDesign(): LiveDesign {
+    return new LiveDesign(this.root, this.readScope, this.id);
+  }
+
+  readIncludedDesigns(): Promise<unknown> {
+    return this.liveDesign().readIncludedDesigns().then((v) => (Array.isArray(v) ? v : []));
+  }
+
+  readClusterableGroups(selection: readonly string[]): Promise<unknown> {
+    return this.liveDesign().readClusterableGroups(selection).then((v) => (Array.isArray(v) ? v : []));
+  }
+
+  readQualitySum(qualityId: string): Promise<number> {
+    return this.liveDesign().readQualitySum(qualityId);
+  }
+
+  readReplaceableCatalogTypes(selection: readonly string[]): Promise<readonly string[]> {
+    return this.liveDesign().readReplaceableCatalog(selection).then((v) => v.types);
+  }
+
+  readReplaceableCatalogDesigns(selection: readonly string[]): Promise<readonly string[]> {
+    return this.liveDesign().readReplaceableCatalog(selection).then((v) => v.designs);
+  }
+
+  readIncludedDesignIds(): Promise<readonly string[]> {
+    return this.liveDesign().readIncludedDesignIds().then((v) => (Array.isArray(v) ? v : []));
+  }
+
+  /** @emoji 🧾 Per-piece placement metadata rows (`getPiecesMetadata`). */
+  readPiecesPlacementMetadataMap(): Promise<Record<string, unknown>> {
+    return this.root.getPiecesMetadata(this.readScope, this.id);
+  }
+
+  /** @emoji 🧾 Full piece DTO rows for this design (`getPieces`). */
+  readPiecesFullRows(): Promise<readonly unknown[]> {
+    return this.root.getPieces(this.readScope, this.id);
+  }
+
+  /** @emoji 🧾 Full connection DTO rows for this design (`getConnections`). */
+  readConnectionsFullRows(): Promise<readonly unknown[]> {
+    return this.root.getConnections(this.readScope, this.id);
+  }
+
   setName(name: string): Promise<SetResult> {
     return this.root.submitChangeKitCommands([
       { changeDesignCommands: { designId: { id: this.id }, commands: [{ name: { name } }] } },
@@ -5134,6 +5217,11 @@ export class TypeStore {
     return TypeSchema.parse(raw);
   }
 
+  /** @emoji 🧾 Best representation for tag ids (`readTypeBestRepresentationCommand`). */
+  readBestRepresentation(tagIds: readonly string[]): Promise<unknown> {
+    return new LiveType(this.root, this.readScope, this.id).readBestRepresentation(tagIds);
+  }
+
   setName(name: string): Promise<SetResult> {
     return this.root.submitChangeKitCommands([
       { changeTypeCommands: { typeId: { id: this.id }, commands: [{ name: { name } }] } },
@@ -5201,6 +5289,23 @@ export class PieceStore {
       this._version += 1;
       handler(ev);
     });
+  }
+
+  /** @emoji 🧾 Flattened placement plane in world space (`readPieceFlatPlaneCommand`). */
+  readFlatPlane(): Promise<unknown> {
+    return new LivePiece(this.root, this.readScope, this.designId, this.id).readFlatPlane();
+  }
+
+  /** @emoji 🧾 Flattened placement center (`readPieceFlatCenterCommand`). */
+  readFlatCenter(): Promise<unknown> {
+    return new LivePiece(this.root, this.readScope, this.designId, this.id).readFlatCenter();
+  }
+
+  /** @emoji 🧾 Parent connection row when connected (`readPieceParentConnectionFullCommand`). */
+  readParentConnectionFull(): Promise<unknown> {
+    return new LivePiece(this.root, this.readScope, this.designId, this.id)
+      .readParentConnectionFull()
+      .then((x) => x ?? undefined);
   }
 
   async full(): Promise<PiecePlain> {
@@ -5493,6 +5598,56 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       const batch: ReadWireBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
       const res = await ks.read(theKitReadScope, batch);
       expect(res.length).toBe(2);
+      await ks.dispose();
+    });
+
+    it("designRowIds and kindRowIds align with design() and type() factory lists", async () => {
+      const minimalKit: KitFullDto = {
+        id: "row-ids-kit",
+        name: "R",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [{ id: "ta", name: "A", connectors: [] }],
+        designs: [{ id: "da", name: "D", pieces: [], connections: [] }],
+      };
+      const ks = await KitStore.open(minimalKit);
+      expect(await ks.designRowIds()).toEqual((await ks.designs()).map((d) => d.id));
+      expect(await ks.kindRowIds()).toEqual((await ks.types()).map((t) => t.id));
+      await ks.dispose();
+    });
+
+    it("PieceStore readFlatPlane is defined on the owning store (delegates to live read wire)", async () => {
+      const minimalKit: KitFullDto = {
+        id: "piece-flat-kit",
+        name: "P",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [{ id: "t1", name: "T", connectors: [] }],
+        designs: [
+          {
+            id: "d1",
+            name: "D",
+            pieces: [
+              {
+                id: "p1",
+                name: "Piece1",
+                type: { id: "t1" },
+                plane: { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } },
+                center: { u: 0, v: 0 },
+                scale: 1,
+                color: "#000000",
+                props: [],
+                attributes: [],
+              },
+            ],
+            connections: [],
+          },
+        ],
+      };
+      const ks = await KitStore.open(minimalKit);
+      expect(typeof ks.piece("d1", "p1").readFlatPlane).toBe("function");
+      expect(typeof ks.design("d1").readClusterableGroups).toBe("function");
+      expect(typeof ks.type("t1").readBestRepresentation).toBe("function");
       await ks.dispose();
     });
 

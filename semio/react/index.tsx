@@ -16,15 +16,12 @@ import {
   ConnectorSchema,
   createFolderKitStore,
   createJsonFileKitStore,
-  createKitCommandEngine,
   createKitStoreClient,
-  createKitCommandEngineExplicitOrigin,
   createSessionKitStore,
   kitReadScopeKey,
   kitReadScopeToGraphQLInput,
   theKitReadScope,
   DesignSchema,
-  executeSemioKitCommand,
   FamilySchema,
   FileSchema,
   FolderSchema,
@@ -39,6 +36,8 @@ import {
   kitEventAffectsPieceLiveRead,
   kitEventAffectsReplaceableCatalogRead,
   kitEventAffectsTypeScopedRead,
+  kitEventTouchesDesign,
+  kitStoreFromKitStoreClient,
   resolveDesignIdForPieceOrConnection,
   submitKitChangeCommands,
   kitStoreClientAddChildByKind,
@@ -104,14 +103,332 @@ import {
   TypeStore,
   Vector,
 } from "@semio/js";
-import type { KitChildEntityKind, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
+import type { KitChildEntityKind, KitEvent, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
 
+// #region 🔖KitHostCommandDispatch
+/** @emoji 🪪 Normalizes {@link Id} handles and plain strings for kit graph RPCs. */
+function __kitHostIdStr(x: unknown): string {
+  if (x == null) return "";
+  if (typeof x === "string") return x;
+  if (typeof x === "object" && x !== null && "id" in x) return String((x as { id: unknown }).id);
+  return String(x);
+}
+
+function __kitHostBridge(store: KitHostStore): KitStoreClient | undefined {
+  return (store as KitHostStore & { __semioKitBridge?: KitStoreClient }).__semioKitBridge;
+}
+
+/**
+ * @emoji 📣 Typed kit graph side-effect for kit/design apps (replaces string `kitWire`).
+ * Sketchpad MUST use this shape instead of `{ command: string; args: unknown[] }`.
+ */
+export type KitHostGraphOp =
+  | { op: "deleteKitSelection"; typeIds: readonly unknown[]; designIds: readonly unknown[] }
+  | { op: "addKitChildType"; body: unknown }
+  | { op: "addKitChildTypes"; bodies: readonly unknown[] }
+  | { op: "removeKitType"; id: unknown }
+  | { op: "removeKitTypes"; ids: readonly unknown[] }
+  | { op: "addKitChildDesign"; body: unknown }
+  | { op: "addKitChildDesigns"; bodies: readonly unknown[] }
+  | { op: "removeKitDesign"; id: unknown }
+  | { op: "removeKitDesigns"; ids: readonly unknown[] }
+  | { op: "setEntityPatch"; entity: "Type" | "Design"; id: unknown; patch: unknown }
+  | { op: "patchTypes"; updates: readonly { type: unknown; diff: unknown }[] }
+  | { op: "patchDesigns"; updates: readonly { design: unknown; diff: unknown }[] }
+  | { op: "addDesignPiece"; designId: unknown; piece: unknown }
+  | { op: "addDesignPieces"; designId: unknown; pieces: readonly unknown[] }
+  | { op: "removeDesignPiece"; designId: unknown; pieceId: unknown }
+  | { op: "removeDesignPieces"; designId: unknown; pieceIds: readonly unknown[] }
+  | { op: "addDesignConnection"; designId: unknown; connection: unknown }
+  | { op: "addDesignConnections"; designId: unknown; connections: readonly unknown[] }
+  | { op: "deleteConnection"; designId: unknown; connectionId: unknown }
+  | { op: "deleteConnections"; designId: unknown; connectionIds: readonly unknown[] }
+  | { op: "patchPiece"; designId: unknown; pieceId: unknown; diff: unknown }
+  | { op: "patchPieces"; designId: unknown; updates: readonly { piece: unknown; diff: unknown }[] }
+  | { op: "patchConnection"; designId: unknown; connectionId: unknown; diff: unknown }
+  | { op: "patchConnectionMany"; designId: unknown; rows: readonly { id: string; diff: unknown }[] }
+  | { op: "clusterPieces"; designId: unknown; pieceIds: readonly unknown[]; clusterName: string }
+  | { op: "expandDesign"; parentDesignId: unknown; nestedDesignId: unknown }
+  | { op: "removeDesignPiecesAndConnections"; designId: unknown; pieceIds: readonly unknown[]; connectionIds: readonly unknown[] };
+
+/** @emoji 🧾 Applies {@link KitHostGraphOp} through the live {@link KitStoreClient} bridge. */
+export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp): Promise<SetResult> {
+  const bridge = __kitHostBridge(host);
+  if (!bridge) return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOp: no kit bridge" } };
+  switch (op.op) {
+    case "deleteKitSelection": {
+      for (const t of op.typeIds) {
+        const r = await kitStoreClientRemoveChildByKind(bridge, "Type", __kitHostIdStr(t));
+        if (!r.ok) return r;
+      }
+      for (const d of op.designIds) {
+        const r = await kitStoreClientRemoveChildByKind(bridge, "Design", __kitHostIdStr(d));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "addKitChildType":
+      return kitStoreClientAddChildByKind(bridge, "Type", op.body);
+    case "addKitChildTypes": {
+      for (const b of op.bodies) {
+        const r = await kitStoreClientAddChildByKind(bridge, "Type", b);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "removeKitType":
+      return kitStoreClientRemoveChildByKind(bridge, "Type", __kitHostIdStr(op.id));
+    case "removeKitTypes": {
+      for (const x of op.ids) {
+        const r = await kitStoreClientRemoveChildByKind(bridge, "Type", __kitHostIdStr(x));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "addKitChildDesign":
+      return kitStoreClientAddChildByKind(bridge, "Design", op.body);
+    case "addKitChildDesigns": {
+      for (const b of op.bodies) {
+        const r = await kitStoreClientAddChildByKind(bridge, "Design", b);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "removeKitDesign":
+      return kitStoreClientRemoveChildByKind(bridge, "Design", __kitHostIdStr(op.id));
+    case "removeKitDesigns": {
+      for (const x of op.ids) {
+        const r = await kitStoreClientRemoveChildByKind(bridge, "Design", __kitHostIdStr(x));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "setEntityPatch": {
+      const id = __kitHostIdStr(op.id);
+      const patch = op.patch && typeof op.patch === "object" ? (op.patch as Record<string, unknown>) : {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (v === undefined) continue;
+        const r = await writeKitStoreClientSchemaField(bridge, op.entity, k, v, id);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "patchTypes": {
+      for (const u of op.updates) {
+        const id = __kitHostIdStr(u.type);
+        const patch = u.diff && typeof u.diff === "object" ? (u.diff as Record<string, unknown>) : {};
+        for (const [k, v] of Object.entries(patch)) {
+          if (v === undefined) continue;
+          const r = await writeKitStoreClientSchemaField(bridge, "Type", k, v, id);
+          if (!r.ok) return r;
+        }
+      }
+      return { ok: true };
+    }
+    case "patchDesigns": {
+      for (const u of op.updates) {
+        const id = __kitHostIdStr(u.design);
+        const patch = u.diff && typeof u.diff === "object" ? (u.diff as Record<string, unknown>) : {};
+        for (const [k, v] of Object.entries(patch)) {
+          if (v === undefined) continue;
+          const r = await writeKitStoreClientSchemaField(bridge, "Design", k, v, id);
+          if (!r.ok) return r;
+        }
+      }
+      return { ok: true };
+    }
+    case "addDesignPiece":
+      return kitStoreClientAddPiece(bridge, __kitHostIdStr(op.designId), op.piece);
+    case "addDesignPieces": {
+      for (const p of op.pieces) {
+        const r = await kitStoreClientAddPiece(bridge, __kitHostIdStr(op.designId), p);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "removeDesignPiece":
+      return kitStoreClientRemovePiece(bridge, __kitHostIdStr(op.designId), __kitHostIdStr(op.pieceId));
+    case "removeDesignPieces": {
+      for (const p of op.pieceIds) {
+        const r = await kitStoreClientRemovePiece(bridge, __kitHostIdStr(op.designId), __kitHostIdStr(p));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "addDesignConnection":
+      return kitStoreClientAddConnection(bridge, __kitHostIdStr(op.designId), op.connection);
+    case "addDesignConnections": {
+      for (const c of op.connections) {
+        const r = await kitStoreClientAddConnection(bridge, __kitHostIdStr(op.designId), c);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "deleteConnection":
+      return bridge.deleteConnection(__kitHostIdStr(op.designId), __kitHostIdStr(op.connectionId));
+    case "deleteConnections": {
+      for (const c of op.connectionIds) {
+        const r = await bridge.deleteConnection(__kitHostIdStr(op.designId), __kitHostIdStr(c));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "patchPiece":
+      return kitStoreClientUpdatePiece(bridge, __kitHostIdStr(op.designId), __kitHostIdStr(op.pieceId), op.diff);
+    case "patchPieces": {
+      const did = __kitHostIdStr(op.designId);
+      for (const u of op.updates) {
+        const pid = __kitHostIdStr(u.piece);
+        const r = await kitStoreClientUpdatePiece(bridge, did, pid, u.diff);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "patchConnection":
+      return kitStoreClientUpdateConnection(bridge, __kitHostIdStr(op.designId), __kitHostIdStr(op.connectionId), op.diff);
+    case "patchConnectionMany": {
+      for (const row of op.rows) {
+        const r = await kitStoreClientUpdateConnection(bridge, __kitHostIdStr(op.designId), row.id, row.diff);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+    case "clusterPieces":
+      return bridge.clusterPieces(
+        __kitHostIdStr(op.designId),
+        op.pieceIds.map((x) => __kitHostIdStr(x)),
+        op.clusterName,
+      );
+    case "expandDesign":
+      return bridge.expandDesign(__kitHostIdStr(op.parentDesignId), __kitHostIdStr(op.nestedDesignId));
+    case "removeDesignPiecesAndConnections": {
+      const did = __kitHostIdStr(op.designId);
+      for (const c of op.connectionIds) {
+        const r = await bridge.deleteConnection(did, __kitHostIdStr(c));
+        if (!r.ok) return r;
+      }
+      for (const p of op.pieceIds) {
+        const r = await kitStoreClientRemovePiece(bridge, did, __kitHostIdStr(p));
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
+  }
+  return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOp: unreachable" } };
+}
+
+/** @emoji 🧾 String-command entry retained for sketchpad host flows; prefer {@link applyKitHostGraphOp} for graph edits. */
+export async function executeSemioKitCommand(store: KitHostStore, command: string, _origin: string, ...args: unknown[]): Promise<unknown> {
+  const bridge = __kitHostBridge(store);
+  if (command === "semio.kit.undo") {
+    if (!bridge) return { ok: false, error: "no kit bridge" };
+    return bridge.undo();
+  }
+  if (command === "semio.kit.redo") {
+    if (!bridge) return { ok: false, error: "no kit bridge" };
+    return bridge.redo();
+  }
+  if (command === "semio.kit.addFile" && args[0]) {
+    if (!bridge) return { ok: false, error: "no kit bridge" };
+    const file = FileSchema.parse(args[0]);
+    return bridge.submitChangeKitCommands([{ addFile: { file } }]);
+  }
+  if (command === "semio.kit.import") {
+    void _origin;
+    return { ok: false, error: "semio.kit.import: not wired in this build" };
+  }
+  if (command === "semio.kit.export") {
+    return { ok: true };
+  }
+  if (command === "semio.kit.patchQuality" && args[0] != null && args[1]) {
+    if (!bridge) return { ok: false, error: { kind: "Internal", message: "no kit bridge" } };
+    const qid = __kitHostIdStr(args[0]);
+    const patch = args[1] && typeof args[1] === "object" ? (args[1] as Record<string, unknown>) : {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === undefined) continue;
+      const r = await writeKitStoreClientSchemaField(bridge, "Quality", k, v, qid);
+      if (!r.ok) return r;
+    }
+    return { ok: true };
+  }
+  if ((command === "semio.kit.addChildType" || command === "semio.kit.createType") && args[0]) {
+    if (!bridge) return { ok: false, error: "no kit bridge" };
+    return kitStoreClientAddChildByKind(bridge, "Type", args[0]);
+  }
+  if (command === "semio.kit.moveToFolder" && args.length >= 3) {
+    const entityId = __kitHostIdStr(args[0]);
+    const kind = String(args[1] ?? "");
+    const folderId = __kitHostIdStr(args[2]);
+    const baseRaw = bridge ? await bridge.getSnapshot() : (store.getSnapshot().kit.toJSON() as Record<string, unknown>);
+    const plain = JSON.parse(JSON.stringify(baseRaw)) as Record<string, unknown>;
+    if (kind === "type") {
+      const rows = (plain.types as unknown[] | undefined) ?? [];
+      for (const t of rows) {
+        if (t && typeof t === "object" && (t as { id?: string }).id === entityId) (t as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "design") {
+      const rows = (plain.designs as unknown[] | undefined) ?? [];
+      for (const d of rows) {
+        if (d && typeof d === "object" && (d as { id?: string }).id === entityId) (d as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "quality") {
+      const rows = (plain.qualities as unknown[] | undefined) ?? [];
+      for (const q of rows) {
+        if (q && typeof q === "object" && (q as { id?: string }).id === entityId) (q as { folder?: string }).folder = folderId;
+      }
+    } else if (kind === "file") {
+      const rows = (plain.files as unknown[] | undefined) ?? [];
+      for (const f of rows) {
+        if (f && typeof f === "object" && (f as { id?: string }).id === entityId) (f as { folder?: { id: string } }).folder = { id: folderId };
+      }
+    } else if (kind === "folder") {
+      const rows = (plain.folders as unknown[] | undefined) ?? [];
+      for (const fo of rows) {
+        if (fo && typeof fo === "object" && (fo as { id?: string }).id === entityId) (fo as { parent?: { id: string } }).parent = { id: folderId };
+      }
+    } else {
+      return { ok: false, error: { kind: "InvalidValue", message: `moveToFolder: unknown kind ${kind}` } };
+    }
+    store.replace(asKitInstance(plain as never));
+    return { ok: true };
+  }
+  if (command === "semio.kit.createFolder" && args[0]) {
+    if (!bridge) return { ok: false, error: { kind: "Internal", message: "no kit bridge" } };
+    return kitStoreClientAddChildByKind(bridge, "Folder", args[0]);
+  }
+  if (command === "semio.kit.updateFolder" && args[0] && args[1]) {
+    if (!bridge) return { ok: false, error: { kind: "Internal", message: "no kit bridge" } };
+    const fid = __kitHostIdStr(args[0]);
+    const patch = args[1] as Record<string, unknown>;
+    for (const [k, v] of Object.entries(patch)) {
+      const r = await writeKitStoreClientSchemaField(bridge, "Folder", k, v, fid);
+      if (!r.ok) return r;
+    }
+    return { ok: true };
+  }
+  return { ok: false, error: { kind: "NotSupported", message: `unhandled ${command}` } };
+}
+
+/** @emoji 🧾 Memoized kit string-command engine for legacy callers (sketchpad). */
+export function createKitCommandEngineExplicitOrigin(store: KitHostStore): { execute: (...args: unknown[]) => Promise<unknown> } {
+  return {
+    execute: async (command: unknown, origin: unknown, ...rest: unknown[]) =>
+      executeSemioKitCommand(store, String(command), String(origin ?? ""), ...rest),
+  };
+}
+
+/** @emoji 🧾 Default {@link createKitCommandEngineExplicitOrigin} wrapper. */
+export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof createKitCommandEngineExplicitOrigin> {
+  return createKitCommandEngineExplicitOrigin(store);
+}
+// #endregion 🔖KitHostCommandDispatch
+
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
-export { kitReadScopeKey, kitReadScopeToGraphQLInput, theKitReadScope } from "@semio/js";
+export { kitReadScopeKey, kitReadScopeToGraphQLInput, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
   KitStoreExecuteResult,
@@ -1307,99 +1624,171 @@ const EMPTY_KIT_TYPES_METADATA: readonly unknown[] = [];
 const EMPTY_KIT_DESIGN_IDS: readonly string[] = [];
 const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
 
-/** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); `useSyncExternalStore` on {@link getSemioKitViewStore} (refetch + equality in @semio/js). */
+/** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); async hub + {@link KitStore.kindRowIds}. */
 export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
   const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-tids:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
         onChange();
         return () => {};
       }
-      return getSemioKitViewStore(runtime.kitClient).subscribe("typeIds", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_TYPE_IDS;
+          return ks.kindRowIds(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPE_IDS;
-    return getSemioKitViewStore(runtime.kitClient).getSnapshot("typeIds") as readonly string[];
-  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_TYPE_IDS };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? (snap.data as readonly string[]) : EMPTY_KIT_TYPE_IDS;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : snap.pending > 0
+        ? { kind: "pending", pending: snap.pending }
+        : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Per-type metadata rows (`ReadKitTypesMetadataCommand`) via {@link getSemioKitViewStore}. */
+/** @emoji 📌 Per-kind metadata rows (`ReadKitTypesMetadataCommand`) via {@link KitStore.kindMetadataRows}. */
 export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
   const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-tmeta:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
         onChange();
         return () => {};
       }
-      return getSemioKitViewStore(runtime.kitClient).subscribe("typesMetadata", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_TYPES_METADATA;
+          return ks.kindMetadataRows(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPES_METADATA;
-    return getSemioKitViewStore(runtime.kitClient).getSnapshot("typesMetadata");
-  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_TYPES_METADATA };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : EMPTY_KIT_TYPES_METADATA;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : snap.pending > 0
+        ? { kind: "pending", pending: snap.pending }
+        : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Design ids from live kit graph (`ReadKitDesignIdsCommand`) via {@link getSemioKitViewStore}. */
+/** @emoji 📌 Design ids from live kit graph (`ReadKitDesignIdsCommand`) via {@link KitStore.designRowIds}. */
 export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
   const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-dids:${scopeKey}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
         onChange();
         return () => {};
       }
-      return getSemioKitViewStore(runtime.kitClient).subscribe("designIds", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_DESIGN_IDS;
+          return ks.designRowIds(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGN_IDS;
-    return getSemioKitViewStore(runtime.kitClient).getSnapshot("designIds") as readonly string[];
-  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_DESIGN_IDS };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? (snap.data as readonly string[]) : EMPTY_KIT_DESIGN_IDS;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : snap.pending > 0
+        ? { kind: "pending", pending: snap.pending }
+        : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`) via {@link getSemioKitViewStore}. */
+/** @emoji 📌 Per-design metadata rows (`ReadKitDesignsMetadataCommand`) via {@link KitStore.designMetadataRows}. */
 export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
   const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-dmeta-res:${scopeKey}:${resolved ?? ""}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
         onChange();
         return () => {};
       }
-      return getSemioKitViewStore(runtime.kitClient).subscribe("designsMetadata", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_DESIGNS_METADATA;
+          return ks.designMetadataRows(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGNS_METADATA;
-    return getSemioKitViewStore(runtime.kitClient).getSnapshot("designsMetadata");
-  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
-  const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
-  const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_DESIGNS_METADATA };
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const value = Array.isArray(snap.data) ? snap.data : EMPTY_KIT_DESIGNS_METADATA;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : snap.pending > 0
+        ? { kind: "pending", pending: snap.pending }
+        : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
 }
 
@@ -3498,23 +3887,36 @@ export function useUpdateConnections(): {
   return { run, status };
 }
 
-/** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`). */
+/** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
 export function usePiecesMetadataMap(designId?: string): HookRead<Record<string, any>> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `pmd:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
         onChange();
         return () => {};
       }
-      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "metadata", onChange);
+      const c = runtime.kitClient;
+      const d = designId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return {};
+          return ks.design(d, readScope).readPiecesPlacementMetadataMap();
+        },
+        (ev) => kitEventTouchesDesign(ev as KitEvent, d),
+        onChange,
+      );
     },
-    [runtime.kitClient, designId],
+    [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "metadata");
-  }, [runtime.kitClient, designId]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = snap.data && typeof snap.data === "object" && !Array.isArray(snap.data) ? (snap.data as Record<string, any>) : {};
   const status: WriteStatus = !designId || !runtime.kitClient
@@ -3525,23 +3927,36 @@ export function usePiecesMetadataMap(designId?: string): HookRead<Record<string,
   return [value, status] as const;
 }
 
-/** @emoji 📌 Piece DTO rows for a design (GraphQL `piecesFullJson` / `KitStoreClient.getPieces`). */
+/** @emoji 📌 Piece DTO rows for a design via {@link DesignStore.readPiecesFullRows}. */
 export function useKitPieces(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `k-pieces:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
         onChange();
         return () => {};
       }
-      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "pieces", onChange);
+      const c = runtime.kitClient;
+      const d = designId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readPiecesFullRows();
+        },
+        (ev) => kitEventTouchesDesign(ev as KitEvent, d),
+        onChange,
+      );
     },
-    [runtime.kitClient, designId],
+    [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "pieces");
-  }, [runtime.kitClient, designId]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
   const status: WriteStatus = !designId || !runtime.kitClient
@@ -3552,23 +3967,36 @@ export function useKitPieces(designId?: string): HookRead<any[]> {
   return [value, status] as const;
 }
 
-/** @emoji 📌 Connection DTO rows for a design (GraphQL `connectionsFullJson`). */
+/** @emoji 📌 Connection DTO rows for a design via {@link DesignStore.readConnectionsFullRows}. */
 export function useKitConnections(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `k-conns:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
         onChange();
         return () => {};
       }
-      return getSemioKitDesignReadStore(runtime.kitClient).subscribe(designId, "connections", onChange);
+      const c = runtime.kitClient;
+      const d = designId;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readConnectionsFullRows();
+        },
+        (ev) => kitEventTouchesDesign(ev as KitEvent, d),
+        onChange,
+      );
     },
-    [runtime.kitClient, designId],
+    [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitDesignReadStore(runtime.kitClient).getSnapshot(designId, "connections");
-  }, [runtime.kitClient, designId]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
   const status: WriteStatus = !designId || !runtime.kitClient
@@ -3579,23 +4007,35 @@ export function useKitConnections(designId?: string): HookRead<any[]> {
   return [value, status] as const;
 }
 
-/** @emoji 📌 Shallow design catalog rows (`designsShallowJson`). */
+/** @emoji 📌 Shallow design catalog rows via {@link KitStore.getDesigns}. */
 export function useKitDesignsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `k-dshallow:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient) {
         onChange();
         return () => {};
       }
-      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("designs", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.getDesigns(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient],
+    [runtime.kitClient, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("designs");
-  }, [runtime.kitClient]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
   const status: WriteStatus = !runtime.kitClient
@@ -3606,23 +4046,35 @@ export function useKitDesignsShallow(): HookRead<any[]> {
   return [value, status] as const;
 }
 
-/** @emoji 📌 Shallow type catalog rows (`typesShallowJson`). */
+/** @emoji 📌 Shallow kind catalog rows via {@link KitStore.getTypes}. */
 export function useKitTypesShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `k-tshallow:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient) {
         onChange();
         return () => {};
       }
-      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("types", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.getTypes(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient],
+    [runtime.kitClient, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("types");
-  }, [runtime.kitClient]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
   const status: WriteStatus = !runtime.kitClient
@@ -3633,23 +4085,35 @@ export function useKitTypesShallow(): HookRead<any[]> {
   return [value, status] as const;
 }
 
-/** @emoji 📌 Shallow author rows (`authorsShallowJson`). */
+/** @emoji 📌 Shallow author rows via {@link KitStore.getAuthors}. */
 export function useKitAuthorsShallow(): HookRead<any[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
+  const key = `k-ashallow:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient) {
         onChange();
         return () => {};
       }
-      return getSemioKitShallowListReadStore(runtime.kitClient).subscribe("authors", onChange);
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.getAuthors(readScope);
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
     },
-    [runtime.kitClient],
+    [runtime.kitClient, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
-    return getSemioKitShallowListReadStore(runtime.kitClient).getSnapshot("authors");
-  }, [runtime.kitClient]);
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
   const value = Array.isArray(snap.data) ? snap.data : [];
   const status: WriteStatus = !runtime.kitClient
@@ -3816,11 +4280,12 @@ export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<
 }
 
 /**
- * Flattened piece plane from the kit store read path (`readPieceFlatPlaneCommand`), subscribed via JS live-read store.
+ * Flattened piece plane from {@link PieceStore.readFlatPlane} (`readPieceFlatPlaneCommand`).
  */
 export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const key = `pfp:${designId ?? ""}:${pieceId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `pfp:${designId ?? ""}:${pieceId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !pieceId) {
@@ -3832,12 +4297,16 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readPieceFlatPlane(d, p),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return undefined;
+          return ks.piece(d, p, readScope).readFlatPlane();
+        },
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
     },
-    [runtime.kitClient, designId, pieceId, key],
+    [runtime.kitClient, designId, pieceId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
@@ -3852,10 +4321,11 @@ export function usePieceFlatPlane(designId?: string, pieceId?: string): HookRead
   return [snap.data, status] as const;
 }
 
-/** Flattened piece center from the kit store read path (`readPieceFlatCenterCommand`). */
+/** Flattened piece center from {@link PieceStore.readFlatCenter} (`readPieceFlatCenterCommand`). */
 export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRead<any> {
   const runtime = useKitRuntime();
-  const key = `pfc:${designId ?? ""}:${pieceId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `pfc:${designId ?? ""}:${pieceId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !pieceId) {
@@ -3867,12 +4337,16 @@ export function usePieceFlatCenter(designId?: string, pieceId?: string): HookRea
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readPieceFlatCenter(d, p),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return undefined;
+          return ks.piece(d, p, readScope).readFlatCenter();
+        },
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
     },
-    [runtime.kitClient, designId, pieceId, key],
+    [runtime.kitClient, designId, pieceId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
@@ -3913,7 +4387,8 @@ export function useParentPieceId(designId?: string, pieceId?: string): HookRead<
 
 export function usePieceParentConnection(designId?: string, pieceId?: string): HookRead<any | undefined> {
   const runtime = useKitRuntime();
-  const key = `ppc:${designId ?? ""}:${pieceId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `ppc:${designId ?? ""}:${pieceId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !pieceId) {
@@ -3925,12 +4400,16 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
       const p = pieceId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readPieceParentConnectionFull(d, p),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return undefined;
+          return ks.piece(d, p, readScope).readParentConnectionFull();
+        },
         (ev) => kitEventAffectsPieceLiveRead(ev, d, p),
         onChange,
       );
     },
-    [runtime.kitClient, designId, pieceId, key],
+    [runtime.kitClient, designId, pieceId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !pieceId) return EMPTY_KIT_READ_SNAP;
@@ -3947,7 +4426,8 @@ export function usePieceParentConnection(designId?: string, pieceId?: string): H
 
 export function useIncludedDesigns(designId?: string): HookRead<any[]> {
   const runtime = useKitRuntime();
-  const key = `inc:${designId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `inc:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
@@ -3958,12 +4438,16 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
       const d = designId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignIncludedDesigns(d).then((v) => (Array.isArray(v) ? v : [])),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readIncludedDesigns();
+        },
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
         onChange,
       );
     },
-    [runtime.kitClient, designId, key],
+    [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
@@ -3984,8 +4468,9 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
  */
 export function useDesignClusterableGroups(designId?: string, selection?: ReadonlyArray<string>): HookRead<ReadonlyArray<ReadonlyArray<{ readonly id: string }>>> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
   const selectionDep = React.useMemo(() => JSON.stringify(selection ?? []), [selection]);
-  const key = `clu:${designId ?? ""}:${selectionDep}`;
+  const key = `clu:${designId ?? ""}:${selectionDep}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
@@ -3997,12 +4482,16 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
       const s = selection ?? [];
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignClusterableGroups(d, s).then((v) => (Array.isArray(v) ? v : [])),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readClusterableGroups(s);
+        },
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
     },
-    [runtime.kitClient, designId, key, selectionDep, selection],
+    [runtime.kitClient, designId, readScope, key, selectionDep, selection],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
@@ -4021,7 +4510,8 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
 /** Sum of prop values linked to `qualityId` in the design (`readDesignQualitySumCommand`). */
 export function useDesignQualitySum(designId?: string, qualityId?: string): HookRead<number> {
   const runtime = useKitRuntime();
-  const key = `dqs:${designId ?? ""}:${qualityId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `dqs:${designId ?? ""}:${qualityId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId || !qualityId) {
@@ -4033,12 +4523,17 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
       const q = qualityId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignQualitySum(d, q).then((v) => (typeof v === "number" && !Number.isNaN(v) ? v : 0)),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return 0;
+          const v = await ks.design(d, readScope).readQualitySum(q);
+          return typeof v === "number" && !Number.isNaN(v) ? v : 0;
+        },
         (ev) => kitEventAffectsDesignQualitySumRead(ev, d, q),
         onChange,
       );
     },
-    [runtime.kitClient, designId, qualityId, key],
+    [runtime.kitClient, designId, qualityId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !qualityId) return { ...EMPTY_KIT_READ_SNAP, data: 0 };
@@ -4055,13 +4550,14 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
 }
 
 /**
- * Best matching representation for a type given tag ids (`readTypeBestRepresentationCommand`).
+ * Best matching representation for a kind given tag ids via {@link TypeStore.readBestRepresentation}.
  */
 export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArray<string>): HookRead<unknown> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
   const tagDep = React.useMemo(() => JSON.stringify(tagIds ?? []), [tagIds]);
   const tags = tagIds ?? [];
-  const key = `tbr:${typeId ?? ""}:${tagDep}`;
+  const key = `tbr:${typeId ?? ""}:${tagDep}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !typeId) {
@@ -4073,12 +4569,16 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
       const tg = tags;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readTypeBestRepresentation(t, tg),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return undefined;
+          return ks.type(t, readScope).readBestRepresentation(tg);
+        },
         (ev) => kitEventAffectsTypeScopedRead(ev, t),
         onChange,
       );
     },
-    [runtime.kitClient, typeId, key, tagDep, tags],
+    [runtime.kitClient, typeId, readScope, key, tagDep, tags],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !typeId) return EMPTY_KIT_READ_SNAP;
@@ -4129,8 +4629,9 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
 
 export function useReplacableTypes(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
-  const key = `rpt:${designId ?? ""}:${pieceKey}`;
+  const key = `rpt:${designId ?? ""}:${pieceKey}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       const sel = pieceIds ?? [];
@@ -4143,12 +4644,16 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
       const s = sel;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignReplaceableCatalogTypes(d, s),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readReplaceableCatalogTypes(s);
+        },
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
     },
-    [runtime.kitClient, designId, key, pieceKey],
+    [runtime.kitClient, designId, readScope, key, pieceKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
@@ -4166,8 +4671,9 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
 
 export function useReplacableDesigns(designId?: string, pieceIds?: string[]): HookRead<string[]> {
   const runtime = useKitRuntime();
+  const readScope = useKitDataScope();
   const pieceKey = pieceIds?.join("\u0000") ?? "";
-  const key = `rpd:${designId ?? ""}:${pieceKey}`;
+  const key = `rpd:${designId ?? ""}:${pieceKey}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       const sel = pieceIds ?? [];
@@ -4180,12 +4686,16 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
       const s = sel;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignReplaceableCatalogDesigns(d, s),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readReplaceableCatalogDesigns(s);
+        },
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set(s)),
         onChange,
       );
     },
-    [runtime.kitClient, designId, key, pieceKey],
+    [runtime.kitClient, designId, readScope, key, pieceKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
@@ -4203,7 +4713,8 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
 
 export function useExplodeableDesignNodes(designId?: string): HookRead<string[]> {
   const runtime = useKitRuntime();
-  const key = `exd:${designId ?? ""}`;
+  const readScope = useKitDataScope();
+  const key = `exd:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !designId) {
@@ -4214,12 +4725,16 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
       const d = designId;
       return getSemioKitLiveReadStore(c).subscribe(
         key,
-        () => c.readDesignIncludedDesignIds(d).then((v) => (Array.isArray(v) ? v : [])),
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return [];
+          return ks.design(d, readScope).readIncludedDesignIds();
+        },
         (ev) => kitEventAffectsReplaceableCatalogRead(ev, d, new Set()),
         onChange,
       );
     },
-    [runtime.kitClient, designId, key],
+    [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
@@ -4710,13 +5225,10 @@ export {
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
-  createKitCommandEngine,
-  createKitCommandEngineExplicitOrigin,
   createKitFileObjectUrl,
   createSessionKitStore,
   Design,
   DiffStatus,
-  executeSemioKitCommand,
   Folder,
   fetchReadableKitFileBlob,
   getExistingKitFileProvider,

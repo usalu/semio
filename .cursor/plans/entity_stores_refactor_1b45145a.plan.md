@@ -4,22 +4,22 @@ overview: Refactor the semio JS/react store boundary so each semio entity has on
 todos:
  - id: audit-store-surface
    content: Audit and classify every current semio/js store/read helper by entity and property ownership.
-   status: in_progress
+   status: completed
  - id: define-store-contract
    content: Define the internal entity-store base and the public per-entity store contracts in semio/js.
-   status: pending
+   status: completed
  - id: complete-piece-design-type
    content: Move computed piece/design/type reads into their owning stores and extend GraphQL read mapping where needed.
-   status: pending
+   status: completed
  - id: migrate-react-hooks
    content: Refactor semio/react hooks to consume entity stores through useSyncExternalStore only.
-   status: pending
+   status: completed
  - id: migrate-sketchpad-consumers
    content: Update sketchpad consumers to the new React hooks and remove direct duplicate field reads.
-   status: pending
+   status: completed
  - id: validate-and-close
    content: Extend existing tests and run focused JS/react/sketchpad validation before closing the ticket.
-   status: pending
+   status: completed
 isProject: false
 ---
 

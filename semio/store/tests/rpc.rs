@@ -73,7 +73,7 @@ async fn sidecar_graphiql_serves_working_fetcher() -> Result<(), Box<dyn std::er
     let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "{ __typename }" })).send().await?;
     assert_eq!(response.status(), reqwest::StatusCode::OK);
     let body: Value = response.json().await?;
-    assert_eq!(body.pointer("/data/__typename"), Some(&json!("KitStoreQueryRoot")));
+    assert_eq!(body.pointer("/data/__typename"), Some(&json!("Query")));
 
     let response = client.post(format!("{base}/graphql")).json(&json!({ "query": "mutation { kitStore { batch(input: { commands: [] }) { clientMutationId } } }" })).send().await?;
     assert_eq!(response.status(), reqwest::StatusCode::SERVICE_UNAVAILABLE);

@@ -15,8 +15,9 @@
 
 // #region ⛩️Imports
 
-import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostStore, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
+import type { Connector, KitCommandContext, KitFolderAdapter, KitJsonFileAdapter, KitFullDto, KitHostGraphOp, KitHostStore, KitRegistryValue, Port, SketchpadKitKindAvailability, SketchpadKitStoreFactory } from "@semio/react";
 import {
+  applyKitHostGraphOp,
   asKitInstance,
   attachSketchpadKitReadShell,
   Author,
@@ -2034,10 +2035,10 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * @emoji 🧾 Command result: optional `kitWire` is executed as {@link executeSemioKitCommand} (`@semio/react` → `@semio/js` → `semio/rs`).
+ * @emoji 🧾 Command result: optional typed {@link KitHostGraphOp} runs through {@link applyKitHostGraphOp} (`@semio/react` → `@semio/js` → `semio/rs`).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
-  kitWire?: { command: string; args: unknown[] };
+  kitGraph?: KitHostGraphOp;
   kitCommandApplied?: boolean;
 }
 
@@ -11261,90 +11262,90 @@ export const kitAppCommands = {
           designs: { removed: selection?.designs ?? [] },
         },
       },
-      kitWire: { command: "semio.kit.deleteKitSelection", args: [selection?.types ?? [], selection?.designs ?? []] },
+      kitGraph: { op: "deleteKitSelection", typeIds: selection?.types ?? [], designIds: selection?.designs ?? [] },
     };
   },
   "semio.kitApp.addType": (context: KitAppCommandContext, type: Type): KitAppCommandResult => {
     const body = (type as any).toPlain?.() ?? (type as any);
     return {
       diff: {},
-      kitWire: { command: "semio.kit.addKitChildType", args: [body] },
+      kitGraph: { op: "addKitChildType", body },
     };
   },
   "semio.kitApp.addTypeAfter": (context: KitAppCommandContext, type: Type, _afterId: Id): KitAppCommandResult => {
     const body = (type as any).toPlain?.() ?? (type as any);
     return {
       diff: {},
-      kitWire: { command: "semio.kit.addKitChildType", args: [body] },
+      kitGraph: { op: "addKitChildType", body },
     };
   },
   "semio.kitApp.addTypes": (context: KitAppCommandContext, types: Type[]): KitAppCommandResult => {
     const body = types.map((t) => (t as any).toPlain?.() ?? t);
     return {
       diff: {},
-      kitWire: { command: "semio.kit.addKitChildTypes", args: [body] },
+      kitGraph: { op: "addKitChildTypes", bodies: body },
     };
   },
   "semio.kitApp.removeType": (context: KitAppCommandContext, Id: Id): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.removeKitType", args: [Id] },
+      kitGraph: { op: "removeKitType", id: Id },
     };
   },
   "semio.kitApp.removeTypes": (context: KitAppCommandContext, typeIds: Id[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.removeKitTypes", args: [typeIds] },
+      kitGraph: { op: "removeKitTypes", ids: typeIds },
     };
   },
   "semio.kitApp.addDesign": (context: KitAppCommandContext, design: Design): KitAppCommandResult => {
     const body = (design as any).toPlain?.() ?? (design as any);
     return {
       diff: {},
-      kitWire: { command: "semio.kit.addKitChildDesign", args: [body] },
+      kitGraph: { op: "addKitChildDesign", body },
     };
   },
   "semio.kitApp.addDesigns": (context: KitAppCommandContext, designs: Design[]): KitAppCommandResult => {
     const body = designs.map((d) => (d as any).toPlain?.() ?? d);
     return {
       diff: {},
-      kitWire: { command: "semio.kit.addKitChildDesigns", args: [body] },
+      kitGraph: { op: "addKitChildDesigns", bodies: body },
     };
   },
   "semio.kitApp.removeDesign": (context: KitAppCommandContext, Id: Id): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.removeKitDesign", args: [Id] },
+      kitGraph: { op: "removeKitDesign", id: Id },
     };
   },
   "semio.kitApp.removeDesigns": (context: KitAppCommandContext, designIds: Id[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.removeKitDesigns", args: [designIds] },
+      kitGraph: { op: "removeKitDesigns", ids: designIds },
     };
   },
   "semio.kitApp.updateType": (context: KitAppCommandContext, id: Id, typeDiff: TypeDiff): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.setField", args: ["Type", id, "__patch", typeDiff] },
+      kitGraph: { op: "setEntityPatch", entity: "Type", id, patch: typeDiff },
     };
   },
   "semio.kitApp.updateTypes": (context: KitAppCommandContext, updates: { type: { id: Id }; diff: TypeDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.patchTypes", args: [updates] },
+      kitGraph: { op: "patchTypes", updates },
     };
   },
   "semio.kitApp.updateDesign": (context: KitAppCommandContext, id: Id, designDiff: DesignDiff): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.setField", args: ["Design", id, "__patch", designDiff] },
+      kitGraph: { op: "setEntityPatch", entity: "Design", id, patch: designDiff },
     };
   },
   "semio.kitApp.updateDesigns": (context: KitAppCommandContext, updates: { design: { id: Id }; diff: DesignDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitWire: { command: "semio.kit.patchDesigns", args: [updates] },
+      kitGraph: { op: "patchDesigns", updates },
     };
   },
   "semio.kitApp.setFilterSearch": (context: KitAppCommandContext, search: string): KitAppCommandResult => {
@@ -24598,9 +24599,8 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     if (result.diff) {
       this.change(result.diff);
     }
-    if (result.kitWire) {
-      const kw = result.kitWire;
-      const kitRes = await executeSemioKitCommand(kitData, kw.command, origin ?? "semio.kitApp", ...(kw.args ?? []));
+    if (result.kitGraph) {
+      const kitRes = await applyKitHostGraphOp(kitData, result.kitGraph);
       if (kitRes.ok) {
         (result as any).kitCommandApplied = true;
       }
@@ -25857,9 +25857,11 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
           },
         },
       },
-      kitWire: {
-        command: "semio.kit.removeDesignPiecesAndConnections",
-        args: [context.design.id, selectedPieces, selectedConnections],
+      kitGraph: {
+        op: "removeDesignPiecesAndConnections",
+        designId: context.design.id,
+        pieceIds: selectedPieces,
+        connectionIds: selectedConnections,
       },
     };
   },
@@ -26157,22 +26159,22 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
   },
   "semio.designApp.addPiece": (context: DesignAppCommandContext, piece: Piece): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.addDesignPiece", args: [context.design.id, piece] },
+      kitGraph: { op: "addDesignPiece", designId: context.design.id, piece },
     };
   },
   "semio.designApp.addPieces": (context: DesignAppCommandContext, pieces: Piece[]): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.addDesignPieces", args: [context.design.id, pieces] },
+      kitGraph: { op: "addDesignPieces", designId: context.design.id, pieces },
     };
   },
   "semio.designApp.removePiece": (context: DesignAppCommandContext, pieceId: Id): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.removeDesignPiece", args: [context.design.id, pieceId] },
+      kitGraph: { op: "removeDesignPiece", designId: context.design.id, pieceId },
     };
   },
   "semio.designApp.removePieces": (context: DesignAppCommandContext, pieceIds: Id[]): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.removeDesignPieces", args: [context.design.id, pieceIds] },
+      kitGraph: { op: "removeDesignPieces", designId: context.design.id, pieceIds },
     };
   },
   "semio.designApp.addConnection": (context: DesignAppCommandContext, connection: Connection): DesignAppCommandResult => {
@@ -26185,32 +26187,32 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       }
     }
     return {
-      kitWire: { command: "semio.kit.addDesignConnection", args: [context.design.id, connection] },
+      kitGraph: { op: "addDesignConnection", designId: context.design.id, connection },
     };
   },
   "semio.designApp.addConnections": (context: DesignAppCommandContext, connections: Connection[]): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.addDesignConnections", args: [context.design.id, connections] },
+      kitGraph: { op: "addDesignConnections", designId: context.design.id, connections },
     };
   },
   "semio.designApp.removeConnection": (context: DesignAppCommandContext, connectionId: Id): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.deleteConnection", args: [context.design.id, connectionId] },
+      kitGraph: { op: "deleteConnection", designId: context.design.id, connectionId },
     };
   },
   "semio.designApp.removeConnections": (context: DesignAppCommandContext, connectionIds: Id[]): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.deleteConnections", args: [context.design.id, connectionIds] },
+      kitGraph: { op: "deleteConnections", designId: context.design.id, connectionIds },
     };
   },
   "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceId: Id, pieceDiff: PieceDiff): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.patchPiece", args: [pieceId, pieceDiff] },
+      kitGraph: { op: "patchPiece", designId: context.design.id, pieceId, diff: pieceDiff },
     };
   },
   "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { piece: PieceId; diff: PieceDiff }[]): DesignAppCommandResult => {
     return {
-      kitWire: { command: "semio.kit.patchPieces", args: [updates] },
+      kitGraph: { op: "patchPieces", designId: context.design.id, updates },
     };
   },
   "semio.designApp.updateConnection": (context: DesignAppCommandContext, connectionId: Id, connectionDiff: ConnectionDiff): DesignAppCommandResult => {
@@ -26219,7 +26221,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       return {};
     }
     return {
-      kitWire: { command: "semio.kit.patchConnection", args: [String(connectionId), connectionDiff] },
+      kitGraph: { op: "patchConnection", designId: context.design.id, connectionId: String(connectionId), diff: connectionDiff },
     };
   },
   "semio.designApp.updateConnections": (context: DesignAppCommandContext, updates: { connection: ConnectionId; diff: ConnectionDiff }[]): DesignAppCommandResult => {
@@ -26229,7 +26231,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       return { id: cid, diff: u.diff };
     });
     return {
-      kitWire: { command: "semio.kit.patchConnectionMany", args: [rows] },
+      kitGraph: { op: "patchConnectionMany", designId: context.design.id, rows },
     };
   },
   "semio.designApp.clusterPieces": (context: DesignAppCommandContext, pieceIds: Id[]): DesignAppCommandResult => {
@@ -26257,9 +26259,11 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
           },
         },
       },
-      kitWire: {
-        command: "semio.kit.clusterPieces",
-        args: [context.design.id, validPieceIds, clusterName],
+      kitGraph: {
+        op: "clusterPieces",
+        designId: context.design.id,
+        pieceIds: validPieceIds,
+        clusterName,
       },
     };
   },
@@ -26285,7 +26289,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
           },
         },
       },
-      kitWire: { command: "semio.kit.expandDesign", args: [context.design.id, designId] },
+      kitGraph: { op: "expandDesign", parentDesignId: context.design.id, nestedDesignId: designId },
     };
   },
 };
@@ -26547,9 +26551,8 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (result.diff) {
       this.change(result.diff);
     }
-    if (result.kitWire) {
-      const kw = result.kitWire;
-      const kitRes = await executeSemioKitCommand(kitStore, kw.command, origin ?? "semio.designApp", ...(kw.args ?? []));
+    if (result.kitGraph) {
+      const kitRes = await applyKitHostGraphOp(kitStore, result.kitGraph);
       if (kitRes.ok) {
         (result as any).kitCommandApplied = true;
       }
