@@ -7,7 +7,7 @@
 
 /// <reference types="vite/client" />
 
-import { KitStore, kitGraphqlFirstData, kitGraphqlRun, type KitFullDto as WasmKitFullDto } from "@semio/js";
+import { KitStore, type KitFullDto as WasmKitFullDto } from "@semio/js";
 import type {
   CoordinatePlain as Coordinate,
   Design,
@@ -113,30 +113,14 @@ function cloneDesignWithDiff(kit: Kit, base: Design, diff: DesignDiff): Design {
 
 async function openWasmKit(kit: Kit): Promise<KitStore> {
   const dto = JSON.parse(JSON.stringify(asKitInstance(kit).toJSON())) as WasmKitFullDto;
-  return KitStore.open(dto, { forceInline: true });
+  return KitStore.open(dto);
 }
 
 type FlattenRow = { pieceId: string; plane: unknown; center: unknown };
 
 async function gqlFlattenMap(ks: KitStore, designId: string): Promise<readonly FlattenRow[]> {
-  const msgs = await kitGraphqlRun(
-    ks.toGraphqlHandle(),
-    { query: `query($id: String!) { kitStore { designByDtoId(id: $id) { flattenMap } } }`, variables: { id: designId } },
-    120_000,
-  );
-  const data = kitGraphqlFirstData(msgs) as { kitStore?: { designByDtoId?: { flattenMap?: unknown } | null } };
-  const raw = data.kitStore?.designByDtoId?.flattenMap;
-  let arr: unknown[] = [];
-  if (Array.isArray(raw)) arr = raw;
-  else if (typeof raw === "string") {
-    try {
-      const p = JSON.parse(raw) as unknown;
-      if (Array.isArray(p)) arr = p;
-    } catch {
-      arr = [];
-    }
-  }
-  return arr as FlattenRow[];
+  const rows = await ks.readDesignFlattenMap(designId);
+  return rows as FlattenRow[];
 }
 
 function piecesDiffFromFlattenRows(rows: readonly FlattenRow[]): NonNullable<DesignDiff["pieces"]> {

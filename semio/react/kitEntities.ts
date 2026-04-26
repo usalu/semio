@@ -298,16 +298,28 @@ export const FileSchema = z.object({
   id: z.string(),
   name: z.string().optional(),
   url: z.string().optional(),
+  remote: z.string().optional(),
   mime: z.string().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
   description: z.string().optional(),
+  blob: z.union([z.string(), z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob)]).optional(),
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
 });
 export type FilePlain = z.infer<typeof FileSchema>;
 export class File implements FilePlain {
-  id!: string; url?: string; mime?: string; size?: number; hash?: string; description?: string; createdAt?: string; updatedAt?: string;
+  id!: string;
+  name?: string;
+  url?: string;
+  remote?: string;
+  mime?: string;
+  size?: number;
+  hash?: string;
+  description?: string;
+  blob?: string | Blob;
+  createdAt?: string;
+  updatedAt?: string;
   constructor(plain: FilePlain) { Object.assign(this, FileSchema.parse(plain)); }
   static from(plain: FilePlain): File { return new File(plain); }
   static fromPlain(plain: FilePlain): File { return new File(plain); }
@@ -417,7 +429,19 @@ export const PortSchema = z.object({
 });
 export type PortPlain = z.infer<typeof PortSchema>;
 export class Port implements PortPlain {
-  id!: string; name!: string; description?: string; icon?: string; compatibleFamilies?: FamilyId[]; mandatory?: boolean; t?: number; point?: Point; direction?: Vector; compatiblePorts?: PortId[]; qualities?: Quality[]; attributes?: Attribute[];
+  id!: string;
+  name!: string;
+  description?: string;
+  icon?: string;
+  compatibleFamilies?: FamilyId[];
+  mandatory?: boolean;
+  t?: number;
+  point?: Point;
+  direction?: Vector;
+  compatiblePorts?: PortId[];
+  qualities?: Quality[];
+  attributes?: Attribute[];
+  maxChildren?: number;
   constructor(plain: PortPlain) { const p = PortSchema.parse(plain); Object.assign(this, p); this.point = p.point ? new Point(p.point) : undefined; this.direction = p.direction ? new Vector(p.direction) : undefined; this.qualities = p.qualities?.map((q) => new Quality(q)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: PortPlain): Port { return new Port(plain); }
   static fromPlain(plain: PortPlain): Port { return new Port(plain); }
@@ -700,6 +724,31 @@ export class Piece {
   toPlain(): PiecePlain { return PieceSchema.parse(this as unknown as PiecePlain); }
   static createId(id: string): PieceId { return { id }; }
   static areSameId(a: PieceId, b: PieceId): boolean { return a.id === b.id; }
+
+  /** @emoji 🧭 Whether this piece wires a nested design id (schema hooks). */
+  wireDesignAsPieceId(): boolean {
+    return Boolean(this.design?.id);
+  }
+
+  /** @emoji 🧭 Wired type id for schema hooks. */
+  wireTypeId(): { id: string } | undefined {
+    return this.type ? { id: this.type.id } : undefined;
+  }
+
+  /** @emoji 🧭 Flat plane DTO for UI (structural truth in `semio/rs` reads). */
+  flatPlane(): unknown {
+    return this.plane ? this.plane.toPlain() : undefined;
+  }
+
+  /** @emoji 🧭 Flat center UV for UI. */
+  flatCenter(): unknown {
+    return this.center ? this.center.toPlain() : undefined;
+  }
+
+  /** @emoji 🧭 Alternative types for replaceable UI (populated from reads in full hosts). */
+  alternativeTypes(): readonly Type[] {
+    return [];
+  }
 }
 export const PieceMetadataDtoSchema = PieceSchema.omit({ props: true, attributes: true });
 export type PieceMetadataDto = z.infer<typeof PieceMetadataDtoSchema>;
@@ -931,6 +980,11 @@ export class Design {
   static createId(id: string): DesignId { return { id }; }
   static areSameId(a: DesignId, b: DesignId): boolean { return a.id === b.id; }
 
+  /** @emoji 🧭 Included / sibling designs for nested-design UI (DTO navigation). */
+  getDesignFamily(): Design[] {
+    return [];
+  }
+
   /** @emoji 🧾 Legacy alias for diagram consumers (`@semio/ui`). */
   getConnections(): Connection[] {
     return [...(this._connections ?? [])];
@@ -1120,6 +1174,61 @@ export class Kit {
   toJSON(): KitFullDto { return this.toPlain(); }
   static createId(id: string): KitId { return { id }; }
   static areSameId(a: KitId, b: KitId): boolean { return a.id === b.id; }
+
+  /** @emoji 🧭 Resolve a design by id (DTO graph navigation for React schema hooks). */
+  findDesign(id: string): Design | undefined {
+    return this.designs?.find((d) => d.id === id);
+  }
+
+  /** @emoji 🧭 Resolve a type by id. */
+  findType(id: string): Type | undefined {
+    return this.types?.find((t) => t.id === id);
+  }
+
+  /** @emoji 🧭 Flatten / parent metadata map (DTO host; WASM bridge may supply richer maps). */
+  piecesMetadataFor(_designId: string): { ok: true; diff: Map<string, { parentPieceId?: string }> } | { ok: false; diff?: undefined } {
+    void _designId;
+    return { ok: true, diff: new Map() };
+  }
+
+  /** @emoji 🧭 Parent piece for `pieceId` via connection graph (connecting → connected). */
+  findParentPieceInDesign(designId: string, pieceId: string): Piece | undefined {
+    const d = this.findDesign(designId);
+    if (!d?._connections || !d.pieces) return undefined;
+    for (const c of d._connections) {
+      const connectingId = c.connecting?.piece?.id;
+      if (connectingId !== pieceId) continue;
+      const parentId = c.connected?.piece?.id;
+      if (!parentId) return undefined;
+      return d.pieces.find((p) => p.id === parentId);
+    }
+    return undefined;
+  }
+
+  /** @emoji 🧭 Parent connection whose connecting side matches `pieceId`. */
+  findParentConnectionForPieceInDesign(designId: string, pieceId: string): Connection | undefined {
+    const d = this.findDesign(designId);
+    if (!d?._connections) return undefined;
+    for (const c of d._connections) {
+      if (c.connecting?.piece?.id === pieceId) return c;
+    }
+    return undefined;
+  }
+
+  /** @emoji 🧭 Child pieces: connections where connected side is `parentPieceId` and connecting side is another piece. */
+  findChildrenPiecesInDesign(designId: string, parentPieceId: string): Piece[] {
+    const d = this.findDesign(designId);
+    if (!d?._connections || !d.pieces) return [];
+    const out: Piece[] = [];
+    for (const c of d._connections) {
+      if (c.connected?.piece?.id !== parentPieceId) continue;
+      const childId = c.connecting?.piece?.id;
+      if (!childId) continue;
+      const p = d.pieces.find((x) => x.id === childId);
+      if (p) out.push(p);
+    }
+    return out;
+  }
 
   /**
    * @emoji 🧭 Sync flatten preview for MCP / `@semio/ui` (identity plane fallback until async WASM is threaded here).

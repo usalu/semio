@@ -81,13 +81,25 @@ import {
   TypeStore,
   Vector,
 } from "./kitEntities";
-import { isKitCommandLifecycleEvent, type SetError, type SetResult } from "@semio/js";
+import type { SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict } from "@semio/js";
+// #region 🧾KitEventGuards
+/** @emoji 🧾 Narrows GraphQL subscription payloads to semio kit command lifecycle rows (local guard; mirrors `@semio/js` private helper). */
+function isKitCommandLifecycleEvent(event: unknown): event is {
+  semioKitCommand: { requestId: string; commandKind: string; phase: string; result?: unknown; error?: unknown };
+} {
+  const c = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
+  if (c == null || typeof c !== "object") return false;
+  const v = c as Record<string, unknown>;
+  return typeof v.requestId === "string" && typeof v.commandKind === "string" && typeof v.phase === "string";
+}
+// #endregion 🧾KitEventGuards
+
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, SetError, SetResult } from "@semio/js";
 export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "./kitEntities";
 export type {
   KitStoreExecuteResult,
@@ -102,7 +114,6 @@ export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileS
 
 // #region ⚛️Types
 
-export type { SetError, SetResult } from "@semio/js";
 export {
   getSemioKitDesignReadStore,
   getSemioKitLiveReadStore,
@@ -963,7 +974,9 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       try {
         const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
-        const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
+        const kitClient =
+          init.kitClient ??
+          (await createKitStoreClient({ initialKit: store.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback() }));
         (store as any).__semioKitBridge = kitClient;
         const kitCommandStore = acquireSemioKitCommandFacade(kitClient);
         const unsub = kitClient.subscribe(() => {
@@ -1370,7 +1383,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
     if (!st) return;
     let cancelled = false;
     let client: KitStoreClient | null = null;
-    void createKitStoreClient({ initialKit: st.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }).then((c) => {
+    void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback() }).then((c) => {
       if (cancelled) {
         releaseSemioKitCommandFacade(c);
         c.dispose();
@@ -4612,6 +4625,7 @@ export {
   Vector,
 } from "./kitEntities";
 export { KitStore } from "@semio/js";
+export type { ReadWireBatch, ReadWireBatchResult, ReadWireItem } from "@semio/js";
 export type {
   AuthorId,
   ConnectionDiff,

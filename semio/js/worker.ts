@@ -1,15 +1,19 @@
 // #region 🧲KitWorkerEntry
-// Dedicated module worker: one `KitStoreHandle`, GraphQL `execute` over postMessage JSON strings.
+// Dedicated module worker: one `KitStoreHandle`, GraphQL over postMessage. All payloads are
+// **complete JSON documents** (one full GraphQL response per `op:"result"` for queries/mutations,
+// one full per-event response per `op:"event"` for subscriptions). No NDJSON / line-of-json.
 // 2026 Ueli Saluz <ueli@semio-tech.com> — GNU LGPL-3.0 or later
 
 type WorkerIn =
   | { op: "init"; dto: unknown }
   | { op: "execute"; reqId: string; body: string }
+  | { op: "subscribe"; reqId: string; body: string }
   | { op: "snapshot"; reqId: string };
 
 type WorkerOut =
   | { op: "ready" }
-  | { op: "chunk"; reqId: string; line: string }
+  | { op: "result"; reqId: string; json: string }
+  | { op: "event"; reqId: string; json: string }
   | { op: "done"; reqId: string }
   | { op: "snapshotResult"; reqId: string; json: string }
   | { op: "error"; reqId?: string; message: string };
@@ -49,8 +53,15 @@ function post(out: WorkerOut): void {
     }
     if (msg.op === "execute") {
       const { reqId, body } = msg;
-      await handle.execute(body, (line: string) => {
-        post({ op: "chunk", reqId, line: String(line) });
+      const json = (await handle.execute(body)) as string;
+      post({ op: "result", reqId, json });
+      post({ op: "done", reqId });
+      return;
+    }
+    if (msg.op === "subscribe") {
+      const { reqId, body } = msg;
+      await handle.subscribe(body, (eventJson: string) => {
+        post({ op: "event", reqId, json: String(eventJson) });
       });
       post({ op: "done", reqId });
       return;

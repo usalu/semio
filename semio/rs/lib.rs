@@ -28517,22 +28517,41 @@ pub mod wasm {
             serde_wasm_bindgen::to_value(&g.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        /// GraphQL over WASM: `request_json` is `{"query": "...", "variables"?: {...}, "operationName"?: "..."}`.
-        /// Each response is JSON-stringified and passed to `on_message` (subscription stream uses the same path).
+        /// 🌐 GraphQL queries / mutations over WASM. `request_json` is `{"query": "...", "variables"?: {...}, "operationName"?: "..."}`.
+        /// Resolves with **one complete JSON document** (the full GraphQL response: `{ "data": ..., "errors": ... }`).
+        /// Subscriptions MUST use [`KitStoreHandle::subscribe`] — this method only returns the single response.
         #[wasm_bindgen(js_name = execute)]
-        pub fn execute(&self, request_json: &str, on_message: &js_sys::Function) -> js_sys::Promise {
+        pub fn execute(&self, request_json: &str) -> js_sys::Promise {
             let req_json = request_json.to_string();
             let graph = self.inner.clone();
             let work_tx = self.work_tx.clone();
-            let cb = on_message.clone();
+            future_to_promise(async move {
+                let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
+                req = req.data(graph).data(work_tx);
+                let schema = crate::kit_graphql::schema();
+                let resp = async_graphql::Response::from(schema.execute(req).await);
+                let json = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                Ok(JsValue::from_str(&json))
+            })
+        }
+
+        /// 🌐 GraphQL subscription over WASM. `on_event` is invoked **once per event** with a **complete JSON document**
+        /// (the full per-event GraphQL response: `{ "data": ..., "errors": ... }`). The returned `Promise` resolves when
+        /// the upstream stream completes (or `on_event` throws — the stream is then dropped).
+        #[wasm_bindgen(js_name = subscribe)]
+        pub fn subscribe(&self, request_json: &str, on_event: &js_sys::Function) -> js_sys::Promise {
+            let req_json = request_json.to_string();
+            let graph = self.inner.clone();
+            let work_tx = self.work_tx.clone();
+            let cb = on_event.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
                 req = req.data(graph).data(work_tx);
                 let schema = crate::kit_graphql::schema();
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
-                    let line = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    let msg = JsValue::from_str(&line);
+                    let json = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let msg = JsValue::from_str(&json);
                     if cb.call1(&JsValue::NULL, &msg).is_err() {
                         break;
                     }
@@ -31783,11 +31802,6 @@ mod tests {
 
 #[cfg(all(test, target_arch = "wasm32"))]
 mod wasm_handle_tests {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    use wasm_bindgen::closure::Closure;
-    use wasm_bindgen::JsCast;
     use wasm_bindgen_test::*;
 
     use crate::kit_graph::KitGraph;
@@ -31810,32 +31824,12 @@ mod wasm_handle_tests {
         let dto = kit.to_full_dto();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
 
-        let captured: Rc<RefCell<Vec<String>>> = Rc::new(RefCell::new(Vec::new()));
-        let cap2 = captured.clone();
-        let closure = Closure::wrap(Box::new(move |line: wasm_bindgen::JsValue| {
-            if let Some(s) = line.as_string() {
-                cap2.borrow_mut().push(s);
-            }
-        }) as Box<dyn FnMut(wasm_bindgen::JsValue)>);
-
         let req = r#"{"query":"query { kitStore { name } }"}"#;
-        let prom = h.execute(req, closure.as_ref().unchecked_ref());
-        closure.forget();
-        wasm_bindgen_futures::JsFuture::from(prom).await.expect("graphql execute future");
-
-        let lines = captured.borrow();
-        assert!(!lines.is_empty(), "expected GraphQL stream chunk(s): {:?}", &*lines);
-        let mut saw = false;
-        for line in lines.iter() {
-            let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
-                continue;
-            };
-            if v["data"]["kitStore"]["name"] == "wasm-gql-name" {
-                saw = true;
-                break;
-            }
-        }
-        assert!(saw, "expected kitStore.name in responses: {:?}", &*lines);
+        let prom = h.execute(req);
+        let raw = wasm_bindgen_futures::JsFuture::from(prom).await.expect("graphql execute future");
+        let json = raw.as_string().expect("execute resolves with a JSON string (one complete response)");
+        let v: serde_json::Value = serde_json::from_str(&json).expect("complete JSON response");
+        assert_eq!(v["data"]["kitStore"]["name"], "wasm-gql-name", "expected kitStore.name in response: {json}");
     }
 }
 

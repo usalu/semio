@@ -9,14 +9,12 @@ import {
   type BackboneConfig,
   type BackboneStatusDto,
   type ConflictResolution,
-  type ReadDesignCommand,
-  type ReadKitCommand,
-  type ReadPieceCommand,
+  type KitFullDto,
+  type ReadWireBatch,
   type SetError,
   type SetResult,
 } from "@semio/js";
-import { Subscription } from "rxjs";
-import type { Kit, KitHostStore } from "./kitEntities";
+import type { KitHostStore } from "./kitEntities";
 import { applyKitClientSnapshotToLocalStore, type SemioKitBridge } from "./kitEntities";
 
 export { applyKitClientSnapshotToLocalStore } from "./kitEntities";
@@ -154,8 +152,8 @@ class LivePiece {
     private readonly pieceId: string,
   ) {}
 
-  private run(cmd: ReadPieceCommand): Promise<readonly unknown[]> {
-    const batch: ReadKitCommand[] = [
+  private run(cmd: Readonly<Record<string, unknown>>): Promise<ReadWireBatch> {
+    const batch: ReadWireBatch = [
       {
         readKitDesignCommands: {
           id: { id: this.designId },
@@ -187,7 +185,7 @@ class LiveDesign {
     private readonly designId: string,
   ) {}
 
-  private run(cmd: ReadDesignCommand): Promise<readonly unknown[]> {
+  private run(cmd: Readonly<Record<string, unknown>>): Promise<ReadWireBatch> {
     return this.ks.read([{ readKitDesignCommands: { id: { id: this.designId }, commands: [cmd] } }]);
   }
 
@@ -198,14 +196,14 @@ class LiveDesign {
   }
 
   readClusterableGroups(selection: readonly string[]): Promise<unknown> {
-    const cmd: ReadDesignCommand = {
+    const cmd: Readonly<Record<string, unknown>> = {
       readDesignClusterableGroupsCommand: { selection: selection.map((id) => ({ id })) },
     };
     return this.run(cmd).then((out) => (firstDesignResult(out, "readDesignClusterableGroupsCommand") as { groups?: unknown } | undefined)?.groups);
   }
 
   readQualitySum(qualityId: string): Promise<number> {
-    const cmd: ReadDesignCommand = { readDesignQualitySumCommand: { qualityId: { id: qualityId } } };
+    const cmd: Readonly<Record<string, unknown>> = { readDesignQualitySumCommand: { qualityId: { id: qualityId } } };
     return this.run(cmd).then((out) => {
       const s = (firstDesignResult(out, "readDesignQualitySumCommand") as { sum?: number } | undefined)?.sum;
       return typeof s === "number" && !Number.isNaN(s) ? s : 0;
@@ -213,7 +211,7 @@ class LiveDesign {
   }
 
   readReplaceableCatalog(selection: readonly string[]): Promise<{ types: string[]; designs: string[] }> {
-    const cmd: ReadDesignCommand = {
+    const cmd: Readonly<Record<string, unknown>> = {
       readDesignReplaceableCatalogCommand: { selection: selection.map((id) => ({ id })) },
     };
     return this.run(cmd).then((out) => {
@@ -443,12 +441,22 @@ export const kitEventAffectsKitColoredConnectorsRead = (_ev?: unknown) => true;
 
 export class WasmKitStoreClient implements KitStoreClient {
   private readonly listeners = new Set<(ev?: unknown) => void>();
-  private sub: Subscription | undefined;
+  private readonly offKit: () => void;
+  private lastDto: Record<string, unknown> = {};
 
   constructor(private readonly ks: SemioWasmKitStore) {
-    this.sub = this.ks.events$.subscribe((ev) => {
-      for (const l of this.listeners) l(ev);
+    this.offKit = this.ks.subscribe(() => {
+      void this.refreshDtoFromStore();
+      for (const l of this.listeners) l(undefined);
     });
+  }
+
+  private async refreshDtoFromStore(): Promise<void> {
+    try {
+      this.lastDto = (await this.ks.snapshot()) as Record<string, unknown>;
+    } catch {
+      /* ignore */
+    }
   }
 
   /** @internal For read-store adapters. */
@@ -457,11 +465,13 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   getDto(): Record<string, unknown> {
-    return this.ks.getCachedKit() as Record<string, unknown>;
+    return this.lastDto;
   }
 
   async getSnapshot(): Promise<Record<string, unknown>> {
-    return (await this.ks.snapshot()) as Record<string, unknown>;
+    const s = (await this.ks.snapshot()) as Record<string, unknown>;
+    this.lastDto = s;
+    return s;
   }
 
   subscribe(cb: (ev?: unknown) => void): () => void {
@@ -472,8 +482,7 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   dispose(): void {
-    this.sub?.unsubscribe();
-    this.sub = undefined;
+    this.offKit();
     this.listeners.clear();
     void this.ks.dispose();
   }
@@ -619,10 +628,10 @@ export class WasmKitStoreClient implements KitStoreClient {
 
 class FallbackKitClient implements KitStoreClient {
   private readonly listeners = new Set<(ev?: unknown) => void>();
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitFullDto) {}
 
   getDto(): Record<string, unknown> {
-    return this.kit.toJSON() as Record<string, unknown>;
+    return this.kit as Record<string, unknown>;
   }
 
   async getSnapshot(): Promise<Record<string, unknown>> {
@@ -748,7 +757,7 @@ class FallbackKitClient implements KitStoreClient {
     return [];
   }
   async getKitMetadata(): Promise<unknown> {
-    return this.kit.toJSON();
+    return this.kit;
   }
   async backboneStatus(): Promise<BackboneStatusDto> {
     return {};
@@ -770,12 +779,12 @@ class FallbackKitClient implements KitStoreClient {
   }
 }
 
-export async function createKitStoreClient(opts: { initialKit: Kit; forceFallback?: boolean }): Promise<KitStoreClient> {
+export async function createKitStoreClient(opts: { initialKit: KitFullDto; forceFallback?: boolean }): Promise<KitStoreClient> {
   if (opts.forceFallback) return new FallbackKitClient(opts.initialKit);
-  const ks = await SemioWasmKitStore.open(opts.initialKit.toJSON() as never, {
-    forceInline: typeof Worker === "undefined",
-  });
-  return new WasmKitStoreClient(ks);
+  const ks = await SemioWasmKitStore.open(opts.initialKit);
+  const c = new WasmKitStoreClient(ks);
+  await c.getSnapshot();
+  return c;
 }
 
 const facades = new WeakMap<KitStoreClient, KitCommandFacade>();

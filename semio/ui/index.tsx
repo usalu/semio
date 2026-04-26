@@ -42,11 +42,6 @@ import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 
-{
-  const k = Kit as unknown as { semioToThreeRootBasis?: () => THREE.Matrix4 };
-  if (!k.semioToThreeRootBasis) k.semioToThreeRootBasis = () => new THREE.Matrix4().identity();
-}
-
 // #region 💻ControllableState
 // Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
 // This hook is the shared mechanism used by multiple components for interactive state that can
@@ -2459,7 +2454,7 @@ const resolveSceneColor = (cssValue: string, fallback: string): string => {
   if (cssValue === "currentColor") return fallback;
   return cssValue;
 };
-const SEMIO_TO_THREE_BASIS = Kit.semioToThreeRootBasis();
+const SEMIO_TO_THREE_BASIS = new THREE.Matrix4().identity();
 const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
 
 interface ScenePieceAsset {

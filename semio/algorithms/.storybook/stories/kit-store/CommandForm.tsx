@@ -4,9 +4,13 @@
 
 import * as React from "react";
 
-import { kitGraphqlExecuteStoreCommand, kitGraphqlRun, type KitGraphqlHandle } from "@semio/js";
 import { ALL_CHANGE_KIT_ROOT_KEYS, ALL_READ_KIT_COMMAND_KEYS, CHANGE_KIT_PRESETS, READ_KIT_PRESETS } from "./commandSchema";
 import type { KitStoreHandle } from "./semioWasm";
+import {
+  storybookKitGraphqlExecuteStoreCommand,
+  storybookKitGraphqlRun,
+  type StorybookKitGraphqlHandle,
+} from "./semioWasm";
 
 type Mode = "changeKit" | "readKit" | "execute";
 
@@ -99,8 +103,8 @@ export const CommandForm: React.FC<{
         onClick={() => {
           void (async () => {
             if (!handle) return;
-            const gql: KitGraphqlHandle = {
-              execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage),
+            const gql: StorybookKitGraphqlHandle = {
+              execute: (requestJson: string) => handle.execute(requestJson),
             };
             try {
               if (mode === "changeKit") {
@@ -114,11 +118,11 @@ export const CommandForm: React.FC<{
                   throw new Error('readKit mode expects a JSON object with a string "query" field (and optional variables)');
                 }
                 const body = parsed as { query: string; variables?: Record<string, unknown>; operationName?: string };
-                const r = await kitGraphqlRun(gql, body);
+                const r = await storybookKitGraphqlRun(gql, body);
                 onCommandRun({ mode, forward: body, result: r, log: `kitGraphqlRun → ${JSON.stringify(r)}` });
               } else {
                 const raw = JSON.parse(executeJson);
-                const r = await kitGraphqlExecuteStoreCommand(gql, raw);
+                const r = await storybookKitGraphqlExecuteStoreCommand(gql, raw);
                 onCommandRun({ mode, forward: raw, result: r, log: `kitStoreExecute → ${JSON.stringify(r)}` });
               }
             } catch (e) {

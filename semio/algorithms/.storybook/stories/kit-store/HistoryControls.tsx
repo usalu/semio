@@ -6,9 +6,12 @@
 
 import * as React from "react";
 
-import { kitGraphqlExecuteStoreCommand, kitGraphqlRun, type KitGraphqlHandle } from "@semio/js";
-
 import type { KitStoreHandle } from "./semioWasm";
+import {
+  storybookKitGraphqlExecuteStoreCommand,
+  storybookKitGraphqlRun,
+  type StorybookKitGraphqlHandle,
+} from "./semioWasm";
 
 type IdCallback = (s: string) => void;
 
@@ -113,9 +116,9 @@ export const HistoryControls: React.FC<{
   /** Pushes checkpoint into Snapshot window `materializeAt` for read-only DTO (empty string = initial). */
   onInspectCheckpoint?: (checkpointId: string) => void;
 }> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg, onInspectCheckpoint }) => {
-  const gqlHandle = (): KitGraphqlHandle => {
+  const gqlHandle = (): StorybookKitGraphqlHandle => {
     if (!handle) throw new Error("KitStore handle not ready");
-    return { execute: (requestJson, onMessage) => handle.execute(requestJson, onMessage) };
+    return { execute: (requestJson: string) => handle.execute(requestJson) };
   };
 
   const ex = (label: string, o: object) => {
@@ -125,7 +128,7 @@ export const HistoryControls: React.FC<{
     }
     void (async () => {
       try {
-        const r = await kitGraphqlExecuteStoreCommand(gqlHandle(), o);
+        const r = await storybookKitGraphqlExecuteStoreCommand(gqlHandle(), o);
         onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
         applyKitStoreCommandResultIds(r, {
           onSessionId,
@@ -147,7 +150,7 @@ export const HistoryControls: React.FC<{
     }
     void (async () => {
       try {
-        const r = await kitGraphqlRun(gqlHandle(), body);
+        const r = await storybookKitGraphqlRun(gqlHandle(), body);
         onLog(`read ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
       } catch (e) {
         onLog(`read ${label} ERROR: ${e instanceof Error ? e.message : String(e)}`);
