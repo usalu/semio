@@ -57,7 +57,7 @@ import {
   type KitStore,
   type KitStoreClient,
   type KitStoreReadSnap,
-  type KitStoreSnapshot,
+  type KitHostStoreSnapshot,
   type KitShallowDto,
   type SetError,
   type SetResult,
@@ -152,7 +152,7 @@ export type SchemaScope = {
 
 export type KitRuntimeContextValue = {
   store: KitStore;
-  snapshot: KitStoreSnapshot;
+  snapshot: KitHostStoreSnapshot;
   state: IndexedSchemaState;
   recentEvents: SchemaPropertyEvent[];
   recentSetRejections: SetError[];
@@ -650,10 +650,10 @@ function nextValueFromAction<T>(current: T, next: SetStateAction<T>): T {
   return typeof next === "function" ? (next as (value: T) => T)(current) : next;
 }
 
-function normalizeStateInput(input: KitStoreSnapshot | KitLike | IndexedSchemaState): IndexedSchemaState {
+function normalizeStateInput(input: KitHostStoreSnapshot | KitLike | IndexedSchemaState): IndexedSchemaState {
   if ((input as IndexedSchemaState).byId instanceof Map) return input as IndexedSchemaState;
-  if ((input as KitStoreSnapshot).kit) {
-    const snapshot = input as KitStoreSnapshot;
+  if ((input as KitHostStoreSnapshot).kit) {
+    const snapshot = input as KitHostStoreSnapshot;
     return scanSchemaState(snapshot.kit.toJSON());
   }
   const kit = asKitInstance(input as KitLike);
@@ -677,7 +677,7 @@ function collectChangedObjectFields(typeName: string, previousValue: any, nextVa
   return fieldNames;
 }
 
-export function diffSchemaPropertyEvents(previousInput: KitStoreSnapshot | KitLike | IndexedSchemaState, nextInput: KitStoreSnapshot | KitLike | IndexedSchemaState): SchemaPropertyEvent[] {
+export function diffSchemaPropertyEvents(previousInput: KitHostStoreSnapshot | KitLike | IndexedSchemaState, nextInput: KitHostStoreSnapshot | KitLike | IndexedSchemaState): SchemaPropertyEvent[] {
   const previous = normalizeStateInput(previousInput);
   const next = normalizeStateInput(nextInput);
   const dirtyIds = new Set<string>();
@@ -1098,9 +1098,9 @@ export function useIsInKitScope(): boolean {
 }
 
 /**
- * @emoji 📌 Live {@link KitStoreSnapshot} for the resolved kit when it matches the current {@link KitRuntimeContext}.
+ * @emoji 📌 Live {@link KitHostStoreSnapshot} for the resolved kit when it matches the current {@link KitRuntimeContext}.
  */
-export function useKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
+export function useKitHostStoreSnapshot(explicitKitId?: string): KitHostStoreSnapshot | null {
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
   const subscribe = React.useCallback(
@@ -1245,35 +1245,35 @@ export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly u
 }
 
 /** @emoji 📌 Full kit store snapshot triad (read-only). */
-export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitStoreSnapshot | null> {
-  const snap = useKitStoreSnapshot(explicitKitId);
+export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitHostStoreSnapshot | null> {
+  const snap = useKitHostStoreSnapshot(explicitKitId);
   return kitReadonlyTriad(snap);
 }
 
 /** @emoji 📌 Kit `types` array from live store snapshot (RS-backed). */
 export function useTypesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
+  const snap = useKitHostStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.types;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `designs` array from live store snapshot (RS-backed). */
 export function useDesignsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
+  const snap = useKitHostStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.designs;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `files` array from live store snapshot (RS-backed). */
 export function useFilesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
+  const snap = useKitHostStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.files;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
 
 /** @emoji 📌 Kit `tags` array from live store snapshot (RS-backed). */
 export function useTagsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
+  const snap = useKitHostStoreSnapshot(explicitKitId);
   const raw = snap?.kit?.tags;
   return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
 }
@@ -1354,7 +1354,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
     });
   }, [kitClient, store, kitIdProp]);
 
-  const snapshotRef = React.useRef<KitStoreSnapshot | null>(null);
+  const snapshotRef = React.useRef<KitHostStoreSnapshot | null>(null);
   const getSnapshot = React.useCallback(() => {
     const snap = store.getSnapshot();
     const prev = snapshotRef.current;
@@ -4069,7 +4069,7 @@ export function useKitStore(): HookTriad<KitStore> {
   return [runtime.store, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
 
-export function useKitSnapshot(): HookTriad<KitStoreSnapshot> {
+export function useKitSnapshot(): HookTriad<KitHostStoreSnapshot> {
   const runtime = useKitRuntime();
   return [runtime.snapshot, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
@@ -4576,7 +4576,7 @@ export type {
   KitJsonFileAdapter,
   KitShallowDto,
   KitStore,
-  KitStoreSnapshot,
+  KitHostStoreSnapshot,
   PieceDiff,
   PieceId,
   Port,

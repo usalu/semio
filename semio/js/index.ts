@@ -878,9 +878,9 @@ export function asKitInstance(input: KitLike): Kit {
 }
 
 /**
- * @emoji 🧾 Pulls the authoritative DTO from `kitClient` into a host {@link KitStore} (no React; call after GQL events).
+ * @emoji 🧾 Pulls the authoritative DTO from `kitClient` into a host {@link KitHostStore} (no React; call after GQL events).
  */
-export async function applyKitClientSnapshotToLocalStore(kitClient: KitStoreClient, store: KitStore): Promise<void> {
+export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
   try {
     await kitClient.getSnapshot();
   } catch {
@@ -903,17 +903,17 @@ export async function applyKitClientSnapshotToLocalStore(kitClient: KitStoreClie
 /** @emoji 🧭 Local/sync facet on every kit store snapshot (WASM or file-backed; hooks read `sync.readonly` etc). */
 export type KitSyncSnapshot = { status: string; dirty: boolean; readonly: boolean; lastSyncedAt: string | null; error: unknown | null };
 export const DEFAULT_KIT_SYNC: Readonly<KitSyncSnapshot> = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
-export type KitStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
-export type KitStore = { getSnapshot(): KitStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
+export type KitHostStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
+export type KitHostStore = { getSnapshot(): KitHostStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
 
-export class InMemoryKitStore implements KitStore {
+export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
   /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: Kit) { this._kit = seed; }
-  getSnapshot(): KitStoreSnapshot {
-    const c = (this as InMemoryKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+  getSnapshot(): KitHostStoreSnapshot {
+    const c = (this as InMemoryKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -924,7 +924,7 @@ export class InMemoryKitStore implements KitStore {
 export type KitJsonFileAdapter = { read: () => Promise<string>; write: (json: string) => Promise<void> };
 export type KitFolderAdapter = { readKit: () => Promise<Uint8Array | undefined>; writeKit: (bytes: Uint8Array) => Promise<void>; readFile: (path: string) => Promise<Blob | undefined>; writeFile: (path: string, blob: Blob) => Promise<void>; deleteFile: (path: string) => Promise<void>; createDirectory: (path: string) => Promise<void>; moveEntry: (from: string, to: string) => Promise<void>; listFiles: () => Promise<string[]> };
 
-export class JsonFileKitStore implements KitStore {
+export class JsonFileKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
   /** @internal */
@@ -935,8 +935,8 @@ export class JsonFileKitStore implements KitStore {
     const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(json)));
     return new JsonFileKitStore(adapter, seed);
   }
-  getSnapshot(): KitStoreSnapshot {
-    const c = (this as JsonFileKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+  getSnapshot(): KitHostStoreSnapshot {
+    const c = (this as JsonFileKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -944,7 +944,7 @@ export class JsonFileKitStore implements KitStore {
   replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void this.adapter.write(JSON.stringify(kit.toJSON())); }
 }
 
-export class FolderKitStore implements KitStore {
+export class FolderKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
   /** @internal */
@@ -957,8 +957,8 @@ export class FolderKitStore implements KitStore {
     }
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }
-  getSnapshot(): KitStoreSnapshot {
-    const c = (this as FolderKitStore & { __semioKitClient?: KitStoreClient }).__semioKitClient;
+  getSnapshot(): KitHostStoreSnapshot {
+    const c = (this as FolderKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
     return { kit, sync: DEFAULT_KIT_SYNC };
   }
@@ -998,7 +998,7 @@ export type KitFileProvider = {
 export type KitFileProviderFactory = (kitId: string) => Promise<KitFileProvider>;
 
 /**
- * @emoji 🧾 Per-`KitStore` blob/object URL and provider resolution cache (host-only; not serialized in kit).
+ * @emoji 🧾 Per-`KitHostStore` blob/object URL and provider resolution cache (host-only; not serialized in kit).
  */
 export type KitFileState = {
   objectUrls: Map<string, string>;
@@ -1012,14 +1012,14 @@ export type KitFileState = {
   _cachedProviderByKitId?: Map<string, KitFileProvider>;
 };
 
-const kitFileStateByStore = new WeakMap<KitStore, KitFileState>();
+const kitFileStateByStore = new WeakMap<KitHostStore, KitFileState>();
 
 function newKitFileState(): KitFileState {
   return { objectUrls: new Map(), providerUrls: new Map(), blobs: new Map(), pendingBlobDownloads: new Map() };
 }
 
-/** @emoji 🧾 Lazily created host cache keyed by the live `KitStore` (same identity as open kit). */
-export function getOrCreateKitFileState(kitStore: KitStore): KitFileState {
+/** @emoji 🧾 Lazily created host cache keyed by the live `KitHostStore` (same identity as open kit). */
+export function getOrCreateKitFileState(kitStore: KitHostStore): KitFileState {
   let st = kitFileStateByStore.get(kitStore);
   if (!st) {
     st = newKitFileState();
@@ -1040,7 +1040,7 @@ const defaultKitFileProviderFactory: KitFileProviderFactory = async (kitId: stri
 };
 
 /** @emoji 🧾 Async resolve + cache; warms {@link getExistingKitFileProvider} after first await. */
-export async function getKitFileProvider(kitStore: KitStore, kitId: string): Promise<KitFileProvider> {
+export async function getKitFileProvider(kitStore: KitHostStore, kitId: string): Promise<KitFileProvider> {
   const st = getOrCreateKitFileState(kitStore);
   st._cachedProviderByKitId = st._cachedProviderByKitId ?? new Map();
   const hit = st._cachedProviderByKitId.get(kitId);
@@ -1053,7 +1053,7 @@ export async function getKitFileProvider(kitStore: KitStore, kitId: string): Pro
 }
 
 /** @emoji 🧾 Synchronous best-effort provider (after at least one {@link getKitFileProvider} call for this store). */
-export function getExistingKitFileProvider(kitStore: KitStore): KitFileProvider | undefined {
+export function getExistingKitFileProvider(kitStore: KitHostStore): KitFileProvider | undefined {
   return getOrCreateKitFileState(kitStore)._lastSyncProvider;
 }
 
@@ -1081,7 +1081,7 @@ export function getReadableKitFileUrl(fileState: KitFileState, file: { id: strin
 /**
  * @emoji 🧾 Merged file-id → best readable URL for UI maps (`useKitStoredFileUrls`).
  */
-export function getStoredKitFileUrls(kitStore: KitStore): Map<string, string> {
+export function getStoredKitFileUrls(kitStore: KitHostStore): Map<string, string> {
   const kit = kitStore.getSnapshot().kit;
   const st = getOrCreateKitFileState(kitStore);
   const out = new Map<string, string>();
@@ -1095,7 +1095,7 @@ export function getStoredKitFileUrls(kitStore: KitStore): Map<string, string> {
 }
 
 /** @emoji 🧾 Registers a `blob:` URL in {@link KitFileState.objectUrls} (revokes prior for same `fileId`). */
-export function createKitFileObjectUrl(kitStore: KitStore, fileId: string, blob: Blob): string {
+export function createKitFileObjectUrl(kitStore: KitHostStore, fileId: string, blob: Blob): string {
   const st = getOrCreateKitFileState(kitStore);
   const prev = st.objectUrls.get(fileId);
   if (prev) { try { URL.revokeObjectURL(prev); } catch { /* ignore */ } }
@@ -1125,7 +1125,7 @@ export function getKitPorts(kit: Kit): Port[] {
 // #endregion KitFileHelpers
 
 // #region KitStoreBinaryFacet
-export type KitBinaryStore = KitStore & {
+export type KitBinaryStore = KitHostStore & {
   readFile?: (path: string) => Promise<Blob | null>;
   writeFile?: (path: string, blob: Blob) => Promise<void>;
   deleteFile?: (path: string) => Promise<void>;
@@ -1171,30 +1171,19 @@ export function normalizeKitCommandLifecycleEvent(event: unknown): KitCommandLif
 }
 
 export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: SetError };
-export type BackboneConfig = { dev: { path: string } } | { local: { folder: string } } | { remote: { url: string; sessionId: string } };
-export type ConflictResolution = { dropWip: null } | { forceOverwriteBackbone: null };
-export type BackboneStatusDto = { attached: boolean; kind?: string | null; tip?: string | null };
-export type KitConflict = { id: string; wipCheckpoint: unknown; backboneTip?: string | null; reason: string; createdAt: string };
+/** @internal Host/schema-only; semio/js does not invoke backbone control (owned by semio/rs). */
+export type HostSchemaKitConflict = { id: string; wipCheckpoint: unknown; backboneTip?: string | null; reason: string; createdAt: string };
 
-function parseKitStoreBackboneStatusResult(raw: unknown): BackboneStatusDto {
-  if (raw == null || typeof raw !== "object") throw new Error("backboneStatus: unexpected result");
-  const o = raw as Record<string, unknown>;
-  const inner = o.backboneStatus as Record<string, unknown> | undefined;
-  if (!inner || typeof inner !== "object") throw new Error("backboneStatus: missing backboneStatus field");
-  return { attached: Boolean(inner.attached), kind: inner.kind != null ? String(inner.kind) : null, tip: inner.tip != null && inner.tip !== "" ? String(inner.tip) : null };
-}
-
-function parseKitStoreListConflictsResult(raw: unknown): KitConflict[] {
-  if (raw == null || typeof raw !== "object") throw new Error("listConflicts: unexpected result");
-  const o = raw as Record<string, unknown>;
-  const inner = o.listConflicts as { items?: unknown[] } | undefined;
-  if (!inner || !Array.isArray(inner.items)) throw new Error("listConflicts: missing listConflicts.items");
-  return inner.items.map((row) => {
-    if (row == null || typeof row !== "object") throw new Error("listConflicts: invalid row");
-    const r = row as Record<string, unknown>;
-    return { id: String(r.id ?? ""), wipCheckpoint: r.wipCheckpoint, backboneTip: r.backboneTip != null ? String(r.backboneTip) : null, reason: String(r.reason ?? ""), createdAt: String(r.createdAt ?? "") };
-  });
-}
+//#region KitBackboneWireShim
+/** @emoji 🧭 Native-only backbone attach payload (WASM {@link SemioKitBridge} has no attach). */
+export type BackboneConfig = Record<string, unknown>;
+/** @emoji 🧭 Native coordinator snapshot (not surfaced on WASM bridge). */
+export type BackboneStatusDto = Record<string, unknown>;
+/** @emoji 🧭 Conflict resolution wire summary for UI typing. */
+export type ConflictResolution = Record<string, unknown>;
+/** @emoji 🧭 Merge conflict row (alias of host-schema shape). */
+export type KitConflict = HostSchemaKitConflict;
+//#endregion KitBackboneWireShim
 
 export type WriteStatus = { kind: "idle"; pending: 0; lastError?: undefined } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError } | { kind: "readonly"; pending: 0 };
 export type HookTriad<T> = readonly [T, (next: T | ((prev: T) => T)) => Promise<SetResult>, WriteStatus];
@@ -1219,58 +1208,11 @@ export function settleSetPromise(p: Promise<unknown>): Promise<SetResult> {
   return p.then((v: unknown) => {
     if (v && typeof v === "object" && (v as { ok?: unknown }).ok === true) return { ok: true } as const;
     if (v && typeof v === "object" && (v as { ok?: unknown }).ok === false && (v as { error?: unknown }).error) return { ok: false, error: normalizeRustSetError((v as { error: unknown }).error) } as const;
-    return { ok: false, error: { kind: "Internal", message: "unexpected patchEntityField result" } } as const;
+    return { ok: false, error: { kind: "Internal", message: "unexpected semio shell mutation result" } } as const;
   });
 }
 
-/** Boundary contract consumed by @semio/react and sketchpad. */
-export interface KitStoreClient {
-  getDto(): Kit;
-  getSnapshot(): Promise<Kit>;
-  /** @emoji 🔧 Field-level patch encoded by wasm then submitted as a `changeKitCommands` GraphQL task. */
-  patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult>;
-  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
-  removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
-  clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
-  dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
-  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
-  fixPieces(designId: string, pieceIds: string[]): Promise<SetResult>;
-  flattenDesign(designId: string): Promise<SetResult>;
-  expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
-  deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
-  changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
-  pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult>;
-  createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult>;
-  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
-  createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
-  getPiecesMetadata(designId: string): Promise<any>;
-  getPieces(designId: string): Promise<any>;
-  getConnections(designId: string): Promise<any>;
-  getDesigns(): Promise<any>;
-  getTypes(): Promise<any>;
-  getAuthors(): Promise<any>;
-  getKitMetadata(): Promise<any>;
-  undo(): Promise<SetResult>;
-  redo(): Promise<SetResult>;
-  canUndo(): Promise<boolean>;
-  canRedo(): Promise<boolean>;
-  subscribe(cb: (ev: any) => void): () => void;
-  dispose(): void;
-  execute(cmd: unknown): Promise<KitStoreExecuteResult>;
-  executeRead(commands: ReadCommandBatch): Promise<ReadCommandBatchResult>;
-  kitGraphql(): KitGraphqlHandle;
-  vcsState(): Promise<any>;
-  theKitDto(): Promise<any>;
-  materializeAt(id: string): Promise<any>;
-  attachBackbone(cfg: BackboneConfig): Promise<SetResult>;
-  detachBackbone(): Promise<SetResult>;
-  backboneStatus(): Promise<BackboneStatusDto>;
-  listConflicts(): Promise<KitConflict[]>;
-  resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult>;
-  syncNow(): Promise<SetResult>;
-}
-
-export type CreateKitStoreClientOptions = {
+export type CreateSemioKitBridgeOptions = {
   initialKit: KitLike;
   wasmSpecifier?: string;
   timeoutMs?: number;
@@ -1286,8 +1228,8 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
-/** In-process mirror of KitStoreHandle for Node/tests. */
-export class FallbackKitStoreClient implements KitStoreClient {
+/** In-process bridge to `KitStoreHandle` (consumed by {@link KitStore}, not a public mutation API). */
+export class FallbackKitStoreClient {
   private handle: any;
   private listeners: Set<(ev: any) => void> = new Set();
   private cached: any;
@@ -1322,6 +1264,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
     catch { const error: SetError = { kind: "Timeout", message: "timeout" }; return { ok: false, error }; }
   }
 
+  /** @internal */
   async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
     try { const cmds = this.handle.changeKitCommandsForFieldPatch(entityKind, id, field, value); return this.submitSetResult("changeKitCommands", { query: `mutation($commands: JSON!) { changeKitCommands(commands: $commands) }`, variables: { commands: cmds } }); }
     catch (e) { return { ok: false, error: normalizeWasmThrownKitError(e) }; }
@@ -1365,16 +1308,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
   async vcsState(): Promise<any> { return await withTimeout(Promise.resolve(this.handle.vcsState()), this.timeoutMs, "timeout"); }
   async theKitDto(): Promise<any> { return await withTimeout(Promise.resolve(this.handle.theKitDto()), this.timeoutMs, "timeout"); }
   async materializeAt(id: string): Promise<any> { const at = id.trim() === "" ? undefined : id; return await withTimeout(Promise.resolve(this.handle.materializeAt(at)), this.timeoutMs, "timeout"); }
-  async attachBackbone(cfg: BackboneConfig): Promise<SetResult> { const r = await this.execute({ attachBackbone: { config: cfg } }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.attachBackbone as { ok?: boolean } | undefined; if (inner?.ok === true) { await this.getSnapshot(); return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "attachBackbone: unexpected result" } }; }
-  async detachBackbone(): Promise<SetResult> { const r = await this.execute({ detachBackbone: null }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.detachBackbone as { ok?: boolean } | undefined; if (inner?.ok === true) { await this.getSnapshot(); return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } }; }
-  async backboneStatus(): Promise<BackboneStatusDto> { const r = await this.execute({ backboneStatus: null }); if (!r.ok) throw new Error(r.error.message); return parseKitStoreBackboneStatusResult(r.result); }
-  async listConflicts(): Promise<KitConflict[]> { const r = await this.execute({ listConflicts: null }); if (!r.ok) throw new Error(r.error.message); return parseKitStoreListConflictsResult(r.result); }
-  async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> { const r = await this.execute({ resolveConflict: { id, strategy } }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.resolveConflict as { ok?: boolean } | undefined; if (inner?.ok === true) { await this.getSnapshot(); return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "resolveConflict: unexpected result" } }; }
-  async syncNow(): Promise<SetResult> { const r = await this.execute({ syncNow: null }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.syncNow as { ok?: boolean } | undefined; if (inner?.ok === true) { await this.getSnapshot(); return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "syncNow: unexpected result" } }; }
 }
 
-/** Comlink-backed client; falls back if worker fails to boot. */
-export class WorkerKitStoreClient implements KitStoreClient {
+/** Comlink-backed bridge; falls back if worker fails to boot. */
+export class WorkerKitStoreClient {
   private worker: Worker;
   private api: any;
   private listeners: Set<(ev: any) => void> = new Set();
@@ -1438,12 +1375,6 @@ export class WorkerKitStoreClient implements KitStoreClient {
   async vcsState(): Promise<any> { return await withTimeout(this.api.vcsState(), this.timeoutMs, "timeout"); }
   async theKitDto(): Promise<any> { return await withTimeout(this.api.theKitDto(), this.timeoutMs, "timeout"); }
   async materializeAt(id: string): Promise<any> { const at = id.trim() === "" ? undefined : id; return await withTimeout(this.api.materializeAt(at), this.timeoutMs, "timeout"); }
-  async attachBackbone(cfg: BackboneConfig): Promise<SetResult> { const r = await this.execute({ attachBackbone: { config: cfg } }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.attachBackbone as { ok?: boolean } | undefined; if (inner?.ok === true) { try { this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout"); } catch { /* ignore */ } return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "attachBackbone: unexpected result" } }; }
-  async detachBackbone(): Promise<SetResult> { const r = await this.execute({ detachBackbone: null }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.detachBackbone as { ok?: boolean } | undefined; if (inner?.ok === true) { try { this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout"); } catch { /* ignore */ } return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "detachBackbone: unexpected result" } }; }
-  async backboneStatus(): Promise<BackboneStatusDto> { const r = await this.execute({ backboneStatus: null }); if (!r.ok) throw new Error(r.error.message); return parseKitStoreBackboneStatusResult(r.result); }
-  async listConflicts(): Promise<KitConflict[]> { const r = await this.execute({ listConflicts: null }); if (!r.ok) throw new Error(r.error.message); return parseKitStoreListConflictsResult(r.result); }
-  async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> { const r = await this.execute({ resolveConflict: { id, strategy } }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.resolveConflict as { ok?: boolean } | undefined; if (inner?.ok === true) { try { this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout"); } catch { /* ignore */ } return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "resolveConflict: unexpected result" } }; }
-  async syncNow(): Promise<SetResult> { const r = await this.execute({ syncNow: null }); if (!r.ok) return r; const o = r.result as Record<string, unknown>; const inner = o.syncNow as { ok?: boolean } | undefined; if (inner?.ok === true) { try { this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout"); } catch { /* ignore */ } return { ok: true } as const; } return { ok: false, error: { kind: "Internal", message: "syncNow: unexpected result" } }; }
 }
 
 const semioWasmInitBySpecifier = new Map<string, Promise<void>>();
@@ -1469,7 +1400,10 @@ async function importWasmModule(specifier: string) {
   return import(/* @vite-ignore */ specifier);
 }
 
-export async function createKitStoreClient(opts: CreateKitStoreClientOptions): Promise<KitStoreClient> {
+/** @emoji 🧭 Underlying WASM/GraphQL transport; prefer {@link createKitStore} and {@link KitStore} for all mutations. */
+export type SemioKitBridge = FallbackKitStoreClient | WorkerKitStoreClient;
+
+export async function createSemioKitBridge(opts: CreateSemioKitBridgeOptions): Promise<SemioKitBridge> {
   const dto = JSON.parse(JSON.stringify(opts.initialKit)) as KitFullDto;
   const wasmSpecifier = opts.wasmSpecifier ?? (globalThis as any).__SEMIO_WASM_SPECIFIER__ ?? "@semio/rs-wasm";
   const timeoutMs = opts.timeoutMs ?? 60_000;
@@ -1535,6 +1469,161 @@ export type ReadCommandBatch = ReadonlyArray<ReadKitCommand>;
 export type ReadCommandBatchResult = ReadonlyArray<ReadKitCommandOutput>;
 //#endregion ReadCommandTypes
 
+//#region SemioKitCommandStore
+/** @emoji 🧭 WASM bridge alias; migrate callers to {@link SemioKitBridge} / {@link createSemioKitBridge}. */
+export type KitStoreClient = SemioKitBridge;
+/** @emoji 🧭 Migrate callers to {@link createSemioKitBridge}. */
+export const createKitStoreClient = createSemioKitBridge;
+export type CreateKitStoreClientOptions = CreateSemioKitBridgeOptions;
+
+/** @emoji 🧾 Stateless WASM command facade: tracks pending `requestId`s; graph I/O delegates to {@link SemioKitBridge}. */
+export class KitStore {
+  private readonly _pendingByRequestId = new Map<KitCommandRequestId, { commandKind: string }>();
+  private _lifecycleUnsub: (() => void) | undefined;
+  constructor(private readonly _bridge: SemioKitBridge) {
+    this._lifecycleUnsub = _bridge.subscribe((ev) => {
+      const n = normalizeKitCommandLifecycleEvent(ev);
+      if (!n) return;
+      const { requestId, phase, commandKind } = n.semioKitCommand;
+      if (phase === "accepted") this._pendingByRequestId.set(requestId, { commandKind });
+      if (phase === "succeeded" || phase === "failed") this._pendingByRequestId.delete(requestId);
+    });
+  }
+
+  dispose(): void {
+    this._lifecycleUnsub?.();
+    this._lifecycleUnsub = undefined;
+    this._bridge.dispose();
+  }
+
+  /** @emoji 🧭 Underlying bridge (read stores, low-level hooks). */
+  get semioKitBridge(): SemioKitBridge {
+    return this._bridge;
+  }
+
+  /** @emoji 🧾 `requestId`s accepted but not yet finished. */
+  get pendingRequestIds(): ReadonlySet<KitCommandRequestId> {
+    return new Set(this._pendingByRequestId.keys());
+  }
+
+  kitGraphql(): KitGraphqlHandle {
+    return this._bridge.kitGraphql();
+  }
+  getDto(): Kit {
+    return this._bridge.getDto();
+  }
+  getSnapshot(): Promise<Kit> {
+    return this._bridge.getSnapshot();
+  }
+  subscribe(cb: (ev: unknown) => void): () => void {
+    return this._bridge.subscribe(cb);
+  }
+  executeRead(cmds: ReadCommandBatch): Promise<ReadCommandBatchResult> {
+    return this._bridge.executeRead(cmds);
+  }
+  execute(cmd: unknown): Promise<KitStoreExecuteResult> {
+    return this._bridge.execute(cmd);
+  }
+  patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
+    return this._bridge.patchEntityField(entityKind, id, field, value);
+  }
+  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
+    return this._bridge.addChild(parentKind, parentId, childKind, dto);
+  }
+  removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
+    return this._bridge.removeChild(parentKind, parentId, childKind, childId);
+  }
+  clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult> {
+    return this._bridge.clusterPieces(designId, pieceIds, clusterName);
+  }
+  dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult> {
+    return this._bridge.dragPieces(designId, pieceIds, du, dv);
+  }
+  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
+    return this._bridge.movePieces(designId, pieceIds, gap, shift, rise);
+  }
+  fixPieces(designId: string, pieceIds: string[]): Promise<SetResult> {
+    return this._bridge.fixPieces(designId, pieceIds);
+  }
+  flattenDesign(designId: string): Promise<SetResult> {
+    return this._bridge.flattenDesign(designId);
+  }
+  expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
+    return this._bridge.expandDesign(parentDesignId, nestedDesignId);
+  }
+  deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
+    return this._bridge.deleteConnection(designId, connectionId);
+  }
+  changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
+    return this._bridge.changePieceType(designId, pieceId, newTypeId);
+  }
+  pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult> {
+    return this._bridge.pasteDesignSelection(designId, selection, plane);
+  }
+  createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult> {
+    return this._bridge.createHangingPieces(designId, typeIds, plane);
+  }
+  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
+    return this._bridge.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort);
+  }
+  createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult> {
+    return this._bridge.createFixedPiece(designId, typeId, plane);
+  }
+  undo(): Promise<SetResult> {
+    return this._bridge.undo();
+  }
+  redo(): Promise<SetResult> {
+    return this._bridge.redo();
+  }
+  canUndo(): Promise<boolean> {
+    return this._bridge.canUndo();
+  }
+  canRedo(): Promise<boolean> {
+    return this._bridge.canRedo();
+  }
+  getPiecesMetadata(designId: string) {
+    return this._bridge.getPiecesMetadata(designId);
+  }
+  getPieces(designId: string) {
+    return this._bridge.getPieces(designId);
+  }
+  getConnections(designId: string) {
+    return this._bridge.getConnections(designId);
+  }
+  getDesigns() {
+    return this._bridge.getDesigns();
+  }
+  getTypes() {
+    return this._bridge.getTypes();
+  }
+  getAuthors() {
+    return this._bridge.getAuthors();
+  }
+  getKitMetadata() {
+    return this._bridge.getKitMetadata();
+  }
+  vcsState() {
+    return this._bridge.vcsState();
+  }
+  theKitDto() {
+    return this._bridge.theKitDto();
+  }
+  materializeAt(id: string) {
+    return this._bridge.materializeAt(id);
+  }
+}
+
+/** @emoji 🧾 Resolves {@link KitStore} facade or raw {@link SemioKitBridge} to the underlying bridge. */
+export function resolveSemioKitBridge(client: SemioKitBridge | KitStore): SemioKitBridge {
+  return client instanceof KitStore ? client.semioKitBridge : client;
+}
+
+/** @emoji 🧾 Opens a {@link KitStore} over a freshly created {@link SemioKitBridge}. */
+export async function createKitStore(opts: CreateSemioKitBridgeOptions): Promise<KitStore> {
+  return new KitStore(await createSemioKitBridge(opts));
+}
+//#endregion SemioKitCommandStore
+
 //#region KitGraphqlWire
 export type KitGraphqlHandle = { execute(requestJson: string, onMessage: (line: string) => void): Promise<void> };
 export type KitCommandReceipt = { requestId: KitCommandRequestId; commandKind: string; accepted: boolean };
@@ -1582,12 +1671,6 @@ export async function kitGraphqlExecuteStoreCommand(handle: KitGraphqlHandle, cm
       case "newSession": return { query: `mutation { newSession }` };
       case "endSession": { const id = (value as { id?: string } | null)?.id; if (typeof id !== "string") throw new Error("endSession: need id"); return { query: `mutation($id: String!) { endSession(id: $id) }`, variables: { id } }; }
       case "newAlternative": { const v = value as { fromCheckpoint?: string | null; name: string } | null; if (v == null || typeof v.name !== "string") throw new Error("newAlternative"); return { query: `mutation($fromCheckpoint: String, $name: String!) { newAlternative(fromCheckpoint: $fromCheckpoint, name: $name) }`, variables: { fromCheckpoint: v.fromCheckpoint ?? null, name: v.name } }; }
-      case "attachBackbone": { const cfg = (value as { config?: unknown } | null)?.config; return { query: `mutation($config: JSON!) { attachBackbone(config: $config) }`, variables: { config: cfg } }; }
-      case "detachBackbone": return { query: `mutation { detachBackbone }` };
-      case "listConflicts": return { query: `mutation { listConflicts }` };
-      case "resolveConflict": { const v = value as { id?: string; strategy?: unknown } | null; if (typeof v?.id !== "string") throw new Error("resolveConflict"); return { query: `mutation($id: String!, $strategy: JSON!) { resolveConflict(id: $id, strategy: $strategy) }`, variables: { id: v.id, strategy: v.strategy } }; }
-      case "backboneStatus": return { query: `mutation { backboneStatus }` };
-      case "syncNow": return { query: `mutation { syncNow }` };
       case "batch": { const cmds = (value as { commands?: unknown[] } | null)?.commands; if (!Array.isArray(cmds)) throw new Error("batch.commands"); return { query: `mutation($commands: [JSON!]!) { kitStoreBatch(commands: $commands) }`, variables: { commands: cmds } }; }
       default: throw new Error(`kitGraphqlExecuteStoreCommand: unhandled ${tag}`);
     }
@@ -1806,7 +1889,7 @@ export class SemioKitViewStore {
   }
 }
 
-export function getSemioKitViewStore(client: KitStoreClient) { return SemioKitViewStore.forClient(client); }
+export function getSemioKitViewStore(client: SemioKitBridge | KitStore) { return SemioKitViewStore.forClient(resolveSemioKitBridge(client)); }
 // #endregion KitViewStore
 
 //#region KitEventParity
@@ -1997,7 +2080,7 @@ export class SemioKitDesignReadStore {
   }
 }
 
-export function getSemioKitDesignReadStore(client: KitStoreClient) { return SemioKitDesignReadStore.forClient(client); }
+export function getSemioKitDesignReadStore(client: SemioKitBridge | KitStore) { return SemioKitDesignReadStore.forClient(resolveSemioKitBridge(client)); }
 
 /** @emoji 🧭 `getDesigns` / `getTypes` / `getAuthors` row lists — selective refetch for {@link SemioKitShallowListReadStore}. */
 export type KitShallowListKind = "designs" | "types" | "authors";
@@ -2127,7 +2210,7 @@ export class SemioKitShallowListReadStore {
   }
 }
 
-export function getSemioKitShallowListReadStore(client: KitStoreClient) { return SemioKitShallowListReadStore.forClient(client); }
+export function getSemioKitShallowListReadStore(client: SemioKitBridge | KitStore) { return SemioKitShallowListReadStore.forClient(resolveSemioKitBridge(client)); }
 
 /** @emoji 🧭 canUndo / canRedo: stack changes after graph mutations, not on command `accepted` only. */
 export function kitEventAffectsCanUndoRedo(ev: unknown): boolean {
@@ -2287,7 +2370,7 @@ export class SemioKitLiveReadStore {
   }
 }
 
-export function getSemioKitLiveReadStore(client: KitStoreClient) { return SemioKitLiveReadStore.forClient(client); }
+export function getSemioKitLiveReadStore(client: SemioKitBridge | KitStore) { return SemioKitLiveReadStore.forClient(resolveSemioKitBridge(client)); }
 //#endregion KitEventParity
 
 //#region KitWorker
@@ -2358,13 +2441,13 @@ export async function importKitToPlain(data: ArrayBuffer | Blob | File | string)
   return KitFullDtoSchema.parse(JSON.parse(t));
 }
 
-async function getOrAttachKitStoreClient(kitStore: KitStore): Promise<KitStoreClient> {
-  const x = (kitStore as any).__semioKitClient as KitStoreClient | undefined;
+async function getOrAttachSemioKitBridge(kitHost: KitHostStore): Promise<SemioKitBridge> {
+  const x = (kitHost as any).__semioKitBridge as SemioKitBridge | undefined;
   if (x) return x;
-  const c = await createKitStoreClient({ initialKit: kitStore.getSnapshot().kit, forceFallback: true });
-  const unsub = c.subscribe(() => { void applyKitClientSnapshotToLocalStore(c, kitStore); });
-  (kitStore as any).__semioKitClient = c;
-  (kitStore as any).__semioKitClientUnsub = unsub;
+  const c = await createSemioKitBridge({ initialKit: kitHost.getSnapshot().kit, forceFallback: true });
+  const unsub = c.subscribe(() => { void applyKitClientSnapshotToLocalStore(c, kitHost); });
+  (kitHost as any).__semioKitBridge = c;
+  (kitHost as any).__semioKitBridgeUnsub = unsub;
   return c;
 }
 
@@ -2378,10 +2461,10 @@ async function runSetChain(fns: Array<() => Promise<SetResult>>): Promise<SetRes
   return last;
 }
 
-/** @emoji 🧾 `semio.kit.*` / `semio.kitApp.*` bridge: {@link KitStoreClient} GraphQL mutations only (no DTO diff apply in JS). */
-export async function executeSemioKitCommand(kitStore: KitStore, command: string, origin: string, ...args: any[]): Promise<KitCommandResult> {
-  const kid = kitStore.getSnapshot().kit.id;
-  const client = await getOrAttachKitStoreClient(kitStore);
+/** @emoji 🧾 `semio.kit.*` / `semio.kitApp.*` bridge: {@link SemioKitBridge} GraphQL mutations only (no DTO diff apply in JS). */
+export async function executeSemioKitCommand(kitHost: KitHostStore, command: string, origin: string, ...args: any[]): Promise<KitCommandResult> {
+  const kid = kitHost.getSnapshot().kit.id;
+  const client = await getOrAttachSemioKitBridge(kitHost);
   let r: SetResult | undefined;
   if (command === "semio.kit.setField" && args.length >= 4) {
     r = await client.patchEntityField(String(args[0]), String(args[1]), String(args[2]), args[3]);
@@ -2511,17 +2594,17 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   else if (String(command).startsWith("semio.kitApp.")) return { ok: true, result: { skipped: true, command, origin } };
   else if (command === "semio.kit.export") return { ok: true, result: {} };
   else return { ok: false, error: { message: `unhandled command ${command}` } };
-  await applyKitClientSnapshotToLocalStore(client, kitStore);
+  await applyKitClientSnapshotToLocalStore(client, kitHost);
   if (!r) return { ok: false, error: { message: "no result" } };
   return { ok: (r as any).ok === true, requestId: (r as any)?.requestId, error: (r as any).ok ? undefined : { message: String((r as any)?.error?.message ?? "command failed") } };
 }
 
-export function createKitCommandEngineExplicitOrigin(kitStore: KitStore) {
+export function createKitCommandEngineExplicitOrigin(kitHost: KitHostStore) {
   return {
-    execute: (command: string, origin: string, ...a: any[]) => executeSemioKitCommand(kitStore, command, origin, ...a),
-    createDesign: (origin: string, body: any) => executeSemioKitCommand(kitStore, "semio.kit.addChildDesign", origin, body),
-    createType: (origin: string, body: any) => executeSemioKitCommand(kitStore, "semio.kit.addChildType", origin, body),
-    createAuthor: (origin: string, body: any) => executeSemioKitCommand(kitStore, "semio.kit.addChildAuthor", origin, body),
+    execute: (command: string, origin: string, ...a: any[]) => executeSemioKitCommand(kitHost, command, origin, ...a),
+    createDesign: (origin: string, body: any) => executeSemioKitCommand(kitHost, "semio.kit.addChildDesign", origin, body),
+    createType: (origin: string, body: any) => executeSemioKitCommand(kitHost, "semio.kit.addChildType", origin, body),
+    createAuthor: (origin: string, body: any) => executeSemioKitCommand(kitHost, "semio.kit.addChildAuthor", origin, body),
   };
 }
 export const createKitCommandEngine = createKitCommandEngineExplicitOrigin;
@@ -2544,6 +2627,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       it("exports key schemas", () => { expect(CoordinateSchema).toBeDefined(); expect(KitFullDtoSchema).toBeDefined(); expect(TypeSchema).toBeDefined(); expect(DesignSchema).toBeDefined(); expect(PieceSchema).toBeDefined(); expect(ConnectionSchema).toBeDefined(); });
       it("exports SetResult wire type shape", () => { const ok: SetResult = { ok: true }; const fail: SetResult = { ok: false, error: { kind: "NotFound", message: "x" } }; expect(ok.ok).toBe(true); expect(fail.ok).toBe(false); });
       it("exports bridge classes", () => { expect(typeof FallbackKitStoreClient).toBe("function"); expect(typeof WorkerKitStoreClient).toBe("function"); expect(typeof KitWorkerApi).toBe("function"); });
+      it("exports stateless KitStore facade and createKitStore", () => { expect(typeof KitStore).toBe("function"); expect(typeof createKitStore).toBe("function"); });
       it("exports Semio utility class", () => { expect(typeof Semio).toBe("function"); expect(typeof Semio.normalizeName).toBe("function"); expect(typeof Semio.round).toBe("function"); expect(typeof Semio.generateId).toBe("function"); });
       it("exports constants", () => { expect(typeof ICON_WIDTH).toBe("number"); expect(ICON_WIDTH).toBe(50); expect(typeof TOLERANCE).toBe("number"); expect(TOLERANCE).toBe(1e-5); });
       it("exports runKitStoreHandleExecute as the raw KitStoreHandle.execute adapter", () => { expect(typeof runKitStoreHandleExecute).toBe("function"); });
