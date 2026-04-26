@@ -12,7 +12,7 @@ import * as React from "react";
 
 import { SemioDiagram } from "@semio/ui";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "../../index";
-import { nativeCopyDesign, nativeFlatDesign, nativePasteDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
+import { nativeCopyDesign, nativeFlatDesign, nativePasteDesign, type NativeAlgorithmLanguage } from "../../index";
 import { useAlgorithmLanguage } from "../withLanguage";
 
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "../../../assets/index";

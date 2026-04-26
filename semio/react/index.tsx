@@ -80,7 +80,7 @@ import {
   Type,
   TypeStore,
   Vector,
-} from "./kitEntities";
+} from "./kitWasmClient";
 import type { SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
@@ -100,7 +100,7 @@ function isKitCommandLifecycleEvent(event: unknown): event is {
 // #endregion 🧾KitEventGuards
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, SetError, SetResult } from "@semio/js";
-export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "./kitEntities";
+export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "./kitWasmClient";
 export type {
   KitStoreExecuteResult,
   KitDesignReadKind,
@@ -110,7 +110,7 @@ export type {
   KitViewCatalogKey,
   WriteStatus,
 } from "./kitWasmClient";
-export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "./kitEntities";
+export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "./kitWasmClient";
 
 // #region ⚛️Types
 
@@ -4623,7 +4623,7 @@ export {
   TOLERANCE,
   Type,
   Vector,
-} from "./kitEntities";
+} from "./kitWasmClient";
 export { KitStore } from "@semio/js";
 export type { ReadWireBatch, ReadWireBatchResult, ReadWireItem } from "@semio/js";
 export type {
@@ -4655,8 +4655,8 @@ export type {
   QualityDiff,
   TypeDiff,
   TypeShallowDto,
-} from "./kitEntities";
-export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "./kitEntities";
+} from "./kitWasmClient";
+export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "./kitWasmClient";
 export type { KitCommandContext, KitCommandResult } from "./kitWasmClient";
 
 export function useJSON(idValue?: string): HookTriad<any> {
@@ -15750,7 +15750,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance } = await import("./kitEntities");
+  const { InMemoryKitStore, asKitInstance } = await import("./kitWasmClient");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };

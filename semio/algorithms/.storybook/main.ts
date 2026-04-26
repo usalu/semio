@@ -76,7 +76,7 @@ function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: str
 
           let result: unknown;
           if (operation === "flatten") {
-            const { nativeFlattenDesign } = await import("../nativeAlgorithmAdapter");
+            const { nativeFlattenDesign } = await import("../index");
             result = await nativeFlattenDesign(bridgePayload.kit as any, bridgePayload.designId, "ts");
           } else if (language === "python") {
             const py = spawnSync(

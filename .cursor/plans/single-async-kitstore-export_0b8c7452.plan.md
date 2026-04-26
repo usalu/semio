@@ -30,7 +30,7 @@ todos:
    content: Update `semio/sketchpad/index.tsx` to consume only `@semio/react` hooks; strip any direct `@semio/js` import
    status: completed
  - id: delete-native-adapter
-   content: Delete `semio/algorithms/nativeAlgorithmAdapter.ts`; rewire `.storybook/main.ts` and stories to call typed `KitStore` semantic commands
+   content: "Delete standalone `nativeAlgorithmAdapter.ts`: logic merged into `semio/algorithms/index.ts` under `🧮NativeKitStoreRunners`; stories/main import `../index` / `../../index`. TS path still uses `KitStore` + `@semio/react` entities for diff display until rs preview commands exist."
    status: completed
  - id: migrate-ui
    content: Strip every applyDiff/previewWithDiff/pickBestRepresentation/flattenDesignCachedOp/semioToThreeRootBasis/Plane.toMatrix usage from `semio/ui/index.tsx`; replace with typed `KitStore` calls + pure linear-algebra helpers
@@ -162,3 +162,17 @@ Reopen `2026/04/26/CLEAN-STATELESS-KIT-STORES-AND-KIT-COMMAND-REQUESTS` (already
 - Splitting the Worker further (e.g. per-tab pool) — single dedicated Worker per `KitStore` is the contract.
 - Re-introducing any JS-side caching layer.
 - Re-introducing entity classes anywhere outside `semio/rs`.
+
+## Completion status (handoff)
+
+**Done in tree**
+
+- `@semio/js`: `KitStore` with opaque `ReadWireBatch` / `read`, callback `subscribe`, `ensureAlive` + post-`dispose()` rejection on `snapshot`/`read`/GraphQL paths; embedded Vitest includes dispose guard.
+- `@semio/react`: `kitWasmClient` batches use `ReadWireBatch` only (no exported read unions from js).
+- `@semio/algorithms`: `nativeAlgorithmAdapter.ts` **removed**; native runners live in `index.ts`; Storybook imports updated.
+- Inline WASM transport when `Worker` is missing remains for Node/Vitest (differs from strict “no inline path” in §Hard rules).
+
+**Explicitly not finished (needs dedicated tickets)**
+
+- **Delete `semio/react/kitEntities.ts`**: `index.tsx` still depends on it at massive scale; requires incremental migration of hooks to DTO + `KitStore` only.
+- **`semio/rs` preview / semantic gaps** (`previewDragPieces`, unified `deletePiecesAndConnections`, etc.): cancelled in plan; algorithms TS path still uses entity `applyDiff` / `dragBySelection` where rs commands are absent.

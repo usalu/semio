@@ -468,7 +468,12 @@ export class KitStore {
     return { execute: (requestJson: string) => this.transport.execute(requestJson) };
   }
 
+  private ensureAlive(): void {
+    if (this.disposed) throw new Error("KitStore disposed");
+  }
+
   private async gqlRun(body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown> {
+    this.ensureAlive();
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
   }
 
@@ -518,6 +523,7 @@ export class KitStore {
   }
 
   async snapshot(): Promise<KitFullDto> {
+    this.ensureAlive();
     const json =
       this.transport instanceof InlineWasmTransport
         ? this.transport.snapshotJson()
@@ -790,6 +796,7 @@ export class KitStore {
   }
 
   async read(batch: ReadWireBatch): Promise<ReadWireBatchResult> {
+    this.ensureAlive();
     const typed = batch as unknown as ReadCommandBatch;
     const out: ReadKitCommandOutput[] = [];
     for (const c of typed) out.push(await this.mapReadCommand(c));
@@ -1069,6 +1076,20 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       const res = await ks.read(batch);
       expect(res.length).toBe(2);
       await ks.dispose();
+    });
+
+    it("rejects snapshot after dispose", async () => {
+      const minimalKit: KitFullDto = {
+        id: "dispose-kit",
+        name: "D",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [],
+        designs: [],
+      };
+      const ks = await KitStore.open(minimalKit);
+      await ks.dispose();
+      await expect(ks.snapshot()).rejects.toThrow(/disposed/i);
     });
 
     it("subscribe returns Unsubscribe and does not expose events$", async () => {
