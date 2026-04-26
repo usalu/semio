@@ -11,6 +11,7 @@
 
 // #region Imports
 // External dependency imports MUST be declared here.
+import { gunzipSync, strFromU8 } from "fflate";
 import { z } from "zod";
 // #endregion Imports
 
@@ -2328,7 +2329,24 @@ export function bootKitWorker() { Comlink.expose(kitWorkerApi); }
 // #region KitCommandWire
 /** @emoji 🧾 String-command context / result (hosts route shell commands; graph mutations are wasm GraphQL only). */
 export type KitCommandContext = { kind: "semio.kitCommand"; command: string; origin: string; args: unknown[] };
-export type KitCommandResult = { ok: boolean; requestId?: string; error?: { message: string }; kitDiff?: KitDiff; result?: unknown };
+export type KitCommandResult = { ok: boolean; requestId?: string; error?: { message: string }; result?: unknown };
+
+/** @emoji 📦 {@link importKitToPlain} — decode gzip/JSON or raw JSON bytes to a `KitFullDto` plain object (authoritative DTO; no host-side DTO diffs). */
+export async function importKitToPlain(data: ArrayBuffer | Blob | File | string): Promise<z.infer<typeof KitFullDtoSchema>> {
+  let u8: Uint8Array;
+  if (typeof data === "string") {
+    const r = await fetch(String(data));
+    u8 = new Uint8Array(await r.arrayBuffer());
+  } else if (data instanceof File || data instanceof Blob) u8 = new Uint8Array(await data.arrayBuffer());
+  else u8 = new Uint8Array(data);
+  const tryText = strFromU8(u8, true).trim();
+  if (tryText.startsWith("{")) {
+    return KitFullDtoSchema.parse(JSON.parse(tryText));
+  }
+  const gun = gunzipSync(u8) as unknown as Uint8Array;
+  const t = strFromU8(gun, true);
+  return KitFullDtoSchema.parse(JSON.parse(t));
+}
 
 async function getOrAttachKitStoreClient(kitStore: KitStore): Promise<KitStoreClient> {
   const x = (kitStore as any).__semioKitClient as KitStoreClient | undefined;
@@ -2340,12 +2358,122 @@ async function getOrAttachKitStoreClient(kitStore: KitStore): Promise<KitStoreCl
   return c;
 }
 
+/** @emoji 🧾 Run {@link SetResult} ops until failure (single gate into wasm GraphQL for sketchpad hosts). */
+async function runSetChain(fns: Array<() => Promise<SetResult>>): Promise<SetResult> {
+  let last: SetResult = { ok: true };
+  for (const fn of fns) {
+    last = await fn();
+    if (!last.ok) return last;
+  }
+  return last;
+}
+
 /** @emoji 🧾 `semio.kit.*` / `semio.kitApp.*` bridge: {@link KitStoreClient} GraphQL mutations only (no DTO diff apply in JS). */
 export async function executeSemioKitCommand(kitStore: KitStore, command: string, origin: string, ...args: any[]): Promise<KitCommandResult> {
   const kid = kitStore.getSnapshot().kit.id;
   const client = await getOrAttachKitStoreClient(kitStore);
   let r: SetResult | undefined;
-  if (command === "semio.kit.moveToFolder" && args.length >= 3) {
+  if (command === "semio.kit.setField" && args.length >= 4) {
+    r = await client.setField(String(args[0]), String(args[1]), String(args[2]), args[3]);
+  } else if (command === "semio.kit.replaceFromFullDto" && args[0] != null) {
+    const ex = await client.execute({ batch: { commands: [{ replaceKitFromFullDto: { dto: args[0] } }] } } as any);
+    if (!ex.ok) return { ok: false, error: { message: String((ex as any).error?.message ?? "replaceFromFullDto") } };
+    r = { ok: true } as any;
+  } else if (command === "semio.kit.replaceFromImportBuffer" && args[0] != null) {
+    const dto = await importKitToPlain(args[0] as any);
+    const ex = await client.execute({ batch: { commands: [{ replaceKitFromFullDto: { dto } }] } } as any);
+    if (!ex.ok) return { ok: false, error: { message: String((ex as any).error?.message ?? "replaceFromImportBuffer") } };
+    r = { ok: true } as any;
+  } else if (command === "semio.kit.deleteKitSelection" && args.length >= 2) {
+    const typeIds = (args[0] as string[]) || [];
+    const designIds = (args[1] as string[]) || [];
+    r = await runSetChain([...typeIds.map((t) => () => client.removeChild("Kit", kid, "Type", t)), ...designIds.map((d) => () => client.removeChild("Kit", kid, "Design", d))]);
+  } else if (command === "semio.kit.removeDesignPiecesAndConnections" && args.length >= 3) {
+    const designId = String(args[0]);
+    const pieceIds = (args[1] as string[]) || [];
+    const connectionIds = (args[2] as string[]) || [];
+    r = await runSetChain([...connectionIds.map((c) => () => client.deleteConnection(designId, c)), ...pieceIds.map((p) => () => client.removeChild("Design", designId, "Piece", p))]);
+  } else if (command === "semio.kit.addKitChildType" && args[0]) {
+    r = await client.addChild("Kit", kid, "Type", args[0]);
+  } else if (command === "semio.kit.addKitChildTypes" && args[0]) {
+    r = await runSetChain((args[0] as any[]).map((dto) => () => client.addChild("Kit", kid, "Type", dto)));
+  } else if (command === "semio.kit.addKitChildDesign" && args[0]) {
+    r = await client.addChild("Kit", kid, "Design", args[0]);
+  } else if (command === "semio.kit.addKitChildDesigns" && args[0]) {
+    r = await runSetChain((args[0] as any[]).map((dto) => () => client.addChild("Kit", kid, "Design", dto)));
+  } else if (command === "semio.kit.removeKitType" && args[0]) {
+    r = await client.removeChild("Kit", kid, "Type", String(args[0]));
+  } else if (command === "semio.kit.removeKitTypes" && args[0]) {
+    r = await runSetChain((args[0] as string[]).map((tid) => () => client.removeChild("Kit", kid, "Type", tid)));
+  } else if (command === "semio.kit.removeKitDesign" && args[0]) {
+    r = await client.removeChild("Kit", kid, "Design", String(args[0]));
+  } else if (command === "semio.kit.removeKitDesigns" && args[0]) {
+    r = await runSetChain((args[0] as string[]).map((did) => () => client.removeChild("Kit", kid, "Design", did)));
+  } else if (command === "semio.kit.patchTypes" && args[0]) {
+    const updates = args[0] as { type: { id: string }; diff: any }[];
+    r = await runSetChain(updates.map((u) => () => client.setField("Type", u.type.id, "__patch", u.diff)));
+  } else if (command === "semio.kit.patchDesigns" && args[0]) {
+    const updates = args[0] as { design: { id: string }; diff: any }[];
+    r = await runSetChain(updates.map((u) => () => client.setField("Design", u.design.id, "__patch", u.diff)));
+  } else if (command === "semio.kit.addDesignPiece" && args.length >= 2) {
+    r = await client.addChild("Design", String(args[0]), "Piece", args[1]);
+  } else if (command === "semio.kit.addDesignPieces" && args.length >= 2) {
+    const designId = String(args[0]);
+    r = await runSetChain((args[1] as any[]).map((piece) => () => client.addChild("Design", designId, "Piece", piece)));
+  } else if (command === "semio.kit.removeDesignPiece" && args.length >= 2) {
+    r = await client.removeChild("Design", String(args[0]), "Piece", String(args[1]));
+  } else if (command === "semio.kit.removeDesignPieces" && args.length >= 2) {
+    const designId = String(args[0]);
+    r = await runSetChain((args[1] as string[]).map((pid) => () => client.removeChild("Design", designId, "Piece", pid)));
+  } else if (command === "semio.kit.addDesignConnection" && args.length >= 2) {
+    r = await client.addChild("Design", String(args[0]), "Connection", args[1]);
+  } else if (command === "semio.kit.addDesignConnections" && args.length >= 2) {
+    const designId = String(args[0]);
+    r = await runSetChain((args[1] as any[]).map((c) => () => client.addChild("Design", designId, "Connection", c)));
+  } else if (command === "semio.kit.deleteConnection" && args.length >= 2) {
+    r = await client.deleteConnection(String(args[0]), String(args[1]));
+  } else if (command === "semio.kit.deleteConnections" && args.length >= 2) {
+    const designId = String(args[0]);
+    r = await runSetChain((args[1] as string[]).map((cid) => () => client.deleteConnection(designId, cid)));
+  } else if (command === "semio.kit.patchPiece" && args.length >= 2) {
+    r = await client.setField("Piece", String(args[0]), "__patch", args[1]);
+  } else if (command === "semio.kit.patchPieces" && args[0]) {
+    r = await runSetChain(
+      (args[0] as { piece: { id: string }; diff: any }[]).map(
+        (u) => () => client.setField("Piece", u.piece.id, "__patch", u.diff),
+      ),
+    );
+  } else if (command === "semio.kit.patchConnection" && args.length >= 2) {
+    r = await client.setField("Connection", String(args[0]), "__patch", args[1]);
+  } else if (command === "semio.kit.patchConnectionMany" && args[0]) {
+    r = await runSetChain(
+      (args[0] as { id: string; diff: any }[]).map(
+        (u) => () => client.setField("Connection", u.id, "__patch", u.diff),
+      ),
+    );
+  } else if (command === "semio.kit.clusterPieces" && args.length >= 3) {
+    r = await client.clusterPieces(String(args[0]), args[1] as string[], String(args[2]));
+  } else if (command === "semio.kit.expandDesign" && args.length >= 2) {
+    r = await client.expandDesign(String(args[0]), String(args[1]));
+  } else if (command === "semio.kit.dragPieces" && args.length >= 4) {
+    r = await client.dragPieces(String(args[0]), args[1] as string[], Number(args[2]), Number(args[3]));
+  } else if (command === "semio.kit.movePieces" && args.length >= 5) {
+    r = await client.movePieces(String(args[0]), args[1] as string[], Number(args[2]), Number(args[3]), Number(args[4]));
+  } else if (command === "semio.kit.fixPieces" && args.length >= 2) {
+    r = await client.fixPieces(String(args[0]), args[1] as string[]);
+  } else if (command === "semio.kit.flattenDesign" && args[0]) {
+    r = await client.flattenDesign(String(args[0]));
+  } else if (command === "semio.kit.changePieceType" && args.length >= 3) {
+    r = await client.changePieceType(String(args[0]), String(args[1]), String(args[2]));
+  } else if (command === "semio.kit.pasteDesignSelection" && args.length >= 2) {
+    r = await client.pasteDesignSelection(String(args[0]), args[1], args[2] ?? null);
+  } else if (command === "semio.kit.createHangingPieces" && args.length >= 3) {
+    r = await client.createHangingPieces(String(args[0]), args[1] as string[], args[2]);
+  } else if (command === "semio.kit.createConnectedPiece" && args.length >= 5) {
+    r = await client.createConnectedPiece(String(args[0]), String(args[1]), String(args[2]), String(args[3]), String(args[4]));
+  } else if (command === "semio.kit.createFixedPiece" && args.length >= 3) {
+    r = await client.createFixedPiece(String(args[0]), String(args[1]), args[2]);
+  } else if (command === "semio.kit.moveToFolder" && args.length >= 3) {
     const [artifactId, kind, folderId] = [args[0], args[1], args[2]]; const fk = String(kind);
     if (fk === "type") r = await client.setField("Type", artifactId, "folder", folderId);
     else if (fk === "design") r = await client.setField("Design", artifactId, "folder", folderId);

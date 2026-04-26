@@ -27,6 +27,7 @@ import {
   getStoredKitFileUrls,
   ICON_WIDTH,
   id,
+  importKitToPlain,
   InMemoryKitStore,
   KitFullDtoSchema,
   TOLERANCE,
@@ -399,12 +400,11 @@ export type { LayoutColumn, LayoutNode, LayoutRow, LayoutStack } from "@semio/ui
 export { Canvas, createDefaultLayout, deduplicateWindowLayout, HorizontalWindows, layoutNodeToGoldenLayoutConfig, parseWindowLayout, SectionSpecificity, stringifyWindowLayout, VerticalWindows, Window, WindowKind };
 
 import type { Locator, Page as PlaywrightPage } from "@playwright/test";
-import { gunzipSync, strFromU8 } from "fflate";
 import { Euler, Matrix4, Vector3 } from "three";
 
 // #region 🔖SketchpadKitUiHelpers
 /**
- * @emoji 🎨 {@link Sketchpad} UI helpers and local DTO merge for transactions; authoritative graph changes use `KitStoreClient` / GQL, not wasm `applyKitDiff`.
+ * @emoji 🎨 {@link Sketchpad} read helpers and scene math only; authoritative kit graph is `semio/rs` via {@link executeSemioKitCommand} (no DTO diffs, no local merge/apply in sketchpad).
  */
 
 function colorStringForIdText(text: string): string {
@@ -482,19 +482,6 @@ export function arePortsCompatible(kit: Kit, a: Port, b: Port): boolean {
 
 export function getClusterableGroups(_kit: Kit, _designId: string, _selectedPieceIds: readonly string[]): string[][] {
   return [];
-}
-
-export function getDesignDiff(before: Design, after: Design): any {
-  const bp = (before as any).pieces || [];
-  const ap = (after as any).pieces || [];
-  const bps = new Set(bp.map((p: any) => p.id));
-  const aps = new Set(ap.map((p: any) => p.id));
-  const added = ap.filter((p: any) => !bps.has(p.id));
-  const removed = bp.filter((p: any) => !aps.has(p.id));
-  const diff: any = {};
-  if (added.length) diff.pieces = { ...(diff.pieces || {}), added };
-  if (removed.length) diff.pieces = { ...(diff.pieces || {}), removed: removed.map((p: any) => ({ id: p.id })) };
-  return diff;
 }
 
 export function getIncludedDesigns(kit: Kit, design: Design): Design[] {
@@ -596,110 +583,23 @@ export function planeToMatrix(plane: Plane | { origin: { x: number; y: number; z
   return new Matrix4().makeBasis(x, y, z).setPosition(o.x, o.y, o.z);
 }
 
-function mergeArrayById<T extends { id: string }>(
-  list: T[] | undefined,
-  added?: T[] | null,
-  removed?: { id: string }[] | null,
-  upd?: { piece?: { id: string }; type?: { id: string }; diff: any; port?: { id: string }; design?: { id: string }; connection?: { id: string }; connector?: { id: string } }[] | null,
-) {
-  let arr = [...(list ?? [])];
-  if (removed?.length) {
-    const s = new Set(removed.map((r) => r.id));
-    arr = arr.filter((x) => !s.has(x.id));
-  }
-  if (added?.length) arr = arr.concat(added);
-  if (upd?.length) {
-    for (const u of upd) {
-      const id =
-        (u as any).piece?.id ||
-        (u as any).type?.id ||
-        (u as any).port?.id ||
-        (u as any).design?.id ||
-        (u as any).connection?.id ||
-        (u as any).connector?.id;
-      if (!id) continue;
-      const i = arr.findIndex((e) => e.id === id);
-      if (i < 0) continue;
-      arr[i] = { ...arr[i], ...((u as any).diff || {}) } as T;
-    }
-  }
-  return arr;
-}
-
-function mergeKitFullDto(plain: KitFullDto, diff: KitDiff): KitFullDto {
-  const p = { ...plain, types: [...(plain.types ?? [])] as any[], designs: [...(plain.designs ?? [])] as any[] };
-  const td = (diff as any).types;
-  if (td) {
-    p.types = mergeArrayById(p.types, td.added, td.removed, td.updated) as any;
-  }
-  const dd = (diff as any).designs;
-  if (dd) {
-    p.designs = mergeArrayById(p.designs, dd.added, dd.removed, dd.updated) as any;
-    for (const u of dd.updated || []) {
-      const id = (u as any).design?.id;
-      if (!id) continue;
-      const d = p.designs.find((x) => (x as any).id === id) as any;
-      if (!d) continue;
-      const pieceD = (u as any).diff?.pieces;
-      if (pieceD) {
-        d.pieces = mergeArrayById(d.pieces, pieceD.added, pieceD.removed, pieceD.updated) as any;
-      }
-      const connD = (u as any).diff?.connections;
-      if (connD) {
-        d.connections = mergeArrayById(d.connections, connD.added, connD.removed, connD.updated) as any;
-      }
-    }
-  }
-  return p as KitFullDto;
-}
-
-export function applyKitDiff(kit: Kit, diff: KitDiff | null | undefined): Kit {
-  if (!diff) return kit;
-  return asKitInstance(KitFullDtoSchema.parse(mergeKitFullDto(kit.toJSON() as KitFullDto, diff)));
-}
-
-export function inverseKitDiff(kit: Kit, diff: KitDiff): KitDiff {
-  const inv: KitDiff = {};
-  if ((diff as any).types?.added?.length) (inv as any).types = { ...(inv as any).types, removed: ((diff as any).types.added as { id: string }[]).map((x) => ({ id: x.id })) };
-  if ((diff as any).types?.removed?.length) (inv as any).types = { ...(inv as any).types, added: (diff as any).types.removed as any[] };
-  if ((diff as any).designs?.added?.length) (inv as any).designs = { ...(inv as any).designs, removed: ((diff as any).designs.added as { id: string }[]).map((x) => ({ id: x.id })) };
-  if ((diff as any).designs?.removed?.length) (inv as any).designs = { ...(inv as any).designs, added: (diff as any).designs.removed as any[] };
-  if ((diff as any).designs?.updated?.length || (diff as any).types?.updated?.length) {
-    void kit;
-    console.warn("[DEBUG] inverseKitDiff: nested updated not fully supported; use KitStoreClient.undo for authoritative undo.");
-  }
-  return inv;
-}
-
-function sketchpadKitStoreApply(kitStore: KitStore, diff: KitDiff | undefined) {
-  if (!diff) return;
-  const plain = kitStore.getSnapshot().kit.toJSON() as KitFullDto;
-  const merged = mergeKitFullDto(plain, diff);
-  kitStore.replace(asKitInstance(KitFullDtoSchema.parse(merged)));
-}
-
-export function sketchpadAttachKitStoreUiApi(kitStore: KitStore): void {
+/**
+ * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitStore} for {@link DesignStore} / legacy selectors (graph mutations: {@link executeSemioKitCommand} only).
+ */
+export function sketchpadAttachKitReadShell(kitStore: KitStore): void {
   const s = kitStore as any;
   if (s.__sketchpadKitUi) return;
   s.__sketchpadKitUi = true;
   s.snapshot = () => kitStore.getSnapshot().kit;
   Object.defineProperty(s, "fileUrls", { get: () => getStoredKitFileUrls(kitStore), configurable: true });
-  s.change = (d: KitDiff) => sketchpadKitStoreApply(kitStore, d);
-  s.apply = (d: KitDiff, _o?: { origin?: string }) => sketchpadKitStoreApply(kitStore, d);
 }
 
+/**
+ * @emoji 📦 Decode gzip/JSON (or {@link @semio/js} `importKitToPlain`) into a {@link Kit} instance; does not mutate a store.
+ */
 export async function importKit(data: ArrayBuffer | Blob | File | string): Promise<{ kit: Kit }> {
-  let u8: Uint8Array;
-  if (typeof data === "string") { const r = await fetch(data); u8 = new Uint8Array(await r.arrayBuffer()); }
-  else if (data instanceof File || data instanceof Blob) u8 = new Uint8Array(await data.arrayBuffer());
-  else u8 = new Uint8Array(data);
-  const tryText = strFromU8(u8, true).trim();
-  if (tryText.startsWith("{")) {
-    return { kit: asKitInstance(KitFullDtoSchema.parse(JSON.parse(tryText))) };
-  }
-  const gun = gunzipSync(u8) as unknown as Uint8Array;
-  const t = strFromU8(gun, true);
-  return { kit: asKitInstance(KitFullDtoSchema.parse(JSON.parse(t))) };
+  const plain = await importKitToPlain(data);
+  return { kit: asKitInstance(Kit.fromPlain(plain)) };
 }
 
 // #endregion 🔖SketchpadKitUiHelpers
@@ -2119,10 +2019,11 @@ export interface AppCommandResult<TDiff = any> {
 }
 
 /**
- * An app step extended with an optional kit diff.
+ * An app step; kit graph side-effects go through `semio/rs` undo history (`semio.kit.undo` / `semio.kit.redo`) — no host-side kit diffs.
  **/
 export interface KitDiffAppStep<TSelectionDiff = any> extends AppStep<TSelectionDiff> {
-  kitDiff?: KitDiff;
+  applyKitUndoOnUndo?: boolean;
+  applyKitRedoOnRedo?: boolean;
 }
 
 /**
@@ -2134,10 +2035,11 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * An app command result extended with an optional kit diff.
+ * @emoji 🧾 Command result: optional `kitWire` is executed as {@link executeSemioKitCommand} (thin client → `semio/rs` only).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
-  kitDiff?: KitDiff;
+  kitWire?: { command: string; args: unknown[] };
+  kitCommandApplied?: boolean;
 }
 
 // #endregion 🎈Store
@@ -2541,10 +2443,6 @@ export interface TransactionMachineConfig<TEdit = any> {
   applySelectionDiff: (selectionDiff: any) => void;
 
   inverseSelectionDiff: (selection: any, diff: any) => any;
-
-  applyKitDiff?: (kitDiff: KitDiff) => void;
-
-  inverseKitDiff?: (kit: Kit, diff: KitDiff) => KitDiff;
 }
 
 // #endregion ⛑️Machine Factories
@@ -6564,8 +6462,15 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
+function scheduleAuthoritativeKitUndo(kitStore: KitStore) {
+  void executeSemioKitCommand(kitStore, "semio.kit.undo", "semio.sketchpad.transaction.undo");
+}
+function scheduleAuthoritativeKitRedo(kitStore: KitStore) {
+  void executeSemioKitCommand(kitStore, "semio.kit.redo", "semio.sketchpad.transaction.redo");
+}
+
 /**
- * Abstract app store that integrates kit diff operations for collaborative kit editing.
+ * Abstract app store that integrates selection diffs; kit graph goes through `semio/rs` undo (see {@link scheduleAuthoritativeKitUndo}).
  **/
 export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends KitDiffAppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends KitDiffAppCommandResult<TDiff>> extends AppStore<
   TState,
@@ -6589,8 +6494,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
           for (let i = currentStack.length - 1; i >= 0; i--) {
             const edit = currentStack.get(i);
             if (edit?.undo) {
-              if (edit.undo.kitDiff) {
-                this.kit().apply(edit.undo.kitDiff);
+              if (edit.undo.applyKitUndoOnUndo) {
+                scheduleAuthoritativeKitUndo(this.kit());
               }
               if (edit.undo.selectionDiff) {
                 this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6612,8 +6517,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
         (this as any).lastDeletedTransactionEdit = edit;
         currentStack.delete(currentStack.length - 1, 1);
         if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
+          if (edit.undo.applyKitUndoOnUndo) {
+            scheduleAuthoritativeKitUndo(this.kit());
           }
           if (edit.undo.selectionDiff) {
             this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6632,8 +6537,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
         pastStack.delete(pastStack.length - 1, 1);
         redoStack.push([edit]);
         if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
+          if (edit.undo.applyKitUndoOnUndo) {
+            scheduleAuthoritativeKitUndo(this.kit());
           }
           if (edit.undo.selectionDiff) {
             this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6655,8 +6560,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
         currentStack.push([lastDeletedEdit]);
         (this as any).lastDeletedTransactionEdit = undefined;
         if (lastDeletedEdit.do) {
-          if (lastDeletedEdit.do.kitDiff) {
-            this.kit().apply(lastDeletedEdit.do.kitDiff);
+          if (lastDeletedEdit.do.applyKitRedoOnRedo) {
+            scheduleAuthoritativeKitRedo(this.kit());
           }
           if (lastDeletedEdit.do.selectionDiff) {
             this.applySelectionDiff(lastDeletedEdit.do.selectionDiff);
@@ -6673,8 +6578,8 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
           pastStack.push([edit]);
         }
         if (edit?.do) {
-          if (edit.do.kitDiff) {
-            this.kit().apply(edit.do.kitDiff);
+          if (edit.do.applyKitRedoOnRedo) {
+            scheduleAuthoritativeKitRedo(this.kit());
           }
           if (edit.do.selectionDiff) {
             this.applySelectionDiff(edit.do.selectionDiff);
@@ -6685,7 +6590,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 
   protected recordEdit(result: TCommandResult): void {
-    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+    if (this.isTransactionActive && (result.diff || result.kitCommandApplied)) {
       let redoStack = this.syncMap.get("redoStack") as SyncArray<any>;
       if (redoStack && redoStack.length > 0) {
         redoStack.delete(0, redoStack.length);
@@ -6698,11 +6603,9 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
       }
       const selection = this.getSelection();
       const inversedSelectionDiff = result.diff?.selection ? this.inverseSelectionDiff(selection, result.diff.selection) : undefined;
-      const kitStore = this.kit();
-      const kitState = kitStore.getSnapshot().kit;
-      const inversedKitDiff = result.kitDiff ? inverseKitDiff(kitState, result.kitDiff) : undefined;
-      const doStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: result.kitDiff, selectionDiff: result.diff?.selection };
-      const undoStep: KitDiffAppStep<TSelectionDiff> = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
+      const applied = (result as any).kitCommandApplied;
+      const doStep: KitDiffAppStep<TSelectionDiff> = { selectionDiff: result.diff?.selection, applyKitRedoOnRedo: !!applied };
+      const undoStep: KitDiffAppStep<TSelectionDiff> = { selectionDiff: inversedSelectionDiff, applyKitUndoOnUndo: !!applied };
       const edit = { do: doStep, undo: undoStep };
       currentStack.push([edit]);
     }
@@ -6908,8 +6811,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
       for (let i = this._currentTransactionStack.length - 1; i >= 0; i--) {
         const edit = this._currentTransactionStack[i] as any;
         if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
+          if (edit.undo.applyKitUndoOnUndo) {
+            scheduleAuthoritativeKitUndo(this.kit());
           }
           if (edit.undo.selectionDiff) {
             this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6928,8 +6831,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         const edit = this._currentTransactionStack.pop() as any;
         this.lastDeletedTransactionEdit = edit;
         if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
+          if (edit.undo.applyKitUndoOnUndo) {
+            scheduleAuthoritativeKitUndo(this.kit());
           }
           if (edit.undo.selectionDiff) {
             this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6942,8 +6845,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         const edit = this.pastTransactionsStack.pop() as any;
         this.redoStack.push(edit);
         if (edit?.undo) {
-          if (edit.undo.kitDiff) {
-            this.kit().apply(edit.undo.kitDiff);
+          if (edit.undo.applyKitUndoOnUndo) {
+            scheduleAuthoritativeKitUndo(this.kit());
           }
           if (edit.undo.selectionDiff) {
             this.applySelectionDiff(edit.undo.selectionDiff);
@@ -6961,8 +6864,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         const edit = this.lastDeletedTransactionEdit as any;
         this.lastDeletedTransactionEdit = undefined;
         if (edit?.do) {
-          if (edit.do.kitDiff) {
-            this.kit().apply(edit.do.kitDiff);
+          if (edit.do.applyKitRedoOnRedo) {
+            scheduleAuthoritativeKitRedo(this.kit());
           }
           if (edit.do.selectionDiff) {
             this.applySelectionDiff(edit.do.selectionDiff);
@@ -6975,8 +6878,8 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
         const edit = this.redoStack.pop() as any;
         this.pastTransactionsStack.push(edit);
         if (edit?.do) {
-          if (edit.do.kitDiff) {
-            this.kit().apply(edit.do.kitDiff);
+          if (edit.do.applyKitRedoOnRedo) {
+            scheduleAuthoritativeKitRedo(this.kit());
           }
           if (edit.do.selectionDiff) {
             this.applySelectionDiff(edit.do.selectionDiff);
@@ -6989,16 +6892,14 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 
   protected recordEdit(result: TCommandResult): void {
     const res = result as any;
-    if (this.isTransactionActive && (res.diff || res.kitDiff)) {
+    if (this.isTransactionActive && (res.diff || res.kitCommandApplied)) {
       this.redoStack = [];
       this.lastDeletedTransactionEdit = undefined;
       const selection = this.getSelection();
       const inversedSelectionDiff = res.diff?.selection ? this.inverseSelectionDiff(selection, res.diff.selection) : undefined;
-      const kitStore = this.kit();
-      const kitState = kitStore.getSnapshot().kit;
-      const inversedKitDiff = res.kitDiff ? inverseKitDiff(kitState, res.kitDiff) : undefined;
-      const doStep = { kitDiff: res.kitDiff, selectionDiff: res.diff?.selection };
-      const undoStep = { kitDiff: inversedKitDiff, selectionDiff: inversedSelectionDiff };
+      const applied = !!res.kitCommandApplied;
+      const doStep = { selectionDiff: res.diff?.selection, applyKitRedoOnRedo: applied };
+      const undoStep = { selectionDiff: inversedSelectionDiff, applyKitUndoOnUndo: applied };
       const edit = { do: doStep, undo: undoStep } as TEdit;
       this._currentTransactionStack.push(edit);
     }
@@ -11256,119 +11157,90 @@ export const kitAppCommands = {
           designs: { removed: selection?.designs ?? [] },
         },
       },
-      kitDiff: {
-        types: { removed: selection?.types?.map((g) => ({ id: g })) },
-        designs: { removed: selection?.designs?.map((g) => ({ id: g })) },
-      },
+      kitWire: { command: "semio.kit.deleteKitSelection", args: [selection?.types ?? [], selection?.designs ?? []] },
     };
   },
   "semio.kitApp.addType": (context: KitAppCommandContext, type: Type): KitAppCommandResult => {
+    const body = (type as any).toPlain?.() ?? (type as any);
     return {
       diff: {},
-      kitDiff: {
-        types: { added: [type] },
-      },
+      kitWire: { command: "semio.kit.addKitChildType", args: [body] },
     };
   },
-  "semio.kitApp.addTypeAfter": (context: KitAppCommandContext, type: Type, afterId: Id): KitAppCommandResult => {
-    const currentTypes = context.kit.types ?? [];
-    const afterIndex = currentTypes.findIndex((t) => t.id === afterId);
-    const insertIndex = afterIndex === -1 ? currentTypes.length : afterIndex + 1;
-    const reordered = [...currentTypes.slice(0, insertIndex), type, ...currentTypes.slice(insertIndex)];
-    const allIds = currentTypes.map((t) => ({ id: t.id }));
+  "semio.kitApp.addTypeAfter": (context: KitAppCommandContext, type: Type, _afterId: Id): KitAppCommandResult => {
+    const body = (type as any).toPlain?.() ?? (type as any);
     return {
       diff: {},
-      kitDiff: {
-        types: { removed: allIds, added: reordered },
-      },
+      kitWire: { command: "semio.kit.addKitChildType", args: [body] },
     };
   },
   "semio.kitApp.addTypes": (context: KitAppCommandContext, types: Type[]): KitAppCommandResult => {
+    const body = types.map((t) => (t as any).toPlain?.() ?? t);
     return {
       diff: {},
-      kitDiff: {
-        types: { added: types },
-      },
+      kitWire: { command: "semio.kit.addKitChildTypes", args: [body] },
     };
   },
   "semio.kitApp.removeType": (context: KitAppCommandContext, Id: Id): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        types: { removed: [{ id: Id }] },
-      },
+      kitWire: { command: "semio.kit.removeKitType", args: [Id] },
     };
   },
   "semio.kitApp.removeTypes": (context: KitAppCommandContext, typeIds: Id[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        types: { removed: typeIds.map((g) => ({ id: g })) },
-      },
+      kitWire: { command: "semio.kit.removeKitTypes", args: [typeIds] },
     };
   },
   "semio.kitApp.addDesign": (context: KitAppCommandContext, design: Design): KitAppCommandResult => {
+    const body = (design as any).toPlain?.() ?? (design as any);
     return {
       diff: {},
-      kitDiff: {
-        designs: { added: [design] },
-      },
+      kitWire: { command: "semio.kit.addKitChildDesign", args: [body] },
     };
   },
   "semio.kitApp.addDesigns": (context: KitAppCommandContext, designs: Design[]): KitAppCommandResult => {
+    const body = designs.map((d) => (d as any).toPlain?.() ?? d);
     return {
       diff: {},
-      kitDiff: {
-        designs: { added: designs },
-      },
+      kitWire: { command: "semio.kit.addKitChildDesigns", args: [body] },
     };
   },
   "semio.kitApp.removeDesign": (context: KitAppCommandContext, Id: Id): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        designs: { removed: [{ id: Id }] },
-      },
+      kitWire: { command: "semio.kit.removeKitDesign", args: [Id] },
     };
   },
   "semio.kitApp.removeDesigns": (context: KitAppCommandContext, designIds: Id[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        designs: { removed: designIds.map((g) => ({ id: g })) },
-      },
+      kitWire: { command: "semio.kit.removeKitDesigns", args: [designIds] },
     };
   },
   "semio.kitApp.updateType": (context: KitAppCommandContext, id: Id, typeDiff: TypeDiff): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        types: { updated: [{ type: { id }, diff: typeDiff }] },
-      },
+      kitWire: { command: "semio.kit.setField", args: ["Type", id, "__patch", typeDiff] },
     };
   },
   "semio.kitApp.updateTypes": (context: KitAppCommandContext, updates: { type: { id: Id }; diff: TypeDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        types: { updated: updates },
-      },
+      kitWire: { command: "semio.kit.patchTypes", args: [updates] },
     };
   },
   "semio.kitApp.updateDesign": (context: KitAppCommandContext, id: Id, designDiff: DesignDiff): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        designs: { updated: [{ design: { id }, diff: designDiff }] },
-      },
+      kitWire: { command: "semio.kit.setField", args: ["Design", id, "__patch", designDiff] },
     };
   },
   "semio.kitApp.updateDesigns": (context: KitAppCommandContext, updates: { design: { id: Id }; diff: DesignDiff }[]): KitAppCommandResult => {
     return {
       diff: {},
-      kitDiff: {
-        designs: { updated: updates },
-      },
+      kitWire: { command: "semio.kit.patchDesigns", args: [updates] },
     };
   },
   "semio.kitApp.setFilterSearch": (context: KitAppCommandContext, search: string): KitAppCommandResult => {
@@ -16446,46 +16318,6 @@ export function useIsPieceTransitiveHovered(): boolean {
  * Hook returning the diff status of the current scoped piece.
  **/
 export function usePieceStatus(): DiffStatus {
-  const piece = usePieceScope();
-  const designScope = useDesignScope();
-  const designAppStore = useDesignStore(identitySelector) as any;
-
-  if (!designAppStore || !piece || !designScope) {
-    return DiffStatus.Unchanged;
-  }
-
-  const currentStack = designAppStore?.currentTransactionStack;
-  if (!currentStack || currentStack.length === 0) {
-    return DiffStatus.Unchanged;
-  }
-
-  for (const edit of currentStack) {
-    if (edit.do?.kitDiff?.designs) {
-      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-        if (designUpdate.diff.pieces?.added) {
-          for (const addedPiece of designUpdate.diff.pieces.added) {
-            if (addedPiece.id === piece.id) {
-              return DiffStatus.Added;
-            }
-          }
-        }
-        if (designUpdate.diff.pieces?.removed) {
-          for (const removedId of designUpdate.diff.pieces.removed) {
-            if (removedId === piece.id) {
-              return DiffStatus.Removed;
-            }
-          }
-        }
-        if (designUpdate.diff.pieces?.updated) {
-          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-            if (pieceUpdate.id === piece.id) {
-              return DiffStatus.Modified;
-            }
-          }
-        }
-      }
-    }
-  }
   return DiffStatus.Unchanged;
 }
 
@@ -16501,28 +16333,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   if (!designAppStore || !pieceScope || !designScope) {
     return selector ? selector(originalPiece) : originalPiece;
   }
-
-  const currentStack = designAppStore?.currentTransactionStack;
-  if (!currentStack || currentStack.length === 0) {
-    return selector ? selector(originalPiece) : originalPiece;
-  }
-
-  let diffedPiece = { ...originalPiece };
-  for (const edit of currentStack) {
-    if (edit.do?.kitDiff?.designs) {
-      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-        if (designUpdate.diff.pieces?.updated) {
-          for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-            if (pieceUpdate.id === pieceScope.id) {
-              diffedPiece = { ...diffedPiece, ...pieceUpdate.diff };
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return selector ? selector(diffedPiece) : diffedPiece;
+  return selector ? selector(originalPiece) : originalPiece;
 }
 
 /**
@@ -18174,7 +17985,7 @@ export class SketchpadStore {
       throw new Error("[sketchpad] registerKitStore requires KitRegistryProvider (getKitRegistryBridge is null).");
     }
 
-    sketchpadAttachKitStoreUiApi(kitStore);
+    sketchpadAttachKitReadShell(kitStore);
 
     let autoSaveTimer: ReturnType<typeof setTimeout> | undefined;
     const scheduleAutoSave = () => {
@@ -19161,6 +18972,7 @@ const SketchpadScopeWithKitRegistry: FC<SketchpadScopeProviderProps & { scopeId:
       (window as any).__SEMIO_STORE__ = store;
       (window as any).__SEMIO_ACTOR__ = actor;
       (window as any).__piecesMetadata = piecesMetadata;
+      (window as any).__SEMIO_EXECUTE_SEMIO_KIT_COMMAND__ = executeSemioKitCommand;
     }
   }
 
@@ -24568,9 +24380,8 @@ export interface KitAppCommandContext extends KitCommandContext {
 /**
  * Result returned by Kit app commands containing diffs to apply.
  **/
-export interface KitAppCommandResult {
+export interface KitAppCommandResult extends KitDiffAppCommandResult<KitAppDiff> {
   diff?: KitAppDiff;
-  kitDiff?: KitDiff;
 }
 
 /**
@@ -25199,7 +25010,7 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
 
     const context: KitAppCommandContext = {
       kitApp: state,
-      kit: kitData.snapshot(),
+      kit: kitData.getSnapshot().kit,
       fileUrls: kitData.fileUrls,
       origin,
     };
@@ -25207,10 +25018,14 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     if (result.diff) {
       this.change(result.diff);
     }
-    this.recordEdit(result);
-    if (result.kitDiff) {
-      kitData.change(result.kitDiff);
+    if (result.kitWire) {
+      const kw = result.kitWire;
+      const kitRes = await executeSemioKitCommand(kitData, kw.command, origin ?? "semio.kitApp", ...(kw.args ?? []));
+      if (kitRes.ok) {
+        (result as any).kitCommandApplied = true;
+      }
     }
+    this.recordEdit(result);
     return result as T;
   }
 
@@ -26400,9 +26215,8 @@ export interface DesignAppCommandContext extends KitCommandContext {
 /**
  * Result returned by Design app commands containing diffs to apply.
  **/
-export interface DesignAppCommandResult {
+export interface DesignAppCommandResult extends KitDiffAppCommandResult<DesignAppDiff> {
   diff?: DesignAppDiff;
-  kitDiff?: KitDiff;
 }
 
 // #endregion 📌Types
@@ -26463,22 +26277,9 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
           },
         },
       },
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  removed: selectedPieces.map((g) => ({ id: g })),
-                },
-                connections: {
-                  removed: selectedConnections.map((g) => ({ id: g })),
-                },
-              },
-            },
-          ],
-        },
+      kitWire: {
+        command: "semio.kit.removeDesignPiecesAndConnections",
+        args: [context.design.id, selectedPieces, selectedConnections],
       },
     };
   },
@@ -26776,74 +26577,22 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
   },
   "semio.designApp.addPiece": (context: DesignAppCommandContext, piece: Piece): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  added: [piece],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.addDesignPiece", args: [context.design.id, piece] },
     };
   },
   "semio.designApp.addPieces": (context: DesignAppCommandContext, pieces: Piece[]): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  added: pieces,
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.addDesignPieces", args: [context.design.id, pieces] },
     };
   },
   "semio.designApp.removePiece": (context: DesignAppCommandContext, pieceId: Id): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  removed: [{ id: pieceId }],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.removeDesignPiece", args: [context.design.id, pieceId] },
     };
   },
   "semio.designApp.removePieces": (context: DesignAppCommandContext, pieceIds: Id[]): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  removed: pieceIds.map((g) => ({ id: g })),
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.removeDesignPieces", args: [context.design.id, pieceIds] },
     };
   },
   "semio.designApp.addConnection": (context: DesignAppCommandContext, connection: Connection): DesignAppCommandResult => {
@@ -26856,110 +26605,32 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       }
     }
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  added: [connection],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.addDesignConnection", args: [context.design.id, connection] },
     };
   },
   "semio.designApp.addConnections": (context: DesignAppCommandContext, connections: Connection[]): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  added: connections,
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.addDesignConnections", args: [context.design.id, connections] },
     };
   },
   "semio.designApp.removeConnection": (context: DesignAppCommandContext, connectionId: Id): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  removed: [{ id: connectionId }],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.deleteConnection", args: [context.design.id, connectionId] },
     };
   },
   "semio.designApp.removeConnections": (context: DesignAppCommandContext, connectionIds: Id[]): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  removed: connectionIds.map((g) => ({ id: g })),
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.deleteConnections", args: [context.design.id, connectionIds] },
     };
   },
   "semio.designApp.updatePiece": (context: DesignAppCommandContext, pieceId: Id, pieceDiff: PieceDiff): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  updated: [{ piece: { id: pieceId }, diff: pieceDiff }],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.patchPiece", args: [pieceId, pieceDiff] },
     };
   },
   "semio.designApp.updatePieces": (context: DesignAppCommandContext, updates: { piece: PieceId; diff: PieceDiff }[]): DesignAppCommandResult => {
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                pieces: {
-                  updated: updates,
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.patchPieces", args: [updates] },
     };
   },
   "semio.designApp.updateConnection": (context: DesignAppCommandContext, connectionId: Id, connectionDiff: ConnectionDiff): DesignAppCommandResult => {
@@ -26967,40 +26638,18 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     if (!connection) {
       return {};
     }
-    const connectionKey = { connected: { piece: connection.connected.piece.id }, connecting: { piece: connection.connecting.piece.id } };
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  updated: [{ connection: { id: connectionKey }, diff: connectionDiff }],
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.patchConnection", args: [String(connectionId), connectionDiff] },
     };
   },
   "semio.designApp.updateConnections": (context: DesignAppCommandContext, updates: { connection: ConnectionId; diff: ConnectionDiff }[]): DesignAppCommandResult => {
+    const rows = updates.map((u) => {
+      const raw = u.connection as any;
+      const cid = typeof raw === "string" ? raw : raw?.id != null ? String(raw.id) : "";
+      return { id: cid, diff: u.diff };
+    });
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: {
-                connections: {
-                  updated: updates,
-                },
-              },
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.patchConnectionMany", args: [rows] },
     };
   },
   "semio.designApp.clusterPieces": (context: DesignAppCommandContext, pieceIds: Id[]): DesignAppCommandResult => {
@@ -27014,8 +26663,6 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     }
     const existingNames = (context.kit.designs || []).map((d) => d.name);
     const clusterName = generateUniqueName(`${context.design.name} Cluster`, existingNames);
-    const { clusteredDesign, externalConnections } = context.kit.createClusteredDesignFromDesign(context.design, validPieceIds, clusterName);
-    const designChange = context.kit.replaceClusterWithDesignChange(context.design, validPieceIds, clusteredDesign, externalConnections);
     const currentSelection = context.designApp.selection || {};
     const piecesRemoved = currentSelection.pieces || [];
     const connectionsRemoved = currentSelection.connections || [];
@@ -27024,23 +26671,15 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
         selection: {
           pieces: {
             removed: piecesRemoved,
-            added: [clusteredDesign.id],
           },
           connections: {
             removed: connectionsRemoved,
           },
         },
       },
-      kitDiff: {
-        designs: {
-          added: [clusteredDesign],
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: designChange.forward,
-            },
-          ],
-        },
+      kitWire: {
+        command: "semio.kit.clusterPieces",
+        args: [context.design.id, validPieceIds, clusterName],
       },
     };
   },
@@ -27052,46 +26691,9 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     if (!referencedDesign) {
       return {};
     }
-
-    const expandedReferencedDesign = context.kit.expandDesignPiecesFrom(referencedDesign);
-    const existingPieceIds = new Set((context.design.pieces || []).map((piece) => piece.id));
-    const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece) => !existingPieceIds.has(piece.id));
-    const existingConnections = context.design.connections || [];
-    const addedConnections = (expandedReferencedDesign.connections || []).filter((connection) => !existingConnections.some((existing) => areSameConnection(existing, connection)));
-
-    const updatedExternalConnections = (context.design.connections || []).map((connection) => {
-      if (connection.connected.designPiece?.id === designId) {
-        return {
-          ...connection,
-          connected: {
-            ...connection.connected,
-            designPiece: undefined,
-          },
-        };
-      }
-      if (connection.connecting.designPiece?.id === designId) {
-        return {
-          ...connection,
-          connecting: {
-            ...connection.connecting,
-            designPiece: undefined,
-          },
-        };
-      }
-      return connection;
-    });
-
-    const expandedDesign: Design = {
-      ...context.design,
-      pieces: [...(context.design.pieces || []), ...addedPieces],
-      connections: [...updatedExternalConnections, ...addedConnections],
-    };
-
-    const designDiff = getDesignDiff(context.design, expandedDesign);
     const currentSelection = context.designApp.selection || {};
     const piecesRemoved = currentSelection.pieces || [];
     const connectionsRemoved = currentSelection.connections || [];
-
     return {
       diff: {
         selection: {
@@ -27103,16 +26705,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
           },
         },
       },
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              design: { id: context.design.id },
-              diff: designDiff,
-            },
-          ],
-        },
-      },
+      kitWire: { command: "semio.kit.expandDesign", args: [context.design.id, designId] },
     };
   },
 };
@@ -27348,7 +26941,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
 
     const kitStore = this.kit();
     const state = this.snapshot();
-    const kitState = kitStore.snapshot();
+    const kitState = kitStore.getSnapshot().kit;
 
     const designStore = this.design();
     const design = designStore.snapshot();
@@ -27374,10 +26967,14 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (result.diff) {
       this.change(result.diff);
     }
-    this.recordEdit(result);
-    if (result.kitDiff) {
-      kitStore.change(result.kitDiff);
+    if (result.kitWire) {
+      const kw = result.kitWire;
+      const kitRes = await executeSemioKitCommand(kitStore, kw.command, origin ?? "semio.designApp", ...(kw.args ?? []));
+      if (kitRes.ok) {
+        (result as any).kitCommandApplied = true;
+      }
     }
+    this.recordEdit(result);
     if (result.diff?.selection && actor) {
       actor.send({ type: "DESIGN.SET_SELECTION", kitId: this.kitId, designId: this.designId, selection: this.state.selection || {} } as any);
     }
@@ -28969,99 +28566,8 @@ function getTransactionAffectedPieces(store: DesignStore | null): { changedPiece
     if (!statusMap.has(pieceId)) statusMap.set(pieceId, DiffStatus.Modified);
   }
   const currentStack = store.currentTransactionStack;
-  if (!currentStack || currentStack.length === 0) return { changedPieces, statusMap };
-  const designSnapshot = store.design().snapshot() as Design | null;
-  const connectionEndpointsById = new Map<string, { connectedPieceId?: string; connectingPieceId?: string }>();
-  for (const connection of designSnapshot?.connections ?? []) {
-    if (!connection?.id) continue;
-    connectionEndpointsById.set(connection.id, {
-      connectedPieceId: connection.connected?.piece?.id,
-      connectingPieceId: connection.connecting?.piece?.id,
-    });
-  }
-
-  const markPieceStatus = (pieceId: string | undefined, status: DiffStatus): void => {
-    if (!pieceId) return;
-    changedPieces.add(pieceId);
-    if (status === DiffStatus.Modified) {
-      if (!statusMap.has(pieceId)) statusMap.set(pieceId, DiffStatus.Modified);
-      return;
-    }
-    statusMap.set(pieceId, status);
-  };
-
-  const markConnectionEndpoints = (connection: { id?: string; connected?: { piece?: { id?: string } }; connecting?: { piece?: { id?: string } } } | undefined, status: DiffStatus): void => {
-    if (!connection) return;
-    const connectedPieceId = connection.connected?.piece?.id;
-    const connectingPieceId = connection.connecting?.piece?.id;
-    if (connectedPieceId || connectingPieceId) {
-      markPieceStatus(connectedPieceId, status);
-      markPieceStatus(connectingPieceId, status);
-      return;
-    }
-    const fallback = connection.id ? connectionEndpointsById.get(connection.id) : undefined;
-    markPieceStatus(fallback?.connectedPieceId, status);
-    markPieceStatus(fallback?.connectingPieceId, status);
-  };
-
-  for (const edit of currentStack) {
-    // Connection removals in `do` may only include IDs. Use inverse edit data when available
-    // to recover endpoints and keep both ends in sync.
-    const undoDesignUpdates = edit.undo?.kitDiff?.designs?.updated || [];
-    for (const designUpdate of undoDesignUpdates) {
-      if (designUpdate.diff.connections?.added) {
-        for (const connection of designUpdate.diff.connections.added) {
-          const connectionId = connection?.id;
-          if (!connectionId) continue;
-          if (!connectionEndpointsById.has(connectionId)) {
-            connectionEndpointsById.set(connectionId, {
-              connectedPieceId: connection.connected?.piece?.id,
-              connectingPieceId: connection.connecting?.piece?.id,
-            });
-          }
-        }
-      }
-    }
-
-    const doDesignUpdates = edit.do?.kitDiff?.designs?.updated || [];
-    for (const designUpdate of doDesignUpdates) {
-      if (designUpdate.diff.pieces?.updated) {
-        for (const pieceUpdate of designUpdate.diff.pieces.updated) {
-          markPieceStatus(pieceUpdate.piece.id, DiffStatus.Modified);
-        }
-      }
-      if (designUpdate.diff.pieces?.added) {
-        for (const piece of designUpdate.diff.pieces.added) {
-          markPieceStatus(piece.id, DiffStatus.Added);
-        }
-      }
-      if (designUpdate.diff.pieces?.removed) {
-        for (const removedPieceId of designUpdate.diff.pieces.removed) {
-          markPieceStatus(removedPieceId.id, DiffStatus.Removed);
-        }
-      }
-      if (designUpdate.diff.connections?.updated) {
-        for (const connectionUpdate of designUpdate.diff.connections.updated) {
-          markConnectionEndpoints(connectionUpdate.connection, DiffStatus.Modified);
-          if (connectionUpdate.diff?.connected?.piece?.id) {
-            markPieceStatus(connectionUpdate.diff.connected.piece.id, DiffStatus.Modified);
-          }
-          if (connectionUpdate.diff?.connecting?.piece?.id) {
-            markPieceStatus(connectionUpdate.diff.connecting.piece.id, DiffStatus.Modified);
-          }
-        }
-      }
-      if (designUpdate.diff.connections?.added) {
-        for (const connection of designUpdate.diff.connections.added) {
-          markConnectionEndpoints(connection, DiffStatus.Added);
-        }
-      }
-      if (designUpdate.diff.connections?.removed) {
-        for (const removedConnection of designUpdate.diff.connections.removed) {
-          markConnectionEndpoints(removedConnection, DiffStatus.Removed);
-        }
-      }
-    }
+  if (currentStack && currentStack.length > 0) {
+    void currentStack;
   }
   return { changedPieces, statusMap };
 }
@@ -29658,32 +29164,7 @@ export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: s
 /**
  * getConnectionStatusFromTransactionStack holds the data fields for a getConnectionStatusFromTransactionStack record.
  **/
-function getConnectionStatusFromTransactionStack(store: DesignStore | null, connectionId: string): DiffStatus {
-  if (!store) return DiffStatus.Unchanged;
-  const currentStack = store.currentTransactionStack;
-  if (!currentStack || currentStack.length === 0) return DiffStatus.Unchanged;
-
-  for (const edit of currentStack) {
-    if (edit.do?.kitDiff?.designs) {
-      for (const designUpdate of edit.do.kitDiff.designs.updated || []) {
-        if (designUpdate.diff.connections?.added) {
-          for (const conn of designUpdate.diff.connections.added) {
-            if (conn.id === connectionId) return DiffStatus.Added;
-          }
-        }
-        if (designUpdate.diff.connections?.removed) {
-          for (const removedConn of designUpdate.diff.connections.removed) {
-            if (removedConn.id === connectionId) return DiffStatus.Removed;
-          }
-        }
-        if (designUpdate.diff.connections?.updated) {
-          for (const connUpdate of designUpdate.diff.connections.updated) {
-            if (connUpdate.connection.id === connectionId) return DiffStatus.Modified;
-          }
-        }
-      }
-    }
-  }
+function getConnectionStatusFromTransactionStack(_store: DesignStore | null, _connectionId: string): DiffStatus {
   return DiffStatus.Unchanged;
 }
 
@@ -41438,7 +40919,7 @@ export interface QualityAppCommandContext extends KitCommandContext {
 /**
  * Result returned by quality app command handlers.
  **/
-export interface QualityAppCommandResult {
+export interface QualityAppCommandResult extends KitDiffAppCommandResult<QualityAppDiff> {
   diff?: QualityAppDiff;
   qualityDiff?: QualityDiff;
 }
@@ -42057,7 +41538,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
 
     const kitStore = this.kit();
     const state = this.snapshot();
-    const kitState = kitStore.snapshot();
+    const kitState = kitStore.getSnapshot().kit;
     const quality = this.quality();
 
     const context: QualityAppCommandContext = {
@@ -42071,18 +41552,14 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
     if (result.diff) {
       this.change(result.diff);
     }
-    const qualityKitDiff = result.qualityDiff
-      ? {
-          qualities: {
-            updated: [{ quality: { id: this.Id.quality }, diff: result.qualityDiff }],
-          },
-        }
-      : undefined;
-    if (qualityKitDiff) (result as any).kitDiff = qualityKitDiff;
-    this.recordEdit(result);
-    if (qualityKitDiff) {
-      kitStore.change(qualityKitDiff);
+    if (result.qualityDiff) {
+      const qid = this.Id.quality;
+      const kitRes = await executeSemioKitCommand(kitStore, "semio.kit.setField", origin ?? "semio.qualityApp", "Quality", qid, "__patch", result.qualityDiff);
+      if (kitRes.ok) {
+        (result as any).kitCommandApplied = true;
+      }
     }
+    this.recordEdit(result);
     return result as T;
   }
 }
@@ -49023,30 +48500,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       { value: focusedRepresentationUrl },
     );
 
-    const createdType = await page.evaluate(() => {
+    const createdType = await page.evaluate(async () => {
       const store = (window as any).__SEMIO_STORE__;
       const globalNavigate = (window as any).__SEMIO_NAVIGATE__;
+      const executeSemioKitCommand = (window as any).__SEMIO_EXECUTE_SEMIO_KIT_COMMAND__;
       const match = window.location.pathname.match(/^\/kits\/([^/]+)\/types\/([^/]+)$/);
-      if (!store || !globalNavigate || !match) throw new Error("Type page context not available.");
+      if (!store || !globalNavigate || !match || !executeSemioKitCommand) throw new Error("Type page context not available.");
       const [, kitId] = match;
       const kitStore = store.kitStore(kitId);
-      if (!kitStore || typeof kitStore.apply !== "function") throw new Error(`Kit store missing for ${kitId}.`);
+      if (!kitStore) throw new Error(`Kit store missing for ${kitId}.`);
       const uniqueName = `Created Type ${Date.now()}`;
       const typeId = crypto.randomUUID();
-      kitStore.apply(
-        {
-          types: {
-            added: [
-              {
-                id: typeId,
-                name: uniqueName,
-                connectors: [],
-              },
-            ],
-          },
-        },
-        { origin: "semio.sketchpad.test.typeCreateKeepsNewName" },
-      );
+      const r = await executeSemioKitCommand(kitStore, "semio.kit.addChildType", "semio.sketchpad.test.typeCreateKeepsNewName", {
+        id: typeId,
+        name: uniqueName,
+        connectors: [],
+      });
+      if (!r?.ok) throw new Error("addChildType failed");
       globalNavigate(`/kits/${kitId}/types/${typeId}`);
       return { typeId, uniqueName };
     });
