@@ -1979,25 +1979,24 @@ func collectGoTestsInSection(filePath string, sectionName string) string {
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 
-		if strings.HasPrefix(trimmed, "// #region") {
-			regionName := strings.TrimPrefix(trimmed, "// #region")
-			regionName = strings.TrimSpace(regionName)
-
-			for _, r := range regionName {
-				if r > 0x7F {
-					regionName = strings.TrimSpace(regionName[len(string(r)):])
-					break
+		if strings.HasPrefix(trimmed, "//") {
+			if idx := strings.Index(trimmed, "#region"); idx >= 0 {
+				regionName := strings.TrimSpace(trimmed[idx+len("#region"):])
+				for _, r := range regionName {
+					if r > 0x7F {
+						regionName = strings.TrimSpace(regionName[len(string(r)):])
+						break
+					}
 				}
+				if Flat(regionName) == flatSection {
+					inSection = true
+					continue
+				} else if inSection {
+					inSection = false
+				}
+			} else if strings.Contains(trimmed, "#endregion") && inSection {
+				break
 			}
-			if Flat(regionName) == flatSection {
-				inSection = true
-				continue
-			} else if inSection {
-				inSection = false
-			}
-		}
-		if strings.HasPrefix(trimmed, "// #endregion") && inSection {
-			break
 		}
 		if inSection {
 			if m := testFuncRe.FindStringSubmatch(line); m != nil {

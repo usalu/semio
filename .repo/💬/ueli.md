@@ -313,7 +313,7 @@ semio:
 
 ---
 
-The following strict layers MUST achieved:
+The following strict layers MUST be achieved:
 semio/rs <-graphql- semio/js <-store- semio/react <-hooks/components- semio/sketchpad
 
 Every layer MUST only know about the layer above implementation details.
@@ -324,7 +324,8 @@ semio/rs:
 - All caching MUST be exlclusively here
 - One process (wasm web worker or os native)
 - Async, non blocking
-- All external kit modification MUST be exclusively over semantic commantics. All commands are async and just return an id. The success/result/error message is sent over events. It is the task of the clients to keep track of requests and responses.
+- All external kit modification MUST be exclusively over semantic commantics.
+- All commands are async and just return an id. The success/result/error message is sent over events. It is the task of the clients to keep track of requests and responses.
 - All internal kit modification (in-memory adjustment + cache invalidation) MUST happen centrally over kit diffs. Ever command MUST NOT edit the state but return a kit diff.
 - Every kit change command MUST define a function that returns for concrete input parameters a kit diff.
 - Every kit change command MUST define a function that returns for a list of kit change commands with specific input paramters that performs the inverse of the command.
@@ -336,12 +337,18 @@ semio/rs <-graphql- semio/js
 semio/js:
 
 - Thin client to semio/rs
-- Exposes Store classes with events, etc
+- Exposes Store classes with 100% typesafe methods, subscription callbacks, etc
 
 semio/react
 
 - Thin client to semio/js
-- Exports granular hooks with `useSyncExternalStore`
+- Exports typed kit reads hooks with `useSyncExternalStore` that uses the subscriptions from the store
+- Exports types kit mutations with `useCallback`
+
+semio/sketchpad:
+
+- Only uses semio/react for kit reads and mutations
+- Local selection
 
 ---
 

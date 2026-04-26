@@ -551,8 +551,8 @@ enabled = true
 	if !strings.Contains(text, `command = "go"`) {
 		t.Fatalf("expected repo command to stay portable, got:\n%s", text)
 	}
-	if !strings.Contains(text, `args = ["run", "./repo/mcp"]`) {
-		t.Fatalf("expected repo args to stay portable, got:\n%s", text)
+	if !strings.Contains(text, `args = ["run", "./repo/codex"]`) && !strings.Contains(text, `args = ["run", "./repo/mcp"]`) {
+		t.Fatalf("expected repo args to stay portable (./repo/codex or ./repo/mcp), got:\n%s", text)
 	}
 	if !strings.Contains(text, fmt.Sprintf("cwd = %q", repoRoot)) {
 		t.Fatalf("expected codex config to set repo root cwd, got:\n%s", text)
@@ -575,8 +575,9 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "codex template uses coda assistant",
 			path: filepath.Join(repoRoot, ".codex", "config.toml"),
 			requiredFragments: []string{
-				`"--directory", "semio/engine", "run", "main.py", "--mcp-stdio"`,
-				`"--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"`,
+				`command = "go"`,
+				`"run"`,
+				`"./repo/codex"`,
 			},
 			forbiddenFragments: []string{
 				"coda/engine",
@@ -587,9 +588,9 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "kiro settings stay repo relative",
 			path: filepath.Join(repoRoot, ".kiro", "settings", "mcp.json"),
 			requiredFragments: []string{
-				`"semio/engine"`,
-				`"coda/assistant"`,
-				`"main.py"`,
+				`"./repo/kiro"`,
+				`"go"`,
+				`"run"`,
 			},
 			forbiddenFragments: []string{
 				"/workspaces/semio/",
@@ -601,9 +602,9 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 			name: "kiro semio agent uses coda assistant",
 			path: filepath.Join(repoRoot, ".kiro", "agents", "semio.json"),
 			requiredFragments: []string{
-				`"semio/engine"`,
-				`"coda/assistant"`,
-				`"main.py"`,
+				`"./repo/kiro"`,
+				`"go"`,
+				`"run"`,
 			},
 			forbiddenFragments: []string{
 				"coda/engine",
@@ -8590,7 +8591,7 @@ func TestGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "semio/assets/repo/some/folder/file_fixed.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -15985,6 +15986,32 @@ func TestRunHookUnknownEvent(t *testing.T) {
 	result := RunHook(hctx)
 	if result.IsAllowed() {
 		t.Error("expected unknown event to be denied")
+	}
+}
+
+func TestHookClientForMcpKindMapsIDEEntrypoints(t *testing.T) {
+	cases := []struct {
+		kind McpClientKind
+		want string
+	}{
+		{McpClientCursor, "cursor-chat"},
+		{McpClientKiro, "kiro-cli"},
+		{McpClientCopilot, "copilot-chat"},
+		{McpClientClaude, "claude-code"},
+		{McpClientCodex, "codex"},
+		{McpClientGeneric, ""},
+	}
+	for _, tc := range cases {
+		if got := HookClientForMcpKind(tc.kind); got != tc.want {
+			t.Errorf("HookClientForMcpKind(%q) = %q, want %q", tc.kind, got, tc.want)
+		}
+	}
+}
+
+func TestRunHookForRejectsGenericKind(t *testing.T) {
+	err := RunHookFor(McpClientGeneric, "stop", nil)
+	if err == nil || !strings.Contains(strings.ToLower(err.Error()), "hooks are not available") {
+		t.Fatalf("expected hooks-unavailable error for generic kind, got: %v", err)
 	}
 }
 

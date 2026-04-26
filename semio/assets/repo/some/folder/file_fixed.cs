@@ -10,11 +10,7 @@
 #region 🎪Classes
 // Domain classes for fixed values.
 // Classes MUST have public properties.
-
-/// <summary>🔧Represents a fixed value container.</summary>
-/// <remarks>
-/// FixedClass MUST have a Value property.
-/// </remarks>
+// FixedClass is a fixed value container with a public Value property.
 public class FixedClass
 {
     public int Value { get; set; }

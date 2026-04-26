@@ -26409,13 +26409,13 @@ pub mod kit_graphql {
         Ok(req)
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct KitStoreBatchInput {
         client_mutation_id: Option<String>,
         commands: Vec<KitStoreBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchCommandInput {
         Live(LiveBatchInput),
         Session(SessionBatchInput),
@@ -26424,12 +26424,12 @@ pub mod kit_graphql {
         Backbone(BackboneBatchInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct LiveBatchInput {
         commands: Vec<LiveBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum LiveBatchCommandInput {
         ChangeKitCommands(ChangeKitCommandsBatchInput),
         Design(DesignBatchInput),
@@ -26437,18 +26437,18 @@ pub mod kit_graphql {
         Redo(ConfirmOnlyInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct ChangeKitCommandsBatchInput {
         commands: Vec<Json<serde_json::Value>>,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct SessionBatchInput {
         session_id: Option<String>,
         commands: Vec<SessionBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum SessionBatchCommandInput {
         CreateSession(ConfirmOnlyInput),
         EndSession(ConfirmOnlyInput),
@@ -26456,19 +26456,19 @@ pub mod kit_graphql {
         Draft(DraftBatchInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct CreateDraftBatchInput {
         parent_checkpoint_id: Option<String>,
         target_alternative_id: Option<String>,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct DraftBatchInput {
         draft_id: Option<String>,
         commands: Vec<DraftBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum DraftBatchCommandInput {
         FinalizeDraft(MessageOnlyInput),
         AbortDraft(ConfirmOnlyInput),
@@ -26478,13 +26478,13 @@ pub mod kit_graphql {
         Transaction(TransactionBatchInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct TransactionBatchInput {
         transaction_id: Option<String>,
         commands: Vec<TransactionBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum TransactionBatchCommandInput {
         ChangeKitCommands(ChangeKitCommandsBatchInput),
         FinalizeTransaction(ConfirmOnlyInput),
@@ -26493,42 +26493,42 @@ pub mod kit_graphql {
         RedoTransaction(CountInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct CheckpointBatchInput {
         checkpoint_id: Option<String>,
         commands: Vec<CheckpointBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum CheckpointBatchCommandInput {
         MarkRelease(ConfirmOnlyInput),
         SetActive(ConfirmOnlyInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct AlternativeBatchInput {
         alternative_id: Option<String>,
         commands: Vec<AlternativeBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum AlternativeBatchCommandInput {
         CreateAlternative(CreateAlternativeBatchInput),
         UnifyAlternative(MessageOnlyInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct CreateAlternativeBatchInput {
         name: String,
         from_checkpoint_id: Option<String>,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct BackboneBatchInput {
         commands: Vec<BackboneBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum BackboneBatchCommandInput {
         AttachBackbone(BackboneConfigBatchInput),
         DetachBackbone(ConfirmOnlyInput),
@@ -26538,48 +26538,48 @@ pub mod kit_graphql {
         SyncNow(ConfirmOnlyInput),
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum BackboneConfigBatchInput {
         Dev(DevBackboneBatchInput),
         Local(LocalBackboneBatchInput),
         Remote(RemoteBackboneBatchInput),
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct DevBackboneBatchInput {
         path: String,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct LocalBackboneBatchInput {
         folder: String,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct RemoteBackboneBatchInput {
         url: String,
         session_id: String,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct ResolveConflictBatchInput {
         conflict_id: String,
         strategy: ConflictResolutionBatchInput,
     }
 
-    #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq)]
+    #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum ConflictResolutionBatchInput {
         DropWip,
         ForceOverwriteBackbone,
     }
 
-    #[derive(Clone, Debug, InputObject)]
+    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct DesignBatchInput {
         design_id: String,
         commands: Vec<DesignBatchCommandInput>,
     }
 
-    #[derive(Clone, Debug, OneofObject)]
+    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum DesignBatchCommandInput {
         ClusterPieces(ClusterPiecesBatchInput),
         DragPieces(DragPiecesBatchInput),
@@ -26692,7 +26692,7 @@ pub mod kit_graphql {
         message: String,
     }
 
-    #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq)]
+    #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchResultKind {
         ChangeKitCommands,
         ClusterPieces,
@@ -26732,14 +26732,14 @@ pub mod kit_graphql {
         SyncNow,
     }
 
-    #[derive(Clone, Debug, SimpleObject)]
+    #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
     struct BackboneBatchStatus {
         attached: bool,
         kind: Option<String>,
         tip: Option<String>,
     }
 
-    #[derive(Clone, Debug, SimpleObject)]
+    #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
     struct ConflictBatchRecord {
         id: String,
         backbone_tip: Option<String>,
@@ -26747,7 +26747,7 @@ pub mod kit_graphql {
         created_at: String,
     }
 
-    #[derive(Clone, Debug, SimpleObject)]
+    #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
     struct KitStoreBatchResult {
         kind: KitStoreBatchResultKind,
         ok: Option<bool>,
@@ -26761,7 +26761,7 @@ pub mod kit_graphql {
         conflicts: Option<Vec<ConflictBatchRecord>>,
     }
 
-    #[derive(Clone, Debug, SimpleObject)]
+    #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
     struct KitStoreBatchPayload {
         client_mutation_id: Option<String>,
         results: Vec<KitStoreBatchResult>,
@@ -26971,7 +26971,11 @@ pub mod kit_graphql {
     #[Object]
     impl KitStoreMutationRoot {
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
-            execute_batch(ctx, input).await
+            let shell = KitShellCtx {
+                graph: ctx.data::<KitGraphRef>()?.clone(),
+                tx: ctx.data::<async_channel::Sender<GraphWork>>()?.clone(),
+            };
+            execute_batch(&shell, input).await
         }
     }
 
@@ -26995,6 +26999,64 @@ pub mod kit_graphql {
         }
     }
 
+    /// 🌐 Single kit handle + actor queue: replaces `async_graphql::Context` data for batch / shell dispatch.
+    #[derive(Clone)]
+    struct KitShellCtx {
+        graph: KitGraphRef,
+        tx: async_channel::Sender<GraphWork>,
+    }
+
+    impl KitShellCtx {
+        async fn run_graph_change(&self, commands: Vec<ChangeKitCommand>) -> Result<(), Error> {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            self.tx
+                .send(GraphWork::ChangeKitCommands { commands, reply: reply_tx })
+                .await
+                .map_err(|e| Error::new(format!("change queue: {e}")))?;
+            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
+        }
+
+        async fn run_custom_set_result(&self, run: Box<dyn FnOnce() -> crate::error::SetResult + Send>) -> Result<(), Error> {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            self.tx
+                .send(GraphWork::CustomSetResult { run, reply: reply_tx })
+                .await
+                .map_err(|e| Error::new(format!("queue: {e}")))?;
+            reply_rx
+                .await
+                .map_err(|_| Error::new("kit actor dropped"))?
+                .map_err(|e| Error::new(format!("{e:?}")))
+        }
+
+        async fn run_vcs_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            self.tx
+                .send(GraphWork::Vcs { command, reply: reply_tx })
+                .await
+                .map_err(|e| Error::new(format!("execute queue: {e}")))?;
+            reply_rx
+                .await
+                .map_err(|_| Error::new("kit actor dropped"))?
+                .map_err(|e| Error::new(format!("{e:?}")))
+        }
+
+        async fn run_change_kit_with_inverse(&self, commands: Vec<ChangeKitCommand>) -> Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), Error> {
+            let (reply_tx, reply_rx) = oneshot::channel();
+            self.tx
+                .send(GraphWork::ChangeKitWithInverse { commands, reply: reply_tx })
+                .await
+                .map_err(|e| Error::new(format!("change queue: {e}")))?;
+            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
+        }
+    }
+
+    fn shell_variables(request: &serde_json::Value) -> serde_json::Value {
+        request
+            .get("variables")
+            .cloned()
+            .unwrap_or_else(|| serde_json::json!({}))
+    }
+
     async fn run_command_shell_request(
         graph: KitGraphRef,
         tx: async_channel::Sender<GraphWork>,
@@ -27002,42 +27064,404 @@ pub mod kit_graphql {
         command_kind: String,
         request: serde_json::Value,
     ) {
-        let request_json = match serde_json::to_string(&request) {
-            Ok(value) => value,
-            Err(e) => {
-                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": e.to_string() })));
-                return;
+        let shell = KitShellCtx { graph: graph.clone(), tx: tx.clone() };
+        let vars = shell_variables(&request);
+        match dispatch_shell_command(&shell, command_kind.as_str(), &vars).await {
+            Ok(response_value) => {
+                emit_command_shell_event(&graph, &request_id, &command_kind, "succeeded", Some(response_value), None);
             }
-        };
-        let mut req = match request_from_json(&request_json) {
-            Ok(req) => req,
             Err(e) => {
-                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": format!("{e:?}") })));
-                return;
+                emit_command_shell_event(
+                    &graph,
+                    &request_id,
+                    &command_kind,
+                    "failed",
+                    None,
+                    Some(serde_json::json!({ "kind": "Internal", "message": e.message })),
+                );
             }
-        };
-        req = req.data(graph.clone()).data(tx);
-        let response = schema().execute(req).await;
-        let response_value = match serde_json::to_value(&response) {
-            Ok(value) => value,
-            Err(e) => {
-                emit_command_shell_event(&graph, &request_id, &command_kind, "failed", None, Some(serde_json::json!({ "kind": "Internal", "message": e.to_string() })));
-                return;
-            }
-        };
-        let errors = response_value.get("errors").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-        if errors.is_empty() {
-            emit_command_shell_event(&graph, &request_id, &command_kind, "succeeded", Some(response_value), None);
-        } else {
-            let message = errors.iter().filter_map(|error| error.get("message").and_then(|v| v.as_str())).collect::<Vec<_>>().join("; ");
-            emit_command_shell_event(
-                &graph,
-                &request_id,
-                &command_kind,
-                "failed",
-                Some(response_value),
-                Some(serde_json::json!({ "kind": "Internal", "message": if message.is_empty() { "GraphQL command failed".to_string() } else { message } })),
-            );
+        }
+    }
+
+    async fn dispatch_shell_command(shell: &KitShellCtx, command_kind: &str, vars: &serde_json::Value) -> Result<serde_json::Value, Error> {
+        match command_kind {
+                "changeKitCommands" => {
+                    let commands_val = vars
+                        .get("commands")
+                        .cloned()
+                        .ok_or_else(|| Error::new("changeKitCommands: missing commands"))?;
+                    let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands_val).map_err(|e| Error::new(format!("changeKitCommands: {e}")))?;
+                    shell.run_graph_change(cmds).await?;
+                    Ok(serde_json::json!({ "data": { "changeKitCommands": true } }))
+                }
+                "changeKitWithInverse" => {
+                    let commands_val = vars
+                        .get("commands")
+                        .cloned()
+                        .ok_or_else(|| Error::new("changeKitWithInverse: missing commands"))?;
+                    let cmds: Vec<ChangeKitCommand> = serde_json::from_value(commands_val).map_err(|e| Error::new(format!("changeKitWithInverse: {e}")))?;
+                    let (kind, inverse) = shell.run_change_kit_with_inverse(cmds).await?;
+                    Ok(serde_json::json!({ "data": { "changeKitWithInverse": { "kind": kind, "inverse": inverse } } }))
+                }
+                "clusterPieces" => {
+                    let design_id = vars
+                        .get("designId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("clusterPieces: designId"))?
+                        .to_string();
+                    let piece_ids = vars
+                        .get("pieceIds")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("clusterPieces: pieceIds"))?
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>();
+                    let cluster_name = vars
+                        .get("clusterName")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("clusterPieces: clusterName"))?
+                        .to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::cluster_pieces(&g, &design_id, piece_ids, cluster_name)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "clusterPieces": { "ok": true } } }))
+                }
+                "dragPieces" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("dragPieces: designId"))?.to_string();
+                    let piece_ids = vars
+                        .get("pieceIds")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("dragPieces: pieceIds"))?
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>();
+                    let du = vars.get("du").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("dragPieces: du"))?;
+                    let dv = vars.get("dv").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("dragPieces: dv"))?;
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::drag_pieces(&g, &design_id, piece_ids, du, dv)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "dragPieces": { "ok": true } } }))
+                }
+                "movePieces" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("movePieces: designId"))?.to_string();
+                    let piece_ids = vars
+                        .get("pieceIds")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("movePieces: pieceIds"))?
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>();
+                    let gap = vars.get("gap").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: gap"))?;
+                    let shift = vars.get("shift").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: shift"))?;
+                    let rise = vars.get("rise").and_then(|v| v.as_f64()).ok_or_else(|| Error::new("movePieces: rise"))?;
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::move_pieces(&g, &design_id, piece_ids, gap, shift, rise)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "movePieces": { "ok": true } } }))
+                }
+                "fixPieces" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("fixPieces: designId"))?.to_string();
+                    let piece_ids = vars
+                        .get("pieceIds")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("fixPieces: pieceIds"))?
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::fix_pieces(&g, &design_id, piece_ids)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "fixPieces": { "ok": true } } }))
+                }
+                "flattenDesign" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("flattenDesign: designId"))?.to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::flatten_design_apply(&g, &design_id)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "flattenDesign": { "ok": true } } }))
+                }
+                "expandDesign" => {
+                    let parent_design_id = vars
+                        .get("parentDesignId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("expandDesign: parentDesignId"))?
+                        .to_string();
+                    let nested_design_id = vars
+                        .get("nestedDesignId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("expandDesign: nestedDesignId"))?
+                        .to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::expand_nested_design(&g, &parent_design_id, &nested_design_id)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "expandDesign": { "ok": true } } }))
+                }
+                "deleteConnection" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("deleteConnection: designId"))?.to_string();
+                    let connection_id = vars
+                        .get("connectionId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("deleteConnection: connectionId"))?
+                        .to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::delete_connection_in_design(&g, &design_id, &connection_id)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "deleteConnection": { "ok": true } } }))
+                }
+                "changePieceType" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changePieceType: designId"))?.to_string();
+                    let piece_id = vars.get("pieceId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changePieceType: pieceId"))?.to_string();
+                    let new_type_id = vars
+                        .get("newTypeId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("changePieceType: newTypeId"))?
+                        .to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::change_piece_type(&g, &design_id, &piece_id, &new_type_id)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "changePieceType": { "ok": true } } }))
+                }
+                "pasteDesignSelection" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("pasteDesignSelection: designId"))?.to_string();
+                    let selection = vars.get("selection").cloned().ok_or_else(|| Error::new("pasteDesignSelection: selection"))?;
+                    let pl: Option<Plane> = match vars.get("plane") {
+                        None | Some(serde_json::Value::Null) => None,
+                        Some(v) => Some(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("plane: {e}")))?),
+                    };
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::paste_design_selection(&g, &design_id, selection, pl)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "pasteDesignSelection": { "ok": true } } }))
+                }
+                "createHangingPieces" => {
+                    let design_id = vars
+                        .get("designId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("createHangingPieces: designId"))?
+                        .to_string();
+                    let type_ids = vars
+                        .get("typeIds")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("createHangingPieces: typeIds"))?
+                        .iter()
+                        .filter_map(|x| x.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>();
+                    let plane: Plane = serde_json::from_value(vars.get("plane").cloned().ok_or_else(|| Error::new("createHangingPieces: plane"))?)
+                        .map_err(|e| Error::new(format!("plane: {e}")))?;
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&g, &design_id, type_ids, plane)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "createHangingPieces": { "ok": true } } }))
+                }
+                "createConnectedPiece" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createConnectedPiece: designId"))?.to_string();
+                    let parent_piece = vars
+                        .get("parentPiece")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("createConnectedPiece: parentPiece"))?
+                        .to_string();
+                    let parent_port = vars
+                        .get("parentPort")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("createConnectedPiece: parentPort"))?
+                        .to_string();
+                    let child_type = vars
+                        .get("childType")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("createConnectedPiece: childType"))?
+                        .to_string();
+                    let child_port = vars
+                        .get("childPort")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("createConnectedPiece: childPort"))?
+                        .to_string();
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || {
+                            KitGraph::create_connected_piece(&g, &design_id, &parent_piece, &parent_port, &child_type, &child_port)
+                        }))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "createConnectedPiece": { "ok": true } } }))
+                }
+                "createFixedPiece" => {
+                    let design_id = vars.get("designId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createFixedPiece: designId"))?.to_string();
+                    let type_id = vars.get("typeId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("createFixedPiece: typeId"))?.to_string();
+                    let plane: Plane = serde_json::from_value(vars.get("plane").cloned().ok_or_else(|| Error::new("createFixedPiece: plane"))?)
+                        .map_err(|e| Error::new(format!("plane: {e}")))?;
+                    let g = shell.graph.clone();
+                    shell
+                        .run_custom_set_result(Box::new(move || KitGraph::create_fixed_piece(&g, &design_id, &type_id, plane)))
+                        .await?;
+                    Ok(serde_json::json!({ "data": { "createFixedPiece": { "ok": true } } }))
+                }
+                "undo" => {
+                    let g = shell.graph.clone();
+                    shell.run_custom_set_result(Box::new(move || KitGraph::undo(&g))).await?;
+                    Ok(serde_json::json!({ "data": { "undo": { "ok": true } } }))
+                }
+                "redo" => {
+                    let g = shell.graph.clone();
+                    shell.run_custom_set_result(Box::new(move || KitGraph::redo(&g))).await?;
+                    Ok(serde_json::json!({ "data": { "redo": { "ok": true } } }))
+                }
+                "attachBackbone" => {
+                    let config_val = vars.get("config").cloned().ok_or_else(|| Error::new("attachBackbone: config"))?;
+                    let cfg: crate::kit_backbone_wire::BackboneConfig =
+                        serde_json::from_value(config_val).map_err(|e| Error::new(format!("attachBackbone: {e}")))?;
+                    let res = shell.run_vcs_command(KitStoreCommand::AttachBackbone { config: cfg }).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "attachBackbone": v } }))
+                }
+                "detachBackbone" => {
+                    let res = shell.run_vcs_command(KitStoreCommand::DetachBackbone).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "detachBackbone": v } }))
+                }
+                "backboneStatus" => {
+                    let res = shell.run_vcs_command(KitStoreCommand::BackboneStatus).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "backboneStatus": v } }))
+                }
+                "listConflicts" => {
+                    let res = shell.run_vcs_command(KitStoreCommand::ListConflicts).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "listConflicts": v } }))
+                }
+                "resolveConflict" => {
+                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("resolveConflict: id"))?;
+                    let strategy_val = vars.get("strategy").cloned().ok_or_else(|| Error::new("resolveConflict: strategy"))?;
+                    let st: crate::kit_backbone_wire::ConflictResolution =
+                        serde_json::from_value(strategy_val).map_err(|e| Error::new(format!("resolveConflict strategy: {e}")))?;
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ResolveConflict {
+                            id: Id::from(id),
+                            strategy: st,
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "resolveConflict": v } }))
+                }
+                "syncNow" => {
+                    let res = shell.run_vcs_command(KitStoreCommand::SyncNow).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "syncNow": v } }))
+                }
+                "newSession" => {
+                    let res = shell.run_vcs_command(KitStoreCommand::NewSession).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "newSession": v } }))
+                }
+                "endSession" => {
+                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("endSession: id"))?;
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::EndSession {
+                            id: Id::from(id),
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "endSession": v } }))
+                }
+                "newAlternative" => {
+                    let from_checkpoint = vars
+                        .get("fromCheckpoint")
+                        .and_then(|v| if v.is_null() { None } else { v.as_str().map(Id::from) });
+                    let name = vars.get("name").and_then(|v| v.as_str()).ok_or_else(|| Error::new("newAlternative: name"))?.to_string();
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::NewAlternative {
+                            from_checkpoint,
+                            name,
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "newAlternative": v } }))
+                }
+                "setActiveCheckpoint" => {
+                    let id = vars.get("id").and_then(|v| if v.is_null() { None } else { v.as_str().map(Id::from) });
+                    let res = shell.run_vcs_command(KitStoreCommand::SetActiveCheckpoint { id }).await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "setActiveCheckpoint": v } }))
+                }
+                "executeSessionCommands" => {
+                    let session_id = vars.get("sessionId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("executeSessionCommands: sessionId"))?;
+                    let sc_arr = vars
+                        .get("sessionCommands")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("executeSessionCommands: sessionCommands"))?;
+                    let mut sc: Vec<SessionCommand> = Vec::with_capacity(sc_arr.len());
+                    for v in sc_arr {
+                        sc.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("session command: {e}")))?);
+                    }
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                            id: Id::from(session_id),
+                            commands: sc,
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "executeSessionCommands": v } }))
+                }
+                "executeKitCheckpointCommands" => {
+                    let checkpoint_id = vars
+                        .get("checkpointId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("executeKitCheckpointCommands: checkpointId"))?;
+                    let c_arr = vars
+                        .get("commands")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("executeKitCheckpointCommands: commands"))?;
+                    let mut c: Vec<KitCheckpointCommand> = Vec::with_capacity(c_arr.len());
+                    for v in c_arr {
+                        c.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("checkpoint command: {e}")))?);
+                    }
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteKitCheckpointCommands {
+                            id: Id::from(checkpoint_id),
+                            commands: c,
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "executeKitCheckpointCommands": v } }))
+                }
+                "executeKitAlternativeCommands" => {
+                    let alternative_id = vars
+                        .get("alternativeId")
+                        .and_then(|v| v.as_str())
+                        .ok_or_else(|| Error::new("executeKitAlternativeCommands: alternativeId"))?;
+                    let c_arr = vars
+                        .get("commands")
+                        .and_then(|v| v.as_array())
+                        .ok_or_else(|| Error::new("executeKitAlternativeCommands: commands"))?;
+                    let mut c: Vec<KitAlternativeCommand> = Vec::with_capacity(c_arr.len());
+                    for v in c_arr {
+                        c.push(serde_json::from_value(v.clone()).map_err(|e| Error::new(format!("alternative command: {e}")))?);
+                    }
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteKitAlternativeCommands {
+                            id: Id::from(alternative_id),
+                            commands: c,
+                        })
+                        .await?;
+                    let v = serde_json::to_value(&res).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "executeKitAlternativeCommands": v } }))
+                }
+                "batch" => {
+                    let input_val = vars.get("input").cloned().ok_or_else(|| Error::new("batch: input"))?;
+                    let input: KitStoreBatchInput = serde_json::from_value(input_val).map_err(|e| Error::new(format!("batch input: {e}")))?;
+                    let payload = execute_batch(&shell, input).await?;
+                    let v = serde_json::to_value(&payload).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "kitStore": { "batch": v } } }))
+                }
+                other => Err(Error::new(format!("submitKitCommand: unknown commandKind {other}"))),
         }
     }
 
@@ -27091,27 +27515,27 @@ pub mod kit_graphql {
         reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(e.to_string()))
     }
 
-    async fn execute_batch(ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
+    async fn execute_batch(shell: &KitShellCtx, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
         let mut results = Vec::new();
         for command in input.commands {
             match command {
-                KitStoreBatchCommandInput::Live(batch) => execute_live_batch(ctx, batch, &mut results).await?,
-                KitStoreBatchCommandInput::Session(batch) => execute_session_batch(ctx, batch, &mut results).await?,
-                KitStoreBatchCommandInput::Checkpoint(batch) => execute_checkpoint_batch(ctx, batch, &mut results).await?,
-                KitStoreBatchCommandInput::Alternative(batch) => execute_alternative_batch(ctx, batch, &mut results).await?,
-                KitStoreBatchCommandInput::Backbone(batch) => execute_backbone_batch(ctx, batch, &mut results).await?,
+                KitStoreBatchCommandInput::Live(batch) => execute_live_batch(shell, batch, &mut results).await?,
+                KitStoreBatchCommandInput::Session(batch) => execute_session_batch(shell, batch, &mut results).await?,
+                KitStoreBatchCommandInput::Checkpoint(batch) => execute_checkpoint_batch(shell, batch, &mut results).await?,
+                KitStoreBatchCommandInput::Alternative(batch) => execute_alternative_batch(shell, batch, &mut results).await?,
+                KitStoreBatchCommandInput::Backbone(batch) => execute_backbone_batch(shell, batch, &mut results).await?,
             }
         }
         Ok(KitStoreBatchPayload { client_mutation_id: input.client_mutation_id, results })
     }
 
-    async fn execute_live_batch(ctx: &Context<'_>, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_live_batch(shell: &KitShellCtx, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
                 LiveBatchCommandInput::ChangeKitCommands(change) => {
                     let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
                     let count = commands.len() as i32;
-                    run_graph_change(ctx, commands).await?;
+                    shell.run_graph_change(commands).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::ChangeKitCommands,
                         ok: Some(true),
@@ -27125,10 +27549,10 @@ pub mod kit_graphql {
                         conflicts: None,
                     });
                 }
-                LiveBatchCommandInput::Design(design) => execute_design_batch(ctx, design, results).await?,
+                LiveBatchCommandInput::Design(design) => execute_design_batch(shell, design, results).await?,
                 LiveBatchCommandInput::Undo(_) => {
-                    let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::undo(&graph))).await?;
+                    let graph = shell.graph.clone();
+                    shell.run_custom_set_result(Box::new(move || KitGraph::undo(&graph))).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::Undo,
                         ok: Some(true),
@@ -27143,8 +27567,8 @@ pub mod kit_graphql {
                     });
                 }
                 LiveBatchCommandInput::Redo(_) => {
-                    let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::redo(&graph))).await?;
+                    let graph = shell.graph.clone();
+                    shell.run_custom_set_result(Box::new(move || KitGraph::redo(&graph))).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::Redo,
                         ok: Some(true),
@@ -27163,9 +27587,9 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_design_batch(ctx: &Context<'_>, batch: DesignBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_design_batch(shell: &KitShellCtx, batch: DesignBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let graph: KitGraphRef = shell.graph.clone();
             let design_id = batch.design_id.clone();
             let kind = match &command {
                 DesignBatchCommandInput::ClusterPieces(_) => KitStoreBatchResultKind::ClusterPieces,
@@ -27182,39 +27606,39 @@ pub mod kit_graphql {
             };
             match command {
                 DesignBatchCommandInput::ClusterPieces(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, input.piece_ids, input.cluster_name))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, input.piece_ids, input.cluster_name))).await?;
                 }
                 DesignBatchCommandInput::DragPieces(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::drag_pieces(&graph, &design_id, input.piece_ids, input.du, input.dv))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::drag_pieces(&graph, &design_id, input.piece_ids, input.du, input.dv))).await?;
                 }
                 DesignBatchCommandInput::MovePieces(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::move_pieces(&graph, &design_id, input.piece_ids, input.gap, input.shift, input.rise))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::move_pieces(&graph, &design_id, input.piece_ids, input.gap, input.shift, input.rise))).await?;
                 }
                 DesignBatchCommandInput::FixPieces(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::fix_pieces(&graph, &design_id, input.piece_ids))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::fix_pieces(&graph, &design_id, input.piece_ids))).await?;
                 }
                 DesignBatchCommandInput::FlattenDesign(_) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id))).await?;
                 }
                 DesignBatchCommandInput::ExpandDesign(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::expand_nested_design(&graph, &design_id, &input.nested_design_id))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::expand_nested_design(&graph, &design_id, &input.nested_design_id))).await?;
                 }
                 DesignBatchCommandInput::DeleteConnection(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &input.connection_id))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &input.connection_id))).await?;
                 }
                 DesignBatchCommandInput::ChangePieceType(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &input.piece_id, &input.new_type_id))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &input.piece_id, &input.new_type_id))).await?;
                 }
                 DesignBatchCommandInput::CreateHangingPieces(input) => {
                     let plane = plane_from_input(input.plane);
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
                 }
                 DesignBatchCommandInput::CreateConnectedPiece(input) => {
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_connected_piece(&graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::create_connected_piece(&graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port))).await?;
                 }
                 DesignBatchCommandInput::CreateFixedPiece(input) => {
                     let plane = plane_from_input(input.plane);
-                    run_custom_set_result(ctx, Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane))).await?;
+                    shell.run_custom_set_result(Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane))).await?;
                 }
             }
             results.push(KitStoreBatchResult { kind, ok: Some(true), count: None, session_id: None, draft_id: None, transaction_id: None, checkpoint_id: None, alternative_id: None, backbone: None, conflicts: None });
@@ -27222,12 +27646,12 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_session_batch(ctx: &Context<'_>, batch: SessionBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_session_batch(shell: &KitShellCtx, batch: SessionBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut session_id = batch.session_id.map(|id| Id::from(id.as_str()));
         for command in batch.commands {
             match command {
                 SessionBatchCommandInput::CreateSession(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::NewSession).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::NewSession).await?;
                     let KitStoreCommandResult::NewSession { id } = res else {
                         return Err(Error::new("expected NewSession result"));
                     };
@@ -27248,7 +27672,7 @@ pub mod kit_graphql {
                 }
                 SessionBatchCommandInput::EndSession(_) => {
                     let id = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = run_vcs_command(ctx, KitStoreCommand::EndSession { id }).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::EndSession { id }).await?;
                     let KitStoreCommandResult::EndSession { ok } = res else {
                         return Err(Error::new("expected EndSession result"));
                     };
@@ -27267,8 +27691,7 @@ pub mod kit_graphql {
                 }
                 SessionBatchCommandInput::CreateDraft(input) => {
                     let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = run_vcs_command(
-                        ctx,
+                    let res = shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: sid,
                             commands: vec![SessionCommand::NewDraft { checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from), alternative_id: input.target_alternative_id.as_deref().map(Id::from) }],
@@ -27297,22 +27720,21 @@ pub mod kit_graphql {
                 }
                 SessionBatchCommandInput::Draft(draft_batch) => {
                     let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    execute_draft_batch(ctx, sid, draft_batch, results).await?;
+                    execute_draft_batch(shell, sid, draft_batch, results).await?;
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_draft_batch(ctx: &Context<'_>, session_id: Id, batch: DraftBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_draft_batch(shell: &KitShellCtx, session_id: Id, batch: DraftBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut draft_id = batch.draft_id.map(|id| Id::from(id.as_str()));
         let mut transaction_id: Option<Id> = None;
         for command in batch.commands {
             match command {
                 DraftBatchCommandInput::FinalizeDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    let res = run_vcs_command(
-                        ctx,
+                    let res = shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }] }],
@@ -27344,7 +27766,7 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::AbortDraft(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    run_vcs_command(ctx, KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
+                    shell.run_vcs_command( KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::AbortDraft,
                         ok: Some(true),
@@ -27360,8 +27782,7 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::UndoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }] }],
@@ -27383,8 +27804,7 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::RedoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }] }],
@@ -27406,8 +27826,7 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::StartTransaction(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    let res = run_vcs_command(
-                        ctx,
+                    let res = shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] },
                     )
                     .await?;
@@ -27437,14 +27856,14 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::Transaction(tx_batch) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    execute_transaction_batch(ctx, session_id.clone(), did, tx_batch, &mut transaction_id, results).await?;
+                    execute_transaction_batch(shell, session_id.clone(), did, tx_batch, &mut transaction_id, results).await?;
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_transaction_batch(ctx: &Context<'_>, session_id: Id, draft_id: Id, batch: TransactionBatchInput, current_transaction_id: &mut Option<Id>, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_transaction_batch(shell: &KitShellCtx, session_id: Id, draft_id: Id, batch: TransactionBatchInput, current_transaction_id: &mut Option<Id>, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut transaction_id = batch.transaction_id.map(|id| Id::from(id.as_str())).or_else(|| current_transaction_id.clone());
         for command in batch.commands {
             let txid = transaction_id.clone().ok_or_else(|| Error::new("transactionId is required"))?;
@@ -27452,8 +27871,7 @@ pub mod kit_graphql {
                 TransactionBatchCommandInput::ChangeKitCommands(change) => {
                     let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
                     let count = commands.len() as i32;
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
@@ -27477,8 +27895,7 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::FinalizeTransaction(_) => {
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
@@ -27502,8 +27919,7 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::AbortTransaction(_) => {
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
@@ -27527,8 +27943,7 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::UndoTransaction(_) => {
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
@@ -27552,8 +27967,7 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::RedoTransaction(_) => {
-                    run_vcs_command(
-                        ctx,
+                    shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
@@ -27582,12 +27996,12 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_checkpoint_batch(ctx: &Context<'_>, batch: CheckpointBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_checkpoint_batch(shell: &KitShellCtx, batch: CheckpointBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let checkpoint_id = batch.checkpoint_id.ok_or_else(|| Error::new("checkpointId is required"))?;
         for command in batch.commands {
             match command {
                 CheckpointBatchCommandInput::MarkRelease(_) => {
-                    run_vcs_command(ctx, KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
+                    shell.run_vcs_command( KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::MarkRelease,
                         ok: Some(true),
@@ -27602,7 +28016,7 @@ pub mod kit_graphql {
                     });
                 }
                 CheckpointBatchCommandInput::SetActive(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
                     let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else {
                         return Err(Error::new("expected SetActiveCheckpoint result"));
                     };
@@ -27624,12 +28038,12 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_alternative_batch(ctx: &Context<'_>, batch: AlternativeBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_alternative_batch(shell: &KitShellCtx, batch: AlternativeBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         let mut alternative_id = batch.alternative_id.map(|id| Id::from(id.as_str()));
         for command in batch.commands {
             match command {
                 AlternativeBatchCommandInput::CreateAlternative(input) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
                     let KitStoreCommandResult::NewAlternative { id } = res else {
                         return Err(Error::new("expected NewAlternative result"));
                     };
@@ -27650,7 +28064,7 @@ pub mod kit_graphql {
                 }
                 AlternativeBatchCommandInput::UnifyAlternative(input) => {
                     let aid = alternative_id.clone().ok_or_else(|| Error::new("alternativeId is required"))?;
-                    run_vcs_command(ctx, KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
+                    shell.run_vcs_command( KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::UnifyAlternative,
                         ok: Some(true),
@@ -27669,7 +28083,7 @@ pub mod kit_graphql {
         Ok(())
     }
 
-    async fn execute_backbone_batch(ctx: &Context<'_>, batch: BackboneBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
+    async fn execute_backbone_batch(shell: &KitShellCtx, batch: BackboneBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
                 BackboneBatchCommandInput::AttachBackbone(config) => {
@@ -27678,7 +28092,7 @@ pub mod kit_graphql {
                         BackboneConfigBatchInput::Local(v) => crate::kit_backbone_wire::BackboneConfig::Local { folder: v.folder },
                         BackboneConfigBatchInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
                     };
-                    let res = run_vcs_command(ctx, KitStoreCommand::AttachBackbone { config }).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::AttachBackbone { config }).await?;
                     let KitStoreCommandResult::AttachBackbone { ok } = res else {
                         return Err(Error::new("expected AttachBackbone result"));
                     };
@@ -27696,7 +28110,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::DetachBackbone(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::DetachBackbone).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::DetachBackbone).await?;
                     let KitStoreCommandResult::DetachBackbone { ok } = res else {
                         return Err(Error::new("expected DetachBackbone result"));
                     };
@@ -27714,7 +28128,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::ListConflicts(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::ListConflicts).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::ListConflicts).await?;
                     let KitStoreCommandResult::ListConflicts { items } = res else {
                         return Err(Error::new("expected ListConflicts result"));
                     };
@@ -27737,7 +28151,7 @@ pub mod kit_graphql {
                         ConflictResolutionBatchInput::DropWip => crate::kit_backbone_wire::ConflictResolution::DropWip,
                         ConflictResolutionBatchInput::ForceOverwriteBackbone => crate::kit_backbone_wire::ConflictResolution::ForceOverwriteBackbone,
                     };
-                    let res = run_vcs_command(ctx, KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
                     let KitStoreCommandResult::ResolveConflict { ok } = res else {
                         return Err(Error::new("expected ResolveConflict result"));
                     };
@@ -27755,7 +28169,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::BackboneStatus(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::BackboneStatus).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::BackboneStatus).await?;
                     let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else {
                         return Err(Error::new("expected BackboneStatus result"));
                     };
@@ -27773,7 +28187,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::SyncNow(_) => {
-                    let res = run_vcs_command(ctx, KitStoreCommand::SyncNow).await?;
+                    let res = shell.run_vcs_command( KitStoreCommand::SyncNow).await?;
                     let KitStoreCommandResult::SyncNow { ok } = res else {
                         return Err(Error::new("expected SyncNow result"));
                     };
