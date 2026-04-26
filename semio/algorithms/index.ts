@@ -194,8 +194,8 @@ export async function pasteDesign(kit: Kit, source: Design, target: Design, anch
 // #endregion 🧮KitStoreRunners
 
 // #region 🧪EmbeddedTests
-if (process.env["SEMIO_ALGORITHMS_RUN_EMBEDDED_TESTS"] === "1") {
-  const { describe, expect, it } = await import("vitest");
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
 
   describe("semio-algorithms public surface", () => {
     it("exposes only rs-backed story helpers and no native adapter API", () => {

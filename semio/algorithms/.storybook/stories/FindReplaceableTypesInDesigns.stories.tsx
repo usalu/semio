@@ -6,7 +6,7 @@
 // #endregion 🧲Header
 
 import { getKitPorts, Kit as KitRuntime, type Design } from "@semio/react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, useAlgorithm } from "../../index";

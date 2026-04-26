@@ -1,9 +1,14 @@
 go 1.25.0
 
 use (
-	./client
+	./claude
 	./cli
+	./client
+	./codex
+	./copilot
+	./cursor
 	./go
+	./kiro
 	./mcp
 	./server
 )

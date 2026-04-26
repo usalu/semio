@@ -6477,7 +6477,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("🎫", "Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "")
+	result := ToolTicketOpen("🎫", "Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -6506,7 +6506,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".repo", "🎫"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	first := ToolTicketOpen("🌱", "Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
+	first := ToolTicketOpen("🌱", "Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -6514,7 +6514,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if !ok || seed == nil {
 		t.Fatalf("expected seeded ticket data")
 	}
-	second := ToolTicketOpen("🎫", "Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
+	second := ToolTicketOpen("🎫", "Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -10807,7 +10807,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 
 	testSessionIDOverride = "session-open-1"
 	defer func() { testSessionIDOverride = "" }()
-	ticket, err := OpenTicket("🎫", "Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	ticket, err := OpenTicket("🎫", "Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -10872,7 +10872,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 	}
 
 	testSessionIDOverride = "session-reopen-2"
-	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true)
+	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true, McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
 	}
@@ -11001,7 +11001,7 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenGoal failed: %v", err)
 	}
-	ticket, err := OpenTicket("🪝", "Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	ticket, err := OpenTicket("🪝", "Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "", McpClientGeneric, "", "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -11796,7 +11796,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 
 // 🧪#endregion 🧬Consolidated
 func TestMcpToolsSchemas(t *testing.T) {
-	s := createMcpServer()
+	s := CreateMcpServer(McpClientGeneric)
 	tools := s.ListTools()
 	allowedTools := []string{
 		"search",
@@ -12587,7 +12587,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 	setupToolTest(t)
 	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
-	result := ToolTicketOpen("🎫", title, "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", title, "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12606,7 +12606,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketClose returned error: %s", closeResult.Error)
 	}
 
-	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen prompt", "sonnet-4-5", "windsurf-chat", "", "", "", "", true)
+	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen prompt", "sonnet-4-5", "windsurf-chat", "", "", "", "", true, McpClientGeneric, "", "")
 	if reopenResult.Error != "" {
 		t.Fatalf("ToolTicketReopen returned error: %s", reopenResult.Error)
 	}
@@ -12654,7 +12654,7 @@ func TestParseTicketPath(t *testing.T) {
 func TestMcpTicketCloseAutoResolve(t *testing.T) {
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12683,7 +12683,7 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫", "Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", "Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -22511,4 +22511,82 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 			t.Fatal("expected newline-after-region breach for Header section")
 		}
 	})
+}
+
+func TestResolvePlanSourceCursorPlanID(t *testing.T) {
+	tmp := t.TempDir()
+	planDir := filepath.Join(tmp, ".cursor", "plans")
+	if err := os.MkdirAll(planDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	id := "fe75d494"
+	planFile := filepath.Join(planDir, "kit_store_"+id+".plan.md")
+	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldRoot := rootDir
+	rootDir = tmp
+	defer func() { rootDir = oldRoot }()
+
+	got, isDir, err := ResolvePlanSource(McpClientCursor, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if isDir {
+		t.Fatal("expected file")
+	}
+	if filepath.Clean(got) != filepath.Clean(planFile) {
+		t.Fatalf("got %q want %q", got, planFile)
+	}
+}
+
+func TestResolvePlanSourceKiroSpecID(t *testing.T) {
+	tmp := t.TempDir()
+	specDir := filepath.Join(tmp, ".kiro", "specs", "my-spec")
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(specDir, "design.md"), []byte("d"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	oldRoot := rootDir
+	rootDir = tmp
+	defer func() { rootDir = oldRoot }()
+
+	got, isDir, err := ResolvePlanSource(McpClientKiro, "my-spec")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !isDir {
+		t.Fatal("expected directory")
+	}
+	if filepath.Clean(got) != filepath.Clean(specDir) {
+		t.Fatalf("got %q want %q", got, specDir)
+	}
+}
+
+func TestMoveTicketPlanIntoFolderFile(t *testing.T) {
+	tmp := t.TempDir()
+	ticketDir := filepath.Join(tmp, "ticket")
+	if err := os.MkdirAll(ticketDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src := filepath.Join(tmp, "outside.md")
+	if err := os.WriteFile(src, []byte("body"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ticket := &Ticket{FolderPath: ticketDir, Plan: &TicketPlan{Source: src, Client: "cursor", ID: "x"}}
+	if err := moveTicketPlanIntoFolder(ticket); err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(ticketDir, "outside.md")
+	if _, err := os.Stat(dst); err != nil {
+		t.Fatal(err)
+	}
+	if ticket.Plan.Source != "" {
+		t.Fatalf("expected empty Source, got %q", ticket.Plan.Source)
+	}
+	if ticket.Plan.Local != "outside.md" {
+		t.Fatalf("Local = %q", ticket.Plan.Local)
+	}
 }

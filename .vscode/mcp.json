@@ -6,7 +6,7 @@
 			"command": "go",
 			"args": [
 				"run",
-				"./repo/mcp"
+				"./repo/copilot"
 			]
 		}
 	}

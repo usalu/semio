@@ -4,7 +4,7 @@
       "command": "go",
       "args": [
         "run",
-        "./repo/mcp"
+        "./repo/cursor"
       ]
     }
   }

@@ -53,7 +53,6 @@ import (
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
 	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/spf13/cobra"
 	repopkg "github.com/usalu/semio/repo/go"
@@ -9652,6 +9651,14 @@ func (c *Checkpoint) GetURI() string {
 	return "repo://checkpoint/" + c.GetID()
 }
 
+// 🧷TicketPlan records an IDE-native plan or spec file to archive into the ticket folder on close.
+type TicketPlan struct {
+	Client string `json:"client,omitempty" yaml:"client,omitempty"`
+	ID     string `json:"id,omitempty" yaml:"id,omitempty"`
+	Source string `json:"source,omitempty" yaml:"source,omitempty"`
+	Local  string `json:"local,omitempty" yaml:"local,omitempty"`
+}
+
 // 🔖Ticket holds the data fields for a ticket record.
 type Ticket struct {
 	Year          int                   `json:"-" yaml:"-"`
@@ -9666,6 +9673,7 @@ type Ticket struct {
 	Management    *TicketManagementData `json:"github,omitempty" yaml:"github,omitempty"`
 	Goal          string                `json:"goal,omitempty" yaml:"goal,omitempty"`
 	Parent        string                `json:"-" yaml:"-"`
+	Plan          *TicketPlan           `json:"plan,omitempty" yaml:"plan,omitempty"`
 	Sessions      []string              `json:"sessions,omitempty" yaml:"sessions,omitempty"`
 	Interactions  []Interaction         `json:"-" yaml:"-"`
 	Agents        []TicketAgent         `json:"-" yaml:"-"`
@@ -9713,6 +9721,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 	}
 	aux := &struct {
 		TicketAlias
+		Plan               *TicketPlan     `json:"plan,omitempty"`
 		PromptLegacy       string          `json:"prompt"`
 		InteractionsLegacy []Interaction   `json:"interactions"`
 		AgentsLegacy       []TicketAgent   `json:"agents"`
@@ -9730,6 +9739,7 @@ func (t *Ticket) UnmarshalJSON(data []byte) error {
 		Management:  aux.Management,
 		Goal:        aux.Goal,
 		Parent:      aux.Parent,
+		Plan:        aux.Plan,
 	}
 	if t.Description == "" && aux.PromptLegacy != "" {
 		t.Description = aux.PromptLegacy
@@ -10673,6 +10683,8 @@ type TicketOpenInput struct {
 	Parent       string `json:"parent,omitempty"`
 	NoManagement bool   `json:"noManagement,omitempty"`
 	Issue        string `json:"issue,omitempty"`
+	PlanID       string `json:"planId,omitempty"`
+	SpecID       string `json:"specId,omitempty"`
 }
 
 // 🆕DraftCreateInput holds the data fields for a draft create input record.
@@ -10766,6 +10778,8 @@ type TicketReopenInput struct {
 	Goal         string  `json:"goal,omitempty"`
 	Parent       string  `json:"parent,omitempty"`
 	NoManagement bool    `json:"noManagement,omitempty"`
+	PlanID       string  `json:"planId,omitempty"`
+	SpecID       string  `json:"specId,omitempty"`
 }
 
 // 🔹TicketChangeInput holds the data fields for a ticket change input record.
@@ -20395,7 +20409,7 @@ func shouldSkipTicket(prompt string) bool {
 }
 
 // 📬OpenTicket MUST complete the operation and return consistent results.
-func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
+func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -20408,11 +20422,11 @@ func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, g
 			return nil, err
 		}
 		if latest.GetStatus() == TicketStatusClosed {
-			return latest, ReopenTicket(latest, prompt, llm, client, draft, goal, parent, noManagement)
+			return latest, ReopenTicket(latest, prompt, llm, client, draft, goal, parent, noManagement, mcpKind, planID, specID)
 		}
 		return latest, nil
 	}
-	return CreateTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	return CreateTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
 }
 
 // ⛳OpenGoal MUST complete the operation and return consistent results.
@@ -20495,7 +20509,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 // 🆕CreateTicket MUST persist the new entity and return a reference to it.
 // 🆕CreateTicket creates a new ticket and persists it.
-func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
+func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) (*Ticket, error) {
 	if goal == "" {
 		return nil, fmt.Errorf("ticket goal is required")
 	}
@@ -20586,6 +20600,10 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 		}},
 	}
 	appendTicketSessionID(ticket, currentTicketSessionID())
+
+	if err := ApplyTicketPlanFromIDs(ticket, mcpKind, planID, specID); err != nil {
+		return nil, err
+	}
 
 	skipIssue := noIssue || noManagement || strings.Contains(prompt, "NOISSUE")
 	if !skipIssue {
@@ -23127,6 +23145,9 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		Summary:    summary,
 		Files:      interactionFiles,
 	})
+	if err := moveTicketPlanIntoFolder(ticket); err != nil {
+		return err
+	}
 	if err := SaveTicket(ticket); err != nil {
 		return err
 	}
@@ -23145,7 +23166,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 }
 
 // 🔖ReopenTicket MUST return a non-nil error when the operation fails.
-func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool) error {
+func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
 	}
@@ -23171,6 +23192,9 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		}
 	} else {
 		return fmt.Errorf("client is required")
+	}
+	if err := ApplyTicketPlanFromIDs(ticket, mcpKind, planID, specID); err != nil {
+		return err
 	}
 
 	interaction := Interaction{
@@ -23240,11 +23264,11 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 }
 
 // 🔖ToolTicketOpen MUST complete the operation successfully.
-func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
+func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string, mcpKind McpClientKind, planID, specID string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketOpenStarting, "repo-cli", repopkg.TicketOpenPayload{
 		Title: title, Prompt: prompt, LLM: llm, Client: client, Goal: goal, Parent: parent,
 	})
-	ticket, err := OpenTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	ticket, err := OpenTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, mcpKind, planID, specID)
 	if err != nil {
 		return toolErrorResult(err)
 	}
@@ -23377,7 +23401,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 }
 
 // 🔖ToolTicketReopen MUST complete the operation successfully.
-func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noManagement bool, mcpKind McpClientKind, planID, specID string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketReopenStarting, "repo-cli", repopkg.TicketReopenPayload{
 		TicketPayload: repopkg.TicketPayload{ID: fmt.Sprintf("%d/%02d/%02d/%s", year, month, day, slug), Year: year, Month: month, Day: day, Slug: slug},
 		Prompt:        prompt, LLM: llm, Client: client,
@@ -23397,7 +23421,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noManagement); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noManagement, mcpKind, planID, specID); err != nil {
 		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🔓 Ticket reopened: %s", ticket.Slug))
@@ -27624,7 +27648,12 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 // 📬TicketOpen MUST return a non-nil error when the operation fails.
 // ⚫TicketOpen performs the ticket open operation on the repo context.
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
+	resolvedClient, err := ResolveAllowedClient(input.Client)
+	if err != nil {
+		return nil, err
+	}
+	kind := McpKindFromResolvedClient(resolvedClient)
+	return OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue, kind, input.PlanID, input.SpecID)
 }
 
 // 🟦TicketClose MUST return a non-nil error when the operation fails.
@@ -27704,7 +27733,12 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement); err != nil {
+	resolvedClient, err := ResolveAllowedClient(input.Client)
+	if err != nil {
+		return nil, err
+	}
+	kind := McpKindFromResolvedClient(resolvedClient)
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.Client, input.Draft, input.Goal, input.Parent, input.NoManagement, kind, input.PlanID, input.SpecID); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -30523,6 +30557,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"issue":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"planId":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"specId":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -30556,6 +30592,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"goal":         &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noManagement": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"planId":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"specId":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -30897,6 +30935,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if inputMap["parent"] != nil {
 						input.Parent = inputMap["parent"].(string)
 					}
+					if inputMap["planId"] != nil {
+						input.PlanID = inputMap["planId"].(string)
+					}
+					if inputMap["specId"] != nil {
+						input.SpecID = inputMap["specId"].(string)
+					}
 					return mutationResolverInstance.TicketOpen(p.Context, input)
 				},
 			},
@@ -30978,6 +31022,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					}
 					if par, ok := inputMap["parent"].(string); ok {
 						input.Parent = par
+					}
+					if pr, ok := inputMap["prompt"].(string); ok {
+						input.Prompt = pr
+					}
+					if inputMap["planId"] != nil {
+						input.PlanID = inputMap["planId"].(string)
+					}
+					if inputMap["specId"] != nil {
+						input.SpecID = inputMap["specId"].(string)
 					}
 					return mutationResolverInstance.TicketReopen(p.Context, input)
 				},
@@ -32416,219 +32469,9 @@ type RepoResolver interface {
 // #region 🦀Mcp
 // MCP protocol handlers for the model context protocol server.
 
-// 🖥️createMcpServer holds the data fields for a createMcpServer record.
-func createMcpServer() *server.MCPServer {
-	s := server.NewMCPServer(
-		"repo",
-		"1.0.0",
-		server.WithToolCapabilities(true),
-		server.WithPromptCapabilities(true),
-	)
-	s.AddPrompt(
-		mcp.NewPrompt("enhance",
-			mcp.WithPromptDescription("Add new features to the implementation and extend the existing tests to cover them."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the features to add."), mcp.RequiredArgument()),
-		),
-		handleEnhancePrompt,
-	)
-	s.AddPrompt(
-		mcp.NewPrompt("refactor",
-			mcp.WithPromptDescription("Refactor the implementation without removing functionality. All tests must pass after the refactor."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the refactoring to apply."), mcp.RequiredArgument()),
-		),
-		handleRefactorPrompt,
-	)
-	s.AddPrompt(
-		mcp.NewPrompt("test",
-			mcp.WithPromptDescription("Extend the test suite to cover additional features or edge cases."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of what to test."), mcp.RequiredArgument()),
-		),
-		handleTestPrompt,
-	)
-	s.AddPrompt(
-		mcp.NewPrompt("comply",
-			mcp.WithPromptDescription("Update the implementation to make all tests pass without removing any test functionality."),
-			mcp.WithArgument("prompt", mcp.ArgumentDescription("Description of the compliance requirement."), mcp.RequiredArgument()),
-		),
-		handleComplyPrompt,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://", "Root", mcp.WithMIMEType("text/plain")),
-		handleRepoResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://bundles", "Bundles", mcp.WithMIMEType("text/plain")),
-		handleBundlesResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://bundle/{id}", "Bundle"),
-		handleBundleResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://folders", "Folders", mcp.WithMIMEType("text/plain")),
-		handleFoldersResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://folder/{id}", "Folder"),
-		handleFolderResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://files", "Files", mcp.WithMIMEType("text/plain")),
-		handleFilesResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://file/{id}", "File"),
-		handleFileResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://sections/{id}", "Sections"),
-		handleSectionsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://section/{id}", "Section"),
-		handleSectionResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://definitions/{id}", "Definitions"),
-		handleDefinitionsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://definition/{id}", "Definition"),
-		handleDefinitionResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://tickets", "Tickets", mcp.WithMIMEType("text/plain")),
-		handleTicketsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://ticket/{id}", "Ticket"),
-		handleTicketResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://goals", "Goals", mcp.WithMIMEType("text/plain")),
-		handleGoalsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://goal/{id}", "Goal"),
-		handleGoalResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://policies", "Policies", mcp.WithMIMEType("text/plain")),
-		handlePoliciesResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://policy/{id}", "Policy"),
-		handlePolicyResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://statutes", "Breach Kinds", mcp.WithMIMEType("text/plain")),
-		handleStatutesResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://statute/{id}", "Breach Kind"),
-		handleStatuteResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://contributors", "Contributors", mcp.WithMIMEType("text/plain")),
-		handleContributorsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://contributor/{id}", "Contributor"),
-		handleContributorResource,
-	)
-	s.AddResource(
-		mcp.NewResource("repo://checkpoints", "Checkpoints", mcp.WithMIMEType("text/plain")),
-		handleCheckpointsResource,
-	)
-	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("repo://checkpoint/{id}", "Checkpoint"),
-		handleCheckpointResource,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_open",
-			mcp.WithDescription("Open a new ticket to track a task or bug fix. Returns the ticket path for use with ticket_close and ticket_reopen."),
-			mcp.WithString("emoji", mcp.Required(), mcp.Description("Single emoji representing the ticket (e.g. '🎫', '🐛', '✨').")),
-			mcp.WithString("title", mcp.Required(), mcp.Description("Short title for the ticket. Shape is not enforced.")),
-			mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
-			mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
-			mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
-			mcp.WithString("llm", mcp.Description("LLM used for this ticket.")),
-			mcp.WithBoolean("no_management", mcp.Description("Skip GitHub issue creation and management.")),
-			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
-			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets.")),
-			mcp.WithString("issue", mcp.Description("Existing GitHub issue URL to link instead of creating a new one.")),
-		),
-		ticketOpen,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_close",
-			mcp.WithDescription("Close a ticket and record the work summary. When path is omitted, closes the latest open ticket."),
-			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the work done.")),
-			mcp.WithArray("files", mcp.Description("Files created, updated, or removed during the ticket."), mcp.WithStringItems()),
-			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to close the latest open ticket.")),
-			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
-			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
-		),
-		ticketClose,
-	)
-	s.AddTool(
-		mcp.NewTool("ticket_reopen",
-			mcp.WithDescription("Reopen a closed ticket to continue work on it. When path is omitted, reopens the latest closed ticket."),
-			mcp.WithString("path", mcp.Description("Ticket path as returned by ticket_open (e.g. '26/03/27/FIX-MCP-DESCRIPTIONS'). Omit to reopen the latest closed ticket.")),
-			mcp.WithString("prompt", mcp.Description("Updated or additional task description.")),
-			mcp.WithString("llm", mcp.Description("LLM to use for the reopened ticket.")),
-			mcp.WithString("client", mcp.Description("Agent client to use for the reopened ticket.")),
-			mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
-			mcp.WithString("draft", mcp.Description("Draft slug to seed the ticket workspace.")),
-			mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
-		),
-		ticketReopen,
-	)
-	s.AddTool(
-		mcp.NewTool("section_move",
-			mcp.WithDescription("Rename a section within a file."),
-			mcp.WithString("file", mcp.Required(), mcp.Description("Path to the file containing the section.")),
-			mcp.WithString("old_name", mcp.Required(), mcp.Description("Current name of the section.")),
-			mcp.WithString("new_name", mcp.Required(), mcp.Description("New name for the section.")),
-		),
-		sectionMove,
-	)
-	s.AddTool(
-		mcp.NewTool("file_integrate",
-			mcp.WithDescription("Integrate source code from a file into a named section of a target file."),
-			mcp.WithString("source", mcp.Required(), mcp.Description("Path to the source file.")),
-			mcp.WithString("target_section", mcp.Required(), mcp.Description("Name of the section in the target file to integrate into.")),
-			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file.")),
-			mcp.WithString("target_parent_section", mcp.Description("Name of the parent section in the target file.")),
-		),
-		sectionIntegrate,
-	)
-	s.AddTool(
-		mcp.NewTool("section_extract",
-			mcp.WithDescription("Extract a named section from a source file into a separate target file."),
-			mcp.WithString("source_file", mcp.Required(), mcp.Description("Path to the source file.")),
-			mcp.WithString("source_section", mcp.Required(), mcp.Description("Name of the section to extract.")),
-			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file where the section will be written.")),
-		),
-		sectionExtract,
-	)
-	s.AddTool(
-		mcp.NewTool("search",
-			mcp.WithDescription("Search the monorepo for relevant information across technologies, bundles, folders, files, sections, definitions, goals, tickets, policies, statutes, contributors, and checkpoints."),
-			mcp.WithString("query", mcp.Description("Space-separated keywords to search for.")),
-		),
-		mcpTree,
-	)
-	return s
-}
-
 // 💿runMcpServer holds the data fields for a runMcpServer record.
 func runMcpServer(cmd *cobra.Command, args []string) error {
-	s := createMcpServer()
-	if err := server.ServeStdio(s); err != nil {
-		return err
-	}
-	return nil
+	return RunMcpServerFor(McpClientGeneric)
 }
 
 // 📝textResult holds the data fields for a textResult record.
@@ -32948,8 +32791,8 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// 🎫ticketOpen holds the data fields for a ticketOpen record.
-func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// 🎫ticketOpenWithKind handles MCP ticket_open for a specific IDE MCP surface.
+func ticketOpenWithKind(ctx context.Context, request mcp.CallToolRequest, kind McpClientKind) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	emoji, _, _ := getStringArg(args, "emoji")
 	title, _, _ := getStringArg(args, "title")
@@ -32962,8 +32805,10 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
+	planID, _, _ := getStringArg(args, "plan_id")
+	specID, _, _ := getStringArg(args, "spec_id")
 
-	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue, kind, planID, specID)
 	return toolResultToMCP(result)
 }
 
@@ -33067,8 +32912,8 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	return toolResultToMCP(result)
 }
 
-// 📬ticketReopen holds the data fields for a ticketReopen record.
-func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+// 📬ticketReopenWithKind handles MCP ticket_reopen for a specific IDE MCP surface.
+func ticketReopenWithKind(ctx context.Context, request mcp.CallToolRequest, kind McpClientKind) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	path, _, _ := getStringArg(args, "path")
 	prompt, _, _ := getStringArg(args, "prompt")
@@ -33077,13 +32922,15 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
 	noManagement, _, _ := getBoolArg(args, "no_management")
+	planID, _, _ := getStringArg(args, "plan_id")
+	specID, _, _ := getStringArg(args, "spec_id")
 
 	year, month, day, slug, err := resolveTicketForReopen(path)
 	if err != nil {
 		return nil, err
 	}
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, client, draft, title, "", "", noManagement, kind, planID, specID)
 	return toolResultToMCP(result)
 }
 
@@ -36845,6 +36692,58 @@ func hookEventStrings() []string {
 	return result
 }
 
+// runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
+func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	if toolName == "" {
+		if tn := extractToolNameFromStdin(input); tn != "" {
+			toolName = tn
+		}
+	}
+	event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
+	if err != nil {
+		return err
+	}
+	if parentInfo == "" {
+		parentInfo = resolvedParent
+	}
+	hctx := HookContext{
+		Event:      event,
+		Client:     client,
+		Second:     time.Now().UTC().Format(time.RFC3339),
+		RepoRoot:   repoRoot,
+		ToolName:   toolName,
+		ToolArgs:   toolArgs,
+		FilePath:   filePath,
+		ParentInfo: parentInfo,
+		Input:      input,
+	}
+	result := RunHook(hctx)
+	provider := GetEditorProvider(client)
+	if provider != nil && provider.Kind() == "copilot-chat" {
+		hookEventName := extractHookEventNameFromStdin(input)
+		if hookEventName == "" {
+			hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
+		}
+		out := provider.FormatHookOutput(hookEventName, result)
+		fmt.Fprintln(stdout, out)
+		return nil
+	}
+	if jsonMode {
+		out, _ := json.Marshal(result)
+		fmt.Fprintln(stdout, string(out))
+		return nil
+	}
+	if !result.IsAllowed() {
+		fmt.Fprintln(stderr, result.GetMessage())
+		return ExitError{Code: 2}
+	}
+	msg := result.GetMessage()
+	if msg != "" {
+		fmt.Fprintln(stdout, msg)
+	}
+	return nil
+}
+
 // 🆕hookCommand creates the `hook <event> <client>` cobra command.
 func hookCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -36918,54 +36817,7 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 					input = json.RawMessage(data)
 				}
 			}
-			if toolName == "" {
-				if tn := extractToolNameFromStdin(input); tn != "" {
-					toolName = tn
-				}
-			}
-			event, resolvedParent, err := ResolveHookEvent(eventStr, client, toolName, input)
-			if err != nil {
-				return err
-			}
-			if parentInfo == "" {
-				parentInfo = resolvedParent
-			}
-			hctx := HookContext{
-				Event:      event,
-				Client:     client,
-				Second:     time.Now().UTC().Format(time.RFC3339),
-				RepoRoot:   repoRoot,
-				ToolName:   toolName,
-				ToolArgs:   toolArgs,
-				FilePath:   filePath,
-				ParentInfo: parentInfo,
-				Input:      input,
-			}
-			result := RunHook(hctx)
-			provider := GetEditorProvider(client)
-			if provider != nil && provider.Kind() == "copilot-chat" {
-				hookEventName := extractHookEventNameFromStdin(input)
-				if hookEventName == "" {
-					hookEventName = provider.NativeEventFromHookEvent(event, parentInfo)
-				}
-				out := provider.FormatHookOutput(hookEventName, result)
-				fmt.Fprintln(cmd.OutOrStdout(), out)
-				return nil
-			}
-			if config.IsJSON() {
-				out, _ := json.Marshal(result)
-				fmt.Fprintln(cmd.OutOrStdout(), string(out))
-				return nil
-			}
-			if !result.IsAllowed() {
-				fmt.Fprintln(cmd.ErrOrStderr(), result.GetMessage())
-				return ExitError{Code: 2}
-			}
-			msg := result.GetMessage()
-			if msg != "" {
-				fmt.Fprintln(cmd.OutOrStdout(), msg)
-			}
-			return nil
+			return runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, config.IsJSON(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 	}
 	cmd.Flags().String("tool-name", "", "Tool name for tool-related events")

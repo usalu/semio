@@ -7,7 +7,7 @@
 
 import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/react";
 import { Design as DesignEntity, Kit } from "@semio/react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
 import { SemioDiagram } from "@semio/ui";

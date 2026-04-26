@@ -3,5 +3,5 @@
 
 [mcp_servers.repo]
 command = "go"
-args = ["run", "./repo/mcp"]
+args = ["run", "./repo/codex"]
 enabled = true

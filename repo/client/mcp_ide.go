@@ -11,7 +11,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -52,6 +51,24 @@ func HookClientForMcpKind(kind McpClientKind) string {
 		return "codex"
 	default:
 		return ""
+	}
+}
+
+// McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
+func McpKindFromResolvedClient(client string) McpClientKind {
+	switch strings.TrimSpace(client) {
+	case "cursor-chat", "cursor":
+		return McpClientCursor
+	case "kiro-cli":
+		return McpClientKiro
+	case "copilot-chat":
+		return McpClientCopilot
+	case "claude-code":
+		return McpClientClaude
+	case "codex":
+		return McpClientCodex
+	default:
+		return McpClientGeneric
 	}
 }
 
@@ -211,14 +228,13 @@ func moveTicketPlanIntoFolder(ticket *Ticket) error {
 	}
 	destName := filepath.Base(src)
 	dest := filepath.Join(ticket.FolderPath, destName)
-	if st, err := os.Stat(dest); err == nil {
-		// Idempotent: already present in ticket folder
-		if ticket.Plan.Local == "" || filepath.Clean(ticket.Plan.Local) == destName {
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		if _, err2 := os.Stat(dest); err2 == nil {
 			ticket.Plan.Local = destName
 			ticket.Plan.Source = ""
 			return nil
 		}
-		_ = st
+		return fmt.Errorf("plan source %q missing and destination %q not found", src, dest)
 	}
 	st, err := os.Stat(src)
 	if err != nil {
@@ -820,6 +836,30 @@ func newTicketReopenHandler(kind McpClientKind) func(context.Context, mcp.CallTo
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		return ticketReopenWithKind(ctx, request, kind)
 	}
+}
+
+// RunHookFor runs a hook for the IDE kind (client is implied; stdin is hook JSON payload).
+func RunHookFor(kind McpClientKind, eventStr string, stdin []byte) error {
+	client := HookClientForMcpKind(kind)
+	if client == "" {
+		return fmt.Errorf("hooks are not available for mcp kind %q", kind)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	repoRoot := findRepoRoot(cwd)
+	SetRootDir(repoRoot)
+	var input json.RawMessage
+	if len(stdin) > 0 {
+		input = json.RawMessage(stdin)
+	}
+	return runHookExecution(client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
+}
+
+// RunMCPFor starts the MCP stdio server for the given IDE kind.
+func RunMCPFor(kind McpClientKind) error {
+	return RunMcpServerFor(kind)
 }
 
 // #endregion 🪝TicketMcpHandlers

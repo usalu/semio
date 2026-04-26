@@ -569,12 +569,15 @@ export class KitStore {
   }
 
   /**
-   * @emoji 🧭 Await `semio/rs` command lifecycle on the shared event bus: `submitKitCommand` returns a `requestId` immediately; `succeeded` / `failed` arrive asynchronously (see `emit_command_shell_event` in `semio/rs`).
+   * @emoji 🧭 `submitKitCommand` + await `succeeded`/`failed` on the kit event bus. Subscribes **before** the mutation so WASM cannot deliver the outcome before the listener exists (single-thread / microtask ordering).
    */
-  private waitForKitCommandOutcome(requestId: KitCommandRequestId): Promise<SetResult> {
+  private async submitShell(commandKind: string, request: { query: string; variables?: Record<string, unknown> }): Promise<SetResult> {
     this.ensureAlive();
-    return new Promise((resolve) => {
-      let settled = false;
+    const maxBuffered = 64;
+    const buffered: KitCommandLifecycleEvent[] = [];
+    let targetRequestId: string | null = null;
+    let settled = false;
+    return await new Promise<SetResult>((resolve) => {
       const finish = (r: SetResult) => {
         if (settled) return;
         settled = true;
@@ -582,43 +585,54 @@ export class KitStore {
         off();
         resolve(r);
       };
+      const drainForRequestId = (rid: string) => {
+        for (const ev of buffered) {
+          const row = ev.semioKitCommand;
+          if (row.requestId !== rid) continue;
+          if (row.phase === "succeeded") finish({ ok: true, requestId: rid });
+          else if (row.phase === "failed")
+            finish({
+              ok: false,
+              error: row.error ?? { kind: "Internal", message: "kit command failed" },
+              requestId: rid,
+            });
+        }
+      };
       const tid = setTimeout(() => {
         finish({
           ok: false,
-          error: { kind: "Timeout", message: `kit command ${requestId}: no succeeded/failed event` },
-          requestId,
+          error: {
+            kind: "Timeout",
+            message: `kit command ${targetRequestId ?? "?"}: no succeeded/failed event`,
+          },
+          requestId: targetRequestId ?? undefined,
         });
       }, this.timeoutMs);
       const off = this.subscribe((ev) => {
         if (!isKitCommandLifecycleEvent(ev)) return;
-        const row = ev.semioKitCommand;
-        if (row.requestId !== requestId) return;
-        if (row.phase === "succeeded") finish({ ok: true, requestId: row.requestId });
-        else if (row.phase === "failed")
-          finish({
-            ok: false,
-            error: row.error ?? { kind: "Internal", message: "kit command failed" },
-            requestId: row.requestId,
-          });
+        if (buffered.length < maxBuffered) buffered.push(ev);
+        if (targetRequestId !== null) drainForRequestId(targetRequestId);
       });
+      void (async () => {
+        try {
+          const data = kitGraphqlData(
+            await this.gqlRun({
+              query: `mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }`,
+              variables: { input: { commandKind, request } },
+            }),
+          );
+          const receipt = (data as { submitKitCommand?: Partial<KitCommandReceipt> }).submitKitCommand;
+          if (!receipt || typeof receipt.requestId !== "string" || receipt.accepted !== true) {
+            finish({ ok: false, error: { kind: "Internal", message: "submitKitCommand: invalid receipt" } });
+            return;
+          }
+          targetRequestId = receipt.requestId;
+          drainForRequestId(targetRequestId);
+        } catch (e) {
+          finish({ ok: false, error: { kind: "Internal", message: String(e) } });
+        }
+      })();
     });
-  }
-
-  private async submitShell(commandKind: string, request: { query: string; variables?: Record<string, unknown> }): Promise<SetResult> {
-    try {
-      const data = kitGraphqlData(
-        await this.gqlRun({
-          query: `mutation($input: KitCommandShellInput!) { submitKitCommand(input: $input) { requestId commandKind accepted } }`,
-          variables: { input: { commandKind, request } },
-        }),
-      );
-      const receipt = (data as { submitKitCommand?: Partial<KitCommandReceipt> }).submitKitCommand;
-      if (!receipt || typeof receipt.requestId !== "string" || receipt.accepted !== true)
-        throw new Error("submitKitCommand: invalid receipt");
-      return await this.waitForKitCommandOutcome(receipt.requestId);
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
   }
 
   async patchEntityField(entityKind: string, id: string, field: string, value: unknown): Promise<SetResult> {
