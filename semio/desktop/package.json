@@ -15,6 +15,7 @@
     "@electron/fuses": "^2.0.0",
     "@elements/ui": "*",
     "@semio/js": "^0.1.0",
+    "@semio/react": "^0.1.0",
     "@semio/sketchpad": "^0.1.0",
     "electron-squirrel-startup": "^1.0.1"
   },

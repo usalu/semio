@@ -4,17 +4,16 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-// Repo CLI entry point.
+// Repo MCP entry point.
 
 // #endregion 🧲Header
 
 // #region 🤸Preamble
-// Package declaration and dependency imports for the repo CLI entry point.
+// Package declaration and dependency imports for the repo MCP entry point.
 
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -23,18 +22,14 @@ import (
 
 // #endregion 🤸Preamble
 
-// #region 🔊Cli
-// CLI process bootstrap.
+// #region 🦀Mcp
+// MCP process bootstrap.
 
 func main() {
-	if err := client.RunCLI(); err != nil {
-		var exitErr client.ExitError
-		if errors.As(err, &exitErr) {
-			os.Exit(exitErr.Code)
-		}
+	if err := client.RunMCP(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-// #endregion 🔊Cli
+// #endregion 🦀Mcp

@@ -6,7 +6,7 @@
 
 // #endregion 🧲Header
 
-package main
+package client
 
 import (
 	"bytes"

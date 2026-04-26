@@ -1,7 +1,9 @@
 go 1.25.0
 
 use (
+	./client
 	./cli
 	./go
+	./mcp
 	./server
 )

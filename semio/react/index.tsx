@@ -50,6 +50,8 @@ import {
   DiffStatus,
   FamilyStore,
   fetchReadableKitFileBlob,
+  File,
+  File as SemioFile,
   FileStore,
   Folder,
   FolderStore,
@@ -73,7 +75,6 @@ import {
   Point,
   Quality,
   Representation,
-  File as SemioFile,
   Tag,
   TOLERANCE,
   Type,
@@ -4603,6 +4604,7 @@ export {
   Point,
   Quality,
   Representation,
+  File,
   File as SemioFile,
   Tag,
   TOLERANCE,
@@ -4615,8 +4617,13 @@ export type {
   ConnectionDiff,
   ConnectionId,
   Connector,
+  CoordinatePlain,
   DesignDiff,
+  DesignDiffOperationResult,
+  DesignOperationResult,
+  DesignPlain,
   DesignShallowDto,
+  FlatMerkleCacheEntry,
   Id,
   KitBinaryStore,
   KitDiff,
@@ -4626,6 +4633,8 @@ export type {
   KitShallowDto,
   KitHostStore,
   KitHostStoreSnapshot,
+  MoveVector,
+  OperationResult,
   PieceDiff,
   PieceId,
   Port,
@@ -4633,6 +4642,7 @@ export type {
   TypeDiff,
   TypeShallowDto,
 } from "./kitEntities";
+export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "./kitEntities";
 export type { KitCommandContext, KitCommandResult } from "./kitWasmClient";
 
 export function useJSON(idValue?: string): HookTriad<any> {

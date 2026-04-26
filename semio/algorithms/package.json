@@ -25,6 +25,7 @@
     "@mdx-js/react": "^3.1.1",
     "@microlink/react-json-view": "^1.31.18",
     "@semio/js": "*",
+    "@semio/react": "*",
     "@semio/ui": "*",
     "@storybook/addon-docs": "^10.3.5",
     "@storybook/addon-vitest": "^10.3.5",

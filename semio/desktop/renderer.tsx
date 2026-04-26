@@ -21,7 +21,7 @@ import {
   InMemoryKitStore,
   type KitFolderAdapter,
   type KitJsonFileAdapter,
-} from "@semio/js";
+} from "@semio/react";
 import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import "./globals.css";

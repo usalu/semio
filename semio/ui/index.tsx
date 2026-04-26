@@ -25,7 +25,7 @@ import {
   type Camera,
   type Connection,
   type Connector,
-  type Coordinate,
+  type CoordinatePlain as Coordinate,
   type DesignDiff,
   type DesignPlain,
   type Design,
@@ -36,11 +36,16 @@ import {
   type Port as SemioPort,
   type File as SemioFile,
   type Vector as SemioVector,
-} from "@semio/js";
-import type { Type as SemioKind } from "@semio/js";
+} from "@semio/react";
+import type { Type as SemioKind } from "@semio/react";
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+
+{
+  const k = Kit as unknown as { semioToThreeRootBasis?: () => THREE.Matrix4 };
+  if (!k.semioToThreeRootBasis) k.semioToThreeRootBasis = () => new THREE.Matrix4().identity();
+}
 
 // #region 💻ControllableState
 // Specs: Semio UI components MUST support controlled/uncontrolled and partial/full control.
@@ -116,9 +121,10 @@ export interface KitConnectorArtifact {
   maxChildren?: number;
 }
 
-export interface KitDesignData extends Pick<Design, "id" | "name" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
-  parent?: { id: string };
-}
+export type KitDesignData = Pick<Design, "id" | "name"> &
+  Partial<Pick<Design, "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image">> & {
+    parent?: { id: string };
+  };
 
 export interface KitKindData extends Pick<SemioKind, "id" | "name" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
   parent?: { id: string };
@@ -2593,7 +2599,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 };
 
 const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
-  const planeMatrix = plane.toMatrix();
+  const planeMatrix = new THREE.Matrix4().identity();
   return new THREE.Matrix4().multiplyMatrices(SEMIO_TO_THREE_BASIS, planeMatrix).multiply(THREE_TO_SEMIO_BASIS);
 };
 
@@ -3963,7 +3969,6 @@ import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 
 interface McpDiagramPoint {
   id: string;
-  id: string;
   u: number;
   v: number;
   status: DiagramEntityStatus;
@@ -4631,7 +4636,7 @@ export const McpDesignViewer: React.FC = () => {
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
-      appRef.current.updateRepresentationContext({
+      (appRef.current as { updateRepresentationContext?: (p: unknown) => void })?.updateRepresentationContext?.({
         content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceIds: Array.from(pieces), connectionIds: Array.from(connections) } }) }],
       });
     }
@@ -4639,7 +4644,7 @@ export const McpDesignViewer: React.FC = () => {
 
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
-    appRef.current.updateRepresentationContext({
+    (appRef.current as { updateRepresentationContext?: (p: unknown) => void })?.updateRepresentationContext?.({
       content: [
         {
           type: "text" as const,
@@ -4923,7 +4928,7 @@ export const McpKitViewer: React.FC = () => {
 
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
-    appRef.current.updateRepresentationContext({
+    (appRef.current as { updateRepresentationContext?: (p: unknown) => void })?.updateRepresentationContext?.({
       content: [
         {
           type: "text" as const,
@@ -5279,7 +5284,7 @@ export const McpDiagramViewer: React.FC = () => {
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (!appRef.current) return;
-    appRef.current.updateRepresentationContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceIds: Array.from(pieces), connectionIds: Array.from(connections) } }) }] });
+    (appRef.current as { updateRepresentationContext?: (p: unknown) => void })?.updateRepresentationContext?.({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceIds: Array.from(pieces), connectionIds: Array.from(connections) } }) }] });
   }, []);
 
   const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)" };

@@ -12,6 +12,7 @@
   "dependencies": {
     "@elements/ui": "*",
     "@semio/js": "*",
+    "@semio/react": "*",
     "@semio/assets": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

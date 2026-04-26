@@ -13,8 +13,8 @@
 
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { Kit, Type as SemioType, Design, Representation } from "@semio/js";
-import { Kit } from "@semio/js";
+import type { Kit, Type as SemioType, Design, Representation } from "@semio/react";
+import { Kit } from "@semio/react";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio/assets";
 import "./globals.css";
 

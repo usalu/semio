@@ -1,0 +1,13 @@
+{
+  "title": "Split Repo Binary Entry Points",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor repo/cli/main.go into repo/client/main.go for shared client code, repo/cli/main.go for Cobra CLI code, and repo/mcp/main.go for MCP code. Keep existing behavior working and update existing tests only as needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1382"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
+  "sessions": [
+    "⚪6055c278721c47f8921069f3ee243328"
+  ]
+}

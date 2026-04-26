@@ -1,4 +1,4 @@
-module github.com/usalu/semio/repo/cli
+module github.com/usalu/semio/repo/mcp
 
 go 1.25.0
 

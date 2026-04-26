@@ -76,8 +76,8 @@ function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: str
 
           let result: unknown;
           if (operation === "flatten") {
-            const { asKitInstance } = await import("@semio/js");
-            result = asKitInstance(bridgePayload.kit as any).runFlattenDesign(bridgePayload.designId);
+            const { nativeFlattenDesign } = await import("../nativeAlgorithmAdapter");
+            result = await nativeFlattenDesign(bridgePayload.kit as any, bridgePayload.designId, "ts");
           } else if (language === "python") {
             const py = spawnSync(
               "uv",

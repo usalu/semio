@@ -294,7 +294,17 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 // #endregion Author
 
 // #region File
-export const FileSchema = z.object({ id: z.string(), url: z.string().optional(), mime: z.string().optional(), size: z.number().optional(), hash: z.string().optional(), description: z.string().optional(), createdAt: DateProperty(), updatedAt: DateProperty() });
+export const FileSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  url: z.string().optional(),
+  mime: z.string().optional(),
+  size: z.number().optional(),
+  hash: z.string().optional(),
+  description: z.string().optional(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
+});
 export type FilePlain = z.infer<typeof FileSchema>;
 export class File implements FilePlain {
   id!: string; url?: string; mime?: string; size?: number; hash?: string; description?: string; createdAt?: string; updatedAt?: string;
@@ -390,7 +400,21 @@ export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 // #endregion Quality
 
 // #region Port
-export const PortSchema = z.object({ id: z.string(), name: z.string(), description: z.string().optional(), icon: z.string().optional(), compatibleFamilies: z.array(FamilyIdSchema).optional(), mandatory: z.boolean().optional(), t: z.number().optional(), point: PointSchema.optional(), direction: VectorSchema.optional(), compatiblePorts: z.array(PortIdSchema).optional(), qualities: z.array(QualitySchema).optional(), attributes: z.array(AttributeSchema).optional() });
+export const PortSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  compatibleFamilies: z.array(FamilyIdSchema).optional(),
+  mandatory: z.boolean().optional(),
+  t: z.number().optional(),
+  point: PointSchema.optional(),
+  direction: VectorSchema.optional(),
+  compatiblePorts: z.array(PortIdSchema).optional(),
+  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+  maxChildren: z.number().optional(),
+});
 export type PortPlain = z.infer<typeof PortSchema>;
 export class Port implements PortPlain {
   id!: string; name!: string; description?: string; icon?: string; compatibleFamilies?: FamilyId[]; mandatory?: boolean; t?: number; point?: Point; direction?: Vector; compatiblePorts?: PortId[]; qualities?: Quality[]; attributes?: Attribute[];
@@ -561,10 +585,62 @@ export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
 
 // #region Type
 export type EntityLifecycle = "active" | "deleted";
-export const TypeSchema = z.object({ id: z.string(), name: z.string(), families: z.array(FamilyIdSchema).optional(), isAbstract: z.boolean().optional(), folder: z.string().optional(), representations: z.array(RepresentationSchema).optional(), connectors: z.array(ConnectorSchema).optional(), props: z.array(PropSchema).optional(), stock: z.number().optional(), virtual: z.boolean().optional(), unit: z.string().optional(), createdAt: DateProperty(), updatedAt: DateProperty(), location: LocationIdSchema.optional(), authors: z.array(AuthorIdSchema).optional(), concepts: z.array(ConceptIdSchema).optional(), icon: z.string().optional(), image: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional(), lifecycle: z.enum(["active", "deleted"]).optional(), deletedByUserId: z.string().optional(), deletedByDisplayName: z.string().optional(), deletedAt: z.string().optional(), deletedInChangeId: z.string().optional() });
+export const TypeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  parent: z.object({ id: z.string() }).optional(),
+  families: z.array(FamilyIdSchema).optional(),
+  isAbstract: z.boolean().optional(),
+  folder: z.string().optional(),
+  representations: z.array(RepresentationSchema).optional(),
+  connectors: z.array(ConnectorSchema).optional(),
+  props: z.array(PropSchema).optional(),
+  stock: z.number().optional(),
+  virtual: z.boolean().optional(),
+  unit: z.string().optional(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
+  location: LocationIdSchema.optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  concepts: z.array(ConceptIdSchema).optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+  lifecycle: z.enum(["active", "deleted"]).optional(),
+  deletedByUserId: z.string().optional(),
+  deletedByDisplayName: z.string().optional(),
+  deletedAt: z.string().optional(),
+  deletedInChangeId: z.string().optional(),
+});
 export type TypePlain = z.infer<typeof TypeSchema>;
 export class Type {
-  id!: string; name!: string; families?: FamilyId[]; isAbstract?: boolean; folder?: string; representations?: Representation[]; connectors?: Connector[]; props?: Prop[]; stock?: number; virtual?: boolean; unit?: string; createdAt?: string; updatedAt?: string; location?: LocationId; authors?: AuthorId[]; concepts?: ConceptId[]; icon?: string; image?: string; description?: string; attributes?: Attribute[]; lifecycle?: EntityLifecycle; deletedByUserId?: string; deletedByDisplayName?: string; deletedAt?: string; deletedInChangeId?: string;
+  id!: string;
+  name!: string;
+  parent?: { id: string };
+  families?: FamilyId[];
+  isAbstract?: boolean;
+  folder?: string;
+  representations?: Representation[];
+  connectors?: Connector[];
+  props?: Prop[];
+  stock?: number;
+  virtual?: boolean;
+  unit?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  location?: LocationId;
+  authors?: AuthorId[];
+  concepts?: ConceptId[];
+  icon?: string;
+  image?: string;
+  description?: string;
+  attributes?: Attribute[];
+  lifecycle?: EntityLifecycle;
+  deletedByUserId?: string;
+  deletedByDisplayName?: string;
+  deletedAt?: string;
+  deletedInChangeId?: string;
   constructor(plain: TypePlain) { const p = TypeSchema.parse(plain); Object.assign(this, p); this.representations = p.representations?.map((m) => new Representation(m)); this.connectors = p.connectors?.map((c) => new Connector(c)); this.props = p.props?.map((x) => new Prop(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static fromPlain(plain: TypePlain): Type { return new Type(plain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
@@ -572,6 +648,11 @@ export class Type {
   toPlain(): TypePlain { return TypeSchema.parse({ ...(this as unknown as TypePlain) }); }
   static createId(id: string): TypeId { return { id }; }
   static areSameId(a: TypeId, b: TypeId): boolean { return a.id === b.id; }
+  /** @emoji 🖼️ Picks a representation for scene rendering (`@semio/ui`); first match until WASM metadata is wired. */
+  static pickBestRepresentation(representations: readonly Representation[], _tagIds: readonly string[]): Representation | undefined {
+    void _tagIds;
+    return representations[0];
+  }
 }
 export const TypeMetadataDtoSchema = TypeSchema.omit({ representations: true, connectors: true, props: true, attributes: true, authors: true, concepts: true });
 export type TypeMetadataDto = z.infer<typeof TypeMetadataDtoSchema>;
@@ -735,10 +816,90 @@ export type StatShallow = z.infer<typeof StatShallowSchema>;
 // #endregion Stat
 
 // #region Design
-export const DesignSchema = z.object({ id: z.string(), name: z.string(), families: z.array(FamilyIdSchema).optional(), isAbstract: z.boolean().optional(), folder: z.string().optional(), pieces: z.array(PieceSchema).optional(), connections: z.array(ConnectionSchema).optional(), stats: z.array(StatSchema).optional(), props: z.array(PropSchema).optional(), layers: z.array(LayerSchema).optional(), activeLayer: LayerIdSchema.optional(), groups: z.array(GroupSchema).optional(), canScale: z.boolean().optional(), canMirror: z.boolean().optional(), unit: z.string().optional(), location: LocationIdSchema.optional(), authors: z.array(AuthorIdSchema).optional(), concepts: z.array(ConceptIdSchema).optional(), icon: z.string().optional(), image: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional(), createdAt: DateProperty(), updatedAt: DateProperty() });
+export const DesignSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  parent: z.object({ id: z.string() }).optional(),
+  families: z.array(FamilyIdSchema).optional(),
+  isAbstract: z.boolean().optional(),
+  folder: z.string().optional(),
+  pieces: z.array(PieceSchema).optional(),
+  connections: z.array(ConnectionSchema).optional(),
+  stats: z.array(StatSchema).optional(),
+  props: z.array(PropSchema).optional(),
+  layers: z.array(LayerSchema).optional(),
+  activeLayer: LayerIdSchema.optional(),
+  groups: z.array(GroupSchema).optional(),
+  canScale: z.boolean().optional(),
+  canMirror: z.boolean().optional(),
+  unit: z.string().optional(),
+  location: LocationIdSchema.optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  concepts: z.array(ConceptIdSchema).optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
+});
 export type DesignPlain = z.infer<typeof DesignSchema>;
+
+export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({ pieces: PiecesDiffSchema.optional(), connections: ConnectionsDiffSchema.optional(), stats: StatsDiffSchema.optional(), props: PropsDiffSchema.optional(), layers: LayersDiffSchema.optional(), groups: GroupsDiffSchema.optional(), authors: AuthorsDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
+export type DesignDiff = z.infer<typeof DesignDiffSchema>;
+export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(), added: z.array(z.any()).optional() });
+export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
+
+/** @emoji ⚠️ Algorithm adapter / native REST error row. */
+export type AlgorithmError = { readonly code: string; readonly message: string };
+export type DesignDiffOperationResult = { readonly ok: true; readonly diff: DesignDiff } | { readonly ok: false; readonly errors: readonly AlgorithmError[] };
+export type OperationResult<T> = { readonly ok: true; readonly value: T } | { readonly ok: false; readonly errors: readonly AlgorithmError[] };
+
+/** @emoji 🔧 Gap/shift/rise knobs for structural move previews (algorithms UI). */
+export type MoveVector = { readonly gap: number; readonly shift: number; readonly rise: number };
+
+/** @emoji 📌 Paste anchoring modes for copy/paste algorithm stories. */
+export type PasteDesignAnchoringKind =
+  | "original"
+  | "middle"
+  | "centroid"
+  | "bottomLeft"
+  | "bottomRight"
+  | "topLeft"
+  | "topRight";
+
+/** @emoji 🧠 Optional per-piece flatten cache row (TS algorithm path; opaque to callers). */
+export type FlatMerkleCacheEntry = Readonly<Record<string, unknown>>;
+
 export class Design {
-  id!: string; name!: string; families?: FamilyId[]; isAbstract?: boolean; folder?: string; pieces?: Piece[]; _connections?: Connection[]; stats?: Stat[]; props?: Prop[]; layers?: Layer[]; activeLayer?: LayerId; groups?: Group[]; canScale?: boolean; canMirror?: boolean; unit?: string; location?: LocationId; authors?: AuthorId[]; concepts?: ConceptId[]; icon?: string; image?: string; description?: string; attributes?: Attribute[]; createdAt!: string; updatedAt!: string;
+  id!: string;
+  name!: string;
+  parent?: { id: string };
+  families?: FamilyId[];
+  isAbstract?: boolean;
+  folder?: string;
+  pieces?: Piece[];
+  _connections?: Connection[];
+  stats?: Stat[];
+  props?: Prop[];
+  layers?: Layer[];
+  activeLayer?: LayerId;
+  groups?: Group[];
+  canScale?: boolean;
+  canMirror?: boolean;
+  unit?: string;
+  location?: LocationId;
+  authors?: AuthorId[];
+  concepts?: ConceptId[];
+  icon?: string;
+  image?: string;
+  description?: string;
+  attributes?: Attribute[];
+  createdAt!: string;
+  updatedAt!: string;
+  get connections(): Connection[] | undefined {
+    return this._connections;
+  }
   constructor(plain: DesignPlain | Design) {
     const wire: DesignPlain = plain instanceof Design ? plain.toPlain() : plain;
     const p = DesignSchema.parse(wire);
@@ -769,15 +930,115 @@ export class Design {
   static deserialize(json: string): Design { return new Design(DesignSchema.parse(JSON.parse(json))); }
   static createId(id: string): DesignId { return { id }; }
   static areSameId(a: DesignId, b: DesignId): boolean { return a.id === b.id; }
+
+  /** @emoji 🧾 Legacy alias for diagram consumers (`@semio/ui`). */
+  getConnections(): Connection[] {
+    return [...(this._connections ?? [])];
+  }
+
+  /** @emoji 🧾 Non-mutating diff overlay for MCP / diagram previews. */
+  static previewWithDiff(design: Design, diff: DesignDiff): Design {
+    const plain = design instanceof Design ? design.toPlain() : DesignSchema.parse(design as unknown as DesignPlain);
+    const n = new Design(plain);
+    n.applyDiff(diff);
+    return n;
+  }
+
+  /** @emoji 🧩 Merges a structural {@link DesignDiff} into this design (pieces + connections). */
+  applyDiff(diff: DesignDiff): void {
+    if (diff.pieces?.removed?.length) {
+      const rm = new Set(diff.pieces.removed.map((x) => x.id));
+      this.pieces = (this.pieces ?? []).filter((p) => !rm.has(p.id));
+    }
+    if (diff.pieces?.updated?.length) {
+      for (const u of diff.pieces.updated) {
+        const p = (this.pieces ?? []).find((x) => x.id === u.piece.id);
+        if (!p) continue;
+        const d = u.diff;
+        if (d.name !== undefined) p.name = d.name;
+        if (d.scale !== undefined) p.scale = d.scale;
+        if (d.center) {
+          const c = p.center ? p.center.toPlain() : { u: 0, v: 0 };
+          p.center = new Coordinate({ ...c, ...d.center });
+        }
+        if (d.plane && p.plane) {
+          const pl = p.plane.toPlain();
+          const o = d.plane.origin ? { ...pl.origin, ...d.plane.origin } : pl.origin;
+          const xa = d.plane.xAxis ? { ...pl.xAxis, ...d.plane.xAxis } : pl.xAxis;
+          const ya = d.plane.yAxis ? { ...pl.yAxis, ...d.plane.yAxis } : pl.yAxis;
+          p.plane = new Plane({ origin: o, xAxis: xa, yAxis: ya });
+        }
+      }
+    }
+    if (diff.pieces?.added?.length) {
+      this.pieces = [...(this.pieces ?? []), ...diff.pieces.added.map((x) => new Piece(PieceSchema.parse(x as PiecePlain)))];
+    }
+    if (diff.connections?.removed?.length) {
+      const rm = new Set(diff.connections.removed.map((x) => x.id));
+      this._connections = (this._connections ?? []).filter((c) => !rm.has(c.id));
+    }
+    if (diff.connections?.updated?.length) {
+      for (const u of diff.connections.updated) {
+        const c = (this._connections ?? []).find((x) => x.id === u.connection.id);
+        if (!c) continue;
+        Object.assign(c, u.diff);
+      }
+    }
+    if (diff.connections?.added?.length) {
+      this._connections = [
+        ...(this._connections ?? []),
+        ...diff.connections.added.map((x) => new Connection(ConnectionSchema.parse(x as z.infer<typeof ConnectionSchema>))),
+      ];
+    }
+  }
+
+  /** @emoji 🧾 Selection drag in flat UV space (piece centers only; algorithm preview). */
+  dragBySelection(piecesDesign: Design, offset: CoordinatePlain): DesignDiff {
+    const du = offset.u ?? 0;
+    const dv = offset.v ?? 0;
+    const sel = new Set((piecesDesign.pieces ?? []).map((p) => p.id));
+    const updated = (this.pieces ?? [])
+      .filter((p) => sel.has(p.id))
+      .map((p) => {
+        const c = p.center?.toPlain() ?? { u: 0, v: 0 };
+        return { piece: { id: p.id }, diff: { center: { u: c.u + du, v: c.v + dv } } };
+      });
+    return { pieces: { updated } };
+  }
+
+  /** @emoji 🗑️ Diff removing the given pieces and connections (preview-only; kit graph unchanged). */
+  deletePiecesAndConnectionsDiff(pieceIds: readonly string[], connectionIds: readonly string[]): DesignDiffOperationResult {
+    return {
+      ok: true,
+      diff: {
+        pieces: { removed: pieceIds.map((id) => ({ id })) },
+        connections: { removed: connectionIds.map((id) => ({ id })) },
+      },
+    };
+  }
 }
+
+export type DesignOperationResult =
+  | { readonly ok: true; readonly design: Design; readonly diff: { forward: DesignDiff; reverse: DesignDiff } }
+  | { readonly ok: false; readonly errors: readonly AlgorithmError[] };
+
+/** @emoji 🧾 Coerces native REST flatten payloads into {@link DesignOperationResult}. */
+export function normalizeDesignFlattenResult(raw: unknown): DesignOperationResult {
+  return raw as DesignOperationResult;
+}
+/** @emoji 🧾 Coerces native REST diff payloads into {@link DesignDiffOperationResult}. */
+export function normalizeDesignDiffResult(raw: unknown): DesignDiffOperationResult {
+  return raw as DesignDiffOperationResult;
+}
+/** @emoji 🧾 Coerces native REST copy payloads into {@link OperationResult}<{@link Design}>. */
+export function normalizeDesignCopyResult(raw: unknown): OperationResult<Design> {
+  return raw as OperationResult<Design>;
+}
+
 export const DesignMetadataDtoSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true, authors: true, concepts: true });
 export type DesignMetadataDto = z.infer<typeof DesignMetadataDtoSchema>;
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true }).extend({ pieces: z.array(PieceMetadataDtoSchema).optional(), connections: z.array(ConnectionMetadataDtoSchema).optional(), stats: z.array(StatMetadataDtoSchema).optional(), props: z.array(PropMetadataDtoSchema).optional(), layers: z.array(LayerMetadataDtoSchema).optional(), groups: z.array(GroupMetadataDtoSchema).optional(), attributes: z.array(AttributeMetadataDtoSchema).optional() });
 export type DesignShallow = z.infer<typeof DesignShallowSchema>;
-export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({ pieces: PiecesDiffSchema.optional(), connections: ConnectionsDiffSchema.optional(), stats: StatsDiffSchema.optional(), props: PropsDiffSchema.optional(), layers: LayersDiffSchema.optional(), groups: GroupsDiffSchema.optional(), authors: AuthorsDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type DesignDiff = z.infer<typeof DesignDiffSchema>;
-export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 // Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to semio/rs (Requirement 3.7)
 // #endregion Design
 
@@ -790,6 +1051,39 @@ export const KitFullDtoSchema = z.object({ id: z.string(), name: z.string(), ver
 export type KitFullDto = z.infer<typeof KitFullDtoSchema>;
 
 export class Kit {
+  /** @emoji 📌 Anchoring kinds exposed to copy/paste algorithm UI. */
+  static readonly pasteDesignAnchoringKinds: readonly PasteDesignAnchoringKind[] = [
+    "original",
+    "middle",
+    "centroid",
+    "bottomLeft",
+    "bottomRight",
+    "topLeft",
+    "topRight",
+  ];
+
+  /** @emoji 🧭 Normalizes plain/DTO kit records to a {@link Kit} entity (replaces legacy `Kit.ensure`). */
+  static ensure(kit: Kit | KitFullDto): Kit {
+    return kit instanceof Kit ? kit : Kit.fromPlain(KitFullDtoSchema.parse(kit));
+  }
+
+  /** @emoji 📋 Copy selection (TS path stub — use REST language or extend with KitStore batch). */
+  copyDesignOp(_design: Design, _pieceIds: readonly string[], _connectionIds: readonly string[]): OperationResult<Design> {
+    void _design;
+    void _pieceIds;
+    void _connectionIds;
+    return { ok: false, errors: [{ code: "native.copy.ts", message: "nativeCopyDesign(ts): not wired to WASM batch yet; switch language or implement batch copy." }] };
+  }
+
+  /** @emoji 📋 Paste selection (TS path stub). */
+  pasteDesignOp(_source: Design, _target: Design, _anchoring: string, _coordinate: CoordinatePlain | undefined): DesignDiff {
+    void _source;
+    void _target;
+    void _anchoring;
+    void _coordinate;
+    return {};
+  }
+
   id!: string; name!: string; version?: string; types?: Type[]; designs?: Design[]; tags?: Tag[]; concepts?: Concept[]; families?: Family[]; qualities?: Quality[]; files?: File[]; folders?: Folder[]; authors?: Author[]; remote?: string; homepage?: string; license?: string; preview?: string; icon?: string; image?: string; description?: string; attributes?: Attribute[]; createdAt!: string; updatedAt!: string;
   constructor(data: KitFullDto) {
     const p = KitFullDtoSchema.parse(data);
@@ -826,6 +1120,41 @@ export class Kit {
   toJSON(): KitFullDto { return this.toPlain(); }
   static createId(id: string): KitId { return { id }; }
   static areSameId(a: KitId, b: KitId): boolean { return a.id === b.id; }
+
+  /**
+   * @emoji 🧭 Sync flatten preview for MCP / `@semio/ui` (identity plane fallback until async WASM is threaded here).
+   */
+  flattenDesignCachedOp(
+    designId: string,
+    _prev?: { [pieceId: string]: FlatMerkleCacheEntry },
+  ): { result: DesignOperationResult; cache: { [pieceId: string]: FlatMerkleCacheEntry } } {
+    void _prev;
+    const design = this.designs?.find((d) => d.id === designId);
+    if (!design) {
+      return {
+        result: {
+          ok: false,
+          errors: [{ code: "mcp-flatten.design-not-found", message: `design ${designId} missing on kit` }],
+        },
+        cache: {},
+      };
+    }
+    const defaultPlane = { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
+    const conns = design.connections ?? [];
+    const forward: DesignDiff = {
+      pieces: {
+        updated: (design.pieces ?? []).map((p) => ({
+          piece: { id: p.id },
+          diff: {
+            plane: (p.plane?.toPlain() as unknown) ?? defaultPlane,
+            center: p.center?.toPlain() ?? { u: 0, v: 0 },
+          },
+        })),
+      },
+      connections: conns.length ? { removed: conns.map((c) => ({ id: c.id })) } : undefined,
+    };
+    return { result: { ok: true, design, diff: { forward, reverse: {} } }, cache: {} };
+  }
 }
 export type KitLike = Kit | KitFullDto;
 

@@ -177,7 +177,7 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
-function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
+export function kitGraphqlFirstData(msgs: unknown[]): Record<string, unknown> {
   for (const m of msgs) {
     if (m == null || typeof m !== "object") continue;
     const r = m as { data?: Record<string, unknown> | null; errors?: readonly { message?: string }[] };
@@ -232,6 +232,143 @@ function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
   }
   return raw as KitEvent;
 }
+
+/** @emoji 🔌 GraphQL execute boundary (inline WASM or worker); same shape as {@link KitStore.toGraphqlHandle}. */
+export type KitGraphqlHandle = { execute(requestJson: string, onMessage: (line: string) => void): Promise<void> };
+
+/** @emoji 🌐 Runs one GraphQL document over a handle; collects NDJSON / line-delimited JSON payloads. */
+export async function kitGraphqlRun(
+  handle: KitGraphqlHandle,
+  body: { query: string; variables?: Record<string, unknown>; operationName?: string },
+  timeoutMs?: number,
+): Promise<unknown[]> {
+  const out: unknown[] = [];
+  await withTimeout(
+    handle.execute(JSON.stringify(body), (line: string) => {
+      out.push(JSON.parse(line));
+    }),
+    timeoutMs ?? 0,
+    "graphql",
+  );
+  return out;
+}
+
+/** @emoji 🧾 Executes one tagged `KitStoreExecuteCommand` variant (session / batch) over GraphQL. */
+export async function kitGraphqlExecuteStoreCommand(
+  handle: KitGraphqlHandle,
+  cmd: unknown,
+  timeoutMs?: number,
+): Promise<KitStoreExecuteResult> {
+  try {
+    if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) throw new Error("command object expected");
+    const o = cmd as Record<string, unknown>;
+    const keys = Object.keys(o);
+    if (keys.length !== 1) throw new Error("single tagged variant expected");
+    const tag = keys[0]!;
+    const value = o[tag];
+    let q: { query: string; variables?: Record<string, unknown> };
+    switch (tag) {
+      case "newSession":
+        q = { query: `mutation { newSession }` };
+        break;
+      case "endSession": {
+        const idv = (value as { id?: string } | null)?.id;
+        if (typeof idv !== "string") throw new Error("endSession id");
+        q = { query: `mutation($id: String!) { endSession(id: $id) }`, variables: { id: idv } };
+        break;
+      }
+      case "newAlternative": {
+        const v = value as { fromCheckpoint?: string | null; name: string } | null;
+        if (v == null || typeof v.name !== "string") throw new Error("newAlternative");
+        q = {
+          query: `mutation($fromCheckpoint: String, $name: String!) { newAlternative(fromCheckpoint: $fromCheckpoint, name: $name) }`,
+          variables: { fromCheckpoint: v.fromCheckpoint ?? null, name: v.name },
+        };
+        break;
+      }
+      case "batch": {
+        const cmds = (value as { commands?: unknown[] } | null)?.commands;
+        if (!Array.isArray(cmds)) throw new Error("batch.commands");
+        q = {
+          query: `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind } } } }`,
+          variables: { input: { commands: cmds } },
+        };
+        break;
+      }
+      default:
+        throw new Error(`executeStoreCommand: unhandled ${tag}`);
+    }
+    const result = kitGraphqlFirstData(await kitGraphqlRun(handle, q, timeoutMs));
+    return { ok: true, result };
+  } catch (e) {
+    return { ok: false, error: { kind: "Internal", message: String(e) } };
+  }
+}
+
+/**
+ * @emoji 📇 Root `ReadKitCommand` variant keys (camelCase) aligned with `semio/rs` `read::ReadKitCommand`.
+ * Nested reads use `readKitDesignCommands`, `readKitTypeCommands`, … with inner command arrays.
+ */
+export const ALL_READ_KIT_COMMAND_KEYS: readonly string[] = [
+  "readKitFullCommand",
+  "readKitShallowCommand",
+  "readKitMetadataCommand",
+  "readKitIdCommand",
+  "readKitNameCommand",
+  "readKitDescriptionCommand",
+  "readKitIconCommand",
+  "readKitImageCommand",
+  "readKitPreviewCommand",
+  "readKitRemoteCommand",
+  "readKitHomepageCommand",
+  "readKitLicenseCommand",
+  "readKitUriCommand",
+  "readKitCreatedCommand",
+  "readKitUpdatedCommand",
+  "readKitTypesFullCommand",
+  "readKitTypesShallowCommand",
+  "readKitTypeIdsCommand",
+  "readKitTypesMetadataCommand",
+  "readKitDesignsFullCommand",
+  "readKitDesignsShallowCommand",
+  "readKitDesignIdsCommand",
+  "readKitDesignsMetadataCommand",
+  "readKitFilesFullCommand",
+  "readKitFilesShallowCommand",
+  "readKitFoldersFullCommand",
+  "readKitFoldersShallowCommand",
+  "readKitLocationsFullCommand",
+  "readKitLocationsShallowCommand",
+  "readKitFamiliesFullCommand",
+  "readKitFamiliesShallowCommand",
+  "readKitPortsFullCommand",
+  "readKitAuthorsFullCommand",
+  "readKitAuthorsShallowCommand",
+  "readKitConceptsFullCommand",
+  "readKitConceptsShallowCommand",
+  "readKitTagsFullCommand",
+  "readKitTagsShallowCommand",
+  "readKitQualitiesFullCommand",
+  "readKitQualitiesShallowCommand",
+  "readKitPropsFullCommand",
+  "readKitPropsShallowCommand",
+  "readKitAttributesFullCommand",
+  "readKitAttributesShallowCommand",
+  "readKitColoredConnectorsCommand",
+  "readKitTypeCommands",
+  "readKitDesignCommands",
+  "readKitFileCommands",
+  "readKitFolderCommands",
+  "readKitLocationCommands",
+  "readKitFamilyCommands",
+  "readKitPortCommands",
+  "readKitAuthorCommands",
+  "readKitConceptCommands",
+  "readKitTagCommands",
+  "readKitQualityCommands",
+  "readKitPropCommands",
+  "readKitAttributeCommands",
+];
 
 // #endregion 🧰GraphqlUtil
 
@@ -414,16 +551,13 @@ export class KitStore {
     return ks;
   }
 
+  /** @emoji 🔌 Handle for `kitGraphqlRun` / Storybook kit-store tooling (same WASM boundary as this store). */
+  toGraphqlHandle(): KitGraphqlHandle {
+    return { execute: (requestJson, onMessage) => this.transport.execute(requestJson, onMessage) };
+  }
+
   private async gqlRun(body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown[]> {
-    const out: unknown[] = [];
-    await withTimeout(
-      this.transport.execute(JSON.stringify(body), (line: string) => {
-        out.push(JSON.parse(line));
-      }),
-      this.timeoutMs,
-      "graphql",
-    );
-    return out;
+    return kitGraphqlRun(this.toGraphqlHandle(), body, this.timeoutMs);
   }
 
   private startSubscriptionLoop(): void {
@@ -721,50 +855,7 @@ export class KitStore {
   }
 
   async executeStoreCommand(cmd: unknown): Promise<KitStoreExecuteResult> {
-    try {
-      if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) throw new Error("command object expected");
-      const o = cmd as Record<string, unknown>;
-      const keys = Object.keys(o);
-      if (keys.length !== 1) throw new Error("single tagged variant expected");
-      const tag = keys[0]!;
-      const value = o[tag];
-      let q: { query: string; variables?: Record<string, unknown> };
-      switch (tag) {
-        case "newSession":
-          q = { query: `mutation { newSession }` };
-          break;
-        case "endSession": {
-          const idv = (value as { id?: string } | null)?.id;
-          if (typeof idv !== "string") throw new Error("endSession id");
-          q = { query: `mutation($id: String!) { endSession(id: $id) }`, variables: { id: idv } };
-          break;
-        }
-        case "newAlternative": {
-          const v = value as { fromCheckpoint?: string | null; name: string } | null;
-          if (v == null || typeof v.name !== "string") throw new Error("newAlternative");
-          q = {
-            query: `mutation($fromCheckpoint: String, $name: String!) { newAlternative(fromCheckpoint: $fromCheckpoint, name: $name) }`,
-            variables: { fromCheckpoint: v.fromCheckpoint ?? null, name: v.name },
-          };
-          break;
-        }
-        case "batch": {
-          const cmds = (value as { commands?: unknown[] } | null)?.commands;
-          if (!Array.isArray(cmds)) throw new Error("batch.commands");
-          q = {
-            query: `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind } } } }`,
-            variables: { input: { commands: cmds } },
-          };
-          break;
-        }
-        default:
-          throw new Error(`executeStoreCommand: unhandled ${tag}`);
-      }
-      const result = kitGraphqlFirstData(await this.gqlRun(q));
-      return { ok: true, result };
-    } catch (e) {
-      return { ok: false, error: { kind: "Internal", message: String(e) } };
-    }
+    return kitGraphqlExecuteStoreCommand(this.toGraphqlHandle(), cmd, this.timeoutMs);
   }
 
   async read(batch: ReadCommandBatch): Promise<ReadCommandBatchResult> {

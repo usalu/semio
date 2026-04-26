@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { Design, Kit, type Connection, type Design as DesignType, type DesignPlain, type Piece } from "@semio/js";
+import { Design, Kit, type Connection, type Design as DesignType, type DesignPlain, type Piece } from "@semio/react";
 import { SemioDesign as DesignView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";

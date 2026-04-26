@@ -1,17 +1,36 @@
 // #region Header
 // semio/algorithms/nativeAlgorithmAdapter.ts
-// Specs: Route algorithm work to in-browser TypeScript or to the engine REST native-algorithms endpoint by language. Output designs always have the operation diff fully applied (no withDiff overlay, no connection preservation).
-// Summary: Single adapter: @semio/js for ts, POST /api/native-algorithms/execute for python, go, rust. All flat/output designs are produced by applying the full forward diff.
+// Specs: Route algorithm work to in-browser TypeScript (WASM `KitStore` + GraphQL reads) or to the engine REST native-algorithms endpoint by language. Output designs always apply the full forward diff for flattened views.
+// Summary: TS path uses `@semio/js` `KitStore` (flatten_map, dragPieces, movePieces); domain types live in `@semio/react`. Non-TS languages POST to `/api/native-algorithms/execute`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
-import type { Coordinate, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, DesignPlain, FlatMerkleCacheEntry, Kit, MoveVector, OperationResult } from "@semio/js";
-import { Design as DesignEntity, Kit as KitRuntime, normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
+/// <reference types="vite/client" />
+
+import { KitStore, kitGraphqlFirstData, kitGraphqlRun, type KitFullDto as WasmKitFullDto } from "@semio/js";
+import type {
+  CoordinatePlain as Coordinate,
+  Design,
+  DesignDiff,
+  DesignDiffOperationResult,
+  DesignOperationResult,
+  DesignPlain,
+  FlatMerkleCacheEntry,
+  Kit,
+  MoveVector,
+  OperationResult,
+} from "@semio/react";
+import {
+  Design as DesignEntity,
+  Kit as KitEntity,
+  asKitInstance,
+  normalizeDesignCopyResult,
+  normalizeDesignDiffResult,
+  normalizeDesignFlattenResult,
+} from "@semio/react";
 
 // #region 🧠Flatten Merkle Cache (TS path only)
-// Per-designId cache reused across nativeFlattenDesign / nativeDragPieces / nativeMovePieces (all TS path)
-// so consecutive flatten calls only redo matrix math for pieces whose merkle inputs actually changed.
-// Native (python/rust/go/csharp) paths don't share this cache — each REST call is stateless.
+// Legacy hook: WASM `DesignStore` owns flatten caches; this map is kept for API compatibility only.
 const flatMerkleCacheByDesign: Map<string, { [pieceId: string]: FlatMerkleCacheEntry }> = new Map();
 const getFlatMerkleCache = (designId: string): { [pieceId: string]: FlatMerkleCacheEntry } | undefined => flatMerkleCacheByDesign.get(designId);
 const setFlatMerkleCache = (designId: string, cache: { [pieceId: string]: FlatMerkleCacheEntry }): void => {
@@ -47,9 +66,6 @@ function engineOrigin(): string {
   return "http://127.0.0.1:2507";
 }
 
-/**
- * POST body for semio engine POST /api/native-algorithms/execute.
- */
 interface NativeAlgorithmRestRequestBody {
   language: Exclude<NativeAlgorithmLanguage, "ts">;
   operation: NativeAlgorithmOperation;
@@ -87,32 +103,87 @@ function asDesignDiff(value: unknown): DesignDiff {
   return value as DesignDiff;
 }
 
-const cloneDesignWithDiff = (kit: Kit, base: Design, diff: DesignDiff): Design => {
-  const k = KitRuntime.ensure(kit);
+function cloneDesignWithDiff(kit: Kit, base: Design, diff: DesignDiff): Design {
+  void kit;
   const plain = (base as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(base)) as DesignPlain);
-  const d = new DesignEntity(plain, k);
+  const d = new DesignEntity(plain);
   d.applyDiff(diff);
   return d;
-};
+}
+
+async function openWasmKit(kit: Kit): Promise<KitStore> {
+  const dto = JSON.parse(JSON.stringify(asKitInstance(kit).toJSON())) as WasmKitFullDto;
+  return KitStore.open(dto, { forceInline: true });
+}
+
+type FlattenRow = { pieceId: string; plane: unknown; center: unknown };
+
+async function gqlFlattenMap(ks: KitStore, designId: string): Promise<readonly FlattenRow[]> {
+  const msgs = await kitGraphqlRun(
+    ks.toGraphqlHandle(),
+    { query: `query($id: String!) { kitStore { designByDtoId(id: $id) { flattenMap } } }`, variables: { id: designId } },
+    120_000,
+  );
+  const data = kitGraphqlFirstData(msgs) as { kitStore?: { designByDtoId?: { flattenMap?: unknown } | null } };
+  const raw = data.kitStore?.designByDtoId?.flattenMap;
+  let arr: unknown[] = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw) as unknown;
+      if (Array.isArray(p)) arr = p;
+    } catch {
+      arr = [];
+    }
+  }
+  return arr as FlattenRow[];
+}
+
+function piecesDiffFromFlattenRows(rows: readonly FlattenRow[]): NonNullable<DesignDiff["pieces"]> {
+  return {
+    updated: rows.map((r) => ({
+      piece: { id: r.pieceId },
+      diff: { plane: r.plane as never, center: r.center as never },
+    })),
+  };
+}
 
 /**
  * Runs flatten in the chosen language: TypeScript in-process or native backends via REST.
  */
 export async function nativeFlattenDesign(kit: Kit, designId: string, language: NativeAlgorithmLanguage): Promise<DesignOperationResult> {
   if (language === "ts") {
-    const { result, cache } = KitRuntime.ensure(kit).flattenDesignCachedOp(designId, getFlatMerkleCache(designId));
-    setFlatMerkleCache(designId, cache);
-    return result;
+    void getFlatMerkleCache(designId);
+    void setFlatMerkleCache;
+    const design = asKitInstance(kit).designs?.find((d) => d.id === designId);
+    if (!design) {
+      return { ok: false, errors: [{ code: "native-flatten.design-not-found", message: `nativeFlattenDesign: design ${designId} not found in kit` }] };
+    }
+    let ks: KitStore | undefined;
+    try {
+      ks = await openWasmKit(kit);
+      const rows = await gqlFlattenMap(ks, designId);
+      const conns = design.connections ?? [];
+      const forward: DesignDiff = {
+        pieces: piecesDiffFromFlattenRows(rows),
+        connections: conns.length ? { removed: conns.map((c) => ({ id: c.id })) } : undefined,
+      };
+      return { ok: true, design, diff: { forward, reverse: {} } };
+    } catch (e) {
+      return { ok: false, errors: [{ code: "native-flatten.wasm", message: String(e) }] };
+    } finally {
+      if (ks) await ks.dispose();
+    }
   }
-  const design = (kit.designs ?? []).find((d) => d.id === designId);
-  if (!design) {
+  const d = (kit.designs ?? []).find((x) => x.id === designId);
+  if (!d) {
     return { ok: false, errors: [{ code: "native-flatten.design-not-found", message: `nativeFlattenDesign: design ${designId} not found in kit` }] };
   }
   const raw = await postNativeAlgorithm({
     language,
     operation: "flatten",
     kit,
-    design,
+    design: d,
     designId,
     pieceIds: [],
     connectionIds: [],
@@ -125,7 +196,7 @@ export async function nativeFlattenDesign(kit: Kit, designId: string, language: 
  */
 export async function nativeDeletePieces(kit: Kit, design: Design, pieceIds: readonly string[], connectionIds: readonly string[], language: NativeAlgorithmLanguage): Promise<DesignDiffOperationResult> {
   if (language === "ts") {
-    const d = design instanceof DesignEntity ? design : new DesignEntity(design as DesignPlain, KitRuntime.ensure(kit));
+    const d = design instanceof DesignEntity ? design : new DesignEntity(design as DesignPlain);
     return d.deletePiecesAndConnectionsDiff([...pieceIds], [...connectionIds]);
   }
   const raw = await postNativeAlgorithm({
@@ -142,9 +213,6 @@ export async function nativeDeletePieces(kit: Kit, design: Design, pieceIds: rea
 
 /**
  * Returns the flat design used as a display base for input and diff windows.
- * Applies only the piece updates from the flatten diff while keeping the original connections,
- * so the diagram can render the connections that the diff is about to remove.
- * For an output window, use {@link nativeFlattenedDesign} so the full diff is applied.
  */
 export async function nativeFlatDesign(kit: Kit, designId: string, language: NativeAlgorithmLanguage): Promise<Design | null> {
   const result = await nativeFlattenDesign(kit, designId, language);
@@ -156,9 +224,6 @@ export async function nativeFlatDesign(kit: Kit, designId: string, language: Nat
 
 /**
  * Returns the flat design produced by fully applying the flatten forward diff.
- * The flatten diff removes all connections (they are absorbed into piece planes/centers),
- * so the returned design has no connections. Use this for output windows where the rule
- * is "diff fully applied, not withDiff overlay".
  */
 export async function nativeFlattenedDesign(kit: Kit, designId: string, language: NativeAlgorithmLanguage): Promise<Design | null> {
   const result = await nativeFlattenDesign(kit, designId, language);
@@ -169,57 +234,72 @@ export async function nativeFlattenedDesign(kit: Kit, designId: string, language
 }
 
 /**
- * Runs drag in-process: flattens, applies {@link Design.dragBySelection}, re-flattens, and returns
- * the flat input (pre-drag), the flat output (post-drag), and the drag diff. Drag's diff only
- * updates piece centers, so both flat designs keep their connections for display by applying
- * only the piece updates from the (re-)flatten diff.
+ * Runs drag in-process: WASM flatten map, UV drag on flat centers, WASM `dragPieces`, then flatten for output.
  */
 export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceIds: readonly string[], offset: Coordinate, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
   const designId = rawDesign.id;
-  const preFlat = KitRuntime.ensure(kit).flattenDesignCachedOp(designId, getFlatMerkleCache(designId));
-  if (!preFlat.result.ok) {
-    throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
+  void getFlatMerkleCache(designId);
+  let ks0: KitStore | undefined;
+  let ks1: KitStore | undefined;
+  try {
+    ks0 = await openWasmKit(kit);
+    const preRows = await gqlFlattenMap(ks0, designId);
+    await ks0.dispose();
+    ks0 = undefined;
+    const prePieceDiff = piecesDiffFromFlattenRows(preRows);
+    const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: prePieceDiff });
+    const piecesDesign: Design = { id: flatDesign.id, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceIds.includes(p.id)) } as Design;
+    const dragDiff = DesignEntity.prototype.dragBySelection.call(flatDesign, piecesDesign, offset);
+    const updatedRaw = cloneDesignWithDiff(kit, rawDesign, dragDiff);
+    const updatedKit: Kit = { ...asKitInstance(kit).toJSON(), designs: (kit.designs ?? []).map((d) => (d.id === designId ? updatedRaw : d)) } as Kit;
+    ks1 = await openWasmKit(updatedKit);
+    const postRows = await gqlFlattenMap(ks1, designId);
+    const postPieceDiff = piecesDiffFromFlattenRows(postRows);
+    const output = cloneDesignWithDiff(updatedKit, updatedRaw, { pieces: postPieceDiff });
+    setFlatMerkleCache(designId, {});
+    return { inputDesign: flatDesign, output, dragDiff };
+  } finally {
+    if (ks0) await ks0.dispose();
+    if (ks1) await ks1.dispose();
   }
-  setFlatMerkleCache(designId, preFlat.cache);
-  const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: preFlat.result.diff.forward.pieces });
-  const piecesDesign: Design = { id: flatDesign.id, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceIds.includes(p.id)) };
-  const dragDiff = DesignEntity.prototype.dragBySelection.call(flatDesign, piecesDesign, offset);
-  const updatedRaw = cloneDesignWithDiff(kit, rawDesign, dragDiff);
-  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.id === designId ? updatedRaw : d)) };
-  const postFlat = KitRuntime.ensure(updatedKit).flattenDesignCachedOp(designId, preFlat.cache);
-  if (!postFlat.result.ok) {
-    throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
-  }
-  setFlatMerkleCache(designId, postFlat.cache);
-  const output = cloneDesignWithDiff(updatedKit, updatedRaw, { pieces: postFlat.result.diff.forward.pieces });
-  return { inputDesign: flatDesign, output, dragDiff };
 }
 
 /**
- * Runs move in-process: flattens, applies {@link Kit.structuralMove} (needs kit types for parent connector frames), re-flattens, and returns
- * the flat input (pre-move), the flat output (post-move), and the move diff. Move's diff only
- * updates piece planes/centers, so both flat designs keep their connections for display by
- * applying only the piece updates from the (re-)flatten diff.
+ * Runs move in-process via WASM `movePieces` + flatten maps for display.
  */
 export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceIds: readonly string[], vector: MoveVector, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
   const designId = rawDesign.id;
-  const preFlat = KitRuntime.ensure(kit).flattenDesignCachedOp(designId, getFlatMerkleCache(designId));
-  if (!preFlat.result.ok) {
-    throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
+  let ks: KitStore | undefined;
+  try {
+    ks = await openWasmKit(kit);
+    const preRows = await gqlFlattenMap(ks, designId);
+    const prePieceDiff = piecesDiffFromFlattenRows(preRows);
+    const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: prePieceDiff });
+    const r = await ks.movePieces(designId, [...pieceIds], vector.gap, vector.shift, vector.rise);
+    if (!r.ok) {
+      throw new Error(String((r as { ok: false; error?: { message?: string } }).error?.message ?? "movePieces failed"));
+    }
+    const postRows = await gqlFlattenMap(ks, designId);
+    const moveDiff: DesignDiff = {
+      pieces: {
+        updated: pieceIds
+          .map((id) => {
+            const a = preRows.find((x) => x.pieceId === id)?.center as { u?: number; v?: number } | undefined;
+            const b = postRows.find((x) => x.pieceId === id)?.center as { u?: number; v?: number } | undefined;
+            if (a == null || b == null) return null;
+            return { piece: { id }, diff: { center: { u: (b.u ?? 0) - (a.u ?? 0), v: (b.v ?? 0) - (a.v ?? 0) } } };
+          })
+          .filter((x): x is NonNullable<typeof x> => x != null),
+      },
+    };
+    const updatedRaw = cloneDesignWithDiff(kit, rawDesign, moveDiff);
+    const updatedKit: Kit = { ...asKitInstance(kit).toJSON(), designs: (kit.designs ?? []).map((d) => (d.id === designId ? updatedRaw : d)) } as Kit;
+    const postPieceDiff = piecesDiffFromFlattenRows(postRows);
+    const output = cloneDesignWithDiff(updatedKit, updatedRaw, { pieces: postPieceDiff });
+    return { inputDesign: flatDesign, output, moveDiff };
+  } finally {
+    if (ks) await ks.dispose();
   }
-  setFlatMerkleCache(designId, preFlat.cache);
-  const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: preFlat.result.diff.forward.pieces });
-  const piecesDesign: Design = { id: flatDesign.id, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceIds.includes(p.id)) };
-  const moveDiff = KitRuntime.ensure(kit).structuralMove(flatDesign, piecesDesign, vector);
-  const updatedRaw = cloneDesignWithDiff(kit, rawDesign, moveDiff);
-  const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.id === designId ? updatedRaw : d)) };
-  const postFlat = KitRuntime.ensure(updatedKit).flattenDesignCachedOp(designId, preFlat.cache);
-  if (!postFlat.result.ok) {
-    throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
-  }
-  setFlatMerkleCache(designId, postFlat.cache);
-  const output = cloneDesignWithDiff(updatedKit, updatedRaw, { pieces: postFlat.result.diff.forward.pieces });
-  return { inputDesign: flatDesign, output, moveDiff };
 }
 
 /**
@@ -227,7 +307,7 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceIds: re
  */
 export async function nativeCopyDesign(kit: Kit, design: Design, pieceIds: readonly string[], connectionIds: readonly string[], language: NativeAlgorithmLanguage): Promise<OperationResult<Design>> {
   if (language === "ts") {
-    return KitRuntime.ensure(kit).copyDesignOp(design, [...pieceIds], [...connectionIds]);
+    return KitEntity.ensure(kit).copyDesignOp(design, [...pieceIds], [...connectionIds]);
   }
   const raw = await postNativeAlgorithm({
     language,
@@ -246,7 +326,7 @@ export async function nativeCopyDesign(kit: Kit, design: Design, pieceIds: reado
  */
 export async function nativePasteDesign(kit: Kit, source: Design, target: Design, anchoring: string, coordinate: Coordinate | undefined, language: NativeAlgorithmLanguage): Promise<DesignDiff> {
   if (language === "ts") {
-    return KitRuntime.ensure(kit).pasteDesignOp(source, target, anchoring, coordinate);
+    return KitEntity.ensure(kit).pasteDesignOp(source, target, anchoring, coordinate);
   }
   const raw = await postNativeAlgorithm({
     language,

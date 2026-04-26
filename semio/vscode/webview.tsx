@@ -16,7 +16,7 @@
 // #region 🛎️Entrypoint
 // Webview entrypoint MUST mount Sketchpad with a JsonFileKitStore backed by VS Code messaging.
 
-import { createJsonFileKitStore, type KitJsonFileAdapter } from "@semio/js";
+import { createJsonFileKitStore, type KitJsonFileAdapter } from "@semio/react";
 import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/react";
 import { createRoot } from "react-dom/client";

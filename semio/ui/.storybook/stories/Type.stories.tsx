@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Connector, Kit, Type as SemioKind } from "@semio/js";
+import type { Connector, Kit, Type as SemioKind } from "@semio/react";
 import { SemioType as TypeView } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
