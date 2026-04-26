@@ -29381,6 +29381,66 @@ mod tests {
         }
 
         #[test]
+        fn gql_kit_event_json_wire_shapes_stable_for_scalar() {
+            use async_graphql::ScalarType;
+
+            use crate::error::SetError;
+            use crate::events::{DesignEvent, KitEvent, KitField};
+            use crate::id::Id;
+            use crate::kit_graphql::GqlKitEvent;
+
+            let to_json = |ev: KitEvent| -> serde_json::Value {
+                let gql = GqlKitEvent(ev);
+                let v = gql.to_value();
+                v.into_json().expect("KitEvent scalar into_json")
+            };
+
+            assert_eq!(to_json(KitEvent::Changed), serde_json::Value::String("Changed".into()));
+
+            assert_eq!(
+                to_json(KitEvent::FieldChanged(KitField::Name)),
+                serde_json::json!({"FieldChanged": "Name"})
+            );
+
+            let did: Id = "design-a".into();
+            assert_eq!(
+                to_json(KitEvent::Design {
+                    design_id: did.clone(),
+                    event: DesignEvent::Changed,
+                }),
+                serde_json::json!({
+                    "Design": {"design_id": "design-a", "event": "Changed"}
+                })
+            );
+
+            assert_eq!(
+                to_json(KitEvent::SemioKitCommand {
+                    request_id: "req-1".to_string(),
+                    command_kind: "undo".to_string(),
+                    phase: "accepted".to_string(),
+                    result: None,
+                    error: None,
+                }),
+                serde_json::json!({
+                    "SemioKitCommand": {
+                        "requestId": "req-1",
+                        "commandKind": "undo",
+                        "phase": "accepted"
+                    }
+                })
+            );
+
+            let rej = KitEvent::SetRejected {
+                event: Box::new(KitEvent::Changed),
+                error: SetError::NotFound("missing".into()),
+            };
+            let j = to_json(rej);
+            let inner = j.get("SetRejected").expect("SetRejected wrapper");
+            assert!(inner.get("event").is_some());
+            assert!(inner.get("error").is_some());
+        }
+
+        #[test]
         fn kit_store_batch_scoped_change_kit_commands_updates_name() {
             let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-shell-before")));
             let (tx, rx) = async_channel::unbounded();

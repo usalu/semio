@@ -313,6 +313,20 @@ semio:
 
 ---
 
+semio/rs, semio/js, semio/react:
+All kit data that is being modified over commands MUST always be scoped within a transaction which is scoped within a draft which is scoped whithin `the kit` or an alternative (always the latest checkpoint of `the kit` or an alternative)
+e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
+Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+
+---
+
+semio/rs, semio/js, semio/react:
+All kit data that is being read MUST either for `the kit`, a checkpoint, an alternative, a draft or a transaction.
+e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
+Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+
+---
+
 The following strict layers MUST be achieved:
 semio/rs <-graphql- semio/js <-store- semio/react <-hooks/components- semio/sketchpad
 
@@ -935,6 +949,17 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🟨js
 
+semio/js:
+
+---
+
+Every store MUST be 100% typesafe.
+The store MUST NOT leak commands and only export clean stores with methods and subscriptions for events.
+There MUST be a subscription method for every single event that exists with proper types.
+Extens semio/rs which produces semio/graphql if necessary.
+
+---
+
 ```ts
 export interface KitStoreClient {
  getDto(): any;
@@ -1496,6 +1521,8 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+Extend the current Versions window kind to a complete VersionsApp.
+The KitApp, DesignApp, TypeApp are all bound to an active
 
 ---
 
