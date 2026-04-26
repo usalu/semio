@@ -2009,7 +2009,7 @@ contributors: ["{{contributor-id}}"]
 session: ["{{agent-session-id}}"] # add session from within agent hooks after ticket was opened or reopened by the cli or the mcp tool. e.g. ""
 ````
 
-`repo/clientent/client ticket <ticket>`
+`repo/client/client ticket <ticket>`
 
 ```yaml
 title: "{{ticket-title}}" # e.g. Tree Text Short IDs
@@ -2067,15 +2067,15 @@ delta: # Derive delta at the end of a session using the agent.code.edited events
 ### 📝 Changes
 
 ```bash
-repo/clientent/client changes # e.g. in git use the unstaged changes since last commit in repo change format
-repo/clientent/client changes {{entity-id-to-filter-changes}} # shows only the portion of the current revision to the checkpoint for the given entity. e.g. technology only show the part of the revision in regards to the technology such as only bundles inside the technology, only
+repo/client/client changes # e.g. in git use the unstaged changes since last commit in repo change format
+repo/client/client changes {{entity-id-to-filter-changes}} # shows only the portion of the current revision to the checkpoint for the given entity. e.g. technology only show the part of the revision in regards to the technology such as only bundles inside the technology, only
 ```
 
 ### 🆕 Revisions
 
 ```bash
-repo/clientent/client revision # e.g. in git shows current staged changes since last commit
-repo/clientent/client revision {{entity-id-to-filter-revision}} # shows only the portion of the current revision to the checkpoint for the given entity. e.g. technology only show the part of the revision in regards to the technology such as only bundles inside the technology, only
+repo/client/client revision # e.g. in git shows current staged changes since last commit
+repo/client/client revision {{entity-id-to-filter-revision}} # shows only the portion of the current revision to the checkpoint for the given entity. e.g. technology only show the part of the revision in regards to the technology such as only bundles inside the technology, only
 ```
 
 ```yaml

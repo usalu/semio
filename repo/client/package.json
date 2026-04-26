@@ -1,0 +1,18 @@
+{
+  "name": "@repo/client",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "repo/client",
+  "projectType": "application",
+  "scripts": {
+    "dev": "go run ../mcp",
+    "build": "node -e \"const cp=require('child_process');const ext=process.platform==='win32'?'.exe':'';cp.execFileSync('go',['build','-o','client'+ext,'../mcp'],{stdio:'inherit'});\"",
+    "test": "go test -v ./..."
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "binary"
+}

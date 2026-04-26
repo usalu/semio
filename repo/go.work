@@ -2,7 +2,6 @@ go 1.25.0
 
 use (
 	./claude
-	./cli
 	./client
 	./codex
 	./copilot

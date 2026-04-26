@@ -176,20 +176,6 @@ func initTemplates() {
 	mdTpl = template.Must(template.New("md").Funcs(templateFuncMap()).Parse(markdownTemplateContent))
 }
 
-// 🧭mustReadTemplate reads a repo client template from the shared CLI template tree.
-func mustReadTemplate(name string) string {
-	_, currentFile, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("failed to locate repo client source file")
-	}
-	templatePath := filepath.Join(filepath.Dir(currentFile), "..", "cli", "templates", filepath.FromSlash(name))
-	content, err := os.ReadFile(templatePath)
-	if err != nil {
-		panic(err)
-	}
-	return string(content)
-}
-
 func renderTemplate(tpl *template.Template, name string, data interface{}) string {
 	var sb strings.Builder
 	if err := tpl.ExecuteTemplate(&sb, name, data); err != nil {
@@ -37689,15 +37675,15 @@ if [ -z "$repo_root" ]; then
 fi
 cd "$repo_root"
 if command -v go >/dev/null 2>&1; then
-  go run ./repo/clientent hook version.checkpoint.ended
+  go run ./repo/mcp hook version.checkpoint.ended
   exit $?
 fi
-if [ -f "$repo_root/repo/clientent/client" ]; then
-  ./repo/cliententent/client hook version.checkpoint.ended
+if [ -f "$repo_root/repo/client/client" ]; then
+  ./repo/client/client hook version.checkpoint.ended
   exit $?
 fi
-if [ -f "$repo_root/repo/clientent/client.exe" ]; then
-  "$repo_root/repo/clientent/client.exe" hook version.checkpoint.ended
+if [ -f "$repo_root/repo/client/client.exe" ]; then
+  "$repo_root/repo/client/client.exe" hook version.checkpoint.ended
   exit $?
 fi
 exit 0
@@ -37743,7 +37729,7 @@ func getClientHookMappings() []ClientHookMapping {
 
 // ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
 func repoCliHookCommand() string {
-	return "go run ./repo/clientent"
+	return "go run ./repo/mcp"
 }
 
 // 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
@@ -44054,7 +44040,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 			if fields[i] == "go" && fields[i+1] == "run" {
 				for j := i + 2; j < len(fields); j++ {
 					base := filepath.Base(fields[j])
-					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/clientent" || fields[j] == "repo/client" {
+					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/client" || fields[j] == "repo/client" {
 						cliIndex = j
 						break
 					}

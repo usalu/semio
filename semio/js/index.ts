@@ -3696,65 +3696,456 @@ export function importKitToPlain(buf: ArrayBuffer | Uint8Array): KitFullDto {
 }
 // #endregion KitImportHelpers
 
-// #region EntityStoreStubs
-/** @emoji 🧭 Sketchpad app-store scaffolding; kit graph commands use {@link KitStoreClient} only. */
+// #region EntityKitStores
+/** @emoji 🧭 Arbitrary kit entity handle: patch fields and subscribe to rs {@link KitEvent} stream. */
 export class KitEntityStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly entityKind: string,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  async patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField(this.entityKind, this.id, field, value);
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) {
+        this._version += 1;
+        handler(ev);
+        return;
+      }
+      const hi = (ev as { HashInvalidated?: { entity?: { kind?: string; id?: string } } }).HashInvalidated;
+      if (hi?.entity?.id === this.id && hi.entity.kind === this.entityKind) {
+        this._version += 1;
+        handler(ev);
+        return;
+      }
+      if (jsonSubtreeHasIdKey(ev, `${this.entityKind.charAt(0).toLowerCase() + this.entityKind.slice(1)}_id`, this.id)) {
+        this._version += 1;
+        handler(ev);
+      }
+    });
+  }
 }
+
+/** @emoji 🧭 Per-design kit handle: GraphQL reads and semantic design mutations on {@link KitStore}. */
 export class DesignStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesDesign(ev, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async metadata(): Promise<DesignMetadataDto> {
+    const out = await this.root.read([{ readKitDesignsMetadataCommand: null }]);
+    const designs = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitDesignsMetadataCommand?: { designs?: unknown } }).readKitDesignsMetadataCommand?.designs,
+    );
+    const row = designs.find((d: unknown) => d && typeof d === "object" && String((d as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`design metadata not found: ${this.id}`);
+    return DesignMetadataDtoSchema.parse(row);
+  }
+
+  async shallow(): Promise<DesignShallow> {
+    const out = await this.root.read([{ readKitDesignsShallowCommand: null }]);
+    const designs = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitDesignsShallowCommand?: { designs?: unknown } }).readKitDesignsShallowCommand?.designs,
+    );
+    const row = designs.find((d: unknown) => d && typeof d === "object" && String((d as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`design shallow not found: ${this.id}`);
+    return DesignShallowSchema.parse(row);
+  }
+
+  /** @emoji 🧾 Full design DTO from a kit snapshot (rs materialized truth). */
+  async full(): Promise<DesignPlain> {
+    const kit = await this.root.snapshot();
+    const raw = (kit.designs ?? []).find((d) => d.id === this.id);
+    if (!raw) throw new Error(`design not found: ${this.id}`);
+    return DesignSchema.parse(raw);
+  }
+
+  async pieces(): Promise<readonly PieceStore[]> {
+    const rows = await this.root.getPieces(this.id);
+    return rows
+      .map((p: unknown) => (p && typeof p === "object" && "id" in (p as object) ? String((p as { id: string }).id) : ""))
+      .filter((pid: string) => pid !== "")
+      .map((pid: string) => this.root.piece(this.id, pid));
+  }
+
+  piece(pieceId: string): PieceStore {
+    return this.root.piece(this.id, pieceId);
+  }
+
+  async connections(): Promise<readonly ConnectionStore[]> {
+    const rows = await this.root.getConnections(this.id);
+    return rows
+      .map((c: unknown) => (c && typeof c === "object" && "id" in (c as object) ? String((c as { id: string }).id) : ""))
+      .filter((cid: string) => cid !== "")
+      .map((cid: string) => this.root.connection(this.id, cid));
+  }
+
+  connection(connectionId: string): ConnectionStore {
+    return this.root.connection(this.id, connectionId);
+  }
+
+  setName(name: string): Promise<SetResult> {
+    return this.root.patchEntityField("Design", this.id, "name", name);
+  }
+
+  cluster(pieceIds: readonly string[], name: string): Promise<SetResult> {
+    return this.root.clusterPieces(this.id, pieceIds, name);
+  }
+
+  drag(pieceIds: readonly string[], du: number, dv: number): Promise<SetResult> {
+    return this.root.dragPieces(this.id, pieceIds, du, dv);
+  }
+
+  move(pieceIds: readonly string[], gap: number, shift: number, rise: number): Promise<SetResult> {
+    return this.root.movePieces(this.id, pieceIds, gap, shift, rise);
+  }
+
+  fix(pieceIds: readonly string[]): Promise<SetResult> {
+    return this.root.fixPieces(this.id, pieceIds);
+  }
+
+  flatten(): Promise<SetResult> {
+    return this.root.flattenDesign(this.id);
+  }
+
+  expand(nestedDesignId: string): Promise<SetResult> {
+    return this.root.expandDesign(this.id, nestedDesignId);
+  }
+
+  paste(selection: unknown, plane?: unknown): Promise<SetResult> {
+    return this.root.pasteDesignSelection(this.id, selection, plane ?? null);
+  }
+
+  createHangingPieces(typeIds: readonly string[], plane: unknown): Promise<SetResult> {
+    return this.root.createHangingPieces(this.id, typeIds, plane);
+  }
+
+  createConnectedPiece(parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
+    return this.root.createConnectedPiece(this.id, parentPiece, parentPort, childType, childPort);
+  }
+
+  createFixedPiece(typeId: string, plane: unknown): Promise<SetResult> {
+    return this.root.createFixedPiece(this.id, typeId, plane);
+  }
+
+  addPiece(dto: PiecePlain): Promise<SetResult> {
+    return this.root.addChild("Design", this.id, "Piece", dto);
+  }
+
+  removePiece(pieceId: string): Promise<SetResult> {
+    return this.root.removeChild("Design", this.id, "Piece", pieceId);
+  }
 }
+
+/** @emoji 🧭 Per-kind kit handle (semio domain kind, not TS typeof). */
 export class TypeStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesType(ev, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async metadata(): Promise<TypeMetadataDto> {
+    const out = await this.root.read([{ readKitTypesMetadataCommand: null }]);
+    const types = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitTypesMetadataCommand?: { types?: unknown } }).readKitTypesMetadataCommand?.types,
+    );
+    const row = types.find((t: unknown) => t && typeof t === "object" && String((t as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`kind metadata not found: ${this.id}`);
+    return TypeMetadataDtoSchema.parse(row);
+  }
+
+  async shallow(): Promise<TypeShallow> {
+    const out = await this.root.read([{ readKitTypesShallowCommand: null }]);
+    const types = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitTypesShallowCommand?: { types?: unknown } }).readKitTypesShallowCommand?.types,
+    );
+    const row = types.find((t: unknown) => t && typeof t === "object" && String((t as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`kind shallow not found: ${this.id}`);
+    return TypeShallowSchema.parse(row);
+  }
+
+  async full(): Promise<TypePlain> {
+    const kit = await this.root.snapshot();
+    const raw = (kit.types ?? []).find((t) => t.id === this.id);
+    if (!raw) throw new Error(`kind not found: ${this.id}`);
+    return TypeSchema.parse(raw);
+  }
+
+  setName(name: string): Promise<SetResult> {
+    return this.root.patchEntityField("Type", this.id, "name", name);
+  }
+
+  addRepresentation(dto: unknown): Promise<SetResult> {
+    return this.root.addChild("Type", this.id, "Representation", dto);
+  }
+
+  addConnector(dto: unknown): Promise<SetResult> {
+    return this.root.addChild("Type", this.id, "Connector", dto);
+  }
+
+  addProp(dto: unknown): Promise<SetResult> {
+    return this.root.addChild("Type", this.id, "Prop", dto);
+  }
+
+  removeChild(childKind: string, childId: string): Promise<SetResult> {
+    return this.root.removeChild("Type", this.id, childKind, childId);
+  }
 }
+
+/** @emoji 🧭 Piece scoped to one design id plus piece id. */
 export class PieceStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly designId: string,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesPiece(ev, this.designId, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async full(): Promise<PiecePlain> {
+    const pieces = await this.root.getPieces(this.designId);
+    const row = pieces.find((p: unknown) => p && typeof p === "object" && String((p as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`piece not found: ${this.id}`);
+    return PieceSchema.parse(row);
+  }
+
+  setPlane(plane: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "plane", plane);
+  }
+
+  setCenter(center: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "center", center);
+  }
+
+  setScale(scale: number): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "scale", scale);
+  }
+
+  setColor(color: string): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "color", color);
+  }
+
+  hide(isHidden: boolean): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "isHidden", isHidden);
+  }
+
+  lock(isLocked: boolean): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, "isLocked", isLocked);
+  }
+
+  addProp(dto: unknown): Promise<SetResult> {
+    return this.root.addChild("Piece", this.id, "Prop", dto);
+  }
+
+  patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Piece", this.id, field, value);
+  }
 }
+
+/** @emoji 🧭 Connection scoped to one design id plus connection id. */
 export class ConnectionStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly designId: string,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesConnection(ev, this.designId, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async full(): Promise<ConnectionPlain> {
+    const connections = await this.root.getConnections(this.designId);
+    const row = connections.find((c: unknown) => c && typeof c === "object" && String((c as { id?: string }).id) === this.id);
+    if (!row) throw new Error(`connection not found: ${this.id}`);
+    return ConnectionSchema.parse(row);
+  }
+
+  setGap(gap: number): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, "gap", gap);
+  }
+
+  setShift(shift: number): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, "shift", shift);
+  }
+
+  setRotation(rotation: number): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, "rotation", rotation);
+  }
+
+  setTilt(tilt: number): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, "tilt", tilt);
+  }
+
+  setTurn(turn: number): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, "turn", turn);
+  }
+
+  delete(): Promise<SetResult> {
+    return this.root.deleteConnection(this.designId, this.id);
+  }
+
+  patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Connection", this.id, field, value);
+  }
 }
+
+/** @emoji 🧭 Kit family row (ports live under families in rs). */
 export class FamilyStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesFamily(ev, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async full(): Promise<FamilyPlain> {
+    const kit = await this.root.snapshot();
+    const raw = (kit.families ?? []).find((f) => f.id === this.id);
+    if (!raw) throw new Error(`family not found: ${this.id}`);
+    return FamilySchema.parse(raw);
+  }
+
+  setName(name: string): Promise<SetResult> {
+    return this.root.patchEntityField("Family", this.id, "name", name);
+  }
+
+  patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Family", this.id, field, value);
+  }
 }
+
+/** @emoji 🧭 Kit file blob row. */
 export class FileStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesFile(ev, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async full(): Promise<FilePlain> {
+    const kit = await this.root.snapshot();
+    const raw = (kit.files ?? []).find((f) => f.id === this.id);
+    if (!raw) throw new Error(`file not found: ${this.id}`);
+    return FileSchema.parse(raw);
+  }
+
+  patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("File", this.id, field, value);
+  }
 }
+
+/** @emoji 🧭 Kit folder row. */
 export class FolderStore {
+  private _version = 0;
   constructor(
-    public readonly parent: unknown,
-    public readonly entityId: unknown,
-    public readonly state: unknown,
+    public readonly root: KitStore,
+    public readonly id: string,
   ) {}
+
+  get readVersion(): number {
+    return this._version;
+  }
+
+  subscribe(handler: (e: KitEvent) => void): Unsubscribe {
+    return this.root.subscribe((ev) => {
+      if (!kitEventTouchesFolder(ev, this.id)) return;
+      this._version += 1;
+      handler(ev);
+    });
+  }
+
+  async full(): Promise<FolderPlain> {
+    const kit = await this.root.snapshot();
+    const raw = (kit.folders ?? []).find((f) => f.id === this.id);
+    if (!raw) throw new Error(`folder not found: ${this.id}`);
+    return FolderSchema.parse(raw);
+  }
+
+  patchField(field: string, value: unknown): Promise<SetResult> {
+    return this.root.patchEntityField("Folder", this.id, field, value);
+  }
 }
-// #endregion EntityStoreStubs
+// #endregion EntityKitStores
 // #endregion 🧩KitEntitiesMerged
 
 // #endregion 🧩KitWasmBridgeMerged
@@ -3777,12 +4168,14 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       const snap = await ks.snapshot();
       expect(snap.id).toBe("test-kit");
       expect(snap.name).toBe("TestKit");
-      const types = await ks.getTypes();
-      expect(Array.isArray(types)).toBe(true);
-      const designs = await ks.getDesigns();
-      expect(Array.isArray(designs)).toBe(true);
-      const r = await ks.patchEntityField("Type", "type-1", "name", "BigWall");
+      const typeStores = await ks.types();
+      expect(typeStores.map((t) => t.id)).toEqual(["type-1"]);
+      const designStores = await ks.designs();
+      expect(designStores.map((d) => d.id)).toEqual(["design-1"]);
+      const r = await ks.type("type-1").setName("BigWall");
       expect(typeof r.ok).toBe("boolean");
+      const meta = await ks.type("type-1").metadata();
+      expect(meta.id).toBe("type-1");
       await ks.dispose();
     });
 
@@ -3874,6 +4267,55 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
               : true;
       const _assert: MustNotLeakRx = true;
       expect(_assert).toBe(true);
+    });
+  });
+
+  describe("semio-js kit event entity filters", () => {
+    it("kitEventTouchesDesignStrict matches nested Design payload", () => {
+      const ev = { Design: { design_id: "d1", event: { Piece: { piece_id: "p1", event: "Changed" } } } } as unknown as KitEvent;
+      expect(kitEventTouchesDesignStrict(ev, "d1")).toBe(true);
+      expect(kitEventTouchesDesignStrict(ev, "d2")).toBe(false);
+    });
+
+    it("kitEventTouchesPiece ignores bare Changed", () => {
+      expect(kitEventTouchesPiece({ Changed: null } as unknown as KitEvent, "d1", "p1")).toBe(false);
+    });
+
+    it("kitEventTouchesPiece matches FlattenInvalidated piece list", () => {
+      const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as unknown as KitEvent;
+      expect(kitEventTouchesPiece(ev, "d1", "p1")).toBe(true);
+      expect(kitEventTouchesPiece(ev, "d1", "p2")).toBe(false);
+    });
+
+    it("kitEventTouchesTypeStrict matches Type payload", () => {
+      const ev = { Type: { type_id: "t1", event: "Changed" } } as unknown as KitEvent;
+      expect(kitEventTouchesTypeStrict(ev, "t1")).toBe(true);
+      expect(kitEventTouchesTypeStrict(ev, "t2")).toBe(false);
+    });
+  });
+
+  describe("semio-js entity stores", () => {
+    it("DesignStore subscribe fires after setName mutation", async () => {
+      const minimalKit: KitFullDto = {
+        id: "sub-design-kit",
+        name: "K",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [],
+        designs: [{ id: "design-a", name: "A", pieces: [], connections: [], createdAt: "2020-01-01T00:00:00.000Z", updatedAt: "2020-01-01T00:00:00.000Z" }],
+      };
+      const ks = await KitStore.open(minimalKit);
+      const d = ks.design("design-a");
+      let hits = 0;
+      const off = d.subscribe(() => {
+        hits += 1;
+      });
+      const before = d.readVersion;
+      await d.setName("RenamedA");
+      expect(d.readVersion).toBeGreaterThanOrEqual(before);
+      expect(hits).toBeGreaterThan(0);
+      off();
+      await ks.dispose();
     });
   });
 }

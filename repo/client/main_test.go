@@ -635,7 +635,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
 				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
 				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
-				`@("run", "./repo/clientent", "configure", "--repo", $repoRoot)`,
+				`@("run", "./repo/client", "configure", "--repo", $repoRoot)`,
 				`@("playwright", "install", "chromium")`,
 				`@("run", "git:setup")`,
 			},
@@ -2104,11 +2104,11 @@ func TestFileHeaderId(t *testing.T) {
 	}{
 		{"code ts", "semio/js/src/index.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
 		{"code tsx", "semio/js/src/App.tsx", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
-		{"code go", "repo/clientent/client.go", "🧰repo⌨️cli" + emojiText(EmojiFileCode) + "cli"},
+		{"code go", "repo/client/client.go", "🧰repo⌨️cli" + emojiText(EmojiFileCode) + "cli"},
 		{"code cs", "semio/gh/Semio.cs", "👤semio🐙gh" + emojiText(EmojiFileCode) + "semio"},
 		{"code py", "semio/engine/main.py", "👤semio⚙️engine" + emojiText(EmojiFileCode) + "main"},
 		{"test ts", "semio/js/src/index.test.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
-		{"test go", "repo/clientent/client_test.go", "🧰repo⌨️cli" + emojiText(EmojiFileLab) + "clitest"},
+		{"test go", "repo/client/client_test.go", "🧰repo⌨️cli" + emojiText(EmojiFileLab) + "clitest"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
@@ -15756,7 +15756,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
 		{"echo with git stash not blocked", "", `echo "git stash"`, false},
-		{"semio cli command not blocked", "", `go run ./repo/clientent tree "hooks events inlet adapter cli"`, false},
+		{"semio cli command not blocked", "", `go run ./repo/mcp tree "hooks events inlet adapter cli"`, false},
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
@@ -15849,7 +15849,7 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{`bash -lc "git stash && echo done"`, true},
 		{`grep "git checkout" file.go`, false},
 		{`echo "git stash"`, false},
-		{"go run ./repo/clientent tree hooks", false},
+		{"go run ./repo/mcp tree hooks", false},
 		{"git status", false},
 		{"git log --oneline -n 5", false},
 		{"git diff", false},
@@ -17423,11 +17423,11 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 		cmd      string
 		expected string
 	}{
-		{"ticket open full path", "go run ./repo/clientent ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket open full path", "go run ./repo/mcp ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket open exe path", ".\\repo\\cli\\cli.exe ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
-		{"ticket reopen", "/workspaces/semio/repo/clientent/client ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
-		{"ticket reopen go run", "go run ./repo/clientent ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen", "/workspaces/semio/repo/client/client ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen go run", "go run ./repo/mcp ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
 		{"goal close", "./cli goal close MY-GOAL 'Summary'", "goal.close"},
 		{"contributor add", "./cli contributor add github-user", "contributor.add"},
@@ -17574,7 +17574,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "go run ./repo/clientent ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
+			Command: "go run ./repo/mcp ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalStarting,
@@ -17614,7 +17614,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "/workspace/repo/clientent/client goal close MY-GOAL 'Summary'",
+			Command: "/workspace/repo/client/client goal close MY-GOAL 'Summary'",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalEnded,

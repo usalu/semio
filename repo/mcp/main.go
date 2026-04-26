@@ -14,6 +14,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -26,6 +27,17 @@ import (
 // MCP process bootstrap.
 
 func main() {
+	if len(os.Args) > 1 {
+		if err := client.RunCLI(); err != nil {
+			var exitErr client.ExitError
+			if errors.As(err, &exitErr) {
+				os.Exit(exitErr.Code)
+			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := client.RunMCP(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
