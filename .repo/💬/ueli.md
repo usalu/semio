@@ -6147,6 +6147,19 @@ repo client:
 
 ---
 
+Extend/Refactor the loc command
+Add markdown language.
+Ignore all folders with .\* and only include
+Add another row `Code` such as which is just
+Add another row `Markup` such html, md, mdx
+Add another row `Data` such as json, yaml, etc (e.g. for json count every key as a line even if it is single line).
+Add another row `Total` which is everything
+Sort rows by loc
+Add --by-contributor=<alias> flag e.g. `--by-contributor=ueli` It MUST work with history and show the history
+Always show % of everything
+
+---
+
 Add a loc command that shows three metrics: loc, edited loc (cummulative over all commits), added loc (cummulative over all commits), removed loc (cummulative over all commits) for the five languages.
 Exclude .repo and gitignored folders.
 

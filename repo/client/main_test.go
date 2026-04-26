@@ -22685,18 +22685,47 @@ func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
 
 func TestLocCommand(t *testing.T) {
 	langs := locMakeLangSet([]string{"TypeScript", "Go", "C#", "Python", "Rust"})
+	num := locMakeNumstatLangSet([]string{"TypeScript", "Go", "C#", "Python", "Rust"})
 	t.Run("classify language", func(t *testing.T) {
-		if got := locClassifyLanguage("a/b/foo.ts", langs); got != "TypeScript" {
+		if got := locClassifyLanguage("a/b/foo.ts", num); got != "TypeScript" {
 			t.Fatalf("ts: got %q", got)
 		}
-		if got := locClassifyLanguage("x.mtsx", langs); got != "TypeScript" {
+		if got := locClassifyLanguage("x.mtsx", num); got != "TypeScript" {
 			t.Fatalf("mtsx: got %q", got)
 		}
-		if got := locClassifyLanguage("pkg/m.go", langs); got != "Go" {
+		if got := locClassifyLanguage("pkg/m.go", num); got != "Go" {
 			t.Fatalf("go: got %q", got)
 		}
-		if got := locClassifyLanguage("noext", langs); got != "" {
+		if got := locClassifyLanguage("noext", num); got != "" {
 			t.Fatalf("noext: got %q", got)
+		}
+		if got := locClassifyLocBucket("x.md"); got != locAggMarkup {
+			t.Fatalf("md bucket: got %q", got)
+		}
+		if got := locClassifyLocBucket("d.json"); got != locAggData {
+			t.Fatalf("json bucket: got %q", got)
+		}
+		if locClassifyLanguage("x.md", langs) != "" {
+			t.Fatalf("markdown should not match code-only weight map")
+		}
+	})
+	t.Run("hidden path segments skipped", func(t *testing.T) {
+		if !locPathHasHiddenSegment("pkg/.cache/x.go") {
+			t.Fatal("expected hidden segment")
+		}
+		if locPathHasHiddenSegment("pkg/src/x.go") {
+			t.Fatal("unexpected hidden")
+		}
+	})
+	t.Run("json key counting", func(t *testing.T) {
+		if n := locJSONKeyCount([]byte(`{"a":1,"b":{"c":2}}`)); n != 3 {
+			t.Fatalf("keys want 3 got %d", n)
+		}
+		if n := locJSONKeyCount([]byte(`{}`)); n != 0 {
+			t.Fatalf("empty object keys want 0 got %d", n)
+		}
+		if n := locCountBucketLoc("x.json", []byte(`{"x":1}`)); n != 1 {
+			t.Fatalf("single-line json loc want 1 got %d", n)
 		}
 	})
 	t.Run("parse numstat", func(t *testing.T) {
@@ -22706,7 +22735,7 @@ func TestLocCommand(t *testing.T) {
 		SetRootDir(td)
 		defer SetRootDir(oldR)
 		raw := "COMMIT\t" + strings.Repeat("a", 8) + "\tAlice\ta@x\t1600000000\n3\t1\tlib/main.go\n-\t-\tbin/legacy\n2\t0\tc.cs\n"
-		out, err := locParseNumstatLog(raw, langs)
+		out, err := locParseNumstatLog(raw, num)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -22725,27 +22754,35 @@ func TestLocCommand(t *testing.T) {
 	})
 	t.Run("merge cumulative and cloc", func(t *testing.T) {
 		c := map[string]LocCumulative{"Go": {Added: 10, Removed: 2}}
-		cloc := map[string]int{"Go": 100, "TypeScript": 0}
-		got := locMergeCumulativeClocEx(c, cloc, []string{"Go", "TypeScript", "C#", "Python", "Rust"})
+		scanned := map[string]int{"Go": 100, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 5, "Data": 3}
+		got := locMergeCumulativeClocEx(c, scanned, []string{"Go", "TypeScript", "C#", "Python", "Rust"})
 		if got["Go"].Loc != 100 || got["Go"].Edited != 12 || got["TypeScript"].Loc != 0 {
 			t.Fatalf("%+v", got["Go"])
 		}
+		if got[locAggCode].Loc != 100 {
+			t.Fatalf("code aggregate %+v", got[locAggCode])
+		}
+		if got[locAggTotal].Loc != 108 {
+			t.Fatalf("total loc want 108 got %d", got[locAggTotal].Loc)
+		}
+		if got["Go"].Percent <= 0 || got[locAggTotal].Percent != 100 {
+			t.Fatalf("percents go=%v total=%v", got["Go"].Percent, got[locAggTotal].Percent)
+		}
 	})
 	t.Run("render markdown", func(t *testing.T) {
-		r := &LocReport{
-			Snapshot: map[string]LocLangStats{
-				"Go": {Loc: 1, Edited: 2, Added: 1, Removed: 1},
-			},
-		}
+		scan := map[string]int{"Go": 1, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 0, "Data": 0}
+		cum := map[string]locCumulativePair{"Go": {Added: 1, Removed: 1}}
+		r := &LocReport{Snapshot: locComposeLocReportSnapshot(cum, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"})}
 		var b strings.Builder
 		renderLocMarkdown(&b, r, false, false)
 		s := b.String()
-		if !strings.Contains(s, "Go") || !strings.Contains(s, "| 1 |") {
+		if !strings.Contains(s, "Go") || !strings.Contains(s, "| 1 |") || !strings.Contains(s, "%") {
 			t.Fatalf("markdown: %q", s)
 		}
 	})
 	t.Run("text no ansi for pipe", func(t *testing.T) {
-		r := &LocReport{Snapshot: map[string]LocLangStats{"Go": {Loc: 1, Edited: 0, Added: 0, Removed: 0}}}
+		scan := map[string]int{"Go": 1, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 0, "Data": 0}
+		r := &LocReport{Snapshot: locComposeLocReportSnapshot(map[string]locCumulativePair{}, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"})}
 		var b strings.Builder
 		renderLocText(&b, r, false, false, false)
 		if strings.ContainsRune(b.String(), '\x1b') {
@@ -22763,6 +22800,9 @@ func TestLocCommand(t *testing.T) {
 		}
 		if found == nil {
 			t.Fatal("no loc")
+		}
+		if f := found.Flags().Lookup("by-contributor"); f == nil {
+			t.Fatal("missing by-contributor flag")
 		}
 	})
 }

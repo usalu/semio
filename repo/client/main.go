@@ -8223,15 +8223,25 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 
 // #region 🔢LOC Command
 // 📈locDefaultBranch: dev walk branch (⛳ wip).
-// 📈locDefaultLanguageList: cloc + git line classification.
+// 📈locDefaultLanguageList: internal scan + git line classification.
 const locDefaultBranch = "⛳wip"
 
+// 🧮locAggCode/locAggMarkup/locAggData/locAggTotal: synthetic aggregate row labels for `loc` tables.
+const (
+	locAggCode   = "Code"
+	locAggMarkup = "Markup"
+	locAggData   = "Data"
+	locAggTotal  = "Total"
+)
+
 // 💿LocLangStats holds the data fields for a line-of-code per-language metrics record.
+// 📊LocLangStats: per-row LOC, optional % of Total, and git delta sums.
 type LocLangStats struct {
-	Loc     int `json:"loc"`
-	Edited  int `json:"edited"`
-	Added   int `json:"added"`
-	Removed int `json:"removed"`
+	Loc     int     `json:"loc"`
+	Percent float64 `json:"percent"`
+	Edited  int     `json:"edited"`
+	Added   int     `json:"added"`
+	Removed int     `json:"removed"`
 }
 
 // 💿LocReport: JSON payload for `loc` output and rendering.
@@ -8291,32 +8301,71 @@ func locPathSkipped(relPath string) bool {
 	return isIgnoredByGitignore(rel)
 }
 
-// 🏷️ locClassifyLanguage classifies a repo-relative path to a cloc language name, else "".
-func locClassifyLanguage(path string, langs map[string]bool) string {
+// 🫥 locPathHasHiddenSegment returns true when any path segment starts with "." (excluding "." / "..").
+func locPathHasHiddenSegment(relPath string) bool {
+	rel := filepath.ToSlash(normalizeRepoPath(relPath))
+	for _, seg := range strings.Split(rel, "/") {
+		if seg == "" || seg == "." || seg == ".." {
+			continue
+		}
+		if strings.HasPrefix(seg, ".") {
+			return true
+		}
+	}
+	return false
+}
+
+// 🗂️ locPathSkippedForLoc combines gitignore/.repo skips with hidden-directory-segment skips for `loc`.
+func locPathSkippedForLoc(relPath string) bool {
+	if locPathSkipped(relPath) {
+		return true
+	}
+	return locPathHasHiddenSegment(relPath)
+}
+
+// 🏷️ locClassifyLocBucket maps a path extension to a `loc` bucket key (code language, Markup, Data) or "".
+func locClassifyLocBucket(path string) string {
 	ext := strings.ToLower(filepath.Ext(path))
 	switch ext {
 	case ".ts", ".tsx", ".cts", ".mts", ".mtsx":
-		if langs["TypeScript"] {
-			return "TypeScript"
-		}
+		return "TypeScript"
 	case ".go":
-		if langs["Go"] {
-			return "Go"
-		}
+		return "Go"
 	case ".cs":
-		if langs["C#"] {
-			return "C#"
-		}
+		return "C#"
 	case ".py":
-		if langs["Python"] {
-			return "Python"
-		}
+		return "Python"
 	case ".rs":
-		if langs["Rust"] {
-			return "Rust"
-		}
+		return "Rust"
+	case ".html", ".htm", ".xhtml", ".md", ".markdown", ".mdown", ".mkd", ".mdx", ".mdc", ".svx", ".svxtheme":
+		return locAggMarkup
+	case ".json", ".jsonc", ".yaml", ".yml", ".toml", ".csv", ".xml", ".ini", ".cfg", ".conf", ".properties", ".editorconfig", ".gitattributes", ".gitmodules":
+		return locAggData
+	default:
+		return ""
 	}
-	return ""
+}
+
+// 🏷️ locClassifyForNumstat returns a bucket key when the path is allowed by the active `loc` weight map.
+func locClassifyForNumstat(path string, w map[string]bool) string {
+	b := locClassifyLocBucket(path)
+	if b == "" || !w[b] {
+		return ""
+	}
+	return b
+}
+
+// 🏷️ locClassifyLanguage classifies a repo-relative path when the bucket is enabled in langs, else "".
+func locClassifyLanguage(path string, langs map[string]bool) string {
+	return locClassifyForNumstat(path, langs)
+}
+
+// 🧾 locMakeNumstatLangSet extends the `--languages` code set with Markup and Data buckets for git deltas.
+func locMakeNumstatLangSet(languages []string) map[string]bool {
+	m := locMakeLangSet(languages)
+	m[locAggMarkup] = true
+	m[locAggData] = true
+	return m
 }
 
 func locMakeLangSet(languages []string) map[string]bool {
@@ -8341,8 +8390,8 @@ type locCumulativePair struct {
 	Added, Removed int
 }
 
-func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib bool) (map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
-	langW := locMakeLangSet(languages)
+func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib bool, contribFilter string) (map[string]locCumulativePair, map[string]map[string]locCumulativePair, error) {
+	langW := locMakeNumstatLangSet(languages)
 	cum := make(map[string]locCumulativePair)
 	for l := range langW {
 		cum[l] = locCumulativePair{}
@@ -8351,8 +8400,12 @@ func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib 
 	if byContrib {
 		byCont = make(map[string]map[string]locCumulativePair)
 	}
+	filt := strings.TrimSpace(contribFilter)
 	for _, c := range commits {
 		alias := locContributorAlias(c.Author, c.AuthorMail)
+		if filt != "" && !strings.EqualFold(filt, alias) {
+			continue
+		}
 		if byContrib {
 			if byCont[alias] == nil {
 				byCont[alias] = make(map[string]locCumulativePair)
@@ -8380,21 +8433,242 @@ func locCumulativeFromRaw(commits []locRawCommit, languages []string, byContrib 
 	return cum, byCont, nil
 }
 
-// 🔗 locMergeCumulativeCloc materializes a per-language LocLangStats snapshot.
-func locMergeCumulativeCloc(c map[string]locCumulativePair, clocData map[string]int, languages []string) map[string]LocLangStats {
-	langW := locMakeLangSet(languages)
-	out := locZeroSnapshot(langW)
-	for l := range langW {
-		st := out[l]
-		st.Loc = clocData[l]
-		if cp, ok := c[l]; ok {
-			st.Added = cp.Added
-			st.Removed = cp.Removed
-			st.Edited = cp.Added + cp.Removed
-		}
-		out[l] = st
+// 📏 locPhysicalLineCount counts newline-terminated lines like wc -l (non-empty files have ≥1 line).
+func locPhysicalLineCount(data []byte) int {
+	if len(data) == 0 {
+		return 0
 	}
+	return bytes.Count(data, []byte("\n")) + 1
+}
+
+// 🧮 locCountJSONKeys counts JSON object keys recursively (each key is one logical LOC unit for Data JSON).
+func locCountJSONKeys(v any) int {
+	switch t := v.(type) {
+	case map[string]any:
+		n := len(t)
+		for _, vv := range t {
+			n += locCountJSONKeys(vv)
+		}
+		return n
+	case []any:
+		var n int
+		for _, vv := range t {
+			n += locCountJSONKeys(vv)
+		}
+		return n
+	default:
+		return 0
+	}
+}
+
+// 🧮 locJSONKeyCount parses JSON and counts object keys; returns 0 when not valid JSON.
+func locJSONKeyCount(data []byte) int {
+	d := bytes.TrimSpace(data)
+	if len(d) == 0 {
+		return 0
+	}
+	var v any
+	if err := json.Unmarshal(d, &v); err != nil {
+		return 0
+	}
+	return locCountJSONKeys(v)
+}
+
+// 🧮 locCountBucketLoc returns LOC for a tracked file body using Data JSON key rules vs physical lines.
+func locCountBucketLoc(path string, data []byte) int {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".json", ".jsonc":
+		k := locJSONKeyCount(data)
+		if k > 0 {
+			return k
+		}
+		if len(bytes.TrimSpace(data)) == 0 {
+			return 0
+		}
+		return locPhysicalLineCount(data)
+	default:
+		return locPhysicalLineCount(data)
+	}
+}
+
+// 🧾 locGitListTrackedPaths lists repo-relative paths at HEAD (tracked) or at ref (git tree).
+func locGitListTrackedPaths(repo, ref string) ([]string, error) {
+	var args []string
+	if ref == "" {
+		args = []string{"-C", repo, "ls-files", "-z"}
+	} else {
+		args = []string{"-C", repo, "ls-tree", "-r", "--name-only", "-z", ref}
+	}
+	stdout, stderr, code := ExecCommand("git", args, repo)
+	if code != 0 {
+		return nil, fmt.Errorf("git paths: %s", strings.TrimSpace(stderr))
+	}
+	var out []string
+	for _, p := range strings.Split(stdout, "\x00") {
+		if p == "" {
+			continue
+		}
+		out = append(out, filepath.ToSlash(p))
+	}
+	return out, nil
+}
+
+// 🧾 locGitReadTrackedBytes reads tracked file bytes at HEAD or at ref via git show.
+func locGitReadTrackedBytes(repo, ref, relPath string) ([]byte, error) {
+	rel := filepath.ToSlash(relPath)
+	if ref == "" {
+		fp := filepath.Join(repo, filepath.FromSlash(rel))
+		return os.ReadFile(fp)
+	}
+	spec := ref + ":" + rel
+	stdout, stderr, code := ExecCommand("git", []string{"-C", repo, "show", spec}, repo)
+	if code != 0 {
+		return nil, fmt.Errorf("git show: %s", strings.TrimSpace(stderr))
+	}
+	return []byte(stdout), nil
+}
+
+// 🧮 locGitSnapshotLocCounts walks tracked paths and sums LOC per `loc` bucket (no cloc).
+func locGitSnapshotLocCounts(repo, ref string, languages []string) (map[string]int, error) {
+	w := locMakeNumstatLangSet(languages)
+	paths, err := locGitListTrackedPaths(repo, ref)
+	if err != nil {
+		return nil, err
+	}
+	counts := make(map[string]int, len(w))
+	for k := range w {
+		counts[k] = 0
+	}
+	for _, rel := range paths {
+		if locPathSkippedForLoc(rel) {
+			continue
+		}
+		bucket := locClassifyForNumstat(rel, w)
+		if bucket == "" {
+			continue
+		}
+		data, err := locGitReadTrackedBytes(repo, ref, rel)
+		if err != nil {
+			continue
+		}
+		if len(data) > 0 && bytes.IndexByte(data, 0) >= 0 {
+			continue
+		}
+		counts[bucket] += locCountBucketLoc(rel, data)
+	}
+	return counts, nil
+}
+
+// 🧾 locZeroScanCounts returns zero scan counts for every numstat bucket (contributor-only rows).
+func locZeroScanCounts(languages []string) map[string]int {
+	w := locMakeNumstatLangSet(languages)
+	z := make(map[string]int, len(w))
+	for k := range w {
+		z[k] = 0
+	}
+	return z
+}
+
+// 🧩 locStatFromPairAndScan builds one row from scan LOC and cumulative git pairs.
+func locStatFromPairAndScan(c map[string]locCumulativePair, scanned map[string]int, key string) LocLangStats {
+	st := LocLangStats{}
+	if scanned != nil {
+		st.Loc = scanned[key]
+	}
+	if p, ok := c[key]; ok {
+		st.Added = p.Added
+		st.Removed = p.Removed
+		st.Edited = p.Added + p.Removed
+	}
+	return st
+}
+
+// 🧮 locApplyPercents sets Percent from Total.loc as denominator (Total row is 100%).
+func locApplyPercents(rows map[string]LocLangStats) {
+	denom := rows[locAggTotal].Loc
+	if denom <= 0 {
+		for k, s := range rows {
+			s.Percent = 0
+			rows[k] = s
+		}
+		return
+	}
+	for k, s := range rows {
+		if k == locAggTotal {
+			s.Percent = 100
+		} else {
+			s.Percent = math.Round(10000*float64(s.Loc)/float64(denom)) / 100
+		}
+		rows[k] = s
+	}
+}
+
+// 📊 locComposeLocReportSnapshot merges scan counts, git deltas, and aggregate Code/Total rows with percents.
+func locComposeLocReportSnapshot(c map[string]locCumulativePair, scanned map[string]int, languages []string) map[string]LocLangStats {
+	w := locMakeNumstatLangSet(languages)
+	out := make(map[string]LocLangStats)
+	codeOrder := []string{"TypeScript", "Go", "C#", "Python", "Rust"}
+	var codeLoc, codeAdded, codeRemoved, codeEdited int
+	for _, ln := range codeOrder {
+		if !w[ln] {
+			continue
+		}
+		st := locStatFromPairAndScan(c, scanned, ln)
+		out[ln] = st
+		codeLoc += st.Loc
+		codeAdded += st.Added
+		codeRemoved += st.Removed
+		codeEdited += st.Edited
+	}
+	mk := locStatFromPairAndScan(c, scanned, locAggMarkup)
+	out[locAggMarkup] = mk
+	da := locStatFromPairAndScan(c, scanned, locAggData)
+	out[locAggData] = da
+	out[locAggCode] = LocLangStats{
+		Loc:     codeLoc,
+		Edited:  codeEdited,
+		Added:   codeAdded,
+		Removed: codeRemoved,
+	}
+	totalLoc := codeLoc + mk.Loc + da.Loc
+	totalEdited := codeEdited + mk.Edited + da.Edited
+	totalAdded := codeAdded + mk.Added + da.Added
+	totalRemoved := codeRemoved + mk.Removed + da.Removed
+	out[locAggTotal] = LocLangStats{
+		Loc:     totalLoc,
+		Edited:  totalEdited,
+		Added:   totalAdded,
+		Removed: totalRemoved,
+	}
+	locApplyPercents(out)
 	return out
+}
+
+// 📶 locSortedRowKeys returns row names sorted by LOC descending with Total last.
+func locSortedRowKeys(rows map[string]LocLangStats) []string {
+	var ks []string
+	for k := range rows {
+		if k == locAggTotal {
+			continue
+		}
+		ks = append(ks, k)
+	}
+	sort.Slice(ks, func(i, j int) bool {
+		li := rows[ks[i]].Loc
+		lj := rows[ks[j]].Loc
+		if li != lj {
+			return li > lj
+		}
+		return ks[i] < ks[j]
+	})
+	ks = append(ks, locAggTotal)
+	return ks
+}
+
+// 🔗 locMergeCumulativeCloc materializes LocLangStats rows (scan replaces cloc).
+func locMergeCumulativeCloc(c map[string]locCumulativePair, scanned map[string]int, languages []string) map[string]LocLangStats {
+	return locComposeLocReportSnapshot(c, scanned, languages)
 }
 
 // 💿LocCumulative: exported for tests; mirrors locCumulativePair from numstat.
@@ -8413,7 +8687,6 @@ func locMergeCumulativeClocEx(c map[string]LocCumulative, clocData map[string]in
 // 🔧 locWalkGitLog returns commits oldest-first; ref empty means from HEAD, else limit to that ref.
 // 📜 locWalkGitLog runs `git log --numstat` and parses the stream.
 func locWalkGitLog(repo string, languages []string, ref string) ([]locRawCommit, error) {
-	langW := locMakeLangSet(languages)
 	// COMMIT%09%H%09%aN%09%aE%09%at
 	pretty := "COMMIT%x09%H%x09%aN%x09%aE%x09%at"
 	args := []string{
@@ -8427,7 +8700,7 @@ func locWalkGitLog(repo string, languages []string, ref string) ([]locRawCommit,
 	if code != 0 {
 		return nil, fmt.Errorf("git log failed: %s", strings.TrimSpace(stderr))
 	}
-	return locParseNumstatLog(stdout, langW)
+	return locParseNumstatLog(stdout, locMakeNumstatLangSet(languages))
 }
 
 // 🧩 locParseNumstatLog breaks numstat + COMMIT-pretty output into per-commit records.
@@ -8472,10 +8745,10 @@ func locParseNumstatLog(stdout string, langW map[string]bool) ([]locRawCommit, e
 			continue
 		}
 		relpath := parts[2]
-		if loPathSkipped := locPathSkipped(relpath); loPathSkipped {
+		if locPathSkippedForLoc(relpath) {
 			continue
 		}
-		lang := locClassifyLanguage(relpath, langW)
+		lang := locClassifyForNumstat(relpath, langW)
 		if lang == "" {
 			continue
 		}
@@ -8490,70 +8763,6 @@ func locParseNumstatLog(stdout string, langW map[string]bool) ([]locRawCommit, e
 	return out, nil
 }
 
-// 🔧 lookPathCloc locates a cloc executable in PATH.
-func lookPathCloc() (string, error) { return exec.LookPath("cloc") }
-
-// 🧮 runCloc: ref "" = working tree; ref non-empty = that git tree-ish (cloc vcs+git, no checkout).
-// 🧮 runCloc produces per language `code` line counts (cloc JSON).
-func runCloc(repoRoot, ref string, languages []string) (map[string]int, error) {
-	exe, err := lookPathCloc()
-	if err != nil {
-		return nil, fmt.Errorf("cloc: not in PATH: %w", err)
-	}
-	langList := strings.Join(languages, ",")
-	var args []string
-	if ref == "" {
-		args = []string{".", "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json"}
-	} else {
-		args = []string{ref, "--vcs=git", "--exclude-dir=.repo", "--include-lang=" + langList, "--json"}
-	}
-	stdout, stderr, code := ExecCommand(exe, args, repoRoot)
-	if code != 0 {
-		return nil, fmt.Errorf("cloc: %s", strings.TrimSpace(stderr))
-	}
-	return locParseClocJSON(stdout, languages)
-}
-
-// 🧩 locParseClocJSON maps cloc JSON to language -> code line count.
-func locParseClocJSON(raw string, languages []string) (map[string]int, error) {
-	var root map[string]json.RawMessage
-	if err := json.Unmarshal([]byte(raw), &root); err != nil {
-		return nil, fmt.Errorf("cloc json: %w", err)
-	}
-	wanted := locMakeLangSet(languages)
-	out := make(map[string]int, len(languages))
-	for l := range wanted {
-		chunk, ok := root[l]
-		if !ok {
-			out[l] = 0
-			continue
-		}
-		var o struct {
-			Code int `json:"code"`
-		}
-		_ = json.Unmarshal(chunk, &o)
-		out[l] = o.Code
-	}
-	return out, nil
-}
-
-// 🔧 locCumulativeToStats builds LocLangStats (loc=0) from pairs for contributor view.
-// 📦 locCumulativeToStats flattens cum pairs into per-language added/removed/edited.
-func locCumulativeToStats(cum map[string]locCumulativePair, languages []string) map[string]LocLangStats {
-	langW := locMakeLangSet(languages)
-	out := locZeroSnapshot(langW)
-	for l := range langW {
-		st := out[l]
-		if p, ok := cum[l]; ok {
-			st.Added = p.Added
-			st.Removed = p.Removed
-			st.Edited = p.Added + p.Removed
-		}
-		out[l] = st
-	}
-	return out
-}
-
 // 🔧 locByContributorsToSnapshot builds a contributor -> language -> stats map; loc=0 in leaf rows.
 // 🧩 locByContributorsToSnapshot builds contributor breakdown from by-contrib cumulative pairs.
 func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, languages []string) map[string]map[string]LocLangStats {
@@ -8562,7 +8771,7 @@ func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, lang
 	}
 	out := make(map[string]map[string]LocLangStats, len(m))
 	for alias, lp := range m {
-		out[alias] = locCumulativeToStats(lp, languages)
+		out[alias] = locComposeLocReportSnapshot(lp, locZeroScanCounts(languages), languages)
 	}
 	return out
 }
@@ -8577,10 +8786,10 @@ func locIsLastCommitOfDayUTC(commits []locRawCommit, i int) bool {
 	return day0 != day1
 }
 
-// 🔧 locBuildHistory: running totals + cloc at sampled commits. verbose samples every step.
+// 🔧 locBuildHistory: running totals + scanned LOC at sampled commits. verbose samples every step.
 // 📅 locBuildHistory assembles the optional --history time series.
-func locBuildHistory(repo string, languages []string, byContrib, verbose bool, commits []locRawCommit) ([]LocHistoryEntry, error) {
-	langW := locMakeLangSet(languages)
+func locBuildHistory(repo string, languages []string, byContrib, verbose bool, commits []locRawCommit, contribFilter string) ([]LocHistoryEntry, error) {
+	langW := locMakeNumstatLangSet(languages)
 	running := make(map[string]locCumulativePair)
 	for l := range langW {
 		running[l] = locCumulativePair{}
@@ -8590,9 +8799,13 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 		byContRun = make(map[string]map[string]locCumulativePair)
 	}
 	var hist []LocHistoryEntry
-	var lastCloc map[string]int
+	var lastScan map[string]int
+	filt := strings.TrimSpace(contribFilter)
 	for i, c := range commits {
 		alias := locContributorAlias(c.Author, c.AuthorMail)
+		if filt != "" && !strings.EqualFold(filt, alias) {
+			continue
+		}
 		if byContrib {
 			if byContRun[alias] == nil {
 				byContRun[alias] = make(map[string]locCumulativePair)
@@ -8616,21 +8829,16 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 				byContRun[alias][l] = a2
 			}
 		}
-		needCloc := verbose || i == 0 || i+1 == len(commits) || lastCloc == nil || locIsLastCommitOfDayUTC(commits, i)
-		if needCloc {
-			m, err := runCloc(repo, c.SHA, languages)
+		needScan := verbose || i == 0 || i+1 == len(commits) || lastScan == nil || locIsLastCommitOfDayUTC(commits, i)
+		if needScan {
+			m, err := locGitSnapshotLocCounts(repo, c.SHA, languages)
 			if err != nil {
 				return nil, err
 			}
-			lastCloc = m
+			lastScan = m
 		}
-		if lastCloc == nil {
-			z := make(map[string]int, len(languages))
-			for _, l := range languages {
-				l = strings.TrimSpace(l)
-				z[l] = 0
-			}
-			lastCloc = z
+		if lastScan == nil {
+			lastScan = locZeroScanCounts(languages)
 		}
 		iso := time.Unix(c.WhenUnix, 0).UTC().Format(time.RFC3339)
 		authorKey := locContributorAlias(c.Author, c.AuthorMail)
@@ -8638,12 +8846,11 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 		if byContrib {
 			row := make(map[string]map[string]LocLangStats, len(byContRun))
 			for a, m2 := range byContRun {
-				row[a] = locCumulativeToStats(m2, languages)
+				row[a] = locComposeLocReportSnapshot(m2, locZeroScanCounts(languages), languages)
 			}
 			entry.ByContributors = row
 		} else {
-			merged := locMergeCumulativeCloc(running, lastCloc, languages)
-			entry.Languages = merged
+			entry.Languages = locMergeCumulativeCloc(running, lastScan, languages)
 		}
 		hist = append(hist, entry)
 	}
@@ -8651,7 +8858,7 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 }
 
 // 🫡 runLocCommand runs `loc` and prints using global --format.
-func runLocCommand(cmd *cobra.Command, config *Config, languages []string, history, byContrib bool, historyBranch string) error {
+func runLocCommand(cmd *cobra.Command, config *Config, languages []string, history, byContrib bool, historyBranch, contribFilter string) error {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	repoRoot := config.Repo
 	if strings.TrimSpace(repoRoot) == "" {
@@ -8675,24 +8882,50 @@ func runLocCommand(cmd *cobra.Command, config *Config, languages []string, histo
 	if err != nil {
 		return err
 	}
-	cum, byC, _ := locCumulativeFromRaw(commits, languages, byContrib)
-	if cum == nil {
-		cum = make(map[string]locCumulativePair)
+	cumAll, byC, _ := locCumulativeFromRaw(commits, languages, byContrib, "")
+	if cumAll == nil {
+		cumAll = make(map[string]locCumulativePair)
 	}
-	cl, err := runCloc(repoRoot, "", languages)
+	cumForSnap := cumAll
+	cf := strings.TrimSpace(contribFilter)
+	if cf != "" {
+		c2, _, _ := locCumulativeFromRaw(commits, languages, false, cf)
+		if c2 != nil {
+			cumForSnap = c2
+		}
+	}
+	cl, err := locGitSnapshotLocCounts(repoRoot, "", languages)
 	if err != nil {
 		return err
 	}
-	snap := locMergeCumulativeCloc(cum, cl, languages)
+	snap := locMergeCumulativeCloc(cumForSnap, cl, languages)
 	rep := LocReport{Snapshot: snap, Branch: ""}
 	if logRef != "" {
 		rep.Branch = logRef
 	}
 	if byContrib {
-		rep.ByContributors = locByContributorsToSnapshot(byC, languages)
+		byUse := byC
+		if cf != "" && byC != nil {
+			if one, ok := byC[cf]; ok {
+				byUse = map[string]map[string]locCumulativePair{cf: one}
+			} else {
+				found := false
+				for k, v := range byC {
+					if strings.EqualFold(k, cf) {
+						byUse = map[string]map[string]locCumulativePair{k: v}
+						found = true
+						break
+					}
+				}
+				if !found {
+					byUse = nil
+				}
+			}
+		}
+		rep.ByContributors = locByContributorsToSnapshot(byUse, languages)
 	}
 	if history {
-		h, err := locBuildHistory(repoRoot, languages, byContrib, verbose, commits)
+		h, err := locBuildHistory(repoRoot, languages, byContrib, verbose, commits, cf)
 		if err != nil {
 			return err
 		}
@@ -8742,7 +8975,7 @@ func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 			s := r.ByContributors[a]
 			fmt.Fprintln(w, "")
 			fmt.Fprintf(w, "### %s\n\n", a)
-			fmt.Fprintln(w, locMarkdownTable("", s, false))
+			fmt.Fprintln(w, locMarkdownTable("", s, true))
 		}
 	}
 	if withHistory && len(r.History) > 0 {
@@ -8768,7 +9001,7 @@ func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 					s := e.ByContributors[a]
 					fmt.Fprintln(w, "")
 					fmt.Fprintf(w, "- **%s**\n\n", a)
-					fmt.Fprintln(w, locMarkdownTable("", s, false))
+					fmt.Fprintln(w, locMarkdownTable("", s, true))
 				}
 			}
 		} else {
@@ -8787,28 +9020,24 @@ func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 	}
 }
 
-// 📤 locMarkdownTable renders a GH-flavoured pipe table; withLoc false omits the loc column.
+// 📤 locMarkdownTable renders a GH-flavoured pipe table sorted by LOC; withLoc omits the physical loc column only.
 func locMarkdownTable(title string, rows map[string]LocLangStats, withLoc bool) string {
-	langs := make([]string, 0, len(rows))
-	for l := range rows {
-		langs = append(langs, l)
-	}
-	sort.Strings(langs)
+	langs := locSortedRowKeys(rows)
 	var b strings.Builder
 	if title != "" {
 		b.WriteString("### " + title + "\n\n")
 	}
 	if withLoc {
-		b.WriteString("| Language | loc | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: |\n")
+		b.WriteString("| Category | loc | % | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: |\n")
+		for _, l := range langs {
+			st := rows[l]
+			b.WriteString(fmt.Sprintf("| %s | %d | %.2f%% | %d | %d | %d |\n", l, st.Loc, st.Percent, st.Edited, st.Added, st.Removed))
+		}
 	} else {
-		b.WriteString("| Language | edited | added | removed |\n| --- | ---: | ---: | ---: |\n")
-	}
-	for _, l := range langs {
-		st := rows[l]
-		if withLoc {
-			b.WriteString(fmt.Sprintf("| %s | %d | %d | %d | %d |\n", l, st.Loc, st.Edited, st.Added, st.Removed))
-		} else {
-			b.WriteString(fmt.Sprintf("| %s | %d | %d | %d |\n", l, st.Edited, st.Added, st.Removed))
+		b.WriteString("| Category | % | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: |\n")
+		for _, l := range langs {
+			st := rows[l]
+			b.WriteString(fmt.Sprintf("| %s | %.2f%% | %d | %d | %d |\n", l, st.Percent, st.Edited, st.Added, st.Removed))
 		}
 	}
 	return b.String()
@@ -8827,7 +9056,7 @@ func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool
 			s := r.ByContributors[a]
 			fmt.Fprintln(w, "")
 			fmt.Fprintln(w, colorize("Contributor: "+a, ColorBlue, isTTY))
-			locTextTable(w, "", s, isTTY, false)
+			locTextTable(w, "", s, isTTY, true)
 		}
 	}
 	if withHistory && len(r.History) > 0 {
@@ -8851,7 +9080,7 @@ func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool
 				for _, a := range acs {
 					fmt.Fprint(w, "  ")
 					fmt.Fprintln(w, colorize(a, ColorBlue, isTTY))
-					locTextTable(w, "  ", e.ByContributors[a], isTTY, false)
+					locTextTable(w, "  ", e.ByContributors[a], isTTY, true)
 				}
 			}
 		} else {
@@ -8869,11 +9098,7 @@ func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool
 
 // 🔤 locTextTable prints a simple aligned table; title may be a prefix.
 func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY, withLoc bool) {
-	keys := make([]string, 0, len(rows))
-	for l := range rows {
-		keys = append(keys, l)
-	}
-	sort.Strings(keys)
+	keys := locSortedRowKeys(rows)
 	if title != "" && !strings.HasPrefix(title, "  ") {
 		fmt.Fprintln(w, colorize(title, ColorBold, isTTY))
 	}
@@ -8881,16 +9106,16 @@ func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY
 		return
 	}
 	if withLoc {
-		fmt.Fprintf(w, "%-16s%10s%10s%10s%10s\n", "Language", "loc", "edited", "added", "removed")
+		fmt.Fprintf(w, "%-14s%8s%8s%8s%8s%8s\n", "Category", "loc", "%", "edited", "added", "removed")
+		for _, l := range keys {
+			s := rows[l]
+			fmt.Fprintf(w, "%-14s%8d%7.1f%%%8d%8d%8d\n", l, s.Loc, s.Percent, s.Edited, s.Added, s.Removed)
+		}
 	} else {
-		fmt.Fprintf(w, "%-16s%10s%10s%10s\n", "Language", "edited", "added", "removed")
-	}
-	for _, l := range keys {
-		s := rows[l]
-		if withLoc {
-			fmt.Fprintf(w, "%-16s%10d%10d%10d%10d\n", l, s.Loc, s.Edited, s.Added, s.Removed)
-		} else {
-			fmt.Fprintf(w, "%-16s%10d%10d%10d\n", l, s.Edited, s.Added, s.Removed)
+		fmt.Fprintf(w, "%-14s%8s%8s%8s%8s\n", "Category", "%", "edited", "added", "removed")
+		for _, l := range keys {
+			s := rows[l]
+			fmt.Fprintf(w, "%-14s%7.1f%%%8d%8d%8d\n", l, s.Percent, s.Edited, s.Added, s.Removed)
 		}
 	}
 }
@@ -8900,7 +9125,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	_ = factory
 	cmd := &cobra.Command{
 		Use:   "loc",
-		Short: "Line counts and cumulative edits (cloc + git) for the five main languages",
+		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
@@ -8910,6 +9135,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 			h, _ := c.Flags().GetBool("history")
 			by, _ := c.Flags().GetBool("by-contributors")
 			br, _ := c.Flags().GetString("branch")
+			bc, _ := c.Flags().GetString("by-contributor")
 			if h {
 				if strings.TrimSpace(br) == "" {
 					br = locDefaultBranch
@@ -8917,13 +9143,14 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 			} else {
 				br = ""
 			}
-			return runLocCommand(c, config, langs, h, by, br)
+			return runLocCommand(c, config, langs, h, by, br, bc)
 		},
 	}
 	cmd.Flags().Bool("history", false, "Per-commit time series; walks --branch (default: "+locDefaultBranch+") without checkout")
 	cmd.Flags().Bool("by-contributors", false, "Break down cumulative line deltas by first author (FindAndUpdateContributor alias)")
+	cmd.Flags().String("by-contributor", "", "Restrict git deltas and history rows to this contributor alias (case-insensitive)")
 	cmd.Flags().String("branch", locDefaultBranch, "With --history: git ref to log (default dev branch). Ignored when --history is false")
-	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "cloc --include-lang; limits numstat by extension")
+	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "Limits which programming-language buckets are counted; markup/data always included when matched")
 	return cmd
 }
 

@@ -15,8 +15,8 @@ bundle:
 
 ## 🛠️ Mechanisms
 
-- **Transport**: **Axum** HTTP. **Install** with `POST /install` (JSON body: `create` / `importFile` / `importFromFolder` / `importFromZip` per [`jsonrpc.rs`](jsonrpc.rs) `InstallBody`). **GraphQL** with `POST /graphql` using the same schema as `semio::kit_graphql` — root mutation `kitStore { batch(input: KitStoreBatchInput!) { … } }` (live / session / checkpoint / alternative / backbone oneofs). **GraphiQL** at `GET /graphiql` (and browser `GET /graphql`). Optional **CORS** is permissive for local dev.
-- **Binary**: `semio-store` (crate `semio-store`), `[[bin]]` in [`Cargo.toml`](Cargo.toml). Entry: [`bin.rs`](bin.rs), server: [`jsonrpc.rs`](jsonrpc.rs) (name kept for minimal churn; not JSON-RPC on the wire).
+- **Transport**: **Axum** HTTP. **Install** with `POST /install` (JSON body: `create` / `importFile` / `importFromFolder` / `importFromZip` per [`bin.rs`](bin.rs) `InstallBody`). **GraphQL** with `POST /graphql` using the same schema as `semio::kit_graphql` — root mutation `kitStore { batch(input: KitStoreBatchInput!) { … } }` (live / session / checkpoint / alternative / backbone oneofs). **GraphiQL** at `GET /graphiql` (and browser `GET /graphql`). Optional **CORS** is permissive for local dev.
+- **Binary**: `semio-store` (crate `semio-store`), `[[bin]]` in [`Cargo.toml`](Cargo.toml). Entry, server, and tests are consolidated in [`bin.rs`](bin.rs).
 - **Control plane**: `execute_with_control_plane` sets `GraphQlVcsOverride { native: Some(store) }` so backbone / coordinator commands run through the real `KitStore::execute` (not only the in-graph actor path). A per-graph **actor** still serializes `ChangeKitCommands` and undo/redo.
 - **Lifecycle**: the first successful `POST /install` wins; a second install returns `409`. Shutdown: `POST /server/shutdown` or process signal.
 - **Events**: unless `SEMIO_STORE_NO_EVENTS` is set, a background thread logs kit events to `tracing` (target `semio_store_event`).

@@ -19,6 +19,7 @@ import {
   createKitStoreClient,
   createSessionKitStore,
   kitReadScopeKey,
+  normalizeKitFullDtoFolderPaths,
   kitReadScopeToGraphQLInput,
   theKitReadScope,
   DesignSchema,
@@ -47,6 +48,7 @@ import {
   kitStoreClientRemovePiece,
   kitStoreClientUpdateConnection,
   kitStoreClientUpdatePiece,
+  type KitFullDto,
   type KitStoreReadSnap,
   type WriteStatus,
   writeKitStoreClientSchemaField,
@@ -103,13 +105,67 @@ import {
   TypeStore,
   Vector,
 } from "@semio/js";
-import type { KitChildEntityKind, KitEvent, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
+import type { KitChildEntityKind, KitEvent, KitFolderAdapter, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
 
 // #region 🔖KitHostCommandDispatch
+/** @emoji 🪪 Authoritative kit DTO from a host store (plain `kit` snapshots may omit class `toJSON`). */
+function __kitHostPlainDtoFromStore(store: KitHostStore): KitFullDto {
+  const snapKit = store.getSnapshot().kit as KitLike;
+  if (typeof (snapKit as { toJSON?: unknown }).toJSON === "function") return (snapKit as Kit).toJSON();
+  return asKitInstance(snapKit).toJSON();
+}
+
+/** @emoji 🪪 Resolves {@link FolderKitStore} adapter when present (runtime field on class instance). */
+function __kitFolderAdapter(store: KitHostStore): KitFolderAdapter | null {
+  const n = String((store as { name?: string }).name ?? "");
+  if (n !== "FolderKitStore") return null;
+  const a = (store as { adapter?: KitFolderAdapter }).adapter;
+  return a ?? null;
+}
+
+function __kitFolderChainPath(dto: KitFullDto, folderId: string | undefined): string {
+  if (!folderId) return "";
+  const folders = (dto.folders ?? []) as Array<{ id?: string; path?: string; name?: string; parent?: { id?: string } }>;
+  const byId = new Map(folders.map((f) => [String(f.id), f]));
+  const segs: string[] = [];
+  let cur: string | undefined = folderId;
+  const visiting = new Set<string>();
+  while (cur) {
+    if (visiting.has(cur)) break;
+    visiting.add(cur);
+    const f = byId.get(cur);
+    if (!f) break;
+    segs.unshift(String(f.name ?? f.id ?? cur));
+    const pid = f.parent?.id != null ? String(f.parent.id) : "";
+    cur = pid || undefined;
+  }
+  return segs.join("/");
+}
+
+/** @emoji 🪪 Relative folder path for adapter I/O (prefer materialized `path` from {@link normalizeKitFullDtoFolderPaths}). */
+function __kitFolderStorageRelPath(dto: KitFullDto, folderId: string | undefined): string {
+  if (!folderId) return "";
+  const folders = (dto.folders ?? []) as Array<{ id?: string; path?: string; name?: string; parent?: { id?: string } }>;
+  const f = folders.find((x) => String(x.id) === folderId);
+  if (!f) return folderId;
+  if (typeof f.path === "string" && f.path.length > 0) return f.path.replace(/\\/g, "/");
+  return __kitFolderChainPath(dto, folderId);
+}
+
+function __kitFileRelPath(dto: KitFullDto, file: { name?: string; folder?: { id?: string } }): string {
+  const base = file.folder?.id ? __kitFolderStorageRelPath(dto, String(file.folder.id)) : "";
+  const n = String(file.name ?? "file");
+  return base ? `${base}/${n}` : n;
+}
+
+function __kitSubfolderRelPath(dto: KitFullDto, folderId: string): string {
+  return __kitFolderStorageRelPath(dto, folderId);
+}
+
 /** @emoji 🪪 Normalizes {@link Id} handles and plain strings for kit graph RPCs. */
 function __kitHostIdStr(x: unknown): string {
   if (x == null) return "";
@@ -333,9 +389,23 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     return bridge.redo();
   }
   if (command === "semio.kit.addFile" && args[0]) {
-    if (!bridge) return { ok: false, error: "no kit bridge" };
     const file = FileSchema.parse(args[0]);
-    return bridge.submitChangeKitCommands([{ addFile: { file } }]);
+    const blobArg = args[1];
+    if (bridge) return bridge.submitChangeKitCommands([{ addFile: { file } }]);
+    const snap = __kitHostPlainDtoFromStore(store);
+    const nextFiles = [...((snap.files as unknown[]) ?? []), file as unknown];
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), files: nextFiles } as KitFullDto);
+    store.replace(Kit.fromPlain(merged));
+    const adapter = __kitFolderAdapter(store);
+    if (adapter && typeof Blob !== "undefined" && blobArg instanceof Blob) {
+      try {
+        const rel = __kitFileRelPath(merged, file as { name?: string; folder?: { id?: string } });
+        await adapter.writeFile(rel, blobArg);
+      } catch {
+        /* ignore */
+      }
+    }
+    return { ok: true };
   }
   if (command === "semio.kit.import") {
     void _origin;
@@ -363,8 +433,8 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     const entityId = __kitHostIdStr(args[0]);
     const kind = String(args[1] ?? "");
     const folderId = __kitHostIdStr(args[2]);
-    const baseRaw = bridge ? await bridge.getSnapshot() : (store.getSnapshot().kit.toJSON() as Record<string, unknown>);
-    const plain = JSON.parse(JSON.stringify(baseRaw)) as Record<string, unknown>;
+    const beforeDto = __kitHostPlainDtoFromStore(store);
+    const plain = JSON.parse(JSON.stringify(beforeDto)) as Record<string, unknown>;
     if (kind === "type") {
       const rows = (plain.types as unknown[] | undefined) ?? [];
       for (const t of rows) {
@@ -393,21 +463,82 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     } else {
       return { ok: false, error: { kind: "InvalidValue", message: `moveToFolder: unknown kind ${kind}` } };
     }
+    const afterDto = asKitInstance(plain as KitLike).toJSON();
+    const adapter = __kitFolderAdapter(store);
+    if (adapter) {
+      try {
+        if (kind === "file") {
+          const filesBefore = (beforeDto.files ?? []) as Array<{ id?: string; name?: string; folder?: { id?: string } }>;
+          const fileBefore = filesBefore.find((f) => String(f.id) === entityId);
+          if (fileBefore) {
+            const fromP = __kitFileRelPath(beforeDto, fileBefore);
+            const fileAfter = ((afterDto.files ?? []) as typeof filesBefore).find((f) => String(f.id) === entityId);
+            if (fileAfter) {
+              const toP = __kitFileRelPath(afterDto, fileAfter);
+              if (fromP !== toP) await adapter.moveEntry(fromP, toP);
+            }
+          }
+        } else if (kind === "folder") {
+          const fromP = __kitSubfolderRelPath(beforeDto, entityId);
+          const toP = __kitSubfolderRelPath(afterDto, entityId);
+          if (fromP !== toP) await adapter.moveEntry(fromP, toP);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     store.replace(asKitInstance(plain as never));
     return { ok: true };
   }
   if (command === "semio.kit.createFolder" && args[0]) {
-    if (!bridge) return { ok: false, error: { kind: "Internal", message: "no kit bridge" } };
-    return kitStoreClientAddChildByKind(bridge, "Folder", args[0]);
+    if (bridge) return kitStoreClientAddChildByKind(bridge, "Folder", args[0]);
+    const snap = __kitHostPlainDtoFromStore(store);
+    const nextFolders = [...((snap.folders as unknown[]) ?? []), args[0] as Record<string, unknown>];
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders: nextFolders } as KitFullDto);
+    store.replace(Kit.fromPlain(merged));
+    const adapter = __kitFolderAdapter(store);
+    if (adapter) {
+      try {
+        const nf = args[0] as { id?: string; name?: string; parent?: { id?: string } };
+        const rel = __kitSubfolderRelPath(merged, String(nf.id ?? ""));
+        if (rel) await adapter.createDirectory(rel);
+      } catch {
+        /* ignore */
+      }
+    }
+    return { ok: true };
   }
   if (command === "semio.kit.updateFolder" && args[0] && args[1]) {
-    if (!bridge) return { ok: false, error: { kind: "Internal", message: "no kit bridge" } };
+    if (bridge) {
+      const fid = __kitHostIdStr(args[0]);
+      const patch = args[1] as Record<string, unknown>;
+      for (const [k, v] of Object.entries(patch)) {
+        const r = await writeKitStoreClientSchemaField(bridge, "Folder", k, v, fid);
+        if (!r.ok) return r;
+      }
+      return { ok: true };
+    }
     const fid = __kitHostIdStr(args[0]);
     const patch = args[1] as Record<string, unknown>;
-    for (const [k, v] of Object.entries(patch)) {
-      const r = await writeKitStoreClientSchemaField(bridge, "Folder", k, v, fid);
-      if (!r.ok) return r;
+    const snap = __kitHostPlainDtoFromStore(store);
+    const folders = ((snap.folders as unknown[]) ?? []).map((row) => {
+      if (row && typeof row === "object" && (row as { id?: string }).id === fid) {
+        return { ...(row as object), ...patch };
+      }
+      return row;
+    });
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders } as KitFullDto);
+    const adapter = __kitFolderAdapter(store);
+    if (adapter) {
+      try {
+        const fromP = __kitSubfolderRelPath(snap, fid);
+        const toP = __kitSubfolderRelPath(merged, fid);
+        if (fromP !== toP) await adapter.moveEntry(fromP, toP);
+      } catch {
+        /* ignore */
+      }
     }
+    store.replace(Kit.fromPlain(merged));
     return { ok: true };
   }
   return { ok: false, error: { kind: "NotSupported", message: `unhandled ${command}` } };
@@ -687,6 +818,10 @@ function noop(): void {}
 async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
   return { ok: true } as const;
 }
+
+/** Stable {@link WriteStatus} for schema hooks outside {@link KitScope} (avoids React #520 from fresh object identity). */
+const SCHEMA_HOOK_READONLY_STATUS = Object.freeze({ kind: "readonly" as const, pending: 0 });
+const SCHEMA_HOOK_IDLE_STATUS = Object.freeze({ kind: "idle" as const, pending: 0 });
 
 function kitIdFromRuntime(runtime: KitRuntimeContextValue): string | null {
   const g = runtime.kitId ?? (runtime.snapshot as { kit?: { id?: string } }).kit?.id;
@@ -1278,13 +1413,33 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       try {
         const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
-        const kitClient =
-          init.kitClient ??
-          (await createKitStoreClient({
-            initialKit: store.getSnapshot().kit.toJSON(),
-            forceFallback: shouldForceKitClientFallback(),
-            readScope: init.readScope,
-          }));
+        let kitClient = init.kitClient ?? null;
+        if (!kitClient) {
+          let initialDto: KitFullDto;
+          try {
+            initialDto = __kitHostPlainDtoFromStore(store);
+          } catch (toJsonErr) {
+            if (init.initialKit != null) {
+              initialDto = normalizeKitFullDtoFolderPaths(init.initialKit as KitFullDto);
+            } else {
+              throw toJsonErr instanceof Error ? toJsonErr : new Error(String(toJsonErr));
+            }
+          }
+          try {
+            kitClient = await createKitStoreClient({
+              initialKit: initialDto,
+              forceFallback: shouldForceKitClientFallback(),
+              readScope: init.readScope,
+            });
+          } catch (wasmErr) {
+            console.warn("[semio/react] createKitStoreClient (wasm) failed; retrying with in-memory fallback client", wasmErr);
+            kitClient = await createKitStoreClient({
+              initialKit: initialDto,
+              forceFallback: true,
+              readScope: init.readScope,
+            });
+          }
+        }
         (store as any).__semioKitBridge = kitClient;
         if (init.readScope) {
           try {
@@ -1298,7 +1453,9 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         });
         rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
       } catch (e) {
-        errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
+        const err = e instanceof Error ? e : new Error(String(e));
+        errRef.current.set(kitId, err);
+        throw err;
       } finally {
         loadingRef.current.delete(kitId);
         bump();
@@ -1505,7 +1662,9 @@ function useKitRuntime(): KitRuntimeContextValue {
 }
 
 function shouldForceKitClientFallback(): boolean {
-  return (import.meta as any)?.env?.MODE === "test";
+  if ((import.meta as any)?.env?.MODE === "test") return true;
+  if (typeof process !== "undefined" && (process as { env?: Record<string, string | undefined> }).env?.SEMIO_SKETCHPAD_RUN_EMBEDDED_TESTS === "1") return true;
+  return false;
 }
 
 /** Like {@link useKitRuntime} but returns `null` outside {@link KitScope} (no throw). */
@@ -5067,7 +5226,7 @@ export function useActiveKitGuid(): string | undefined {
 }
 
 /**
- * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitHostStore} for legacy design-store selectors; graph mutations use {@link executeSemioKitCommand} only.
+ * @emoji 🪝 Attach read-only `snapshot` / `fileUrls` on {@link KitHostStore} for legacy design-store selectors; graph mutations use {@link applyKitHostGraphOp} / {@link executeSemioKitCommand}.
  */
 export function attachSketchpadKitReadShell(kitStore: KitHostStore): void {
   const s = kitStore as any;
@@ -5128,8 +5287,11 @@ export const usePieceById = usePieceTriad;
 export const useDesignById = useDesignTriad;
 
 function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any> {
-  const runtime = useKitRuntime();
+  const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
+  if (!runtime) {
+    return [undefined, noopAsyncSet, SCHEMA_HOOK_READONLY_STATUS] as const;
+  }
   const ref = resolveReference(runtime.state, typeName, idValue, scope);
   const value = ref?.value;
   const canWrite = runtime.canWrite && !!ref;
@@ -5140,13 +5302,16 @@ function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any
     },
     [runtime, typeName, idValue, scope, canWrite],
   );
-  const status: WriteStatus = canWrite ? { kind: "idle", pending: 0 } : { kind: "readonly", pending: 0 };
+  const status: WriteStatus = canWrite ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
   return [value, setValue, status] as const;
 }
 
 function useSchemaFieldState(typeName: string, fieldName: string, idValue?: string): HookTriad<any> {
-  const runtime = useKitRuntime();
+  const runtime = useKitRuntimeSafe();
   const scope = React.useContext(SchemaScopeContext);
+  if (!runtime) {
+    return [undefined, noopAsyncSet, SCHEMA_HOOK_READONLY_STATUS] as const;
+  }
   const value = readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
   const classicWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
   const rustTarget = React.useMemo(() => resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope), [runtime.kitClient, runtime.snapshot.kit.id, runtime.canWrite, typeName, fieldName, idValue, scope]);
@@ -5191,20 +5356,15 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
     [runtime, rustTarget, classicWritable, typeName, fieldName, idValue, scope, value],
   );
 
-  let status: WriteStatus;
-  if (rustTarget && runtime.kitClient) {
-    if (!runtime.canWrite) {
-      status = { kind: "readonly", pending: 0 };
-    } else if (pending > 0) {
-      status = { kind: "pending", pending, lastError: lastErr };
-    } else if (lastErr) {
-      status = { kind: "error", pending: 0, lastError: lastErr };
-    } else {
-      status = { kind: "idle", pending: 0 };
+  const status: WriteStatus = React.useMemo(() => {
+    if (rustTarget && runtime.kitClient) {
+      if (!runtime.canWrite) return SCHEMA_HOOK_READONLY_STATUS;
+      if (pending > 0) return { kind: "pending", pending, lastError: lastErr } as const;
+      if (lastErr) return { kind: "error", pending: 0, lastError: lastErr } as const;
+      return SCHEMA_HOOK_IDLE_STATUS;
     }
-  } else {
-    status = classicWritable ? { kind: "idle", pending: 0 } : { kind: "readonly", pending: 0 };
-  }
+    return classicWritable ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
+  }, [rustTarget, runtime.kitClient, runtime.canWrite, pending, lastErr, classicWritable]);
 
   return [value, setValue, status] as const;
 }

@@ -12,7 +12,7 @@
 // Play application entrypoint registering sketchpad apps and rendering the root.
 // Entrypoint MUST register all app configs before rendering the Sketchpad component.
 
-import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, qualityConfig, typeConfig } from "@semio/sketchpad";
+import { Sketchpad, appRegistry, designConfig, docsConfig, feedbackConfig, homeConfig, kitConfig, typeConfig } from "@semio/sketchpad";
 import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import { InMemoryKitStore } from "@semio/react";
@@ -24,7 +24,6 @@ appRegistry.register(docsConfig);
 appRegistry.register(feedbackConfig);
 appRegistry.register(homeConfig);
 appRegistry.register(kitConfig);
-appRegistry.register(qualityConfig);
 appRegistry.register(typeConfig);
 
 const temporaryKitStoreFactory: SketchpadKitStoreFactory = (kit) => new InMemoryKitStore(kit);

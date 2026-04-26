@@ -48,6 +48,7 @@ export default defineConfig(async () => {
     resolve: {
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../../js") },
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname, "../../sketchpad") },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../../studio") },

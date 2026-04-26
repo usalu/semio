@@ -3590,10 +3590,20 @@ export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 // #endregion File
 
 // #region Folder
-export const FolderSchema = z.object({ id: z.string(), path: z.string(), description: z.string().optional() });
+export const FolderSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  parent: z.object({ id: z.string() }).optional(),
+  path: z.string().optional(),
+  description: z.string().optional(),
+});
 export type FolderPlain = z.infer<typeof FolderSchema>;
 export class Folder implements FolderPlain {
-  id!: string; path!: string; description?: string;
+  id!: string;
+  name?: string;
+  parent?: { id: string };
+  path?: string;
+  description?: string;
   constructor(plain: FolderPlain) { Object.assign(this, FolderSchema.parse(plain)); }
   static from(plain: FolderPlain): Folder { return new Folder(plain); }
   static fromPlain(plain: FolderPlain): Folder { return new Folder(plain); }
@@ -3638,10 +3648,28 @@ export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 // #endregion Benchmark
 
 // #region Quality
-export const QualitySchema = z.object({ id: z.string(), key: z.string(), value: z.string().optional(), unit: z.string().optional(), definition: z.string().optional(), description: z.string().optional(), benchmarks: z.array(BenchmarkSchema).optional() });
+export const QualitySchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  key: z.string(),
+  folder: z.string().optional(),
+  value: z.string().optional(),
+  unit: z.string().optional(),
+  definition: z.string().optional(),
+  description: z.string().optional(),
+  benchmarks: z.array(BenchmarkSchema).optional(),
+});
 export type QualityPlain = z.infer<typeof QualitySchema>;
 export class Quality implements QualityPlain {
-  id!: string; key!: string; value?: string; unit?: string; definition?: string; description?: string; benchmarks?: Benchmark[];
+  id!: string;
+  name?: string;
+  key!: string;
+  folder?: string;
+  value?: string;
+  unit?: string;
+  definition?: string;
+  description?: string;
+  benchmarks?: Benchmark[];
   constructor(plain: QualityPlain) { const p = QualitySchema.parse(plain); Object.assign(this, p); this.benchmarks = p.benchmarks?.map((b) => new Benchmark(b)); }
   static from(plain: QualityPlain): Quality { return new Quality(plain); }
   static fromPlain(plain: QualityPlain): Quality { return new Quality(plain); }
@@ -3736,7 +3764,13 @@ export type FamiliesDiff = z.infer<typeof FamiliesDiffSchema>;
 // #endregion Family
 
 // #region Prop
-export const PropSchema = z.object({ id: z.string(), key: z.string(), value: z.string().optional(), unit: z.string().optional(), quality: QualityIdSchema.optional() });
+export const PropSchema = z.object({
+  id: z.coerce.string(),
+  key: z.coerce.string(),
+  value: z.string().optional(),
+  unit: z.string().optional(),
+  quality: QualityIdSchema.optional(),
+});
 export type PropPlain = z.infer<typeof PropSchema>;
 export class Prop implements PropPlain {
   id!: string; key!: string; value?: string; unit?: string; quality?: QualityId;
@@ -4480,6 +4514,36 @@ export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
 export const KitFullDtoSchema = z.object({ id: z.string(), name: z.string(), version: z.string().optional(), types: z.array(TypeSchema).optional(), designs: z.array(DesignSchema).optional(), tags: z.array(TagSchema).optional(), concepts: z.array(ConceptSchema).optional(), families: z.array(FamilySchema).optional(), qualities: z.array(QualitySchema).optional(), files: z.array(FileSchema).optional(), folders: z.array(FolderSchema).optional(), authors: z.array(AuthorSchema).optional(), remote: z.string().optional(), homepage: z.string().optional(), license: z.string().optional(), preview: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional(), createdAt: DateProperty(), updatedAt: DateProperty() });
 export type KitFullDto = z.infer<typeof KitFullDtoSchema>;
 
+/** @emoji 🧾 Fills missing `folders[].path` from legacy `name` + `parent` before {@link FolderSchema} parse. */
+export function normalizeKitFullDtoFolderPaths(dto: KitFullDto): KitFullDto {
+  const foldersUnknown = (dto as { folders?: unknown }).folders;
+  if (!Array.isArray(foldersUnknown) || foldersUnknown.length === 0) return dto;
+  const list = foldersUnknown as Array<Record<string, unknown>>;
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const row of list) {
+    if (row && typeof row.id === "string") byId.set(row.id, row);
+  }
+  const resolvePath = (f: Record<string, unknown>, visiting: Set<string>): string => {
+    const fid = typeof f.id === "string" ? f.id : "";
+    const existing = f.path;
+    if (typeof existing === "string" && existing.length > 0) return existing;
+    if (fid && visiting.has(fid)) return String(f.name ?? fid);
+    if (fid) visiting.add(fid);
+    const seg = String((f.name as string | undefined) ?? (fid || "folder"));
+    const parent = f.parent as { id?: string } | undefined;
+    const pid = parent?.id != null ? String(parent.id) : "";
+    if (pid && byId.has(pid)) {
+      const base = resolvePath(byId.get(pid)!, visiting);
+      if (fid) visiting.delete(fid);
+      return base ? `${base}/${seg}` : seg;
+    }
+    if (fid) visiting.delete(fid);
+    return seg;
+  };
+  const nextFolders = list.map((row) => ({ ...row, path: resolvePath(row, new Set()) }));
+  return { ...(dto as object), folders: nextFolders } as KitFullDto;
+}
+
 export class Kit {
   /** @emoji 📌 Anchoring kinds exposed to copy/paste algorithm UI. */
   static readonly pasteDesignAnchoringKinds: readonly PasteDesignAnchoringKind[] = [
@@ -4494,7 +4558,7 @@ export class Kit {
 
   /** @emoji 🧭 Normalizes plain/DTO kit records to a {@link Kit} entity (replaces legacy `Kit.ensure`). */
   static ensure(kit: Kit | KitFullDto): Kit {
-    return kit instanceof Kit ? kit : Kit.fromPlain(KitFullDtoSchema.parse(kit));
+    return kit instanceof Kit ? kit : Kit.fromPlain(kit as KitFullDto);
   }
 
   /** @emoji 📋 Copy selection (TS path stub — use REST language or extend with KitStore batch). */
@@ -4516,7 +4580,7 @@ export class Kit {
 
   id!: string; name!: string; version?: string; types?: Type[]; designs?: Design[]; tags?: Tag[]; concepts?: Concept[]; families?: Family[]; qualities?: Quality[]; files?: File[]; folders?: Folder[]; authors?: Author[]; remote?: string; homepage?: string; license?: string; preview?: string; icon?: string; image?: string; description?: string; attributes?: Attribute[]; createdAt!: string; updatedAt!: string;
   constructor(data: KitFullDto) {
-    const p = KitFullDtoSchema.parse(data);
+    const p = KitFullDtoSchema.parse(normalizeKitFullDtoFolderPaths(data));
     Object.assign(this, p);
     this.types = p.types?.map((t) => new Type(t));
     this.designs = p.designs?.map((d) => new Design(d));
@@ -4652,7 +4716,7 @@ export function id(): string {
 
 /** @emoji 🧭 DTO/entity to `Kit` (react / kit registry). */
 export function asKitInstance(input: KitLike): Kit {
-  return input instanceof Kit ? input : Kit.fromPlain(KitFullDtoSchema.parse(input as KitFullDto));
+  return input instanceof Kit ? input : Kit.fromPlain(input as KitFullDto);
 }
 
 /**
@@ -4692,7 +4756,9 @@ export class InMemoryKitStore implements KitHostStore {
   private _kit: Kit;
   /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
   readonly name = "InMemoryKitStore";
-  constructor(seed: Kit) { this._kit = seed; }
+  constructor(seed: KitLike) {
+    this._kit = seed instanceof Kit ? seed : Kit.fromPlain(seed as KitFullDto);
+  }
   getSnapshot(): KitHostStoreSnapshot {
     const c = (this as InMemoryKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
     const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
@@ -4724,7 +4790,7 @@ export class JsonFileKitStore implements KitHostStore {
   private constructor(private readonly adapter: KitJsonFileAdapter, seed: Kit) { this._kit = seed; }
   static async create(adapter: KitJsonFileAdapter) {
     const json = await adapter.read();
-    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(json)));
+    const seed = json.trim() === "" ? asKitInstance({ id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }) : Kit.fromPlain(JSON.parse(json) as KitFullDto);
     return new JsonFileKitStore(adapter, seed);
   }
   getSnapshot(): KitHostStoreSnapshot {
@@ -4745,7 +4811,12 @@ export class FolderKitStore implements KitHostStore {
   static async create(adapter: KitFolderAdapter, initial?: KitFullDto) {
     const bytes = await adapter.readKit();
     if (bytes != null && bytes.length > 0) {
-      try { const t = new TextDecoder().decode(bytes); return new FolderKitStore(adapter, Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(t)))); } catch { /* fall through */ }
+      try {
+        const t = new TextDecoder().decode(bytes);
+        return new FolderKitStore(adapter, Kit.fromPlain(JSON.parse(t) as KitFullDto));
+      } catch {
+        /* fall through */
+      }
     }
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }

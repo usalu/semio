@@ -4,19 +4,19 @@ overview: Make `semio/js` expose only clean, fully typed store facades with type
 todos:
  - id: event-contract
    content: Type the Rust/GraphQL event contract and add schema/subscription coverage.
-   status: in_progress
+   status: completed
  - id: js-store-api
    content: Refactor semio/js to typed store methods and per-event subscriptions with no public command leaks.
-   status: pending
+   status: completed
  - id: react-boundary
    content: Migrate semio/react to consume and expose only clean typed store APIs.
-   status: pending
+   status: completed
  - id: sketchpad-migration
    content: Remove sketchpad kitWire/string-command usage and route mutations through typed stores.
-   status: pending
+   status: completed
  - id: validation
    content: Run Rust, JS, React, and Sketchpad targeted tests and close the repo ticket.
-   status: pending
+   status: completed
 isProject: false
 ---
 

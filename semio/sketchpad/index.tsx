@@ -23,7 +23,6 @@ import {
   Author,
   AuthorId,
   Camera,
-  Connector,
   Concept,
   Connection,
   ConnectionDiff,
@@ -1943,7 +1942,7 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; desktop?: D
 // #endregion 📹Sketchpad State
 
 // #region 💧Commands
-// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `executeSemioKitCommand` → `@semio/js` / rs).
+// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `applyKitHostGraphOp`, `executeSemioKitCommand` → `@semio/js` / rs).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -18779,16 +18778,14 @@ export const SketchpadScopeProvider: FC<SketchpadScopeProviderProps> = (props) =
     return <SketchpadStartupFallback />;
   }
 
-  return React.createElement(
-    KitStoreProvider,
-    null,
-    React.createElement(SketchpadScopeWithKitRegistry, {
-      ...props,
-      scopeId: id,
-      hydratedInitialState: initialState,
-      configsReady,
-    }),
-  );
+  // Single {@link KitStoreProvider} lives in {@link Sketchpad} (outer shell). Nested providers
+  // overwrite/clear {@link getKitRegistryBridge}'s module singleton on inner unmount and break registry opens.
+  return React.createElement(SketchpadScopeWithKitRegistry, {
+    ...props,
+    scopeId: id,
+    hydratedInitialState: initialState,
+    configsReady,
+  });
 };
 
 /**
@@ -54474,7 +54471,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await ensureMetabolismFolderKitDbFile();
       // createFolderKitStore is defined inline in this file, use it directly.
       const adapter = await createNodeMetabolismFolderAdapter();
-      const store = await createFolderKitStore(adapter);
+      const store = await createFolderKitStore(adapter, await loadMetabolismKitFixture());
       const kit = store.getSnapshot().kit;
       const nakagin = kit.designs?.find((d: any) => d.name === "Nakagin Capsule Tower" || (d.id && String(d.id).includes("9a890dd4")));
       expect(nakagin).toBeTruthy();
@@ -54628,12 +54625,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     });
 
     test("persisted folder kits restore from their stored source without invoking other local factories", async () => {
-      const restoredKit: Kit = { id: id(), name: "Restored Folder Kit", types: [], designs: [] };
+      const t = new Date().toISOString();
+      const restoredKit: Kit = { id: id(), name: "Restored Folder Kit", types: [], designs: [], createdAt: t, updatedAt: t };
       const folderFactoryCalls: string[] = [];
       let fileFactoryCallCount = 0;
       const createFakeKitStore = (kit: Kit) =>
         ({
-          getSnapshot: () => ({ kit, sync: { status: "ready", dirty: false, readonly: false } }),
+          getSnapshot: () => ({
+            kit,
+            sync: { status: "ready", dirty: false, readonly: false, lastSyncedAt: null, error: null },
+          }),
           subscribe: () => () => {},
           save: async () => {},
           reload: async () => {},
@@ -54664,7 +54665,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         {
           kits: [
             {
-              kit: { id: restoredKit.id, name: "Persisted Snapshot", types: [], designs: [] },
+              kit: { id: restoredKit.id, name: "Persisted Snapshot", types: [], designs: [], createdAt: t, updatedAt: t },
               kind: "folder",
               source: { kind: "folder", path: "C:/kits/metabolism" },
             },
@@ -54681,14 +54682,18 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       expect(folderFactoryCalls).toEqual(["C:/kits/metabolism"]);
       expect(fileFactoryCallCount).toBe(0);
-      expect(store.kit(restoredKit.id).snapshot().name).toBe("Restored Folder Kit");
+      expect(store.kit(restoredKit.id).getSnapshot().kit.name).toBe("Restored Folder Kit");
     });
 
     test("persisted local kits without a stored source do not trigger startup pickers", async () => {
       let folderFactoryCallCount = 0;
+      const t = new Date().toISOString();
       const createFakeKitStore = (kit: Kit) =>
         ({
-          getSnapshot: () => ({ kit, sync: { status: "ready", dirty: false, readonly: false } }),
+          getSnapshot: () => ({
+            kit,
+            sync: { status: "ready", dirty: false, readonly: false, lastSyncedAt: null, error: null },
+          }),
           subscribe: () => () => {},
           save: async () => {},
           reload: async () => {},
@@ -54703,7 +54708,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         }) as unknown as KitHostStore;
       const folderFactory: SketchpadKitStoreFactory = async () => {
         folderFactoryCallCount += 1;
-        return createFakeKitStore({ id: id(), name: "Unexpected Prompted Folder Kit", types: [], designs: [] });
+        return createFakeKitStore({
+          id: id(),
+          name: "Unexpected Prompted Folder Kit",
+          types: [],
+          designs: [],
+          createdAt: t,
+          updatedAt: t,
+        });
       };
 
       const kitId = id();
@@ -54713,7 +54725,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         {
           kits: [
             {
-              kit: { id: kitId, name: "E2E local kit", types: [], designs: [] },
+              kit: { id: kitId, name: "E2E local kit", types: [], designs: [], createdAt: t, updatedAt: t },
               kind: "file",
             },
           ],
@@ -54728,7 +54740,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(folderFactoryCallCount).toBe(0);
-      expect(store.kit(kitId).snapshot().name).toBe("E2E local kit");
+      expect(store.kit(kitId).getSnapshot().kit.name).toBe("E2E local kit");
     });
 
     test("skipBrowserKitSnapshotPersistence keeps localStorage kit snapshots empty (desktop)", async () => {

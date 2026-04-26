@@ -1,0 +1,10 @@
+{
+  "title": "Sketchpad Playwright And Registry Open Compliance",
+  "emoji": "🧪",
+  "status": "open",
+  "description": "Green semio/sketchpad npm run test (Playwright): fix KitRegistryProvider.open swallowing errors, metabolism kit registry row, moveToFolder, folder adapter ops, React #520. Respect layering rs\u003c-graphql\u003c-js\u003c-react\u003c-sketchpad.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a4a2171ba5c84192a4f18f6342ed15df"
+  ]
+}
