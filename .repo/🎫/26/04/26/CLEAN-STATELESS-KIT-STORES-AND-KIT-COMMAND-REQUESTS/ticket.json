@@ -3,10 +3,11 @@
   "emoji": "🎫",
   "status": "closed",
   "description": "Implement stateless semio/js stores (KitStore, DesignStore, TypeStore facades) that only track task ids; single typed execute to semio/rs; extend Rust KitStoreHandle.execute so every call allocates a task id and emits lifecycle events; remove setField and any from public JS boundary; update semio/react hooks for taskId; extend existing tests.",
-  "summary": "Added KitBackboneWireShim types (BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict) and stateless KitStore facade over SemioKitBridge with requestId lifecycle tracking, resolveSemioKitBridge, and createKitStore. Wired getOrAttachSemioKitBridge + executeSemioKitCommand + command engine to KitHostStore and __semioKitBridge. Migrated semio/react and semio/sketchpad to KitHostStore / KitHostStoreSnapshot; registry attaches bridge on __semioKitBridge; read-store getters accept bridge or facade. Restored useKitStoreSnapshot hook name after snapshot rename. JS (141) and React (11) embedded tests plus tsc pass for js, react, sketchpad.",
+  "summary": "Completed stateless KitStore plan: typed KitTypedShellCommand + dispatchKitTypedShellCommand; acquire/release facade per bridge; KitStore.runMutation only (no public patch/add/remove); domain facades (DesignStore, TypeStore, etc.); React kitCommandStore + runKitTypedMutation. executeSemioKitCommand now routes all mutations through acquireSemioKitCommandFacade + runMutation so sketchpad string commands share the same shell path. JS embedded tests + vitest 143 passed; React build/tests verified.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪1be43ce81c274d37854618a32ec63860",
-    "⚪a705d9e0c6f24e6a9c84748db9ba7b54"
+    "⚪a705d9e0c6f24e6a9c84748db9ba7b54",
+    "⚪db76ab5edc8b42a8ab185c3a668be0bb"
   ]
 }

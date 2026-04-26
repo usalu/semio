@@ -10,6 +10,8 @@ bundle:
 # 🧾 Specification
 
 You MUST only export the `KitStore` along with all types that are needed for the commands.
+You MUST NOT store any kit data.
+You MUST NOT cache any kit data locally.
 
 ## 🕸️ Systems
 

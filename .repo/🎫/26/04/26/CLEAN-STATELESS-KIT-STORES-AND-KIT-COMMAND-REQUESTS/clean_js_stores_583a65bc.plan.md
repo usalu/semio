@@ -10,7 +10,7 @@ todos:
    status: completed
  - id: typed-execute
    content: Introduce typed command/result/request receipt maps around the single Rust execute boundary.
-   status: pending
+   status: completed
  - id: store-facades
    content: Implement stateless `KitStore` plus domain facades as the only public semio/js store API.
    status: completed

@@ -14,9 +14,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "comlink": "^4.4.2",
-    "fflate": "^0.8.2",
-    "zod": "^4.3.5"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

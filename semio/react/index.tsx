@@ -8,6 +8,7 @@
 // #region ⚛️Imports
 
 import {
+  acquireSemioKitCommandFacade,
   applyKitClientSnapshotToLocalStore,
   asKitInstance,
   createFolderKitStore,
@@ -55,9 +56,12 @@ import {
   type KitJsonFileAdapter,
   type KitLike,
   type KitHostStore,
+  KitStore,
+  releaseSemioKitCommandFacade,
   type KitStoreClient,
   type KitStoreReadSnap,
   type KitHostStoreSnapshot,
+  type KitTypedShellCommand,
   type KitShallowDto,
   type SetError,
   type SetResult,
@@ -69,7 +73,8 @@ import * as React from "react";
 
 // #endregion ⚛️Imports
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinaryStore, KitConflict, KitFileState, KitHostStore, KitHostStoreSnapshot, KitStoreExecuteResult } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitBinaryStore, KitConflict, KitFileState, KitHostStore, KitHostStoreSnapshot, KitStoreExecuteResult, KitTypedShellCommand } from "@semio/js";
+export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileStore, FolderStore, KitEntityStore } from "@semio/js";
 
 // #region ⚛️Types
 
@@ -150,6 +155,11 @@ export type SchemaScope = {
   path: Array<string | number>;
 };
 
+function runKitTypedMutation(ks: KitStore | null, cmd: KitTypedShellCommand): Promise<SetResult> {
+  if (!ks) return Promise.resolve({ ok: false, error: { kind: "Internal", message: "no kit command facade" } });
+  return ks.runMutation(cmd);
+}
+
 export type KitRuntimeContextValue = {
   store: KitHostStore;
   snapshot: KitHostStoreSnapshot;
@@ -163,6 +173,8 @@ export type KitRuntimeContextValue = {
   /** Optional open/backbone config when the kit is not from {@link KitRegistryProvider}. */
   kitBackbone?: KitBackboneConfig;
   kitClient: KitStoreClient | null;
+  /** @emoji 🧾 Typed shell facade over {@link kitClient}; preferred path for writes. */
+  kitCommandStore: KitStore | null;
   setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
   setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
 };
@@ -321,22 +333,22 @@ function connectionDiffWireKeyForDataKey(dataKey: string): string {
   return dataKey;
 }
 
-/** @emoji 🧾 Single field/fragment routed to `KitStoreClient.patchEntityField` (WASM change commands, no local graph replace). */
+/** @emoji 🧾 Single field/fragment routed through {@link KitStore.runMutation} (WASM shell, no local graph replace). */
 async function writeKitClientSchemaField(
-  kitClient: KitStoreClient,
+  kitCommands: KitStore,
   typeName: string,
   dataKey: string,
   value: unknown,
   entityId: string,
 ): Promise<SetResult> {
   if (typeName === "Piece" && dataKey !== "name" && dataKey !== "color") {
-    return kitClient.patchEntityField("Piece", entityId, "__patch", { [dataKey]: value } as any);
+    return kitCommands.runMutation({ kind: "setEntityField", entityKind: "Piece", id: entityId, field: "__patch", value: { [dataKey]: value } as any });
   }
   if (typeName === "Connection") {
     const w = connectionDiffWireKeyForDataKey(dataKey);
-    return kitClient.patchEntityField("Connection", entityId, "__patch", { [w]: value } as any);
+    return kitCommands.runMutation({ kind: "setEntityField", entityKind: "Connection", id: entityId, field: "__patch", value: { [w]: value } as any });
   }
-  return kitClient.patchEntityField(typeName, entityId, dataKey, value);
+  return kitCommands.runMutation({ kind: "setEntityField", entityKind: typeName, id: entityId, field: dataKey, value });
 }
 
 function noop(): void {}
@@ -864,6 +876,7 @@ export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 export type KitRegistryEntry = {
   store: KitHostStore;
   kitClient: KitStoreClient;
+  kitCommandStore: KitStore;
   refs: number;
   /** @emoji 📌How this kit is persisted; derived at {@link KitRegistryValue.open} time. */
   persistence: KitPersistenceInfo;
@@ -891,6 +904,7 @@ export type KitRegistryValue = {
 type RegistryRow = {
   store: KitHostStore;
   kitClient: KitStoreClient;
+  kitCommandStore: KitStore;
   refs: number;
   unsub: () => void;
   persistence: KitPersistenceInfo;
@@ -927,10 +941,11 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
         const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
         (store as any).__semioKitBridge = kitClient;
+        const kitCommandStore = acquireSemioKitCommandFacade(kitClient);
         const unsub = kitClient.subscribe(() => {
           void applyKitClientSnapshotToLocalStore(kitClient, store);
         });
-        rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
+        rowsRef.current.set(kitId, { store, kitClient, kitCommandStore, refs: 1, unsub, persistence });
       } catch (e) {
         errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
       } finally {
@@ -949,6 +964,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       if (row.refs <= 0) {
         row.unsub();
         try {
+          releaseSemioKitCommandFacade(row.kitClient);
           (row.store as any).__semioKitBridgeUnsub?.();
           delete (row.store as any).__semioKitBridgeUnsub;
           delete (row.store as any).__semioKitBridge;
@@ -1332,6 +1348,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
     let client: KitStoreClient | null = null;
     void createKitStoreClient({ initialKit: st.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }).then((c) => {
       if (cancelled) {
+        releaseSemioKitCommandFacade(c);
         c.dispose();
         return;
       }
@@ -1340,13 +1357,17 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
     });
     return () => {
       cancelled = true;
-      client?.dispose();
+      if (client) {
+        releaseSemioKitCommandFacade(client);
+        client.dispose();
+      }
       setKitClientState(null);
     };
   }, [kitIdProp, externalStore, internalStore, kitClientProp]);
 
   const store = kitIdProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
   const kitClient = kitIdProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
+  const kitCommandStore = React.useMemo(() => (kitClient ? acquireSemioKitCommandFacade(kitClient) : null), [kitClient]);
 
   if (kitIdProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
   if (!store) return React.createElement(React.Fragment, null, fallback);
@@ -1429,7 +1450,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
 
   const setFieldValue = React.useCallback(
     async (typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
-      if (!kitClient) {
+      if (!kitClient || !kitCommandStore) {
         const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
         pushSetRejection(e);
         return { ok: false, error: e };
@@ -1455,16 +1476,16 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
         pushSetRejection(e);
         return { ok: false, error: e };
       }
-      const r = await writeKitClientSchemaField(kitClient, typeName, key, val, entityId);
+      const r = await writeKitClientSchemaField(kitCommandStore, typeName, key, val, entityId);
       if (!r.ok) pushSetRejection(r.error);
       return r;
     },
-    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
+    [kitClient, kitCommandStore, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const setObjectValue = React.useCallback(
     async (typeName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
-      if (!kitClient) {
+      if (!kitClient || !kitCommandStore) {
         const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
         pushSetRejection(e);
         return { ok: false, error: e };
@@ -1490,7 +1511,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
         if (!isWritableField(currentState, typeName, fn, idValue, scope)) continue;
         const dataKey = getFieldDataKey(typeName, fn);
         const v = (nextObj as any)?.[dataKey];
-        const r = await writeKitClientSchemaField(kitClient, typeName, dataKey, v, entityId);
+        const r = await writeKitClientSchemaField(kitCommandStore, typeName, dataKey, v, entityId);
         if (!r.ok) {
           pushSetRejection(r.error);
           return r;
@@ -1498,7 +1519,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
       }
       return { ok: true } as const;
     },
-    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
+    [kitClient, kitCommandStore, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const activeKitId = kitIdProp ?? snapshot.kit?.id;
@@ -1515,10 +1536,11 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
       kitId: activeKitId,
       kitBackbone: backbone,
       kitClient,
+      kitCommandStore,
       setFieldValue,
       setObjectValue,
     }),
-    [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, setFieldValue, setObjectValue],
+    [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, kitCommandStore, setFieldValue, setObjectValue],
   );
 
   return React.createElement(KitRuntimeContext.Provider, { value }, children);
@@ -2550,7 +2572,7 @@ export const useUpdateAuthor = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Author", authorId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Author", id: authorId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2582,7 +2604,7 @@ export const useUpdateType = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Type", typeId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Type", id: typeId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2614,7 +2636,7 @@ export const useUpdateDesign = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Design", designId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Design", id: designId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2646,7 +2668,7 @@ export const useUpdateQuality = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Quality", qualityId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Quality", id: qualityId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2678,7 +2700,7 @@ export const useUpdatePort = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Port", portId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Port", id: portId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2710,7 +2732,7 @@ export const useUpdateTag = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Tag", tagId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Tag", id: tagId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2745,7 +2767,7 @@ export const useUpdateFile = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("File", fileId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: fileId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2777,7 +2799,7 @@ export const useUpdateFolder = (): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const [field, value] of Object.entries(patch)) {
-        const r = await runtime.kitClient.patchEntityField("Folder", folderId, field, value);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Folder", id: folderId, field, value });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2806,7 +2828,7 @@ export function useMoveToFolder(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.patchEntityField("File", fileId, "folder", targetFolderId);
+      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: fileId, field: "folder", value: targetFolderId });
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2843,19 +2865,19 @@ export function useMoveKitArtifactToFolder(): {
         let r: SetResult;
         switch (artifactKind) {
           case "type":
-            r = await runtime.kitClient.patchEntityField("Type", artifactId, "folder", folderId);
+            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Type", id: String(artifactId), field: "folder", value: folderId });
             break;
           case "design":
-            r = await runtime.kitClient.patchEntityField("Design", artifactId, "folder", folderId);
+            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Design", id: String(artifactId), field: "folder", value: folderId });
             break;
           case "quality":
-            r = await runtime.kitClient.patchEntityField("Quality", artifactId, "folder", folderId);
+            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Quality", id: String(artifactId), field: "folder", value: folderId });
             break;
           case "file":
-            r = await runtime.kitClient.patchEntityField("File", artifactId, "folder", folderId ? { id: folderId } : null);
+            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "File", id: String(artifactId), field: "folder", value: folderId ? { id: folderId } : null });
             break;
           case "folder":
-            r = await runtime.kitClient.patchEntityField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
+            r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Folder", id: String(artifactId), field: "parent", value: folderId ? { id: folderId } : null });
             break;
           default: {
             const e: SetError = { kind: "InvalidValue", message: `unknown artifact kind: ${artifactKind}` };
@@ -3221,7 +3243,7 @@ export function useUpdatePiece(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.patchEntityField("Piece", pieceId, "__patch", patch);
+      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Piece", id: pieceId, field: "__patch", value: patch });
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3250,7 +3272,7 @@ export function useUpdatePieces(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runtime.kitClient.patchEntityField("Piece", u.id, "__patch", u.diff);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Piece", id: u.id, field: "__patch", value: u.diff });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3279,7 +3301,7 @@ export function useUpdateConnection(): {
         return { ok: false, error: e } as const;
       }
       setStatus({ kind: "pending", pending: 1 });
-      const r = await runtime.kitClient.patchEntityField("Connection", connectionId, "__patch", patch);
+      const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Connection", id: connectionId, field: "__patch", value: patch });
       if (!r.ok) {
         runtime.pushSetRejection(r.error);
         setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -3308,7 +3330,7 @@ export function useUpdateConnections(): {
       }
       setStatus({ kind: "pending", pending: 1 });
       for (const u of updates) {
-        const r = await runtime.kitClient.patchEntityField("Connection", u.id, "__patch", u.diff);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: "Connection", id: u.id, field: "__patch", value: u.diff });
         if (!r.ok) {
           runtime.pushSetRejection(r.error);
           setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -4479,7 +4501,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         }
         setPending((p) => p + 1);
         setLastErr(undefined);
-        const r = await runtime.kitClient.patchEntityField(rustTarget.kind, rustTarget.id, rustTarget.field, resolved);
+        const r = await runKitTypedMutation(runtime.kitCommandStore, { kind: "setEntityField", entityKind: rustTarget.kind, id: rustTarget.id, field: rustTarget.field, value: resolved });
         setPending((p) => p - 1);
         if (!r.ok) {
           setLastErr(r.error);
