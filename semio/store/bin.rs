@@ -1,51 +1,20 @@
-//! `semio-store`: NDJSON JSON-RPC 2.0 on stdio (stdout = frames, stderr = logs).
+//! `semio-store`: HTTP GraphQL (stderr = logs). See `jsonrpc.rs` (name kept) for routes.
 
 mod jsonrpc;
 
-use std::io::{self, BufRead, Write as _};
-use std::sync::mpsc;
-use std::sync::OnceLock;
-use std::thread;
+use std::io;
 
-use semio::kit_store::KitStore;
-
-fn main() {
+#[tokio::main]
+async fn main() {
     let _ = tracing_subscriber::fmt()
         .with_env_filter(
             std::env::var("RUST_LOG")
-                .or_else(|_| std::env::var("RUST_TRACING")) // be lenient
-                .unwrap_or_else(|_| "error".to_string()),
+                .or_else(|_| std::env::var("RUST_TRACING"))
+                .unwrap_or_else(|_| "error,semio_store=info,semio_store_event=off".to_string()),
         )
         .with_target(false)
         .with_writer(io::stderr)
         .try_init();
 
-    let (tx, rx) = mpsc::channel::<String>();
-    let writer = thread::spawn(move || {
-        let stdout = io::stdout();
-        let mut lock = stdout.lock();
-        for line in rx {
-            if writeln!(&mut lock, "{line}").is_err() {
-                break;
-            }
-            if lock.flush().is_err() {
-                break;
-            }
-        }
-    });
-
-    let store: OnceLock<KitStore> = OnceLock::new();
-    let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-        let line = match line {
-            Ok(l) => l,
-            Err(_) => break,
-        };
-        if line.is_empty() {
-            continue;
-        }
-        jsonrpc::handle_line(&line, &store, &tx);
-    }
-    drop(tx);
-    let _ = writer.join();
+    jsonrpc::run().await
 }

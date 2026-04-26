@@ -463,6 +463,12 @@ function kitGraphqlData(response: unknown): Record<string, unknown> {
   throw new Error("kitGraphql: no data in response");
 }
 
+/** @internal `gqlRunWithReadScope` maps the main line to `kitStore` and other scopes to `kitReadScope`. */
+function gqlDataKitQueryRoot<T>(d: { kitStore?: T; kitReadScope?: T } | null | undefined): T | undefined {
+  if (d == null) return undefined;
+  return d.kitStore !== undefined && d.kitStore !== null ? d.kitStore : d.kitReadScope;
+}
+
 function kitGraphqlJsonToReadonlyArray(v: unknown): readonly unknown[] {
   if (Array.isArray(v)) return v;
   if (v == null) return [];
@@ -477,7 +483,8 @@ function kitGraphqlJsonToReadonlyArray(v: unknown): readonly unknown[] {
   return [];
 }
 
-function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
+/** @emoji 🧾 Narrows subscription payloads to semio kit command lifecycle rows. */
+export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
   const c = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
   if (c == null || typeof c !== "object") return false;
   const v = c as Record<string, unknown>;
@@ -759,6 +766,16 @@ export class KitStore {
     scope: KitReadScope,
     body: { query: string; variables?: Record<string, unknown> | undefined; operationName?: string },
   ): Promise<unknown> {
+    if (isTheKitReadScope(scope)) {
+      // Main kit line: `kitStore` works on all released `@semio/rs-wasm` builds; strip scoped `$scope` (requires newer schema).
+      const vars = { ...(body.variables ?? {}) } as Record<string, unknown> & { scope?: unknown };
+      delete vars["scope"];
+      let q = body.query
+        .replace(/\$scope:\s*KitReadScopeInput!\s*,?/g, "")
+        .replace(/kitReadScope\(\s*scope:\s*\$scope\s*\)\s*/g, "kitStore");
+      q = q.replace(/query\(\s*\)\s*{/g, "query {");
+      return this.gqlRun({ ...body, query: q, variables: vars });
+    }
     return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? {}) });
   }
 
@@ -829,8 +846,8 @@ export class KitStore {
     }
     const data = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { liveFullDto } }` }),
-    ) as { kitReadScope?: { liveFullDto?: unknown } | null };
-    const j = data.kitReadScope?.liveFullDto;
+    ) as { kitStore?: { liveFullDto?: unknown } | null; kitReadScope?: { liveFullDto?: unknown } | null };
+    const j = gqlDataKitQueryRoot(data)?.liveFullDto;
     if (j && typeof j === "object" && !Array.isArray(j)) return j as Record<string, unknown>;
     return {};
   }
@@ -1093,14 +1110,14 @@ export class KitStore {
   /**
    * @emoji 🧭 Read-only flatten map rows for one design (`semio/rs` `flatten_map`), for algorithm / MCP tooling.
    */
-  async readDesignFlattenMap(designId: string): Promise<readonly Record<string, unknown>[]> {
+  async readDesignFlattenMap(scope: KitReadScope, designId: string): Promise<readonly Record<string, unknown>[]> {
     const data = kitGraphqlData(
-      await this.gqlRun({
-        query: `query($id: String!) { kitStore { designByDtoId(id: $id) { flattenMap } } }`,
+      await this.gqlRunWithReadScope(scope, {
+        query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { flattenMap } } }`,
         variables: { id: designId },
       }),
-    ) as { kitStore?: { designByDtoId?: { flattenMap?: unknown } | null } | null };
-    const raw = data.kitStore?.designByDtoId?.flattenMap;
+    ) as { kitStore?: { designByDtoId?: { flattenMap?: unknown } | null } | null; kitReadScope?: { designByDtoId?: { flattenMap?: unknown } | null } | null };
+    const raw = gqlDataKitQueryRoot(data)?.designByDtoId?.flattenMap;
     if (Array.isArray(raw)) return raw as Record<string, unknown>[];
     if (typeof raw === "string") {
       try {
@@ -1125,92 +1142,110 @@ export class KitStore {
     return this.submitShell("changeKitCommands", { variables: { commands: [...commands] } });
   }
 
-  private async mapReadCommand(c: ReadKitCommand): Promise<ReadKitCommandOutput> {
+  private async mapReadCommand(scope: KitReadScope, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { typeIds } }` })) as { kitStore?: { typeIds?: unknown } };
-      return { readKitTypeIdsCommand: { typeIds: kitGraphqlJsonToReadonlyArray(d.kitStore?.typeIds) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { typeIds } }` }),
+      ) as { kitReadScope?: { typeIds?: unknown } };
+      return { readKitTypeIdsCommand: { typeIds: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.typeIds) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { designIds } }` })) as { kitStore?: { designIds?: unknown } };
-      return { readKitDesignIdsCommand: { designIds: kitGraphqlJsonToReadonlyArray(d.kitStore?.designIds) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { designIds } }` }),
+      ) as { kitReadScope?: { designIds?: unknown } };
+      return { readKitDesignIdsCommand: { designIds: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.designIds) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { typesMetadata } }` })) as { kitStore?: { typesMetadata?: unknown } };
-      return { readKitTypesMetadataCommand: { types: kitGraphqlJsonToReadonlyArray(d.kitStore?.typesMetadata) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { typesMetadata } }` }),
+      ) as { kitReadScope?: { typesMetadata?: unknown } };
+      return { readKitTypesMetadataCommand: { types: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.typesMetadata) } };
     }
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { designsMetadata } }` })) as { kitStore?: { designsMetadata?: unknown } };
-      return { readKitDesignsMetadataCommand: { designs: kitGraphqlJsonToReadonlyArray(d.kitStore?.designsMetadata) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { designsMetadata } }` }),
+      ) as { kitReadScope?: { designsMetadata?: unknown } };
+      return { readKitDesignsMetadataCommand: { designs: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.designsMetadata) } };
     }
     if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { typesShallowJson } }` })) as { kitStore?: { typesShallowJson?: unknown } };
-      return { readKitTypesShallowCommand: { types: kitGraphqlJsonToReadonlyArray(d.kitStore?.typesShallowJson) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { typesShallowJson } }` }),
+      ) as { kitReadScope?: { typesShallowJson?: unknown } };
+      return { readKitTypesShallowCommand: { types: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.typesShallowJson) } };
     }
     if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { designsShallowJson } }` })) as { kitStore?: { designsShallowJson?: unknown } };
-      return { readKitDesignsShallowCommand: { designs: kitGraphqlJsonToReadonlyArray(d.kitStore?.designsShallowJson) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { designsShallowJson } }` }),
+      ) as { kitReadScope?: { designsShallowJson?: unknown } };
+      return { readKitDesignsShallowCommand: { designs: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.designsShallowJson) } };
     }
     if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { authorsShallowJson } }` })) as { kitStore?: { authorsShallowJson?: unknown } };
-      return { readKitAuthorsShallowCommand: { authors: kitGraphqlJsonToReadonlyArray(d.kitStore?.authorsShallowJson) } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { authorsShallowJson } }` }),
+      ) as { kitReadScope?: { authorsShallowJson?: unknown } };
+      return { readKitAuthorsShallowCommand: { authors: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.authorsShallowJson) } };
     }
     if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { kitMetadataJson } }` })) as { kitStore?: { kitMetadataJson?: unknown } };
-      return { readKitMetadataCommand: { metadata: d.kitStore?.kitMetadataJson } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { kitMetadataJson } }` }),
+      ) as { kitReadScope?: { kitMetadataJson?: unknown } };
+      return { readKitMetadataCommand: { metadata: gqlDataKitQueryRoot(d)?.kitMetadataJson } };
     }
     if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
-      const d = kitGraphqlData(await this.gqlRun({ query: `query { kitStore { coloredConnectors } }` })) as { kitStore?: { coloredConnectors?: unknown } };
-      return { readKitColoredConnectorsCommand: { rows: d.kitStore?.coloredConnectors } };
+      const d = kitGraphqlData(
+        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { coloredConnectors } }` }),
+      ) as { kitReadScope?: { coloredConnectors?: unknown } };
+      return { readKitColoredConnectorsCommand: { rows: gqlDataKitQueryRoot(d)?.coloredConnectors } };
     }
     if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
       const { id, commands } = c.readKitDesignCommands;
       const results: ReadDesignCommandOutput[] = [];
-      for (const sub of commands) results.push(await this.mapDesignRead(id.id, sub));
+      for (const sub of commands) results.push(await this.mapDesignRead(scope, id.id, sub));
       return { readKitDesignCommands: { results } };
     }
     if ("readKitTypeCommands" in c && c.readKitTypeCommands) {
       const { id, commands } = c.readKitTypeCommands;
       const results: ReadTypeCommandOutput[] = [];
-      for (const sub of commands) results.push(await this.mapTypeRead(id.id, sub));
+      for (const sub of commands) results.push(await this.mapTypeRead(scope, id.id, sub));
       return { readKitTypeCommands: { results } };
     }
     throw new Error(`read: unsupported ${Object.keys(c).join(",")}`);
   }
 
-  private async mapDesignRead(designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
+  private async mapDesignRead(scope: KitReadScope, designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
     if ("readDesignPiecesFullCommand" in cmd && cmd.readDesignPiecesFullCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { piecesFullJson } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { piecesFullJson } } }`,
           variables: { id: designId },
         }),
-      ) as { kitStore?: { designByDtoId?: { piecesFullJson?: unknown } | null } | null };
-      return { readDesignPiecesFullCommand: { pieces: kitGraphqlJsonToReadonlyArray(d.kitStore?.designByDtoId?.piecesFullJson) } };
+      ) as { kitReadScope?: { designByDtoId?: { piecesFullJson?: unknown } | null } | null };
+      return { readDesignPiecesFullCommand: { pieces: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.designByDtoId?.piecesFullJson) } };
     }
     if ("readDesignConnectionsFullCommand" in cmd && cmd.readDesignConnectionsFullCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { connectionsFullJson } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { connectionsFullJson } } }`,
           variables: { id: designId },
         }),
-      ) as { kitStore?: { designByDtoId?: { connectionsFullJson?: unknown } | null } | null };
-      return { readDesignConnectionsFullCommand: { connections: kitGraphqlJsonToReadonlyArray(d.kitStore?.designByDtoId?.connectionsFullJson) } };
+      ) as { kitReadScope?: { designByDtoId?: { connectionsFullJson?: unknown } | null } | null };
+      return { readDesignConnectionsFullCommand: { connections: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(d)?.designByDtoId?.connectionsFullJson) } };
     }
     if ("readDesignPieceCommands" in cmd && cmd.readDesignPieceCommands) {
       const { id, commands } = cmd.readDesignPieceCommands;
       const results: ReadPieceCommandOutput[] = [];
-      for (const pc of commands) results.push(await this.mapPieceRead(designId, id.id, pc));
+      for (const pc of commands) results.push(await this.mapPieceRead(scope, designId, id.id, pc));
       return { readDesignPieceCommands: { results } };
     }
     if ("readDesignClusterableGroupsCommand" in cmd && cmd.readDesignClusterableGroupsCommand) {
       const sel = cmd.readDesignClusterableGroupsCommand.selection.map((s) => s.id);
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`,
           variables: { id: designId, sel },
         }),
-      ) as { kitStore?: { designByDtoId?: { clusterableGroups?: unknown } | null } | null };
-      const raw = d.kitStore?.designByDtoId?.clusterableGroups;
+      ) as { kitReadScope?: { designByDtoId?: { clusterableGroups?: unknown } | null } | null };
+      const raw = gqlDataKitQueryRoot(d)?.designByDtoId?.clusterableGroups;
       const groups = Array.isArray(raw)
         ? raw.map((row: unknown) => (Array.isArray(row) ? row.map((pid: unknown) => ({ id: String(pid) })) : []))
         : [];
@@ -1218,32 +1253,32 @@ export class KitStore {
     }
     if ("readDesignIncludedDesignsCommand" in cmd && cmd.readDesignIncludedDesignsCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesigns } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { includedDesigns } } }`,
           variables: { id: designId },
         }),
-      ) as { kitStore?: { designByDtoId?: { includedDesigns?: unknown } | null } | null };
-      return { readDesignIncludedDesignsCommand: { designs: d.kitStore?.designByDtoId?.includedDesigns } };
+      ) as { kitReadScope?: { designByDtoId?: { includedDesigns?: unknown } | null } | null };
+      return { readDesignIncludedDesignsCommand: { designs: gqlDataKitQueryRoot(d)?.designByDtoId?.includedDesigns } };
     }
     if ("readDesignQualitySumCommand" in cmd && cmd.readDesignQualitySumCommand) {
       const qid = cmd.readDesignQualitySumCommand.qualityId.id;
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!, $qid: String!) { kitStore { designByDtoId(id: $id) { qualitySum(qualityId: $qid) } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!, $qid: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { qualitySum(qualityId: $qid) } } }`,
           variables: { id: designId, qid },
         }),
-      ) as { kitStore?: { designByDtoId?: { qualitySum?: number } | null } | null };
-      return { readDesignQualitySumCommand: { sum: d.kitStore?.designByDtoId?.qualitySum ?? 0 } };
+      ) as { kitReadScope?: { designByDtoId?: { qualitySum?: number } | null } | null };
+      return { readDesignQualitySumCommand: { sum: gqlDataKitQueryRoot(d)?.designByDtoId?.qualitySum ?? 0 } };
     }
     if ("readDesignReplaceableCatalogCommand" in cmd && cmd.readDesignReplaceableCatalogCommand) {
       const sel = cmd.readDesignReplaceableCatalogCommand.selection.map((s) => s.id);
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`,
           variables: { id: designId, sel },
         }),
-      ) as { kitStore?: { designByDtoId?: { replaceableCatalog?: { typeIds?: string[]; designIds?: string[] } } | null } | null };
-      const rc = d.kitStore?.designByDtoId?.replaceableCatalog;
+      ) as { kitReadScope?: { designByDtoId?: { replaceableCatalog?: { typeIds?: string[]; designIds?: string[] } } | null } | null };
+      const rc = gqlDataKitQueryRoot(d)?.designByDtoId?.replaceableCatalog;
       return {
         readDesignReplaceableCatalogCommand: {
           types: (rc?.typeIds ?? []).map((id: string) => ({ id: String(id) })),
@@ -1253,137 +1288,137 @@ export class KitStore {
     }
     if ("readDesignIncludedDesignIdsCommand" in cmd && cmd.readDesignIncludedDesignIdsCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesignIds } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { includedDesignIds } } }`,
           variables: { id: designId },
         }),
-      ) as { kitStore?: { designByDtoId?: { includedDesignIds?: string[] } | null } | null };
-      return { readDesignIncludedDesignIdsCommand: { designIds: d.kitStore?.designByDtoId?.includedDesignIds ?? [] } };
+      ) as { kitReadScope?: { designByDtoId?: { includedDesignIds?: string[] } | null } | null };
+      return { readDesignIncludedDesignIdsCommand: { designIds: gqlDataKitQueryRoot(d)?.designByDtoId?.includedDesignIds ?? [] } };
     }
     throw new Error(`readDesign: ${Object.keys(cmd).join(",")}`);
   }
 
-  private async mapPieceRead(designId: string, pieceId: string, cmd: ReadPieceCommand): Promise<ReadPieceCommandOutput> {
+  private async mapPieceRead(scope: KitReadScope, designId: string, pieceId: string, cmd: ReadPieceCommand): Promise<ReadPieceCommandOutput> {
     if ("readPieceFlatPlaneCommand" in cmd && cmd.readPieceFlatPlaneCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatPlane } } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatPlane } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kitStore?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: unknown } | null } | null } | null };
-      return { readPieceFlatPlaneCommand: { flatPlane: d.kitStore?.designByDtoId?.pieceByDtoId?.flatPlane } };
+      ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: unknown } | null } | null } | null };
+      return { readPieceFlatPlaneCommand: { flatPlane: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane } };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatCenter } } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatCenter } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kitStore?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null } | null };
-      return { readPieceFlatCenterCommand: { flatCenter: d.kitStore?.designByDtoId?.pieceByDtoId?.flatCenter } };
+      ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null } | null };
+      return { readPieceFlatCenterCommand: { flatCenter: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter } };
     }
     if ("readPieceParentConnectionFullCommand" in cmd && cmd.readPieceParentConnectionFullCommand === null) {
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnectionFull } } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnectionFull } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kitStore?: { designByDtoId?: { pieceByDtoId?: { parentConnectionFull?: unknown } | null } | null } | null };
-      return { readPieceParentConnectionFullCommand: { connection: d.kitStore?.designByDtoId?.pieceByDtoId?.parentConnectionFull } };
+      ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { parentConnectionFull?: unknown } | null } | null } | null };
+      return { readPieceParentConnectionFullCommand: { connection: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnectionFull } };
     }
     throw new Error(`readPiece: ${Object.keys(cmd).join(",")}`);
   }
 
-  private async mapTypeRead(typeId: string, cmd: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
+  private async mapTypeRead(scope: KitReadScope, typeId: string, cmd: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
     if ("readTypeBestRepresentationCommand" in cmd && cmd.readTypeBestRepresentationCommand) {
       const tags = cmd.readTypeBestRepresentationCommand.tagIds;
       const d = kitGraphqlData(
-        await this.gqlRun({
-          query: `query($id: String!, $tags: [String!]!) { kitStore { typeByDtoId(id: $id) { bestRepresentation(tagIds: $tags) } } }`,
+        await this.gqlRunWithReadScope(scope, {
+          query: `query($scope: KitReadScopeInput!, $id: String!, $tags: [String!]!) { kitReadScope(scope: $scope) { typeByDtoId(id: $id) { bestRepresentation(tagIds: $tags) } } }`,
           variables: { id: typeId, tags: [...tags] },
         }),
-      ) as { kitStore?: { typeByDtoId?: { bestRepresentation?: unknown } | null } | null };
-      return { readTypeBestRepresentationCommand: { representation: d.kitStore?.typeByDtoId?.bestRepresentation } };
+      ) as { kitReadScope?: { typeByDtoId?: { bestRepresentation?: unknown } | null } | null };
+      return { readTypeBestRepresentationCommand: { representation: gqlDataKitQueryRoot(d)?.typeByDtoId?.bestRepresentation } };
     }
     throw new Error(`readType: ${Object.keys(cmd).join(",")}`);
   }
 
-  async getPiecesMetadata(designId: string): Promise<Record<string, unknown>> {
+  async getPiecesMetadata(scope: KitReadScope, designId: string): Promise<Record<string, unknown>> {
     const d = kitGraphqlData(
-      await this.gqlRun({
-        query: `query($id: String!) { kitStore { designByDtoId(id: $id) { piecesMetadataJson } } }`,
+      await this.gqlRunWithReadScope(scope, {
+        query: `query($scope: KitReadScopeInput!, $id: String!) { kitReadScope(scope: $scope) { designByDtoId(id: $id) { piecesMetadataJson } } }`,
         variables: { id: designId },
       }),
-    ) as { kitStore?: { designByDtoId?: { piecesMetadataJson?: unknown } | null } | null };
-    const v = d.kitStore?.designByDtoId?.piecesMetadataJson;
+    ) as { kitReadScope?: { designByDtoId?: { piecesMetadataJson?: unknown } | null } | null };
+    const v = gqlDataKitQueryRoot(d)?.designByDtoId?.piecesMetadataJson;
     if (v && typeof v === "object" && !Array.isArray(v)) return v as Record<string, unknown>;
     return {};
   }
 
-  async getPieces(designId: string): Promise<readonly unknown[]> {
-    const out = await this.read([{ readKitDesignCommands: { id: { id: designId }, commands: [{ readDesignPiecesFullCommand: null }] } }]);
+  async getPieces(scope: KitReadScope, designId: string): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitDesignCommands: { id: { id: designId }, commands: [{ readDesignPiecesFullCommand: null }] } }]);
     const block = out[0] as { readKitDesignCommands?: { results?: ReadonlyArray<{ readDesignPiecesFullCommand?: { pieces?: unknown } }> } };
     const pieces = block.readKitDesignCommands?.results?.[0]?.readDesignPiecesFullCommand?.pieces;
     return kitGraphqlJsonToReadonlyArray(pieces);
   }
 
-  async getConnections(designId: string): Promise<readonly unknown[]> {
-    const out = await this.read([{ readKitDesignCommands: { id: { id: designId }, commands: [{ readDesignConnectionsFullCommand: null }] } }]);
+  async getConnections(scope: KitReadScope, designId: string): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitDesignCommands: { id: { id: designId }, commands: [{ readDesignConnectionsFullCommand: null }] } }]);
     const block = out[0] as { readKitDesignCommands?: { results?: ReadonlyArray<{ readDesignConnectionsFullCommand?: { connections?: unknown } }> } };
     const connections = block.readKitDesignCommands?.results?.[0]?.readDesignConnectionsFullCommand?.connections;
     return kitGraphqlJsonToReadonlyArray(connections);
   }
 
-  async getDesigns(): Promise<readonly unknown[]> {
-    const out = await this.read([{ readKitDesignsShallowCommand: null }]);
+  async getDesigns(scope: KitReadScope): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitDesignsShallowCommand: null }]);
     return kitGraphqlJsonToReadonlyArray((out[0] as { readKitDesignsShallowCommand?: { designs?: unknown } }).readKitDesignsShallowCommand?.designs);
   }
 
-  async getTypes(): Promise<readonly unknown[]> {
-    const out = await this.read([{ readKitTypesShallowCommand: null }]);
+  async getTypes(scope: KitReadScope): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitTypesShallowCommand: null }]);
     return kitGraphqlJsonToReadonlyArray((out[0] as { readKitTypesShallowCommand?: { types?: unknown } }).readKitTypesShallowCommand?.types);
   }
 
-  async getAuthors(): Promise<readonly unknown[]> {
-    const out = await this.read([{ readKitAuthorsShallowCommand: null }]);
+  async getAuthors(scope: KitReadScope): Promise<readonly unknown[]> {
+    const out = await this.read(scope, [{ readKitAuthorsShallowCommand: null }]);
     return kitGraphqlJsonToReadonlyArray((out[0] as { readKitAuthorsShallowCommand?: { authors?: unknown } }).readKitAuthorsShallowCommand?.authors);
   }
 
-  async getKitMetadata(): Promise<unknown> {
-    const out = await this.read([{ readKitMetadataCommand: null }]);
+  async getKitMetadata(scope: KitReadScope): Promise<unknown> {
+    const out = await this.read(scope, [{ readKitMetadataCommand: null }]);
     return (out[0] as { readKitMetadataCommand?: { metadata?: unknown } }).readKitMetadataCommand?.metadata;
   }
 
   // #region KitStoreEntityFactories
   /** @emoji 🧭 Sync handle for kit-scoped design reads and mutations (no I/O). */
-  design(id: string): DesignStore {
-    return new DesignStore(this, id);
+  design(id: string, readScope: KitReadScope = theKitReadScope): DesignStore {
+    return new DesignStore(this, id, readScope);
   }
   /** @emoji 🧭 Sync handle for kit-scoped kind reads and mutations (no I/O). */
-  type(id: string): TypeStore {
-    return new TypeStore(this, id);
+  type(id: string, readScope: KitReadScope = theKitReadScope): TypeStore {
+    return new TypeStore(this, id, readScope);
   }
   /** @emoji 🧭 Sync handle for a piece within a design (no I/O). */
-  piece(designId: string, id: string): PieceStore {
-    return new PieceStore(this, designId, id);
+  piece(designId: string, id: string, readScope: KitReadScope = theKitReadScope): PieceStore {
+    return new PieceStore(this, designId, id, readScope);
   }
   /** @emoji 🧭 Sync handle for a connection within a design (no I/O). */
-  connection(designId: string, id: string): ConnectionStore {
-    return new ConnectionStore(this, designId, id);
+  connection(designId: string, id: string, readScope: KitReadScope = theKitReadScope): ConnectionStore {
+    return new ConnectionStore(this, designId, id, readScope);
   }
-  family(id: string): FamilyStore {
-    return new FamilyStore(this, id);
+  family(id: string, readScope: KitReadScope = theKitReadScope): FamilyStore {
+    return new FamilyStore(this, id, readScope);
   }
-  file(id: string): FileStore {
-    return new FileStore(this, id);
+  file(id: string, readScope: KitReadScope = theKitReadScope): FileStore {
+    return new FileStore(this, id, readScope);
   }
-  folder(id: string): FolderStore {
-    return new FolderStore(this, id);
+  folder(id: string, readScope: KitReadScope = theKitReadScope): FolderStore {
+    return new FolderStore(this, id, readScope);
   }
 
   /** @emoji 🧭 All design ids in the live kit as {@link DesignStore} handles. */
-  async designs(): Promise<readonly DesignStore[]> {
-    const out = await this.read([{ readKitDesignIdsCommand: null }]);
+  async designs(scope: KitReadScope = theKitReadScope): Promise<readonly DesignStore[]> {
+    const out = await this.read(scope, [{ readKitDesignIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
     );
@@ -1392,12 +1427,12 @@ export class KitStore {
       if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
       return "";
     };
-    return ids.map((row) => this.design(toId(row))).filter((s) => s.id !== "");
+    return ids.map((row) => this.design(toId(row), scope)).filter((s) => s.id !== "");
   }
 
   /** @emoji 🧭 All kind ids in the live kit as {@link TypeStore} handles. */
-  async types(): Promise<readonly TypeStore[]> {
-    const out = await this.read([{ readKitTypeIdsCommand: null }]);
+  async types(scope: KitReadScope = theKitReadScope): Promise<readonly TypeStore[]> {
+    const out = await this.read(scope, [{ readKitTypeIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
     );
@@ -1406,7 +1441,7 @@ export class KitStore {
       if (row && typeof row === "object" && "id" in row && typeof (row as { id: unknown }).id === "string") return (row as { id: string }).id;
       return "";
     };
-    return ids.map((row) => this.type(toId(row))).filter((s) => s.id !== "");
+    return ids.map((row) => this.type(toId(row), scope)).filter((s) => s.id !== "");
   }
   // #endregion KitStoreEntityFactories
 }
@@ -1639,22 +1674,25 @@ function firstDesignResult(out: readonly unknown[], cmdKey: string): unknown {
 
 /** @emoji 🧭 Graph-shaped reads routed through {@link KitStore.read} (no legacy JS kit graph). */
 export class LiveKitRoot {
-  constructor(private readonly ks: KitStore) {}
+  constructor(
+    private readonly ks: KitStore,
+    private readonly readScope: KitReadScope = theKitReadScope,
+  ) {}
 
   piece(designId: string, pieceId: string): LivePiece {
-    return new LivePiece(this.ks, designId, pieceId);
+    return new LivePiece(this.ks, this.readScope, designId, pieceId);
   }
 
   design(designId: string): LiveDesign {
-    return new LiveDesign(this.ks, designId);
+    return new LiveDesign(this.ks, this.readScope, designId);
   }
 
   type(typeId: string): LiveType {
-    return new LiveType(this.ks, typeId);
+    return new LiveType(this.ks, this.readScope, typeId);
   }
 
   readColoredConnectors(): Promise<readonly unknown[]> {
-    return this.ks.read([{ readKitColoredConnectorsCommand: null }]).then((out) => {
+    return this.ks.read(this.readScope, [{ readKitColoredConnectorsCommand: null }]).then((out) => {
       const rows = (out[0] as { readKitColoredConnectorsCommand?: { rows?: unknown } }).readKitColoredConnectorsCommand?.rows;
       return Array.isArray(rows) ? rows : [];
     });
@@ -1664,6 +1702,7 @@ export class LiveKitRoot {
 class LivePiece {
   constructor(
     private readonly ks: KitStore,
+    private readonly readScope: KitReadScope,
     private readonly designId: string,
     private readonly pieceId: string,
   ) {}
@@ -1677,7 +1716,7 @@ class LivePiece {
         },
       },
     ];
-    return this.ks.read(batch);
+    return this.ks.read(this.readScope, batch);
   }
 
   readFlatPlane(): Promise<unknown> {
@@ -1698,11 +1737,12 @@ class LivePiece {
 class LiveDesign {
   constructor(
     private readonly ks: KitStore,
+    private readonly readScope: KitReadScope,
     private readonly designId: string,
   ) {}
 
   private run(cmd: ReadDesignCommand): Promise<ReadWireBatchResult> {
-    return this.ks.read([{ readKitDesignCommands: { id: { id: this.designId }, commands: [cmd] } }]);
+    return this.ks.read(this.readScope, [{ readKitDesignCommands: { id: { id: this.designId }, commands: [cmd] } }]);
   }
 
   readIncludedDesigns(): Promise<unknown> {
@@ -1751,12 +1791,13 @@ class LiveDesign {
 class LiveType {
   constructor(
     private readonly ks: KitStore,
+    private readonly readScope: KitReadScope,
     private readonly typeId: string,
   ) {}
 
   readBestRepresentation(tagIds: readonly string[]): Promise<unknown> {
     return this.ks
-      .read([
+      .read(this.readScope, [
         {
           readKitTypeCommands: {
             id: { id: this.typeId },
@@ -1944,12 +1985,50 @@ export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShal
 
 // #region 🧰EventFilters
 
-export const kitEventAffectsCanUndoRedo = (_ev?: unknown) => true;
-export const kitEventAffectsPieceLiveRead = (_ev?: unknown, _d?: string, _p?: string) => true;
-export const kitEventAffectsReplaceableCatalogRead = (_ev?: unknown, _d?: string, _s?: ReadonlySet<string>) => true;
-export const kitEventAffectsDesignQualitySumRead = (_ev?: unknown, _d?: string, _q?: string) => true;
-export const kitEventAffectsTypeScopedRead = (_ev?: unknown, _t?: string) => true;
-export const kitEventAffectsKitColoredConnectorsRead = (_ev?: unknown) => true;
+/** @emoji 🧭 Any kit graph mutation may flip undo/redo eligibility. */
+export function kitEventAffectsCanUndoRedo(ev: unknown): boolean {
+  void ev;
+  return true;
+}
+
+/** @emoji 🧭 Live piece reads invalidate when the piece or its design changes. */
+export function kitEventAffectsPieceLiveRead(ev: unknown, designId?: string, pieceId?: string): boolean {
+  if (!designId || !pieceId) return true;
+  if (ev == null || typeof ev !== "object") return true;
+  return kitEventTouchesPiece(ev as KitEvent, designId, pieceId);
+}
+
+/** @emoji 🧭 Replaceable catalog reads are design-scoped. */
+export function kitEventAffectsReplaceableCatalogRead(ev: unknown, designId?: string, _selection?: ReadonlySet<string>): boolean {
+  void _selection;
+  if (!designId) return true;
+  if (ev == null || typeof ev !== "object") return true;
+  return kitEventTouchesDesign(ev as KitEvent, designId);
+}
+
+/** @emoji 🧭 Design quality sum reads follow design-scoped invalidation. */
+export function kitEventAffectsDesignQualitySumRead(ev: unknown, designId?: string, _qualityId?: string): boolean {
+  void _qualityId;
+  if (!designId) return true;
+  if (ev == null || typeof ev !== "object") return true;
+  return kitEventTouchesDesign(ev as KitEvent, designId);
+}
+
+/** @emoji 🧭 Type-scoped reads follow kind-scoped invalidation. */
+export function kitEventAffectsTypeScopedRead(ev: unknown, typeId?: string): boolean {
+  if (!typeId) return true;
+  if (ev == null || typeof ev !== "object") return true;
+  return kitEventTouchesType(ev as KitEvent, typeId);
+}
+
+/** @emoji 🧭 Colored connector rows are kit-wide; invalidate on broad graph changes. */
+export function kitEventAffectsKitColoredConnectorsRead(ev: unknown): boolean {
+  if (ev == null || typeof ev !== "object") return true;
+  const e = ev as KitEvent;
+  if ("Changed" in e && (e as { Changed?: unknown }).Changed === null) return true;
+  if ("ValidationInvalidated" in e && (e as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  return true;
+}
 
 // #endregion 🧰EventFilters
 
@@ -1959,17 +2038,30 @@ export class WasmKitStoreClient implements KitStoreClient {
   private readonly listeners = new Set<(ev?: unknown) => void>();
   private readonly offKit: () => void;
   private lastDto: Record<string, unknown> = {};
+  /** @emoji 🧭 Active read scope for {@link getPieces} / view-store DTO materialization. */
+  kitReadScope: KitReadScope = theKitReadScope;
 
-  constructor(private readonly ks: KitStore) {
+  constructor(
+    private readonly ks: KitStore,
+    readScope: KitReadScope = theKitReadScope,
+  ) {
+    this.kitReadScope = readScope;
     this.offKit = this.ks.subscribe(() => {
       void this.refreshDtoFromStore();
       for (const l of this.listeners) l(undefined);
     });
+    void this.refreshDtoFromStore();
+  }
+
+  setKitReadScope(scope: KitReadScope): void {
+    this.kitReadScope = scope;
+    void this.refreshDtoFromStore();
+    for (const l of this.listeners) l(undefined);
   }
 
   private async refreshDtoFromStore(): Promise<void> {
     try {
-      this.lastDto = (await this.ks.snapshot()) as Record<string, unknown>;
+      this.lastDto = (await this.ks.materializedLiveJsonForReadScope(this.kitReadScope)) as Record<string, unknown>;
     } catch {
       /* ignore */
     }
@@ -1985,7 +2077,7 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   async getSnapshot(): Promise<Record<string, unknown>> {
-    const s = (await this.ks.snapshot()) as Record<string, unknown>;
+    const s = (await this.ks.materializedLiveJsonForReadScope(this.kitReadScope)) as Record<string, unknown>;
     this.lastDto = s;
     return s;
   }
@@ -2004,7 +2096,7 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   kitGraphql(): LiveKitRoot {
-    return new LiveKitRoot(this.ks);
+    return new LiveKitRoot(this.ks, this.kitReadScope);
   }
 
   submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
@@ -2082,31 +2174,31 @@ export class WasmKitStoreClient implements KitStoreClient {
   }
 
   getPiecesMetadata(designId: string): Promise<Record<string, unknown>> {
-    return this.ks.getPiecesMetadata(designId);
+    return this.ks.getPiecesMetadata(this.kitReadScope, designId);
   }
 
   getPieces(designId: string): Promise<readonly unknown[]> {
-    return this.ks.getPieces(designId);
+    return this.ks.getPieces(this.kitReadScope, designId);
   }
 
   getConnections(designId: string): Promise<readonly unknown[]> {
-    return this.ks.getConnections(designId);
+    return this.ks.getConnections(this.kitReadScope, designId);
   }
 
   getDesigns(): Promise<readonly unknown[]> {
-    return this.ks.getDesigns();
+    return this.ks.getDesigns(this.kitReadScope);
   }
 
   getTypes(): Promise<readonly unknown[]> {
-    return this.ks.getTypes();
+    return this.ks.getTypes(this.kitReadScope);
   }
 
   getAuthors(): Promise<readonly unknown[]> {
-    return this.ks.getAuthors();
+    return this.ks.getAuthors(this.kitReadScope);
   }
 
   getKitMetadata(): Promise<unknown> {
-    return this.ks.getKitMetadata();
+    return this.ks.getKitMetadata(this.kitReadScope);
   }
 
   backboneStatus(): Promise<BackboneStatusDto> {
@@ -2274,10 +2366,10 @@ class FallbackKitClient implements KitStoreClient {
   }
 }
 
-export async function createKitStoreClient(opts: { initialKit: KitFullDto; forceFallback?: boolean }): Promise<KitStoreClient> {
+export async function createKitStoreClient(opts: { initialKit: KitFullDto; forceFallback?: boolean; readScope?: KitReadScope }): Promise<KitStoreClient> {
   if (opts.forceFallback) return new FallbackKitClient(opts.initialKit);
   const ks = await KitStore.open(opts.initialKit);
-  const c = new WasmKitStoreClient(ks);
+  const c = new WasmKitStoreClient(ks, opts.readScope);
   await c.getSnapshot();
   return c;
 }
@@ -3938,6 +4030,7 @@ export class DesignStore {
   constructor(
     public readonly root: KitStore,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -3953,7 +4046,7 @@ export class DesignStore {
   }
 
   async metadata(): Promise<DesignMetadataDto> {
-    const out = await this.root.read([{ readKitDesignsMetadataCommand: null }]);
+    const out = await this.root.read(this.readScope, [{ readKitDesignsMetadataCommand: null }]);
     const designs = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitDesignsMetadataCommand?: { designs?: unknown } }).readKitDesignsMetadataCommand?.designs,
     );
@@ -3963,7 +4056,7 @@ export class DesignStore {
   }
 
   async shallow(): Promise<DesignShallow> {
-    const out = await this.root.read([{ readKitDesignsShallowCommand: null }]);
+    const out = await this.root.read(this.readScope, [{ readKitDesignsShallowCommand: null }]);
     const designs = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitDesignsShallowCommand?: { designs?: unknown } }).readKitDesignsShallowCommand?.designs,
     );
@@ -3974,34 +4067,34 @@ export class DesignStore {
 
   /** @emoji 🧾 Full design DTO from a kit snapshot (rs materialized truth). */
   async full(): Promise<DesignPlain> {
-    const kit = await this.root.snapshot();
+    const kit = (await this.root.materializedLiveJsonForReadScope(this.readScope)) as KitFullDto;
     const raw = (kit.designs ?? []).find((d) => d.id === this.id);
     if (!raw) throw new Error(`design not found: ${this.id}`);
     return DesignSchema.parse(raw);
   }
 
   async pieces(): Promise<readonly PieceStore[]> {
-    const rows = await this.root.getPieces(this.id);
+    const rows = await this.root.getPieces(this.readScope, this.id);
     return rows
       .map((p: unknown) => (p && typeof p === "object" && "id" in (p as object) ? String((p as { id: string }).id) : ""))
       .filter((pid: string) => pid !== "")
-      .map((pid: string) => this.root.piece(this.id, pid));
+      .map((pid: string) => this.root.piece(this.id, pid, this.readScope));
   }
 
   piece(pieceId: string): PieceStore {
-    return this.root.piece(this.id, pieceId);
+    return this.root.piece(this.id, pieceId, this.readScope);
   }
 
   async connections(): Promise<readonly ConnectionStore[]> {
-    const rows = await this.root.getConnections(this.id);
+    const rows = await this.root.getConnections(this.readScope, this.id);
     return rows
       .map((c: unknown) => (c && typeof c === "object" && "id" in (c as object) ? String((c as { id: string }).id) : ""))
       .filter((cid: string) => cid !== "")
-      .map((cid: string) => this.root.connection(this.id, cid));
+      .map((cid: string) => this.root.connection(this.id, cid, this.readScope));
   }
 
   connection(connectionId: string): ConnectionStore {
-    return this.root.connection(this.id, connectionId);
+    return this.root.connection(this.id, connectionId, this.readScope);
   }
 
   setName(name: string): Promise<SetResult> {
@@ -4070,6 +4163,7 @@ export class TypeStore {
   constructor(
     public readonly root: KitStore,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4085,7 +4179,7 @@ export class TypeStore {
   }
 
   async metadata(): Promise<TypeMetadataDto> {
-    const out = await this.root.read([{ readKitTypesMetadataCommand: null }]);
+    const out = await this.root.read(this.readScope, [{ readKitTypesMetadataCommand: null }]);
     const types = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitTypesMetadataCommand?: { types?: unknown } }).readKitTypesMetadataCommand?.types,
     );
@@ -4095,7 +4189,7 @@ export class TypeStore {
   }
 
   async shallow(): Promise<TypeShallow> {
-    const out = await this.root.read([{ readKitTypesShallowCommand: null }]);
+    const out = await this.root.read(this.readScope, [{ readKitTypesShallowCommand: null }]);
     const types = kitGraphqlJsonToReadonlyArray(
       (out[0] as { readKitTypesShallowCommand?: { types?: unknown } }).readKitTypesShallowCommand?.types,
     );
@@ -4105,7 +4199,7 @@ export class TypeStore {
   }
 
   async full(): Promise<TypePlain> {
-    const kit = await this.root.snapshot();
+    const kit = (await this.root.materializedLiveJsonForReadScope(this.readScope)) as KitFullDto;
     const raw = (kit.types ?? []).find((t) => t.id === this.id);
     if (!raw) throw new Error(`kind not found: ${this.id}`);
     return TypeSchema.parse(raw);
@@ -4165,6 +4259,7 @@ export class PieceStore {
     public readonly root: KitStore,
     public readonly designId: string,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4180,7 +4275,7 @@ export class PieceStore {
   }
 
   async full(): Promise<PiecePlain> {
-    const pieces = await this.root.getPieces(this.designId);
+    const pieces = await this.root.getPieces(this.readScope, this.designId);
     const row = pieces.find((p: unknown) => p && typeof p === "object" && String((p as { id?: string }).id) === this.id);
     if (!row) throw new Error(`piece not found: ${this.id}`);
     return PieceSchema.parse(row);
@@ -4234,6 +4329,7 @@ export class ConnectionStore {
     public readonly root: KitStore,
     public readonly designId: string,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4249,7 +4345,7 @@ export class ConnectionStore {
   }
 
   async full(): Promise<ConnectionPlain> {
-    const connections = await this.root.getConnections(this.designId);
+    const connections = await this.root.getConnections(this.readScope, this.designId);
     const row = connections.find((c: unknown) => c && typeof c === "object" && String((c as { id?: string }).id) === this.id);
     if (!row) throw new Error(`connection not found: ${this.id}`);
     return ConnectionSchema.parse(row);
@@ -4295,6 +4391,7 @@ export class FamilyStore {
   constructor(
     public readonly root: KitStore,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4310,7 +4407,7 @@ export class FamilyStore {
   }
 
   async full(): Promise<FamilyPlain> {
-    const kit = await this.root.snapshot();
+    const kit = (await this.root.materializedLiveJsonForReadScope(this.readScope)) as KitFullDto;
     const raw = (kit.families ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`family not found: ${this.id}`);
     return FamilySchema.parse(raw);
@@ -4341,6 +4438,7 @@ export class FileStore {
   constructor(
     public readonly root: KitStore,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4356,7 +4454,7 @@ export class FileStore {
   }
 
   async full(): Promise<FilePlain> {
-    const kit = await this.root.snapshot();
+    const kit = (await this.root.materializedLiveJsonForReadScope(this.readScope)) as KitFullDto;
     const raw = (kit.files ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`file not found: ${this.id}`);
     return FileSchema.parse(raw);
@@ -4384,6 +4482,7 @@ export class FolderStore {
   constructor(
     public readonly root: KitStore,
     public readonly id: string,
+    public readonly readScope: KitReadScope = theKitReadScope,
   ) {}
 
   get readVersion(): number {
@@ -4399,7 +4498,7 @@ export class FolderStore {
   }
 
   async full(): Promise<FolderPlain> {
-    const kit = await this.root.snapshot();
+    const kit = (await this.root.materializedLiveJsonForReadScope(this.readScope)) as KitFullDto;
     const raw = (kit.folders ?? []).find((f) => f.id === this.id);
     if (!raw) throw new Error(`folder not found: ${this.id}`);
     return FolderSchema.parse(raw);
@@ -4448,6 +4547,10 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       await ks.dispose();
     });
 
+    it("kitReadScopeKey normalizes the main line scope for cache keys", () => {
+      expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(kitReadScopeToGraphQLInput(theKitReadScope)));
+    });
+
     it("read batch returns typed rows", async () => {
       const minimalKit: KitFullDto = {
         id: "read-kit",
@@ -4459,7 +4562,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       };
       const ks = await KitStore.open(minimalKit);
       const batch: ReadWireBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
-      const res = await ks.read(batch);
+      const res = await ks.read(theKitReadScope, batch);
       expect(res.length).toBe(2);
       await ks.dispose();
     });

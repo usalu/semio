@@ -1,0 +1,10 @@
+{
+  "title": "Remove Quality App From Sketchpad",
+  "emoji": "✏️",
+  "status": "open",
+  "description": "Remove the Quality app from semio/sketchpad while preserving quality entities where still used by kits.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪56d2a42745374712b2465aa09eb40c32"
+  ]
+}

@@ -1499,6 +1499,10 @@ semio/sketchpad:
 
 ---
 
+Remove quality app.
+
+---
+
 Refactor state managment to be clean hooks such as
 You MUST use one Store section where you
 

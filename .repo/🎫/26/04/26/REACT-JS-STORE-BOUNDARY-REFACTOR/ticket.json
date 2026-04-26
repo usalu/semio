@@ -1,0 +1,15 @@
+{
+  "title": "React Js Store Boundary Refactor",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Refactor semio/react to be a pure consumer of semio/js stores (promise + subscribe only). Move command wire construction, LiveKitRoot reads, and kitEventAffects usage from react into semio/js. Internal RxJS stays in KitStore; KitStoreClient.subscribe delivers typed kit events.",
+  "goal": "🎯r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "f503c535",
+    "source": "c:\\git\\semio\\.cursor\\plans\\react_js_store_boundary_f503c535.plan.md"
+  },
+  "sessions": [
+    "⚪2ce2d35fc901465ebd3a37fea9630abc"
+  ]
+}

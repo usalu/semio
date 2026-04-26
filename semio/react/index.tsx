@@ -20,6 +20,9 @@ import {
   createKitStoreClient,
   createKitCommandEngineExplicitOrigin,
   createSessionKitStore,
+  kitReadScopeKey,
+  kitReadScopeToGraphQLInput,
+  theKitReadScope,
   DesignSchema,
   executeSemioKitCommand,
   FamilySchema,
@@ -100,6 +103,7 @@ import type {
   ChangeConnectionCommandWire,
   ChangeKitCommandWire,
   ChangePieceCommandWire,
+  KitReadScope,
   KitStoreClient,
   SetError,
   SetResult,
@@ -121,7 +125,8 @@ function isKitCommandLifecycleEvent(event: unknown): event is {
 }
 // #endregion 🧾KitEventGuards
 
-export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, SetError, SetResult } from "@semio/js";
+export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, SetError, SetResult } from "@semio/js";
+export { kitReadScopeKey, kitReadScopeToGraphQLInput, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
   KitStoreExecuteResult,
@@ -1114,6 +1119,11 @@ function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: 
 // #region ⚛️Context
 
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
+/** @emoji 🧭 Active {@link KitReadScope} for read hooks / `WasmKitDataScope` (default main line). */
+export const KitDataScopeContext = React.createContext<KitReadScope>(theKitReadScope);
+export function useKitDataScope(): KitReadScope {
+  return React.useContext(KitDataScopeContext);
+}
 /** @emoji 📌 Current {@link SchemaScope} from nearest entity scope provider (TypeScope, DesignScope, …). */
 export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 
@@ -1653,13 +1663,24 @@ export type KitScopeProps = {
   kitId?: string;
   /** When provided (e.g. from registry), skips creating a new worker client. */
   kitClient?: KitStoreClient | null;
+  /** @emoji 🧭 Initial {@link KitReadScope} for `createKitStoreClient` / read materialization (default main line). */
+  kitReadScope?: KitReadScope;
   backbone?: KitBackboneConfig;
   initialKit?: KitLike;
   children: ReactNode;
   fallback?: ReactNode;
 };
 
-export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: kitClientProp, backbone, initialKit, children, fallback = null }: KitScopeProps): React.ReactElement | null {
+export function KitScope({
+  store: externalStore,
+  kitId: kitIdProp,
+  kitClient: kitClientProp,
+  kitReadScope: kitReadScopeProp = theKitReadScope,
+  backbone,
+  initialKit,
+  children,
+  fallback = null,
+}: KitScopeProps): React.ReactElement | null {
   const registry = React.useContext(KitRegistryContext);
   if (kitIdProp && !registry) {
     throw new Error("semio/react: <KitScope kitId={...}> must be wrapped in <KitRegistryProvider>.");

@@ -18156,13 +18156,13 @@ pub mod kit_graph {
         }
     }
 
-    #[derive(Clone, Debug, Serialize)]
-    struct PiecePlacementMetadataJson {
+    /// 🧩 Per-piece derived placement row (same structure as the former `get_pieces_metadata_json` map values).
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PiecePlacementMetadataRow {
         pub plane: Plane,
         pub center: Coordinate,
-        #[serde(rename = "fixedPieceId")]
         pub fixed_piece_id: String,
-        #[serde(rename = "parentPieceId")]
         pub parent_piece_id: Option<String>,
         pub depth: i32,
         pub path: Vec<String>,
@@ -20919,7 +20919,8 @@ pub mod kit_graph {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn get_pieces_metadata_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
+        /// 🧩 Structured piece placement map (see [`Self::get_pieces_metadata_json`] for JSON interop).
+        pub fn piece_placement_metadata(&self, design_id: &str) -> std::result::Result<HashMap<String, PiecePlacementMetadataRow>, SetError> {
             let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
             let flat = dr.flatten_map();
@@ -20972,16 +20973,31 @@ pub mod kit_graph {
                 }
             }
 
-            let mut out: HashMap<String, PiecePlacementMetadataJson> = HashMap::new();
+            let mut out: HashMap<String, PiecePlacementMetadataRow> = HashMap::new();
             for p in &dr.pieces {
                 if let Ok(pr) = p.read() {
                     let id_s = pr.id.to_string();
                     let (plane, center) = flat.get(&pr.id).cloned().unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
                     let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
                     let dpt = *depth.get(&pr.id).unwrap_or(&0);
-                    out.insert(id_s.clone(), PiecePlacementMetadataJson { plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
+                    out.insert(
+                        id_s.clone(),
+                        PiecePlacementMetadataRow {
+                            plane,
+                            center,
+                            fixed_piece_id: id_s.clone(),
+                            parent_piece_id,
+                            depth: dpt,
+                            path: vec![id_s],
+                        },
+                    );
                 }
             }
+            Ok(out)
+        }
+
+        pub fn get_pieces_metadata_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
+            let out = self.piece_placement_metadata(design_id)?;
             serde_json::to_value(&out).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
@@ -26590,7 +26606,7 @@ pub mod io {
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
-    use async_graphql::{Context, Enum, Error, InputObject, Json, Object, OneofObject, Request, Result, Schema, SimpleObject, Subscription, Variables};
+    use async_graphql::{Context, Enum, Error, InputObject, InputValueError, InputValueResult, Object, OneofObject, Request, Result, Scalar, ScalarType, Schema, SimpleObject, Subscription, Value, Variables};
     use async_stream::stream;
     use futures_channel::oneshot;
     use futures_util::Stream;
@@ -26612,6 +26628,116 @@ pub mod kit_graphql {
     use crate::read::DesignFlattenMapEntryDto;
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
+
+    // #subregion GqlControlPlaneScalars
+    /// 🧾 `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(transparent)]
+    pub struct GqlChangeKitCommand(pub ChangeKitCommand);
+
+    #[Scalar(name = "ChangeKitCommand")]
+    impl ScalarType for GqlChangeKitCommand {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json().map_err(|_| InputValueError::custom("ChangeKitCommand: expected JSON value"))?;
+            let cmd: ChangeKitCommand = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlChangeKitCommand(cmd))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ChangeKitCommand serialize")).expect("ChangeKitCommand to async_graphql::Value")
+        }
+    }
+
+    /// 📣 Same serde wire as the kit event bus; GraphQL scalar name is not `JSON`.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(transparent)]
+    pub struct GqlKitEvent(pub KitEvent);
+
+    #[Scalar(name = "KitEvent")]
+    impl ScalarType for GqlKitEvent {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json().map_err(|_| InputValueError::custom("KitEvent: expected JSON value"))?;
+            let ev: KitEvent = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlKitEvent(ev))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("KitEvent serialize")).expect("KitEvent to async_graphql::Value")
+        }
+    }
+
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(transparent)]
+    struct GqlKitFullSnapshot(pub crate::kit_graph::KitFullDto);
+
+    #[Scalar(name = "KitFullSnapshot")]
+    impl ScalarType for GqlKitFullSnapshot {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json().map_err(|_| InputValueError::custom("KitFullSnapshot: expected JSON value"))?;
+            let dto: crate::kit_graph::KitFullDto = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlKitFullSnapshot(dto))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("KitFullSnapshot ser")).expect("to Value")
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct GqlTypeShallowList(Vec<crate::typ::TypeShallowDto>);
+
+    #[Scalar(name = "TypeShallowList")]
+    impl ScalarType for GqlTypeShallowList {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json()?;
+            let a: Vec<crate::typ::TypeShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlTypeShallowList(a))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct GqlDesignShallowList(Vec<crate::design::DesignShallowDto>);
+
+    #[Scalar(name = "DesignShallowList")]
+    impl ScalarType for GqlDesignShallowList {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json()?;
+            let a: Vec<crate::design::DesignShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlDesignShallowList(a))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct GqlAuthorShallowList(Vec<crate::author::AuthorShallowDto>);
+
+    #[Scalar(name = "AuthorShallowList")]
+    impl ScalarType for GqlAuthorShallowList {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json()?;
+            let a: Vec<crate::author::AuthorShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlAuthorShallowList(a))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+        }
+    }
+    // #endregion
+
+    /// 🌐 Optional native [`crate::kit_store::KitStore`]: when present (e.g. semio-store), `run_vcs_command` uses [`crate::kit_store::KitStore::execute`] (coordinator + backbone). Otherwise the graph actor uses [`KitStoreCommand::execute`] on the WIP graph only.
+    #[derive(Clone, Default)]
+    pub struct GraphQlVcsOverride {
+        #[cfg(not(target_arch = "wasm32"))]
+        pub native: Option<Arc<crate::kit_store::KitStore>>,
+    }
 
     /// Queued work for the per-handle WASM actor ([`super::wasm::KitStoreHandle`]).
     pub enum GraphWork {
@@ -26710,6 +26836,18 @@ pub mod kit_graphql {
         Ok(req)
     }
 
+    /// 🌐 GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlVcsOverride`] (semio-store).
+    pub async fn execute_with_control_plane(
+        request_json: &str,
+        graph: KitGraphRef,
+        work_tx: async_channel::Sender<GraphWork>,
+        vcs: GraphQlVcsOverride,
+    ) -> Result<async_graphql::Response, Error> {
+        let mut req = request_from_json(request_json)?;
+        req = req.data(graph).data(work_tx).data(vcs);
+        Ok(async_graphql::Response::from(schema().execute(req).await))
+    }
+
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct KitStoreBatchInput {
         client_mutation_id: Option<String>,
@@ -26740,7 +26878,7 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct ChangeKitCommandsBatchInput {
-        commands: Vec<Json<serde_json::Value>>,
+        commands: Vec<GqlChangeKitCommand>,
     }
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
@@ -27160,13 +27298,37 @@ pub mod kit_graphql {
 
     #[Object(name = "Mutation")]
     impl RootMutation {
+        /// 🌐 Run shell [`dispatch_shell_command`] in the current request (result body); use `submitKitCommand` for async `SemioKitCommand` events.
+        async fn kit_command_shell(
+            &self,
+            ctx: &Context<'_>,
+            command_kind: String,
+            request: Json<serde_json::Value>,
+        ) -> Result<Json<serde_json::Value>> {
+            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
+            let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
+            let shell = KitShellCtx { graph, tx, vcs };
+            let vars = shell_variables(&request.0);
+            let v = dispatch_shell_command(&shell, &command_kind, &vars).await?;
+            Ok(Json(v))
+        }
+
         /// Submit any semantic kit mutation through one asynchronous shell.
         async fn submit_kit_command(&self, ctx: &Context<'_>, input: KitCommandShellInput) -> Result<KitCommandReceipt> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
+            let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
             let request_id = Id::new_v7().to_string();
             emit_command_shell_event(&graph, &request_id, &input.command_kind, "accepted", None, None);
-            spawn_command_shell(graph, tx, request_id.clone(), input.command_kind.clone(), input.request.0);
+            spawn_command_shell(
+                graph,
+                tx,
+                vcs,
+                request_id.clone(),
+                input.command_kind.clone(),
+                input.request.0,
+            );
             Ok(KitCommandReceipt {
                 request_id,
                 command_kind: input.command_kind,
@@ -27200,6 +27362,7 @@ pub mod kit_graphql {
     struct KitShellCtx {
         graph: KitGraphRef,
         tx: async_channel::Sender<GraphWork>,
+        vcs: GraphQlVcsOverride,
     }
 
     impl KitShellCtx {
@@ -27225,6 +27388,12 @@ pub mod kit_graphql {
         }
 
         async fn run_vcs_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                if let Some(ref store) = self.vcs.native {
+                    return store.execute(command).map_err(|e| Error::new(e.to_string()));
+                }
+            }
             let (reply_tx, reply_rx) = oneshot::channel();
             self.tx
                 .send(GraphWork::Vcs { command, reply: reply_tx })
@@ -27256,11 +27425,16 @@ pub mod kit_graphql {
     async fn run_command_shell_request(
         graph: KitGraphRef,
         tx: async_channel::Sender<GraphWork>,
+        vcs: GraphQlVcsOverride,
         request_id: String,
         command_kind: String,
         request: serde_json::Value,
     ) {
-        let shell = KitShellCtx { graph: graph.clone(), tx: tx.clone() };
+        let shell = KitShellCtx {
+            graph: graph.clone(),
+            tx: tx.clone(),
+            vcs,
+        };
         let vars = shell_variables(&request);
         match dispatch_shell_command(&shell, command_kind.as_str(), &vars).await {
             Ok(response_value) => {
@@ -27500,6 +27674,38 @@ pub mod kit_graphql {
                         .await?;
                     Ok(serde_json::json!({ "data": { "createFixedPiece": { "ok": true } } }))
                 }
+                "changeKitCommandsForFieldPatch" => {
+                    let kind = vars.get("kind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: kind"))?;
+                    let id = vars.get("id").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: id"))?;
+                    let field = vars.get("field").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: field"))?;
+                    let value: serde_json::Value = vars.get("value").cloned().ok_or_else(|| Error::new("changeKitCommandsForFieldPatch: value"))?;
+                    let ek = KitGraph::parse_entity_kind(kind).map_err(|e| Error::new(e.to_string()))?;
+                    let g = shell.graph.clone();
+                    let cmds = KitGraph::change_kit_commands_for_field_patch(&g, ek, id, field, value).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "changeKitCommandsForFieldPatch": cmds } }))
+                }
+                "changeKitCommandsForAddChild" => {
+                    let parent_kind = vars.get("parentKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: parentKind"))?;
+                    let parent_id = vars.get("parentId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: parentId"))?;
+                    let child_kind = vars.get("childKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForAddChild: childKind"))?;
+                    let dto: serde_json::Value = vars.get("dto").cloned().ok_or_else(|| Error::new("changeKitCommandsForAddChild: dto"))?;
+                    let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| Error::new(e.to_string()))?;
+                    let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| Error::new(e.to_string()))?;
+                    let g = shell.graph.clone();
+                    let cmds = KitGraph::change_kit_commands_for_add_child(&g, pk, parent_id, ck, dto).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "changeKitCommandsForAddChild": cmds } }))
+                }
+                "changeKitCommandsForRemoveChild" => {
+                    let parent_kind = vars.get("parentKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: parentKind"))?;
+                    let parent_id = vars.get("parentId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: parentId"))?;
+                    let child_kind = vars.get("childKind").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: childKind"))?;
+                    let child_id = vars.get("childId").and_then(|v| v.as_str()).ok_or_else(|| Error::new("changeKitCommandsForRemoveChild: childId"))?;
+                    let pk = KitGraph::parse_entity_kind(parent_kind).map_err(|e| Error::new(e.to_string()))?;
+                    let ck = KitGraph::parse_entity_kind(child_kind).map_err(|e| Error::new(e.to_string()))?;
+                    let g = shell.graph.clone();
+                    let cmds = KitGraph::change_kit_commands_for_remove_child(&g, pk, parent_id, ck, child_id).map_err(|e| Error::new(e.to_string()))?;
+                    Ok(serde_json::json!({ "data": { "changeKitCommandsForRemoveChild": cmds } }))
+                }
                 "undo" => {
                     let g = shell.graph.clone();
                     shell.run_custom_set_result(Box::new(move || KitGraph::undo(&g))).await?;
@@ -27664,11 +27870,12 @@ pub mod kit_graphql {
     fn spawn_command_shell(
         graph: KitGraphRef,
         tx: async_channel::Sender<GraphWork>,
+        vcs: GraphQlVcsOverride,
         request_id: String,
         command_kind: String,
         request: serde_json::Value,
     ) {
-        let fut = run_command_shell_request(graph, tx, request_id, command_kind, request);
+        let fut = run_command_shell_request(graph, tx, vcs, request_id, command_kind, request);
         #[cfg(target_arch = "wasm32")]
         wasm_bindgen_futures::spawn_local(fut);
         #[cfg(not(target_arch = "wasm32"))]
@@ -27708,7 +27915,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 LiveBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
+                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
                     shell.run_graph_change(commands).await?;
                     results.push(KitStoreBatchResult {
@@ -28044,7 +28251,7 @@ pub mod kit_graphql {
             let txid = transaction_id.clone().ok_or_else(|| Error::new("transactionId is required"))?;
             match command {
                 TransactionBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands = change.commands.into_iter().map(|value| serde_json::from_value::<ChangeKitCommand>(value.0).map_err(|e| Error::new(e.to_string()))).collect::<Result<Vec<ChangeKitCommand>>>()?;
+                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
                     shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
@@ -29060,7 +29267,10 @@ pub mod wasm {
             let work_tx = self.work_tx.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req.data(graph).data(work_tx);
+                req = req
+                    .data(graph)
+                    .data(work_tx)
+                    .data(crate::kit_graphql::GraphQlVcsOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 let json = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -29079,7 +29289,10 @@ pub mod wasm {
             let cb = on_event.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req.data(graph).data(work_tx);
+                req = req
+                    .data(graph)
+                    .data(work_tx)
+                    .data(crate::kit_graphql::GraphQlVcsOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
@@ -29148,7 +29361,10 @@ mod tests {
             let out = futures_lite::future::block_on(async move {
                 let body = r#"{"query":"query { kitStore { name } }"}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
-                req = req.data(kit).data(tx);
+                req = req
+                    .data(kit)
+                    .data(tx)
+                    .data(kit_graphql::GraphQlVcsOverride::default());
                 let schema = kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 serde_json::to_value(resp).expect("to json")
@@ -29171,7 +29387,10 @@ mod tests {
                     "variables": { "input": { "commandKind": "changeKitCommands", "request": shell_request } }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit.clone()).data(tx);
+                req = req
+                    .data(kit.clone())
+                    .data(tx)
+                    .data(kit_graphql::GraphQlVcsOverride::default());
                 let schema = kit_graphql::schema();
                 serde_json::to_value(async_graphql::Response::from(schema.execute(req).await)).expect("to json")
             });

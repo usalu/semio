@@ -321,7 +321,7 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -17154,404 +17154,6 @@ export function enablePerformanceLogging(enabled: boolean = true) {
   }
 }
 
-/** logStateAccess holds the data fields for a logStateAccess record.
- **/
-/**
- **/
-function logStateAccess(hookName: string, storeType: string, selectorInfo?: string) {
-  if (!performanceLoggingEnabled) return;
-  const key = `${hookName}:${storeType}${selectorInfo ? `:${selectorInfo}` : ""}`;
-  const count = (performanceLogCounts.get(key) || 0) + 1;
-  performanceLogCounts.set(key, count);
-  const now = Date.now();
-  const lastTime = performanceLogTimestamps.get(key) || 0;
-  performanceLogTimestamps.set(key, now);
-  if (now - lastTime < 100) {
-    console.warn(`[PERF] Rapid re-render: ${key} (${count}x, ${now - lastTime}ms apart)`);
-  }
-}
-
-/**
- * Hook synchronizing a store snapshot with React state via useSyncExternalStore.
- **/
-export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      return store.onChanged((cb: () => void) => {
-        cb();
-        callback();
-        return () => {};
-      });
-    },
-    [store],
-  );
-  const getSnapshot = useCallback(() => {
-    logStateAccess("useSync", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE" : "selector");
-    return selector(store.snapshot());
-  }, [store, selector]);
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook synchronizing an optional store snapshot returning null when absent.
- **/
-export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-      return store.onChanged((cb: () => void) => {
-        cb();
-        callback();
-        return () => {};
-      });
-    },
-    [store],
-  );
-  const getSnapshot = useCallback(() => {
-    if (!store) return null as TSelected | null;
-    logStateAccess("useSyncOptional", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE" : "selector");
-    return selector(store.snapshot());
-  }, [store, selector]);
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook synchronizing a store snapshot with deep observation support.
- **/
-export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-      return store.onChangedDeep((cb: () => void) => {
-        cb();
-        callback();
-        return () => {};
-      });
-    },
-    [store],
-  );
-  const getSnapshot = useCallback(() => {
-    if (!store) return null as TSelected | null;
-    logStateAccess("useSyncDeep", (store as any).constructor?.name || "unknown", selector === identitySelector ? "FULL_STATE_DEEP" : "selector");
-    return selector(store.snapshot());
-  }, [store, selector]);
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook synchronizing a single field of a Sync-backed store.
- **/
-export function useSyncField<T, TSelected = T>(
-  store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T; getFieldSnapshot?: (key: string) => any },
-  key: string,
-  selector: (value: T) => TSelected = identitySelector as any,
-  deep: boolean = true,
-  comparator?: (a: TSelected, b: TSelected) => boolean,
-): TSelected {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      return store.onFieldChanged(
-        key,
-        (cb: () => void) => {
-          cb();
-          callback();
-          return () => {};
-        },
-        deep,
-      );
-    },
-    [store, key, deep],
-  );
-
-  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
-
-  const getSnapshot = useCallback(() => {
-    let newValue: TSelected;
-    if (store.getFieldSnapshot) {
-      const fieldValue = store.getFieldSnapshot(key);
-      newValue = selector({ [key]: fieldValue } as T);
-    } else {
-      newValue = selector(store.snapshot());
-    }
-
-    if (newValue === null || typeof newValue !== "object") {
-      if (newValue === lastResultRef.current.value) {
-        return lastResultRef.current.value;
-      }
-      lastResultRef.current = { value: newValue };
-      return newValue;
-    }
-
-    if (comparator) {
-      if (lastResultRef.current.value !== undefined && comparator(lastResultRef.current.value, newValue)) {
-        return lastResultRef.current.value;
-      }
-      lastResultRef.current = { value: newValue };
-      return newValue;
-    }
-
-    const newJson = JSON.stringify(newValue);
-    if (newJson === lastResultRef.current.json) {
-      return lastResultRef.current.value;
-    }
-
-    lastResultRef.current = { value: newValue, json: newJson };
-    return newValue;
-  }, [store, selector, key, comparator]);
-
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook synchronizing multiple fields of a Sync-backed store.
- **/
-export function useSyncFields<T, TSelected = T>(
-  store: { onFieldsChanged: (keys: string[], subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
-  keys: string[],
-  selector: (value: T) => TSelected = identitySelector as any,
-  deep: boolean = true,
-  comparator?: (a: TSelected, b: TSelected) => boolean,
-): TSelected {
-  const keysRef = useRef(keys);
-  if (keys.length !== keysRef.current.length || keys.some((k, i) => k !== keysRef.current[i])) keysRef.current = keys;
-  const stableKeys = keysRef.current;
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      return store.onFieldsChanged(
-        stableKeys,
-        (cb: () => void) => {
-          cb();
-          callback();
-          return () => {};
-        },
-        deep,
-      );
-    },
-    [store, stableKeys, deep],
-  );
-
-  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
-
-  const getSnapshot = useCallback(() => {
-    const newValue = selector(store.snapshot());
-
-    if (newValue === null || typeof newValue !== "object") {
-      if (newValue === lastResultRef.current.value) {
-        return lastResultRef.current.value;
-      }
-      lastResultRef.current = { value: newValue };
-      return newValue;
-    }
-
-    if (comparator) {
-      if (lastResultRef.current.value !== undefined && comparator(lastResultRef.current.value, newValue)) {
-        return lastResultRef.current.value;
-      }
-      lastResultRef.current = { value: newValue };
-      return newValue;
-    }
-
-    const newJson = JSON.stringify(newValue);
-    if (newJson === lastResultRef.current.json) {
-      return lastResultRef.current.value;
-    }
-
-    lastResultRef.current = { value: newValue, json: newJson };
-    return newValue;
-  }, [store, selector, comparator]);
-
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook tracking nested array item membership via sync observation.
- **/
-export function useSyncNestedArrayItemMembership(store: { syncMap: SyncMap<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-      return createNestedArrayItemMembershipObserver(store.syncMap, mapKey, arrayKey, itemId, (cb: () => void) => {
-        cb();
-        callback();
-        return () => {};
-      });
-    },
-    [store, mapKey, arrayKey, itemId],
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (!store) return false;
-    const nestedMap = store.syncMap.get(mapKey) as SyncMap<any> | undefined;
-    if (!nestedMap) return false;
-    const arr = nestedMap.get(arrayKey) as SyncArray<string> | undefined;
-    if (!arr) return false;
-    return arr.toArray().includes(itemId);
-  }, [store, mapKey, arrayKey, itemId]);
-
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook tracking selection item membership via sync observation.
- **/
-export function useSyncSelectionItemMembership(store: { syncMap: SyncMap<any> } | null, arrayKey: string, itemId: string): boolean {
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-
-      return createNestedArrayItemMembershipObserver(store.syncMap, "selection", arrayKey, itemId, (cb: () => void) => {
-        cb();
-        callback();
-        return () => {};
-      });
-    },
-    [store, arrayKey, itemId],
-  );
-
-  const getSnapshot = useCallback(() => {
-    if (!store) return false;
-    const selection = store.syncMap.get("selection") as SyncMap<any> | undefined;
-    if (!selection) return false;
-    const arr = selection.get(arrayKey) as SyncArray<string> | undefined;
-    if (!arr) return false;
-    return arr.toArray().includes(itemId);
-  }, [store, arrayKey, itemId]);
-
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/**
- * Hook traversing a sync path and selecting a value from the resolved node.
- **/
-export function usePath<T, TSelected = T>(
-  store: { onPathChanged: (path: SyncPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: SyncPath) => any } | null,
-  path: SyncPath,
-  selector: (value: any) => TSelected = identitySelector as any,
-): TSelected | undefined {
-  const pathKey = useMemo(() => JSON.stringify(path), [path]);
-  const subscribe = useCallback(
-    (callback: () => void) => {
-      if (!store) return () => {};
-      return store.onPathChanged(path, () => {
-        callback();
-        return () => {};
-      });
-    },
-    [store, pathKey],
-  );
-  const lastResultRef = useRef<{ value: TSelected; json?: string }>({ value: undefined as any });
-  const getSnapshot = useCallback(() => {
-    if (!store) return undefined;
-    const rawValue = store.getPathSnapshot(path);
-    const value = isSyncMap(rawValue) || isSyncArray(rawValue) ? rawValue.toJSON() : rawValue;
-    const newValue = selector(value);
-    if (newValue === null || typeof newValue !== "object") {
-      if (newValue === lastResultRef.current.value) return lastResultRef.current.value;
-      lastResultRef.current = { value: newValue };
-      return newValue;
-    }
-    const newJson = JSON.stringify(newValue);
-    if (newJson === lastResultRef.current.json) return lastResultRef.current.value;
-    lastResultRef.current = { value: newValue, json: newJson };
-    return newValue;
-  }, [store, pathKey, selector]);
-  return useSyncExternalStore(subscribe, getSnapshot);
-}
-
-/** initialDocsPanelVisibility holds the data fields for a initialDocsPanelVisibility record.
- **/
-/**
- **/
-const initialDocsPanelVisibility: PanelVisibility = {
-  toolbar: false,
-  details: false,
-  tools: false,
-  hud: false,
-  stats: false,
-};
-
-/** docsPanelVisibilityState holds the data fields for a docsPanelVisibilityState record.
- **/
-/**
- **/
-let docsPanelVisibilityState: PanelVisibility = initialDocsPanelVisibility;
-/** docsPanelVisibilityListeners holds the data fields for a docsPanelVisibilityListeners record.
- **/
-/**
- **/
-const docsPanelVisibilityListeners = new Set<() => void>();
-
-/** DocsPanelVisibilityUpdate holds the data fields for a DocsPanelVisibilityUpdate record.
- **/
-/**
- **/
-type DocsPanelVisibilityUpdate = PanelVisibility | ((prev: PanelVisibility) => PanelVisibility);
-/**
- * getDocsPanelVisibilitySnapshot holds the data fields for a getDocsPanelVisibilitySnapshot record.
- **/
-function getDocsPanelVisibilitySnapshot(): PanelVisibility {
-  return docsPanelVisibilityState;
-}
-/**
- * subscribeDocsPanelVisibility holds the data fields for a subscribeDocsPanelVisibility record.
- **/
-function subscribeDocsPanelVisibility(listener: () => void) {
-  docsPanelVisibilityListeners.add(listener);
-  return () => {
-    docsPanelVisibilityListeners.delete(listener);
-  };
-}
-/**
- * updateDocsPanelVisibilityState holds the data fields for a updateDocsPanelVisibilityState record.
- **/
-function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
-  const next = typeof update === "function" ? (update as (prev: PanelVisibility) => PanelVisibility)(docsPanelVisibilityState) : update;
-  const merged = { ...docsPanelVisibilityState, ...next };
-  docsPanelVisibilityState = merged;
-  docsPanelVisibilityListeners.forEach((listener) => listener());
-}
-/**
- * nullStore holds the data fields for a nullStore record.
- **/
-const nullStore: Synchronizable<null> = {
-  onChanged: () => () => {},
-  onChangedDeep: () => () => {},
-  snapshot: () => null,
-};
-
-/**
- * Hook synchronizing a store with state tracking for loading, error, and idle status.
- **/
-export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchronizable<TAccessl> & Store<TAccessl>) | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): StoreState<TAccessl | TSelected> {
-  const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
-  const state = deep
-    ? useSyncExternalStore(
-        (onStoreChange: () => void) =>
-          actualStore.onChangedDeep((cb: () => void) => {
-            cb();
-            onStoreChange();
-            return () => {};
-          }),
-        actualStore.snapshot.bind(actualStore),
-      )
-    : useSyncExternalStore(
-        (onStoreChange: () => void) =>
-          actualStore.onChanged((cb: () => void) => {
-            cb();
-            onStoreChange();
-            return () => {};
-          }),
-        actualStore.snapshot.bind(actualStore),
-      );
-  if (!store) {
-    return { status: StoreStatus.IDLE, data: null as any };
-  }
-  const storeState = (store as Store<TAccessl>).getState();
-  return {
-    ...storeState,
-    data: storeState.data && selector ? selector(storeState.data) : storeState.data,
-  } as StoreState<TAccessl | TSelected>;
-}
 /**
  * areSameKit holds the data fields for a areSameKit record.
  **/
@@ -20509,18 +20111,18 @@ export const useFocus = (): FocusApi => {
 
 export const useFocusSafe = (): FocusApi | null => {
   const actor = useSketchpadActorSafe();
-  const focusItems = useSyncExternalStore(
-    useCallback(
-      (onChange) => {
-        if (!actor) return () => {};
-        const s = actor.subscribe(() => onChange());
-        return () => s.unsubscribe();
-      },
-      [actor],
-    ),
-    useCallback(() => (actor ? actor.getSnapshot().context.ui.focusItems : _emptyUiFocus), [actor]),
-    () => _emptyUiFocus,
-  );
+  const [focusItems, setFocusItemsState] = useState<FocusItem[]>(_emptyUiFocus);
+  useEffect(() => {
+    if (!actor) {
+      setFocusItemsState(_emptyUiFocus);
+      return;
+    }
+    setFocusItemsState(actor.getSnapshot().context.ui.focusItems);
+    const sub = actor.subscribe(() => {
+      setFocusItemsState(actor.getSnapshot().context.ui.focusItems);
+    });
+    return () => sub.unsubscribe();
+  }, [actor]);
   const setFocusItems = useCallback(
     (items: FocusItem[]) => {
       actor?.send({ type: "UI.FOCUS.SET_ITEMS", items });
@@ -20670,18 +20272,19 @@ export function useOrigin(): () => string {
  **/
 export function useOriginValue(): string {
   const actor = useSketchpadActorSafe();
-  return useSyncExternalStore(
-    useCallback(
-      (onChange) => {
-        if (!actor) return () => {};
-        const sub = actor.subscribe(() => onChange());
-        return () => sub.unsubscribe();
-      },
-      [actor],
-    ),
-    useCallback(() => (actor ? actor.getSnapshot().context.ui.origin : DEFAULT_SKETCHPAD_UI_ORIGIN), [actor]),
-    useCallback(() => DEFAULT_SKETCHPAD_UI_ORIGIN, []),
-  );
+  const [origin, setOrigin] = useState(() => (actor ? actor.getSnapshot().context.ui.origin : DEFAULT_SKETCHPAD_UI_ORIGIN));
+  useEffect(() => {
+    if (!actor) {
+      setOrigin(DEFAULT_SKETCHPAD_UI_ORIGIN);
+      return;
+    }
+    setOrigin(actor.getSnapshot().context.ui.origin);
+    const sub = actor.subscribe(() => {
+      setOrigin(actor.getSnapshot().context.ui.origin);
+    });
+    return () => sub.unsubscribe();
+  }, [actor]);
+  return origin;
 }
 
 // #endregion 🏰Origin
@@ -20948,10 +20551,11 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
     [t],
   );
 
-  const apps = useSyncExternalStore(
-    useCallback((cb) => appRegistry.subscribe(cb), []),
-    () => appRegistry.getAllApps(),
-  );
+  const [apps, setApps] = useState(() => appRegistry.getAllApps());
+  useEffect(() => {
+    setApps(appRegistry.getAllApps());
+    return appRegistry.subscribe(() => setApps(appRegistry.getAllApps()));
+  }, []);
 
   const panelConfigsByApp = useMemo(() => {
     const emptyLabelFn = () => "";
@@ -28529,17 +28133,17 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const kitId = kitScope?.id ?? id?.kit ?? "";
   const designId = designScope?.id ?? id?.design ?? "";
   const store = useDesignStore(undefined, id) as DesignStore | null;
-  const state = useSyncExternalStore(
-    useCallback(
-      (callback: () => void) => {
-        if (!store) return () => {};
-        return store.subscribe(callback);
-      },
-      [store],
-    ),
-    useCallback(() => store?.snapshot() ?? null, [store]),
-    useCallback(() => store?.snapshot() ?? null, [store]),
-  );
+  const [state, setState] = useState<DesignAppState | null>(() => store?.snapshot() ?? null);
+  useEffect(() => {
+    if (!store) {
+      setState(null);
+      return;
+    }
+    setState(store.snapshot());
+    return store.subscribe(() => {
+      setState(store.snapshot());
+    });
+  }, [store]);
   const lastSyncedStateRef = useRef<{
     panelVisibility: PanelVisibility;
     selection: DesignAppSelection | undefined;
@@ -28751,14 +28355,19 @@ function areTransactionContextsEqual(a: TransactionPiecesContextValue, b: Transa
  **/
 function TransactionPiecesProviderInner({ store, children }: { store: DesignStore; children: ReactNode }) {
   const lastResultRef = useRef<TransactionPiecesContextValue>(EMPTY_TRANSACTION_CONTEXT);
-  const subscribe = useCallback((callback: () => void) => store.subscribe(callback), [store]);
   const getSnapshot = useCallback(() => {
     const result = getTransactionAffectedPieces(store);
     if (areTransactionContextsEqual(result, lastResultRef.current)) return lastResultRef.current;
     lastResultRef.current = result;
     return result;
   }, [store]);
-  const transactionData = useSyncExternalStore(subscribe, getSnapshot);
+  const [transactionData, setTransactionData] = useState<TransactionPiecesContextValue>(() => getSnapshot());
+  useLayoutEffect(() => {
+    setTransactionData(getSnapshot());
+    return store.subscribe(() => {
+      setTransactionData(getSnapshot());
+    });
+  }, [store, getSnapshot]);
   return <TransactionPiecesContext.Provider value={transactionData}>{children}</TransactionPiecesContext.Provider>;
 }
 
@@ -28850,7 +28459,6 @@ class HoverPiecesStore {
  * HoverPiecesStoreContext holds a stable store reference for granular hover subscriptions.
  **/
 const HoverPiecesStoreContext = createContext<HoverPiecesStore | null>(null);
-const noopSubscribe = (_cb: () => void) => () => {};
 // [👤semio📚js🗃️sketchpad💻design🔖store🛠️computehoverdata](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Store/d/i/computeHoverData)
 /**
  * computeHoverData holds the data fields for a computeHoverData record.
@@ -28972,11 +28580,17 @@ export function HoverPiecesProvider({ children }: { children: ReactNode }) {
 export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?: string): boolean {
   const hoverStore = useContext(HoverPiecesStoreContext);
   const stablePieceId = pieceId ?? "";
-  const getSnapshot = useCallback(() => {
+  const readHovered = useCallback(() => {
     if (!stablePieceId) return false;
     return hoverStore?.getData().transitivelyHoveredPieces.has(stablePieceId) ?? false;
   }, [hoverStore, stablePieceId]);
-  return useSyncExternalStore(hoverStore?.subscribe ?? noopSubscribe, getSnapshot);
+  const [hovered, setHovered] = useState(readHovered);
+  useLayoutEffect(() => {
+    setHovered(readHovered());
+    if (!hoverStore?.subscribe) return;
+    return hoverStore.subscribe(() => setHovered(readHovered()));
+  }, [hoverStore, readHovered]);
+  return hovered;
 }
 
 /**
@@ -28985,8 +28599,14 @@ export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?:
  **/
 export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined, typeId: string): boolean {
   const hoverStore = useContext(HoverPiecesStoreContext);
-  const getSnapshot = useCallback(() => hoverStore?.getData().transitivelyHoveredTypes.has(typeId) ?? false, [hoverStore, typeId]);
-  return useSyncExternalStore(hoverStore?.subscribe ?? noopSubscribe, getSnapshot);
+  const readHovered = useCallback(() => hoverStore?.getData().transitivelyHoveredTypes.has(typeId) ?? false, [hoverStore, typeId]);
+  const [hovered, setHovered] = useState(readHovered);
+  useLayoutEffect(() => {
+    setHovered(readHovered());
+    if (!hoverStore?.subscribe) return;
+    return hoverStore.subscribe(() => setHovered(readHovered()));
+  }, [hoverStore, readHovered]);
+  return hovered;
 }
 
 /**
@@ -29448,7 +29068,11 @@ const getDesignFilterSnapshot = (): DesignFilterState => getDesignFilterStore().
 const DesignFilterContext = createContext<DesignFilterState>(DEFAULT_FILTER_STATE);
 
 const DesignFilterProvider: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const sharedState = useSyncExternalStore(subscribeDesignFilter, getDesignFilterSnapshot);
+  const [sharedState, setSharedState] = useState<DesignFilterState>(() => getDesignFilterSnapshot());
+  useEffect(() => {
+    setSharedState(getDesignFilterSnapshot());
+    return subscribeDesignFilter(() => setSharedState(getDesignFilterSnapshot()));
+  }, []);
   return <DesignFilterContext.Provider value={sharedState}>{children}</DesignFilterContext.Provider>;
 };
 
@@ -31823,16 +31447,20 @@ const PieceRenderDataStoreContext = createContext<PieceRenderDataStoreApi>(creat
  **/
 function usePieceRenderData(pieceId: string): PieceRenderData {
   const store = useContext(PieceRenderDataStoreContext);
-  const subscribe = useCallback((cb: () => void) => store.subscribe(cb), [store]);
   const lastRef = useRef<{ version: number; data: PieceRenderData }>({ version: -1, data: EMPTY_PIECE_RENDER_DATA });
-  const getSnapshot = useCallback(() => {
+  const readData = useCallback(() => {
     const ver = store.getVersion(pieceId);
     if (ver === lastRef.current.version) return lastRef.current.data;
     const data = store.get(pieceId);
     lastRef.current = { version: ver, data };
     return data;
   }, [store, pieceId]);
-  return useSyncExternalStore(subscribe, getSnapshot);
+  const [data, setData] = useState<PieceRenderData>(() => readData());
+  useLayoutEffect(() => {
+    setData(readData());
+    return store.subscribe(() => setData(readData()));
+  }, [store, pieceId, readData]);
+  return data;
 }
 
 function syncPieceRenderData(store: PieceRenderDataStoreApi, designStore: DesignStore, hover: DesignAppHover | undefined, selection: DesignAppSelection | undefined) {
@@ -40544,7 +40172,14 @@ const createTypeFilterStore = () => {
 
 const typeFilterStore = createTypeFilterStore();
 
-const useTypeFilters = (): TypeFilterState => useSyncExternalStore(typeFilterStore.subscribe, typeFilterStore.getState, typeFilterStore.getState);
+const useTypeFilters = (): TypeFilterState => {
+  const [filters, setFilters] = useState<TypeFilterState>(() => typeFilterStore.getState());
+  useEffect(() => {
+    setFilters(typeFilterStore.getState());
+    return typeFilterStore.subscribe(() => setFilters(typeFilterStore.getState()));
+  }, []);
+  return filters;
+};
 
 const TypeKindToggles: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43287,11 +42922,12 @@ async function ensureDocsMetadataLoaded(): Promise<void> {
 }
 
 function useDocsMetadataVersion(): number {
+  const [version, setVersion] = useState(() => getDocsMetadataVersion());
   useEffect(() => {
     void ensureDocsMetadataLoaded();
   }, []);
-
-  return useSyncExternalStore(subscribeDocsMetadata, getDocsMetadataVersion, getDocsMetadataVersion);
+  useEffect(() => subscribeDocsMetadata(() => setVersion(getDocsMetadataVersion())), []);
+  return version;
 }
 
 /**
@@ -43470,7 +43106,11 @@ const getHeadingsSnapshot = () => headingsState.getAll();
  * Hook providing heading registration and retrieval via external store.
  **/
 export const useHeadings = () => {
-  const headings = useSyncExternalStore(subscribeHeadings, getHeadingsSnapshot);
+  const [headings, setHeadings] = useState<HeadingNode[]>(() => getHeadingsSnapshot());
+  useEffect(() => {
+    setHeadings(getHeadingsSnapshot());
+    return subscribeHeadings(() => setHeadings(getHeadingsSnapshot()));
+  }, []);
 
   const registerHeading = useCallback((heading: HeadingNode) => {
     headingsState.register(heading);
