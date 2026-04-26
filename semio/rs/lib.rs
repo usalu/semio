@@ -26883,9 +26883,9 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum LiveBatchCommandInput {
-        ChangeKitCommands(ChangeKitCommandsBatchInput),
-        Design(DesignBatchInput),
+        /// 🧾 WIP graph undo stack only (not draft/transaction scoped).
         Undo(ConfirmOnlyInput),
+        /// 🧾 WIP graph redo stack only (not draft/transaction scoped).
         Redo(ConfirmOnlyInput),
     }
 
@@ -26939,6 +26939,8 @@ pub mod kit_graphql {
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum TransactionBatchCommandInput {
         ChangeKitCommands(ChangeKitCommandsBatchInput),
+        /// 🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
+        Design(DesignBatchInput),
         FinalizeTransaction(ConfirmOnlyInput),
         AbortTransaction(ConfirmOnlyInput),
         UndoTransaction(CountInput),
@@ -27399,27 +27401,58 @@ pub mod kit_graphql {
         Ok(KitStoreBatchPayload { client_mutation_id: input.client_mutation_id, results })
     }
 
+    /// 🧾 Map one design batch command to [`ChangeKitCommand`] atoms for transaction execution.
+    fn design_batch_command_to_change_kit_commands(design_id: &str, command: DesignBatchCommandInput) -> Result<Vec<ChangeKitCommand>, Error> {
+        use crate::change_command::ChangeKitCommand as C;
+        use crate::connection::ConnectionIdDto;
+        use crate::design::DesignIdDto;
+        use crate::id::Id;
+        use crate::piece::PieceIdDto;
+        use crate::typ::TypeIdDto;
+        let did = DesignIdDto { id: Id::from(design_id) };
+        match command {
+            DesignBatchCommandInput::ClusterPieces(input) => Ok(vec![C::ClusterPieces {
+                design_id: did,
+                piece_ids: input.piece_ids,
+                cluster_name: input.cluster_name,
+            }]),
+            DesignBatchCommandInput::DragPieces(input) => Ok(vec![C::DragPieces {
+                design_id: did,
+                piece_ids: input.piece_ids,
+                du: input.du,
+                dv: input.dv,
+            }]),
+            DesignBatchCommandInput::MovePieces(input) => Ok(vec![C::MovePieces {
+                design_id: did,
+                piece_ids: input.piece_ids,
+                gap: input.gap,
+                shift: input.shift,
+                rise: input.rise,
+            }]),
+            DesignBatchCommandInput::FixPieces(input) => Ok(vec![C::FixPieces { design_id: did, piece_ids: input.piece_ids }]),
+            DesignBatchCommandInput::FlattenDesign(_) => Ok(vec![C::FlattenDesign { design_id: did }]),
+            DesignBatchCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign {
+                parent_design_id: did,
+                nested_design_id: DesignIdDto { id: Id::from(input.nested_design_id.as_str()) },
+            }]),
+            DesignBatchCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection {
+                design_id: did,
+                connection_id: ConnectionIdDto { id: Id::from(input.connection_id.as_str()) },
+            }]),
+            DesignBatchCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind {
+                design_id: did,
+                piece_id: PieceIdDto { id: Id::from(input.piece_id.as_str()) },
+                new_type_id: TypeIdDto { id: Id::from(input.new_type_id.as_str()) },
+            }]),
+            DesignBatchCommandInput::CreateHangingPieces(_) | DesignBatchCommandInput::CreateConnectedPiece(_) | DesignBatchCommandInput::CreateFixedPiece(_) => Err(Error::new(
+                "design canvas createHangingPieces/createConnectedPiece/createFixedPiece are not implemented as ChangeKitCommand yet; use a future transaction command variant",
+            )),
+        }
+    }
+
     async fn execute_live_batch(shell: &KitShellCtx, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
         for command in batch.commands {
             match command {
-                LiveBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
-                    let count = commands.len() as i32;
-                    shell.run_graph_change(commands).await?;
-                    results.push(KitStoreBatchResult {
-                        kind: KitStoreBatchResultKind::ChangeKitCommands,
-                        ok: Some(true),
-                        count: Some(count),
-                        session_id: None,
-                        draft_id: None,
-                        transaction_id: None,
-                        checkpoint_id: None,
-                        alternative_id: None,
-                        backbone: None,
-                        conflicts: None,
-                    });
-                }
-                LiveBatchCommandInput::Design(design) => execute_design_batch(shell, design, results).await?,
                 LiveBatchCommandInput::Undo(_) => {
                     let graph = shell.graph.clone();
                     shell.run_custom_set_result(Box::new(move || KitGraph::undo(&graph))).await?;
@@ -28209,7 +28242,7 @@ pub mod kit_graphql {
         }
     }
     fn gql_coord3(c: &crate::geom::Coordinate) -> GqlCoordinate3 {
-        // 🔖 geom::Coordinate is 2D (u,v) — expose in GQL as (x,y,z) with z=0.
+        // `geom::Coordinate` is 2D (u, v); GQL pose uses (x, y, z) with z = 0.
         GqlCoordinate3 {
             x: c.u,
             y: c.v,

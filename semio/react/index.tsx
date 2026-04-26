@@ -8,9 +8,9 @@
 // #region ⚛️Imports
 
 import {
-  acquireSemioKitCommandFacade,
   applyKitClientSnapshotToLocalStore,
   AuthorSchema,
+  buildSchemaEntityChangeCommands,
   ConceptSchema,
   ConnectionSchema,
   ConnectorSchema,
@@ -33,7 +33,6 @@ import {
   getSemioKitShallowListReadStore,
   getSemioKitViewStore,
   isKitCommandLifecycleEvent,
-  releaseSemioKitCommandFacade,
   kitEventAffectsCanUndoRedo,
   kitEventAffectsDesignQualitySumRead,
   kitEventAffectsKitColoredConnectorsRead,
@@ -15964,7 +15963,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, theKitReadScope, kitReadScopeKey } = await import("@semio/js");
+  const { InMemoryKitStore, asKitInstance, kitReadScopeKey } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -16345,6 +16344,7 @@ if (shouldRunReactEmbeddedTests) {
         resolveConflict: async () => ({}),
         syncNow: async () => ({}),
         subscribe: () => () => {},
+        setKitReadScope: () => {},
         dispose: () => {},
       };
       let seen: SetError[] = [];
@@ -16366,7 +16366,7 @@ if (shouldRunReactEmbeddedTests) {
   });
 
   describe("kit data scope", () => {
-    it("CheckpointDataScope sets client read scope and useKitDataScope returns nested checkpoint", async () => {
+    it("KitScope kitReadScope prop drives setKitReadScope and useKitDataScope (checkpoint line)", async () => {
       const log: string[] = [];
       const kit = asKitInstance({
         id: "k1",
@@ -16384,6 +16384,7 @@ if (shouldRunReactEmbeddedTests) {
           log.push(kitReadScopeKey(s));
         },
       };
+      const ck: KitReadScope = { checkpoint: { checkpointId: "cpx" } };
       let got: KitReadScope | null = null;
       function Leaf() {
         got = useKitDataScope();
@@ -16391,8 +16392,8 @@ if (shouldRunReactEmbeddedTests) {
       }
       const tree = React.createElement(
         KitScope,
-        { store, kitClient: client, kitReadScope: theKitReadScope },
-        React.createElement(CheckpointDataScope, { checkpointId: "cpx" }, React.createElement(Leaf, null)),
+        { store, kitClient: client, kitReadScope: ck },
+        React.createElement(Leaf, null),
       );
       const { unmount } = render(tree);
       await waitFor(() => {
@@ -16400,10 +16401,9 @@ if (shouldRunReactEmbeddedTests) {
           throw new Error("not ready");
         }
       });
-      const ck = kitReadScopeKey({ checkpoint: { checkpointId: "cpx" } });
-      expect(log).toContain(ck);
+      const ckKey = kitReadScopeKey({ checkpoint: { checkpointId: "cpx" } });
+      expect(log).toContain(ckKey);
       unmount();
-      expect(log[log.length - 1]).toBe(kitReadScopeKey(theKitReadScope));
     });
   });
 

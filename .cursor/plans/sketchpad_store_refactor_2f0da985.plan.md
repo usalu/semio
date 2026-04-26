@@ -7,22 +7,22 @@ todos:
    status: completed
  - id: store-section
    content: Consolidate state-management definitions in one Store section inside semio/sketchpad/index.tsx.
-   status: in_progress
+   status: completed
  - id: single-machine
    content: Make the sketchpad machine the only authority for sketchpad and app UI state.
-   status: pending
+   status: completed
  - id: clean-hooks
    content: Replace XState-facing and external-store hooks with clean public hook wrappers.
-   status: pending
+   status: completed
  - id: capabilities
    content: Derive canSet and action capability from transition descriptors instead of duplicated snapshot.can payloads.
-   status: pending
+   status: completed
  - id: remove-sync
    content: Remove sketchpad-local useSyncDeep/useSyncExternalStore patterns from state hooks.
-   status: pending
+   status: completed
  - id: tests-validation
    content: Extend existing verification and run sketchpad build/test/layer checks.
-   status: pending
+   status: completed
 isProject: false
 ---
 
