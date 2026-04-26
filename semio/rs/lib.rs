@@ -26606,7 +26606,7 @@ pub mod io {
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
-    use async_graphql::{Context, Enum, Error, InputObject, InputValueError, InputValueResult, Json, Object, OneofObject, Request, Result, Scalar, ScalarType, Schema, SimpleObject, Subscription, Value, Variables};
+    use async_graphql::{Context, Enum, Error, InputObject, InputValueError, InputValueResult, Object, OneofObject, Request, Result, Scalar, ScalarType, Schema, SimpleObject, Subscription, Value, Variables};
     use async_stream::stream;
     use futures_channel::oneshot;
     use futures_util::Stream;
@@ -26625,7 +26625,6 @@ pub mod kit_graphql {
     use crate::kit_session::SessionCommand;
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::piece::PieceStoreRef;
-    use crate::read::DesignFlattenMapEntryDto;
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
 
@@ -26722,6 +26721,22 @@ pub mod kit_graphql {
             let v = value.into_json()?;
             let a: Vec<crate::author::AuthorShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
             Ok(GqlAuthorShallowList(a))
+        }
+
+        fn to_value(&self) -> Value {
+            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    struct GqlConnectionFullList(Vec<crate::connection::ConnectionFullDto>);
+
+    #[Scalar(name = "ConnectionFullList")]
+    impl ScalarType for GqlConnectionFullList {
+        fn parse(value: Value) -> InputValueResult<Self> {
+            let v = value.into_json()?;
+            let a: Vec<crate::connection::ConnectionFullDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            Ok(GqlConnectionFullList(a))
         }
 
         fn to_value(&self) -> Value {
@@ -28194,7 +28209,12 @@ pub mod kit_graphql {
         }
     }
     fn gql_coord3(c: &crate::geom::Coordinate) -> GqlCoordinate3 {
-        GqlCoordinate3 { x: c.x, y: c.y, z: c.z }
+        // 🔖 geom::Coordinate is 2D (u,v) — expose in GQL as (x,y,z) with z=0.
+        GqlCoordinate3 {
+            x: c.u,
+            y: c.v,
+            z: 0.0,
+        }
     }
     fn gql_pose_object(p: &crate::piece::PoseFullDto) -> GqlPoseObject {
         GqlPoseObject {
@@ -28308,6 +28328,34 @@ pub mod kit_graphql {
         alternatives: Vec<VcsAlternativeGql>,
         sessions: Vec<VcsSessionGql>,
         the_kit_line: Vec<String>,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct DesignFlattenMapEntryObject {
+        piece_id: String,
+        plane: GqlPlaneObject,
+        center: GqlCoordinate3,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct IncludedDesignObject {
+        id: String,
+        design_id: String,
+        connection_kind: String,
+        center: Option<GqlCoordinate3>,
+        plane: Option<GqlPlaneObject>,
+        external_connections: GqlConnectionFullList,
+    }
+
+    #[derive(Clone, Debug, SimpleObject)]
+    struct PiecePlacementRowObject {
+        piece_id: String,
+        plane: GqlPlaneObject,
+        center: GqlCoordinate3,
+        fixed_piece_id: String,
+        parent_piece_id: Option<String>,
+        depth: i32,
+        path: Vec<String>,
     }
     // #endregion
 
@@ -28576,12 +28624,19 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
         }
 
-        async fn flatten_map(&self) -> Result<Json<Vec<DesignFlattenMapEntryDto>>> {
+        async fn flatten_map(&self) -> Result<Vec<DesignFlattenMapEntryObject>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
-            let mut rows: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
-            rows.sort_by(|a, b| a.piece_id.as_str().cmp(b.piece_id.as_str()));
-            Ok(Json(rows))
+            let mut rows: Vec<DesignFlattenMapEntryObject> = m
+                .into_iter()
+                .map(|(piece_id, (plane, center))| DesignFlattenMapEntryObject {
+                    piece_id: piece_id.to_string(),
+                    plane: gql_plane_object(&plane),
+                    center: gql_coord3(&center),
+                })
+                .collect();
+            rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
+            Ok(rows)
         }
         async fn clusterable_groups(&self, selection: Vec<String>) -> Result<Vec<Vec<String>>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -28602,36 +28657,46 @@ pub mod kit_graphql {
             let alts = d.replaceable_catalog_candidates(&ids);
             Ok(ReplaceableCatalogNode { type_ids: alts.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect(), design_ids: alts.designs.iter().filter_map(|x| x.read().ok().map(|r| r.id.to_string())).collect() })
         }
-        async fn included_designs(&self) -> Result<Json<serde_json::Value>> {
+        async fn included_designs(&self) -> Result<Vec<IncludedDesignObject>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let v = crate::read::design_included_infos(&*d);
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
+            Ok(v
+                .into_iter()
+                .map(|x| IncludedDesignObject {
+                    id: x.id.to_string(),
+                    design_id: x.design_id.to_string(),
+                    connection_kind: x.type_,
+                    center: x.center.as_ref().map(gql_coord3),
+                    plane: x.plane.as_ref().map(gql_plane_object),
+                    external_connections: GqlConnectionFullList(x.external_connections),
+                })
+                .collect())
         }
         async fn included_design_ids(&self) -> Result<Vec<String>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             Ok(crate::read::design_included_design_ids(&*d).into_iter().map(|x| x.id.to_string()).collect())
         }
 
-        /// 🌐 Full piece DTO list (same as [`KitGraph::get_pieces_json`] for this design).
-        async fn pieces_full_json(&self) -> Result<Json<serde_json::Value>> {
-            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = dr.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Full connection DTO list (same as [`KitGraph::get_connections_json`] for this design).
-        async fn connections_full_json(&self) -> Result<Json<serde_json::Value>> {
-            let dr = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = dr.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
-            Ok(Json(serde_json::to_value(&v).map_err(|e| Error::new(e.to_string()))?))
-        }
-
-        /// 🌐 Flatten placement map JSON (same as [`KitGraph::get_pieces_metadata_json`]).
-        async fn pieces_metadata_json(&self, ctx: &Context<'_>) -> Result<Json<serde_json::Value>> {
+        /// 🌐 Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
+        async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<PiecePlacementRowObject>> {
             let gref: &KitGraphRef = ctx.data()?;
             let g = lock_graph(gref)?;
             let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
-            g.get_pieces_metadata_json(&did).map(Json).map_err(|e| Error::new(format!("{e:?}")))
+            let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
+            let mut rows: Vec<PiecePlacementRowObject> = m
+                .into_iter()
+                .map(|(piece_id, r)| PiecePlacementRowObject {
+                    piece_id,
+                    plane: gql_plane_object(&r.plane),
+                    center: gql_coord3(&r.center),
+                    fixed_piece_id: r.fixed_piece_id,
+                    parent_piece_id: r.parent_piece_id,
+                    depth: r.depth,
+                    path: r.path,
+                })
+                .collect();
+            rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
+            Ok(rows)
         }
     }
 
@@ -28649,16 +28714,19 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
         }
 
-        async fn flat_plane(&self) -> Result<Json<crate::geom::Plane>> {
-            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_plane()))
+        async fn flat_plane(&self) -> Result<GqlPlaneObject> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(gql_plane_object(&p.flat_plane()))
         }
 
-        async fn flat_center(&self) -> Result<Json<crate::geom::Coordinate>> {
-            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_center()))
+        async fn flat_center(&self) -> Result<GqlCoordinate3> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(gql_coord3(&p.flat_center()))
         }
 
-        async fn flat_pose(&self) -> Result<Json<crate::piece::PoseFullDto>> {
-            Ok(Json(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.flat_pose_full_dto()))
+        async fn flat_pose(&self) -> Result<GqlPoseObject> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(gql_pose_object(&p.flat_pose_full_dto()))
         }
 
         async fn scale(&self) -> Result<Option<f64>> {
@@ -28671,14 +28739,10 @@ pub mod kit_graphql {
             Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeNode))
         }
 
-        /// 🌐 Full parent connection DTO when the piece is linked through a connection.
-        async fn parent_connection_full(&self) -> Result<Option<Json<serde_json::Value>>> {
+        /// Parent connection when the piece is linked through a connection.
+        async fn parent_connection(&self) -> Result<Option<ConnectionNode>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            let c = p.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_full_dto()));
-            match c {
-                Some(dto) => Ok(Some(Json(serde_json::to_value(&dto).map_err(|e| Error::new(e.to_string()))?))),
-                None => Ok(None),
-            }
+            Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionNode))
         }
     }
 
@@ -28704,13 +28768,13 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationNode).collect())
         }
 
-        /// 🌐 Best matching representation for tag selection.
-        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<Json<serde_json::Value>>> {
+        /// Best matching representation for tag selection.
+        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<RepresentationNode>> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let r = t.best_representation_for_tag_ids(&ids);
             match r {
-                Some(dto) => Ok(Some(Json(serde_json::to_value(&dto).map_err(|e| Error::new(e.to_string()))?))),
+                Some(dto) => Ok(t.representation(dto.id.as_str()).map(RepresentationNode)),
                 None => Ok(None),
             }
         }

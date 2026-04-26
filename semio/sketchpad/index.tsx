@@ -8791,6 +8791,17 @@ export const sketchpadMachine = setup({
     "UI.OPEN_KIT.ACTIVATE": { actions: "uiOpenKitActivate" },
     "UI.LOCAL_SELECTION.SET_ACTIVE_KIT": { actions: "uiLocalSelectionSetActiveKit" },
     "UI.LOCAL_SELECTION.SET_ENTITY_IDS": { actions: "uiLocalSelectionSetEntityIds" },
+    "DOCS.TOGGLE_PANEL": {
+      actions: assign(({ context, event }) => {
+        if (event.type !== "DOCS.TOGGLE_PANEL") return {};
+        return {
+          docsApp: {
+            ...context.docsApp,
+            panelVisibility: getNextPanelVisibilityFromToggle(context.docsApp.panelVisibility, (event as { panel: keyof PanelVisibility }).panel),
+          },
+        };
+      }),
+    },
     "*": { actions: "dispatchAppEvent" },
   },
   states: {
@@ -43688,15 +43699,6 @@ const docsAppPlugin: AppPlugin = {
 if (typeof window !== "undefined") {
   registerAppPlugin(docsAppPlugin);
   registerDocsRegistry(docsRegistry);
-
-  registerEventHandler("DOCS.TOGGLE_PANEL", {
-    action: (context: any, event: any) => ({
-      docsApp: {
-        ...context.docsApp,
-        panelVisibility: getNextPanelVisibilityFromToggle(context.docsApp.panelVisibility, event.panel),
-      },
-    }),
-  });
 }
 
 // #endregion 🔧Docs App Plugin Registration

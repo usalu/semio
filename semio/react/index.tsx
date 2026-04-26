@@ -32,18 +32,24 @@ import {
   getSemioKitLiveReadStore,
   getSemioKitShallowListReadStore,
   getSemioKitViewStore,
+  isKitCommandLifecycleEvent,
+  releaseSemioKitCommandFacade,
   kitEventAffectsCanUndoRedo,
   kitEventAffectsDesignQualitySumRead,
   kitEventAffectsKitColoredConnectorsRead,
   kitEventAffectsPieceLiveRead,
   kitEventAffectsReplaceableCatalogRead,
   kitEventAffectsTypeScopedRead,
-  LiveKitRoot,
-  releaseSemioKitCommandFacade,
-  type KitCommandFacade,
+  kitStoreClientAddChildByKind,
+  kitStoreClientAddConnection,
+  kitStoreClientAddPiece,
+  kitStoreClientRemoveChildByKind,
+  kitStoreClientRemovePiece,
+  kitStoreClientUpdateConnection,
+  kitStoreClientUpdatePiece,
   type KitStoreReadSnap,
-  type KitTypedShellCommand,
   type WriteStatus,
+  writeKitStoreClientSchemaField,
 } from "@semio/js";
 import {
   asKitInstance,
@@ -77,8 +83,6 @@ import {
   importKitToPlain,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
-  kitWireChangeDesignConnection,
-  kitWireChangeDesignPiece,
   Kit,
   KitEntityStore,
   Piece,
@@ -99,31 +103,11 @@ import {
   TypeStore,
   Vector,
 } from "@semio/js";
-import type {
-  ChangeConnectionCommandWire,
-  ChangeKitCommandWire,
-  ChangePieceCommandWire,
-  KitReadScope,
-  KitStoreClient,
-  SetError,
-  SetResult,
-} from "@semio/js";
+import type { KitChildEntityKind, KitReadScope, KitStoreClient, SetError, SetResult } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
-
-// #region 🧾KitEventGuards
-/** @emoji 🧾 Narrows GraphQL subscription payloads to semio kit command lifecycle rows (local guard; mirrors `@semio/js` private helper). */
-function isKitCommandLifecycleEvent(event: unknown): event is {
-  semioKitCommand: { requestId: string; commandKind: string; phase: string; result?: unknown; error?: unknown };
-} {
-  const c = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
-  if (c == null || typeof c !== "object") return false;
-  const v = c as Record<string, unknown>;
-  return typeof v.requestId === "string" && typeof v.commandKind === "string" && typeof v.phase === "string";
-}
-// #endregion 🧾KitEventGuards
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, SetError, SetResult } from "@semio/js";
 export { kitReadScopeKey, kitReadScopeToGraphQLInput, theKitReadScope } from "@semio/js";
@@ -133,7 +117,6 @@ export type {
   KitDesignReadKind,
   KitShallowListKind,
   KitStoreReadSnap,
-  KitTypedShellCommand,
   KitViewCatalogKey,
   WriteStatus,
 } from "@semio/js";
@@ -217,200 +200,6 @@ export type SchemaScope = {
   path: Array<string | number>;
 };
 
-function runKitTypedMutation(ks: KitCommandFacade | null, cmd: KitTypedShellCommand): Promise<SetResult> {
-  if (!ks) return Promise.resolve({ ok: false, error: { kind: "Internal", message: "no kit command facade" } });
-  return ks.runMutation(cmd);
-}
-
-async function submitKitChangeCommands(client: KitStoreClient | null, commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
-  if (!client) return { ok: false, error: { kind: "Internal", message: "no kit client" } };
-  return client.submitChangeKitCommands(commands);
-}
-
-type KitSnapDesign = { id: string; pieces?: readonly { id?: string }[]; connections?: readonly { id?: string }[] };
-
-async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, kind: string, entityId: string): Promise<string | null> {
-  if (kind !== "Piece" && kind !== "Connection") return null;
-  const snap = (await client.getSnapshot()) as { designs?: readonly KitSnapDesign[] };
-  for (const d of snap.designs ?? []) {
-    if (kind === "Piece" && d.pieces?.some((p) => String(p.id) === entityId)) return d.id;
-    if (kind === "Connection" && d.connections?.some((c) => String(c.id) === entityId)) return d.id;
-  }
-  return null;
-}
-
-function piecePatchToWireCommands(patch: Record<string, unknown>): ChangePieceCommandWire[] {
-  const out: ChangePieceCommandWire[] = [];
-  if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
-  if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
-  if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
-  if ("center" in patch) out.push({ center: { center: patch.center } });
-  if ("scale" in patch) out.push({ scale: { scale: typeof patch.scale === "number" ? patch.scale : Number(patch.scale) } });
-  if ("mirrorPlane" in patch) out.push({ mirrorPlane: { mirrorPlane: patch.mirrorPlane } });
-  if ("hidden" in patch) out.push({ hidden: { hidden: Boolean(patch.hidden) } });
-  if ("isHidden" in patch) out.push({ hidden: { hidden: Boolean(patch.isHidden) } });
-  if ("locked" in patch) out.push({ locked: { locked: Boolean(patch.locked) } });
-  if ("isLocked" in patch) out.push({ locked: { locked: Boolean(patch.isLocked) } });
-  if ("color" in patch) out.push({ color: { color: patch.color == null ? null : String(patch.color) } });
-  if ("type" in patch) {
-    const t = patch.type;
-    const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
-    out.push({ type: { typeId: { id: tid } } });
-  }
-  return out;
-}
-
-function connectionPatchToWireCommands(patch: Record<string, unknown>): ChangeConnectionCommandWire[] {
-  const out: ChangeConnectionCommandWire[] = [];
-  const num = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
-  const opt = (v: unknown): number | null => (v == null ? null : num(v));
-  if ("gap" in patch) out.push({ gap: { value: opt(patch.gap) } });
-  if ("shift" in patch) out.push({ shift: { value: opt(patch.shift) } });
-  if ("rise" in patch) out.push({ rise: { value: opt(patch.rise) } });
-  if ("rotation" in patch) out.push({ rotation: { value: opt(patch.rotation) } });
-  if ("turn" in patch) out.push({ turn: { value: opt(patch.turn) } });
-  if ("tilt" in patch) out.push({ tilt: { value: opt(patch.tilt) } });
-  if ("x" in patch) out.push({ x: { value: opt(patch.x) } });
-  if ("y" in patch) out.push({ y: { value: opt(patch.y) } });
-  if ("u" in patch) out.push({ x: { value: opt(patch.u) } });
-  if ("v" in patch) out.push({ y: { value: opt(patch.v) } });
-  if ("description" in patch) out.push({ description: { value: patch.description == null ? null : String(patch.description) } });
-  return out;
-}
-
-/** @emoji 🧾 Map one schema entity field to `ChangeKitCommandWire[]` (empty = no-op). `designId` required for Piece/Connection. */
-function buildSchemaEntityChangeCommands(
-  typeName: string,
-  entityId: string,
-  dataKey: string,
-  value: unknown,
-  designId: string | null,
-): readonly ChangeKitCommandWire[] {
-  const idw = { id: entityId };
-  if (typeName === "Kit") {
-    if (dataKey === "name") return [{ name: { name: String(value) } }];
-    if (dataKey === "description") return [{ description: { description: value == null ? null : String(value) } }];
-    if (dataKey === "icon") return [{ icon: { icon: value == null ? null : String(value) } }];
-    if (dataKey === "image") return [{ image: { image: value == null ? null : String(value) } }];
-    if (dataKey === "version" || dataKey === "release") return [{ version: { version: value == null ? null : String(value) } }];
-    if (dataKey === "homepage") return [{ homepage: { homepage: value == null ? null : String(value) } }];
-    if (dataKey === "license") return [{ license: { license: value == null ? null : String(value) } }];
-    if (dataKey === "preview") return [{ preview: { preview: value == null ? null : String(value) } }];
-    if (dataKey === "remote") return [{ remote: { remote: value == null ? null : String(value) } }];
-    if (dataKey === "uri") return [{ uri: { uri: value == null ? null : String(value) } }];
-    if (dataKey === "created" || dataKey === "createdAt") return [{ created: { created: value == null ? null : String(value) } }];
-    if (dataKey === "updated" || dataKey === "updatedAt") return [{ updated: { updated: value == null ? null : String(value) } }];
-    return [];
-  }
-  if (typeName === "Author") {
-    if (dataKey === "name") return [{ changeAuthorCommands: { authorId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "email") return [{ changeAuthorCommands: { authorId: idw, commands: [{ email: { email: String(value) } }] } }];
-    if (dataKey === "role") return [{ changeAuthorCommands: { authorId: idw, commands: [{ role: { role: value == null ? null : String(value) } }] } }];
-    if (dataKey === "rank") return [{ changeAuthorCommands: { authorId: idw, commands: [{ rank: { rank: value == null ? null : Number(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Type") {
-    if (dataKey === "name") return [{ changeTypeCommands: { typeId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeTypeCommands: { typeId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "icon") return [{ changeTypeCommands: { typeId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
-    if (dataKey === "image") return [{ changeTypeCommands: { typeId: idw, commands: [{ image: { image: value == null ? null : String(value) } }] } }];
-    if (dataKey === "stock") return [{ changeTypeCommands: { typeId: idw, commands: [{ stock: { stock: value == null ? null : Number(value) } }] } }];
-    if (dataKey === "virtual" || dataKey === "typeVirtual" || dataKey === "isAbstract")
-      return [{ changeTypeCommands: { typeId: idw, commands: [{ typeVirtual: { value: value == null ? null : Boolean(value) } }] } }];
-    if (dataKey === "unit") return [{ changeTypeCommands: { typeId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Design") {
-    if (dataKey === "name") return [{ changeDesignCommands: { designId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeDesignCommands: { designId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "icon") return [{ changeDesignCommands: { designId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
-    if (dataKey === "image") return [{ changeDesignCommands: { designId: idw, commands: [{ image: { image: value == null ? null : String(value) } }] } }];
-    if (dataKey === "unit") return [{ changeDesignCommands: { designId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Quality") {
-    if (dataKey === "key") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ key: { key: String(value) } }] } }];
-    if (dataKey === "value") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ value: { value: value == null ? null : String(value) } }] } }];
-    if (dataKey === "unit") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ unit: { unit: value == null ? null : String(value) } }] } }];
-    if (dataKey === "definition") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ definition: { definition: value == null ? null : String(value) } }] } }];
-    if (dataKey === "description") return [{ changeKitQualityCommands: { qualityId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Port") {
-    if (dataKey === "name") return [{ changeKitPortCommands: { portId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeKitPortCommands: { portId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "icon") return [{ changeKitPortCommands: { portId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Tag") {
-    if (dataKey === "name") return [{ changeTagCommands: { tagId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "order" || dataKey === "orderIndex") return [{ changeTagCommands: { tagId: idw, commands: [{ order: { order: value == null ? null : Number(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Concept") {
-    if (dataKey === "name") return [{ changeConceptCommands: { conceptId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeConceptCommands: { conceptId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "order" || dataKey === "orderIndex") return [{ changeConceptCommands: { conceptId: idw, commands: [{ order: { order: value == null ? null : Number(value) } }] } }];
-    return [];
-  }
-  if (typeName === "File") {
-    if (dataKey === "url") return [{ changeFileCommands: { fileId: idw, commands: [{ url: { url: String(value) } }] } }];
-    if (dataKey === "mime") return [{ changeFileCommands: { fileId: idw, commands: [{ mime: { mime: value == null ? null : String(value) } }] } }];
-    if (dataKey === "size") return [{ changeFileCommands: { fileId: idw, commands: [{ size: { size: value == null ? null : Number(value) } }] } }];
-    if (dataKey === "hash") return [{ changeFileCommands: { fileId: idw, commands: [{ hash: { hash: value == null ? null : String(value) } }] } }];
-    if (dataKey === "description") return [{ changeFileCommands: { fileId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "created" || dataKey === "createdAt")
-      return [{ changeFileCommands: { fileId: idw, commands: [{ created: { created: value == null ? null : String(value) } }] } }];
-    if (dataKey === "updated" || dataKey === "updatedAt")
-      return [{ changeFileCommands: { fileId: idw, commands: [{ updated: { updated: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Folder") {
-    if (dataKey === "path") return [{ changeFolderCommands: { folderId: idw, commands: [{ path: { path: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeFolderCommands: { folderId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Family") {
-    if (dataKey === "name") return [{ changeFamilyCommands: { familyId: idw, commands: [{ name: { name: String(value) } }] } }];
-    if (dataKey === "description") return [{ changeFamilyCommands: { familyId: idw, commands: [{ description: { description: value == null ? null : String(value) } }] } }];
-    if (dataKey === "icon") return [{ changeFamilyCommands: { familyId: idw, commands: [{ icon: { icon: value == null ? null : String(value) } }] } }];
-    return [];
-  }
-  if (typeName === "Piece") {
-    if (!designId) return [];
-    if (dataKey === "name") return [kitWireChangeDesignPiece(designId, entityId, [{ name: { name: String(value) } }])];
-    if (dataKey === "description") return [kitWireChangeDesignPiece(designId, entityId, [{ description: { description: value == null ? null : String(value) } }])];
-    if (dataKey === "plane") return [kitWireChangeDesignPiece(designId, entityId, [{ plane: { plane: value } }])];
-    if (dataKey === "center") return [kitWireChangeDesignPiece(designId, entityId, [{ center: { center: value } }])];
-    if (dataKey === "scale") return [kitWireChangeDesignPiece(designId, entityId, [{ scale: { scale: Number(value) } }])];
-    if (dataKey === "mirrorPlane") return [kitWireChangeDesignPiece(designId, entityId, [{ mirrorPlane: { mirrorPlane: value } }])];
-    if (dataKey === "isHidden" || dataKey === "hidden") return [kitWireChangeDesignPiece(designId, entityId, [{ hidden: { hidden: Boolean(value) } }])];
-    if (dataKey === "isLocked" || dataKey === "locked") return [kitWireChangeDesignPiece(designId, entityId, [{ locked: { locked: Boolean(value) } }])];
-    if (dataKey === "color") return [kitWireChangeDesignPiece(designId, entityId, [{ color: { color: value == null ? null : String(value) } }])];
-    if (dataKey === "type" || dataKey === "typeId") {
-      const t = value;
-      const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
-      return [kitWireChangeDesignPiece(designId, entityId, [{ type: { typeId: { id: tid } } }])];
-    }
-    return [];
-  }
-  if (typeName === "Connection") {
-    if (!designId) return [];
-    const dk = connectionDiffWireKeyForDataKey(dataKey);
-    if (dk === "gap") return [kitWireChangeDesignConnection(designId, entityId, [{ gap: { value: Number(value) } }])];
-    if (dk === "shift") return [kitWireChangeDesignConnection(designId, entityId, [{ shift: { value: Number(value) } }])];
-    if (dk === "rise") return [kitWireChangeDesignConnection(designId, entityId, [{ rise: { value: Number(value) } }])];
-    if (dk === "rotation") return [kitWireChangeDesignConnection(designId, entityId, [{ rotation: { value: Number(value) } }])];
-    if (dk === "turn") return [kitWireChangeDesignConnection(designId, entityId, [{ turn: { value: Number(value) } }])];
-    if (dk === "tilt") return [kitWireChangeDesignConnection(designId, entityId, [{ tilt: { value: Number(value) } }])];
-    if (dk === "x") return [kitWireChangeDesignConnection(designId, entityId, [{ x: { value: Number(value) } }])];
-    if (dk === "y") return [kitWireChangeDesignConnection(designId, entityId, [{ y: { value: Number(value) } }])];
-    if (dataKey === "description") return [kitWireChangeDesignConnection(designId, entityId, [{ description: { value: value == null ? null : String(value) } }])];
-    return [];
-  }
-  return [];
-}
-
 export type KitRuntimeContextValue = {
   store: KitHostStore;
   snapshot: KitHostStoreSnapshot;
@@ -424,8 +213,6 @@ export type KitRuntimeContextValue = {
   /** Optional open/backbone config when the kit is not from {@link KitRegistryProvider}. */
   kitBackbone?: KitBackboneConfig;
   kitClient: KitStoreClient | null;
-  /** @emoji 🧾 Typed shell facade over {@link kitClient}; preferred path for writes. */
-  kitCommandStore: KitCommandFacade | null;
   setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
   setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
 };
@@ -575,31 +362,6 @@ export function useSemioStoreSelector<T, S>(
     return out;
   }, [store, select, isEqual]);
   return React.useSyncExternalStore(store.subscribe, get, get);
-}
-
-/** @emoji 🧾 Maps schema connection `u`/`v` to Rust `ConnectionDiff` `x`/`y` wire keys. */
-function connectionDiffWireKeyForDataKey(dataKey: string): string {
-  if (dataKey === "u") return "x";
-  if (dataKey === "v") return "y";
-  return dataKey;
-}
-
-/** @emoji 🧾 Single schema field routed through {@link KitStoreClient.submitChangeKitCommands} (typed wire, no planner queries). */
-async function writeKitClientSchemaField(
-  kitClient: KitStoreClient,
-  typeName: string,
-  dataKey: string,
-  value: unknown,
-  entityId: string,
-): Promise<SetResult> {
-  let designId: string | null = null;
-  if (typeName === "Piece" || typeName === "Connection") {
-    designId = await resolveDesignIdForPieceOrConnection(kitClient, typeName, entityId);
-    if (!designId) return { ok: false, error: { kind: "NotFound", message: `no design for ${typeName} ${entityId}` } };
-  }
-  const cmds = buildSchemaEntityChangeCommands(typeName, entityId, dataKey, value, designId);
-  if (cmds.length === 0) return { ok: false, error: { kind: "NotSupported", message: `${typeName}.${dataKey}` } };
-  return kitClient.submitChangeKitCommands(cmds);
 }
 
 function noop(): void {}
@@ -1137,7 +899,6 @@ export const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 export type KitRegistryEntry = {
   store: KitHostStore;
   kitClient: KitStoreClient;
-  kitCommandStore: KitCommandFacade;
   refs: number;
   /** @emoji 📌How this kit is persisted; derived at {@link KitRegistryValue.open} time. */
   persistence: KitPersistenceInfo;
@@ -1147,7 +908,7 @@ export type KitRegistryValue = {
   activeKitId: string | undefined;
   setActiveKit: (id: string | undefined) => void;
   /** @emoji 📌Open or bump refcount for a kit. */
-  open: (id: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient }) => Promise<void>;
+  open: (id: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient; readScope?: KitReadScope }) => Promise<void>;
   /** @emoji 📌In-memory kit; returns new id. */
   openTemporary: (initialKit?: KitLike) => Promise<string>;
   /** @emoji 📌Json-file store from adapter. */
@@ -1165,7 +926,6 @@ export type KitRegistryValue = {
 type RegistryRow = {
   store: KitHostStore;
   kitClient: KitStoreClient;
-  kitCommandStore: KitCommandFacade;
   refs: number;
   unsub: () => void;
   persistence: KitPersistenceInfo;
@@ -1187,7 +947,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
   const [activeKitId, setActiveKitId] = React.useState<string | undefined>(undefined);
 
   const open = React.useCallback(
-    async (kitId: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient }) => {
+    async (kitId: string, init: { backbone?: KitBackboneConfig; initialKit?: KitLike; store?: KitHostStore; kitClient?: KitStoreClient; readScope?: KitReadScope }) => {
       const cur = rowsRef.current.get(kitId);
       if (cur) {
         cur.refs += 1;
@@ -1202,13 +962,23 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
         const kitClient =
           init.kitClient ??
-          (await createKitStoreClient({ initialKit: store.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback() }));
+          (await createKitStoreClient({
+            initialKit: store.getSnapshot().kit.toJSON(),
+            forceFallback: shouldForceKitClientFallback(),
+            readScope: init.readScope,
+          }));
         (store as any).__semioKitBridge = kitClient;
-        const kitCommandStore = acquireSemioKitCommandFacade(kitClient);
+        if (init.readScope) {
+          try {
+            kitClient.setKitReadScope(init.readScope);
+          } catch {
+            /* ignore */
+          }
+        }
         const unsub = kitClient.subscribe(() => {
           void applyKitClientSnapshotToLocalStore(kitClient, store);
         });
-        rowsRef.current.set(kitId, { store, kitClient, kitCommandStore, refs: 1, unsub, persistence });
+        rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
       } catch (e) {
         errRef.current.set(kitId, e instanceof Error ? e : new Error(String(e)));
       } finally {
@@ -1227,7 +997,6 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       if (row.refs <= 0) {
         row.unsub();
         try {
-          releaseSemioKitCommandFacade(row.kitClient);
           (row.store as any).__semioKitBridgeUnsub?.();
           delete (row.store as any).__semioKitBridgeUnsub;
           delete (row.store as any).__semioKitBridge;
@@ -1541,6 +1310,7 @@ const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
 export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
@@ -1549,12 +1319,12 @@ export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]
       }
       return getSemioKitViewStore(runtime.kitClient).subscribe("typeIds", onChange);
     },
-    [runtime.kitClient, runtime.kitId, resolved],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPE_IDS;
     return getSemioKitViewStore(runtime.kitClient).getSnapshot("typeIds") as readonly string[];
-  }, [runtime.kitClient, runtime.kitId, resolved]);
+  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
   const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
   const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
@@ -1564,6 +1334,7 @@ export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]
 export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
@@ -1572,12 +1343,12 @@ export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unk
       }
       return getSemioKitViewStore(runtime.kitClient).subscribe("typesMetadata", onChange);
     },
-    [runtime.kitClient, runtime.kitId, resolved],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_TYPES_METADATA;
     return getSemioKitViewStore(runtime.kitClient).getSnapshot("typesMetadata");
-  }, [runtime.kitClient, runtime.kitId, resolved]);
+  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
   const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
   const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
@@ -1587,6 +1358,7 @@ export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unk
 export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
@@ -1595,12 +1367,12 @@ export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string
       }
       return getSemioKitViewStore(runtime.kitClient).subscribe("designIds", onChange);
     },
-    [runtime.kitClient, runtime.kitId, resolved],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGN_IDS;
     return getSemioKitViewStore(runtime.kitClient).getSnapshot("designIds") as readonly string[];
-  }, [runtime.kitClient, runtime.kitId, resolved]);
+  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
   const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
   const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
@@ -1610,6 +1382,7 @@ export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string
 export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly unknown[]> {
   const runtime = useKitRuntime();
   const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
   const subscribe = React.useCallback(
     (onChange: () => void) => {
       if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
@@ -1618,12 +1391,12 @@ export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly u
       }
       return getSemioKitViewStore(runtime.kitClient).subscribe("designsMetadata", onChange);
     },
-    [runtime.kitClient, runtime.kitId, resolved],
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey],
   );
   const getSnap = React.useCallback(() => {
     if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_DESIGNS_METADATA;
     return getSemioKitViewStore(runtime.kitClient).getSnapshot("designsMetadata");
-  }, [runtime.kitClient, runtime.kitId, resolved]);
+  }, [runtime.kitClient, runtime.kitId, resolved, scopeKey]);
   const value = React.useSyncExternalStore(subscribe, getSnap, getSnap);
   const status: WriteStatus = !runtime.kitClient || !resolved || runtime.kitId !== resolved ? { kind: "readonly", pending: 0 } : { kind: "idle", pending: 0 };
   return [value, noopAsyncSet, status] as const;
@@ -1723,7 +1496,6 @@ export function KitScope({
     let client: KitStoreClient | null = null;
     void createKitStoreClient({ initialKit: st.getSnapshot().kit.toJSON(), forceFallback: shouldForceKitClientFallback(), readScope: kitReadScopeProp }).then((c) => {
       if (cancelled) {
-        releaseSemioKitCommandFacade(c);
         c.dispose();
         return;
       }
@@ -1733,16 +1505,19 @@ export function KitScope({
     return () => {
       cancelled = true;
       if (client) {
-        releaseSemioKitCommandFacade(client);
         client.dispose();
       }
       setKitClientState(null);
     };
-  }, [kitIdProp, externalStore, internalStore, kitClientProp]);
+  }, [kitIdProp, externalStore, internalStore, kitClientProp, kitReadScopeProp]);
 
   const store = kitIdProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
   const kitClient = kitIdProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
-  const kitCommandStore = React.useMemo(() => (kitClient ? acquireSemioKitCommandFacade(kitClient) : null), [kitClient]);
+
+  React.useEffect(() => {
+    if (!kitClient) return;
+    kitClient.setKitReadScope(kitReadScopeProp);
+  }, [kitClient, kitReadScopeProp]);
 
   if (kitIdProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
   if (!store) return React.createElement(React.Fragment, null, fallback);
@@ -1851,7 +1626,7 @@ export function KitScope({
         pushSetRejection(e);
         return { ok: false, error: e };
       }
-      const r = await writeKitClientSchemaField(kitClient, typeName, key, val, entityId);
+      const r = await writeKitStoreClientSchemaField(kitClient, typeName, key, val, entityId);
       if (!r.ok) pushSetRejection(r.error);
       return r;
     },
@@ -1911,14 +1686,17 @@ export function KitScope({
       kitId: activeKitId,
       kitBackbone: backbone,
       kitClient,
-      kitCommandStore,
       setFieldValue,
       setObjectValue,
     }),
-    [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, kitCommandStore, setFieldValue, setObjectValue],
+    [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, backbone, kitClient, setFieldValue, setObjectValue],
   );
 
-  return React.createElement(KitRuntimeContext.Provider, { value }, children);
+  return React.createElement(
+    KitDataScopeContext.Provider,
+    { value: kitReadScopeProp },
+    React.createElement(KitRuntimeContext.Provider, { value }, children),
+  );
 }
 
 type EntityScopeProps = { id?: string; children: ReactNode };
@@ -16186,7 +15964,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
+  const { InMemoryKitStore, asKitInstance, theKitReadScope, kitReadScopeKey } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -16251,6 +16029,7 @@ if (shouldRunReactEmbeddedTests) {
       resolveConflict: async () => ({}),
       syncNow: async () => ({}),
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
+      setKitReadScope: (_s: import("@semio/js").KitReadScope) => {},
       dispose: () => {},
     }) as KitStoreClient;
 
@@ -16583,6 +16362,48 @@ if (shouldRunReactEmbeddedTests) {
       render(React.createElement(KitScope, { store, kitClient: stub }, React.createElement(Probe)));
       await waitFor(() => expect(seen.length).toBeGreaterThan(0));
       expect(seen[0]?.message).toContain("stub-cluster");
+    });
+  });
+
+  describe("kit data scope", () => {
+    it("CheckpointDataScope sets client read scope and useKitDataScope returns nested checkpoint", async () => {
+      const log: string[] = [];
+      const kit = asKitInstance({
+        id: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        types: [],
+        designs: [],
+      });
+      const store = new InMemoryKitStore(kit);
+      const base = createTestKitClient(store);
+      const client: KitStoreClient = {
+        ...base,
+        setKitReadScope: (s) => {
+          log.push(kitReadScopeKey(s));
+        },
+      };
+      let got: KitReadScope | null = null;
+      function Leaf() {
+        got = useKitDataScope();
+        return null;
+      }
+      const tree = React.createElement(
+        KitScope,
+        { store, kitClient: client, kitReadScope: theKitReadScope },
+        React.createElement(CheckpointDataScope, { checkpointId: "cpx" }, React.createElement(Leaf, null)),
+      );
+      const { unmount } = render(tree);
+      await waitFor(() => {
+        if (!got || !("checkpoint" in got) || (got as { checkpoint: { checkpointId: string } }).checkpoint.checkpointId !== "cpx") {
+          throw new Error("not ready");
+        }
+      });
+      const ck = kitReadScopeKey({ checkpoint: { checkpointId: "cpx" } });
+      expect(log).toContain(ck);
+      unmount();
+      expect(log[log.length - 1]).toBe(kitReadScopeKey(theKitReadScope));
     });
   });
 

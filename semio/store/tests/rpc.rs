@@ -3,10 +3,29 @@
 use std::io::{BufRead, BufReader};
 use std::process::{Command, Stdio};
 
-use semio::change_command::ChangeKitCommand;
 use semio::id::Id;
 use semio::kit::KitFullDto;
 use serde_json::{json, Value};
+
+fn batch_mutation_with_fields(extra: &str) -> String {
+    format!(
+        r"mutation Batch($input: KitStoreBatchInput!) {{
+  kitStore {{
+    batch(input: $input) {{
+      clientMutationId
+      results {{
+        kind
+        ok
+        count
+        backbone {{ attached kind tip }}
+        conflicts {{ id backboneTip reason createdAt }}
+        {extra}
+      }}
+    }}
+  }}
+}}"
+    )
+}
 
 fn spawn_server() -> Result<(std::process::Child, u16, String), Box<dyn std::error::Error + Send + Sync>> {
     let exe = std::path::Path::new(env!("CARGO_BIN_EXE_semio-store"));
@@ -83,26 +102,29 @@ async fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::e
     )
     .await?;
 
-    let cmds = vec![ChangeKitCommand::Name {
-        name: "Renamed".to_string(),
-    }];
-    let cmd_j = serde_json::to_value(&cmds)?;
+    let qm = batch_mutation_with_fields("");
     let m1 = post_gql(
         &client,
         &base,
-        "mutation($req: JSON!) { kitCommandShell(commandKind: \"changeKitWithInverse\", request: $req) }",
+        &qm,
         Some(json!({
-            "req": { "variables": { "commands": cmd_j } }
+            "input": {
+                "commands": [{
+                    "live": {
+                        "commands": [{
+                            "changeKitCommands": {
+                                "commands": [{ "name": { "name": "Renamed" } }]
+                            }
+                        }]
+                    }
+                }]
+            }
         })),
     )
     .await?;
     if m1.get("errors").is_some() {
-        return Err(format!("graphql errors: {m1}").into());
+        return Err(format!("graphql m1: {m1}").into());
     }
-    let inv = m1
-        .pointer("/data/kitCommandShell/data/changeKitWithInverse/inverse")
-        .cloned()
-        .ok_or("inverse in response")?;
 
     let q2 = post_gql(
         &client,
@@ -120,9 +142,15 @@ async fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::e
     let m3 = post_gql(
         &client,
         &base,
-        "mutation($req: JSON!) { kitCommandShell(commandKind: \"changeKitCommands\", request: $req) }",
+        &qm,
         Some(json!({
-            "req": { "variables": { "commands": inv } }
+            "input": {
+                "commands": [{
+                    "live": {
+                        "commands": [{ "undo": { "confirm": true } }]
+                    }
+                }]
+            }
         })),
     )
     .await?;
@@ -148,7 +176,7 @@ async fn sidecar_create_snapshot_name_change_undo() -> Result<(), Box<dyn std::e
 }
 
 #[tokio::test]
-async fn sidecar_planner_then_execute_field_patch() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn sidecar_batch_rename_to_q() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let (mut child, _port, base) = spawn_server()?;
     let client = reqwest::Client::new();
     let kid = Id::new_v7();
@@ -164,30 +192,24 @@ async fn sidecar_planner_then_execute_field_patch() -> Result<(), Box<dyn std::e
     )
     .await?;
 
-    let m2 = post_gql(
-        &client,
-        &base,
-        "mutation($req: JSON!) { kitCommandShell(commandKind: \"changeKitCommandsForFieldPatch\", request: $req) }",
-        Some(json!({
-            "req": { "variables": {
-                "kind": "Kit",
-                "id": kid.as_str(),
-                "field": "name",
-                "value": "Q"
-            } }
-        })),
-    )
-    .await?;
-    let cmds = m2
-        .pointer("/data/kitCommandShell/data/changeKitCommandsForFieldPatch")
-        .cloned()
-        .ok_or("planner cmds")?;
-
+    let qm = batch_mutation_with_fields("");
     let m3 = post_gql(
         &client,
         &base,
-        "mutation($req: JSON!) { kitCommandShell(commandKind: \"changeKitCommands\", request: $req) }",
-        Some(json!({ "req": { "variables": { "commands": cmds } } })),
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "live": {
+                        "commands": [{
+                            "changeKitCommands": {
+                                "commands": [{ "name": { "name": "Q" } }]
+                            }
+                        }]
+                    }
+                }]
+            }
+        })),
     )
     .await?;
     if m3.get("errors").is_some() {
@@ -227,18 +249,31 @@ async fn sidecar_backbone_attach_status_conflicts_sync_detach() -> Result<(), Bo
     )
     .await?;
 
+    let qm = batch_mutation_with_fields("");
+
     let m2 = post_gql(
         &client,
         &base,
-        "mutation { kitCommandShell(commandKind: \"listConflicts\", request: {}) }",
-        None,
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "backbone": {
+                        "commands": [{ "listConflicts": { "confirm": true } }]
+                    }
+                }]
+            }
+        })),
     )
     .await?;
-    let items = m2
-        .pointer("/data/kitCommandShell/data/listConflicts/listConflicts/items")
+    if m2.get("errors").is_some() {
+        return Err(format!("m2: {m2}").into());
+    }
+    let c0 = m2
+        .pointer("/data/kitStore/batch/results/0/conflicts")
         .and_then(|x| x.as_array())
-        .ok_or("listConflicts")?;
-    assert!(items.is_empty(), "expected no conflicts");
+        .ok_or("listConflicts.conflicts")?;
+    assert!(c0.is_empty(), "expected no conflicts");
 
     let mut bb_path = std::env::temp_dir();
     bb_path.push(format!("semio-store-dev-backbone-{}.json", Id::new_v7().as_str()));
@@ -246,68 +281,101 @@ async fn sidecar_backbone_attach_status_conflicts_sync_detach() -> Result<(), Bo
     let m3 = post_gql(
         &client,
         &base,
-        "mutation($req: JSON!) { kitCommandShell(commandKind: \"attachBackbone\", request: $req) }",
+        &qm,
         Some(json!({
-            "req": { "variables": { "config": { "dev": { "path": bb_path.to_string_lossy() } } } }
+            "input": {
+                "commands": [{
+                    "backbone": {
+                        "commands": [{
+                            "attachBackbone": { "dev": { "path": bb_path.to_string_lossy() } }
+                        }]
+                    }
+                }]
+            }
         })),
     )
     .await?;
-    assert_eq!(
-        m3.pointer("/data/kitCommandShell/data/attachBackbone/attachBackbone/ok"),
-        Some(&json!(true))
-    );
+    if m3.get("errors").is_some() {
+        return Err(format!("m3: {m3}").into());
+    }
+    assert_eq!(m3.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
 
     let m4 = post_gql(
         &client,
         &base,
-        "mutation { kitCommandShell(commandKind: \"backboneStatus\", request: {}) }",
-        None,
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "backbone": {
+                        "commands": [{ "backboneStatus": { "confirm": true } }]
+                    }
+                }]
+            }
+        })),
     )
     .await?;
-    assert_eq!(
-        m4.pointer("/data/kitCommandShell/data/backboneStatus/backboneStatus/attached"),
-        Some(&json!(true))
-    );
-    assert_eq!(
-        m4.pointer("/data/kitCommandShell/data/backboneStatus/backboneStatus/kind"),
-        Some(&json!("dev"))
-    );
+    if m4.get("errors").is_some() {
+        return Err(format!("m4: {m4}").into());
+    }
+    assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/attached"), Some(&json!(true)));
+    assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/kind"), Some(&json!("dev")));
 
     let m5 = post_gql(
         &client,
         &base,
-        "mutation { kitCommandShell(commandKind: \"syncNow\", request: {}) }",
-        None,
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "backbone": { "commands": [{ "syncNow": { "confirm": true } }] }
+                }]
+            }
+        })),
     )
     .await?;
-    assert_eq!(
-        m5.pointer("/data/kitCommandShell/data/syncNow/syncNow/ok"),
-        Some(&json!(true))
-    );
+    if m5.get("errors").is_some() {
+        return Err(format!("m5: {m5}").into());
+    }
+    assert_eq!(m5.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
 
     let m6 = post_gql(
         &client,
         &base,
-        "mutation { kitCommandShell(commandKind: \"detachBackbone\", request: {}) }",
-        None,
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "backbone": { "commands": [{ "detachBackbone": { "confirm": true } }] }
+                }]
+            }
+        })),
     )
     .await?;
-    assert_eq!(
-        m6.pointer("/data/kitCommandShell/data/detachBackbone/detachBackbone/ok"),
-        Some(&json!(true))
-    );
+    if m6.get("errors").is_some() {
+        return Err(format!("m6: {m6}").into());
+    }
+    assert_eq!(m6.pointer("/data/kitStore/batch/results/0/ok"), Some(&json!(true)));
 
     let m7 = post_gql(
         &client,
         &base,
-        "mutation { kitCommandShell(commandKind: \"backboneStatus\", request: {}) }",
-        None,
+        &qm,
+        Some(json!({
+            "input": {
+                "commands": [{
+                    "backbone": {
+                        "commands": [{ "backboneStatus": { "confirm": true } }]
+                    }
+                }]
+            }
+        })),
     )
     .await?;
-    assert_eq!(
-        m7.pointer("/data/kitCommandShell/data/backboneStatus/backboneStatus/attached"),
-        Some(&json!(false))
-    );
+    if m7.get("errors").is_some() {
+        return Err(format!("m7: {m7}").into());
+    }
+    assert_eq!(m7.pointer("/data/kitStore/batch/results/0/backbone/attached"), Some(&json!(false)));
 
     let _ = std::fs::remove_file(&bb_path);
     let _ = child.kill();

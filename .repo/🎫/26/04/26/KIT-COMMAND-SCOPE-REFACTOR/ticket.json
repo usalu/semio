@@ -1,0 +1,15 @@
+{
+  "title": "Kit Command Scope Refactor",
+  "emoji": "🔖",
+  "status": "open",
+  "description": "Refactor semio/rs, semio/graphql, semio/js, semio/react, semio/sketchpad so every kit mutation is scoped: kit or alternative latest checkpoint -\u003e draft -\u003e transaction -\u003e command batch. Add KitWriteScope in Rust, typed GraphQL command inputs (no JSON scalars for writes), JS KitStore scoped APIs, React scope providers/hooks, Sketchpad routing through scoped commands. Bind plan kit_command_scopes_b02844b8.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kitapp",
+  "plan": {
+    "client": "cursor",
+    "id": "b02844b8",
+    "source": "c:\\git\\semio\\.cursor\\plans\\kit_command_scopes_b02844b8.plan.md"
+  },
+  "sessions": [
+    "⚪07b7aef48dff49fe96e055baf4568778"
+  ]
+}
