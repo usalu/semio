@@ -63,10 +63,65 @@ import (
 // #endregion 🤸Preamble
 
 // #region 🎁Templates
-// Runtime template files and initialization for text and markdown rendering.
+// Runtime template definitions and initialization for text and markdown rendering.
 
-var textTemplateContent = mustReadTemplate("renderers/text.tpl")
-var markdownTemplateContent = mustReadTemplate("renderers/markdown.tpl")
+var textTemplateContent = `{{- define "text/entity" -}}
+{{- if .ID }}{{ colorize (sanitizeProp .ID) "bold" .IsTTY }}{{ end -}}
+{{- range $i, $p := .Props -}}
+{{- if or (ne $.ID "") (gt $i 0) }} {{ end -}}
+{{- colorize $p (propColor $i) $.IsTTY -}}
+{{- end -}}
+{{- end -}}
+{{- define "text/analyze_summary" -}}
+{{ colorize "->" "blue" .IsTTY }} found {{ .Total }} breachs{{ if .Autofixable }} ({{ .Autofixable }} autofixable){{ end }}
+{{- end -}}
+{{- define "text/breach" -}}
+  {{ colorize "breach" "red" .IsTTY }} {{ .Kind }} {{ colorize (printf "%s:%s" .Scope .Line) "dim" .IsTTY }} {{ .Summary }}
+{{- end -}}
+{{- define "text/fix" -}}
+{{ colorize "->" "blue" .IsTTY }} fixed {{ .Fixed }} breachs ({{ .Remaining }} remaining)
+{{- end -}}
+{{- define "text/id_path" -}}
+{{ colorize "->" "blue" .IsTTY }} {{ .ID }} {{ .Path }}
+{{- end -}}
+{{- define "text/id_only" -}}
+{{ colorize "->" "blue" .IsTTY }} item {{ .ID }}
+{{- end -}}
+{{- define "text/done_success" -}}
+{{- colorize "ok" "green" .IsTTY }} done  {{ .Command }}  {{ .Duration -}}
+{{- end -}}
+{{- define "text/done_failure" -}}
+{{- colorize "failed" "red" .IsTTY }} failed {{ .Command }}  {{ .Duration }} (exit: {{ .ExitCode }})
+{{- end -}}
+{{- define "text/error" -}}
+{{ colorize "error" "red" .IsTTY }} error: {{ .Message }}
+{{- end -}}
+{{- define "text/error_detail" -}}
+{{ .Detail }}
+{{- end -}}
+{{- define "text/log" -}}
+{{ colorize "-" "dim" .IsTTY }} {{ .Message }}
+{{- end -}}
+{{- define "text/progress_tty" -}}
+{{- printf "\r" }}{{ colorize "..." "blue" true }} {{ .Percent }}% ({{ .Current }}/{{ .Total }}) {{ .Step -}}
+{{- end -}}
+{{- define "text/progress" -}}
+progress: {{ .Percent }}% {{ .Step }}
+{{- end -}}
+{{- define "text/result_fallback" -}}
+{{ colorize "->" "blue" .IsTTY }} {{ .Data }}
+{{- end -}}`
+
+var markdownTemplateContent = "{{- define \"md/entity_link\" -}}\n[{{ sanitizeProp .ID }}]({{ .URI }}){{ range .Props }} - `{{ . }}`{{ end }}\n{{- end -}}\n" +
+	"{{- define \"md/entity_item\" -}}\n- [{{ sanitizeProp .ID }}]({{ .URI }}){{ range .Props }} - `{{ . }}`{{ end }}\n{{- end -}}\n" +
+	"{{- define \"md/analyze_total\" -}}\n- **Total Breachs**: {{ .Total }}\n{{- end -}}\n" +
+	"{{- define \"md/analyze_autofixable\" -}}\n- **Autofixable**: {{ .Autofixable }}\n{{- end -}}\n" +
+	"{{- define \"md/breach\" -}}\n- [{{ .Kind }}](repo://statute/{{ pathToUriPath .Kind }}) - {{ .Scope }}:{{ .Line }} - {{ .Summary }}\n{{- end -}}\n" +
+	"{{- define \"md/error\" -}}\n**Error: {{ .Message }}**\n{{- end -}}\n" +
+	"{{- define \"md/error_detail\" -}}\n> {{ .Detail }}\n{{- end -}}\n" +
+	"{{- define \"md/result_fallback\" -}}\n[{{ sanitizeProp .Name }}]({{ .URI }})\n{{- end -}}\n" +
+	"{{- define \"md/tree_node_category\" -}}\n{{- .Indent }}- {{ if .URI }}[{{ .Label }}]({{ .URI }}){{ else }}{{ .Label }}{{ end }}\n{{- end -}}\n" +
+	"{{- define \"md/tree_node_entity\" -}}\n{{- .Indent }}{{ .Content }}\n{{- end -}}"
 
 var (
 	textTpl *template.Template
@@ -37634,15 +37689,15 @@ if [ -z "$repo_root" ]; then
 fi
 cd "$repo_root"
 if command -v go >/dev/null 2>&1; then
-  go run ./repo/cli hook version.checkpoint.ended
+  go run ./repo/clientent hook version.checkpoint.ended
   exit $?
 fi
-if [ -f "$repo_root/repo/cli/cli" ]; then
-  ./repo/cli/cli hook version.checkpoint.ended
+if [ -f "$repo_root/repo/clientent/client" ]; then
+  ./repo/cliententent/client hook version.checkpoint.ended
   exit $?
 fi
-if [ -f "$repo_root/repo/cli/cli.exe" ]; then
-  "$repo_root/repo/cli/cli.exe" hook version.checkpoint.ended
+if [ -f "$repo_root/repo/clientent/client.exe" ]; then
+  "$repo_root/repo/clientent/client.exe" hook version.checkpoint.ended
   exit $?
 fi
 exit 0
@@ -37688,7 +37743,7 @@ func getClientHookMappings() []ClientHookMapping {
 
 // ⌨️repoCliHookCommand returns a cross-platform repo CLI invocation for hook configs.
 func repoCliHookCommand() string {
-	return "go run ./repo/cli"
+	return "go run ./repo/clientent"
 }
 
 // 🔷generateCopilotConfig holds the data fields for a generateCopilotConfig record.
@@ -43999,7 +44054,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 			if fields[i] == "go" && fields[i+1] == "run" {
 				for j := i + 2; j < len(fields); j++ {
 					base := filepath.Base(fields[j])
-					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/cli" || fields[j] == "repo/cli" {
+					if base == "cli" || base == "cli.exe" || fields[j] == "./repo/clientent" || fields[j] == "repo/client" {
 						cliIndex = j
 						break
 					}

@@ -3,7 +3,7 @@ go 1.25.0
 use (
 	./coda/blnbo/go
 	./coda/programming/go
-	./repo/cli
+	./repo/clientent
 	./repo/server
 	./semio/go
 )

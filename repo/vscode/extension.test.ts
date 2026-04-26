@@ -961,7 +961,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/clientent/client");
     assert.ok(children.length > 0, "CLI returned no children — check that 'search' command exists");
     const labels = children.map((c) => c.label as string);
     assert.ok(
@@ -974,7 +974,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/clientent/client");
     assert.ok(roots.length > 0, "CLI returned no root elements — check that 'search' command exists");
     for (const r of roots) {
       assert.strictEqual(r.contextValue, "category", `Root ${r.label} should have category contextValue`);
@@ -996,7 +996,7 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/cli/cli");
+    assert.ok(hasRepoAccess(), "CLI binary must be accessible at repo/clientent/client");
     const codebaseRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Codebase"));
     assert.ok(codebaseRoot, "Codebase category not found in tree root");
     const expanded = await provider.getChildren(codebaseRoot);

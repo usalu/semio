@@ -1148,6 +1148,52 @@ export class KitStore {
     const out = await this.read([{ readKitMetadataCommand: null }]);
     return (out[0] as { readKitMetadataCommand?: { metadata?: unknown } }).readKitMetadataCommand?.metadata;
   }
+
+  // #region KitStoreEntityFactories
+  /** @emoji 🧭 Sync handle for kit-scoped design reads and mutations (no I/O). */
+  design(id: string): DesignStore {
+    return new DesignStore(this, id);
+  }
+  /** @emoji 🧭 Sync handle for kit-scoped kind reads and mutations (no I/O). */
+  type(id: string): TypeStore {
+    return new TypeStore(this, id);
+  }
+  /** @emoji 🧭 Sync handle for a piece within a design (no I/O). */
+  piece(designId: string, id: string): PieceStore {
+    return new PieceStore(this, designId, id);
+  }
+  /** @emoji 🧭 Sync handle for a connection within a design (no I/O). */
+  connection(designId: string, id: string): ConnectionStore {
+    return new ConnectionStore(this, designId, id);
+  }
+  family(id: string): FamilyStore {
+    return new FamilyStore(this, id);
+  }
+  file(id: string): FileStore {
+    return new FileStore(this, id);
+  }
+  folder(id: string): FolderStore {
+    return new FolderStore(this, id);
+  }
+
+  /** @emoji 🧭 All design ids in the live kit as {@link DesignStore} handles. */
+  async designs(): Promise<readonly DesignStore[]> {
+    const out = await this.read([{ readKitDesignIdsCommand: null }]);
+    const ids = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
+    ) as readonly { id?: string }[];
+    return ids.map((row) => this.design(String(row.id ?? "")));
+  }
+
+  /** @emoji 🧭 All kind ids in the live kit as {@link TypeStore} handles. */
+  async types(): Promise<readonly TypeStore[]> {
+    const out = await this.read([{ readKitTypeIdsCommand: null }]);
+    const ids = kitGraphqlJsonToReadonlyArray(
+      (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
+    ) as readonly { id?: string }[];
+    return ids.map((row) => this.type(String(row.id ?? "")));
+  }
+  // #endregion KitStoreEntityFactories
 }
 
 // #endregion 📦KitStore
@@ -1163,6 +1209,119 @@ export async function openKit(initialKit: KitFullDto, opts?: KitStoreOpenOptions
 
 // #endregion 🧰OpenKit
 
+// #region KitEventEntityFilter
+/** @emoji 🧪 True when JSON subtree contains a string field `key` equal to `id`. */
+function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
+  if (raw == null) return false;
+  if (typeof raw === "string") return false;
+  if (typeof raw === "number" || typeof raw === "boolean") return false;
+  if (Array.isArray(raw)) {
+    for (const x of raw) if (jsonSubtreeHasIdKey(x, key, id)) return true;
+    return false;
+  }
+  if (typeof raw === "object") {
+    const o = raw as Record<string, unknown>;
+    const v = o[key];
+    if (typeof v === "string" && v === id) return true;
+    for (const k of Object.keys(o)) if (jsonSubtreeHasIdKey(o[k], key, id)) return true;
+  }
+  return false;
+}
+
+/** @emoji 🧭 Design-scoped kit events (excludes bare `Changed`, which is kit-wide). */
+export function kitEventTouchesDesignStrict(ev: KitEvent, designId: string): boolean {
+  if (designId === "") return false;
+  const d = (ev as { Design?: { design_id?: string; event?: unknown } }).Design;
+  if (d && typeof d.design_id === "string" && d.design_id === designId) return true;
+  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: unknown } }).FlattenInvalidated;
+  if (fi && typeof fi.design === "string" && fi.design === designId) return true;
+  if (jsonSubtreeHasIdKey(ev, "design_id", designId)) return true;
+  const ca = (ev as { ChildAdded?: { parent?: { id?: string }; child?: { id?: string } } }).ChildAdded;
+  if (ca && ca.parent?.id === designId) return true;
+  const cr = (ev as { ChildRemoved?: { parent?: { id?: string }; child?: { id?: string } } }).ChildRemoved;
+  if (cr && cr.parent?.id === designId) return true;
+  return false;
+}
+
+/** @emoji 🧭 Whether a subscription {@link KitEvent} likely concerns the given design (includes kit-wide invalidations). */
+export function kitEventTouchesDesign(ev: KitEvent, designId: string): boolean {
+  if (designId === "") return false;
+  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  return kitEventTouchesDesignStrict(ev, designId);
+}
+
+/** @emoji 🧭 Type-scoped events (no bare `Changed`). */
+export function kitEventTouchesTypeStrict(ev: KitEvent, typeId: string): boolean {
+  if (typeId === "") return false;
+  const t = (ev as { Type?: { type_id?: string } }).Type;
+  if (t && typeof t.type_id === "string" && t.type_id === typeId) return true;
+  if (jsonSubtreeHasIdKey(ev, "type_id", typeId)) return true;
+  const ca = (ev as { ChildAdded?: { parent?: { id?: string; kind?: string }; child?: { id?: string } } }).ChildAdded;
+  if (ca?.parent?.kind === "Type" && ca.parent.id === typeId) return true;
+  const cr = (ev as { ChildRemoved?: { parent?: { id?: string; kind?: string }; child?: { id?: string } } }).ChildRemoved;
+  if (cr?.parent?.kind === "Type" && cr.parent.id === typeId) return true;
+  return false;
+}
+
+/** @emoji 🧭 Whether a subscription {@link KitEvent} likely concerns the given kind id. */
+export function kitEventTouchesType(ev: KitEvent, typeId: string): boolean {
+  if (typeId === "") return false;
+  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  return kitEventTouchesTypeStrict(ev, typeId);
+}
+
+/** @emoji 🧭 Piece-scoped events (design-scoped strict + piece id + flatten rows). */
+export function kitEventTouchesPiece(ev: KitEvent, designId: string, pieceId: string): boolean {
+  if (pieceId === "") return false;
+  if (kitEventTouchesDesignStrict(ev, designId)) return true;
+  const p = (ev as { Piece?: { piece_id?: string } }).Piece;
+  if (p && typeof p.piece_id === "string" && p.piece_id === pieceId) return true;
+  if (jsonSubtreeHasIdKey(ev, "piece_id", pieceId)) return true;
+  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: string[] } }).FlattenInvalidated;
+  if (fi && fi.design === designId && Array.isArray(fi.pieces) && fi.pieces.includes(pieceId)) return true;
+  return false;
+}
+
+/** @emoji 🧭 Connection-scoped events (design-scoped strict + connection id). */
+export function kitEventTouchesConnection(ev: KitEvent, designId: string, connectionId: string): boolean {
+  if (connectionId === "") return false;
+  if (kitEventTouchesDesignStrict(ev, designId)) return true;
+  const c = (ev as { Connection?: { connection_id?: string } }).Connection;
+  if (c && typeof c.connection_id === "string" && c.connection_id === connectionId) return true;
+  if (jsonSubtreeHasIdKey(ev, "connection_id", connectionId)) return true;
+  return false;
+}
+
+/** @emoji 🧭 Family / file / folder entity filters (ChildAdded paths + id fields). */
+export function kitEventTouchesFamily(ev: KitEvent, familyId: string): boolean {
+  if (familyId === "") return false;
+  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  const f = (ev as { Family?: { family_id?: string } }).Family;
+  if (f && typeof f.family_id === "string" && f.family_id === familyId) return true;
+  if (jsonSubtreeHasIdKey(ev, "family_id", familyId)) return true;
+  return false;
+}
+
+export function kitEventTouchesFile(ev: KitEvent, fileId: string): boolean {
+  if (fileId === "") return false;
+  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  const f = (ev as { File?: { file_id?: string } }).File;
+  if (f && typeof f.file_id === "string" && f.file_id === fileId) return true;
+  if (jsonSubtreeHasIdKey(ev, "file_id", fileId)) return true;
+  return false;
+}
+
+export function kitEventTouchesFolder(ev: KitEvent, folderId: string): boolean {
+  if (folderId === "") return false;
+  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  const f = (ev as { Folder?: { folder_id?: string } }).Folder;
+  if (f && typeof f.folder_id === "string" && f.folder_id === folderId) return true;
+  if (jsonSubtreeHasIdKey(ev, "folder_id", folderId)) return true;
+  return false;
+}
+// #endregion KitEventEntityFilter
 
 // #region 🧩KitWasmBridgeMerged
 // #region 🔌KitStoreClientTypes

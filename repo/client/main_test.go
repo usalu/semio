@@ -635,7 +635,7 @@ func TestNativeBootstrapAssetsStayRepoRelative(t *testing.T) {
 				`Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"`,
 				`Stop-RepoPythonProcesses -RepoRoot $repoRoot`,
 				`@("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind)`,
-				`@("run", "./repo/cli", "configure", "--repo", $repoRoot)`,
+				`@("run", "./repo/clientent", "configure", "--repo", $repoRoot)`,
 				`@("playwright", "install", "chromium")`,
 				`@("run", "git:setup")`,
 			},
@@ -2104,11 +2104,11 @@ func TestFileHeaderId(t *testing.T) {
 	}{
 		{"code ts", "semio/js/src/index.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "index"},
 		{"code tsx", "semio/js/src/App.tsx", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileCode) + "app"},
-		{"code go", "repo/cli/cli.go", "🧰repo⌨️cli" + emojiText(EmojiFileCode) + "cli"},
+		{"code go", "repo/clientent/client.go", "🧰repo⌨️cli" + emojiText(EmojiFileCode) + "cli"},
 		{"code cs", "semio/gh/Semio.cs", "👤semio🐙gh" + emojiText(EmojiFileCode) + "semio"},
 		{"code py", "semio/engine/main.py", "👤semio⚙️engine" + emojiText(EmojiFileCode) + "main"},
 		{"test ts", "semio/js/src/index.test.ts", "👤semio📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
-		{"test go", "repo/cli/cli_test.go", "🧰repo⌨️cli" + emojiText(EmojiFileLab) + "clitest"},
+		{"test go", "repo/clientent/client_test.go", "🧰repo⌨️cli" + emojiText(EmojiFileLab) + "clitest"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
@@ -6954,7 +6954,7 @@ func TestGetArtifactID_Bundle(t *testing.T) {
 	}{
 		{"library bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 		{"schema bundle", map[string]interface{}{"name": "repo/graphql", "kind": "schema"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleSchema) + "graphql"},
-		{"binary bundle", map[string]interface{}{"name": "repo/cli", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
+		{"binary bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
 		{"ui bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"site bundle", map[string]interface{}{"name": "semio/desktop", "kind": "site"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "desktop"},
@@ -7824,12 +7824,12 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 		}
 	}
 	if cliBundle == nil {
-		t.Fatal("repo/cli bundle not found")
+		t.Fatal("repo/client bundle not found")
 	}
 	cliBundleId := GetArtifactID("bundle", cliBundle.Data)
 	expectedCliBundleId := emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"
 	if cliBundleId != expectedCliBundleId {
-		t.Errorf("repo/cli bundle id: expected %q, got %q", expectedCliBundleId, cliBundleId)
+		t.Errorf("repo/client bundle id: expected %q, got %q", expectedCliBundleId, cliBundleId)
 	}
 	for _, c := range cliBundle.Children {
 		ek := treeNodeKindToEntityKind(c.Kind)
@@ -8047,7 +8047,7 @@ func TestBundleListIDs(t *testing.T) {
 		"semio/docs":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
 		"semio/play":       emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "play",
 		"semio/assets":     emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
-		"repo/cli":         emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
+		"repo/client":         emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
 		"repo/server":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/go":          emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleLibrary) + "go",
 		"repo/vscode":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩") + "vscode",
@@ -8070,7 +8070,7 @@ func TestBundleListIDs(t *testing.T) {
 }
 
 func TestSectionListIDs(t *testing.T) {
-	result := ToolSectionList("repo/cli/main.go")
+	result := ToolSectionList("repo/client/main.go")
 	if result.Error != "" {
 		t.Fatalf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -8264,7 +8264,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 		"semio/assets":  emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets",
 		"semio/desktop": emojiText(EmojiTechnologyUser) + "semio" + emojiText("🖥️") + "desktop",
 		"semio/docs":    emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSite) + "docs",
-		"repo/cli":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
+		"repo/client":      emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "cli",
 		"repo/server":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍") + "server",
 		"repo/vscode":   emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩") + "vscode",
 	}
@@ -8454,7 +8454,7 @@ func TestAllSpecIDExamples(t *testing.T) {
 		{"bundles under technology", "bundles", map[string]interface{}{"parentId": emojiText(EmojiTechnologyUser) + "semio"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundles)},
 		{"library bundle semio/js", "bundle", map[string]interface{}{"name": "semio/js", "kind": "library"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 		{"schema bundle semio/graphql", "bundle", map[string]interface{}{"name": "semio/graphql", "kind": "schema"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleSchema) + "graphql"},
-		{"binary bundle repo/cli", "bundle", map[string]interface{}{"name": "repo/cli", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
+		{"binary bundle repo/client", "bundle", map[string]interface{}{"name": "repo/client", "kind": "binary"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleBinary) + "cli"},
 		{"ui bundle repo/vscode", "bundle", map[string]interface{}{"name": "repo/vscode", "kind": "ui"}, emojiText(EmojiTechnologyInfra) + "repo" + emojiText(EmojiBundleUI) + "vscode"},
 		{"example bundle coda/examples", "bundle", map[string]interface{}{"name": "coda/examples", "kind": "example"}, emojiText(EmojiTechnologyResearch) + "coda" + emojiText(EmojiBundleExample) + "examples"},
 		{"assets bundle semio/assets", "bundle", map[string]interface{}{"name": "semio/assets", "kind": "assets"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "assets"},
@@ -11265,9 +11265,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "definition go type treated as interface",
 			kind:    "definition",
-			data:    map[string]interface{}{"kind": "type", "filePath": "repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
-			wantID:  buildDefinitionID(buildFileID("repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
-			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
+			data:    map[string]interface{}{"kind": "type", "filePath": "repo/client/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
+			wantID:  buildDefinitionID(buildFileID("repo/client/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
+			wantURI: "repo://definition/" + buildDefinitionID(buildFileID("repo/client/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
 		},
 		{
 			name:    "definition constant",
@@ -11533,7 +11533,7 @@ func TestPathToUriPath(t *testing.T) {
 		want string
 	}{
 		{"semio/js/src", "semio/js/src"},
-		{"repo/cli/main.go", "repo/cli/main.go"},
+		{"repo/client/main.go", "repo/client/main.go"},
 		{"test.txt", "test.txt"},
 		{"a b/c d", "a%20b/c%20d"},
 	}
@@ -11552,7 +11552,7 @@ func TestPathFromUriPath(t *testing.T) {
 		want    string
 	}{
 		{"semio/js/src", "semio/js/src"},
-		{"repo/cli/main.go", "repo/cli/main.go"},
+		{"repo/client/main.go", "repo/client/main.go"},
 		{"a%20b/c%20d", "a b/c d"},
 	}
 	for _, tt := range tests {
@@ -12460,7 +12460,7 @@ func TestToolFolderTree(t *testing.T) {
 
 func TestToolFileList(t *testing.T) {
 	setupToolTest(t)
-	result := ToolFileList("repo/cli")
+	result := ToolFileList("repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolFileList returned error: %s", result.Error)
 	}
@@ -12471,7 +12471,7 @@ func TestToolFileList(t *testing.T) {
 
 func TestToolFileTree(t *testing.T) {
 	setupToolTest(t)
-	result := ToolFileTree("repo/cli")
+	result := ToolFileTree("repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolFileTree returned error: %s", result.Error)
 	}
@@ -12479,7 +12479,7 @@ func TestToolFileTree(t *testing.T) {
 
 func TestToolSectionList(t *testing.T) {
 	setupToolTest(t)
-	result := ToolSectionList("repo/cli/main.go")
+	result := ToolSectionList("repo/client/main.go")
 	if result.Error != "" {
 		t.Errorf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -12487,7 +12487,7 @@ func TestToolSectionList(t *testing.T) {
 
 func TestToolSectionTree(t *testing.T) {
 	setupToolTest(t)
-	result := ToolSectionTree("repo/cli/main.go")
+	result := ToolSectionTree("repo/client/main.go")
 	if result.Error != "" {
 		t.Errorf("ToolSectionTree returned error: %s", result.Error)
 	}
@@ -12495,7 +12495,7 @@ func TestToolSectionTree(t *testing.T) {
 
 func TestToolDefinitionList(t *testing.T) {
 	setupToolTest(t)
-	result := ToolDefinitionList("repo/cli/main.go")
+	result := ToolDefinitionList("repo/client/main.go")
 	if result.Error != "" {
 		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
 	}
@@ -12511,7 +12511,7 @@ func TestToolPolicyList(t *testing.T) {
 
 func TestToolPolicyCheck(t *testing.T) {
 	setupToolTest(t)
-	result := ToolPolicyCheck("code", "repo/cli")
+	result := ToolPolicyCheck("code", "repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyCheck returned error: %s", result.Error)
 	}
@@ -12519,7 +12519,7 @@ func TestToolPolicyCheck(t *testing.T) {
 
 func TestToolAnalyzeScope(t *testing.T) {
 	setupToolTest(t)
-	result := ToolAnalyze("repo/cli", nil)
+	result := ToolAnalyze("repo/client", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze returned error: %s", result.Error)
 	}
@@ -12527,7 +12527,7 @@ func TestToolAnalyzeScope(t *testing.T) {
 
 func TestToolFixScope(t *testing.T) {
 	setupToolTest(t)
-	result := ToolFix("repo/cli")
+	result := ToolFix("repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolFix returned error: %s", result.Error)
 	}
@@ -12602,7 +12602,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketRead returned error: %s", readResult.Error)
 	}
 
-	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Test summary", []string{"repo/cli/main.go"}, "", true)
+	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Test summary", []string{"repo/client/main.go"}, "", true)
 	if closeResult.Error != "" {
 		t.Fatalf("ToolTicketClose returned error: %s", closeResult.Error)
 	}
@@ -12612,7 +12612,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketReopen returned error: %s", reopenResult.Error)
 	}
 
-	ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Final close", []string{"repo/cli/main.go"}, "", true)
+	ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Final close", []string{"repo/client/main.go"}, "", true)
 	ticketPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	os.RemoveAll(ticketPath)
 }
@@ -12664,7 +12664,7 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 		t.Fatal("ToolTicketOpen returned nil ticket")
 	}
 	defer func() {
-		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/cli/main.go"}, "", true)
+		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/client/main.go"}, "", true)
 		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
 	}()
 
@@ -12702,7 +12702,7 @@ func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
 		t.Fatalf("parseTicketPath(%q) error: %v", fullYearPath, err)
 	}
 
-	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/cli/main.go"}, "", true)
+	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/client/main.go"}, "", true)
 	if closeResult.Error != "" {
 		t.Fatalf("ToolTicketClose with full year path returned error: %s", closeResult.Error)
 	}
@@ -15756,7 +15756,7 @@ func TestIsToolBlocked(t *testing.T) {
 		{"case insensitive", "TERMINAL", "GIT CHECKOUT main", true},
 		{"grep with git checkout pattern not blocked", "", `grep "git checkout" file.go`, false},
 		{"echo with git stash not blocked", "", `echo "git stash"`, false},
-		{"semio cli command not blocked", "", `go run ./repo/cli tree "hooks events inlet adapter cli"`, false},
+		{"semio cli command not blocked", "", `go run ./repo/clientent tree "hooks events inlet adapter cli"`, false},
 		{"cd then git checkout blocked", "", "cd /workspaces && git checkout feature", true},
 		{"pipe grep allowed", "", `ls | grep "git checkout"`, false},
 		{"git checkout after semicolon blocked", "", "echo done; git checkout main", true},
@@ -15849,7 +15849,7 @@ func TestIsCommandSegmentBlocked(t *testing.T) {
 		{`bash -lc "git stash && echo done"`, true},
 		{`grep "git checkout" file.go`, false},
 		{`echo "git stash"`, false},
-		{"go run ./repo/cli tree hooks", false},
+		{"go run ./repo/clientent tree hooks", false},
 		{"git status", false},
 		{"git log --oneline -n 5", false},
 		{"git diff", false},
@@ -15968,7 +15968,7 @@ func TestRunHookToolAllowed(t *testing.T) {
 		Second:   time.Now().UTC().Format(time.RFC3339),
 		RepoRoot: t.TempDir(),
 		ToolName: "read_file",
-		ToolArgs: "/workspaces/semio/repo/cli/main.go",
+		ToolArgs: "/workspaces/semio/repo/client/main.go",
 	}
 	result := RunHook(hctx)
 	if !result.IsAllowed() {
@@ -17423,11 +17423,11 @@ func TestDeriveRepoOpFromCLICommand(t *testing.T) {
 		cmd      string
 		expected string
 	}{
-		{"ticket open full path", "go run ./repo/cli ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
+		{"ticket open full path", "go run ./repo/clientent ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket open exe path", ".\\repo\\cli\\cli.exe ticket open MY-GOAL 'My Title' 'My Prompt' claude-code sonnet-4-5", "ticket.open"},
 		{"ticket close", "./cli ticket close 26 03 05 MY-SLUG 'Summary' semio/go/semio.go", "ticket.close"},
-		{"ticket reopen", "/workspaces/semio/repo/cli/cli ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
-		{"ticket reopen go run", "go run ./repo/cli ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen", "/workspaces/semio/repo/clientent/client ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
+		{"ticket reopen go run", "go run ./repo/clientent ticket reopen 26 03 05 MY-SLUG 'Prompt' claude-code sonnet-4-5", "ticket.reopen"},
 		{"goal open", "./cli goal open 'Title' 'Desc' 'Prompt' claude-code sonnet-4-5", "goal.open"},
 		{"goal close", "./cli goal close MY-GOAL 'Summary'", "goal.close"},
 		{"contributor add", "./cli contributor add github-user", "contributor.add"},
@@ -17574,7 +17574,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "go run ./repo/cli ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
+			Command: "go run ./repo/clientent ticket open MY-GOAL 'My Title' claude-code sonnet-4-5",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalStarting,
@@ -17614,7 +17614,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 				HookResultBase: HookResultBase{Allowed: true},
 				Session:        "sess2",
 			},
-			Command: "/workspace/repo/cli/cli goal close MY-GOAL 'Summary'",
+			Command: "/workspace/repo/clientent/client goal close MY-GOAL 'Summary'",
 		}
 		hctx := HookContext{
 			Event:    HookAgentToolTerminalEnded,
@@ -18479,8 +18479,8 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"ssh", "ssh user@host", ToolKindTerminal},
 		{"custom-tool", "./custom-tool --flag", ToolKindTerminal},
 
-		{"cd && go test", "cd /workspaces/semio/repo/cli && go test ./...", ToolKindTest},
-		{"cd && go test piped", "cd /workspaces/semio/repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80", ToolKindTest},
+		{"cd && go test", "cd /workspaces/semio/repo/client && go test ./...", ToolKindTest},
+		{"cd && go test piped", "cd /workspaces/semio/repo/client && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80", ToolKindTest},
 		{"cd && cargo test", "cd /path && cargo test", ToolKindTest},
 		{"cd && npm test", "cd technology && npm test", ToolKindTest},
 		{"cd && pytest", "cd tests && pytest -k test_foo", ToolKindTest},
@@ -18604,7 +18604,7 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 		{"phpunit vendor", "./vendor/bin/phpunit tests/"},
 		{"cargo nextest", "cargo nextest run"},
 
-		{"cd && go test", "cd /workspaces/semio/repo/cli && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80"},
+		{"cd && go test", "cd /workspaces/semio/repo/client && go test -v -run TestFoo -timeout 60s 2>&1 | tail -80"},
 		{"cd && cargo test", "cd /path/to/technology && cargo test"},
 		{"cd && npm test", "cd frontend && npm test"},
 		{"cd && pytest", "cd tests && pytest -k test_integration"},
@@ -18782,7 +18782,7 @@ func TestParseTestInfoFromCommand(t *testing.T) {
 
 		{"cd && go test -run", "cd /path && go test -run TestFoo -timeout 30s ./...", []string{"TestFoo"}, "30"},
 		{"cd && go test all", "cd /path && go test ./...", []string{""}, ""},
-		{"cd && go test piped", "cd /workspaces/semio/repo/cli && go test -v -run TestBar -timeout 60s 2>&1 | tail -80", []string{"TestBar"}, "60"},
+		{"cd && go test piped", "cd /workspaces/semio/repo/client && go test -v -run TestBar -timeout 60s 2>&1 | tail -80", []string{"TestBar"}, "60"},
 		{"cd && pytest -k", "cd /app && pytest -k test_integration", []string{"test_integration"}, ""},
 		{"cd && jest -t", "cd frontend && jest -t MyComponent", []string{"MyComponent"}, ""},
 		{"cd; cargo test -- filter", "cd /path; cargo test -- my_test", []string{"my_test"}, ""},
@@ -18815,7 +18815,7 @@ func TestExtractTestSegmentFromCommand(t *testing.T) {
 		expectCwd string
 	}{
 		{"simple go test", "go test ./...", "go test ./...", ""},
-		{"cd && go test", "cd /workspaces/semio/repo/cli && go test -v -run TestFoo ./...", "go test -v -run TestFoo ./...", "/workspaces/semio/repo/cli"},
+		{"cd && go test", "cd /workspaces/semio/repo/client && go test -v -run TestFoo ./...", "go test -v -run TestFoo ./...", "/workspaces/semio/repo/client"},
 		{"cd && go test piped", "cd /path && go test -v ./... 2>&1 | tail -80", "go test -v ./... 2>&1", "/path"},
 		{"export && cd && go test", "export GOFLAGS=-count=1 && cd /src && go test -v ./...", "go test -v ./...", "/src"},
 		{"cd && npm test", "cd frontend && npm test", "npm test", "frontend"},
@@ -22231,35 +22231,35 @@ func TestExtractSearchFromInputLineNumbers(t *testing.T) {
 			input: `{
 				"tool_name": "read_file",
 				"tool_input": {
-					"filePath": "/workspaces/semio/repo/cli/main.go",
+					"filePath": "/workspaces/semio/repo/client/main.go",
 					"startLine": 35490,
 					"endLine": 35490
 				}
 			}`,
-			expected: "/workspaces/semio/repo/cli/main.go#L35490",
+			expected: "/workspaces/semio/repo/client/main.go#L35490",
 		},
 		{
 			name: "line range",
 			input: `{
 				"tool_name": "read_file",
 				"tool_input": {
-					"filePath": "/workspaces/semio/repo/cli/main.go",
+					"filePath": "/workspaces/semio/repo/client/main.go",
 					"startLine": 35490,
 					"endLine": 35540
 				}
 			}`,
-			expected: "/workspaces/semio/repo/cli/main.go#L35490-L35540",
+			expected: "/workspaces/semio/repo/client/main.go#L35490-L35540",
 		},
 		{
 			name: "only start line",
 			input: `{
 				"tool_name": "read_file",
 				"tool_input": {
-					"filePath": "/workspaces/semio/repo/cli/main.go",
+					"filePath": "/workspaces/semio/repo/client/main.go",
 					"startLine": 35490
 				}
 			}`,
-			expected: "/workspaces/semio/repo/cli/main.go#L35490",
+			expected: "/workspaces/semio/repo/client/main.go#L35490",
 		},
 	}
 	for _, tt := range tests {
