@@ -8,6 +8,7 @@
 // #region ⚛️Imports
 
 import {
+  applyKitClientSnapshotToLocalStore,
   asKitInstance,
   createFolderKitStore,
   createJsonFileKitStore,
@@ -159,8 +160,8 @@ export type KitRuntimeContextValue = {
   /** Optional open/backbone config when the kit is not from {@link KitRegistryProvider}. */
   kitBackbone?: KitBackboneConfig;
   kitClient: KitStoreClient | null;
-  setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
-  setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
+  setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
+  setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => Promise<SetResult>;
 };
 
 /** @emoji 📌Persistence metadata for an open kit in the registry. */
@@ -287,6 +288,53 @@ const NEVER_WRITABLE_FIELDS = new Set([
 // #endregion ⚛️Constants
 
 // #region ⚛️Utilities
+
+/** @emoji 🧾 `useSyncExternalStore` with a derived snapshot and a custom equality for fewer rerenders. */
+export function useSemioStoreSelector<T, S>(
+  store: { getSnapshot(): T; subscribe(onChange: () => void): () => void },
+  select: (snap: T) => S,
+  isEqual: (a: S, b: S) => boolean = (a, b) => Object.is(a, b),
+): S {
+  const last = React.useRef<{ snap: T; out: S } | null>(null);
+  const get = React.useCallback((): S => {
+    const snap = store.getSnapshot();
+    const cached = last.current;
+    if (cached && cached.snap === snap) return cached.out;
+    const out = select(snap);
+    if (cached && isEqual(cached.out, out)) {
+      last.current = { snap, out: cached.out };
+      return cached.out;
+    }
+    last.current = { snap, out };
+    return out;
+  }, [store, select, isEqual]);
+  return React.useSyncExternalStore(store.subscribe, get, get);
+}
+
+/** @emoji 🧾 Maps schema connection `u`/`v` to Rust `ConnectionDiff` `x`/`y` wire keys. */
+function connectionDiffWireKeyForDataKey(dataKey: string): string {
+  if (dataKey === "u") return "x";
+  if (dataKey === "v") return "y";
+  return dataKey;
+}
+
+/** @emoji 🧾 Single field/fragment routed to `KitStoreClient.setField` (WASM change commands, no local graph replace). */
+async function writeKitClientSchemaField(
+  kitClient: KitStoreClient,
+  typeName: string,
+  dataKey: string,
+  value: unknown,
+  entityId: string,
+): Promise<SetResult> {
+  if (typeName === "Piece" && dataKey !== "name" && dataKey !== "color") {
+    return kitClient.setField("Piece", entityId, "__patch", { [dataKey]: value } as any);
+  }
+  if (typeName === "Connection") {
+    const w = connectionDiffWireKeyForDataKey(dataKey);
+    return kitClient.setField("Connection", entityId, "__patch", { [w]: value } as any);
+  }
+  return kitClient.setField(typeName, entityId, dataKey, value);
+}
 
 function noop(): void {}
 
@@ -875,15 +923,9 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
         const persistence = init.store ? inferPersistenceFromInit({ backbone: init.backbone, store: init.store }) : inferPersistenceFromInit({ backbone: init.backbone, store });
         const kitClient = init.kitClient ?? (await createKitStoreClient({ initialKit: store.getSnapshot().kit, forceFallback: shouldForceKitClientFallback() }));
+        (store as any).__semioKitClient = kitClient;
         const unsub = kitClient.subscribe(() => {
-          try {
-            const incoming = kitClient.getDto();
-            const curJson = store.getSnapshot().kit.toJSON();
-            if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
-            store.replace(asKitInstance(incoming));
-          } catch {
-            store.replace(asKitInstance(kitClient.getDto()));
-          }
+          void applyKitClientSnapshotToLocalStore(kitClient, store);
         });
         rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
       } catch (e) {
@@ -903,6 +945,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
       row.refs -= 1;
       if (row.refs <= 0) {
         row.unsub();
+        try { delete (row.store as any).__semioKitClient; } catch { /* ignore */ }
         row.kitClient.dispose();
         rowsRef.current.delete(kitId);
         setActiveKitId((cur) => (cur === kitId ? undefined : cur));
@@ -1304,14 +1347,7 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
     if (kitIdProp) return;
     if (!kitClient) return;
     return kitClient.subscribe(() => {
-      try {
-        const incoming = kitClient.getDto();
-        const cur = store.getSnapshot().kit.toJSON();
-        if (JSON.stringify(incoming) === JSON.stringify(cur)) return;
-        store.replace(asKitInstance(incoming));
-      } catch {
-        store.replace(asKitInstance(kitClient.getDto()));
-      }
+      void applyKitClientSnapshotToLocalStore(kitClient, store);
     });
   }, [kitClient, store, kitIdProp]);
 
@@ -1384,32 +1420,77 @@ export function KitScope({ store: externalStore, kitId: kitIdProp, kitClient: ki
   }, [kitClient, pushSetRejection]);
 
   const setFieldValue = React.useCallback(
-    (typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null) => {
+    async (typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
+      if (!kitClient) {
+        const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
+        pushSetRejection(e);
+        return { ok: false, error: e };
+      }
+      if (snapshot.sync.readonly) {
+        return { ok: false, error: { kind: "Readonly", message: "read-only" } };
+      }
       const currentState = scanSchemaState(store.getSnapshot().kit.toJSON());
-      if (!isWritableField(currentState, typeName, fieldName, idValue, scope)) return;
+      if (!isWritableField(currentState, typeName, fieldName, idValue, scope)) {
+        return { ok: false, error: { kind: "Readonly", message: "not writable" } };
+      }
       const ref = resolveReference(currentState, typeName, idValue, scope);
-      if (!ref) return;
+      if (!ref) {
+        return { ok: false, error: { kind: "NotFound", message: "entity" } };
+      }
       const key = getFieldDataKey(typeName, fieldName);
-      const clone = deepClone(currentState.plain);
-      const currentObject = getByPath(clone, ref.path);
-      const currentValue = currentObject?.[key];
-      currentObject[key] = normalizeNextValue(currentValue, fieldName, nextValueFromAction(currentValue, next));
-      store.replace(asKitInstance(clone));
+      const currentValue = readSchemaFieldValue(currentState, typeName, fieldName, idValue, scope);
+      const nextResolved = nextValueFromAction(currentValue, next);
+      const val = normalizeNextValue(currentValue, fieldName, nextResolved);
+      const entityId = typeName === "Kit" ? String(currentState.kitId ?? ref.id ?? (ref as any).value?.id ?? "") : String(ref.id ?? "");
+      if (!entityId) {
+        const e: SetError = { kind: "NotFound", message: "missing id" };
+        pushSetRejection(e);
+        return { ok: false, error: e };
+      }
+      const r = await writeKitClientSchemaField(kitClient, typeName, key, val, entityId);
+      if (!r.ok) pushSetRejection(r.error);
+      return r;
     },
-    [store],
+    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const setObjectValue = React.useCallback(
-    (typeName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null) => {
+    async (typeName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null): Promise<SetResult> => {
+      if (!kitClient) {
+        const e: SetError = { kind: "Internal", message: "kit client required for mutations" };
+        pushSetRejection(e);
+        return { ok: false, error: e };
+      }
+      if (snapshot.sync.readonly) {
+        return { ok: false, error: { kind: "Readonly", message: "read-only" } };
+      }
       const currentState = scanSchemaState(store.getSnapshot().kit.toJSON());
       const ref = resolveReference(currentState, typeName, idValue, scope);
-      if (!ref) return;
-      const clone = deepClone(currentState.plain);
-      const currentValue = getByPath(clone, ref.path);
-      setByPath(clone, ref.path, nextValueFromAction(currentValue, next));
-      store.replace(asKitInstance(clone));
+      if (!ref) {
+        return { ok: false, error: { kind: "NotFound", message: "entity" } };
+      }
+      const prev = ref.value;
+      const nextObj = nextValueFromAction(prev, next);
+      const fieldNames = collectChangedObjectFields(typeName, prev, nextObj);
+      const entityId = typeName === "Kit" ? String(currentState.kitId ?? ref.id ?? (ref as any).value?.id ?? "") : String(ref.id ?? "");
+      if (!entityId) {
+        const e: SetError = { kind: "NotFound", message: "missing id" };
+        pushSetRejection(e);
+        return { ok: false, error: e };
+      }
+      for (const fn of fieldNames) {
+        if (!isWritableField(currentState, typeName, fn, idValue, scope)) continue;
+        const dataKey = getFieldDataKey(typeName, fn);
+        const v = (nextObj as any)?.[dataKey];
+        const r = await writeKitClientSchemaField(kitClient, typeName, dataKey, v, entityId);
+        if (!r.ok) {
+          pushSetRejection(r.error);
+          return r;
+        }
+      }
+      return { ok: true } as const;
     },
-    [store],
+    [kitClient, store, snapshot.sync.readonly, pushSetRejection],
   );
 
   const activeKitId = kitIdProp ?? snapshot.kit?.id;
@@ -4311,8 +4392,7 @@ function useSchemaObjectState(typeName: string, idValue?: string): HookTriad<any
   const setValue = React.useCallback(
     async (next: SetStateAction<any>) => {
       if (!canWrite) return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
-      runtime.setObjectValue(typeName, next, idValue, scope);
-      return { ok: true } as const;
+      return await runtime.setObjectValue(typeName, next, idValue, scope);
     },
     [runtime, typeName, idValue, scope, canWrite],
   );
@@ -4350,8 +4430,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
       if (!classicWritable) {
         return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
       }
-      runtime.setFieldValue(typeName, fieldName, resolved, idValue, scope);
-      return { ok: true } as const;
+      return await runtime.setFieldValue(typeName, fieldName, resolved, idValue, scope);
     },
     [runtime, rustTarget, classicWritable, typeName, fieldName, idValue, scope, value],
   );
@@ -4380,6 +4459,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
 
 /** Re-exports for hosts (e.g. sketchpad) that must not import kit domain from `@semio/js` directly. */
 export {
+  applyKitClientSnapshotToLocalStore,
   applyKitDiff,
   areDesignsInSameFamily,
   arePortsCompatible,
@@ -4418,7 +4498,6 @@ export {
   getKitPorts,
   getOrCreateKitFileState,
   getReadableKitFileUrl,
-  getSqlJs,
   getStoredKitFileUrls,
   ICON_WIDTH,
   id,
@@ -4428,7 +4507,6 @@ export {
   isBrowserReadableFileUrl,
   Kit,
   KitFullDtoSchema,
-  kitToSqlite,
   Piece,
   Plane,
   planeToMatrix,

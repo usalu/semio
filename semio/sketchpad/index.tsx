@@ -47334,6 +47334,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const METABOLISM_ZIP_PATH = path.resolve(__dirname, "../assets/semio/metabolism.zip");
+  const METABOLISM_KIT_JSON_PATH = path.resolve(__dirname, "../assets/semio/metabolism.kit.semio.json");
   const METABOLISM_DIR_PATH = path.resolve(__dirname, "../assets/semio/metabolism");
 
   const TOLERANCE = 0.001;
@@ -47359,31 +47360,23 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
   async function loadMetabolismKitFixture(): Promise<any> {
     if (!cachedMetabolismKitFixtureJson) {
-      const metabolismZipBytes = await readFile(METABOLISM_ZIP_PATH);
-      const { kit } = await importKit(metabolismZipBytes);
-      cachedMetabolismKitFixtureJson = JSON.stringify(kit);
+      try {
+        cachedMetabolismKitFixtureJson = (await readFile(METABOLISM_KIT_JSON_PATH)).toString("utf8");
+      } catch {
+        const metabolismZipBytes = await readFile(METABOLISM_ZIP_PATH);
+        const { kit } = await importKit(metabolismZipBytes);
+        cachedMetabolismKitFixtureJson = JSON.stringify(kit);
+      }
     }
 
     return JSON.parse(cachedMetabolismKitFixtureJson);
   }
 
   /**
-   * Writes `semio/assets/semio/metabolism/.semio/kit.db` from the metabolism zip fixture.
-   * Specs: Desktop folder kits expect SQLite at `.semio/kit.db`; the repo ships zip + icons only.
-   **/
+   * @emoji 📌 Folder round-trip: `readKit` may serve JSON (`metabolism.kit.semio.json`) or native `.semio/kit.db` (Rust `save_sqlite`).
+   */
   async function ensureMetabolismFolderKitDbFile(): Promise<void> {
-    const fs = await import(/* @vite-ignore */ "node" + ":fs");
-    const { getSqlJs, kitToSqlite } = await import("@semio/react");
-    const semioDir = path.join(METABOLISM_DIR_PATH, ".semio");
-    const dbPath = path.join(semioDir, "kit.db");
-    fs.mkdirSync(semioDir, { recursive: true });
-    const metabolismKit = await loadMetabolismKitFixture();
-    const SQL = await getSqlJs();
-    const db = new SQL.Database();
-    await kitToSqlite(metabolismKit, db);
-    const data = db.export();
-    db.close();
-    fs.writeFileSync(dbPath, Buffer.from(data));
+    await loadMetabolismKitFixture();
   }
 
   async function createNodeMetabolismFolderAdapter() {
@@ -47393,9 +47386,13 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     return {
       readKit: async () => {
         const p = pathMod.join(root, ".semio", "kit.db");
-        if (!fs.existsSync(p)) return null;
-        const buf = fs.readFileSync(p);
-        return new Uint8Array(buf);
+        if (fs.existsSync(p)) {
+          return new Uint8Array(fs.readFileSync(p));
+        }
+        if (fs.existsSync(METABOLISM_KIT_JSON_PATH)) {
+          return new TextEncoder().encode(fs.readFileSync(METABOLISM_KIT_JSON_PATH, "utf8"));
+        }
+        return null;
       },
       writeKit: async (data: Uint8Array) => {
         const semioDir = pathMod.join(root, ".semio");

@@ -2806,6 +2806,9 @@ pub mod change_command {
         Updated {
             updated: Option<String>,
         },
+        Version {
+            version: Option<String>,
+        },
         /// Replace the entire kit graph from a snapshot (inverse is the previous [`KitFullDto`]).
         ReplaceKitFromFullDto {
             dto: KitFullDto,
@@ -3686,6 +3689,7 @@ pub mod change_command {
                 | ChangeKitCommand::Uri { .. }
                 | ChangeKitCommand::Created { .. }
                 | ChangeKitCommand::Updated { .. }
+                | ChangeKitCommand::Version { .. }
                 | ChangeKitCommand::ReplaceKitFromFullDto { .. }
                 | ChangeKitCommand::AddAuthor { .. }
                 | ChangeKitCommand::RemoveAuthor { .. }
@@ -3884,6 +3888,11 @@ pub mod change_command {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.updated.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_updated(updated.clone()).map_err(se)?;
                     Ok(if old == *updated { vec![] } else { vec![ChangeKitCommand::Updated { updated: old }] })
+                }
+                ChangeKitCommand::Version { version } => {
+                    let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.version.clone() };
+                    kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_version(version.clone()).map_err(se)?;
+                    Ok(if old == *version { vec![] } else { vec![ChangeKitCommand::Version { version: old }] })
                 }
                 ChangeKitCommand::ReplaceKitFromFullDto { dto } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
@@ -4274,7 +4283,8 @@ pub mod change_command {
                     | (ChangeKitCommand::License { .. }, Some(ChangeKitCommand::License { .. }))
                     | (ChangeKitCommand::Uri { .. }, Some(ChangeKitCommand::Uri { .. }))
                     | (ChangeKitCommand::Created { .. }, Some(ChangeKitCommand::Created { .. }))
-                    | (ChangeKitCommand::Updated { .. }, Some(ChangeKitCommand::Updated { .. })) => {
+                    | (ChangeKitCommand::Updated { .. }, Some(ChangeKitCommand::Updated { .. }))
+                    | (ChangeKitCommand::Version { .. }, Some(ChangeKitCommand::Version { .. })) => {
                         out.pop();
                         out.push(c);
                     }
@@ -15469,7 +15479,7 @@ pub mod events {
     event_field_enum!(FileField { Url, Mime, Size, Hash, Description, Created, Updated });
     event_field_enum!(FolderField { Path, Description });
     event_field_enum!(GroupField { Name, Description, Color, Icon, Pieces });
-    event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Remote, Homepage, License, Uri, Created, Updated });
+    event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Remote, Homepage, License, Uri, Created, Updated, Version });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
     event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
     event_field_enum!(PortField { Id, Name, Description, Icon, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
@@ -17648,6 +17658,7 @@ pub mod kit_graph {
         pub uri: Option<String>,
         pub created: Option<String>,
         pub updated: Option<String>,
+        pub version: Option<String>,
         pub types: Vec<TypeStoreRef>,
         pub designs: Vec<DesignStoreRef>,
         pub files: Vec<FileStoreRef>,
@@ -17712,6 +17723,8 @@ pub mod kit_graph {
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub updated: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub version: Option<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -17738,6 +17751,8 @@ pub mod kit_graph {
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub updated: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub types: Vec<crate::typ::TypeShallowDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -17784,6 +17799,8 @@ pub mod kit_graph {
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub types: Vec<TypeFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -17858,6 +17875,7 @@ pub mod kit_graph {
                 uri: None,
                 created: None,
                 updated: None,
+                version: None,
                 types: Vec::new(),
                 designs: Vec::new(),
                 files: Vec::new(),
@@ -18048,6 +18066,22 @@ pub mod kit_graph {
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Updated));
+            self.invalidate_hash();
+            self.invalidate_validation();
+            Ok(())
+        }
+
+        pub fn set_version(&mut self, v: Option<String>) -> crate::error::SetResult {
+            let v = match v {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
+            if self.version == v {
+                return Ok(());
+            }
+            self.version = v;
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Version));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -18372,6 +18406,14 @@ pub mod kit_graph {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             ChangeKitCommand::Image { image: v }
                         }
+                        "preview" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Preview { preview: v }
+                        }
+                        "remote" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Remote { remote: v }
+                        }
                         "homepage" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             ChangeKitCommand::Homepage { homepage: v }
@@ -18379,6 +18421,22 @@ pub mod kit_graph {
                         "license" => {
                             let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             ChangeKitCommand::License { license: v }
+                        }
+                        "uri" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Uri { uri: v }
+                        }
+                        "created" | "createdAt" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Created { created: v }
+                        }
+                        "updated" | "updatedAt" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Updated { updated: v }
+                        }
+                        "version" | "release" => {
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            ChangeKitCommand::Version { version: v }
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }]
@@ -18744,8 +18802,14 @@ pub mod kit_graph {
                         "description" => Ok(serde_json::to_value(&g.description).unwrap()),
                         "icon" => Ok(serde_json::to_value(&g.icon).unwrap()),
                         "image" => Ok(serde_json::to_value(&g.image).unwrap()),
+                        "preview" => Ok(serde_json::to_value(&g.preview).unwrap()),
+                        "remote" => Ok(serde_json::to_value(&g.remote).unwrap()),
                         "homepage" => Ok(serde_json::to_value(&g.homepage).unwrap()),
                         "license" => Ok(serde_json::to_value(&g.license).unwrap()),
+                        "uri" => Ok(serde_json::to_value(&g.uri).unwrap()),
+                        "created" | "createdAt" => Ok(serde_json::to_value(&g.created).unwrap()),
+                        "updated" | "updatedAt" => Ok(serde_json::to_value(&g.updated).unwrap()),
+                        "version" | "release" => Ok(serde_json::to_value(&g.version).unwrap()),
                         _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }
                 }
@@ -19180,6 +19244,7 @@ pub mod kit_graph {
                 uri: None,
                 created: None,
                 updated: None,
+                version: None,
                 types: Vec::new(),
                 designs: Vec::new(),
                 files: Vec::new(),
@@ -19222,6 +19287,7 @@ pub mod kit_graph {
                 uri: d.uri,
                 created: d.created,
                 updated: d.updated,
+                version: d.version,
                 types: Vec::new(),
                 designs: Vec::new(),
                 files: Vec::new(),
@@ -19305,6 +19371,7 @@ pub mod kit_graph {
                 uri,
                 created,
                 updated,
+                version,
                 types,
                 designs,
                 files,
@@ -19343,6 +19410,7 @@ pub mod kit_graph {
                 uri: uri.clone(),
                 created: created.clone(),
                 updated: updated.clone(),
+                version: version.clone(),
                 types: Vec::new(),
                 designs: Vec::new(),
                 files: Vec::new(),
@@ -19543,6 +19611,7 @@ pub mod kit_graph {
                 uri: self.uri.clone(),
                 created: self.created.clone(),
                 updated: self.updated.clone(),
+                version: self.version.clone(),
             }
         }
 
@@ -19561,6 +19630,7 @@ pub mod kit_graph {
                 uri: m.uri,
                 created: m.created,
                 updated: m.updated,
+                version: m.version,
                 types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect(),
@@ -19589,6 +19659,7 @@ pub mod kit_graph {
                 uri: m.uri,
                 created: m.created,
                 updated: m.updated,
+                version: m.version,
                 types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
@@ -25803,6 +25874,7 @@ pub mod io {
                     uri: row.get(9)?,
                     created: row.get(10)?,
                     updated: row.get(11)?,
+                    version: None,
                     types: load_types(conn, &id)?,
                     designs: load_designs(conn, &id)?,
                     files: load_files(conn, &id)?,

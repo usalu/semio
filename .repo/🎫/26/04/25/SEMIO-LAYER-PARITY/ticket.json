@@ -1,9 +1,18 @@
 {
   "title": "Semio Layer Parity",
-  "status": "open",
-  "summary": "Layer parity (JS/React): Selective KitEvent invalidation for SemioKitViewStore; SemioKitDesignReadStore + SemioKitShallowListReadStore; React hooks use useSyncExternalStore + useSemioReadSnap. See layer-parity-impl.md. Tests: vitest js 139, react 10, cargo lib 122.",
+  "status": "closed",
+  "summary": "Layer parity follow-up: semio/js KitHostDomain hygiene—top-level three imports, safe JSDoc for importKit, applyKitDiff type-id find (precedence fix), executeSemioKitCommand complete SetResult paths (updateFolder default r, import no-op, guard). Embedded export denylist aligned with explicit bridge exports. prior: Rust domain/events/tests; React registry __semioKitClient attach/detach, hook store parity; sketchpad metabolism fixture + FolderKitStore JSON read path. Validation: vitest js 139, react 10, cargo test --lib 122, tsc js+react, sketchpad build.",
   "sessions": [
     "⚪154f9e4386274198abe0659b6603106e",
     "⚪a6e41d95fb204e0b87b8c70d6037c2a9"
+  ],
+  "filesTouched": [
+    "semio/js/index.ts",
+    "semio/js/package.json",
+    "semio/react/index.tsx",
+    "semio/rs/lib.rs",
+    "semio/sketchpad/index.tsx",
+    ".repo/🎫/26/04/25/SEMIO-LAYER-PARITY/important.md",
+    ".repo/🎫/26/04/25/SEMIO-LAYER-PARITY/ticket.json"
   ]
 }
