@@ -89,12 +89,18 @@ export type IdDto = { readonly id: string };
 
 export type ReadPieceCommand =
   | { readonly readPieceFlatPlaneCommand: null }
-  | { readonly readPieceFlatCenterCommand: null };
+  | { readonly readPieceFlatCenterCommand: null }
+  | { readonly readPieceParentConnectionFullCommand: null };
 
 export type ReadDesignCommand =
   | { readonly readDesignPiecesFullCommand: null }
   | { readonly readDesignConnectionsFullCommand: null }
-  | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } };
+  | { readonly readDesignPieceCommands: { readonly id: IdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignsCommand: null }
+  | { readonly readDesignQualitySumCommand: { readonly qualityId: IdDto } }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<IdDto> } }
+  | { readonly readDesignIncludedDesignIdsCommand: null };
 
 export type ReadTypeCommand = { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } };
 
@@ -195,7 +201,7 @@ function kitGraphqlJsonToReadonlyArray(v: unknown): readonly unknown[] {
   return [];
 }
 
-function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
+export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
   const c = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
   if (c == null || typeof c !== "object") return false;
   const v = c as Record<string, unknown>;
@@ -844,6 +850,64 @@ export class KitStore {
       for (const pc of commands) results.push(await this.mapPieceRead(designId, id.id, pc));
       return { readDesignPieceCommands: { results } };
     }
+    if ("readDesignClusterableGroupsCommand" in cmd && cmd.readDesignClusterableGroupsCommand) {
+      const sel = cmd.readDesignClusterableGroupsCommand.selection.map((s) => s.id);
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`,
+          variables: { id: designId, sel },
+        }),
+      ) as { kitStore?: { designByDtoId?: { clusterableGroups?: unknown } | null } | null };
+      const raw = d.kitStore?.designByDtoId?.clusterableGroups;
+      const groups = Array.isArray(raw)
+        ? raw.map((row: unknown) => (Array.isArray(row) ? row.map((pid: unknown) => ({ id: String(pid) })) : []))
+        : [];
+      return { readDesignClusterableGroupsCommand: { groups } };
+    }
+    if ("readDesignIncludedDesignsCommand" in cmd && cmd.readDesignIncludedDesignsCommand === null) {
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesigns } } }`,
+          variables: { id: designId },
+        }),
+      ) as { kitStore?: { designByDtoId?: { includedDesigns?: unknown } | null } | null };
+      return { readDesignIncludedDesignsCommand: { designs: d.kitStore?.designByDtoId?.includedDesigns } };
+    }
+    if ("readDesignQualitySumCommand" in cmd && cmd.readDesignQualitySumCommand) {
+      const qid = cmd.readDesignQualitySumCommand.qualityId.id;
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($id: String!, $qid: String!) { kitStore { designByDtoId(id: $id) { qualitySum(qualityId: $qid) } } }`,
+          variables: { id: designId, qid },
+        }),
+      ) as { kitStore?: { designByDtoId?: { qualitySum?: number } | null } | null };
+      return { readDesignQualitySumCommand: { sum: d.kitStore?.designByDtoId?.qualitySum ?? 0 } };
+    }
+    if ("readDesignReplaceableCatalogCommand" in cmd && cmd.readDesignReplaceableCatalogCommand) {
+      const sel = cmd.readDesignReplaceableCatalogCommand.selection.map((s) => s.id);
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($id: String!, $sel: [String!]!) { kitStore { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`,
+          variables: { id: designId, sel },
+        }),
+      ) as { kitStore?: { designByDtoId?: { replaceableCatalog?: { typeIds?: string[]; designIds?: string[] } } | null } | null };
+      const rc = d.kitStore?.designByDtoId?.replaceableCatalog;
+      return {
+        readDesignReplaceableCatalogCommand: {
+          types: (rc?.typeIds ?? []).map((id: string) => ({ id: String(id) })),
+          designs: (rc?.designIds ?? []).map((id: string) => ({ id: String(id) })),
+        },
+      };
+    }
+    if ("readDesignIncludedDesignIdsCommand" in cmd && cmd.readDesignIncludedDesignIdsCommand === null) {
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($id: String!) { kitStore { designByDtoId(id: $id) { includedDesignIds } } }`,
+          variables: { id: designId },
+        }),
+      ) as { kitStore?: { designByDtoId?: { includedDesignIds?: string[] } | null } | null };
+      return { readDesignIncludedDesignIdsCommand: { designIds: d.kitStore?.designByDtoId?.includedDesignIds ?? [] } };
+    }
     throw new Error(`readDesign: ${Object.keys(cmd).join(",")}`);
   }
 
@@ -865,6 +929,15 @@ export class KitStore {
         }),
       ) as { kitStore?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null } | null };
       return { readPieceFlatCenterCommand: { flatCenter: d.kitStore?.designByDtoId?.pieceByDtoId?.flatCenter } };
+    }
+    if ("readPieceParentConnectionFullCommand" in cmd && cmd.readPieceParentConnectionFullCommand === null) {
+      const d = kitGraphqlFirstData(
+        await this.gqlRun({
+          query: `query($d: String!, $p: String!) { kitStore { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnectionFull } } } }`,
+          variables: { d: designId, p: pieceId },
+        }),
+      ) as { kitStore?: { designByDtoId?: { pieceByDtoId?: { parentConnectionFull?: unknown } | null } | null } | null };
+      return { readPieceParentConnectionFullCommand: { connection: d.kitStore?.designByDtoId?.pieceByDtoId?.parentConnectionFull } };
     }
     throw new Error(`readPiece: ${Object.keys(cmd).join(",")}`);
   }

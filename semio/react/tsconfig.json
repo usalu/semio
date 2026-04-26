@@ -36,6 +36,9 @@
       "@semio/js/*": [
         "../js/*"
       ],
+      "@semio/rs-wasm": [
+        "../rs/pkg/semio.d.ts"
+      ],
       "@semio/sketchpad": [
         "../sketchpad"
       ],
