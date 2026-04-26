@@ -1,19 +1,18 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
-// Specs: Copy/paste proxies through native adapters and the native copy/paste selectors.
-// Summary: Copy/paste Storybook shells with native adapters, source selection, and diff/output previews.
+// Specs: Copy/paste proxies through @semio/react entity helpers backed by semio/rs.
+// Summary: Copy/paste Storybook shells with KitEntity-backed copy/paste, source selection, and diff/output previews.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/react";
-import { Design as DesignEntity, Kit, type Kit as KitType } from "@semio/react";
+import { Design as DesignEntity, Kit } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { SemioDiagram } from "@semio/ui";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "../../index";
-import { nativeCopyDesign, nativeFlatDesign, nativePasteDesign, type NativeAlgorithmLanguage } from "../../index";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { copyDesign, flatDesign, pasteDesign } from "../../index";
 
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "../../../assets/index";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
@@ -154,7 +153,6 @@ const LAYOUT_WITH = {
 export type CopyPasteStoryMode = "without" | "with";
 
 function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const kitWithPasteTarget = React.useMemo(() => ({ ...kit, designs: [...(kit.designs ?? []), pasteTargetDesign] }), [kit]);
   const [flatSourceDesign, setFlatSourceDesign] = React.useState<Design | null>(null);
@@ -176,7 +174,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     setLayoutReady(false);
     setDesignDiff(undefined);
     void (async () => {
-      const [flatSrc, flatTgt] = await Promise.all([nativeFlatDesign(kit, rawDesign.id, language), nativeFlatDesign(kitWithPasteTarget, pasteTargetDesign.id, language)]);
+      const [flatSrc, flatTgt] = await Promise.all([flatDesign(kit, rawDesign.id), flatDesign(kitWithPasteTarget, pasteTargetDesign.id)]);
       if (cancelled) return;
       setFlatSourceDesign(flatSrc);
       setFlatPasteTargetDesign(flatTgt);
@@ -185,7 +183,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     return () => {
       cancelled = true;
     };
-  }, [kit, kitWithPasteTarget, language]);
+  }, [kit, kitWithPasteTarget]);
 
   React.useEffect(() => {
     if (!layoutReady || !flatSourceDesign) return;
@@ -196,25 +194,25 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
         return;
       }
       setDesignDiff(undefined);
-      const copyRes = await nativeCopyDesign(kit, flatSourceDesign, selectedPieceIds, selectedConnectionIds, language);
+      const copyRes = await copyDesign(kit, flatSourceDesign, selectedPieceIds, selectedConnectionIds);
       if (cancelled) return;
       if (!copyRes.ok) return;
       const copied = copyRes.diff;
       const coordinate = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
-      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coordinate, language);
+      const diff = await pasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coordinate);
       if (!cancelled) setDesignDiff(diff);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, flatSourceDesign, layoutReady, selectedPieceIds, selectedConnectionIds, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
+  }, [kit, flatSourceDesign, layoutReady, selectedPieceIds, selectedConnectionIds, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
   const outputDesign = React.useMemo(() => {
     if (!flatPasteTargetDesign) return pasteTargetDesign as Design;
     if (!designDiff) return flatPasteTargetDesign as Design;
-    const k = Kit.ensure(kitWithPasteTarget as KitType);
+    void Kit.ensure(kitWithPasteTarget);
     const plain = (flatPasteTargetDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatPasteTargetDesign)) as DesignPlain);
-    const next = new DesignEntity(plain, k);
+    const next = new DesignEntity(plain);
     next.applyDiff(designDiff);
     return next;
   }, [designDiff, flatPasteTargetDesign, kitWithPasteTarget]);
@@ -239,14 +237,14 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       diffDesign: (flatPasteTargetDesign ?? pasteTargetDesign) as Design,
       outputDesign,
       error: !layoutReady
-        ? `Loading copy & paste preview (${language})…`
+        ? "Loading copy & paste preview…"
         : selectedPieceIds.length === 0 && selectedConnectionIds.length === 0
           ? "Select at least one piece or connection to copy."
           : !designDiff
-            ? `Loading paste result (${language})…`
+            ? "Loading paste result…"
             : undefined,
     }),
-    [kit, flatSourceDesign, flatPasteTargetDesign, layoutReady, selectedPieceIds, selectedConnectionIds, vec, designDiff, outputDesign, language, mode],
+    [kit, flatSourceDesign, flatPasteTargetDesign, layoutReady, selectedPieceIds, selectedConnectionIds, vec, designDiff, outputDesign, mode],
   );
 
   const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(() => ({ flatPasteTargetDesign: flatPasteTargetDesign ?? undefined, pasteAnchoring, onPasteAnchoringChange: setPasteAnchoring }), [flatPasteTargetDesign, pasteAnchoring]);

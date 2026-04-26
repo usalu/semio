@@ -9,6 +9,12 @@ bundle:
 
 # 🧾 Specification
 
+## Strict layering (algorithms Storybook)
+
+For in-browser **TypeScript** algorithm paths, prefer **`@semio/js` `KitStore`** (then GraphQL → `semio/rs`) for kit reads/writes. For **UI** and shared DTO shapes, use **`@semio/react`** re-exports — do not skip react when the surface is hook-oriented.
+
+Native REST / stdin bridges MUST target **`semio/rs`** implementations, not duplicated graph math in TypeScript.
+
 ## 🕸️ Systems
 
 - **Algorithm Visualization System**: Storybook-based UI shell that renders algorithm inputs and outputs using the standardized `AlgorithmApp` from `@semio/ui`.

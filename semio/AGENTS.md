@@ -4,6 +4,17 @@ emoji: 👤
 
 # 🧾 Specification
 
+## Strict layering (semio wasm host)
+
+Dependency direction is **one step down only** (no skipping, no upward imports):
+
+`semio/sketchpad` → `semio/react` → `semio/js` → **GraphQL** → `semio/rs`
+
+- **`semio/rs`**: sole owner of domain logic, kit caches, semantic change semantics, and diff algebra. One logical process (WASM worker or OS native); async, non-blocking toward clients.
+- **`semio/js`**: thin GraphQL client + `KitStore` (typed methods, subscription callbacks). No kit authority, no domain caches.
+- **`semio/react`**: thin adapter to `@semio/js` stores; hooks use `useSyncExternalStore` (or equivalent) on those subscriptions for external reads.
+- **`semio/sketchpad`**: UI + wiring only; kit I/O exclusively through `@semio/react` exports (never `@semio/js`).
+
 ## 🕸️ Systems
 
 ### Kits, Families, Designs, Types

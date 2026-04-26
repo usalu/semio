@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Drag.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign + nativeDragPieces. No domain logic. All designs include connections.
-// Summary: Flat input design via nativeFlatDesign; nativeDragPieces returns flat input, output with connections, and drag diff.
+// Specs: Pure UI proxy to flatDesign + dragPieces. No domain logic. All designs include connections.
+// Summary: Flat input design via flatDesign (semio/rs WASM); dragPieces returns flat input, output with connections, and drag diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -10,8 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeDragPieces, nativeFlatDesign, type NativeAlgorithmLanguage } from "../../index";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { dragPieces, flatDesign } from "../../index";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 import { DragDesign, DragOffset, DragPieces } from "../../../assets/index";
@@ -26,8 +25,6 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DragFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
-
   const kit = React.useMemo(
     () => ({
       ...metabolismKit,
@@ -50,7 +47,7 @@ function DragFrame() {
     setDesignDiff(undefined);
     setDragError(undefined);
     void (async () => {
-      const flat = await nativeFlatDesign(kit, rawDesign.id, language);
+      const flat = await flatDesign(kit, rawDesign.id);
       if (cancelled) return;
       setFlatInputDesign(flat);
       setSelectedPieceIds((prev) => {
@@ -63,7 +60,7 @@ function DragFrame() {
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   React.useEffect(() => {
     if (!flatInputDesign) return;
@@ -80,7 +77,7 @@ function DragFrame() {
       setDesignDiff(undefined);
       setDragError(undefined);
       try {
-        const { output, dragDiff } = await nativeDragPieces(kit, rawDesign as Design, selectedPieceIds, vec, language);
+        const { output, dragDiff } = await dragPieces(kit, rawDesign as Design, selectedPieceIds, vec);
         if (!cancelled) {
           setDesignDiff(dragDiff);
           setOutputDesign(output);
@@ -96,7 +93,7 @@ function DragFrame() {
     return () => {
       cancelled = true;
     };
-  }, [flatInputDesign, kit, selectedPieceIds, vec, language]);
+  }, [flatInputDesign, kit, selectedPieceIds, vec]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
@@ -111,9 +108,9 @@ function DragFrame() {
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: (outputDesign ?? flatInputDesign ?? rawDesign) as Design,
-      error: dragError ? dragError : !flatInputDesign ? `Loading drag preview (${language})…` : selectedPieceIds.length === 0 ? "Select at least one piece to drag." : !outputDesign ? `Loading drag result (${language})…` : undefined,
+      error: dragError ? dragError : !flatInputDesign ? "Loading drag preview…" : selectedPieceIds.length === 0 ? "Select at least one piece to drag." : !outputDesign ? "Loading drag result…" : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceIds, vec, designDiff, outputDesign, dragError, language],
+    [kit, flatInputDesign, selectedPieceIds, vec, designDiff, outputDesign, dragError],
   );
 
   return <AlgorithmApp id="drag" label="Drag" windows={WINDOWS} context={context} className="h-full w-full" />;

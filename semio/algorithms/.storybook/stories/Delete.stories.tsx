@@ -1,18 +1,17 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Delete.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign + nativeDeletePieces. No domain logic. All designs include connections.
-// Summary: Flat input design via nativeFlatDesign; nativeDeletePieces returns diff; Design.applyDiff computes output.
+// Specs: Pure UI proxy to flatDesign + deletePieces. No domain logic. All designs include connections.
+// Summary: Flat input design via flatDesign (semio/rs WASM); deletePieces returns diff; Design.applyDiff computes output.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff, DesignPlain, Kit as KitPlain } from "@semio/react";
-import { Design as DesignEntity, Kit } from "@semio/react";
+import type { Design, DesignDiff, DesignPlain } from "@semio/react";
+import { Design as DesignEntity } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeDeletePieces, nativeFlatDesign, type NativeAlgorithmLanguage } from "../../index";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { deletePieces, flatDesign } from "../../index";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
@@ -26,7 +25,6 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function DeleteFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
   const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([]);
@@ -38,7 +36,7 @@ function DeleteFrame() {
     setFlatInputDesign(null);
     setDesignDiff(undefined);
     void (async () => {
-      const flat = await nativeFlatDesign(kit, rawDesign.id, language);
+      const flat = await flatDesign(kit, rawDesign.id);
       if (cancelled) return;
       setFlatInputDesign(flat);
       setSelectedPieceIds((prev) => {
@@ -51,7 +49,7 @@ function DeleteFrame() {
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   React.useEffect(() => {
     if (!flatInputDesign) return;
@@ -62,23 +60,22 @@ function DeleteFrame() {
         return;
       }
       setDesignDiff(undefined);
-      const diffRes = await nativeDeletePieces(kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, language);
+      const diffRes = await deletePieces(kit, flatInputDesign, selectedPieceIds, selectedConnectionIds);
       if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.diff : undefined);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, language]);
+  }, [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds]);
 
   const outputDesign = React.useMemo(() => {
     if (!flatInputDesign) return rawDesign as Design;
     if (!designDiff) return flatInputDesign as Design;
-    const k = Kit.ensure(kit as KitPlain);
     const plain = (flatInputDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatInputDesign)) as DesignPlain);
-    const next = new DesignEntity(plain, k);
+    const next = new DesignEntity(plain);
     next.applyDiff(designDiff);
     return next;
-  }, [designDiff, flatInputDesign, kit]);
+  }, [designDiff, flatInputDesign]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
@@ -92,14 +89,14 @@ function DeleteFrame() {
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: outputDesign as Design,
       error: !flatInputDesign
-        ? `Loading delete preview (${language})…`
+        ? "Loading delete preview…"
         : selectedPieceIds.length === 0 && selectedConnectionIds.length === 0
           ? "Select at least one piece or connection to delete."
           : !designDiff
-            ? `Loading delete result (${language})…`
+            ? "Loading delete result…"
             : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign, language],
+    [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

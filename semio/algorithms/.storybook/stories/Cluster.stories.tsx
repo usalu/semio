@@ -1,17 +1,16 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Cluster.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign. No domain logic. All designs include connections.
-// Summary: Flat input design via nativeFlatDesign; diff/output are local story fixtures.
+// Specs: Pure UI proxy to flatDesign. No domain logic. All designs include connections.
+// Summary: Flat input design via flatDesign (semio/rs WASM); diff/output are local story fixtures.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff } from "@semio/react";
+import type { Design } from "@semio/react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeFlatDesign, type NativeAlgorithmLanguage } from "../../index";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { flatDesign } from "../../index";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
@@ -25,7 +24,6 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function ClusterFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
   const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([]);
@@ -33,7 +31,7 @@ function ClusterFrame() {
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const flat = await nativeFlatDesign(kit, rawDesign.id, language);
+      const flat = await flatDesign(kit, rawDesign.id);
       if (cancelled) return;
       setFlatInputDesign(flat);
       setSelectedPieceIds((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.id));
@@ -41,7 +39,7 @@ function ClusterFrame() {
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   const designDiff = React.useMemo(
     () =>
@@ -65,9 +63,9 @@ function ClusterFrame() {
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: (flatInputDesign ?? rawDesign) as Design,
-      error: !flatInputDesign ? `Loading cluster preview (${language})…` : selectedPieceIds.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
+      error: !flatInputDesign ? "Loading cluster preview…" : selectedPieceIds.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceIds, designDiff, language],
+    [kit, flatInputDesign, selectedPieceIds, designDiff],
   );
 
   return <AlgorithmApp id="cluster" label="Cluster" windows={WINDOWS} context={context} className="h-full w-full" />;

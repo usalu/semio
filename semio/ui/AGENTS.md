@@ -9,6 +9,11 @@ bundle:
 
 # 🧾 Specification
 
+## Strict layering (semio UI)
+
+- Kit-bearing UI MUST depend on **`@semio/react`** hooks and props, not on **`@semio/js`** directly.
+- Storybook / Vite may resolve `@semio/js` only for transitive tooling; application code SHOULD stay on the react layer.
+
 ## 🕸️ Systems
 
 ## 🧮 Algorithms

@@ -1115,6 +1115,42 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       expect(_compileAssert).toBe(true);
       expect(n).toBeGreaterThanOrEqual(0);
     });
+
+    it("theKit, vcsState, materializeAt root, and undo/redo flags round-trip", async () => {
+      const minimalKit: KitFullDto = {
+        id: "vcs-kit",
+        name: "V",
+        createdAt: "2020-01-01T00:00:00.000Z",
+        updatedAt: "2020-01-01T00:00:00.000Z",
+        types: [],
+        designs: [],
+      };
+      const ks = await KitStore.open(minimalKit);
+      const snap = await ks.snapshot();
+      const tk = await ks.theKit();
+      expect(tk.id).toBe(snap.id);
+      const vcs = await ks.vcsState();
+      expect(vcs != null && typeof vcs === "object").toBe(true);
+      const mat = await ks.materializeAt("");
+      expect(mat.id).toBe(snap.id);
+      expect(typeof (await ks.canUndo())).toBe("boolean");
+      expect(typeof (await ks.canRedo())).toBe("boolean");
+      await ks.dispose();
+    });
+
+    it("compile-time: KitStore public surface excludes rxjs-style stream fields", () => {
+      type KitStorePublicKeys = keyof KitStore;
+      type MustNotLeakRx =
+        "events$" extends KitStorePublicKeys
+          ? never
+          : "pipe" extends KitStorePublicKeys
+            ? never
+            : "_trySubscribe" extends KitStorePublicKeys
+              ? never
+              : true;
+      const _assert: MustNotLeakRx = true;
+      expect(_assert).toBe(true);
+    });
   });
 }
 // #endregion 🧪EmbeddedTests

@@ -838,7 +838,7 @@ class MemoryDoc implements SyncDoc {
 }
 
 /**
- * In-memory only; kit authority is Rust/wasm via @semio/js worker.
+ * In-memory only; kit authority is `semio/rs` via `@semio/react` → `@semio/js` `KitStore` (Worker).
  */
 export function createSyncDocFactory(): SyncDocFactory {
   return () => new MemoryDoc();
@@ -898,7 +898,7 @@ class ImmediateSyncPersistenceProvider implements PersistenceProvider {
 }
 
 /**
- * @deprecated In-memory doc only; `adapter` is ignored. Host should persist kit via @semio/js.
+ * @deprecated In-memory doc only; `adapter` is ignored. Host should persist kit via `@semio/react` store clients → `@semio/js` `KitStore`.
  */
 export function createJsonFilePersistenceFactory(_adapter: JsonFileAdapter): PersistenceFactory {
   return (_syncDoc: SyncDoc, _key: string) => new ImmediateSyncPersistenceProvider();
@@ -1927,7 +1927,7 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; desktop?: D
 // #endregion 📹Sketchpad State
 
 // #region 💧Commands
-// Sketchpad command context/result; kit graph commands live in @semio/js (KitCommandContext, KitCommandResult, executeSemioKitCommand).
+// Sketchpad command context/result; kit I/O is `@semio/react` (`KitCommandContext`, `KitCommandResult`, `executeSemioKitCommand` → `@semio/js` / rs).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.
@@ -2019,7 +2019,7 @@ export interface KitDiffAppEdit<TSelectionDiff = any> {
 }
 
 /**
- * @emoji 🧾 Command result: optional `kitWire` is executed as {@link executeSemioKitCommand} (thin client → `semio/rs` only).
+ * @emoji 🧾 Command result: optional `kitWire` is executed as {@link executeSemioKitCommand} (`@semio/react` → `@semio/js` → `semio/rs`).
  **/
 export interface KitDiffAppCommandResult<TDiff = any> extends AppCommandResult<TDiff> {
   kitWire?: { command: string; args: unknown[] };

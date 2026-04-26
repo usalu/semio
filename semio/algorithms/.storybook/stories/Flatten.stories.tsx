@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/Flatten.stories.tsx
-// Specs: Pure UI proxy to nativeFlatDesign + nativeFlattenedDesign + nativeFlattenDesign. Output window applies the full flatten diff (no connections).
-// Summary: nativeFlatDesign feeds the diff window base (connections preserved); nativeFlattenedDesign feeds the output (full diff applied, connections removed); nativeFlattenDesign provides the diff itself.
+// Specs: Pure UI proxy to flatDesign + flattenedDesign + flattenDesign. Output window applies the full flatten diff (no connections).
+// Summary: flatDesign feeds the diff window base (connections preserved); flattenedDesign feeds the output (full diff applied, connections removed); flattenDesign provides the diff itself.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -10,8 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
-import { nativeFlatDesign, nativeFlattenDesign, nativeFlattenedDesign, type NativeAlgorithmLanguage } from "../../index";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { flatDesign, flattenDesign, flattenedDesign } from "../../index";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
@@ -25,44 +24,43 @@ const WINDOWS: AlgorithmWindowDef[] = [
 ];
 
 function FlattenFrame() {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
-  const [flatDesign, setFlatDesign] = React.useState<Design | null>(null);
-  const [flattenedDesign, setFlattenedDesign] = React.useState<Design | null>(null);
+  const [flatPreview, setFlatPreview] = React.useState<Design | null>(null);
+  const [flattenedPreview, setFlattenedPreview] = React.useState<Design | null>(null);
   const [flattenDiff, setFlattenDiff] = React.useState<DesignDiff | undefined>(undefined);
 
   React.useEffect(() => {
     let cancelled = false;
-    setFlatDesign(null);
-    setFlattenedDesign(null);
+    setFlatPreview(null);
+    setFlattenedPreview(null);
     setFlattenDiff(undefined);
     void (async () => {
       const [flatResult, flattenedResult, flattenResult] = await Promise.all([
-        nativeFlatDesign(kit, rawDesign.id, language),
-        nativeFlattenedDesign(kit, rawDesign.id, language),
-        nativeFlattenDesign(kit, rawDesign.id, language),
+        flatDesign(kit, rawDesign.id),
+        flattenedDesign(kit, rawDesign.id),
+        flattenDesign(kit, rawDesign.id),
       ]);
       if (cancelled) return;
-      setFlatDesign(flatResult);
-      setFlattenedDesign(flattenedResult);
+      setFlatPreview(flatResult);
+      setFlattenedPreview(flattenedResult);
       setFlattenDiff(flattenResult.ok ? flattenResult.diff.forward : undefined);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, language]);
+  }, [kit]);
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
-      design: (flatDesign ?? rawDesign) as Design,
+      design: (flatPreview ?? rawDesign) as Design,
       selectedPieceIds: [],
       designDiff: flattenDiff,
-      diffDesign: (flatDesign ?? rawDesign) as Design,
-      outputDesign: (flattenedDesign ?? flatDesign ?? rawDesign) as Design,
-      error: !flatDesign || !flattenedDesign || !flattenDiff ? `Loading flatten (${language})…` : undefined,
+      diffDesign: (flatPreview ?? rawDesign) as Design,
+      outputDesign: (flattenedPreview ?? flatPreview ?? rawDesign) as Design,
+      error: !flatPreview || !flattenedPreview || !flattenDiff ? "Loading flatten…" : undefined,
     }),
-    [kit, flatDesign, flattenedDesign, flattenDiff, language],
+    [kit, flatPreview, flattenedPreview, flattenDiff],
   );
 
   return <AlgorithmApp id="flatten" label="Flatten" windows={WINDOWS} context={context} className="h-full w-full" />;

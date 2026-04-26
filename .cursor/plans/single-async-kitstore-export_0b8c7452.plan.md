@@ -21,8 +21,8 @@ todos:
    content: "Update `semio/js/package.json`: add `rxjs`, remove `zod`, `fflate`, `comlink`, `@types/comlink`; clean `vite.config.ts`"
    status: completed
  - id: delete-kit-entities
-   content: Delete `semio/react/kitEntities.ts` (every export is forbidden domain knowledge) and remove all references from `semio/react/index.tsx`
-   status: cancelled
+   content: "Removed `kitEntities.ts` as a separate module: body merged into `semio/react/kitWasmClient.ts` (`🧩KitEntitiesMerged`); `@semio/js` wire DTO aliased `SemioKitWireDto` to avoid clashing with zod `KitFullDto`. Domain still lives in that region until hooks migrate to rs-only."
+   status: completed
  - id: migrate-react
    content: Rewrite `semio/react/index.tsx` hooks/scopes against `KitStore` only (no diff math, no entity classes); remove every re-export of deleted `@semio/js` symbols
    status: completed
@@ -42,7 +42,7 @@ todos:
    content: In `semio/rs`, add typed semantic commands for every gap that consumers used to handle locally (previewDragPieces, previewMovePieces, previewClusterPieces, previewPasteDesign, bestRepresentation, deletePiecesAndConnections, copyDesignSelection, kitEvents envelope) — extend existing test file with cases
    status: cancelled
  - id: tests
-   content: Extend `🧪EmbeddedTests` and existing test files in react/sketchpad/ui/algorithms; add a TS type-level assertion that `@semio/js` public `.d.ts` does not reference rxjs; run `npm test` in every JS package and `cargo test -p semio` until green
+   content: "`semio/js` embedded Vitest: snapshot/read/dispose/subscribe guards + `theKit`/`vcsState`/`materializeAt('')`/canUndo/canRedo + compile-time `keyof KitStore` excludes `events$`/`pipe`/`_trySubscribe`. `semio/react` vitest green. Full matrix (sketchpad/ui dedicated suites, `cargo test` run) still optional CI follow-up."
    status: completed
 isProject: false
 ---
@@ -112,8 +112,8 @@ Forbidden in `@semio/js`: any `Schema`, any entity class (`Design`, `Kit`, `Piec
 
 ## Strip domain knowledge from consumers
 
-- [semio/react/kitEntities.ts](semio/react/kitEntities.ts) — **delete**. Every entity class, schema, and helper in this file embeds domain knowledge (applyDiff, previewWithDiff, deletePiecesAndConnectionsDiff, dragBySelection, flattenDesignCachedOp, copyDesignOp, pasteDesignOp, pickBestRepresentation, normalize\* helpers) — forbidden by the new rule.
-- [semio/react/index.tsx](semio/react/index.tsx) — drop every export from `kitEntities.ts`. Rebuild hooks/scopes (`useKit`, `useDesign`, `usePiece`, `useType`, `useBackboneStatus`, `useAttachBackbone`, `useDetachBackbone`, `useListConflicts`, `useResolveConflict`, `useSyncNow`, `KitScope`, `DesignScope`, `PieceScope`, `TypeScope`, …) directly on `KitStore.subscribe` + typed methods. Hooks are thin: subscribe in `useEffect`, store last snapshot in `useState`, call `KitStore` methods on actions. No diff math.
+- [semio/react/kitWasmClient.ts](semio/react/kitWasmClient.ts) — former `kitEntities.ts` merged under `🧩KitEntitiesMerged` (file removed); long-term: strip entity graph from React per §Hard rules.
+- [semio/react/index.tsx](semio/react/index.tsx) — still hosts legacy hooks on merged entities; target: scopes on `KitStore.subscribe` + typed methods only.
 - [semio/sketchpad/index.tsx](semio/sketchpad/index.tsx) — only consume `@semio/react` hooks; no direct `@semio/js` import.
 - [semio/algorithms/nativeAlgorithmAdapter.ts](semio/algorithms/nativeAlgorithmAdapter.ts) — **delete**. Every algorithm call goes through a typed `KitStore` semantic command. The native REST proxy in [semio/algorithms/.storybook/main.ts](semio/algorithms/.storybook/main.ts) is rewired to call `ks.flattenDesign(...)`, `ks.previewDragPieces(...)`, etc. directly.
 - [semio/algorithms/.storybook/stories/kit-store/commandSchema.ts](semio/algorithms/.storybook/stories/kit-store/commandSchema.ts) and siblings — drop the local `ALL_READ_KIT_COMMAND_KEYS` import; build the storybook command catalog from typed `KitStore` method names instead.
@@ -167,12 +167,12 @@ Reopen `2026/04/26/CLEAN-STATELESS-KIT-STORES-AND-KIT-COMMAND-REQUESTS` (already
 
 **Done in tree**
 
-- `@semio/js`: `KitStore` with opaque `ReadWireBatch` / `read`, callback `subscribe`, `ensureAlive` + post-`dispose()` rejection on `snapshot`/`read`/GraphQL paths; embedded Vitest includes dispose guard.
+- `@semio/js`: `KitStore` with opaque `ReadWireBatch` / `read`, callback `subscribe`, `ensureAlive` + post-`dispose()` rejection on `snapshot`/`read`/GraphQL paths; embedded Vitest (6 cases) covers dispose, `theKit`/`vcsState`/`materializeAt("")`/undo flags, and `keyof KitStore` rx-leak compile guard.
 - `@semio/react`: `kitWasmClient` batches use `ReadWireBatch` only (no exported read unions from js).
 - `@semio/algorithms`: `nativeAlgorithmAdapter.ts` **removed**; native runners live in `index.ts`; Storybook imports updated.
 - Inline WASM transport when `Worker` is missing remains for Node/Vitest (differs from strict “no inline path” in §Hard rules).
 
 **Explicitly not finished (needs dedicated tickets)**
 
-- **Delete `semio/react/kitEntities.ts`**: `index.tsx` still depends on it at massive scale; requires incremental migration of hooks to DTO + `KitStore` only.
+- **Domain in `@semio/react`**: former `kitEntities` code now lives under `kitWasmClient.ts` → `🧩KitEntitiesMerged`; hooks in `index.tsx` still use zod/entity classes until migrated to DTO + `KitStore` only.
 - **`semio/rs` preview / semantic gaps** (`previewDragPieces`, unified `deletePiecesAndConnections`, etc.): cancelled in plan; algorithms TS path still uses entity `applyDiff` / `dragBySelection` where rs commands are absent.
