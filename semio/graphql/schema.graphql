@@ -8,13 +8,6 @@ input AlternativeBatchInput {
 	commands: [AlternativeBatchCommandInput!]!
 }
 
-type AlternativeDto {
-	id: String!
-	name: String!
-	root: String!
-	checkpoints: [String!]!
-}
-
 type AttributeFullDto {
 	id: Id!
 	key: String!
@@ -428,17 +421,6 @@ input DraftBatchInput {
 	commands: [DraftBatchCommandInput!]!
 }
 
-type DraftDto {
-	id: String!
-	parentCheckpoint: String
-	targetAlternative: String
-	finalizedTransactionCount: Int!
-	redoTransactionCount: Int!
-	openTransactionId: String
-	canUndo: Boolean!
-	canRedo: Boolean!
-}
-
 input DragPiecesBatchInput {
 	pieceIds: [String!]!
 	du: Float!
@@ -622,7 +604,7 @@ type KitStore {
 	materializeAt(checkpointId: String): KitFullSnapshot!
 	metadata: KitMetadataDto!
 	shallow: KitShallowDto!
-	vcsState: VcsStateStore!
+	vcsState: VcsStateDto!
 }
 
 input KitStoreBatchCommandInput @oneOf {
@@ -954,11 +936,6 @@ input ResolveConflictBatchInput {
 	strategy: ConflictResolutionBatchInput!
 }
 
-type RootDto {
-	id: String!
-	name: String!
-}
-
 input SessionBatchCommandInput @oneOf {
 	createSession: ConfirmOnlyInput
 	endSession: ConfirmOnlyInput
@@ -969,11 +946,6 @@ input SessionBatchCommandInput @oneOf {
 input SessionBatchInput {
 	sessionId: String
 	commands: [SessionBatchCommandInput!]!
-}
-
-type SessionDto {
-	id: String!
-	drafts: [DraftDto!]!
 }
 
 type SideMetadataDto {
@@ -1108,7 +1080,14 @@ type TypeShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type VcsCheckpointStore {
+type VcsAlternativeDto {
+	id: String!
+	name: String!
+	root: String!
+	checkpoints: [String!]!
+}
+
+type VcsCheckpointDto {
 	id: String!
 	parent: String
 	message: String
@@ -1119,12 +1098,33 @@ type VcsCheckpointStore {
 	changeCount: Int!
 }
 
-type VcsStateStore {
+type VcsDraftDto {
+	id: String!
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
+type VcsRootDto {
+	id: String!
+	name: String!
+}
+
+type VcsSessionDto {
+	id: String!
+	drafts: [VcsDraftDto!]!
+}
+
+type VcsStateDto {
 	theKitHead: String
-	root: RootDto!
-	checkpoints: [VcsCheckpointStore!]!
-	alternatives: [AlternativeDto!]!
-	sessions: [SessionDto!]!
+	root: VcsRootDto!
+	checkpoints: [VcsCheckpointDto!]!
+	alternatives: [VcsAlternativeDto!]!
+	sessions: [VcsSessionDto!]!
 	theKitLine: [String!]!
 }
 

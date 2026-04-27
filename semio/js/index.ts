@@ -1310,6 +1310,52 @@ function __normalizeTypeOrDesignMetadataRow(row: JsonObject | KitJsonObjectDto):
   delete out["updated"];
   if (out["virtual"] === undefined && typeof out["typeVirtual"] === "boolean") out["virtual"] = out["typeVirtual"] as boolean;
   delete out["typeVirtual"];
+  if (out["parent"] === undefined && out["kit"] != null && typeof out["kit"] === "object" && !Array.isArray(out["kit"])) {
+    const k = out["kit"] as JsonObject;
+    if (typeof k["id"] === "string") out["parent"] = { id: k["id"] as string };
+  }
+  delete out["kit"];
+  return out;
+}
+
+//#region 🔌KitGraphqlReadSelections
+const KIT_GQL_TYPE_SHALLOW_FIELDS =
+  "id name description icon image stock isAbstract unit location { id } created updated";
+const KIT_GQL_DESIGN_SHALLOW_FIELDS =
+  "id name description icon image location { id } unit created updated kit { id }";
+const KIT_GQL_TYPE_METADATA_FIELDS =
+  "id name description icon image stock isAbstract unit location { id } created updated";
+const KIT_GQL_DESIGN_METADATA_FIELDS =
+  "id name description icon image location { id } unit created updated kit { id }";
+//#endregion 🔌KitGraphqlReadSelections
+
+function kitGraphqlKitShallowRoot(row: JsonObject): JsonObject {
+  const s = row["shallow"];
+  if (s != null && typeof s === "object" && !Array.isArray(s)) return s as JsonObject;
+  return {} as JsonObject;
+}
+
+function kitGraphqlShallowPacketsFromArray(arr: JsonValue | undefined): readonly JsonObject[] {
+  if (!Array.isArray(arr)) return [];
+  const out: JsonObject[] = [];
+  for (const el of arr) {
+    if (el != null && typeof el === "object" && !Array.isArray(el)) {
+      const sh = (el as JsonObject)["shallow"];
+      if (sh != null && typeof sh === "object" && !Array.isArray(sh)) out.push(sh as JsonObject);
+    }
+  }
+  return out;
+}
+
+function kitGraphqlExtractNestedMetadata(arr: JsonValue | undefined): readonly JsonObject[] {
+  if (!Array.isArray(arr)) return [];
+  const out: JsonObject[] = [];
+  for (const el of arr) {
+    if (el != null && typeof el === "object" && !Array.isArray(el)) {
+      const m = (el as JsonObject)["metadata"];
+      if (m != null && typeof m === "object" && !Array.isArray(m)) out.push(m as JsonObject);
+    }
+  }
   return out;
 }
 
