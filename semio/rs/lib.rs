@@ -27333,7 +27333,7 @@ pub mod kit_graphql {
 
     #[Object(name = "KitStoreMutation")]
     impl KitStoreMutation {
-        /// Batched control-plane writes (VCS, live graph, design canvas); replaces the former `submitKitCommand` shell.
+        /// Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
@@ -27352,39 +27352,6 @@ pub mod kit_graphql {
     }
 
     impl KitShellCtx {
-        async fn run_graph_change(&self, commands: Vec<ChangeKitCommand>) -> Result<(), Error> {
-            let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx
-                .send(GraphWork::ChangeKitCommands { commands, reply: reply_tx })
-                .await
-                .map_err(|e| Error::new(format!("change queue: {e}")))?;
-            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
-        }
-
-        async fn run_change_kit_with_inverse(
-            &self,
-            commands: Vec<ChangeKitCommand>,
-        ) -> Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), Error> {
-            let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx
-                .send(GraphWork::ChangeKitWithInverse { commands, reply: reply_tx })
-                .await
-                .map_err(|e| Error::new(format!("change queue: {e}")))?;
-            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(Error::new)
-        }
-
-        async fn run_custom_set_result(&self, run: Box<dyn FnOnce() -> crate::error::SetResult + Send>) -> Result<(), Error> {
-            let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx
-                .send(GraphWork::CustomSetResult { run, reply: reply_tx })
-                .await
-                .map_err(|e| Error::new(format!("queue: {e}")))?;
-            reply_rx
-                .await
-                .map_err(|_| Error::new("kit actor dropped"))?
-                .map_err(|e| Error::new(format!("{e:?}")))
-        }
-
         async fn run_vcs_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
             #[cfg(not(target_arch = "wasm32"))]
             {
@@ -27476,91 +27443,6 @@ pub mod kit_graphql {
                 v.and_then(|x| x.as_str().map(|s| s.to_string())).unwrap_or_else(|| format!("{o:?}"))
             }
         }
-    }
-
-    fn plane_from_input(input: PlaneInputBatch) -> Plane {
-        Plane {
-            origin: crate::geom::Point { x: input.origin.x, y: input.origin.y, z: input.origin.z },
-            x_axis: crate::geom::Vector { x: input.x_axis.x, y: input.x_axis.y, z: input.x_axis.z },
-            y_axis: crate::geom::Vector { x: input.y_axis.x, y: input.y_axis.y, z: input.y_axis.z },
-        }
-    }
-
-    async fn execute_design_batch(shell: &KitShellCtx, batch: DesignBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
-        for command in batch.commands {
-            let graph: KitGraphRef = shell.graph.clone();
-            let design_id = batch.design_id.clone();
-            let kind = match &command {
-                DesignBatchCommandInput::ClusterPieces(_) => KitStoreBatchResultKind::ClusterPieces,
-                DesignBatchCommandInput::DragPieces(_) => KitStoreBatchResultKind::DragPieces,
-                DesignBatchCommandInput::MovePieces(_) => KitStoreBatchResultKind::MovePieces,
-                DesignBatchCommandInput::FixPieces(_) => KitStoreBatchResultKind::FixPieces,
-                DesignBatchCommandInput::FlattenDesign(_) => KitStoreBatchResultKind::FlattenDesign,
-                DesignBatchCommandInput::ExpandDesign(_) => KitStoreBatchResultKind::ExpandDesign,
-                DesignBatchCommandInput::DeleteConnection(_) => KitStoreBatchResultKind::DeleteConnection,
-                DesignBatchCommandInput::ChangePieceType(_) => KitStoreBatchResultKind::ChangePieceType,
-                DesignBatchCommandInput::CreateHangingPieces(_) => KitStoreBatchResultKind::CreateHangingPieces,
-                DesignBatchCommandInput::CreateConnectedPiece(_) => KitStoreBatchResultKind::CreateConnectedPiece,
-                DesignBatchCommandInput::CreateFixedPiece(_) => KitStoreBatchResultKind::CreateFixedPiece,
-            };
-            match command {
-                DesignBatchCommandInput::ClusterPieces(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::cluster_pieces(&graph, &design_id, input.piece_ids, input.cluster_name))).await?;
-                }
-                DesignBatchCommandInput::DragPieces(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::drag_pieces(&graph, &design_id, input.piece_ids, input.du, input.dv))).await?;
-                }
-                DesignBatchCommandInput::MovePieces(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::move_pieces(&graph, &design_id, input.piece_ids, input.gap, input.shift, input.rise))).await?;
-                }
-                DesignBatchCommandInput::FixPieces(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::fix_pieces(&graph, &design_id, input.piece_ids))).await?;
-                }
-                DesignBatchCommandInput::FlattenDesign(_) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::flatten_design_apply(&graph, &design_id))).await?;
-                }
-                DesignBatchCommandInput::ExpandDesign(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::expand_nested_design(&graph, &design_id, &input.nested_design_id))).await?;
-                }
-                DesignBatchCommandInput::DeleteConnection(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::delete_connection_in_design(&graph, &design_id, &input.connection_id))).await?;
-                }
-                DesignBatchCommandInput::ChangePieceType(input) => {
-                    shell.run_custom_set_result(Box::new(move || KitGraph::change_piece_type(&graph, &design_id, &input.piece_id, &input.new_type_id))).await?;
-                }
-                DesignBatchCommandInput::CreateHangingPieces(input) => {
-                    let plane = plane_from_input(input.plane);
-                    shell.run_custom_set_result(Box::new(move || KitGraph::create_hanging_pieces(&graph, &design_id, input.type_ids, plane))).await?;
-                }
-                DesignBatchCommandInput::CreateConnectedPiece(input) => {
-                    shell
-                        .run_custom_set_result(Box::new(move || {
-                            KitGraph::create_connected_piece(
-                                &graph, &design_id, &input.parent_piece, &input.parent_port, &input.child_type, &input.child_port,
-                            )
-                        })).await?;
-                }
-                DesignBatchCommandInput::CreateFixedPiece(input) => {
-                    let plane = plane_from_input(input.plane);
-                    shell.run_custom_set_result(Box::new(move || KitGraph::create_fixed_piece(&graph, &design_id, &input.type_id, plane))).await?;
-                }
-            }
-            results.push(KitStoreBatchResult {
-                kind,
-                ok: Some(true),
-                count: None,
-                session_id: None,
-                draft_id: None,
-                transaction_id: None,
-                checkpoint_id: None,
-                alternative_id: None,
-                backbone: None,
-                conflicts: None,
-                change_kind: None,
-                inverse: None,
-            });
-        }
-        Ok(())
     }
 
     async fn execute_session_batch(shell: &KitShellCtx, batch: SessionBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {

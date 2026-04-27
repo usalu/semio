@@ -953,6 +953,11 @@ semio/js:
 
 ---
 
+Everything MUST be 100% typesafe. No Record, no strings, no json.
+Extend semio/rs with semio/graphql if necessary.
+
+---
+
 Refactor everything to be 100% typesafe.
 All methods MUST NOT use any generic, unknown, Record, Json or anything.
 Just \*Dtos (input, id, full, metadata, etc).

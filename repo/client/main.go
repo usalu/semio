@@ -8237,12 +8237,13 @@ const (
 // 💿LocLangStats holds the data fields for a line-of-code per-language metrics record.
 // 📊LocLangStats: per-row LOC, % of tree Total, % of branch WIP churn, and git delta sums.
 type LocLangStats struct {
-	Loc         int     `json:"loc"`
-	Percent     float64 `json:"percent"`
-	WipPercent  float64 `json:"wip_percent"`
-	Edited      int     `json:"edited"`
-	Added       int     `json:"added"`
-	Removed     int     `json:"removed"`
+	Loc                 int      `json:"loc"`
+	Percent             float64  `json:"percent"`
+	SincePrevLocPercent *float64 `json:"since_prev_loc_percent,omitempty"`
+	WipPercent          float64  `json:"wip_percent"`
+	Edited              int      `json:"edited"`
+	Added               int      `json:"added"`
+	Removed             int      `json:"removed"`
 }
 
 // 💿LocReport: JSON payload for `loc` output and rendering.
@@ -8834,19 +8835,9 @@ func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, lang
 	return out
 }
 
-// 🔧 locIsLastCommitOfDayUTC returns true for last commit in runs when calendar day (UTC) changes.
-func locIsLastCommitOfDayUTC(commits []locRawCommit, i int) bool {
-	if i == len(commits)-1 {
-		return true
-	}
-	day0 := time.Unix(commits[i].WhenUnix, 0).UTC().Format("2006-01-02")
-	day1 := time.Unix(commits[i+1].WhenUnix, 0).UTC().Format("2006-01-02")
-	return day0 != day1
-}
-
-// 🔧 locBuildHistory: running totals + scanned LOC at sampled commits. verbose samples every step.
+// 🔧 locBuildHistory: running totals + per-commit tree scan for accurate LOC at each SHA on the logged ref.
 // 📅 locBuildHistory assembles the optional --history time series.
-func locBuildHistory(repo string, languages []string, byContrib, verbose bool, commits []locRawCommit, contribFilter string) ([]LocHistoryEntry, error) {
+func locBuildHistory(repo string, languages []string, byContrib bool, commits []locRawCommit, contribFilter string) ([]LocHistoryEntry, error) {
 	langW := locMakeNumstatLangSet(languages)
 	running := make(map[string]locCumulativePair)
 	runningBranch := make(map[string]locCumulativePair)
@@ -8861,7 +8852,7 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 	var hist []LocHistoryEntry
 	var lastScan map[string]int
 	filt := strings.TrimSpace(contribFilter)
-	for i, c := range commits {
+	for _, c := range commits {
 		for l, p := range c.Delta {
 			if !langW[l] {
 				continue
@@ -8898,24 +8889,18 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 				byContRun[alias][l] = a2
 			}
 		}
-		needScan := verbose || i == 0 || i+1 == len(commits) || lastScan == nil || locIsLastCommitOfDayUTC(commits, i)
-		if needScan {
-			m, err := locGitSnapshotLocCounts(repo, c.SHA, languages)
-			if err != nil {
-				return nil, err
-			}
-			lastScan = m
+		// Always scan each commit tree so history rows show true LOC at that SHA (Δ% vs prior row uses consecutive samples).
+		m, err := locGitSnapshotLocCounts(repo, c.SHA, languages)
+		if err != nil {
+			return nil, err
 		}
-		if lastScan == nil {
-			lastScan = locZeroScanCounts(languages)
-		}
+		lastScan = m
 		wipBranchDenom := locSumEditedPairs(runningBranch, langW)
 		iso := time.Unix(c.WhenUnix, 0).UTC().Format(time.RFC3339)
-		authorKey := locContributorAlias(c.Author, c.AuthorMail)
-		entry := LocHistoryEntry{SHA: c.SHA, Date: iso, Author: authorKey}
+		entry := LocHistoryEntry{SHA: c.SHA, Date: iso, Author: alias}
 		if byContrib {
 			row := make(map[string]map[string]LocLangStats, 1)
-			row[alias] = locComposeLocReportSnapshot(byContRun[alias], locZeroScanCounts(languages), languages, wipBranchDenom)
+			row[alias] = locComposeLocReportSnapshot(byContRun[alias], lastScan, languages, wipBranchDenom)
 			entry.ByContributors = row
 		} else {
 			entry.Languages = locComposeLocReportSnapshot(running, lastScan, languages, wipBranchDenom)
@@ -8925,9 +8910,99 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 	return hist, nil
 }
 
+// 📉 locHistoryEntryStatsMap returns language rows for one history step (merged tree or single contributor snapshot).
+func locHistoryEntryStatsMap(e *LocHistoryEntry) map[string]LocLangStats {
+	if e == nil {
+		return nil
+	}
+	if len(e.Languages) > 0 {
+		return e.Languages
+	}
+	if e.ByContributors != nil {
+		for _, row := range e.ByContributors {
+			return row
+		}
+	}
+	return nil
+}
+
+// 📉 locPctLocSincePrevPtr is percent change in physical LOC from the prior history row (same category); prev 0 and curr>0 yields 100.
+func locPctLocSincePrevPtr(prevLoc, currLoc int) *float64 {
+	var v float64
+	switch {
+	case prevLoc == 0 && currLoc == 0:
+		v = 0
+	case prevLoc == 0:
+		v = 100
+	default:
+		v = 100 * float64(currLoc-prevLoc) / float64(prevLoc)
+	}
+	v = math.Round(100*v) / 100
+	return &v
+}
+
+// 📉 locApplyHistoryLocSincePrev stamps SincePrevLocPercent vs the previous history entry (nil on first row / missing keys).
+func locApplyHistoryLocSincePrev(h []LocHistoryEntry) {
+	var prev map[string]int
+	first := true
+	for i := range h {
+		rows := locHistoryEntryStatsMap(&h[i])
+		if rows == nil {
+			continue
+		}
+		for k, st := range rows {
+			var pct *float64
+			if !first && prev != nil {
+				pr := 0
+				if p, ok := prev[k]; ok {
+					pr = p
+				}
+				pct = locPctLocSincePrevPtr(pr, st.Loc)
+			}
+			st.SincePrevLocPercent = pct
+			rows[k] = st
+		}
+		next := make(map[string]int, len(rows))
+		for k, st := range rows {
+			next[k] = st.Loc
+		}
+		prev = next
+		first = false
+	}
+}
+
+// 📉 locDisplayHistoryBranch maps common ref spellings to the same emoji id as the default wip branch (⛳wip).
+func locDisplayHistoryBranch(ref string) string {
+	s := strings.TrimSpace(ref)
+	if s == "" {
+		return s
+	}
+	s = strings.TrimPrefix(s, "refs/heads/")
+	if strings.EqualFold(s, "wip") {
+		return locDefaultBranch
+	}
+	if s == locDefaultBranch {
+		return locDefaultBranch
+	}
+	return strings.TrimSpace(ref)
+}
+
+// 📉 locHistoryCheckpointLabel is the short checkpoint-style id (🔀 + 7 hex), matching checkpoint nodes.
+func locHistoryCheckpointLabel(sha string) string {
+	short := strings.TrimSpace(sha)
+	if len(short) > 7 {
+		short = short[:7]
+	}
+	return emojiText(EmojiCheckpoint) + short
+}
+
+// 📉 locContributorEmojiID matches contributor entity ids (🧑‍💻 + flat alias).
+func locContributorEmojiID(alias string) string {
+	return emojiText(EmojiContributor) + Flat(strings.TrimSpace(alias))
+}
+
 // 🫡 runLocCommand runs `loc` and prints using global --format.
 func runLocCommand(cmd *cobra.Command, config *Config, languages []string, history, byContrib bool, historyBranch, contribFilter string) error {
-	verbose, _ := cmd.Flags().GetBool("verbose")
 	repoRoot := config.Repo
 	if strings.TrimSpace(repoRoot) == "" {
 		if wd, err := os.Getwd(); err == nil {
@@ -8994,10 +9069,11 @@ func runLocCommand(cmd *cobra.Command, config *Config, languages []string, histo
 		rep.ByContributors = locByContributorsToSnapshot(byUse, languages, wipBranchDenom)
 	}
 	if history {
-		h, err := locBuildHistory(repoRoot, languages, byContrib, verbose, commits, cf)
+		h, err := locBuildHistory(repoRoot, languages, byContrib, commits, cf)
 		if err != nil {
 			return err
 		}
+		locApplyHistoryLocSincePrev(h)
 		rep.History = h
 	}
 	out := cmd.OutOrStdout()
@@ -9031,7 +9107,7 @@ func runLocCommand(cmd *cobra.Command, config *Config, languages []string, histo
 // 📤 renderLocMarkdown outputs GitHub-flavoured tables for `loc`.
 func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 	fmt.Fprintln(w, "## LOC")
-	fmt.Fprintln(w, locMarkdownTable("Snapshot", r.Snapshot, locUseFullTreeTable(r.Snapshot)))
+	fmt.Fprintln(w, locMarkdownTable("Snapshot", r.Snapshot, locUseFullTreeTable(r.Snapshot), false))
 	if byContrib && len(r.ByContributors) > 0 {
 		keys := make([]string, 0, len(r.ByContributors))
 		for a := range r.ByContributors {
@@ -9043,21 +9119,17 @@ func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 		for _, a := range keys {
 			s := r.ByContributors[a]
 			fmt.Fprintln(w, "")
-			fmt.Fprintf(w, "### %s\n\n", a)
-			fmt.Fprintln(w, locMarkdownTable("", s, locUseFullTreeTable(s)))
+			fmt.Fprintf(w, "### %s\n\n", locContributorEmojiID(a))
+			fmt.Fprintln(w, locMarkdownTable("", s, locUseFullTreeTable(s), false))
 		}
 	}
 	if withHistory && len(r.History) > 0 {
 		fmt.Fprintln(w, "")
-		fmt.Fprintln(w, "## History (", r.Branch, ")")
+		fmt.Fprintln(w, "## History (", locDisplayHistoryBranch(r.Branch), ")")
 		if byContrib {
 			for _, e := range r.History {
-				short := e.SHA
-				if len(short) > 7 {
-					short = short[:7]
-				}
 				fmt.Fprintln(w, "")
-				fmt.Fprintf(w, "#### %s  %s  %s\n", short, e.Date, e.Author)
+				fmt.Fprintf(w, "#### %s  %s  %s\n", locHistoryCheckpointLabel(e.SHA), e.Date, locContributorEmojiID(e.Author))
 				acs := make([]string, 0, len(e.ByContributors))
 				for a := range e.ByContributors {
 					acs = append(acs, a)
@@ -9071,31 +9143,27 @@ func renderLocMarkdown(w io.Writer, r *LocReport, withHistory, byContrib bool) {
 					showSub := len(acs) > 1 || !strings.EqualFold(strings.TrimSpace(a), strings.TrimSpace(e.Author))
 					if showSub {
 						fmt.Fprintln(w, "")
-						fmt.Fprintf(w, "- **%s**\n\n", a)
+						fmt.Fprintf(w, "- **%s**\n\n", locContributorEmojiID(a))
 					} else {
 						fmt.Fprintln(w, "")
 					}
-					fmt.Fprintln(w, locMarkdownTable("", s, locUseFullTreeTable(s)))
+					fmt.Fprintln(w, locMarkdownTable("", s, locUseFullTreeTable(s), true))
 				}
 			}
 		} else {
 			for _, e := range r.History {
 				fmt.Fprintln(w, "")
-				short := e.SHA
-				if len(short) > 7 {
-					short = short[:7]
-				}
-				fmt.Fprintf(w, "#### %s  %s\n\n", short, e.Date)
+				fmt.Fprintf(w, "#### %s  %s\n\n", locHistoryCheckpointLabel(e.SHA), e.Date)
 				if e.Languages != nil {
-					fmt.Fprintln(w, locMarkdownTable("", e.Languages, locUseFullTreeTable(e.Languages)))
+					fmt.Fprintln(w, locMarkdownTable("", e.Languages, locUseFullTreeTable(e.Languages), true))
 				}
 			}
 		}
 	}
 }
 
-// 📤 locMarkdownTable renders a GH-flavoured pipe table. fullTree: loc + tree % + wip% + churn; else wip% + churn only (contributor deltas), sorted by edited.
-func locMarkdownTable(title string, rows map[string]LocLangStats, fullTree bool) string {
+// 📤 locMarkdownTable renders a GH-flavoured pipe table. sincePrevCol adds Δ% vs prior history row (fullTree only).
+func locMarkdownTable(title string, rows map[string]LocLangStats, fullTree, sincePrevCol bool) string {
 	var langs []string
 	if fullTree {
 		langs = locSortedRowKeys(rows)
@@ -9107,10 +9175,22 @@ func locMarkdownTable(title string, rows map[string]LocLangStats, fullTree bool)
 		b.WriteString("### " + title + "\n\n")
 	}
 	if fullTree {
-		b.WriteString("| Category | loc | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
-		for _, l := range langs {
-			st := rows[l]
-			b.WriteString(fmt.Sprintf("| %s | %d | %.2f%% | %.2f%% | %d | %d | %d |\n", l, st.Loc, st.Percent, st.WipPercent, st.Edited, st.Added, st.Removed))
+		if sincePrevCol {
+			b.WriteString("| Category | loc | Δ% | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |\n")
+			for _, l := range langs {
+				st := rows[l]
+				d := "—"
+				if st.SincePrevLocPercent != nil {
+					d = fmt.Sprintf("%+.2f%%", *st.SincePrevLocPercent)
+				}
+				b.WriteString(fmt.Sprintf("| %s | %d | %s | %.2f%% | %.2f%% | %d | %d | %d |\n", l, st.Loc, d, st.Percent, st.WipPercent, st.Edited, st.Added, st.Removed))
+			}
+		} else {
+			b.WriteString("| Category | loc | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
+			for _, l := range langs {
+				st := rows[l]
+				b.WriteString(fmt.Sprintf("| %s | %d | %.2f%% | %.2f%% | %d | %d | %d |\n", l, st.Loc, st.Percent, st.WipPercent, st.Edited, st.Added, st.Removed))
+			}
 		}
 	} else {
 		b.WriteString("| Category | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: |\n")
@@ -9124,7 +9204,7 @@ func locMarkdownTable(title string, rows map[string]LocLangStats, fullTree bool)
 
 // 🔤 renderLocText prints a colored fixed-width table for TTY; plain for pipes.
 func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool) {
-	locTextTable(w, "Snapshot", r.Snapshot, isTTY, locUseFullTreeTable(r.Snapshot))
+	locTextTable(w, "Snapshot", r.Snapshot, isTTY, locUseFullTreeTable(r.Snapshot), false)
 	if byContrib && len(r.ByContributors) > 0 {
 		ks := make([]string, 0, len(r.ByContributors))
 		for a := range r.ByContributors {
@@ -9134,20 +9214,16 @@ func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool
 		for _, a := range ks {
 			s := r.ByContributors[a]
 			fmt.Fprintln(w, "")
-			fmt.Fprintln(w, colorize("Contributor: "+a, ColorBlue, isTTY))
-			locTextTable(w, "", s, isTTY, locUseFullTreeTable(s))
+			fmt.Fprintln(w, colorize("Contributor: "+locContributorEmojiID(a), ColorBlue, isTTY))
+			locTextTable(w, "", s, isTTY, locUseFullTreeTable(s), false)
 		}
 	}
 	if withHistory && len(r.History) > 0 {
 		fmt.Fprintln(w, "")
-		fmt.Fprintln(w, colorize("History: "+r.Branch, ColorBold, isTTY))
+		fmt.Fprintln(w, colorize("History: "+locDisplayHistoryBranch(r.Branch), ColorBold, isTTY))
 		if byContrib {
 			for _, e := range r.History {
-				short := e.SHA
-				if len(short) > 7 {
-					short = short[:7]
-				}
-				fmt.Fprintln(w, colorize(short+"  "+e.Date, ColorDim, isTTY), e.Author)
+				fmt.Fprintln(w, colorize(locHistoryCheckpointLabel(e.SHA)+"  "+e.Date, ColorDim, isTTY), locContributorEmojiID(e.Author))
 				if e.ByContributors == nil {
 					continue
 				}
@@ -9161,28 +9237,24 @@ func renderLocText(w io.Writer, r *LocReport, withHistory, byContrib, isTTY bool
 					showSub := len(acs) > 1 || !strings.EqualFold(strings.TrimSpace(a), strings.TrimSpace(e.Author))
 					if showSub {
 						fmt.Fprint(w, "  ")
-						fmt.Fprintln(w, colorize(a, ColorBlue, isTTY))
-						locTextTable(w, "  ", s, isTTY, locUseFullTreeTable(s))
+						fmt.Fprintln(w, colorize(locContributorEmojiID(a), ColorBlue, isTTY))
+						locTextTable(w, "  ", s, isTTY, locUseFullTreeTable(s), true)
 					} else {
-						locTextTable(w, "", s, isTTY, locUseFullTreeTable(s))
+						locTextTable(w, "", s, isTTY, locUseFullTreeTable(s), true)
 					}
 				}
 			}
 		} else {
 			for _, e := range r.History {
-				short := e.SHA
-				if len(short) > 7 {
-					short = short[:7]
-				}
-				fmt.Fprintln(w, colorize(short, ColorDim, isTTY), e.Date)
-				locTextTable(w, "", e.Languages, isTTY, locUseFullTreeTable(e.Languages))
+				fmt.Fprintln(w, colorize(locHistoryCheckpointLabel(e.SHA)+"  "+e.Date, ColorDim, isTTY))
+				locTextTable(w, "", e.Languages, isTTY, locUseFullTreeTable(e.Languages), true)
 			}
 		}
 	}
 }
 
-// 🔤 locTextTable prints a simple aligned table; title may be a prefix. fullTree includes loc + tree %; else wip% + churn only.
-func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY, fullTree bool) {
+// 🔤 locTextTable prints a simple aligned table; title may be a prefix. sincePrevCol adds Δ% after loc (fullTree only).
+func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY, fullTree, sincePrevCol bool) {
 	var keys []string
 	if fullTree {
 		keys = locSortedRowKeys(rows)
@@ -9196,10 +9268,22 @@ func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY
 		return
 	}
 	if fullTree {
-		fmt.Fprintf(w, "%-14s%8s%7s%7s%8s%8s%8s\n", "Category", "loc", "%", "wip", "edited", "added", "removed")
-		for _, l := range keys {
-			s := rows[l]
-			fmt.Fprintf(w, "%-14s%8d%6.1f%%%6.1f%%%8d%8d%8d\n", l, s.Loc, s.Percent, s.WipPercent, s.Edited, s.Added, s.Removed)
+		if sincePrevCol {
+			fmt.Fprintf(w, "%-14s%8s%8s%7s%7s%8s%8s%8s\n", "Category", "loc", "Δ%", "%", "wip", "edited", "added", "removed")
+			for _, l := range keys {
+				s := rows[l]
+				d := "    —"
+				if s.SincePrevLocPercent != nil {
+					d = fmt.Sprintf("%+6.1f%%", *s.SincePrevLocPercent)
+				}
+				fmt.Fprintf(w, "%-14s%8d%8s%6.1f%%%6.1f%%%8d%8d%8d\n", l, s.Loc, d, s.Percent, s.WipPercent, s.Edited, s.Added, s.Removed)
+			}
+		} else {
+			fmt.Fprintf(w, "%-14s%8s%7s%7s%8s%8s%8s\n", "Category", "loc", "%", "wip", "edited", "added", "removed")
+			for _, l := range keys {
+				s := rows[l]
+				fmt.Fprintf(w, "%-14s%8d%6.1f%%%6.1f%%%8d%8d%8d\n", l, s.Loc, s.Percent, s.WipPercent, s.Edited, s.Added, s.Removed)
+			}
 		}
 	} else {
 		fmt.Fprintf(w, "%-14s%7s%8s%8s%8s\n", "Category", "wip", "edited", "added", "removed")
@@ -9216,7 +9300,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
-		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/mcp (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/mcp. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors.",
+		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/mcp (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/mcp. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳wip, 🔀abc1234, 🧑‍💻alias).",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")

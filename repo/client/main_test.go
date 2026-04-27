@@ -22818,7 +22818,7 @@ func TestLocCommand(t *testing.T) {
 		if locUseFullTreeTable(rows) {
 			t.Fatal("expected delta-only rows (total loc 0)")
 		}
-		md := locMarkdownTable("", rows, false)
+		md := locMarkdownTable("", rows, false, false)
 		if strings.Contains(md, "| loc |") || strings.Contains(md, "| Category | % |") {
 			t.Fatalf("unexpected full-tree columns: %q", md)
 		}
@@ -22842,6 +22842,29 @@ func TestLocCommand(t *testing.T) {
 		ks := locSortedRowKeysChurn(rows)
 		if len(ks) != 3 || ks[0] != "Go" || ks[1] != "Rust" || ks[2] != locAggTotal {
 			t.Fatalf("got %v", ks)
+		}
+	})
+	t.Run("history since-prev loc percent", func(t *testing.T) {
+		prev := map[string]LocLangStats{"Go": {Loc: 100}, locAggTotal: {Loc: 1000}}
+		cur := map[string]LocLangStats{"Go": {Loc: 110}, locAggTotal: {Loc: 1100}}
+		h := []LocHistoryEntry{{SHA: "aaa", Languages: prev}, {SHA: "bbb", Languages: cur}}
+		locApplyHistoryLocSincePrev(h)
+		if h[0].Languages["Go"].SincePrevLocPercent != nil {
+			t.Fatalf("first row want nil delta")
+		}
+		if h[1].Languages["Go"].SincePrevLocPercent == nil {
+			t.Fatal("second row want delta")
+		}
+		if g := *h[1].Languages["Go"].SincePrevLocPercent; g < 9.99 || g > 10.01 {
+			t.Fatalf("go Δ%% want ~10 got %v", g)
+		}
+	})
+	t.Run("locHistoryEntryStatsMap prefers languages", func(t *testing.T) {
+		rows := map[string]LocLangStats{"Go": {Loc: 1}}
+		e := LocHistoryEntry{Languages: rows, ByContributors: map[string]map[string]LocLangStats{"x": {}}}
+		got := locHistoryEntryStatsMap(&e)
+		if got == nil || got["Go"].Loc != 1 {
+			t.Fatalf("expected Languages map, got %#v", got)
 		}
 	})
 	t.Run("text no ansi for pipe", func(t *testing.T) {

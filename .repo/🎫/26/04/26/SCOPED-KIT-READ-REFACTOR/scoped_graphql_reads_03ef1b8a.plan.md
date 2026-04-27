@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: rust-graphql
    content: Refactor `semio/rs/lib.rs` GraphQL query/mutation surface so all reads require `KitReadScopeInput` and live undo/redo disappears.
-   status: in_progress
+   status: completed
  - id: schema
    content: Regenerate or update `semio/graphql/schema.graphql` to match the Rust schema.
-   status: pending
+   status: completed
  - id: js-client
    content: Update `semio/js/index.ts` client queries to always use scoped reads.
-   status: pending
+   status: completed
  - id: tests
    content: Extend existing Rust and affected JS tests to cover scoped reads and scoped-only undo/redo.
-   status: pending
+   status: completed
  - id: verify
    content: Run focused Rust/JS/schema verification and fix regressions.
-   status: pending
+   status: completed
 isProject: false
 ---
 

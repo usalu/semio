@@ -10,7 +10,11 @@
 
 // #region 🗄️Configuration
 import path from "path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+
+const reactDir = path.dirname(fileURLToPath(import.meta.url));
+const semioWasmBg = path.resolve(reactDir, "../rs/pkg/semio_bg.wasm");
 
 export default defineConfig({
   resolve: {
@@ -24,6 +28,8 @@ export default defineConfig({
     testTimeout: 30000,
     include: ["index.tsx"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
+    /** Lets `@semio/js` `KitStore.open` load `semio_bg.wasm` when Vitest bundles `import.meta.url` away from `semio/js`. */
+    env: { SEMIO_WASM_BG_PATH: semioWasmBg },
   },
 });
 // #endregion 🗄️Configuration

@@ -128,6 +128,9 @@ import type {
   KitReadScope,
   KitStoreClient,
   KitWriteScope,
+  PiecePlacementRowWireDto,
+  PlanePlain,
+  SemioKitWireTreeDto,
   SetError,
   SetResult,
   TypeMetadataDto,
@@ -3804,13 +3807,13 @@ export function useDeselectAll(): { run: () => Promise<SetResult>; status: Write
 }
 
 export function usePasteDesignSelection(): {
-  run: (designId: string, selection: unknown, plane?: unknown) => Promise<SetResult>;
+  run: (designId: string, selection: SemioKitWireTreeDto, plane?: PlanePlain | null) => Promise<SetResult>;
   status: WriteStatus;
 } {
   const runtime = useKitRuntime();
   const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
   const run = React.useCallback(
-    async (designId: string, selection: unknown, plane?: unknown) => {
+    async (designId: string, selection: SemioKitWireTreeDto, plane?: PlanePlain | null) => {
       if (!runtime.kitClient || !runtime.canWrite) {
         const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
         setStatus({ kind: "error", pending: 0, lastError: e });
@@ -3832,13 +3835,13 @@ export function usePasteDesignSelection(): {
 }
 
 export function useCreateHangingPieces(): {
-  run: (designId: string, typeIds: string[], plane: unknown) => Promise<SetResult>;
+  run: (designId: string, typeIds: string[], plane: PlanePlain) => Promise<SetResult>;
   status: WriteStatus;
 } {
   const runtime = useKitRuntime();
   const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
   const run = React.useCallback(
-    async (designId: string, typeIds: string[], plane: unknown) => {
+    async (designId: string, typeIds: string[], plane: PlanePlain) => {
       if (!runtime.kitClient || !runtime.canWrite) {
         const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
         setStatus({ kind: "error", pending: 0, lastError: e });
@@ -3888,13 +3891,13 @@ export function useCreateConnectedPiece(): {
 }
 
 export function useCreateFixedPiece(): {
-  run: (designId: string, typeId: string, plane: unknown) => Promise<SetResult>;
+  run: (designId: string, typeId: string, plane: PlanePlain) => Promise<SetResult>;
   status: WriteStatus;
 } {
   const runtime = useKitRuntime();
   const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
   const run = React.useCallback(
-    async (designId: string, typeId: string, plane: unknown) => {
+    async (designId: string, typeId: string, plane: PlanePlain) => {
       if (!runtime.kitClient || !runtime.canWrite) {
         const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
         setStatus({ kind: "error", pending: 0, lastError: e });
@@ -4157,8 +4160,17 @@ export function useUpdateConnections(): {
   return { run, status };
 }
 
+/** @emoji 🧾 Normalizes live-read snapshot data into a placement metadata map (Map or plain record from older hubs). */
+function __semioPiecesPlacementWireMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowWireDto> {
+  if (data instanceof Map) return data as ReadonlyMap<string, PiecePlacementRowWireDto>;
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return new Map(Object.entries(data as Record<string, PiecePlacementRowWireDto>));
+  }
+  return new Map();
+}
+
 /** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
-export function usePiecesMetadataMap(designId?: string): HookRead<Record<string, any>> {
+export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<string, PiecePlacementRowWireDto>> {
   const runtime = useKitRuntime();
   const readScope = useKitDataScope();
   const key = `pmd:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
@@ -4174,7 +4186,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<Record<string,
         key,
         async () => {
           const ks = kitStoreFromKitStoreClient(c);
-          if (!ks) return {};
+          if (!ks) return new Map<string, PiecePlacementRowWireDto>();
           return ks.design(d, readScope).readPiecesPlacementMetadataMap();
         },
         (ev) => kitEventTouchesDesign(ev as KitEvent, d),
@@ -4188,7 +4200,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<Record<string,
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
-  const value = snap.data && typeof snap.data === "object" && !Array.isArray(snap.data) ? (snap.data as Record<string, any>) : {};
+  const value = __semioPiecesPlacementWireMapFromReadSnap(snap.data);
   const status: WriteStatus = !designId || !runtime.kitClient
     ? { kind: "readonly", pending: 0 }
     : snap.pending > 0
@@ -4543,9 +4555,9 @@ export function useAuthors(): HookRead<any[]> {
   return useKitAuthorsShallow();
 }
 
-export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<any> {
+export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<PiecePlacementRowWireDto | undefined> {
   const [map, status] = usePiecesMetadataMap(designId);
-  const value = React.useMemo(() => (pieceId && map != null ? map[pieceId] : undefined), [map, pieceId]);
+  const value = React.useMemo(() => (pieceId ? map?.get(pieceId) : undefined), [map, pieceId]);
   return [value, status] as const;
 }
 
@@ -16728,13 +16740,13 @@ if (shouldRunReactEmbeddedTests) {
         store.replace(asKitInstance(kit));
         return { ok: true };
       },
-      readPieceFlatPlane: async () => undefined,
-      readPieceFlatCenter: async () => undefined,
-      readPieceParentConnectionFull: async () => undefined,
+      readPieceFlatPlane: async () => null,
+      readPieceFlatCenter: async () => null,
+      readPieceParentConnectionFull: async () => null,
       readDesignIncludedDesigns: async () => [],
       readDesignClusterableGroups: async () => [],
       readDesignQualitySum: async () => 0,
-      readTypeBestRepresentation: async () => undefined,
+      readTypeBestRepresentation: async () => null,
       readColoredConnectors: async () => [],
       readDesignReplaceableCatalogTypes: async () => [],
       readDesignReplaceableCatalogDesigns: async () => [],
@@ -16754,13 +16766,16 @@ if (shouldRunReactEmbeddedTests) {
       createHangingPieces: async () => ({ ok: true }),
       createConnectedPiece: async () => ({ ok: true }),
       createFixedPiece: async () => ({ ok: true }),
-      getPiecesMetadata: async () => ({}),
+      getPiecesMetadata: async () => new Map(),
       getPieces: async () => [],
       getConnections: async () => [],
       getDesigns: async () => [],
       getTypes: async () => [],
       getAuthors: async () => [],
-      getKitMetadata: async () => store.getSnapshot().kit.toJSON(),
+      getKitMetadata: async () => {
+        const k = kitJsonFromStore(store) as KitFullDto;
+        return { id: String(k.id ?? ""), name: String(k.name ?? "") };
+      },
       undo: async () => ({ ok: true }),
       redo: async () => ({ ok: true }),
       canUndo: async () => false,
@@ -17103,13 +17118,16 @@ if (shouldRunReactEmbeddedTests) {
         createHangingPieces: async () => ({ ok: true }) as const,
         createConnectedPiece: async () => ({ ok: true }) as const,
         createFixedPiece: async () => ({ ok: true }) as const,
-        getPiecesMetadata: async () => ({}),
+        getPiecesMetadata: async () => new Map(),
         getPieces: async () => [],
         getConnections: async () => [],
         getDesigns: async () => [],
         getTypes: async () => [],
         getAuthors: async () => [],
-        getKitMetadata: async () => ({}),
+        getKitMetadata: async () => {
+          const k = store.getSnapshot().kit.toJSON() as KitFullDto;
+          return { id: String(k.id ?? ""), name: String(k.name ?? "") };
+        },
         undo: async () => ({ ok: true }) as const,
         redo: async () => ({ ok: true }) as const,
         canUndo: async () => false,
@@ -17120,13 +17138,13 @@ if (shouldRunReactEmbeddedTests) {
         listConflicts: async () => [],
         resolveConflict: async () => ({ ok: true } as const),
         syncNow: async () => ({ ok: true } as const),
-        readPieceFlatPlane: async () => undefined,
-        readPieceFlatCenter: async () => undefined,
-        readPieceParentConnectionFull: async () => undefined,
+        readPieceFlatPlane: async () => null,
+        readPieceFlatCenter: async () => null,
+        readPieceParentConnectionFull: async () => null,
         readDesignIncludedDesigns: async () => [],
         readDesignClusterableGroups: async () => [],
         readDesignQualitySum: async () => 0,
-        readTypeBestRepresentation: async () => undefined,
+        readTypeBestRepresentation: async () => null,
         readColoredConnectors: async () => [],
         readDesignReplaceableCatalogTypes: async () => [],
         readDesignReplaceableCatalogDesigns: async () => [],

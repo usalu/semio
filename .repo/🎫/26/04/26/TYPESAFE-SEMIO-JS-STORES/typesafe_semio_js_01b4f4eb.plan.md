@@ -4,22 +4,22 @@ overview: Refactor `semio/js` so its public and internal method surfaces use exp
 todos:
  - id: ticket-reopen
    content: Reopen the existing `TYPESAFE-SEMIO-JS-STORES` ticket for this work.
-   status: in_progress
+   status: completed
  - id: dto-inventory
    content: Inventory all loose method signatures and group them by DTO family in `semio/js/index.ts`.
-   status: pending
+   status: completed
  - id: dto-definitions
    content: Introduce concrete DTO definitions and schemas for GraphQL, commands, reads, events, and entity patch inputs.
-   status: pending
+   status: completed
  - id: js-refactor
    content: Replace loose semio/js method inputs and outputs with DTOs and update internal helpers.
-   status: pending
+   status: completed
  - id: react-consumer
    content: Update `semio/react/index.tsx` consumers and stubs to the new DTO contracts.
-   status: pending
+   status: completed
  - id: tests-validation
    content: Extend embedded tests and run targeted build/test/lint validation.
-   status: pending
+   status: completed
 isProject: false
 ---
 

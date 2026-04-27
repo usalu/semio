@@ -321,7 +321,7 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -7163,19 +7163,19 @@ export type PieceMetadata = {
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const designScope = useDesignScope();
-  const [record] = usePiecesMetadataRecordFromKit(designScope?.id);
+  const [placementMap] = usePiecesMetadataRecordFromKit(designScope?.id);
   return useMemo(() => {
     const m = new Map<string, PieceMetadata>();
-    if (record && typeof record === "object") {
-      for (const [k, v] of Object.entries(record)) {
-        m.set(k, v as PieceMetadata);
-      }
-      if (typeof window !== "undefined") {
-        (window as any).__SEMIO_PIECES_METADATA__ = record;
-      }
+    if (placementMap instanceof Map) {
+      for (const [k, v] of placementMap) m.set(k, v as PieceMetadata);
+    } else if (placementMap && typeof placementMap === "object") {
+      for (const [k, v] of Object.entries(placementMap as Record<string, PieceMetadata>)) m.set(k, v as PieceMetadata);
+    }
+    if (typeof window !== "undefined") {
+      (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(m);
     }
     return m;
-  }, [record]);
+  }, [placementMap]);
 }
 
 export function usePieceMetadata(pieceId?: Id): PieceMetadata | undefined {
@@ -13764,18 +13764,21 @@ function useKitAppYjsToXStateSync() {
   const kitScope = useKitScope();
   const kitId = kitScope?.id ?? "";
   const sketchpadStore = useSketchpadStore();
-  const sketchpadCommands = useSketchpadCommands();
   const hasKit = useHasKit(kitId);
   const initializedKeyRef = useRef<string | null>(null);
   const syncedKeyRef = useRef<string | null>(null);
+  /** @emoji 🧾 Re-render after {@link SketchpadStore#createKitApp} so {@link MultiWindowApp} can mount layout before children read kit app store. */
+  const [, kitAppCreateBump] = useReducer((n: number) => n + 1, 0);
 
   useLayoutEffect(() => {
     if (!kitId || !hasKit) return;
 
     if (!sketchpadStore.hasKitApp({ kit: kitId })) {
-      sketchpadCommands.createKitApp("semio.sketchpad.app.kit.autoCreateForSync", { kit: kitId });
+      /** @emoji 🧾 Must call {@link SketchpadStore#createKitApp} directly: `execute("semio.sketchpad.createKitApp")` is async and would leave {@link MultiWindowApp} stuck on the preparing shell. */
+      sketchpadStore.createKitApp(kitId);
+      kitAppCreateBump();
     }
-  }, [kitId, hasKit, sketchpadStore, sketchpadCommands]);
+  }, [kitId, hasKit, sketchpadStore]);
 
   useLayoutEffect(() => {
     if (!kitId || !hasKit) return;
@@ -15229,10 +15232,9 @@ const MultiWindowApp: FC = () => {
 
   const hasKit = useHasKit(kitId || "");
 
-  const store = useMemo(() => {
-    if (!kitId || !sketchpadStore?.hasKitApp?.({ kit: kitId })) return null;
-    return sketchpadStore.kitApp(kitId);
-  }, [sketchpadStore, kitId]);
+  /** @emoji 🧾 Must not memoize only on `kitId`: {@link SketchpadStore#createKitApp} can appear between renders without store ref changing. */
+  const store =
+    kitId && sketchpadStore?.hasKitApp?.({ kit: kitId }) ? sketchpadStore.kitApp(kitId) : null;
   const addSidePanelTab = useAddSidePanelTab();
   const removeSidePanelTab = useRemoveSidePanelTab();
 
@@ -15400,6 +15402,14 @@ const MultiWindowApp: FC = () => {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">Loading kit...</p>
+      </div>
+    );
+  }
+
+  if (kitId && !sketchpadStore.hasKitApp({ kit: kitId })) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-muted-foreground">Preparing kit app…</p>
       </div>
     );
   }

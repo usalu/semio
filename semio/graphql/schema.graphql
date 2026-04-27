@@ -335,14 +335,6 @@ input KitReadScopeTransactionInput {
 type KitStore {
 	name: String!
 	"""
-	🌐 Same as the former WASM `canUndo` / `canRedo` helpers.
-	"""
-	canUndo: Boolean!
-	"""
-	🌐 Same as the former WASM `canUndo` / `canRedo` helpers.
-	"""
-	canRedo: Boolean!
-	"""
 	🌐 Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
 	"""
 	designByDtoId(id: String!): Design
@@ -374,9 +366,9 @@ type KitStore {
 	"""
 	coloredConnectors: [KitColoredConnectorObject!]!
 	"""
-	Full kit DTO snapshot (materialized live graph).
+	🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
 	"""
-	liveFullDto: KitFullSnapshot!
+	fullDto: KitFullSnapshot!
 	"""
 	`the_kit` line DTO (committed main line).
 	"""
@@ -405,7 +397,6 @@ type KitStore {
 }
 
 input KitStoreBatchCommandInput @oneOf {
-	live: LiveBatchInput
 	session: SessionBatchInput
 	checkpoint: CheckpointBatchInput
 	alternative: AlternativeBatchInput
@@ -460,8 +451,6 @@ enum KitStoreBatchResultKind {
 	CREATE_HANGING_PIECES
 	CREATE_CONNECTED_PIECE
 	CREATE_FIXED_PIECE
-	UNDO
-	REDO
 	NEW_SESSION
 	END_SESSION
 	NEW_DRAFT
@@ -488,27 +477,9 @@ enum KitStoreBatchResultKind {
 
 type KitStoreMutation {
 	"""
-	Batched control-plane writes (VCS, live graph, design canvas); replaces the former `submitKitCommand` shell.
+	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
 	"""
 	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
-}
-
-input LiveBatchCommandInput @oneOf {
-	changeKitCommands: ChangeKitCommandsBatchInput
-	design: DesignBatchInput
-	changeKitWithInverse: ChangeKitCommandsBatchInput
-	"""
-	🧾 WIP graph undo stack only (not draft/transaction scoped).
-	"""
-	undo: ConfirmOnlyInput
-	"""
-	🧾 WIP graph redo stack only (not draft/transaction scoped).
-	"""
-	redo: ConfirmOnlyInput
-}
-
-input LiveBatchInput {
-	commands: [LiveBatchCommandInput!]!
 }
 
 input LocalBackboneBatchInput {
@@ -581,13 +552,9 @@ input PointInputBatch {
 
 type Query {
 	"""
-	Live kit graph root (strong handles: nested fields return the same in-memory `Arc` stores).
+	🌐 **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
 	"""
-	kitStore: KitStore!
-	"""
-	Materialized kit view for **scoped** reads (the kit, checkpoint, alternative, draft, or open transaction), matching [`KitReadScope`].
-	"""
-	kitReadScope(scope: KitReadScopeInput!): KitStore!
+	kit(scope: KitReadScopeInput!): KitStore!
 }
 
 input RemoteBackboneBatchInput {
