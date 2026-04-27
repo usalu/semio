@@ -4,19 +4,19 @@ overview: Consolidate the first Rust GraphQL/store cleanup slice by removing red
 todos:
  - id: reopen-ticket
    content: Reopen or attach to the existing `Rust GraphQL Store Dto Cleanup` ticket before implementation.
-   status: in_progress
+   status: completed
  - id: collapse-node-layer
    content: Refactor `kit_graphql` wrapper structs and async-graphql object names so exposed objects are consistently `*Store`.
-   status: pending
+   status: completed
  - id: regenerate-schema
    content: Regenerate `semio/graphql/schema.graphql` and update direct JS/React query/type callers.
-   status: pending
+   status: completed
  - id: extend-tests
    content: Extend existing Rust tests to assert unified schema names and absence of exposed node/mixed names.
-   status: pending
+   status: completed
  - id: verify-close
    content: Run focused Rust/JS/React checks, then close the repo ticket with touched files.
-   status: pending
+   status: completed
 isProject: false
 ---
 

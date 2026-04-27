@@ -1,8 +1,9 @@
 {
   "title": "Rust GraphQL Store Dto Cleanup",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Implement Rust GraphQL cleanup: rename entity types to *Store, remove *Row and *List scalars, rename Gql* to Store/DTO names, add enums for finite strings, regenerate semio/graphql/schema.graphql. Plan id d0ffcac5.",
+  "summary": "GraphQL *Store consolidation: internal kit_graphql structs renamed to *StoreGraphql; Connection/Connector/Representation SDL types are ConnectionStore/ConnectorStore/RepresentationStore. Regenerated semio/graphql/schema.graphql. Updated semio/js and semio/react schema type strings. Extended SDL hygiene test. Aligned sqlite INSERT/SELECT with vcs_initial_json. Added ChangeDesignCommand apply delegates for piece subcommands. Tests: cargo test semio 140 pass, js vitest 25, react vitest 14.",
   "goal": "🎯r2603",
   "sessions": [
     "⚪7354ebbcdcb84cd0be03000ee129e726"

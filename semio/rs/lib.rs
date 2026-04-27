@@ -64,14 +64,6 @@ pub mod read {
         pub external_connections: Vec<ConnectionFullDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
-    #[serde(rename_all = "camelCase")]
-    pub struct KitColoredConnectorDto {
-        pub type_id: TypeIdDto,
-        pub connector_id: crate::connector::ConnectorIdDto,
-        pub color: String,
-    }
-
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommand {
@@ -119,7 +111,6 @@ pub mod read {
         ReadKitPropsShallowCommand,
         ReadKitAttributesFullCommand,
         ReadKitAttributesShallowCommand,
-        ReadKitColoredConnectorsCommand,
         ReadKitTypeCommands {
             id: TypeIdDto,
             commands: Vec<ReadTypeCommand>,
@@ -221,7 +212,6 @@ pub mod read {
         ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
         ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
         ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-        ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorDto> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
         ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
         ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -2072,7 +2062,7 @@ pub mod read {
     }
 
 
-    fn color_string_for_id_text(text: &str) -> String {
+    pub(crate) fn color_string_for_id_text(text: &str) -> String {
         if text.is_empty() {
             return "var(--foreground)".to_string();
         }
@@ -2122,21 +2112,6 @@ pub mod read {
         let i = h % VARI.len();
         let j = (h / VARI.len()) % VARI[i].len();
         VARI[i][j].to_string()
-    }
-
-    pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorDto> {
-        let mut out: Vec<KitColoredConnectorDto> = Vec::new();
-        for t in &g.types {
-            let Ok(tr) = t.read() else { continue };
-            let tid = TypeIdDto { id: tr.id.clone() };
-            for c in &tr.connectors {
-                let Ok(co) = c.read() else { continue };
-                let dto = co.to_full_dto();
-                let key = dto.port.as_ref().map(|p| p.id.as_str().to_string()).unwrap_or_else(|| co.id.as_str().to_string());
-                out.push(KitColoredConnectorDto { type_id: tid.clone(), connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() }, color: color_string_for_id_text(&key) });
-            }
-        }
-        out
     }
 
     pub(crate) fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
@@ -2481,7 +2456,6 @@ pub mod read {
                 ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
                 ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
                 ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitColoredConnectorsCommand => ReadKitCommandOutput::ReadKitColoredConnectorsCommand { rows: kit_colored_connector_rows(g) },
                 ReadKitCommand::ReadKitTypeCommands { id, commands } => {
                     let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -9382,6 +9356,7 @@ pub mod connector {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
+    use crate::kit_graph::KitGraph;
     use crate::port::{PortIdDto, PortStoreWeak};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
@@ -9399,6 +9374,7 @@ pub mod connector {
         pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
+        color_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -9406,7 +9382,13 @@ pub mod connector {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, async_graphql::SimpleObject)]
+    pub struct ColorDto {
+        /// 🎨 CSS color string for connector visuals (cached; keyed by port compatibility group).
+        pub css: String,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
     pub struct ConnectorMetadataDto {
         pub id: Id,
         pub code: String,
@@ -9414,9 +9396,11 @@ pub mod connector {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<PortIdDto>,
+        #[serde(default)]
+        pub color: ColorDto,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
     pub struct ConnectorShallowDto {
         pub id: Id,
         #[serde(default, alias = "name")]
@@ -9429,9 +9413,11 @@ pub mod connector {
         pub qualities: Vec<QualityShallowDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeShallowDto>,
+        #[serde(default)]
+        pub color: ColorDto,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
     pub struct ConnectorFullDto {
         pub id: Id,
         #[serde(default, alias = "name")]
@@ -9444,11 +9430,34 @@ pub mod connector {
         pub qualities: Vec<QualityFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeFullDto>,
+        #[serde(default)]
+        pub color: ColorDto,
     }
+
+    impl PartialEq for ConnectorMetadataDto {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port
+        }
+    }
+    impl Eq for ConnectorMetadataDto {}
+
+    impl PartialEq for ConnectorShallowDto {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port && self.qualities == other.qualities && self.attributes == other.attributes
+        }
+    }
+    impl Eq for ConnectorShallowDto {}
+
+    impl PartialEq for ConnectorFullDto {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port && self.qualities == other.qualities && self.attributes == other.attributes
+        }
+    }
+    impl Eq for ConnectorFullDto {}
 
     impl ConnectorStore {
         pub fn new(code: impl Into<String>) -> Self {
-            Self { id: Id::new_v7(), code: code.into(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id: Id::new_v7(), code: code.into(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
         #[inline]
@@ -9461,22 +9470,22 @@ pub mod connector {
         }
 
         pub fn from_id_dto(d: ConnectorIdDto) -> Self {
-            Self { id: d.id, code: String::new(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id: d.id, code: String::new(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: ConnectorMetadataDto) -> Self {
-            Self { id: d.id, code: d.code, description: d.description, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id: d.id, code: d.code, description: d.description, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port });
+            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: ConnectorFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port });
+            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
@@ -9488,7 +9497,8 @@ pub mod connector {
 
         pub fn to_metadata_dto(&self) -> ConnectorMetadataDto {
             let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            ConnectorMetadataDto { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port }
+            let css = self.color_css_string();
+            ConnectorMetadataDto { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port, color: ColorDto { css } }
         }
 
         pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
@@ -9500,6 +9510,7 @@ pub mod connector {
                 port: m.port,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
                 attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+                color: m.color,
             }
         }
 
@@ -9512,7 +9523,47 @@ pub mod connector {
                 port: m.port,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
                 attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+                color: m.color,
             }
+        }
+
+        pub fn invalidate_color_cache(&self) {
+            self.color_cache.invalidate();
+        }
+
+        /// 🎨 Resolves the cached CSS color from the connector port's kit-wide compatibility group.
+        pub fn color_css_string(&self) -> String {
+            self.color_cache
+                .get_or_init(|| {
+                    let fallback_key = self.id.as_str().to_string();
+                    let Some(tw) = self.parent_type.upgrade() else {
+                        return crate::read::color_string_for_id_text(&fallback_key);
+                    };
+                    let Ok(tr) = tw.read() else {
+                        return crate::read::color_string_for_id_text(&fallback_key);
+                    };
+                    let Some(kw) = tr.parent_kit.upgrade() else {
+                        return crate::read::color_string_for_id_text(&fallback_key);
+                    };
+                    let Ok(kg) = kw.read() else {
+                        return crate::read::color_string_for_id_text(&fallback_key);
+                    };
+                    let key = if let Some(pw) = &self.port {
+                        if let Some(pr) = pw.upgrade() {
+                            if let Ok(prr) = pr.read() {
+                                KitGraph::port_compatibility_group_root_id(&*kg, &prr.id).map(|root| root.as_str().to_string()).unwrap_or_else(|| prr.id.as_str().to_string())
+                            } else {
+                                fallback_key.clone()
+                            }
+                        } else {
+                            fallback_key.clone()
+                        }
+                    } else {
+                        fallback_key.clone()
+                    };
+                    crate::read::color_string_for_id_text(&key)
+                })
+                .clone()
         }
 
         pub fn set_code(&mut self, code: String) -> crate::error::SetResult {
@@ -20502,6 +20553,64 @@ pub mod kit_graph {
             (family_by_id, port_by_id)
         }
 
+        /// 🧮 Same 32-bit string hash magnitude as sketchpad `hashString` for union-find tie-breaks.
+        pub(crate) fn js_string_hash_abs(text: &str) -> u32 {
+            let mut h: i32 = 0;
+            for c in text.chars() {
+                h = (h << 5).wrapping_sub(h).wrapping_add(c as i32);
+            }
+            if h == i32::MIN { 2_147_483_648u32 } else { h.unsigned_abs() }
+        }
+
+        /// 🗺️ Union-find root for a port's compatibility component (matches sketchpad `createPortGroupMap` tie-break).
+        pub(crate) fn port_compatibility_group_root_id(kit: &KitGraph, start: &Id) -> Option<Id> {
+            use std::collections::HashMap;
+            let (_, port_by_id) = Self::build_family_port_index(kit);
+            if !port_by_id.contains_key(start) {
+                return None;
+            }
+            let mut parent: HashMap<Id, Id> = port_by_id.keys().cloned().map(|k| (k.clone(), k)).collect();
+            fn find(parent: &mut HashMap<Id, Id>, x: &Id) -> Id {
+                let p = parent.get(x).cloned().unwrap_or_else(|| x.clone());
+                if p == *x {
+                    x.clone()
+                } else {
+                    let r = find(parent, &p);
+                    parent.insert(x.clone(), r.clone());
+                    r
+                }
+            }
+            fn union(parent: &mut HashMap<Id, Id>, a: &Id, b: &Id) {
+                let ra = find(parent, a);
+                let rb = find(parent, b);
+                if ra == rb {
+                    return;
+                }
+                let ha = KitGraph::js_string_hash_abs(ra.as_str());
+                let hb = KitGraph::js_string_hash_abs(rb.as_str());
+                if ha <= hb {
+                    parent.insert(rb, ra);
+                } else {
+                    parent.insert(ra, rb);
+                }
+            }
+            for (pid, pref) in &port_by_id {
+                if let Ok(pr) = pref.read() {
+                    for w in &pr.compatible_ports {
+                        if let Some(op) = w.upgrade() {
+                            if let Ok(or) = op.read() {
+                                let oid = or.id.clone();
+                                if port_by_id.contains_key(&oid) {
+                                    union(&mut parent, pid, &oid);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Some(find(&mut parent, start))
+        }
+
         fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeStoreRef> {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
@@ -26507,7 +26616,7 @@ pub mod io {
 
         fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFullDto, KitFullDto)> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, initial_json
+                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
@@ -26560,7 +26669,7 @@ pub mod io {
                 tx.execute(
                     "INSERT INTO kit (
                         id, name, description, icon, image, preview,
-                        remote, homepage, license, uri, created_at, updated_at, initial_json
+                        remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                     params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated, initial_json,],
                 )?;

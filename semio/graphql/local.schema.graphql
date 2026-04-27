@@ -619,39 +619,6 @@ type KitShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type KitStore implements Node {
-	id: ID
-	container: KitGraph
-	full: KitFullDto!
-	metadata: KitMetadataDto!
-	shallow: KitShallowDto!
-	name: String!
-	designByDtoId(id: String!): DesignStore
-	typeByDtoId(id: String!): TypeStore
-	description: String
-	types: [TypeStore!]!
-	designs: [DesignStore!]!
-	coloredConnectors: [KitColoredConnectorDto!]!
-	fullDto: KitFullSnapshot!
-	theKitDto: KitFullSnapshot!
-	materializeAt(checkpointId: String): KitFullSnapshot!
-}
-
-
-type KitGraph implements Node  {
-	theKit: KitStore
-	alternatives: [KitAlternative!]!
-	checkpoints: [KitCheckpoint!]!
-	drafts: [KitDraft!]!
-}
-
-type KitSession {
-	id: ID!
-	wip: KitGraph!
-	authorative: KitGraph
-	conflicts: [KitConflict!]!
-}
-
 input KitStoreCommandInput @oneOf {
 	session: SessionInput
 	checkpoint: CheckpointInput
@@ -662,10 +629,6 @@ input KitStoreCommandInput @oneOf {
 input KitStoreInput {
 	clientMutationId: String
 	commands: [KitStoreCommandInput!]!
-}
-
-type KitStoreMutation {
-	batch(input: KitStoreInput!): KitStorePayload!
 }
 
 type KitStorePayload {
@@ -764,10 +727,6 @@ input MovePiecesInput {
 	gap: Float!
 	shift: Float!
 	rise: Float!
-}
-
-type Mutation {
-	kitStore: KitStoreMutation!
 }
 
 type PieceFullDto {
@@ -916,10 +875,6 @@ type QualityShallowDto {
 	definition: String
 	description: String
 	benchmarks: [BenchmarkMetadataDto!]!
-}
-
-type Query {
-	kit(scope: KitReadScopeInput!): KitStore!
 }
 
 input RemoteBackboneInput {
@@ -1153,16 +1108,81 @@ input VectorInput {
 Directs the executor to include this field or fragment only when the `if` argument is true.
 """
 directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-"""
-Indicates that an Input Object is a OneOf Input Object (and thus requires exactly one of its field be provided)
-"""
+
 directive @oneOf on INPUT_OBJECT
-"""
-Directs the executor to skip this field or fragment when the `if` argument is true.
-"""
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+type KitStore{
+	container: KitGraph
+	checkpoint: Checkpoint!
+	draft: KitDraft
+	transaction: KitTransaction
+	full: KitFullDto!
+	metadata: KitMetadataDto!
+	shallow: KitShallowDto!
+	id: ID
+	name: String!
+	description: String
+	...
+	design(id:DesignIdDto): DesignStore
+	designs: [DesignStore!]!
+	type(id: TypeIdDto!): TypeStore
+	types: [TypeStore!]!
+	...
+}
+
+type KitAlternative {
+	container: KitGraph
+	id: ID!
+	name: String!
+	start: Checkpoint!
+	checkpoints: [Checkpoint!]!
+	store: KitStore!
+	draft: KitDraft
+	transaction: KitTransaction
+}
+
+type KitGraph  {
+	container: KitSession
+	id:ID!
+	theKit: KitStore
+	alternative(id: KitAlternativeIdDto!): KitAlternative
+	alternatives: [KitAlternative!]!
+	checkpoint(id:KitCheckpointIdDto!): KitCheckpoint
+	checkpoints: [KitCheckpoint!]!
+}
+
+type KitSession {
+	id: ID!
+	wip: KitGraph!
+	authorative: KitGraph
+	conflicts: [KitConflict!]!
+}
+
+type Query {
+	session(): KitSession!
+}
+
+
+input KitChangeScopeInputDto @oneOf {
+
+}
+
+input KitGraphCommandRequest {
+	change(changeScope)
+	vc()
+}
+
+type Mutation {
+	execute(requests: [KitGraphCommandRequest!]!): KitGraphCommandResponse!
+}
+
+
 schema {
 	query: Query
 	mutation: Mutation
 	subscription: Subscription
 }
+
+
+
