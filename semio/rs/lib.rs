@@ -17462,13 +17462,13 @@ pub mod folder {
 }
 
 pub mod geom {
-    use async_graphql::SimpleObject;
+    use async_graphql::{InputObject, SimpleObject};
     use serde::{Deserialize, Serialize};
 
     use crate::hash::HashWriter;
     use crate::merkle::Writer as MerkleWriter;
 
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject, InputObject)]
     pub struct Coordinate {
         pub u: f64,
         pub v: f64,
@@ -17525,7 +17525,7 @@ pub mod geom {
 
     pub type Uv = Coordinate;
 
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject, InputObject)]
     pub struct Point {
         pub x: f64,
         pub y: f64,
@@ -17557,7 +17557,7 @@ pub mod geom {
         }
     }
 
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject, InputObject)]
     pub struct Vector {
         pub x: f64,
         pub y: f64,
@@ -17603,7 +17603,7 @@ pub mod geom {
         }
     }
 
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject, InputObject)]
     pub struct Plane {
         #[serde(default)]
         pub origin: Point,
@@ -21699,7 +21699,7 @@ pub mod piece {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct PieceFullDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -27426,11 +27426,11 @@ pub mod kit_graphql {
 
     #[Object(name = "Query")]
     impl RootQuery {
-        async fn kit(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
+        async fn kit(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreGraphql> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let rs = kit_read_scope_from_gql(scope)?;
             let view = crate::kit_read_scope::resolve_read_graph(&g, &rs).map_err(|e| Error::new(e.to_string()))?;
-            Ok(KitStoreNode(view))
+            Ok(KitStoreGraphql(view))
         }
     }
 
@@ -27938,41 +27938,41 @@ pub mod kit_graphql {
         schema().sdl()
     }
 
-    pub struct ReplaceableCatalogNode {
+    pub struct ReplaceableCatalogStoreGraphql {
         pub types: Vec<crate::typ::TypeStoreRef>,
         pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
     #[Object(name = "ReplaceableCatalogStore")]
-    impl ReplaceableCatalogNode {
-        async fn types(&self) -> Result<Vec<TypeNode>> {
-            Ok(self.types.iter().cloned().map(TypeNode).collect())
+    impl ReplaceableCatalogStoreGraphql {
+        async fn types(&self) -> Result<Vec<TypeStoreGraphql>> {
+            Ok(self.types.iter().cloned().map(TypeStoreGraphql).collect())
         }
-        async fn designs(&self) -> Result<Vec<DesignNode>> {
-            Ok(self.designs.iter().cloned().map(DesignNode).collect())
+        async fn designs(&self) -> Result<Vec<DesignStoreGraphql>> {
+            Ok(self.designs.iter().cloned().map(DesignStoreGraphql).collect())
         }
     }
 
     #[derive(Clone)]
-    pub struct KitStoreNode(pub KitGraphRef);
+    pub struct KitStoreGraphql(pub KitGraphRef);
 
     #[derive(Clone)]
-    pub struct DesignNode(pub DesignStoreRef);
+    pub struct DesignStoreGraphql(pub DesignStoreRef);
 
     #[derive(Clone)]
-    pub struct PieceNode(pub PieceStoreRef);
+    pub struct PieceStoreGraphql(pub PieceStoreRef);
 
     #[derive(Clone)]
-    pub struct TypeNode(pub TypeStoreRef);
+    pub struct TypeStoreGraphql(pub TypeStoreRef);
 
     #[derive(Clone)]
-    pub struct ConnectionNode(pub ConnectionStoreRef);
+    pub struct ConnectionStoreGraphql(pub ConnectionStoreRef);
 
     #[derive(Clone)]
-    pub struct ConnectorNode(pub ConnectorStoreRef);
+    pub struct ConnectorStoreGraphql(pub ConnectorStoreRef);
 
     #[derive(Clone)]
-    pub struct RepresentationNode(pub RepresentationStoreRef);
+    pub struct RepresentationStoreGraphql(pub RepresentationStoreRef);
 
     #[derive(Clone, Debug, SimpleObject)]
     #[graphql(name = "CheckpointDto")]
@@ -28030,32 +28030,32 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitStore")]
-    impl KitStoreNode {
+    impl KitStoreGraphql {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
         }
 
-        async fn design_by_dto_id(&self, id: String) -> Result<Option<DesignNode>> {
+        async fn design_by_dto_id(&self, id: String) -> Result<Option<DesignStoreGraphql>> {
             let g = lock_graph(&self.0)?;
-            Ok(g.design(id.as_str()).map(DesignNode))
+            Ok(g.design(id.as_str()).map(DesignStoreGraphql))
         }
 
-        async fn type_by_dto_id(&self, id: String) -> Result<Option<TypeNode>> {
+        async fn type_by_dto_id(&self, id: String) -> Result<Option<TypeStoreGraphql>> {
             let g = lock_graph(&self.0)?;
             let target = Id::from(id.as_str());
-            Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(TypeNode))
+            Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(TypeStoreGraphql))
         }
 
         async fn description(&self) -> Result<Option<String>> {
             Ok(lock_graph(&self.0)?.description.clone())
         }
 
-        async fn types(&self) -> Result<Vec<TypeNode>> {
-            Ok(lock_graph(&self.0)?.types.iter().cloned().map(TypeNode).collect())
+        async fn types(&self) -> Result<Vec<TypeStoreGraphql>> {
+            Ok(lock_graph(&self.0)?.types.iter().cloned().map(TypeStoreGraphql).collect())
         }
 
-        async fn designs(&self) -> Result<Vec<DesignNode>> {
-            Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignNode).collect())
+        async fn designs(&self) -> Result<Vec<DesignStoreGraphql>> {
+            Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignStoreGraphql).collect())
         }
 
         async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorDto>> {
@@ -28136,7 +28136,7 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "DesignStore")]
-    impl DesignNode {
+    impl DesignStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
         }
@@ -28149,11 +28149,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
+        async fn container(&self, ctx: &Context<'_>) -> Result<KitStoreGraphql> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let _kit_read = lock_graph(&g)?;
             drop(_kit_read);
-            Ok(KitStoreNode(g))
+            Ok(KitStoreGraphql(g))
         }
 
         async fn metadata(&self) -> Result<crate::design::DesignMetadataDto> {
@@ -28168,18 +28168,18 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_full_dto())
         }
 
-        async fn pieces(&self) -> Result<Vec<PieceNode>> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(PieceNode).collect())
+        async fn pieces(&self) -> Result<Vec<PieceStoreGraphql>> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(PieceStoreGraphql).collect())
         }
 
-        async fn piece_by_dto_id(&self, id: String) -> Result<Option<PieceNode>> {
+        async fn piece_by_dto_id(&self, id: String) -> Result<Option<PieceStoreGraphql>> {
             let target = Id::from(id.as_str());
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d.pieces.iter().find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(PieceNode))
+            Ok(d.pieces.iter().find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(PieceStoreGraphql))
         }
 
-        async fn connections(&self) -> Result<Vec<ConnectionNode>> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
+        async fn connections(&self) -> Result<Vec<ConnectionStoreGraphql>> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionStoreGraphql).collect())
         }
 
         async fn pieces_full(&self) -> Result<Vec<crate::piece::PieceFullDto>> {
@@ -28212,11 +28212,11 @@ pub mod kit_graphql {
             let qid = Id::from(quality_id.as_str());
             Ok(crate::read::design_sum_quality(&*d, &*g, &qid))
         }
-        async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalogNode> {
+        async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalogStoreGraphql> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let alts = d.replaceable_catalog_candidates(&ids);
-            Ok(ReplaceableCatalogNode { types: alts.types, designs: alts.designs })
+            Ok(ReplaceableCatalogStoreGraphql { types: alts.types, designs: alts.designs })
         }
         async fn included_designs(&self) -> Result<Vec<crate::read::IncludedDesignInfoDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -28229,7 +28229,7 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "PieceStore")]
-    impl PieceNode {
+    impl PieceStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
         }
@@ -28242,11 +28242,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<DesignNode> {
+        async fn container(&self) -> Result<DesignStoreGraphql> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             p.parent_design
                 .upgrade()
-                .map(DesignNode)
+                .map(DesignStoreGraphql)
                 .ok_or_else(|| Error::new("design container missing for piece"))
         }
 
@@ -28281,19 +28281,19 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
         }
 
-        async fn ref_type(&self) -> Result<Option<TypeNode>> {
+        async fn ref_type(&self) -> Result<Option<TypeStoreGraphql>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeNode))
+            Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeStoreGraphql))
         }
 
-        async fn parent_connection(&self) -> Result<Option<ConnectionNode>> {
+        async fn parent_connection(&self) -> Result<Option<ConnectionStoreGraphql>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionNode))
+            Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionStoreGraphql))
         }
 
-        async fn parent_piece(&self) -> Result<Option<PieceNode>> {
+        async fn parent_piece(&self) -> Result<Option<PieceStoreGraphql>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.parent_piece.as_ref().and_then(|w| w.upgrade()).map(PieceNode))
+            Ok(p.parent_piece.as_ref().and_then(|w| w.upgrade()).map(PieceStoreGraphql))
         }
 
         async fn depth(&self) -> Result<i32> {
@@ -28301,17 +28301,17 @@ pub mod kit_graphql {
             Ok(p.depth())
         }
 
-        async fn path(&self) -> Result<Vec<PieceNode>> {
+        async fn path(&self) -> Result<Vec<PieceStoreGraphql>> {
             let (steps, design_weak) = {
                 let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
                 (p.path(), p.parent_design.clone())
             };
             let design = design_weak.upgrade().ok_or_else(|| Error::new("design container missing for piece"))?;
             let dr = design.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let mut out: Vec<PieceNode> = Vec::new();
+            let mut out: Vec<PieceStoreGraphql> = Vec::new();
             for step in steps {
                 if let Some(pr) = dr.piece(step.id.as_str()) {
-                    out.push(PieceNode(pr));
+                    out.push(PieceStoreGraphql(pr));
                 }
             }
             Ok(out)
@@ -28319,7 +28319,7 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "TypeStore")]
-    impl TypeNode {
+    impl TypeStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())
         }
@@ -28332,11 +28332,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<KitStoreNode> {
+        async fn container(&self) -> Result<KitStoreGraphql> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             t.parent_kit
                 .upgrade()
-                .map(KitStoreNode)
+                .map(KitStoreGraphql)
                 .ok_or_else(|| Error::new("kit container missing for type"))
         }
 
@@ -28352,27 +28352,27 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_full_dto())
         }
 
-        async fn connectors(&self) -> Result<Vec<ConnectorNode>> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(ConnectorNode).collect())
+        async fn connectors(&self) -> Result<Vec<ConnectorStoreGraphql>> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(ConnectorStoreGraphql).collect())
         }
 
-        async fn representations(&self) -> Result<Vec<RepresentationNode>> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationNode).collect())
+        async fn representations(&self) -> Result<Vec<RepresentationStoreGraphql>> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationStoreGraphql).collect())
         }
 
-        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<RepresentationNode>> {
+        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<RepresentationStoreGraphql>> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let r = t.best_representation_for_tag_ids(&ids);
             match r {
-                Some(dto) => Ok(t.representation(dto.id.as_str()).map(RepresentationNode)),
+                Some(dto) => Ok(t.representation(dto.id.as_str()).map(RepresentationStoreGraphql)),
                 None => Ok(None),
             }
         }
     }
 
-    #[Object(name = "Connector")]
-    impl ConnectorNode {
+    #[Object(name = "ConnectorStore")]
+    impl ConnectorStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
         }
@@ -28385,11 +28385,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<TypeNode> {
+        async fn container(&self) -> Result<TypeStoreGraphql> {
             let c = self.0.read().map_err(|_| Error::new("connector lock poisoned"))?;
             c.parent_type
                 .upgrade()
-                .map(TypeNode)
+                .map(TypeStoreGraphql)
                 .ok_or_else(|| Error::new("type container missing for connector"))
         }
 
@@ -28406,8 +28406,8 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Representation")]
-    impl RepresentationNode {
+    #[Object(name = "RepresentationStore")]
+    impl RepresentationStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
         }
@@ -28420,11 +28420,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<TypeNode> {
+        async fn container(&self) -> Result<TypeStoreGraphql> {
             let r = self.0.read().map_err(|_| Error::new("representation lock poisoned"))?;
             r.parent_type
                 .upgrade()
-                .map(TypeNode)
+                .map(TypeStoreGraphql)
                 .ok_or_else(|| Error::new("type container missing for representation"))
         }
 
@@ -28441,17 +28441,17 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Connection")]
-    impl ConnectionNode {
+    #[Object(name = "ConnectionStore")]
+    impl ConnectionStoreGraphql {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
         }
 
-        async fn container(&self) -> Result<DesignNode> {
+        async fn container(&self) -> Result<DesignStoreGraphql> {
             let c = self.0.read().map_err(|_| Error::new("connection lock poisoned"))?;
             c.parent_design
                 .upgrade()
-                .map(DesignNode)
+                .map(DesignStoreGraphql)
                 .ok_or_else(|| Error::new("design container missing for connection"))
         }
 
@@ -28714,16 +28714,37 @@ mod tests {
                 "type DesignStore",
                 "type PieceStore",
                 "type TypeStore",
-                "type Connection",
-                "type Connector",
-                "type Representation",
+                "type ConnectionStore",
+                "type ConnectorStore",
+                "type RepresentationStore",
                 "type ReplaceableCatalogStore",
             ] {
                 assert!(s.contains(required), "SDL must declare {required}");
             }
-            for forbidden_entity in ["\ntype Design\n", "\ntype Piece\n", "\ntype Type\n", "\ntype ConnectionStore\n", "\ntype ConnectorStore\n", "\ntype RepresentationStore\n", "\ntype Kit\n"] {
-                assert!(!s.contains(forbidden_entity), "SDL must not declare bare entity {forbidden_entity:?}");
+            for forbidden_entity in [
+                "\ntype Design\n",
+                "\ntype Piece\n",
+                "\ntype Type\n",
+                "\ntype Connection\n",
+                "\ntype Connector\n",
+                "\ntype Representation\n",
+                "\ntype Kit\n",
+            ] {
+                assert!(!s.contains(forbidden_entity), "SDL must not declare bare/mixed entity {forbidden_entity:?}");
             }
+            for wrapper in [
+                "KitStoreNode",
+                "DesignNode",
+                "PieceNode",
+                "TypeNode",
+                "ConnectionNode",
+                "ConnectorNode",
+                "RepresentationNode",
+                "ReplaceableCatalogNode",
+            ] {
+                assert!(!s.contains(&format!("type {wrapper} {{")), "SDL must not leak *Node / internal GraphQL wrapper names: {wrapper}");
+            }
+            assert!(!s.contains("StoreGraphql"), "SDL must not leak internal *StoreGraphql Rust struct suffix into SDL");
             assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"), "replaceable catalog resolver");
             assert!(s.contains("types: [TypeStore!]!") && s.contains("designs: [DesignStore!]!"), "ReplaceableCatalog exposes store refs");
             assert!(s.contains("container: KitStore!") && s.contains("container: DesignStore!"), "container back-refs use *Store SDL names");

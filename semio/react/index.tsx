@@ -990,10 +990,10 @@ const ROOT_COLLECTION_TYPE_BY_KEY: Record<string, string> = {
   folders: "Folder",
   authors: "Author",
   pieces: "Piece",
-  connections: "Connection",
+  connections: "ConnectionStore",
   benchmarks: "Benchmark",
-  representations: "Representation",
-  connectors: "Connector",
+  representations: "RepresentationStore",
+  connectors: "ConnectorStore",
   stats: "Stat",
   props: "Prop",
   layers: "Layer",
@@ -1034,6 +1034,8 @@ const NESTED_TYPE_BY_KEY: Record<string, string> = {
   designPiece: "Piece",
   parentPiece: "Piece",
   childPiece: "Piece",
+  parentConnection: "ConnectionStore",
+  childConnections: "ConnectionStore",
   activeDesign: "Design",
   type: "Type",
   design: "Design",
@@ -1042,9 +1044,9 @@ const NESTED_TYPE_BY_KEY: Record<string, string> = {
   createdBy: "Author",
   updatedBy: "Author",
   port: "Port",
-  connector: "Connector",
-  childConnector: "Connector",
-  parentConnector: "Connector",
+  connector: "ConnectorStore",
+  childConnector: "ConnectorStore",
+  parentConnector: "ConnectorStore",
   actor: "Actor",
   session: "KitSession",
   client: "KitClientInfo",
@@ -1273,7 +1275,7 @@ function findLiveEntity(kit: Kit, typeName: string, id?: string): any {
   if (typeName === "Kit") return kit;
   if (!id) return undefined;
   if (typeName === "Piece") return findLivePiece(kit, id)?.piece;
-  if (typeName === "Connection") return findLiveConnection(kit, id)?.connection;
+  if (typeName === "ConnectionStore") return findLiveConnection(kit, id)?.connection;
   if (typeName === "Type") return kit.findType(id);
   if (typeName === "Design") return kit.findDesign(id);
   if (typeName === "Port") return getKitPorts(kit).find((entry) => entry.id === id);
@@ -1284,13 +1286,13 @@ function findLiveEntity(kit: Kit, typeName: string, id?: string): any {
   if (typeName === "Tag") return kit.tags?.find((entry) => entry.id === id);
   if (typeName === "Concept") return kit.concepts?.find((entry) => entry.id === id);
   if (typeName === "Family") return kit.families?.find((entry) => entry.id === id);
-  if (typeName === "Representation") {
+  if (typeName === "RepresentationStore") {
     for (const entry of kit.types ?? []) {
       const match = entry.representations?.find((representation) => representation.id === id);
       if (match) return match;
     }
   }
-  if (typeName === "Connector") {
+  if (typeName === "ConnectorStore") {
     for (const entry of kit.types ?? []) {
       const match = entry.connectors?.find((connector) => connector.id === id);
       if (match) return match;
@@ -1368,7 +1370,7 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
       return [...(piece.alternativeTypes() ?? []).map((entry) => ({ type: entry, design: undefined })), ...(readCustomFieldValue(state, typeName, "alternativeDesigns", id) ?? []).map((entry: any) => ({ type: undefined, design: entry }))];
     }
   }
-  if (typeName === "Connection") {
+  if (typeName === "ConnectionStore") {
     const found = id ? findLiveConnection(state.kit, id) : undefined;
     if (!found) return undefined;
     const { connection } = found;
@@ -2849,7 +2851,7 @@ export function DesignScope({ id: idValue, children }: EntityScopeProps): React.
 }
 
 export function ConnectionScope({ id: idValue, children }: EntityScopeProps): React.ReactElement {
-  const scope = useEntityScope("Connection", idValue);
+  const scope = useEntityScope("ConnectionStore", idValue);
   return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
@@ -2902,12 +2904,12 @@ export function FamilyScope({ id: idValue, children }: EntityScopeProps): React.
 }
 
 export function RepresentationScope({ id: idValue, children }: EntityScopeProps): React.ReactElement {
-  const scope = useEntityScope("Representation", idValue);
+  const scope = useEntityScope("RepresentationStore", idValue);
   return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
 export function ConnectorScope({ id: idValue, children }: EntityScopeProps): React.ReactElement {
-  const scope = useEntityScope("Connector", idValue);
+  const scope = useEntityScope("ConnectorStore", idValue);
   return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
@@ -2993,7 +2995,7 @@ export function usePieceScope(): { id: string } | null {
 }
 
 export function useConnectionScope(): { id: string } | null {
-  return useEntityScopeId("Connection");
+  return useEntityScopeId("ConnectionStore");
 }
 
 // #endregion ⚛️Context
@@ -5950,7 +5952,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         setPending((p) => p + 1);
         setLastErr(undefined);
         let designId: string | null = null;
-        if (rustTarget.kind === "Piece" || rustTarget.kind === "Connection") {
+        if (rustTarget.kind === "Piece" || rustTarget.kind === "ConnectionStore") {
           designId = await resolveDesignIdForPieceOrConnection(runtime.kitClient, rustTarget.kind, rustTarget.id);
         }
         const cmds = buildSchemaEntityChangeCommands(rustTarget.kind, rustTarget.id, rustTarget.field, resolved, designId);
@@ -7532,39 +7534,39 @@ export function useFamilyPatchInputAttributes(idValue?: string): HookTriad<any> 
 }
 
 export function useRepresentation(idValue?: string): HookTriad<any> {
-  return useSchemaObjectState("Representation", idValue);
+  return useSchemaObjectState("RepresentationStore", idValue);
 }
 
 export function useRepresentationHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "hash", idValue);
+  return useSchemaFieldState("RepresentationStore", "hash", idValue);
 }
 
 export function useRepresentationId(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "id", idValue);
+  return useSchemaFieldState("RepresentationStore", "id", idValue);
 }
 
 export function useRepresentationType(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "type", idValue);
+  return useSchemaFieldState("RepresentationStore", "type", idValue);
 }
 
 export function useRepresentationName(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "name", idValue);
+  return useSchemaFieldState("RepresentationStore", "name", idValue);
 }
 
 export function useRepresentationTags(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "tags", idValue);
+  return useSchemaFieldState("RepresentationStore", "tags", idValue);
 }
 
 export function useRepresentationFile(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "file", idValue);
+  return useSchemaFieldState("RepresentationStore", "file", idValue);
 }
 
 export function useRepresentationDescription(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "description", idValue);
+  return useSchemaFieldState("RepresentationStore", "description", idValue);
 }
 
 export function useRepresentationAttributes(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Representation", "attributes", idValue);
+  return useSchemaFieldState("RepresentationStore", "attributes", idValue);
 }
 
 export function useRepresentationInput(idValue?: string): HookTriad<any> {
@@ -7596,67 +7598,67 @@ export function useRepresentationInputAttributes(idValue?: string): HookTriad<an
 }
 
 export function useConnector(idValue?: string): HookTriad<any> {
-  return useSchemaObjectState("Connector", idValue);
+  return useSchemaObjectState("ConnectorStore", idValue);
 }
 
 export function useConnectorHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "hash", idValue);
+  return useSchemaFieldState("ConnectorStore", "hash", idValue);
 }
 
 export function useConnectorId(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "id", idValue);
+  return useSchemaFieldState("ConnectorStore", "id", idValue);
 }
 
 export function useConnectorType(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "type", idValue);
+  return useSchemaFieldState("ConnectorStore", "type", idValue);
 }
 
 export function useConnectorName(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "name", idValue);
+  return useSchemaFieldState("ConnectorStore", "name", idValue);
 }
 
 export function useConnectorT(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "t", idValue);
+  return useSchemaFieldState("ConnectorStore", "t", idValue);
 }
 
 export function useConnectorPoint(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "point", idValue);
+  return useSchemaFieldState("ConnectorStore", "point", idValue);
 }
 
 export function useConnectorDirection(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "direction", idValue);
+  return useSchemaFieldState("ConnectorStore", "direction", idValue);
 }
 
 export function useConnectorDescription(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "description", idValue);
+  return useSchemaFieldState("ConnectorStore", "description", idValue);
 }
 
 export function useConnectorPort(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "port", idValue);
+  return useSchemaFieldState("ConnectorStore", "port", idValue);
 }
 
 export function useConnectorMandatory(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "mandatory", idValue);
+  return useSchemaFieldState("ConnectorStore", "mandatory", idValue);
 }
 
 export function useConnectorMaxChildren(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "maxChildren", idValue);
+  return useSchemaFieldState("ConnectorStore", "maxChildren", idValue);
 }
 
 export function useConnectorProps(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "props", idValue);
+  return useSchemaFieldState("ConnectorStore", "props", idValue);
 }
 
 export function useConnectorAttributes(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "attributes", idValue);
+  return useSchemaFieldState("ConnectorStore", "attributes", idValue);
 }
 
 export function useConnectorPieces(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "pieces", idValue);
+  return useSchemaFieldState("ConnectorStore", "pieces", idValue);
 }
 
 export function useConnectorCompatibleConnectors(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connector", "compatibleConnectors", idValue);
+  return useSchemaFieldState("ConnectorStore", "compatibleConnectors", idValue);
 }
 
 export function useConnectorInput(idValue?: string): HookTriad<any> {
@@ -8084,83 +8086,83 @@ export function useSideInputConnectorId(idValue?: string): HookTriad<any> {
 }
 
 export function useConnectionTriad(idValue?: string): HookTriad<any> {
-  return useSchemaObjectState("Connection", idValue);
+  return useSchemaObjectState("ConnectionStore", idValue);
 }
 
 export function useConnectionHash(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "hash", idValue);
+  return useSchemaFieldState("ConnectionStore", "hash", idValue);
 }
 
 export function useConnectionId(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "id", idValue);
+  return useSchemaFieldState("ConnectionStore", "id", idValue);
 }
 
 export function useConnectionDesign(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "design", idValue);
+  return useSchemaFieldState("ConnectionStore", "design", idValue);
 }
 
 export function useConnectionConnected(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "connected", idValue);
+  return useSchemaFieldState("ConnectionStore", "connected", idValue);
 }
 
 export function useConnectionConnecting(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "connecting", idValue);
+  return useSchemaFieldState("ConnectionStore", "connecting", idValue);
 }
 
 export function useConnectionGap(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "gap", idValue);
+  return useSchemaFieldState("ConnectionStore", "gap", idValue);
 }
 
 export function useConnectionShift(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "shift", idValue);
+  return useSchemaFieldState("ConnectionStore", "shift", idValue);
 }
 
 export function useConnectionRise(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "rise", idValue);
+  return useSchemaFieldState("ConnectionStore", "rise", idValue);
 }
 
 export function useConnectionRotation(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "rotation", idValue);
+  return useSchemaFieldState("ConnectionStore", "rotation", idValue);
 }
 
 export function useConnectionTurn(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "turn", idValue);
+  return useSchemaFieldState("ConnectionStore", "turn", idValue);
 }
 
 export function useConnectionTilt(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "tilt", idValue);
+  return useSchemaFieldState("ConnectionStore", "tilt", idValue);
 }
 
 export function useConnectionU(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "u", idValue);
+  return useSchemaFieldState("ConnectionStore", "u", idValue);
 }
 
 export function useConnectionV(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "v", idValue);
+  return useSchemaFieldState("ConnectionStore", "v", idValue);
 }
 
 export function useConnectionDescription(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "description", idValue);
+  return useSchemaFieldState("ConnectionStore", "description", idValue);
 }
 
 export function useConnectionAttributes(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "attributes", idValue);
+  return useSchemaFieldState("ConnectionStore", "attributes", idValue);
 }
 
 export function useConnectionChildPiece(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "childPiece", idValue);
+  return useSchemaFieldState("ConnectionStore", "childPiece", idValue);
 }
 
 export function useConnectionChildConnector(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "childConnector", idValue);
+  return useSchemaFieldState("ConnectionStore", "childConnector", idValue);
 }
 
 export function useConnectionParentPiece(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "parentPiece", idValue);
+  return useSchemaFieldState("ConnectionStore", "parentPiece", idValue);
 }
 
 export function useConnectionParentConnector(idValue?: string): HookTriad<any> {
-  return useSchemaFieldState("Connection", "parentConnector", idValue);
+  return useSchemaFieldState("ConnectionStore", "parentConnector", idValue);
 }
 
 export function useConnectionInput(idValue?: string): HookTriad<any> {

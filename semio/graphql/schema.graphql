@@ -164,23 +164,6 @@ enum ConflictResolutionInput {
 	FORCE_OVERWRITE_BACKBONE
 }
 
-type Connection {
-	id: String!
-	container: DesignStore!
-	metadata: ConnectionMetadataDto!
-	shallow: ConnectionShallowDto!
-	full: ConnectionFullDto!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	u: Float
-	v: Float
-	description: String
-}
-
 type ConnectionFullDto {
 	id: Id!
 	connected: SideMetadataDto!
@@ -228,14 +211,21 @@ type ConnectionShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type Connector {
+type ConnectionStore {
 	id: String!
-	code: String!
+	container: DesignStore!
+	metadata: ConnectionMetadataDto!
+	shallow: ConnectionShallowDto!
+	full: ConnectionFullDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
 	description: String
-	container: TypeStore!
-	metadata: ConnectorMetadataDto!
-	shallow: ConnectorShallowDto!
-	full: ConnectorFullDto!
 }
 
 type ConnectorFullDto {
@@ -265,6 +255,16 @@ type ConnectorShallowDto {
 	port: PortIdDto
 	qualities: [QualityShallowDto!]!
 	attributes: [AttributeShallowDto!]!
+}
+
+type ConnectorStore {
+	id: String!
+	code: String!
+	description: String
+	container: TypeStore!
+	metadata: ConnectorMetadataDto!
+	shallow: ConnectorShallowDto!
+	full: ConnectorFullDto!
 }
 
 type Coordinate {
@@ -409,7 +409,7 @@ type DesignStore {
 	full: DesignFullDto!
 	pieces: [PieceStore!]!
 	pieceByDtoId(id: String!): PieceStore
-	connections: [Connection!]!
+	connections: [ConnectionStore!]!
 	piecesFull: [PieceFullDto!]!
 	connectionsFull: [ConnectionFullDto!]!
 	flattenMap: [DesignFlattenMapEntryDto!]!
@@ -632,7 +632,7 @@ type KitStore {
 	materializeAt(checkpointId: String): KitFullSnapshot!
 	metadata: KitMetadataDto!
 	shallow: KitShallowDto!
-	vcsState: StateDto!
+	state: StateDto!
 }
 
 input KitStoreCommandInput @oneOf {
@@ -823,7 +823,7 @@ type PieceStore {
 	flatPose: PoseFullDto!
 	scale: Float
 	refType: TypeStore
-	parentConnection: Connection
+	parentConnection: ConnectionStore
 	parentPiece: PieceStore
 	depth: Int!
 	path: [PieceStore!]!
@@ -915,16 +915,6 @@ type ReplaceableCatalogStore {
 	designs: [DesignStore!]!
 }
 
-type Representation {
-	id: String!
-	url: String!
-	description: String
-	container: TypeStore!
-	metadata: RepresentationMetadataDto!
-	shallow: RepresentationShallowDto!
-	full: RepresentationFullDto!
-}
-
 type RepresentationFullDto {
 	id: Id!
 	url: String!
@@ -950,6 +940,16 @@ type RepresentationShallowDto {
 	tags: [TagShallowDto!]!
 	qualities: [QualityShallowDto!]!
 	attributes: [AttributeShallowDto!]!
+}
+
+type RepresentationStore {
+	id: String!
+	url: String!
+	description: String
+	container: TypeStore!
+	metadata: RepresentationMetadataDto!
+	shallow: RepresentationShallowDto!
+	full: RepresentationFullDto!
 }
 
 input ResolveConflictInput {
@@ -1115,9 +1115,9 @@ type TypeStore {
 	metadata: TypeMetadataDto!
 	shallow: TypeShallowDto!
 	full: TypeFullDto!
-	connectors: [Connector!]!
-	representations: [Representation!]!
-	bestRepresentation(tagIds: [String!]!): Representation
+	connectors: [ConnectorStore!]!
+	representations: [RepresentationStore!]!
+	bestRepresentation(tagIds: [String!]!): RepresentationStore
 }
 
 type Vector {

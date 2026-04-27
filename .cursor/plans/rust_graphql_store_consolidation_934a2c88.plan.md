@@ -2,21 +2,21 @@
 name: rust graphql store consolidation
 overview: Consolidate the first Rust GraphQL/store cleanup slice by removing redundant GraphQL node wrappers and aligning the exposed API around the existing `*Store` Rust entities. The implementation should continue the open `Rust GraphQL Store Dto Cleanup` ticket and keep changes focused on `semio/rs`, `semio/graphql`, and direct JS/React callers.
 todos:
-  - id: reopen-ticket
-    content: Reopen or attach to the existing `Rust GraphQL Store Dto Cleanup` ticket before implementation.
-    status: pending
-  - id: collapse-node-layer
-    content: Refactor `kit_graphql` wrapper structs and async-graphql object names so exposed objects are consistently `*Store`.
-    status: pending
-  - id: regenerate-schema
-    content: Regenerate `semio/graphql/schema.graphql` and update direct JS/React query/type callers.
-    status: pending
-  - id: extend-tests
-    content: Extend existing Rust tests to assert unified schema names and absence of exposed node/mixed names.
-    status: pending
-  - id: verify-close
-    content: Run focused Rust/JS/React checks, then close the repo ticket with touched files.
-    status: pending
+ - id: reopen-ticket
+   content: Reopen or attach to the existing `Rust GraphQL Store Dto Cleanup` ticket before implementation.
+   status: in_progress
+ - id: collapse-node-layer
+   content: Refactor `kit_graphql` wrapper structs and async-graphql object names so exposed objects are consistently `*Store`.
+   status: pending
+ - id: regenerate-schema
+   content: Regenerate `semio/graphql/schema.graphql` and update direct JS/React query/type callers.
+   status: pending
+ - id: extend-tests
+   content: Extend existing Rust tests to assert unified schema names and absence of exposed node/mixed names.
+   status: pending
+ - id: verify-close
+   content: Run focused Rust/JS/React checks, then close the repo ticket with touched files.
+   status: pending
 isProject: false
 ---
 

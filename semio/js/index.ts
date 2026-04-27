@@ -956,7 +956,7 @@ export function buildSchemaEntityChangeCommands(kind: string, id: string, field:
       }
       return [];
     }
-    case "Connection": {
+    case "ConnectionStore": {
       if (!designId) return [];
       const dk = connectionDiffKeyForDataKey(field);
       if (dk === "gap") return [kitChangeDesignConnection(designId, id, [{ gap: { value: Number(value) } }])];
@@ -1056,7 +1056,7 @@ export async function submitKitChangeCommands(client: KitStoreClient, commands: 
 export async function resolveDesignIdForPieceOrConnection(client: KitStoreClient, entityKind: string, entityId: string): Promise<string | null> {
   const snap = await client.fetchFullKit();
   if (entityKind === "Piece") return __findDesignIdForPieceInKitDto(snap, entityId);
-  if (entityKind === "Connection") return __findDesignIdForConnectionInKitDto(snap, entityId);
+  if (entityKind === "ConnectionStore") return __findDesignIdForConnectionInKitDto(snap, entityId);
   return null;
 }
 
@@ -1096,8 +1096,8 @@ export async function writeKitStoreClientSchemaField(client: KitStoreClient, typ
   const root = await client.fetchFullKit();
   let designId: string | null = null;
   if (typeName === "Piece") designId = __findDesignIdForPieceInKitDto(root, entityId);
-  if (typeName === "Connection") designId = __findDesignIdForConnectionInKitDto(root, entityId);
-  const cmds = buildSchemaEntityChangeCommands(typeName, entityId, key, valueCast, typeName === "Piece" || typeName === "Connection" ? designId : null);
+  if (typeName === "ConnectionStore") designId = __findDesignIdForConnectionInKitDto(root, entityId);
+  const cmds = buildSchemaEntityChangeCommands(typeName, entityId, key, valueCast, typeName === "Piece" || typeName === "ConnectionStore" ? designId : null);
   if (!cmds.length) return { ok: false, error: { kind: "NotSupported", message: `${typeName}.${key}` } };
   return client.submitChangeKitCommands(cmds);
 }
@@ -6610,10 +6610,10 @@ export class TypeStore {
   }
 
   removeChild(childKind: string, childId: string): Promise<SetResult> {
-    if (childKind === "Representation") {
+    if (childKind === "RepresentationStore") {
       return this.root.submitChangeKitCommands([{ changeTypeCommands: { typeId: { id: this.id }, commands: [{ removeRepresentation: { id: { id: childId } } }] } }]);
     }
-    if (childKind === "Connector") {
+    if (childKind === "ConnectorStore") {
       return this.root.submitChangeKitCommands([{ changeTypeCommands: { typeId: { id: this.id }, commands: [{ removeConnector: { connectorId: { id: childId } } }] } }]);
     }
     if (childKind === "Prop") {

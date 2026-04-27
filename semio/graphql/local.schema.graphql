@@ -619,7 +619,12 @@ type KitShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type KitStore {
+type KitStore implements Node {
+	id: ID
+	container: KitGraph
+	full: KitFullDto!
+	metadata: KitMetadataDto!
+	shallow: KitShallowDto!
 	name: String!
 	designByDtoId(id: String!): DesignStore
 	typeByDtoId(id: String!): TypeStore
@@ -630,9 +635,21 @@ type KitStore {
 	fullDto: KitFullSnapshot!
 	theKitDto: KitFullSnapshot!
 	materializeAt(checkpointId: String): KitFullSnapshot!
-	metadata: KitMetadataDto!
-	shallow: KitShallowDto!
-	vcsState: StateDto!
+}
+
+
+type KitGraph implements Node  {
+	theKit: KitStore
+	alternatives: [KitAlternative!]!
+	checkpoints: [KitCheckpoint!]!
+	drafts: [KitDraft!]!
+}
+
+type KitSession {
+	id: ID!
+	wip: KitGraph!
+	authorative: KitGraph
+	conflicts: [KitConflict!]!
 }
 
 input KitStoreCommandInput @oneOf {

@@ -32,26 +32,44 @@ const definitionBody = (definition: string): string => {
 const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
 const disallowed = "leg" + "acy";
 assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add compatibility-only field names in identifiers or generated descriptions");
-for (const definition of ["type KitStore", "type Query", "type Mutation", "type Subscription", "type Type", "type Design", "type Piece", "type Connection"]) {
+for (const definition of [
+  "type KitStore",
+  "type Query",
+  "type Mutation",
+  "type Subscription",
+  "type TypeStore",
+  "type DesignStore",
+  "type PieceStore",
+  "type ConnectionStore",
+]) {
   definitionBody(definition);
 }
 const queryBody = definitionBody("type Query");
-assertSchema(queryBody.includes("kitStore: KitStore!") && queryBody.includes("kitReadScope(scope: KitReadScopeInput!): KitStore!"), "Query MUST expose Rust kit store roots");
+assertSchema(
+  queryBody.includes("kit(scope: KitReadScopeInput!): KitStore!") && !queryBody.includes("kitReadScope"),
+  "Query MUST expose kit(scope:) root read",
+);
 const mutationBody = definitionBody("type Mutation");
 assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
 const kitStoreMutationBody = definitionBody("type KitStoreMutation");
 assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreInput!): KitStorePayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
 const subscriptionBody = definitionBody("type Subscription");
-assertSchema(subscriptionBody.includes("eventStream: JSON!"), "Subscription MUST expose the Rust event stream");
+assertSchema(subscriptionBody.includes("eventStream: KitEvent!"), "Subscription MUST expose the Rust event stream");
 const kitBody = definitionBody("type KitStore");
 assertSchema(
-  kitBody.includes("liveFullDto: KitFullSnapshot!") && kitBody.includes("typeIds: [String!]!") && kitBody.includes("designByDtoId(id: String!): Design"),
+  kitBody.includes("fullDto: KitFullSnapshot!") && kitBody.includes("typeByDtoId(id: String!): TypeStore") && kitBody.includes("designByDtoId(id: String!): DesignStore"),
   "KitStore MUST expose the current semio/rs live graph API",
 );
-const typeBody = definitionBody("type Type");
-assertSchema(typeBody.includes("connectors: [Connector!]!") && typeBody.includes("representations: [Representation!]!"), "Type MUST expose the Rust catalog handles");
-const designBody = definitionBody("type Design");
-assertSchema(designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalog!"), "Design MUST expose computed semio/rs graph operations");
+const typeBody = definitionBody("type TypeStore");
+assertSchema(
+  typeBody.includes("connectors: [ConnectorStore!]!") && typeBody.includes("representations: [RepresentationStore!]!"),
+  "TypeStore MUST expose the Rust catalog handles",
+);
+const designBody = definitionBody("type DesignStore");
+assertSchema(
+  designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"),
+  "DesignStore MUST expose computed semio/rs graph operations",
+);
 assertSchema(graphqlSchema.includes("input KitReadScopeInput @oneOf"), "semio GraphQL schema MUST expose Rust read scopes as one-of input");
 
 execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
