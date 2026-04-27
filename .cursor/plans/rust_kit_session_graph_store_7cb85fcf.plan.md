@@ -2,24 +2,24 @@
 name: Rust Kit Session Graph Store
 overview: Refactor `semio/rs` and the GraphQL surface to a clean `KitSession`/`KitGraph`/`KitAlternative`/`KitStore`/`KitCheckpoint`/`KitDraft`/`KitTransaction`/`KitConflict` object graph. Drafts move onto alternatives, the per-client `kit_session::Session` is removed, mutations and reads are reorganized under `Query.session` / `Mutation.session`, and JS/React/sketchpad consumers are updated end-to-end.
 todos:
-  - id: ticket
-    content: Reopen RUST-GRAPH-QL-STORE-DTO-CLEANUP ticket (or open new under r2603) and update its description to cover the session/graph/alternative/store/checkpoint/draft/transaction/conflict refactor.
-    status: pending
-  - id: domain-model
-    content: "Phase 1 — semio/rs/lib.rs: delete kit_session per-client container, move drafts onto KitAlternative, refactor KitReadScope (no sessionId), rebuild KitStoreCommand into Alternative/Draft/Transaction/Checkpoint/Backbone tree, update KitStore/wip_kit/coordinator for stable session id."
-    status: pending
-  - id: graphql-layer
-    content: "Phase 2 — kit_graphql module: implement KitSession/KitGraph/KitAlternative/KitStore/KitCheckpoint/KitDraft/KitTransaction/KitConflict resolvers, build KitSessionMutation tree, drop KitStoreMutation/KitStorePayload/coloredConnectors, regenerate semio/graphql/schema.graphql + local.schema.graphql."
-    status: pending
-  - id: js-client
-    content: "Phase 3 — semio/js/index.ts: rewrite all queries/mutations to session.wip/authorative tree and the nested mutation API; drop sessionId bookkeeping; update generated contract assertions."
-    status: pending
-  - id: react-sketchpad
-    content: "Phase 4 — semio/react/index.tsx + semio/sketchpad/index.tsx + semio/algorithms storybook + any semio/ui consumers: switch hooks to KitSession/KitGraph/KitAlternative/KitStore, remove sessionId state, address drafts by alternativeId only."
-    status: pending
-  - id: tests-verify
-    content: Phase 5 — extend Rust kit_graphql_smoke + end-to-end tests, JS/React vitest, sketchpad typecheck, run cargo + nx, add temporary [DEBUG] logs to confirm a create/finalize cycle, then strip and close ticket with full file list.
-    status: pending
+ - id: ticket
+   content: Reopen RUST-GRAPH-QL-STORE-DTO-CLEANUP ticket (or open new under r2603) and update its description to cover the session/graph/alternative/store/checkpoint/draft/transaction/conflict refactor.
+   status: completed
+ - id: domain-model
+   content: "Phase 1 — semio/rs/lib.rs: delete kit_session per-client container, move drafts onto KitAlternative, refactor KitReadScope (no sessionId), rebuild KitStoreCommand into Alternative/Draft/Transaction/Checkpoint/Backbone tree, update KitStore/wip_kit/coordinator for stable session id."
+   status: completed
+ - id: graphql-layer
+   content: "Phase 2 — kit_graphql module: implement KitSession/KitGraph/KitAlternative/KitStore/KitCheckpoint/KitDraft/KitTransaction/KitConflict resolvers, build KitSessionMutation tree, drop KitStoreMutation/KitStorePayload/coloredConnectors, regenerate semio/graphql/schema.graphql + local.schema.graphql."
+   status: in_progress
+ - id: js-client
+   content: "Phase 3 — semio/js/index.ts: rewrite all queries/mutations to session.wip/authorative tree and the nested mutation API; drop sessionId bookkeeping; update generated contract assertions."
+   status: pending
+ - id: react-sketchpad
+   content: "Phase 4 — semio/react/index.tsx + semio/sketchpad/index.tsx + semio/algorithms storybook + any semio/ui consumers: switch hooks to KitSession/KitGraph/KitAlternative/KitStore, remove sessionId state, address drafts by alternativeId only."
+   status: pending
+ - id: tests-verify
+   content: Phase 5 — extend Rust kit_graphql_smoke + end-to-end tests, JS/React vitest, sketchpad typecheck, run cargo + nx, add temporary [DEBUG] logs to confirm a create/finalize cycle, then strip and close ticket with full file list.
+   status: pending
 isProject: false
 ---
 
@@ -95,43 +95,43 @@ Mutations move under the session entity (object-oriented; no `KitStoreMutation`)
 
 ```graphql
 type KitSessionMutation {
-  createAlternative(input: CreateKitAlternativeInput!): KitAlternative!
-  alternative(id: KitAlternativeIdDto!): KitAlternativeMutation!
-  checkpoint(id: KitCheckpointIdDto!): KitCheckpointMutation!
-  backbone: KitBackboneMutation!
+ createAlternative(input: CreateKitAlternativeInput!): KitAlternative!
+ alternative(id: KitAlternativeIdDto!): KitAlternativeMutation!
+ checkpoint(id: KitCheckpointIdDto!): KitCheckpointMutation!
+ backbone: KitBackboneMutation!
 }
 type KitAlternativeMutation {
-  createDraft(parentCheckpointId: ID): KitDraft!
-  draft: KitDraftMutation
-  unify(message: String!): KitCheckpoint!
+ createDraft(parentCheckpointId: ID): KitDraft!
+ draft: KitDraftMutation
+ unify(message: String!): KitCheckpoint!
 }
 type KitDraftMutation {
-  finalize(message: String!): KitCheckpoint!
-  abort: Boolean!
-  undo(count: Int): Boolean!
-  redo(count: Int): Boolean!
-  startTransaction: KitTransaction!
-  transaction: KitTransactionMutation
+ finalize(message: String!): KitCheckpoint!
+ abort: Boolean!
+ undo(count: Int): Boolean!
+ redo(count: Int): Boolean!
+ startTransaction: KitTransaction!
+ transaction: KitTransactionMutation
 }
 type KitTransactionMutation {
-  changeKit(commands: [ChangeKitCommand!]!): Int!
-  changeKitWithInverse(commands: [ChangeKitCommand!]!): KitChangeWithInverseDto!
-  design(id: DesignIdDto!): DesignMutation!
-  finalize: KitCheckpoint!
-  abort: Boolean!
-  undo(count: Int): Boolean!
-  redo(count: Int): Boolean!
+ changeKit(commands: [ChangeKitCommand!]!): Int!
+ changeKitWithInverse(commands: [ChangeKitCommand!]!): KitChangeWithInverseDto!
+ design(id: DesignIdDto!): DesignMutation!
+ finalize: KitCheckpoint!
+ abort: Boolean!
+ undo(count: Int): Boolean!
+ redo(count: Int): Boolean!
 }
 type KitCheckpointMutation {
-  markRelease: Boolean!
-  setActive: Boolean!
+ markRelease: Boolean!
+ setActive: Boolean!
 }
 type KitBackboneMutation {
-  attach(config: BackboneConfigInput!): BackboneStatus!
-  detach: Boolean!
-  status: BackboneStatus!
-  syncNow: Boolean!
-  resolveConflict(id: ID!, strategy: ConflictResolutionInput!): Boolean!
+ attach(config: BackboneConfigInput!): BackboneStatus!
+ detach: Boolean!
+ status: BackboneStatus!
+ syncNow: Boolean!
+ resolveConflict(id: ID!, strategy: ConflictResolutionInput!): Boolean!
 }
 ```
 

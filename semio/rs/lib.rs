@@ -6263,14 +6263,16 @@ pub mod kit_alternative {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub root: Option<Id>,
         pub checkpoints: Vec<Id>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub draft: Option<crate::kit_draft::Draft>,
     }
 
     impl KitAlternative {
         pub fn new(name: String, from_checkpoint: Option<Id>) -> Self {
             let id = Id::new_v7();
             match from_checkpoint {
-                Some(cp) => Self { id, name, root: Some(cp.clone()), checkpoints: vec![cp] },
-                None => Self { id, name, root: None, checkpoints: vec![] },
+                Some(cp) => Self { id, name, root: Some(cp.clone()), checkpoints: vec![cp], draft: None },
+                None => Self { id, name, root: None, checkpoints: vec![], draft: None },
             }
         }
 
@@ -6592,14 +6594,15 @@ pub mod kit_read_scope {
             alternative_id: Id,
         },
         Draft {
-            #[serde(rename = "sessionId")]
-            session_id: Id,
+            /// `None` means the main kit line (`the_kit_draft`); `Some(alternativeId)` scopes to that alternative's single draft slot.
+            #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+            alternative_id: Option<Id>,
             #[serde(rename = "draftId")]
             draft_id: Id,
         },
         Transaction {
-            #[serde(rename = "sessionId")]
-            session_id: Id,
+            #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+            alternative_id: Option<Id>,
             #[serde(rename = "draftId")]
             draft_id: Id,
             #[serde(rename = "transactionId")]
@@ -6609,21 +6612,21 @@ pub mod kit_read_scope {
 
     use crate::kit_draft::Draft as KitDraft;
 
-    fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_draft_working_graph(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id) -> Result<KitGraphRef> {
         let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?.clone()
+            g.clone_draft_for_owner(alternative_id, draft_id).ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?
         };
         d.materialize_working_graph()
     }
 
-    fn materialize_transaction_read_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_transaction_read_graph(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
         {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
+            let d = g.draft_ref_for_owner(alternative_id, draft_id).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
             let _ = d.open_transaction_ref(transaction_id).ok_or_else(|| SemioError::InvalidOperation("read scope: transaction is not the open transaction".into()))?;
         }
-        materialize_draft_working_graph(kit, session_id, draft_id)
+        materialize_draft_working_graph(kit, alternative_id, draft_id)
     }
 
     pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
@@ -6642,96 +6645,17 @@ pub mod kit_read_scope {
                 };
                 g0.materialize_graph_at(at)
             }
-            KitReadScope::Draft { session_id, draft_id } => {
+            KitReadScope::Draft { alternative_id, draft_id } => {
                 drop(g0);
-                return materialize_draft_working_graph(kit, session_id, draft_id);
+                return materialize_draft_working_graph(kit, alternative_id.as_ref(), draft_id);
             }
-            KitReadScope::Transaction { session_id, draft_id, transaction_id } => {
+            KitReadScope::Transaction { alternative_id, draft_id, transaction_id } => {
                 drop(g0);
-                return materialize_transaction_read_graph(kit, session_id, draft_id, transaction_id);
+                return materialize_transaction_read_graph(kit, alternative_id.as_ref(), draft_id, transaction_id);
             }
         };
         drop(g0);
         Ok(view)
-    }
-}
-pub mod kit_session {
-    //! Client session: owns drafts.
-    use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
-
-    use crate::id::Id;
-    use crate::kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
-    use crate::kit_read_scope::KitReadScope;
-    use crate::read::{ReadKitCommand, ReadKitCommandOutput};
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct Session {
-        pub id: Id,
-        pub drafts: HashMap<Id, Draft>,
-    }
-
-    impl Session {
-        pub fn new() -> Self {
-            Self { id: Id::new_v7(), drafts: HashMap::new() }
-        }
-
-        pub fn with_id(id: Id) -> Self {
-            Self { id, drafts: HashMap::new() }
-        }
-
-        pub fn add_draft(&mut self, d: Draft) -> Id {
-            let did = d.id.clone();
-            self.drafts.insert(did.clone(), d);
-            did
-        }
-
-        pub fn remove_draft(&mut self, did: &Id) -> Option<Draft> {
-            self.drafts.remove(did)
-        }
-
-        pub fn draft(&self, did: &Id) -> Option<&Draft> {
-            self.drafts.get(did)
-        }
-
-        pub fn draft_mut(&mut self, did: &Id) -> Option<&mut Draft> {
-            self.drafts.get_mut(did)
-        }
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum SessionCommand {
-        ReadKitCommands {
-            scope: KitReadScope,
-            commands: Vec<ReadKitCommand>,
-        },
-        NewDraft {
-            #[serde(rename = "checkpointId")]
-            checkpoint_id: Option<Id>,
-            #[serde(rename = "alternativeId")]
-            alternative_id: Option<Id>,
-        },
-        ExecuteKitDraftCommands {
-            id: Id,
-            commands: Vec<KitDraftCommand>,
-        },
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum SessionCommandResult {
-        ReadKitCommands {
-            results: Vec<ReadKitCommandOutput>,
-        },
-        NewDraft {
-            #[serde(rename = "draftId")]
-            draft_id: Id,
-        },
-        ExecuteKitDraftCommands {
-            results: Vec<KitDraftCommandResult>,
-        },
-        Nothing,
     }
 }
 
@@ -6880,7 +6804,7 @@ pub mod backbone {
         g.the_kit_head = snap.the_kit_head.clone();
         g.alternatives = snap.alternatives.clone();
         g.children = snap.children.clone();
-        g.sessions.clear();
+        g.clear_all_working_drafts();
         Ok(())
     }
 
@@ -7134,19 +7058,14 @@ pub mod wip_kit {
 
     fn scan_finalize(graph: &KitGraphRef, res: &KitStoreCommandResult, coord: &Sender<CoordMsg>) {
         use crate::kit_draft::KitDraftCommandResult;
-        use crate::kit_session::SessionCommandResult;
-        if let KitStoreCommandResult::ExecuteSessionCommands { results } = res {
-            for sr in results {
-                if let SessionCommandResult::ExecuteKitDraftCommands { results } = sr {
-                    for dr in results {
-                        if let KitDraftCommandResult::FinalizeToKitCheckpoint { .. } = dr {
-                            let proposed = {
-                                let g = graph.read().expect("wip graph");
-                                crate::backbone::BackboneSnapshot::from_graph(&g)
-                            };
-                            let _ = coord.send(CoordMsg::WipProposal { proposed, reply: None });
-                        }
-                    }
+        if let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res {
+            for dr in results {
+                if let KitDraftCommandResult::FinalizeToKitCheckpoint { .. } = dr {
+                    let proposed = {
+                        let g = graph.read().expect("wip graph");
+                        crate::backbone::BackboneSnapshot::from_graph(&g)
+                    };
+                    let _ = coord.send(CoordMsg::WipProposal { proposed, reply: None });
                 }
             }
         }
@@ -7458,7 +7377,7 @@ pub mod kit_store {
 
 pub mod kit_store_command {
     //! Top-level kit store command dispatch. Commands are methods on the command
-    //! types (`KitStoreCommand::execute`, `SessionCommand::execute`, ...); the
+    //! types (`KitStoreCommand::execute`, `KitDraftCommand::execute`, ...); the
     //! in-memory graph (`KitStore`) is the host object they act upon.
     use serde::{Deserialize, Serialize};
 
@@ -7471,7 +7390,6 @@ pub mod kit_store_command {
     use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
     use crate::kit_read_scope::{self, KitReadScope};
-    use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
     use crate::{error::Result, error::SemioError};
@@ -7516,18 +7434,23 @@ pub mod kit_store_command {
             scope: KitReadScope,
             commands: Vec<ReadKitCommand>,
         },
-        NewSession,
-        EndSession {
-            id: Id,
+        NewDraft {
+            #[serde(rename = "checkpointId", default, skip_serializing_if = "Option::is_none")]
+            checkpoint_id: Option<Id>,
+            #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+            alternative_id: Option<Id>,
+        },
+        ExecuteKitDraftCommands {
+            #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+            alternative_id: Option<Id>,
+            #[serde(rename = "draftId")]
+            draft_id: Id,
+            commands: Vec<KitDraftCommand>,
         },
         NewAlternative {
             #[serde(rename = "fromCheckpoint", default, skip_serializing_if = "Option::is_none")]
             from_checkpoint: Option<Id>,
             name: String,
-        },
-        ExecuteSessionCommands {
-            id: Id,
-            commands: Vec<SessionCommand>,
         },
         ExecuteKitCheckpointCommands {
             id: Id,
@@ -7563,17 +7486,15 @@ pub mod kit_store_command {
         ReadKitCommands {
             results: Vec<ReadKitCommandOutput>,
         },
-        NewSession {
-            id: Id,
+        NewDraft {
+            #[serde(rename = "draftId")]
+            draft_id: Id,
         },
-        EndSession {
-            ok: bool,
+        ExecuteKitDraftCommands {
+            results: Vec<KitDraftCommandResult>,
         },
         NewAlternative {
             id: Id,
-        },
-        ExecuteSessionCommands {
-            results: Vec<SessionCommandResult>,
         },
         ExecuteKitCheckpointCommands {
             results: Vec<KitCheckpointCommandResult>,
@@ -7636,17 +7557,48 @@ pub mod kit_store_command {
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
                     Ok(KitStoreCommandResult::ReadKitCommands { results })
                 }
-                KitStoreCommand::NewSession => {
+                KitStoreCommand::NewDraft { checkpoint_id, alternative_id } => {
+                    let base = {
+                        let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
+                            return Err(SemioError::InvalidOperation("stale or invalid draft base".into()));
+                        }
+                        match &alternative_id {
+                            None => {
+                                if g.the_kit_draft.is_some() {
+                                    return Err(SemioError::InvalidOperation("kit line draft already open".into()));
+                                }
+                            }
+                            Some(aid) => {
+                                let a = g.alternatives.get(aid).ok_or_else(|| SemioError::NotFound { kind: "KitAlternative", id: aid.clone() })?;
+                                if a.draft.is_some() {
+                                    return Err(SemioError::InvalidOperation("alternative draft already open".into()));
+                                }
+                            }
+                        }
+                        g.materialize_at(checkpoint_id.as_ref())
+                    };
+                    KitGraph::replace_live_graph(kit, base.clone())?;
+                    let draft = crate::kit_draft::Draft::new(checkpoint_id, alternative_id.clone(), base);
+                    let draft_id = draft.id.clone();
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let session = Session::new();
-                    let id = session.id.clone();
-                    g.sessions.insert(id.clone(), session);
-                    Ok(KitStoreCommandResult::NewSession { id })
+                    match alternative_id {
+                        None => {
+                            g.the_kit_draft = Some(draft);
+                        }
+                        Some(aid) => {
+                            g.alternatives.get_mut(&aid).expect("checked").draft = Some(draft);
+                        }
+                    }
+                    Ok(KitStoreCommandResult::NewDraft { draft_id })
                 }
-                KitStoreCommand::EndSession { id } => {
-                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    g.sessions.remove(&id);
-                    Ok(KitStoreCommandResult::EndSession { ok: true })
+                KitStoreCommand::ExecuteKitDraftCommands { alternative_id, draft_id, commands } => {
+                    let mut results = Vec::new();
+                    let alt_ref = alternative_id.as_ref();
+                    for c in commands {
+                        results.push(c.execute(kit, alt_ref, &draft_id)?);
+                    }
+                    Ok(KitStoreCommandResult::ExecuteKitDraftCommands { results })
                 }
                 KitStoreCommand::NewAlternative { from_checkpoint, name } => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -7659,13 +7611,6 @@ pub mod kit_store_command {
                     let aid = alt.id.clone();
                     g.alternatives.insert(aid.clone(), alt);
                     Ok(KitStoreCommandResult::NewAlternative { id: aid })
-                }
-                KitStoreCommand::ExecuteSessionCommands { id, commands } => {
-                    let mut results = Vec::new();
-                    for c in commands {
-                        results.push(c.execute(kit, &id)?);
-                    }
-                    Ok(KitStoreCommandResult::ExecuteSessionCommands { results })
                 }
                 KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
                     let mut results = Vec::new();
@@ -7685,49 +7630,11 @@ pub mod kit_store_command {
         }
     }
 
-    impl SessionCommand {
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id) -> Result<SessionCommandResult> {
-            match self {
-                SessionCommand::ReadKitCommands { scope, commands } => {
-                    let view = kit_read_scope::resolve_read_graph(kit, &scope)?;
-                    let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let results = ReadKitCommand::execute_many(&*gr, &commands)?;
-                    Ok(SessionCommandResult::ReadKitCommands { results })
-                }
-                SessionCommand::NewDraft { checkpoint_id, alternative_id } => {
-                    let base = {
-                        let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        if !g.sessions.contains_key(sid) {
-                            return Err(SemioError::InvalidOperation("unknown session".into()));
-                        }
-                        if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
-                            return Err(SemioError::InvalidOperation("stale or invalid draft base".into()));
-                        }
-                        g.materialize_at(checkpoint_id.as_ref())
-                    };
-                    KitGraph::replace_live_graph(kit, base.clone())?;
-                    let draft = crate::kit_draft::Draft::new(checkpoint_id, alternative_id, base);
-                    let aid = draft.id.clone();
-                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    g.sessions.get_mut(sid).expect("session").add_draft(draft);
-                    Ok(SessionCommandResult::NewDraft { draft_id: aid })
-                }
-                SessionCommand::ExecuteKitDraftCommands { id: did, commands } => {
-                    let mut results = Vec::new();
-                    for c in commands {
-                        results.push(c.execute(kit, sid, &did)?);
-                    }
-                    Ok(SessionCommandResult::ExecuteKitDraftCommands { results })
-                }
-            }
-        }
-    }
-
     impl KitDraftCommand {
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
-                    let sc = KitReadScope::Draft { session_id: sid.clone(), draft_id: did.clone() };
+                    let sc = KitReadScope::Draft { alternative_id: alternative_id.cloned(), draft_id: did.clone() };
                     let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
                     let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
@@ -7735,46 +7642,57 @@ pub mod kit_store_command {
                 }
                 KitDraftCommand::StartTransaction => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g.sessions.get_mut(sid).ok_or_else(|| SemioError::InvalidOperation("unknown session for draft tx".into()))?.draft_mut(did).ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
+                    let d = g.draft_mut_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction".into()))?;
                     let tid = d.start_transaction()?;
                     Ok(KitDraftCommandResult::StartTransaction { transaction_id: tid })
                 }
                 KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
                     let mut results = Vec::new();
                     for c in commands {
-                        results.push(c.execute(kit, sid, did, &txid)?);
+                        results.push(c.execute(kit, alternative_id, did, &txid)?);
                     }
                     Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
                 }
-                KitDraftCommand::FinalizeToKitCheckpoint { message } => Self::finalize_draft(kit, sid, did, message),
+                KitDraftCommand::FinalizeToKitCheckpoint { message } => Self::finalize_draft(kit, alternative_id, did, message),
                 KitDraftCommand::Abort => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    if let Some(session) = g.sessions.get_mut(sid) {
-                        session.remove_draft(did);
+                    match alternative_id {
+                        None => {
+                            if g.the_kit_draft.as_ref().map(|d| d.id == *did).unwrap_or(false) {
+                                g.the_kit_draft = None;
+                            }
+                        }
+                        Some(aid) => {
+                            if let Some(a) = g.alternatives.get_mut(aid) {
+                                if a.draft.as_ref().map(|d| d.id == *did).unwrap_or(false) {
+                                    a.draft = None;
+                                }
+                            }
+                        }
                     }
                     Ok(KitDraftCommandResult::Abort { ok: true })
                 }
-                KitDraftCommand::Undo { count } => Self::draft_undo(kit, sid, did, count),
-                KitDraftCommand::Redo { count } => Self::draft_redo(kit, sid, did, count),
+                KitDraftCommand::Undo { count } => Self::draft_undo(kit, alternative_id, did, count),
+                KitDraftCommand::Redo { count } => Self::draft_redo(kit, alternative_id, did, count),
                 KitDraftCommand::CanUndo { count: _ } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).map(|d| d.can_undo_draft()).unwrap_or(false);
+                    let can = g.draft_ref_for_owner(alternative_id, did).map(|d| d.can_undo_draft()).unwrap_or(false);
                     Ok(KitDraftCommandResult::CanUndo { can })
                 }
                 KitDraftCommand::CanRedo { count: _ } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).map(|d| d.can_redo_draft()).unwrap_or(false);
+                    let can = g.draft_ref_for_owner(alternative_id, did).map(|d| d.can_redo_draft()).unwrap_or(false);
                     Ok(KitDraftCommandResult::CanRedo { can })
                 }
             }
         }
 
-        fn draft_undo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_undo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.draft_mut_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.pop_finalized()
                 };
                 let Some(tx) = tx_opt else {
@@ -7784,19 +7702,19 @@ pub mod kit_store_command {
                     KitChange::apply_backward(ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 }
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                if let Some(d) = g.draft_mut_for_owner(alternative_id, did) {
                     d.push_redo_transaction(tx);
                 }
             }
             Ok(KitDraftCommandResult::Undo { ok: true })
         }
 
-        fn draft_redo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_redo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.draft_mut_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.pop_redo_transaction()
                 };
                 let Some(tx) = tx_opt else {
@@ -7806,17 +7724,17 @@ pub mod kit_store_command {
                     KitChange::apply_forward(ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 }
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                if let Some(d) = g.draft_mut_for_owner(alternative_id, did) {
                     d.push_finalized(tx);
                 }
             }
             Ok(KitDraftCommandResult::Redo { ok: true })
         }
 
-        fn finalize_draft(kit: &KitGraphRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
+        fn finalize_draft(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, message: String) -> Result<KitDraftCommandResult> {
             let (parent, alt, kc) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g.sessions.get(sid).and_then(|s| s.draft(did)).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
+                let d = g.draft_ref_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
                 if d.has_open_transaction() {
                     return Err(SemioError::InvalidOperation("open transaction must be closed before FinalizeToKitCheckpoint".into()));
                 }
@@ -7848,26 +7766,36 @@ pub mod kit_store_command {
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.checkpoints.insert(new_id.clone(), cp);
                 g.children.entry(parent.clone()).or_default().push(new_id.clone());
-                if let Some(aid) = alt {
-                    if let Some(a) = g.alternatives.get_mut(&aid) {
-                        a.append(new_id.clone());
-                    } else {
-                        return Err(SemioError::InvalidOperation("target alternative missing".into()));
+                match &alt {
+                    Some(aid) => {
+                        if let Some(a) = g.alternatives.get_mut(aid) {
+                            a.append(new_id.clone());
+                        } else {
+                            return Err(SemioError::InvalidOperation("target alternative missing".into()));
+                        }
+                        if let Some(a) = g.alternatives.get_mut(aid) {
+                            if a.draft.as_ref().map(|d| d.id == *did).unwrap_or(false) {
+                                a.draft = None;
+                            }
+                        }
                     }
-                } else {
-                    g.the_kit_head = Some(new_id.clone());
+                    None => {
+                        g.the_kit_head = Some(new_id.clone());
+                        if g.the_kit_draft.as_ref().map(|d| d.id == *did).unwrap_or(false) {
+                            g.the_kit_draft = None;
+                        }
+                    }
                 }
-                g.sessions.get_mut(sid).expect("s").remove_draft(did);
             }
             Ok(KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id: new_id })
         }
     }
 
     impl TransactionCommand {
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
+        pub fn execute(self, kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
-                    let sc = KitReadScope::Transaction { session_id: sid.clone(), draft_id: did.clone(), transaction_id: txid.clone() };
+                    let sc = KitReadScope::Transaction { alternative_id: alternative_id.cloned(), draft_id: did.clone(), transaction_id: txid.clone() };
                     let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
                     let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
@@ -7877,13 +7805,13 @@ pub mod kit_store_command {
                     let mut n = 0usize;
                     {
                         let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let ot = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).ok_or_else(|| SemioError::InvalidOperation("no open matching transaction".into()))?;
+                        let ot = g.draft_ref_for_owner(alternative_id, did).and_then(|d| d.open_transaction_ref(txid)).ok_or_else(|| SemioError::InvalidOperation("no open matching transaction".into()))?;
                         if !ot.is_open() {
                             return Err(SemioError::InvalidOperation("transaction is not open".into()));
                         }
                     }
                     for c in &chs {
-                        if KitGraph::open_transaction_apply_one_command(kit, sid, did, txid, c)? {
+                        if KitGraph::open_transaction_apply_one_command(kit, alternative_id, did, txid, c)? {
                             n += 1;
                         }
                     }
@@ -7891,14 +7819,14 @@ pub mod kit_store_command {
                 }
                 TransactionCommand::Finalize => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.draft_mut_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.finalize_transaction(txid)?;
                     Ok(TransactionCommandResult::Finalize { ok: true })
                 }
                 TransactionCommand::Abort => {
                     let tx = {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                        let d = g.draft_mut_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                         d.take_open_transaction(txid)?
                     };
                     for ch in tx.changes.iter().rev() {
@@ -7906,28 +7834,28 @@ pub mod kit_store_command {
                     }
                     Ok(TransactionCommandResult::Abort { ok: true })
                 }
-                TransactionCommand::Undo => Self::tx_undo(kit, sid, did, txid, false),
-                TransactionCommand::UndoAll => Self::tx_undo(kit, sid, did, txid, true),
-                TransactionCommand::Redo => Self::tx_redo(kit, sid, did, txid, false),
-                TransactionCommand::RedoAll => Self::tx_redo(kit, sid, did, txid, true),
+                TransactionCommand::Undo => Self::tx_undo(kit, alternative_id, did, txid, false),
+                TransactionCommand::UndoAll => Self::tx_undo(kit, alternative_id, did, txid, true),
+                TransactionCommand::Redo => Self::tx_redo(kit, alternative_id, did, txid, false),
+                TransactionCommand::RedoAll => Self::tx_redo(kit, alternative_id, did, txid, true),
                 TransactionCommand::CanUndo => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_undo()).unwrap_or(false);
+                    let can = g.draft_ref_for_owner(alternative_id, did).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_undo()).unwrap_or(false);
                     Ok(TransactionCommandResult::CanUndo { can })
                 }
                 TransactionCommand::CanRedo => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_redo()).unwrap_or(false);
+                    let can = g.draft_ref_for_owner(alternative_id, did).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_redo()).unwrap_or(false);
                     Ok(TransactionCommandResult::CanRedo { can })
                 }
             }
         }
 
-        fn tx_undo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_undo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
+                    let tx = g.draft_mut_for_owner(alternative_id, did).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
                     if !tx.can_undo() {
                         return Ok(if all { TransactionCommandResult::UndoAll { ok: true } } else { TransactionCommandResult::Undo { ok: true } });
                     }
@@ -7939,7 +7867,7 @@ pub mod kit_store_command {
                 KitChange::apply_backward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
+                    let tx = g.draft_mut_for_owner(alternative_id, did).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
                     tx.redo_changes.push(ch);
                 }
                 if !all {
@@ -7949,11 +7877,11 @@ pub mod kit_store_command {
             Ok(TransactionCommandResult::UndoAll { ok: true })
         }
 
-        fn tx_redo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_redo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
+                    let tx = g.draft_mut_for_owner(alternative_id, did).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
                     if !tx.can_redo() {
                         return Ok(if all { TransactionCommandResult::RedoAll { ok: true } } else { TransactionCommandResult::Redo { ok: true } });
                     }
@@ -7965,7 +7893,7 @@ pub mod kit_store_command {
                 KitChange::apply_forward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
+                    let tx = g.draft_mut_for_owner(alternative_id, did).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
                     tx.changes.push(ch);
                 }
                 if !all {
@@ -9352,7 +9280,7 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -9599,6 +9527,7 @@ pub mod connector {
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
+            self.color_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(t) = self.parent_type.upgrade() {
                 if let Ok(tr) = t.read() {
@@ -18514,7 +18443,7 @@ pub mod kit_graph {
         pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
         pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
         pub the_kit_head: Option<Id>,
-        pub sessions: std::collections::HashMap<Id, crate::kit_session::Session>,
+        pub the_kit_draft: Option<crate::kit_draft::Draft>,
         pub children: std::collections::HashMap<Option<Id>, Vec<Id>>,
     }
 
@@ -18716,11 +18645,36 @@ pub mod kit_graph {
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
-                sessions: std::collections::HashMap::new(),
+                the_kit_draft: None,
                 children: std::collections::HashMap::new(),
             };
             s.initial = s.to_full_dto();
             s
+        }
+
+        pub fn draft_ref_for_owner(&self, alternative_id: Option<&Id>, draft_id: &Id) -> Option<&crate::kit_draft::Draft> {
+            match alternative_id {
+                None => self.the_kit_draft.as_ref().filter(|d| d.id == *draft_id),
+                Some(aid) => self.alternatives.get(aid).and_then(|a| a.draft.as_ref()).filter(|d| d.id == *draft_id),
+            }
+        }
+
+        pub fn draft_mut_for_owner(&mut self, alternative_id: Option<&Id>, draft_id: &Id) -> Option<&mut crate::kit_draft::Draft> {
+            match alternative_id {
+                None => self.the_kit_draft.as_mut().filter(|d| d.id == *draft_id),
+                Some(aid) => self.alternatives.get_mut(aid).and_then(|a| a.draft.as_mut()).filter(|d| d.id == *draft_id),
+            }
+        }
+
+        pub fn clone_draft_for_owner(&self, alternative_id: Option<&Id>, draft_id: &Id) -> Option<crate::kit_draft::Draft> {
+            self.draft_ref_for_owner(alternative_id, draft_id).cloned()
+        }
+
+        pub fn clear_all_working_drafts(&mut self) {
+            self.the_kit_draft = None;
+            for a in self.alternatives.values_mut() {
+                a.draft = None;
+            }
         }
 
         const MAX_UNDO_STEPS: usize = 100;
@@ -18738,9 +18692,22 @@ pub mod kit_graph {
             self.event_bus.subscribe()
         }
 
+        pub fn invalidate_connector_color_caches(&self) {
+            for t in &self.types {
+                if let Ok(tr) = t.read() {
+                    for c in &tr.connectors {
+                        if let Ok(cr) = c.try_read() {
+                            cr.invalidate_color_cache();
+                        }
+                    }
+                }
+            }
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
+            self.invalidate_connector_color_caches();
         }
 
         pub fn invalidate_validation(&self) {
@@ -19701,7 +19668,7 @@ pub mod kit_graph {
             merged.event_bus = bus;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let preserve = (g.undo_past.clone(), g.undo_future.clone(), g.undo_inhibit, g.initial.clone(), g.checkpoints.clone(), g.alternatives.clone(), g.the_kit_head.clone(), g.sessions.clone(), g.children.clone());
+                let preserve = (g.undo_past.clone(), g.undo_future.clone(), g.undo_inhibit, g.initial.clone(), g.checkpoints.clone(), g.alternatives.clone(), g.the_kit_head.clone(), g.the_kit_draft.clone(), g.children.clone());
                 *g = merged;
                 g.undo_past = preserve.0;
                 g.undo_future = preserve.1;
@@ -19710,7 +19677,7 @@ pub mod kit_graph {
                 g.checkpoints = preserve.4;
                 g.alternatives = preserve.5;
                 g.the_kit_head = preserve.6;
-                g.sessions = preserve.7;
+                g.the_kit_draft = preserve.7;
                 g.children = preserve.8;
             }
             event_wire::rewire_parent_kits(kit);
@@ -19783,7 +19750,7 @@ pub mod kit_graph {
             Ok(pre)
         }
 
-        pub(crate) fn open_transaction_apply_one_command(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id, c: &ChangeKitCommand) -> std::result::Result<bool, SemioError> {
+        pub(crate) fn open_transaction_apply_one_command(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id, c: &ChangeKitCommand) -> std::result::Result<bool, SemioError> {
             use crate::kit_change::KitChange;
             let before = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -19802,7 +19769,7 @@ pub mod kit_graph {
             let mut recorded = false;
             {
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if let Some(tx) = g.sessions.get_mut(session_id).and_then(|s| s.draft_mut(draft_id)).and_then(|d| d.open_transaction_mut(transaction_id)) {
+                if let Some(tx) = g.draft_mut_for_owner(alternative_id, draft_id).and_then(|d| d.open_transaction_mut(transaction_id)) {
                     tx.record(kc.clone());
                     recorded = true;
                 }
@@ -20105,7 +20072,7 @@ pub mod kit_graph {
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
-                sessions: std::collections::HashMap::new(),
+                the_kit_draft: None,
                 children: std::collections::HashMap::new(),
             }
         }
@@ -20148,7 +20115,7 @@ pub mod kit_graph {
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
-                sessions: std::collections::HashMap::new(),
+                the_kit_draft: None,
                 children: std::collections::HashMap::new(),
             }
         }
@@ -20269,7 +20236,7 @@ pub mod kit_graph {
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
-                sessions: std::collections::HashMap::new(),
+                the_kit_draft: None,
                 children: std::collections::HashMap::new(),
             }));
 
@@ -25703,8 +25670,22 @@ pub mod io {
 
             tx.execute("INSERT INTO kit_main_line (kit_id, head_checkpoint_id) VALUES (?1, ?2)", params![kit_id.as_str(), g.the_kit_head.as_ref().map(|h| h.as_str())])?;
 
-            let sessions_json = serde_json::to_string(&g.sessions)?;
-            tx.execute("INSERT INTO kit_sessions_bundle (kit_id, json) VALUES (?1, ?2)", params![kit_id.as_str(), sessions_json])?;
+            #[derive(serde::Serialize)]
+            #[serde(rename_all = "camelCase")]
+            struct KitWorkingDraftsPersistSer {
+                #[serde(skip_serializing_if = "Option::is_none")]
+                the_kit_draft: Option<crate::kit_draft::Draft>,
+                #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+                alternative_drafts: std::collections::HashMap<String, crate::kit_draft::Draft>,
+            }
+            let mut alternative_drafts: std::collections::HashMap<String, crate::kit_draft::Draft> = std::collections::HashMap::new();
+            for (aid, a) in &g.alternatives {
+                if let Some(d) = &a.draft {
+                    alternative_drafts.insert(aid.to_string(), d.clone());
+                }
+            }
+            let drafts_json = serde_json::to_string(&KitWorkingDraftsPersistSer { the_kit_draft: g.the_kit_draft.clone(), alternative_drafts })?;
+            tx.execute("INSERT INTO kit_sessions_bundle (kit_id, json) VALUES (?1, ?2)", params![kit_id.as_str(), drafts_json])?;
             Ok(())
         }
 
@@ -25771,17 +25752,34 @@ pub mod io {
                     let cid: String = cr.get(0)?;
                     checkpoints_ordered.push(Id::from(cid.as_str()));
                 }
-                alternatives.insert(alt_id.clone(), KitAlternative { id: alt_id, name, root, checkpoints: checkpoints_ordered });
-            }
-
-            if let Some(json) = conn.query_row("SELECT json FROM kit_sessions_bundle WHERE kit_id = ?1", params![kit_id.as_str()], |row| row.get::<_, String>(0)).optional()? {
-                g.sessions = serde_json::from_str(&json)?;
-            } else {
-                g.sessions.clear();
+                alternatives.insert(alt_id.clone(), KitAlternative { id: alt_id, name, root, checkpoints: checkpoints_ordered, draft: None });
             }
 
             g.checkpoints = checkpoints;
             g.alternatives = alternatives;
+
+            if let Some(json) = conn.query_row("SELECT json FROM kit_sessions_bundle WHERE kit_id = ?1", params![kit_id.as_str()], |row| row.get::<_, String>(0)).optional()? {
+                #[derive(serde::Deserialize)]
+                #[serde(rename_all = "camelCase")]
+                struct KitWorkingDraftsPersist {
+                    #[serde(default)]
+                    the_kit_draft: Option<crate::kit_draft::Draft>,
+                    #[serde(default)]
+                    alternative_drafts: std::collections::HashMap<String, crate::kit_draft::Draft>,
+                }
+                if let Ok(blob) = serde_json::from_str::<KitWorkingDraftsPersist>(&json) {
+                    g.the_kit_draft = blob.the_kit_draft;
+                    for (aid_s, d) in blob.alternative_drafts {
+                        let aid = Id::from(aid_s.as_str());
+                        if let Some(a) = g.alternatives.get_mut(&aid) {
+                            a.draft = Some(d);
+                        }
+                    }
+                }
+            } else {
+                g.the_kit_draft = None;
+            }
+
             g.children = rebuild_checkpoint_children(&g.checkpoints);
             Ok(())
         }
@@ -26366,6 +26364,7 @@ pub mod io {
                     port: Some(PortIdDto { id: Id::from(port_id) }),
                     qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
+                    ..Default::default()
                 });
             }
             Ok(values)
@@ -27058,7 +27057,6 @@ pub mod kit_graphql {
     use crate::kit_alternative::KitAlternativeCommand;
     use crate::kit_checkpoint::KitCheckpointCommand;
     use crate::kit_graph::{KitGraph, KitGraphRef};
-    use crate::kit_session::SessionCommand;
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::piece::PieceStoreRef;
     use crate::representation::RepresentationStoreRef;
@@ -27233,14 +27231,13 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct SessionInput {
-        session_id: Option<String>,
+        /// When the batch has `draft` commands without a preceding `createDraft`, scopes the draft slot (`None` = main kit line).
+        alternative_id: Option<String>,
         commands: Vec<SessionCommandInput>,
     }
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum SessionCommandInput {
-        CreateSession(ConfirmOnlyInput),
-        EndSession(ConfirmOnlyInput),
         CreateDraft(CreateDraftInput),
         Draft(DraftInput),
     }
@@ -27518,8 +27515,6 @@ pub mod kit_graphql {
         CreateHangingPieces,
         CreateConnectedPiece,
         CreateFixedPiece,
-        NewSession,
-        EndSession,
         NewDraft,
         StartTransaction,
         FinalizeDraft,
@@ -27624,14 +27619,19 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct KitReadScopeDraftInput {
-        session_id: String,
+        #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+        alternative_id: Option<String>,
+        #[serde(rename = "draftId")]
         draft_id: String,
     }
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
     struct KitReadScopeTransactionInput {
-        session_id: String,
+        #[serde(rename = "alternativeId", default, skip_serializing_if = "Option::is_none")]
+        alternative_id: Option<String>,
+        #[serde(rename = "draftId")]
         draft_id: String,
+        #[serde(rename = "transactionId")]
         transaction_id: String,
     }
 
@@ -27641,8 +27641,21 @@ pub mod kit_graphql {
             KitReadScopeInput::TheKit(_) => R::TheKit,
             KitReadScopeInput::Checkpoint(c) => R::Checkpoint { checkpoint_id: Id::from(c.checkpoint_id.as_str()) },
             KitReadScopeInput::Alternative(a) => R::Alternative { alternative_id: Id::from(a.alternative_id.as_str()) },
-            KitReadScopeInput::Draft(d) => R::Draft { session_id: Id::from(d.session_id.as_str()), draft_id: Id::from(d.draft_id.as_str()) },
-            KitReadScopeInput::Transaction(t) => R::Transaction { session_id: Id::from(t.session_id.as_str()), draft_id: Id::from(t.draft_id.as_str()), transaction_id: Id::from(t.transaction_id.as_str()) },
+            KitReadScopeInput::Draft(d) => R::Draft {
+                alternative_id: d.alternative_id.as_ref().and_then(|s| {
+                    let t = s.trim();
+                    if t.is_empty() { None } else { Some(Id::from(t)) }
+                }),
+                draft_id: Id::from(d.draft_id.as_str()),
+            },
+            KitReadScopeInput::Transaction(t) => R::Transaction {
+                alternative_id: t.alternative_id.as_ref().and_then(|s| {
+                    let u = s.trim();
+                    if u.is_empty() { None } else { Some(Id::from(u)) }
+                }),
+                draft_id: Id::from(t.draft_id.as_str()),
+                transaction_id: Id::from(t.transaction_id.as_str()),
+            },
         })
     }
 
@@ -27759,58 +27772,39 @@ pub mod kit_graphql {
     }
 
     async fn execute_session_batch(shell: &KitShellCtx, batch: SessionInput, results: &mut Vec<KitStoreResult>) -> Result<()> {
-        let mut session_id = batch.session_id.map(|id| Id::from(id.as_str()));
+        let batch_alternative = batch.alternative_id.as_deref().map(Id::from);
+        let mut scope_alternative: Option<Id> = batch_alternative.clone();
         let mut last_draft_id: Option<Id> = None;
         for command in batch.commands {
             match command {
-                SessionCommandInput::CreateSession(_) => {
-                    let res = shell.run_command(KitStoreCommand::NewSession).await?;
-                    let KitStoreCommandResult::NewSession { id } = res else {
-                        return Err(Error::new("expected NewSession result"));
-                    };
-                    let id_string = id.to_string();
-                    session_id = Some(id);
-                    results.push(KitStoreResult { ok: Some(true), session_id: Some(id_string), ..empty_kit_store_batch_result(KitStoreResultKind::NewSession) });
-                }
-                SessionCommandInput::EndSession(_) => {
-                    let id = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = shell.run_command(KitStoreCommand::EndSession { id }).await?;
-                    let KitStoreCommandResult::EndSession { ok } = res else {
-                        return Err(Error::new("expected EndSession result"));
-                    };
-                    results.push(KitStoreResult { ok: Some(ok), ..empty_kit_store_batch_result(KitStoreResultKind::EndSession) });
-                }
                 SessionCommandInput::CreateDraft(input) => {
-                    let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
+                    scope_alternative = input.target_alternative_id.as_deref().map(Id::from);
                     let res = shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: sid,
-                            commands: vec![SessionCommand::NewDraft { checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from), alternative_id: input.target_alternative_id.as_deref().map(Id::from) }],
+                        .run_command(KitStoreCommand::NewDraft {
+                            checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from),
+                            alternative_id: scope_alternative.clone(),
                         })
                         .await?;
                     let draft_id = match res {
-                        KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
-                            crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                            _ => return Err(Error::new("expected NewDraft result")),
-                        },
-                        _ => return Err(Error::new("expected ExecuteSessionCommands result")),
+                        KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                        _ => return Err(Error::new("expected NewDraft result")),
                     };
                     last_draft_id = Some(draft_id.clone());
                     results.push(KitStoreResult { ok: Some(true), draft_id: Some(draft_id.to_string()), ..empty_kit_store_batch_result(KitStoreResultKind::NewDraft) });
                 }
                 SessionCommandInput::Draft(mut draft_batch) => {
-                    let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
                     if draft_batch.draft_id.is_none() {
                         draft_batch.draft_id = last_draft_id.as_ref().map(|id| id.to_string());
                     }
-                    execute_draft_batch(shell, sid, draft_batch, results).await?;
+                    let alt = scope_alternative.clone().or_else(|| batch_alternative.clone());
+                    execute_draft_batch(shell, alt, draft_batch, results).await?;
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_draft_batch(shell: &KitShellCtx, session_id: Id, batch: DraftInput, results: &mut Vec<KitStoreResult>) -> Result<()> {
+    async fn execute_draft_batch(shell: &KitShellCtx, alternative_id: Option<Id>, batch: DraftInput, results: &mut Vec<KitStoreResult>) -> Result<()> {
         let mut draft_id = batch.draft_id.map(|id| Id::from(id.as_str()));
         let mut transaction_id: Option<Id> = None;
         for command in batch.commands {
@@ -27818,34 +27812,35 @@ pub mod kit_graphql {
                 DraftCommandInput::FinalizeDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     let res = shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: did,
+                            commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }],
                         })
                         .await?;
                     let checkpoint_id = match res {
-                        KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
-                            crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
-                                crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                                _ => return Err(Error::new("expected FinalizeToKitCheckpoint result")),
-                            },
-                            _ => return Err(Error::new("expected ExecuteKitDraftCommands result")),
+                        KitStoreCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
+                            _ => return Err(Error::new("expected FinalizeToKitCheckpoint result")),
                         },
-                        _ => return Err(Error::new("expected ExecuteSessionCommands result")),
+                        _ => return Err(Error::new("expected ExecuteKitDraftCommands result")),
                     };
                     results.push(KitStoreResult { ok: Some(true), checkpoint_id: Some(checkpoint_id.to_string()), ..empty_kit_store_batch_result(KitStoreResultKind::FinalizeDraft) });
                 }
                 DraftCommandInput::AbortDraft(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    shell.run_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
+                    shell
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: alternative_id.clone(), draft_id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] })
+                        .await?;
                     results.push(KitStoreResult { ok: Some(true), ..empty_kit_store_batch_result(KitStoreResultKind::AbortDraft) });
                 }
                 DraftCommandInput::UndoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: did,
+                            commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }],
                         })
                         .await?;
                     results.push(KitStoreResult { ok: Some(true), count: input.count, ..empty_kit_store_batch_result(KitStoreResultKind::UndoDraft) });
@@ -27853,9 +27848,10 @@ pub mod kit_graphql {
                 DraftCommandInput::RedoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: did,
+                            commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }],
                         })
                         .await?;
                     results.push(KitStoreResult { ok: Some(true), count: input.count, ..empty_kit_store_batch_result(KitStoreResultKind::RedoDraft) });
@@ -27863,31 +27859,28 @@ pub mod kit_graphql {
                 DraftCommandInput::StartTransaction(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     let res = shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] })
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: alternative_id.clone(), draft_id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] })
                         .await?;
                     let new_transaction_id = match res {
-                        KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
-                            crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
-                                crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                                _ => return Err(Error::new("expected StartTransaction result")),
-                            },
-                            _ => return Err(Error::new("expected ExecuteKitDraftCommands result")),
+                        KitStoreCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
+                            _ => return Err(Error::new("expected StartTransaction result")),
                         },
-                        _ => return Err(Error::new("expected ExecuteSessionCommands result")),
+                        _ => return Err(Error::new("expected ExecuteKitDraftCommands result")),
                     };
                     transaction_id = Some(new_transaction_id.clone());
                     results.push(KitStoreResult { ok: Some(true), transaction_id: Some(new_transaction_id.to_string()), ..empty_kit_store_batch_result(KitStoreResultKind::StartTransaction) });
                 }
                 DraftCommandInput::Transaction(tx_batch) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    execute_transaction_batch(shell, session_id.clone(), did, tx_batch, &mut transaction_id, results).await?;
+                    execute_transaction_batch(shell, alternative_id.clone(), did, tx_batch, &mut transaction_id, results).await?;
                 }
             }
         }
         Ok(())
     }
 
-    async fn execute_transaction_batch(shell: &KitShellCtx, session_id: Id, draft_id: Id, batch: TransactionInput, current_transaction_id: &mut Option<Id>, results: &mut Vec<KitStoreResult>) -> Result<()> {
+    async fn execute_transaction_batch(shell: &KitShellCtx, alternative_id: Option<Id>, draft_id: Id, batch: TransactionInput, current_transaction_id: &mut Option<Id>, results: &mut Vec<KitStoreResult>) -> Result<()> {
         let mut transaction_id = batch.transaction_id.map(|id| Id::from(id.as_str())).or_else(|| current_transaction_id.clone());
         for command in batch.commands {
             let txid = transaction_id.clone().ok_or_else(|| Error::new("transactionId is required"))?;
@@ -27896,11 +27889,12 @@ pub mod kit_graphql {
                     let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
                             }],
                         })
                         .await?;
@@ -27909,18 +27903,22 @@ pub mod kit_graphql {
                 TransactionCommandInput::ChangeKitWithInverse(change) => {
                     let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
-                    let view = crate::kit_read_scope::resolve_read_graph(&shell.graph, &crate::kit_read_scope::KitReadScope::Transaction { session_id: session_id.clone(), draft_id: draft_id.clone(), transaction_id: txid.clone() })
-                        .map_err(|e| Error::new(e.to_string()))?;
+                    let view = crate::kit_read_scope::resolve_read_graph(
+                        &shell.graph,
+                        &crate::kit_read_scope::KitReadScope::Transaction { alternative_id: alternative_id.clone(), draft_id: draft_id.clone(), transaction_id: txid.clone() },
+                    )
+                    .map_err(|e| Error::new(e.to_string()))?;
                     let pre = KitGraph::control_plane_pre_batch(&view, &commands).map_err(|e| Error::new(format!("{e:?}")))?;
                     let k = pre.kind.clone();
                     let inv_gql: Vec<GqlChangeKitCommand> = pre.inverse_flat.into_iter().map(GqlChangeKitCommand).collect();
                     let (ck, cko) = kit_change_semantic_fields(&k);
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
                             }],
                         })
                         .await?;
@@ -27953,11 +27951,12 @@ pub mod kit_graphql {
                         let commands = design_batch_command_to_change_kit_commands(&design_id, sub)?;
                         let count = commands.len() as i32;
                         shell
-                            .run_command(KitStoreCommand::ExecuteSessionCommands {
-                                id: session_id.clone(),
-                                commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                    id: draft_id.clone(),
-                                    commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
+                            .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                                alternative_id: alternative_id.clone(),
+                                draft_id: draft_id.clone(),
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                    id: txid.clone(),
+                                    commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
                                 }],
                             })
                             .await?;
@@ -27966,11 +27965,12 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::FinalizeTransaction(_) => {
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Finalize] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::Finalize],
                             }],
                         })
                         .await?;
@@ -27978,11 +27978,12 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::AbortTransaction(_) => {
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Abort] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::Abort],
                             }],
                         })
                         .await?;
@@ -27990,11 +27991,12 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::UndoTransaction(_) => {
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Undo] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::Undo],
                             }],
                         })
                         .await?;
@@ -28002,11 +28004,12 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::RedoTransaction(_) => {
                     shell
-                        .run_command(KitStoreCommand::ExecuteSessionCommands {
-                            id: session_id.clone(),
-                            commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                                id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Redo] }],
+                        .run_command(KitStoreCommand::ExecuteKitDraftCommands {
+                            alternative_id: alternative_id.clone(),
+                            draft_id: draft_id.clone(),
+                            commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid.clone(),
+                                commands: vec![crate::kit_transaction::TransactionCommand::Redo],
                             }],
                         })
                         .await?;
@@ -28219,9 +28222,17 @@ pub mod kit_graphql {
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
+    #[graphql(name = "RootDto")]
+    struct RootDto {
+        id: String,
+        name: String,
+    }
+    #[derive(Clone, Debug, SimpleObject)]
     #[graphql(name = "DraftDto")]
     struct DraftDto {
         id: String,
+        #[graphql(name = "ownerAlternativeId")]
+        owner_alternative_id: Option<String>,
         parent_checkpoint: Option<String>,
         target_alternative: Option<String>,
         finalized_transaction_count: usize,
@@ -28231,25 +28242,14 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "SessionDto")]
-    struct SessionDto {
-        id: String,
-        drafts: Vec<DraftDto>,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "RootDto")]
-    struct RootDto {
-        id: String,
-        name: String,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
     #[graphql(name = "StateDto")]
     struct StateDto {
         the_kit_head: Option<String>,
         root: RootDto,
         checkpoints: Vec<CheckpointDto>,
         alternatives: Vec<AlternativeDto>,
-        sessions: Vec<SessionDto>,
+        #[graphql(name = "workingDrafts")]
+        working_drafts: Vec<DraftDto>,
         the_kit_line: Vec<String>,
     }
 
@@ -28280,11 +28280,6 @@ pub mod kit_graphql {
 
         async fn designs(&self) -> Result<Vec<DesignStoreGraphql>> {
             Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignStoreGraphql).collect())
-        }
-
-        async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorDto>> {
-            let g = lock_graph(&self.0)?;
-            Ok(crate::read::kit_colored_connector_rows(&*g))
         }
 
         async fn full_dto(&self) -> Result<GqlKitFullSnapshot> {
@@ -28331,31 +28326,38 @@ pub mod kit_graphql {
                 .map(|a| AlternativeDto { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut sessions: Vec<SessionDto> = g
-                .sessions
-                .values()
-                .map(|s| {
-                    let mut drafts: Vec<DraftDto> = s
-                        .drafts
-                        .values()
-                        .map(|d| DraftDto {
-                            id: d.id.to_string(),
-                            parent_checkpoint: d.parent_checkpoint.as_ref().map(|p| p.to_string()),
-                            target_alternative: d.target_alternative.as_ref().map(|t| t.to_string()),
-                            finalized_transaction_count: d.transactions.len(),
-                            redo_transaction_count: d.redo_transactions.len(),
-                            open_transaction_id: d.open_transaction.as_ref().map(|t| t.id.to_string()),
-                            can_undo: d.can_undo_draft(),
-                            can_redo: d.can_redo_draft(),
-                        })
-                        .collect();
-                    drafts.sort_by(|a, b| a.id.cmp(&b.id));
-                    SessionDto { id: s.id.to_string(), drafts }
-                })
-                .collect();
-            sessions.sort_by(|a, b| a.id.cmp(&b.id));
+            let mut working_drafts: Vec<DraftDto> = Vec::new();
+            if let Some(d) = &g.the_kit_draft {
+                working_drafts.push(DraftDto {
+                    id: d.id.to_string(),
+                    owner_alternative_id: None,
+                    parent_checkpoint: d.parent_checkpoint.as_ref().map(|p: &crate::id::Id| p.to_string()),
+                    target_alternative: d.target_alternative.as_ref().map(|t: &crate::id::Id| t.to_string()),
+                    finalized_transaction_count: d.transactions.len(),
+                    redo_transaction_count: d.redo_transactions.len(),
+                    open_transaction_id: d.open_transaction.as_ref().map(|t| t.id.to_string()),
+                    can_undo: d.can_undo_draft(),
+                    can_redo: d.can_redo_draft(),
+                });
+            }
+            for a in g.alternatives.values() {
+                if let Some(d) = &a.draft {
+                    working_drafts.push(DraftDto {
+                        id: d.id.to_string(),
+                        owner_alternative_id: Some(a.id.to_string()),
+                        parent_checkpoint: d.parent_checkpoint.as_ref().map(|p: &crate::id::Id| p.to_string()),
+                        target_alternative: d.target_alternative.as_ref().map(|t: &crate::id::Id| t.to_string()),
+                        finalized_transaction_count: d.transactions.len(),
+                        redo_transaction_count: d.redo_transactions.len(),
+                        open_transaction_id: d.open_transaction.as_ref().map(|t| t.id.to_string()),
+                        can_undo: d.can_undo_draft(),
+                        can_redo: d.can_redo_draft(),
+                    });
+                }
+            }
+            working_drafts.sort_by(|a, b| a.id.cmp(&b.id));
             let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
-            Ok(StateDto { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: RootDto { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
+            Ok(StateDto { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: RootDto { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, working_drafts, the_kit_line })
         }
     }
 
@@ -28615,6 +28617,10 @@ pub mod kit_graphql {
                 .upgrade()
                 .map(TypeStoreGraphql)
                 .ok_or_else(|| Error::new("type container missing for connector"))
+        }
+
+        async fn color(&self) -> Result<crate::connector::ColorDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata_dto().color)
         }
 
         async fn metadata(&self) -> Result<crate::connector::ConnectorMetadataDto> {
@@ -29042,13 +29048,12 @@ mod tests {
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
                 let body = serde_json::json!({
-                    "query": "mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind sessionId draftId transactionId } } } }",
+                    "query": "mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind draftId transactionId } } } }",
                     "variables": {
                         "input": {
                             "commands": [{
                                 "session": {
                                     "commands": [
-                                        { "createSession": { "confirm": true } },
                                         { "createDraft": {} },
                                         { "draft": { "commands": [
                                             { "startTransaction": { "confirm": true } },
@@ -29067,13 +29072,12 @@ mod tests {
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             let rows = out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).expect("batch results");
-            let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str()));
             let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str()));
             let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str()));
-            let (sid, did, tid) = (sid.expect("sessionId"), did.expect("draftId"), tid.expect("transactionId"));
+            let (did, tid) = (did.expect("draftId"), tid.expect("transactionId"));
 
             let draft_name = futures_lite::future::block_on(async {
-                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"sessionId":"{}","draftId":"{}"}}}}}}}}"#, sid, did);
+                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"draftId":"{}"}}}}}}}}"#, did);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
                 req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
@@ -29082,7 +29086,7 @@ mod tests {
             assert_eq!(draft_name, "in-tx");
 
             let tx_name = futures_lite::future::block_on(async {
-                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"sessionId":"{}","draftId":"{}","transactionId":"{}"}}}}}}}}"#, sid, did, tid);
+                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"draftId":"{}","transactionId":"{}"}}}}}}}}"#, did, tid);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
                 req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
@@ -29098,13 +29102,12 @@ mod tests {
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
                 let body = serde_json::json!({
-                    "query": "mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind sessionId draftId transactionId } } } }",
+                    "query": "mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind draftId transactionId } } } }",
                     "variables": {
                         "input": {
                             "commands": [{
                                 "session": {
                                     "commands": [
-                                        { "createSession": { "confirm": true } },
                                         { "createDraft": {} },
                                         { "draft": { "commands": [
                                             { "startTransaction": { "confirm": true } },
@@ -29122,7 +29125,6 @@ mod tests {
                 req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 let rows = v.pointer("/data/kitStore/batch/results").and_then(|x| x.as_array()).expect("results");
-                let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).expect("sid");
                 let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).expect("did");
                 let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).expect("tid");
 
@@ -29132,7 +29134,6 @@ mod tests {
                         "input": {
                             "commands": [{
                                 "session": {
-                                    "sessionId": sid,
                                     "commands": [{
                                         "draft": {
                                             "draftId": did,
@@ -29250,7 +29251,6 @@ mod tests {
                             "commands": [{
                                 "session": {
                                     "commands": [
-                                        { "createSession": { "confirm": true } },
                                         { "createDraft": {} },
                                         { "draft": { "commands": [
                                             { "startTransaction": { "confirm": true } },
@@ -29290,7 +29290,6 @@ mod tests {
                             "commands": [{
                                 "session": {
                                     "commands": [
-                                        { "createSession": { "confirm": true } },
                                         { "createDraft": {} },
                                         { "draft": { "commands": [
                                             { "startTransaction": { "confirm": true } },
@@ -31107,6 +31106,7 @@ mod tests {
 
         mod connector {
             use crate::events::KitEvent;
+            use crate::read::color_string_for_id_text;
 
             #[test]
             fn connector_set_code_emits() {
@@ -31121,6 +31121,70 @@ mod tests {
                 c.write().unwrap().set_code("C2".into());
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::Connector { event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Code), .. })));
+            }
+
+            #[test]
+            fn connector_color_css_matches_port_group_root() {
+                let (kit, _type_id, conn_id) = super::common::kit_with_type_connector();
+                let kr = kit.read().unwrap();
+                let port_id = kr.ports[0].read().unwrap().id.clone();
+                let c = {
+                    let t = kr.semio_type(_type_id.as_str()).unwrap();
+                    let tr = t.read().unwrap();
+                    tr.connector(conn_id.as_str()).unwrap().clone()
+                };
+                drop(kr);
+                let root = crate::kit_graph::KitGraph::port_compatibility_group_root_id(&*kit.read().unwrap(), &port_id).expect("port in kit");
+                let expected = color_string_for_id_text(root.as_str());
+                assert_eq!(c.read().unwrap().color_css_string(), expected);
+            }
+
+            #[test]
+            fn compatible_ports_share_connector_color() {
+                let type_id = crate::id::Id::new_v7();
+                let port_a = crate::id::Id::new_v7();
+                let port_b = crate::id::Id::new_v7();
+                let conn_a = crate::id::Id::new_v7();
+                let conn_b = crate::id::Id::new_v7();
+                let kit_id = crate::id::Id::new_v7();
+                let dto = crate::kit_graph::KitFullDto {
+                    id: kit_id,
+                    name: "kit".into(),
+                    ports: vec![
+                        crate::port::PortFullDto {
+                            id: port_a.clone(),
+                            compatible_ports: vec![crate::port::PortIdDto { id: port_b.clone() }],
+                            ..Default::default()
+                        },
+                        crate::port::PortFullDto {
+                            id: port_b.clone(),
+                            compatible_ports: vec![crate::port::PortIdDto { id: port_a.clone() }],
+                            ..Default::default()
+                        },
+                    ],
+                    types: vec![crate::typ::TypeFullDto {
+                        id: type_id.clone(),
+                        name: "typ".into(),
+                        connectors: vec![
+                            crate::connector::ConnectorFullDto { id: conn_a.clone(), code: "A".into(), port: Some(crate::port::PortIdDto { id: port_a.clone() }), ..Default::default() },
+                            crate::connector::ConnectorFullDto { id: conn_b.clone(), code: "B".into(), port: Some(crate::port::PortIdDto { id: port_b.clone() }), ..Default::default() },
+                        ],
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                };
+                let kit = crate::kit_graph::KitGraph::from_full_dto(dto);
+                let kr = kit.read().unwrap();
+                let t = kr.semio_type(type_id.as_str()).unwrap();
+                let tr = t.read().unwrap();
+                let ca = tr.connector(conn_a.as_str()).unwrap().clone();
+                let cb = tr.connector(conn_b.as_str()).unwrap().clone();
+                drop(tr);
+                drop(t);
+                drop(kr);
+                let a = ca.read().unwrap().color_css_string();
+                let b = cb.read().unwrap().color_css_string();
+                assert_eq!(a, b);
             }
         }
 
@@ -31729,13 +31793,11 @@ mod tests {
         use crate::kit_checkpoint::KitCheckpointCommand;
         use crate::kit_draft::KitDraftCommand;
         use crate::kit_graph::KitGraph;
-        use crate::kit_session::SessionCommand;
         use crate::kit_store_command::{self, KitStoreCommand};
         use crate::kit_transaction::TransactionCommand;
         use crate::read::{ReadKitCommand, ReadTypeCommand, ReadTypeCommandOutput};
         use crate::typ::TypeIdDto;
         use crate::typ::TypeStore;
-
         fn make_kit_with_type() -> (Arc<RwLock<KitGraph>>, Id) {
             let mut inner = KitGraph::new("k");
             let t = Arc::new(RwLock::new(TypeStore::new("T0")));
@@ -31796,48 +31858,34 @@ mod tests {
             inner.types.push(t);
             inner.initial = inner.to_full_dto();
             let k = Arc::new(RwLock::new(inner));
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
-                },
-                _ => panic!(),
-            };
-            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                .expect("st")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }).expect("st") {
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: txid,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: txid,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
+                    ],
                 },
             )
             .expect("fin");
@@ -31877,57 +31925,49 @@ mod tests {
         #[test]
         fn transaction_change_undo_redo() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let txid = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
                 },
-                _ => panic!(),
-            };
-            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                .expect("st")
+            )
+            .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let res = KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![KitDraftCommand::ExecuteTransactionCommands {
-                            id: txid,
-                            commands: vec![
-                                TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
-                                },
-                                TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
-                                TransactionCommand::Undo,
-                                TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
-                            ],
-                        }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                        id: txid,
+                        commands: vec![
+                            TransactionCommand::ChangeKitCommands {
+                                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
+                            },
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                            TransactionCommand::Undo,
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                        ],
                     }],
                 },
             )
             .expect("seq");
             match res {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => {
                     let tr = match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: dr } => match &dr[0] {
-                            crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results: tr } => tr,
-                            _ => panic!(),
-                        },
+                        crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results: tr } => tr,
                         _ => panic!(),
                     };
                     let (read1, read2) = (&tr[1], &tr[3]);
@@ -31960,45 +32000,40 @@ mod tests {
         #[test]
         fn draft_undo_across_transactions() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
-                _ => panic!(),
-            };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
-                },
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let run_tx = |name: &str| {
-                let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                    .expect("st")
+                let txid = match KitGraph::execute(
+                    &k,
+                    KitStoreCommand::ExecuteKitDraftCommands {
+                        alternative_id: None,
+                        draft_id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    },
+                )
+                .expect("st")
                 {
-                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                    kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
                     },
                     _ => panic!(),
                 };
                 KitGraph::execute(
                     &k,
-                    KitStoreCommand::ExecuteSessionCommands {
-                        id: sid.clone(),
-                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                            id: did.clone(),
-                            commands: vec![KitDraftCommand::ExecuteTransactionCommands {
-                                id: txid,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            }],
+                    KitStoreCommand::ExecuteKitDraftCommands {
+                        alternative_id: None,
+                        draft_id: did.clone(),
+                        commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                            id: txid,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
                         }],
                     },
                 )
@@ -32010,7 +32045,15 @@ mod tests {
                 let g = k.read().expect("g");
                 assert_eq!(read_type_name(&*g, &tid), "A2");
             }
-            KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
+            KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did.clone(),
+                    commands: vec![KitDraftCommand::Undo { count: 1 }],
+                },
+            )
+            .expect("undo dr");
             {
                 let g = k.read().expect("g");
                 assert_eq!(read_type_name(&*g, &tid), "A1");
@@ -32020,57 +32063,49 @@ mod tests {
         #[test]
         fn finalize_to_checkpoint_first_has_none_parent() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let txid = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
                 },
-                _ => panic!(),
-            };
-            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                .expect("st")
+            )
+            .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let cp = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: txid,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: txid,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
+                    ],
                 },
             )
             .expect("fin")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32085,57 +32120,49 @@ mod tests {
         #[test]
         fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did0 = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let tx0 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did0.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
                 },
-                _ => panic!(),
-            };
-            let tx0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                .expect("st")
+            )
+            .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let cp_main = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did0,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx0,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m0".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did0,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx0,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "m0".into() },
+                    ],
                 },
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32145,45 +32172,51 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let did1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let did1 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::NewDraft {
+                    checkpoint_id: Some(cp_main.clone()),
+                    alternative_id: Some(alt_id.clone()),
                 },
+            )
+            .expect("nd1")
+            {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let tx1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: Some(alt_id.clone()),
+                    draft_id: did1.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
+                },
+            )
                 .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let _ = KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did1,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx1,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "a".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: Some(alt_id.clone()),
+                    draft_id: did1,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx1,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "a".into() },
+                    ],
                 },
             )
             .expect("fa");
@@ -32202,57 +32235,42 @@ mod tests {
         #[test]
         fn alternative_share_checkpoints() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
-                },
-                _ => panic!(),
-            };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let cp0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
+                    ],
                 },
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32274,25 +32292,15 @@ mod tests {
         #[test]
         fn tx_undo_updates_live_snapshot_after_multiple_changes() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
-                },
-                _ => panic!(),
-            };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32305,9 +32313,13 @@ mod tests {
             let run_tx = |command: TransactionCommand| {
                 KitGraph::execute(
                     &k,
-                    KitStoreCommand::ExecuteSessionCommands {
-                        id: sid.clone(),
-                        commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx.clone(), commands: vec![command] }] }],
+                    KitStoreCommand::ExecuteKitDraftCommands {
+                        alternative_id: None,
+                        draft_id: did.clone(),
+                        commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx.clone(),
+                            commands: vec![command],
+                        }],
                     },
                 )
                 .expect("tx cmd")
@@ -32336,19 +32348,20 @@ mod tests {
 
             let can_redo = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: tx, commands: vec![TransactionCommand::CanRedo] }] }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                        id: tx,
+                        commands: vec![TransactionCommand::CanRedo],
+                    }],
                 },
             )
             .expect("can redo")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results } => match &results[0] {
-                            crate::kit_transaction::TransactionCommandResult::CanRedo { can } => *can,
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results } => match &results[0] {
+                        crate::kit_transaction::TransactionCommandResult::CanRedo { can } => *can,
                         _ => panic!(),
                     },
                     _ => panic!(),
@@ -32361,57 +32374,49 @@ mod tests {
         #[test]
         fn unify_alternative_replaces_list_with_root_and_new() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did0 = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let tx0 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did0.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
                 },
-                _ => panic!(),
-            };
-            let tx0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
-                .expect("st")
+            )
+            .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let cp0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did0,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx0,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "c0".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did0,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx0,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "c0".into() },
+                    ],
                 },
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32420,53 +32425,57 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let did1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
+            let did1 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::NewDraft {
+                    checkpoint_id: Some(cp0.clone()),
+                    alternative_id: Some(alt.clone()),
                 },
+            )
+            .expect("nd1")
+            {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let tx1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute(
+                &k,
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: Some(alt.clone()),
+                    draft_id: did1.clone(),
+                    commands: vec![KitDraftCommand::StartTransaction],
+                },
+            )
                 .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let _cp1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did1,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx1,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "c1".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: Some(alt.clone()),
+                    draft_id: did1,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx1,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "c1".into() },
+                    ],
                 },
             )
             .expect("f1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32491,57 +32500,42 @@ mod tests {
         #[test]
         fn release_caches_materialized_kit() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
-                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
-                    _ => panic!(),
-                },
-                _ => panic!(),
-            };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
-                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let cp = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid,
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did,
-                        commands: vec![
-                            KitDraftCommand::ExecuteTransactionCommands {
-                                id: tx,
-                                commands: vec![
-                                    TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
-                                    },
-                                    TransactionCommand::Finalize,
-                                ],
-                            },
-                            KitDraftCommand::FinalizeToKitCheckpoint { message: "r".into() },
-                        ],
-                    }],
+                KitStoreCommand::ExecuteKitDraftCommands {
+                    alternative_id: None,
+                    draft_id: did,
+                    commands: vec![
+                        KitDraftCommand::ExecuteTransactionCommands {
+                            id: tx,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
+                                },
+                                TransactionCommand::Finalize,
+                            ],
+                        },
+                        KitDraftCommand::FinalizeToKitCheckpoint { message: "r".into() },
+                    ],
                 },
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
-                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
-                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
-                        _ => panic!(),
-                    },
+                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                    crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
@@ -32629,7 +32623,7 @@ pub use change_command::{
 };
 pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
 pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
+pub use connector::{ColorDto, ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
 pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
@@ -32650,7 +32644,6 @@ pub use kit_conflict_registry::ConflictRegistry;
 pub use kit_diff::KitDiff;
 pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_graph::KitGraph;
-pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
 pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};

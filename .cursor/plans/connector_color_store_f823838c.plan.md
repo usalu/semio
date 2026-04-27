@@ -4,10 +4,10 @@ overview: Move connector color ownership from kit-wide colored connector rows to
 todos:
  - id: rust-color-store
    content: Implement cached ConnectorStore color in Rust and remove kit-wide colored connector rows.
-   status: in_progress
+   status: completed
  - id: schema-js-react
    content: Update GraphQL, JS, and React APIs to expose connector.color and remove coloredConnectors reads.
-   status: pending
+   status: in_progress
  - id: ui-consumers
    content: Update sketchpad, algorithms, and UI consumers to read connector-local colors.
    status: pending
