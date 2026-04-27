@@ -36,8 +36,16 @@ pub mod read {
     use crate::tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto};
     use crate::typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStoreRef};
 
+    /// 🧩 How a nested design is referenced from host connections (wire `type` string).
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, async_graphql::Enum)]
+    #[serde(rename_all = "lowercase")]
+    pub enum IncludedDesignConnectionKind {
+        Connected,
+        Fixed,
+    }
+
     /// One row of [`crate::design::DesignStore::flatten_map`].
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct DesignFlattenMapEntryDto {
         pub piece_id: Id,
@@ -46,15 +54,16 @@ pub mod read {
     }
 
     /// Included child design stub referenced from connections (port of [`getIncludedDesigns`](DesignStore::included_design_infos) in JS).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct IncludedDesignInfoDto {
         pub id: Id,
         #[serde(rename = "designId")]
         pub design_id: Id,
-        /// `"connected"` or `"fixed"`.
+        /// Wire JSON uses `"type"`; GraphQL exposes `connectionKind`.
         #[serde(rename = "type")]
-        pub type_: String,
+        #[graphql(name = "connectionKind")]
+        pub connection_kind: IncludedDesignConnectionKind,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -64,7 +73,7 @@ pub mod read {
     }
 
     /// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct KitColoredConnectorRowDto {
         pub type_id: TypeIdDto,
@@ -2248,7 +2257,7 @@ pub mod read {
                 .filter_map(|c| c.read().ok().map(|cr| cr.to_full_dto()))
                 .filter(|c| c.connected.design_piece.as_ref().is_some_and(|p| p.id == design_id) || c.connecting.design_piece.as_ref().is_some_and(|p| p.id == design_id))
                 .collect();
-            out.push(IncludedDesignInfoDto { id: design_id.clone(), design_id: design_id.clone(), type_: "connected".to_string(), center: None, plane: None, external_connections: ex });
+            out.push(IncludedDesignInfoDto { id: design_id.clone(), design_id: design_id.clone(), connection_kind: IncludedDesignConnectionKind::Connected, center: None, plane: None, external_connections: ex });
         }
         out
     }
@@ -8124,12 +8133,12 @@ pub mod attribute {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AttributeIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AttributeMetadataDto {
         pub id: Id,
         pub key: String,
@@ -8138,7 +8147,7 @@ pub mod attribute {
         pub definition: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AttributeShallowDto {
         pub id: Id,
         pub key: String,
@@ -8147,7 +8156,7 @@ pub mod attribute {
         pub definition: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AttributeFullDto {
         pub id: Id,
         pub key: String,
@@ -8380,12 +8389,12 @@ pub mod author {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AuthorIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AuthorMetadataDto {
         pub id: Id,
         pub name: String,
@@ -8396,7 +8405,7 @@ pub mod author {
         pub rank: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AuthorShallowDto {
         pub id: Id,
         #[serde(default)]
@@ -8409,7 +8418,7 @@ pub mod author {
         pub rank: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct AuthorFullDto {
         pub id: Id,
         #[serde(default)]
@@ -8599,12 +8608,12 @@ pub mod benchmark {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct BenchmarkIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct BenchmarkMetadataDto {
         pub id: Id,
         pub name: String,
@@ -8618,7 +8627,7 @@ pub mod benchmark {
         pub max_excluded: Option<bool>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct BenchmarkShallowDto {
         pub id: Id,
         pub name: String,
@@ -8632,7 +8641,7 @@ pub mod benchmark {
         pub max_excluded: Option<bool>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct BenchmarkFullDto {
         pub id: Id,
         pub name: String,
@@ -8796,12 +8805,12 @@ pub mod concept {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConceptIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConceptMetadataDto {
         pub id: Id,
         pub name: String,
@@ -8811,7 +8820,7 @@ pub mod concept {
         pub order: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConceptShallowDto {
         pub id: Id,
         #[serde(default)]
@@ -8822,7 +8831,7 @@ pub mod concept {
         pub order: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConceptFullDto {
         pub id: Id,
         #[serde(default)]
@@ -9002,12 +9011,12 @@ pub mod connection {
         child_plane_matrix: Cache<nalgebra::Matrix4<f64>>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionMetadataDto {
         pub id: Id,
         pub connected: SideMetadataDto,
@@ -9032,7 +9041,7 @@ pub mod connection {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionShallowDto {
         pub id: Id,
         pub connected: SideMetadataDto,
@@ -9059,7 +9068,7 @@ pub mod connection {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionFullDto {
         pub id: Id,
         pub connected: SideMetadataDto,
@@ -9421,12 +9430,12 @@ pub mod connector {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorMetadataDto {
         pub id: Id,
         pub code: String,
@@ -9436,7 +9445,7 @@ pub mod connector {
         pub port: Option<PortIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorShallowDto {
         pub id: Id,
         /// Metabolism sometimes omits both; see [`ConnectorFullDto::code`].
@@ -9452,7 +9461,7 @@ pub mod connector {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorFullDto {
         pub id: Id,
         /// Exporters may omit a connector label; `name` in C# is an alias of our `code`.
@@ -9670,12 +9679,12 @@ pub mod design {
         flatten_cache: Cache<HashMap<Id, (Plane, Coordinate)>>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct DesignIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct DesignMetadataDto {
         pub id: Id,
         pub name: String,
@@ -9697,7 +9706,7 @@ pub mod design {
         pub kit: Option<crate::kit_graph::KitIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct DesignShallowDto {
         pub id: Id,
         pub name: String,
@@ -9743,7 +9752,7 @@ pub mod design {
         pub stats: Vec<StatShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct DesignFullDto {
         pub id: Id,
         pub name: String,
@@ -17263,12 +17272,12 @@ pub mod file {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FileIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FileMetadataDto {
         pub id: Id,
         pub url: String,
@@ -17286,7 +17295,7 @@ pub mod file {
         pub updated: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FileShallowDto {
         pub id: Id,
         /// Metabolism: payload is often in `blob` (data URL) or a human `name`; we prefer a direct `url` when present.
@@ -17335,7 +17344,7 @@ pub mod file {
         }
     }
 
-    #[derive(Clone, Debug, Serialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FileFullDto {
         pub id: Id,
         pub url: String,
@@ -17565,12 +17574,12 @@ pub mod folder {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FolderIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FolderMetadataDto {
         pub id: Id,
         pub path: String,
@@ -17578,7 +17587,7 @@ pub mod folder {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FolderShallowDto {
         pub id: Id,
         #[serde(default, alias = "name")]
@@ -17587,7 +17596,7 @@ pub mod folder {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FolderFullDto {
         pub id: Id,
         #[serde(default, alias = "name")]
@@ -17707,13 +17716,14 @@ pub mod folder {
 }
 
 pub mod geom {
+    use async_graphql::SimpleObject;
     use serde::{Deserialize, Serialize};
 
     use crate::hash::HashWriter;
     use crate::merkle::Writer as MerkleWriter;
 
     /// 2D diagram coordinate (`hash_coordinate` in `semio/py/main.py` — "Coordinate" + u + v).
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Coordinate {
         pub u: f64,
         pub v: f64,
@@ -17775,7 +17785,7 @@ pub mod geom {
     pub type Uv = Coordinate;
 
     /// 3D point (`hash_point` in `semio/py/main.py`).
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Point {
         pub x: f64,
         pub y: f64,
@@ -17809,7 +17819,7 @@ pub mod geom {
     }
 
     /// 3D direction (`hash_vector` in `semio/py/main.py`). Not necessarily unit length.
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Vector {
         pub x: f64,
         pub y: f64,
@@ -17856,7 +17866,7 @@ pub mod geom {
     }
 
     /// Oriented plane: origin, x-axis, y-axis (Python `hash_plane`).
-    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Plane {
         #[serde(default)]
         pub origin: Point,
@@ -17950,12 +17960,12 @@ pub mod location {
         hash_cache: crate::hash::Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
     pub struct LocationIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LocationMetadataDto {
         pub id: Id,
         pub longitude: f64,
@@ -17964,7 +17974,7 @@ pub mod location {
         pub altitude: Option<f64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LocationShallowDto {
         pub id: Id,
         pub longitude: f64,
@@ -17975,7 +17985,7 @@ pub mod location {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LocationFullDto {
         pub id: Id,
         pub longitude: f64,
@@ -18053,12 +18063,12 @@ pub mod group {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct GroupIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct GroupMetadataDto {
         pub id: Id,
         pub name: String,
@@ -18072,7 +18082,7 @@ pub mod group {
         pub pieces: Vec<PieceIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct GroupShallowDto {
         pub id: Id,
         pub name: String,
@@ -18086,7 +18096,7 @@ pub mod group {
         pub pieces: Vec<PieceIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct GroupFullDto {
         pub id: Id,
         pub name: String,
@@ -18324,6 +18334,24 @@ pub mod id {
         }
     }
 }
+
+//#region IdGraphqlScalar
+use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
+
+#[Scalar(name = "Id")]
+impl ScalarType for crate::id::Id {
+    fn parse(value: Value) -> InputValueResult<Self> {
+        match value {
+            Value::String(s) => Ok(crate::id::Id::from(String::from(s.as_str()))),
+            _ => Err(InputValueError::custom("Id must be a string")),
+        }
+    }
+
+    fn to_value(&self) -> Value {
+        Value::String(self.as_str().into())
+    }
+}
+//#endregion
 
 pub mod hash {
     use sha2::{Digest, Sha256};
@@ -18626,12 +18654,12 @@ pub mod kit_graph {
         pub inverse_flat: Vec<ChangeKitCommand>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct KitIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct KitMetadataDto {
         pub id: Id,
         pub name: String,
@@ -18659,7 +18687,7 @@ pub mod kit_graph {
         pub version: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct KitShallowDto {
         pub id: Id,
         pub name: String,
@@ -18707,7 +18735,7 @@ pub mod kit_graph {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct KitFullDto {
         pub id: Id,
         pub name: String,
@@ -18781,9 +18809,10 @@ pub mod kit_graph {
     }
 
     /// 🧩 Per-piece derived placement row (same structure as the former `get_pieces_metadata_json` map values).
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
-    pub struct PiecePlacementMetadataRow {
+    pub struct PiecePlacementMetadataDto {
+        pub piece_id: Id,
         pub plane: Plane,
         pub center: Coordinate,
         pub fixed_piece_id: String,
@@ -21599,7 +21628,7 @@ pub mod kit_graph {
         }
 
         /// 🧩 Structured piece placement map (see [`Self::get_pieces_metadata_json`] for JSON interop).
-        pub fn piece_placement_metadata(&self, design_id: &str) -> std::result::Result<HashMap<String, PiecePlacementMetadataRow>, SetError> {
+        pub fn piece_placement_metadata(&self, design_id: &str) -> std::result::Result<HashMap<String, PiecePlacementMetadataDto>, SetError> {
             let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
             let flat = dr.flatten_map();
@@ -21652,14 +21681,14 @@ pub mod kit_graph {
                 }
             }
 
-            let mut out: HashMap<String, PiecePlacementMetadataRow> = HashMap::new();
+            let mut out: HashMap<String, PiecePlacementMetadataDto> = HashMap::new();
             for p in &dr.pieces {
                 if let Ok(pr) = p.read() {
                     let id_s = pr.id.to_string();
                     let (plane, center) = flat.get(&pr.id).cloned().unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
                     let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
                     let dpt = *depth.get(&pr.id).unwrap_or(&0);
-                    out.insert(id_s.clone(), PiecePlacementMetadataRow { plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
+                    out.insert(id_s.clone(), PiecePlacementMetadataDto { piece_id: pr.id.clone(), plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
                 }
             }
             Ok(out)
@@ -21740,12 +21769,12 @@ pub mod layer {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LayerIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LayerMetadataDto {
         pub id: Id,
         #[serde(default, alias = "path")]
@@ -21762,7 +21791,7 @@ pub mod layer {
         pub locked: Option<bool>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LayerShallowDto {
         pub id: Id,
         #[serde(default, alias = "path")]
@@ -21779,7 +21808,7 @@ pub mod layer {
         pub locked: Option<bool>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct LayerFullDto {
         pub id: Id,
         #[serde(default, alias = "path")]
@@ -22008,13 +22037,13 @@ pub mod piece {
         flat_center: Cache<Coordinate>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PieceIdDto {
         pub id: Id,
     }
 
     /// Explicit plane + center placement (world or local), used by read commands and narrow piece views.
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct PoseFullDto {
         pub plane: Plane,
@@ -22047,7 +22076,7 @@ pub mod piece {
         pub designs: Vec<crate::design::DesignIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PieceMetadataDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22069,12 +22098,13 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
+        #[graphql(name = "kind")]
         pub r#type: Option<TypeIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub design: Option<crate::design::DesignIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PieceShallowDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22096,6 +22126,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
+        #[graphql(name = "kind")]
         pub r#type: Option<TypeIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub design: Option<crate::design::DesignIdDto>,
@@ -22105,7 +22136,7 @@ pub mod piece {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PieceFullDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22127,6 +22158,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
+        #[graphql(name = "kind")]
         pub r#type: Option<TypeIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub design: Option<crate::design::DesignIdDto>,
@@ -22957,12 +22989,12 @@ pub mod port {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
     pub struct PortIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PortMetadataDto {
         pub id: Id,
         pub name: String,
@@ -22972,7 +23004,7 @@ pub mod port {
         pub icon: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PortShallowDto {
         pub id: Id,
         pub name: String,
@@ -22998,7 +23030,7 @@ pub mod port {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PortFullDto {
         pub id: Id,
         #[serde(default)]
@@ -23290,12 +23322,12 @@ pub mod family {
         pub(crate) hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
     pub struct FamilyIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FamilyMetadataDto {
         pub id: Id,
         pub name: String,
@@ -23305,7 +23337,7 @@ pub mod family {
         pub icon: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FamilyShallowDto {
         pub id: Id,
         pub name: String,
@@ -23317,7 +23349,7 @@ pub mod family {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FamilyFullDto {
         pub id: Id,
         pub name: String,
@@ -23446,12 +23478,12 @@ pub mod prop {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropMetadataDto {
         pub id: Id,
         pub key: String,
@@ -23460,7 +23492,7 @@ pub mod prop {
         pub unit: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropShallowDto {
         pub id: Id,
         pub key: String,
@@ -23470,7 +23502,7 @@ pub mod prop {
     }
 
     /// Wire: either `key` or `quality: { id }` (resolved to `key` from kit `qualities` in [`crate::kit_graph::KitGraph::from_full_dto`]).
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropFullDto {
         pub id: Id,
         /// May be empty on wire when `quality` carries the catalog id (see [`PropFullDto::quality`]).
@@ -23658,12 +23690,12 @@ pub mod quality {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct QualityIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct QualityMetadataDto {
         pub id: Id,
         pub key: String,
@@ -23677,7 +23709,7 @@ pub mod quality {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct QualityShallowDto {
         pub id: Id,
         pub key: String,
@@ -23693,7 +23725,7 @@ pub mod quality {
         pub benchmarks: Vec<BenchmarkMetadataDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct QualityFullDto {
         pub id: Id,
         pub key: String,
@@ -24033,12 +24065,12 @@ pub mod representation {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct RepresentationIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct RepresentationMetadataDto {
         pub id: Id,
         pub url: String,
@@ -24048,7 +24080,7 @@ pub mod representation {
         pub file: Option<FileIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct RepresentationShallowDto {
         pub id: Id,
         #[serde(default, alias = "name", alias = "blob")]
@@ -24065,7 +24097,7 @@ pub mod representation {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct RepresentationFullDto {
         pub id: Id,
         /// Metabolism uses `name` (and sometimes `blob`) for the same role as our canonical `url`.
@@ -24259,7 +24291,7 @@ pub mod side {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct SideIdDto {
         pub id: Id,
     }
@@ -24268,7 +24300,7 @@ pub mod side {
         Id::new_v7()
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     pub struct SideMetadataDto {
         /// C# connection sides often omit; generated when materializing a [`SideStore`].
         #[serde(default = "new_side_dto_id")]
@@ -24289,7 +24321,7 @@ pub mod side {
         }
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct SideShallowDto {
         pub id: Id,
         pub piece: crate::piece::PieceIdDto,
@@ -24299,7 +24331,7 @@ pub mod side {
         pub design_piece: Option<crate::piece::PieceIdDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct SideFullDto {
         pub id: Id,
         pub piece: crate::piece::PieceIdDto,
@@ -24448,12 +24480,12 @@ pub mod stat {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct StatIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct StatMetadataDto {
         pub id: Id,
         pub key: String,
@@ -24464,7 +24496,7 @@ pub mod stat {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct StatShallowDto {
         pub id: Id,
         pub key: String,
@@ -24475,7 +24507,7 @@ pub mod stat {
         pub description: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct StatFullDto {
         pub id: Id,
         pub key: String,
@@ -24645,12 +24677,12 @@ pub mod tag {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TagIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TagMetadataDto {
         pub id: Id,
         pub name: String,
@@ -24658,7 +24690,7 @@ pub mod tag {
         pub order: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TagShallowDto {
         pub id: Id,
         #[serde(default)]
@@ -24667,7 +24699,7 @@ pub mod tag {
         pub order: Option<i64>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TagFullDto {
         pub id: Id,
         #[serde(default)]
@@ -24856,12 +24888,12 @@ pub mod typ {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TypeIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TypeMetadataDto {
         pub id: Id,
         pub name: String,
@@ -24885,7 +24917,7 @@ pub mod typ {
         pub updated: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TypeShallowDto {
         pub id: Id,
         pub name: String,
@@ -24927,7 +24959,7 @@ pub mod typ {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct TypeFullDto {
         pub id: Id,
         pub name: String,
@@ -27351,86 +27383,6 @@ pub mod kit_graphql {
         }
     }
 
-    #[derive(Clone, Debug)]
-    struct GqlTypeShallowList(Vec<crate::typ::TypeShallowDto>);
-
-    #[Scalar(name = "TypeShallowList")]
-    impl ScalarType for GqlTypeShallowList {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json()?;
-            let a: Vec<crate::typ::TypeShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlTypeShallowList(a))
-        }
-
-        fn to_value(&self) -> Value {
-            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
-        }
-    }
-
-    #[derive(Clone, Debug)]
-    struct GqlDesignShallowList(Vec<crate::design::DesignShallowDto>);
-
-    #[Scalar(name = "DesignShallowList")]
-    impl ScalarType for GqlDesignShallowList {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json()?;
-            let a: Vec<crate::design::DesignShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlDesignShallowList(a))
-        }
-
-        fn to_value(&self) -> Value {
-            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
-        }
-    }
-
-    /// 🌐 One author row from [`crate::author::AuthorShallowDto`] (replaces the former `AuthorShallowList` scalar).
-    #[derive(Clone, Debug, SimpleObject)]
-    struct AuthorShallowRow {
-        id: String,
-        name: String,
-        email: String,
-        role: Option<String>,
-        rank: Option<i64>,
-    }
-
-    impl From<crate::author::AuthorShallowDto> for AuthorShallowRow {
-        fn from(a: crate::author::AuthorShallowDto) -> Self {
-            Self { id: a.id.to_string(), name: a.name, email: a.email, role: a.role, rank: a.rank }
-        }
-    }
-
-    #[derive(Clone, Debug)]
-    struct GqlConnectionFullList(Vec<crate::connection::ConnectionFullDto>);
-
-    #[Scalar(name = "ConnectionFullList")]
-    impl ScalarType for GqlConnectionFullList {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json()?;
-            let a: Vec<crate::connection::ConnectionFullDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlConnectionFullList(a))
-        }
-
-        fn to_value(&self) -> Value {
-            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
-        }
-    }
-
-    /// 🧾 Vec [`PieceFullDto`] wire (GraphQL name is not `JSON`).
-    #[derive(Clone, Debug)]
-    struct GqlPieceFullList(Vec<crate::piece::PieceFullDto>);
-
-    #[Scalar(name = "PieceFullList")]
-    impl ScalarType for GqlPieceFullList {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json()?;
-            let a: Vec<crate::piece::PieceFullDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlPieceFullList(a))
-        }
-
-        fn to_value(&self) -> Value {
-            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
-        }
-    }
     // #endregion
 
     /// 🌐 Optional native [`crate::kit_store::KitStore`]: when present (e.g. semio-store), `run_vcs_command` uses [`crate::kit_store::KitStore::execute`] (coordinator + backbone). Otherwise the graph actor uses [`KitStoreCommand::execute`] on the WIP graph only.
@@ -27873,10 +27825,30 @@ pub mod kit_graphql {
         SyncNow,
     }
 
+    #[derive(Clone, Copy, Debug, Enum, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    enum BackboneKindBatch {
+        Memory,
+        Dev,
+        Local,
+        Remote,
+    }
+
+    fn backbone_kind_batch_from_wire(s: &str) -> Option<BackboneKindBatch> {
+        match s {
+            "memory" => Some(BackboneKindBatch::Memory),
+            "dev" => Some(BackboneKindBatch::Dev),
+            "local" => Some(BackboneKindBatch::Local),
+            "remote" => Some(BackboneKindBatch::Remote),
+            _ => None,
+        }
+    }
+
     #[derive(Clone, Debug, SimpleObject, serde::Serialize, serde::Deserialize)]
     struct BackboneBatchStatus {
         attached: bool,
-        kind: Option<String>,
+        kind: Option<BackboneKindBatch>,
+        /// 🧾 Populated when the backbone driver reports a non-standard `kind` string.
+        kind_other: Option<String>,
         tip: Option<String>,
     }
 
@@ -28430,7 +28402,14 @@ pub mod kit_graphql {
                     let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else {
                         return Err(Error::new("expected BackboneStatus result"));
                     };
-                    results.push(KitStoreBatchResult { ok: Some(true), backbone: Some(BackboneBatchStatus { attached, kind, tip: tip.map(|id| id.to_string()) }), ..empty_kit_store_batch_result(KitStoreBatchResultKind::BackboneStatus) });
+                    let (kind, kind_other) = match kind.as_deref() {
+                        None => (None, None),
+                        Some(s) => match backbone_kind_batch_from_wire(s) {
+                            Some(k) => (Some(k), None),
+                            None => (None, Some(s.to_owned())),
+                        },
+                    };
+                    results.push(KitStoreBatchResult { ok: Some(true), backbone: Some(BackboneBatchStatus { attached, kind, kind_other, tip: tip.map(|id| id.to_string()) }), ..empty_kit_store_batch_result(KitStoreBatchResultKind::BackboneStatus) });
                 }
                 BackboneBatchCommandInput::SyncNow(_) => {
                     let res = shell.run_vcs_command(KitStoreCommand::SyncNow).await?;
@@ -28528,114 +28507,10 @@ pub mod kit_graphql {
     #[derive(Clone)]
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
-    // #subregion GqlValueObjects
+    // #subregion KitGraphqlVcsStores
     #[derive(Clone, Debug, SimpleObject)]
-    struct GqlPoint3 {
-        x: f64,
-        y: f64,
-        z: f64,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
-    struct GqlVector3 {
-        x: f64,
-        y: f64,
-        z: f64,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
-    struct GqlPlaneObject {
-        origin: GqlPoint3,
-        x_axis: GqlVector3,
-        y_axis: GqlVector3,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
-    struct GqlCoordinate3 {
-        x: f64,
-        y: f64,
-        z: f64,
-    }
-    #[derive(Clone, Debug, SimpleObject)]
-    struct GqlPoseObject {
-        plane: GqlPlaneObject,
-        center: GqlCoordinate3,
-    }
-
-    fn gql_point3(p: &crate::geom::Point) -> GqlPoint3 {
-        GqlPoint3 { x: p.x, y: p.y, z: p.z }
-    }
-    fn gql_vector3(v: &crate::geom::Vector) -> GqlVector3 {
-        GqlVector3 { x: v.x, y: v.y, z: v.z }
-    }
-    fn gql_plane_object(p: &Plane) -> GqlPlaneObject {
-        GqlPlaneObject { origin: gql_point3(&p.origin), x_axis: gql_vector3(&p.x_axis), y_axis: gql_vector3(&p.y_axis) }
-    }
-    fn gql_coord3(c: &crate::geom::Coordinate) -> GqlCoordinate3 {
-        // `geom::Coordinate` is 2D (u, v); GQL pose uses (x, y, z) with z = 0.
-        GqlCoordinate3 { x: c.u, y: c.v, z: 0.0 }
-    }
-    fn gql_pose_object(p: &crate::piece::PoseFullDto) -> GqlPoseObject {
-        GqlPoseObject { plane: gql_plane_object(&p.plane), center: gql_coord3(&p.center) }
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct GqlIdOnly {
-        id: String,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct TypeMetadataObject {
-        id: String,
-        name: String,
-        description: Option<String>,
-        icon: Option<String>,
-        image: Option<String>,
-        stock: Option<i64>,
-        type_virtual: Option<bool>,
-        unit: Option<String>,
-        location: Option<GqlIdOnly>,
-        created: Option<String>,
-        updated: Option<String>,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct DesignMetadataObject {
-        id: String,
-        name: String,
-        description: Option<String>,
-        icon: Option<String>,
-        image: Option<String>,
-        location: Option<GqlIdOnly>,
-        unit: Option<String>,
-        created: Option<String>,
-        updated: Option<String>,
-        kit: Option<GqlIdOnly>,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct KitColoredConnectorObject {
-        type_id: GqlIdOnly,
-        connector_id: GqlIdOnly,
-        color: String,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct KitMetadataObject {
-        id: String,
-        name: String,
-        description: Option<String>,
-        icon: Option<String>,
-        image: Option<String>,
-        preview: Option<String>,
-        remote: Option<String>,
-        homepage: Option<String>,
-        license: Option<String>,
-        uri: Option<String>,
-        created: Option<String>,
-        updated: Option<String>,
-        version: Option<String>,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct VcsCheckpointGql {
+    #[graphql(name = "VcsCheckpointStore")]
+    struct VcsCheckpointStore {
         id: String,
         parent: Option<String>,
         message: Option<String>,
@@ -28646,14 +28521,16 @@ pub mod kit_graphql {
         change_count: usize,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct VcsAlternativeGql {
+    #[graphql(name = "VcsAlternativeStore")]
+    struct VcsAlternativeStore {
         id: String,
         name: String,
         root: String,
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct VcsDraftGql {
+    #[graphql(name = "VcsDraftStore")]
+    struct VcsDraftStore {
         id: String,
         parent_checkpoint: Option<String>,
         target_alternative: Option<String>,
@@ -28664,51 +28541,26 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct VcsSessionGql {
+    #[graphql(name = "VcsSessionStore")]
+    struct VcsSessionStore {
         id: String,
-        drafts: Vec<VcsDraftGql>,
+        drafts: Vec<VcsDraftStore>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct VcsRootGql {
+    #[graphql(name = "VcsRootStore")]
+    struct VcsRootStore {
         id: String,
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct VcsStateGql {
+    #[graphql(name = "VcsStateStore")]
+    struct VcsStateStore {
         the_kit_head: Option<String>,
-        root: VcsRootGql,
-        checkpoints: Vec<VcsCheckpointGql>,
-        alternatives: Vec<VcsAlternativeGql>,
-        sessions: Vec<VcsSessionGql>,
+        root: VcsRootStore,
+        checkpoints: Vec<VcsCheckpointStore>,
+        alternatives: Vec<VcsAlternativeStore>,
+        sessions: Vec<VcsSessionStore>,
         the_kit_line: Vec<String>,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct DesignFlattenMapEntryObject {
-        piece_id: String,
-        plane: GqlPlaneObject,
-        center: GqlCoordinate3,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct IncludedDesignObject {
-        id: String,
-        design_id: String,
-        connection_kind: String,
-        center: Option<GqlCoordinate3>,
-        plane: Option<GqlPlaneObject>,
-        external_connections: GqlConnectionFullList,
-    }
-
-    #[derive(Clone, Debug, SimpleObject)]
-    struct PiecePlacementRowObject {
-        piece_id: String,
-        plane: GqlPlaneObject,
-        center: GqlCoordinate3,
-        fixed_piece_id: String,
-        parent_piece_id: Option<String>,
-        depth: i32,
-        path: Vec<String>,
     }
     // #endregion
 
@@ -28756,55 +28608,19 @@ pub mod kit_graphql {
         }
 
         /// 🌐 Per-type metadata rows.
-        async fn types_metadata(&self) -> Result<Vec<TypeMetadataObject>> {
+        async fn types_metadata(&self) -> Result<Vec<crate::typ::TypeMetadataDto>> {
             let g = lock_graph(&self.0)?;
-            let out: Vec<TypeMetadataObject> = g
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto()))
-                .map(|m| TypeMetadataObject {
-                    id: m.id.to_string(),
-                    name: m.name,
-                    description: m.description,
-                    icon: m.icon,
-                    image: m.image,
-                    stock: m.stock,
-                    type_virtual: m.virtual_,
-                    unit: m.unit,
-                    location: m.location.map(|l| GqlIdOnly { id: l.id.to_string() }),
-                    created: m.created,
-                    updated: m.updated,
-                })
-                .collect();
-            Ok(out)
+            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto())).collect())
         }
         /// 🌐 Per-design metadata rows.
-        async fn designs_metadata(&self) -> Result<Vec<DesignMetadataObject>> {
+        async fn designs_metadata(&self) -> Result<Vec<crate::design::DesignMetadataDto>> {
             let g = lock_graph(&self.0)?;
-            let out: Vec<DesignMetadataObject> = g
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto()))
-                .map(|m| DesignMetadataObject {
-                    id: m.id.to_string(),
-                    name: m.name,
-                    description: m.description,
-                    icon: m.icon,
-                    image: m.image,
-                    location: m.location.map(|l| GqlIdOnly { id: l.id.to_string() }),
-                    unit: m.unit,
-                    created: m.created,
-                    updated: m.updated,
-                    kit: m.kit.map(|k| GqlIdOnly { id: k.id.to_string() }),
-                })
-                .collect();
-            Ok(out)
+            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto())).collect())
         }
         /// 🌐 Colored connector index rows.
-        async fn colored_connectors(&self) -> Result<Vec<KitColoredConnectorObject>> {
+        async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorRowDto>> {
             let g = lock_graph(&self.0)?;
-            let rows = crate::read::kit_colored_connector_rows(&*g);
-            Ok(rows.into_iter().map(|r| KitColoredConnectorObject { type_id: GqlIdOnly { id: r.type_id.id.to_string() }, connector_id: GqlIdOnly { id: r.connector_id.id.to_string() }, color: r.color }).collect())
+            Ok(crate::read::kit_colored_connector_rows(&*g))
         }
 
         /// 🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
@@ -28823,52 +28639,35 @@ pub mod kit_graphql {
         }
 
         /// 🌐 Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
-        async fn kit_metadata(&self) -> Result<KitMetadataObject> {
-            let m = lock_graph(&self.0)?.to_metadata_dto();
-            Ok(KitMetadataObject {
-                id: m.id.to_string(),
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                preview: m.preview,
-                remote: m.remote,
-                homepage: m.homepage,
-                license: m.license,
-                uri: m.uri,
-                created: m.created,
-                updated: m.updated,
-                version: m.version,
-            })
+        async fn kit_metadata(&self) -> Result<crate::kit_graph::KitMetadataDto> {
+            Ok(lock_graph(&self.0)?.to_metadata_dto())
         }
 
-        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
-        async fn designs_shallow(&self) -> Result<GqlDesignShallowList> {
+        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; explicit list of [`crate::design::DesignShallowDto`]).
+        async fn designs_shallow(&self) -> Result<Vec<crate::design::DesignShallowDto>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(GqlDesignShallowList(v))
+            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect())
         }
 
         /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
-        async fn types_shallow(&self) -> Result<GqlTypeShallowList> {
+        async fn types_shallow(&self) -> Result<Vec<crate::typ::TypeShallowDto>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(GqlTypeShallowList(v))
+            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect())
         }
 
         /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
-        async fn authors_shallow(&self) -> Result<Vec<AuthorShallowRow>> {
+        async fn authors_shallow(&self) -> Result<Vec<crate::author::AuthorShallowDto>> {
             let g = lock_graph(&self.0)?;
-            Ok(g.authors.iter().filter_map(|a| a.read().ok().map(|r| AuthorShallowRow::from(r.to_shallow_dto()))).collect())
+            Ok(g.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect())
         }
 
         /// Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
-        async fn vcs_state(&self) -> Result<VcsStateGql> {
+        async fn vcs_state(&self) -> Result<VcsStateStore> {
             let g = lock_graph(&self.0)?;
-            let mut checkpoints: Vec<VcsCheckpointGql> = g
+            let mut checkpoints: Vec<VcsCheckpointStore> = g
                 .checkpoints
                 .values()
-                .map(|c| VcsCheckpointGql {
+                .map(|c| VcsCheckpointStore {
                     id: c.id.to_string(),
                     parent: c.parent.as_ref().map(|p| p.to_string()),
                     message: c.message.clone(),
@@ -28880,20 +28679,20 @@ pub mod kit_graphql {
                 })
                 .collect();
             checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut alternatives: Vec<VcsAlternativeGql> = g
+            let mut alternatives: Vec<VcsAlternativeStore> = g
                 .alternatives
                 .values()
-                .map(|a| VcsAlternativeGql { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
+                .map(|a| VcsAlternativeStore { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut sessions: Vec<VcsSessionGql> = g
+            let mut sessions: Vec<VcsSessionStore> = g
                 .sessions
                 .values()
                 .map(|s| {
-                    let mut drafts: Vec<VcsDraftGql> = s
+                    let mut drafts: Vec<VcsDraftStore> = s
                         .drafts
                         .values()
-                        .map(|d| VcsDraftGql {
+                        .map(|d| VcsDraftStore {
                             id: d.id.to_string(),
                             parent_checkpoint: d.parent_checkpoint.as_ref().map(|p| p.to_string()),
                             target_alternative: d.target_alternative.as_ref().map(|t| t.to_string()),
@@ -28905,16 +28704,16 @@ pub mod kit_graphql {
                         })
                         .collect();
                     drafts.sort_by(|a, b| a.id.cmp(&b.id));
-                    VcsSessionGql { id: s.id.to_string(), drafts }
+                    VcsSessionStore { id: s.id.to_string(), drafts }
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
             let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
-            Ok(VcsStateGql { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRootGql { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
+            Ok(VcsStateStore { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRootStore { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
         }
     }
 
-    #[Object(name = "Design")]
+    #[Object(name = "DesignStore")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
@@ -28943,24 +28742,22 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
         }
 
-        /// 🌐 `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
-        async fn pieces_full(&self) -> Result<GqlPieceFullList> {
+        /// 🌐 `PieceFullDto` list (semio read batch); prefer [`Self::pieces`] in graph UI.
+        async fn pieces_full(&self) -> Result<Vec<crate::piece::PieceFullDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
-            Ok(GqlPieceFullList(v))
+            Ok(d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect())
         }
 
-        /// 🌐 `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
-        async fn connections_full(&self) -> Result<GqlConnectionFullList> {
+        /// 🌐 `ConnectionFullDto` list; prefer [`Self::connections`] in graph UI.
+        async fn connections_full(&self) -> Result<Vec<crate::connection::ConnectionFullDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v: Vec<_> = d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
-            Ok(GqlConnectionFullList(v))
+            Ok(d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect())
         }
 
-        async fn flatten_map(&self) -> Result<Vec<DesignFlattenMapEntryObject>> {
+        async fn flatten_map(&self) -> Result<Vec<crate::read::DesignFlattenMapEntryDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
-            let mut rows: Vec<DesignFlattenMapEntryObject> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryObject { piece_id: piece_id.to_string(), plane: gql_plane_object(&plane), center: gql_coord3(&center) }).collect();
+            let mut rows: Vec<crate::read::DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| crate::read::DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
             rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
             Ok(rows)
         }
@@ -28983,19 +28780,9 @@ pub mod kit_graphql {
             let alts = d.replaceable_catalog_candidates(&ids);
             Ok(ReplaceableCatalogNode { type_ids: alts.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect(), design_ids: alts.designs.iter().filter_map(|x| x.read().ok().map(|r| r.id.to_string())).collect() })
         }
-        async fn included_designs(&self) -> Result<Vec<IncludedDesignObject>> {
+        async fn included_designs(&self) -> Result<Vec<crate::read::IncludedDesignInfoDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let v = crate::read::design_included_infos(&*d);
-            Ok(v.into_iter()
-                .map(|x| IncludedDesignObject {
-                    id: x.id.to_string(),
-                    design_id: x.design_id.to_string(),
-                    connection_kind: x.type_,
-                    center: x.center.as_ref().map(gql_coord3),
-                    plane: x.plane.as_ref().map(gql_plane_object),
-                    external_connections: GqlConnectionFullList(x.external_connections),
-                })
-                .collect())
+            Ok(crate::read::design_included_infos(&*d))
         }
         async fn included_design_ids(&self) -> Result<Vec<String>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -29003,21 +28790,18 @@ pub mod kit_graphql {
         }
 
         /// 🌐 Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
-        async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<PiecePlacementRowObject>> {
+        async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<crate::kit_graph::PiecePlacementMetadataDto>> {
             let gref: &KitGraphRef = ctx.data()?;
             let g = lock_graph(gref)?;
             let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
             let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
-            let mut rows: Vec<PiecePlacementRowObject> = m
-                .into_iter()
-                .map(|(piece_id, r)| PiecePlacementRowObject { piece_id, plane: gql_plane_object(&r.plane), center: gql_coord3(&r.center), fixed_piece_id: r.fixed_piece_id, parent_piece_id: r.parent_piece_id, depth: r.depth, path: r.path })
-                .collect();
-            rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
+            let mut rows: Vec<crate::kit_graph::PiecePlacementMetadataDto> = m.into_values().collect();
+            rows.sort_by(|a, b| a.fixed_piece_id.cmp(&b.fixed_piece_id));
             Ok(rows)
         }
     }
 
-    #[Object(name = "Piece")]
+    #[Object(name = "PieceStore")]
     impl PieceNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
@@ -29031,26 +28815,26 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
         }
 
-        async fn flat_plane(&self) -> Result<GqlPlaneObject> {
+        async fn flat_plane(&self) -> Result<Plane> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(gql_plane_object(&p.flat_plane()))
+            Ok(p.flat_plane())
         }
 
-        async fn flat_center(&self) -> Result<GqlCoordinate3> {
+        async fn flat_center(&self) -> Result<Coordinate> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(gql_coord3(&p.flat_center()))
+            Ok(p.flat_center())
         }
 
-        async fn flat_pose(&self) -> Result<GqlPoseObject> {
+        async fn flat_pose(&self) -> Result<crate::piece::PoseFullDto> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(gql_pose_object(&p.flat_pose_full_dto()))
+            Ok(p.flat_pose_full_dto())
         }
 
         async fn scale(&self) -> Result<Option<f64>> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
         }
 
-        /// Strong ref to the resolved type for this piece (in-memory, not a lookup by id).
+        /// Strong ref to the resolved kind for this piece (in-memory, not a lookup by id).
         async fn ref_type(&self) -> Result<Option<TypeNode>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeNode))
@@ -29063,7 +28847,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Type")]
+    #[Object(name = "TypeStore")]
     impl TypeNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())

@@ -66,7 +66,7 @@ function createKitStoreWorker(): Worker {
 }
 
 // #endregion 🧵InlineWorker
-// #region 🔌WireTypes
+// #region 🔌JsonGraphQlDtoTypes
 
 /** @emoji 🪪 Correlates kit command lifecycle events on the wire. */
 export type KitCommandRequestId = string;
@@ -117,7 +117,7 @@ export type KitChangeKind =
   | { readonly other: string }
   | (string & { readonly _semioExt?: 1 });
 
-/** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKind} via {@linkcode kitChangeSemanticKindToWire}. */
+/** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKind} via {@linkcode kitChangeSemanticKindToGraphQl}. */
 export type KitChangeSemanticKindGql =
   | "INFERRED"
   | "SET_KIT_METADATA"
@@ -136,7 +136,7 @@ export type KitChangeSemanticKindGql =
   | "OTHER";
 
 /** @emoji 🧾 Maps batch `changeKind` + `changeKindOther` into {@linkcode KitChangeKind} (camelCase unit or `{ other }` for extension labels). */
-export function kitChangeSemanticKindToWire(
+export function kitChangeSemanticKindToGraphQl(
   gql: KitChangeSemanticKindGql | null | undefined,
   other: string | null | undefined,
 ): KitChangeKind {
@@ -178,6 +178,13 @@ export type KitJsonTreeDto =
 export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
 /** @emoji 🧱 JSON object node (string-keyed). */
 export type JsonObject = { readonly [key: string]: JsonValue };
+
+/** @emoji 🔒 Recursive readonly DTO view for Zod-inferred and GraphQL-shaped values. */
+export type ReadonlyDto<T> = T extends ReadonlyArray<infer U>
+  ? ReadonlyArray<ReadonlyDto<U>>
+  : T extends object
+    ? { readonly [K in keyof T]: ReadonlyDto<T[K]> }
+    : T;
 
 /** @emoji 🧱 Mutable JSON object for local construction. */
 type JsonObjectMutable = { [key: string]: JsonValue };
@@ -393,7 +400,7 @@ function __kitPlaneToBatchInput(plane: KitJsonTreeDto | null | undefined): { ori
 
 // #endregion 🔖KitWriteScope
 
-// #region 🔖KitReadWireDto
+// #region 🔖ReadBatchAndKitRead
 /** @emoji 🧾 One `design.flattenMap` row (`DesignFlattenMapEntryObject`). */
 export type DesignFlattenMapEntryDto = Readonly<{
   readonly pieceId: string;
@@ -445,7 +452,7 @@ export type KitMetadataDto = Readonly<{
   readonly updated?: string | null;
   readonly version?: string | null;
 }>;
-// #endregion 🔖KitReadWireDto
+// #endregion 🔖ReadBatchAndKitRead
 
 /** @emoji 🧾 Batch input for {@link KitStore.read} (per-command, same for all entries in a batch). */
 export type ReadBatch = readonly ReadKitCommand[];
@@ -891,7 +898,7 @@ export type ConnectionFieldPatchInput = Readonly<{
 }>;
 
 /** @emoji 🧾 Value bucket for `buildSchemaEntityChangeCommands` (schema hooks). */
-export type SchemaEntityFieldValue = KitJsonTreeDto | string | number | boolean | null;
+export type SchemaEntityFieldValue = KitJsonTreeDto | string | number | boolean | null | object;
 
 /** @emoji 🧾 Converts a piece field patch into nested `changePieceCommands` wire entries. */
 export function piecePatchToChangeCommands(patch: PieceFieldPatchInput): ChangePieceCommand[] {
@@ -935,20 +942,23 @@ export function connectionPatchToChangeCommands(patch: ConnectionFieldPatchInput
 }
 
 /**
- * @emoji 🧾 Maps a schema entity + field to `changeKitCommands` wires for `submitChangeKitCommands` (React + kit store).
+ * @emoji 🧾 Maps a schema entity + field to `changeKitCommands` for `submitChangeKitCommands` (React + kit store).
  * `designId` is required for Piece/Connection; otherwise pass `null`.
  */
 export function buildSchemaEntityChangeCommands(
   kind: string,
   id: string,
   field: string,
-  value: SchemaEntityFieldValue,
+  value: unknown,
   designId: string | null,
 ): readonly ChangeKitCommand[] {
+  const valueCast = value as SchemaEntityFieldValue;
+  void valueCast;
   switch (kind) {
     case "Kit": {
-      if (field === "name") return [{ name: { name: String(value ?? "") } } as const];
-      if (field === "description") return [{ description: { description: (value as string) ?? null } } as const];
+      if (field === "name") return [{ name: { name: String(value) } } as const];
+      if (field === "description")
+        return [{ description: { description: value == null ? null : String(value) } } as const];
       if (field === "icon") return [{ icon: { icon: (value as string) ?? null } } as const];
       if (field === "image") return [{ image: { image: (value as string) ?? null } } as const];
       if (field === "homepage") return [{ homepage: { homepage: (value as string) ?? null } } as const];
@@ -962,52 +972,52 @@ export function buildSchemaEntityChangeCommands(
       return [];
     }
     case "Type": {
-      const inner = oneChangeTypeCommandForField(field, value);
+      const inner = oneChangeTypeCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeTypeCommands: { typeId: __kid(id), commands: [inner] } } as const];
     }
     case "Design": {
-      const inner = oneChangeDesignCommandForField(field, value);
+      const inner = oneChangeDesignCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeDesignCommands: { designId: __kid(id), commands: [inner] } } as const];
     }
     case "Author": {
-      const inner = oneChangeAuthorCommandForField(field, value);
+      const inner = oneChangeAuthorCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeAuthorCommands: { authorId: __kid(id), commands: [inner] } } as const];
     }
     case "Tag": {
-      const inner = oneChangeTagCommandForField(field, value);
+      const inner = oneChangeTagCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeTagCommands: { tagId: __kid(id), commands: [inner] } } as const];
     }
     case "File": {
-      const inner = oneChangeFileCommandForField(field, value);
+      const inner = oneChangeFileCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeFileCommands: { fileId: __kid(id), commands: [inner] } } as const];
     }
     case "Folder": {
-      const inner = oneChangeFolderCommandForField(field, value);
+      const inner = oneChangeFolderCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeFolderCommands: { folderId: __kid(id), commands: [inner] } } as const];
     }
     case "Quality": {
-      const inner = oneChangeQualityCommandForField(field, value);
+      const inner = oneChangeQualityCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeKitQualityCommands: { qualityId: __kid(id), commands: [inner] } } as const];
     }
     case "Port": {
-      const inner = oneChangePortCommandForField(field, value);
+      const inner = oneChangePortCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeKitPortCommands: { portId: __kid(id), commands: [inner] } } as const];
     }
     case "Concept": {
-      const inner = oneChangeConceptCommandForField(field, value);
+      const inner = oneChangeConceptCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeConceptCommands: { conceptId: __kid(id), commands: [inner] } } as const];
     }
     case "Family": {
-      const inner = oneChangeFamilyCommandForField(field, value);
+      const inner = oneChangeFamilyCommandForField(field, valueCast);
       if (!inner) return [];
       return [{ changeFamilyCommands: { familyId: __kid(id), commands: [inner] } } as const];
     }
@@ -1149,9 +1159,9 @@ export async function kitStoreClientUpdatePiece(
   client: KitStoreClient,
   designId: string,
   pieceId: string,
-  patch: PieceFieldPatchInput,
+  patch: unknown,
 ): Promise<SetResult> {
-  const pcmds = piecePatchToChangeCommands(patch);
+  const pcmds = piecePatchToChangeCommands(patch as PieceFieldPatchInput);
   if (!pcmds.length) return { ok: true };
   return client.submitChangeKitCommands([kitChangeDesignPiece(designId, pieceId, pcmds)]);
 }
@@ -1161,9 +1171,9 @@ export async function kitStoreClientUpdateConnection(
   client: KitStoreClient,
   designId: string,
   connectionId: string,
-  patch: ConnectionFieldPatchInput,
+  patch: unknown,
 ): Promise<SetResult> {
-  const ccmds = connectionPatchToChangeCommands(patch);
+  const ccmds = connectionPatchToChangeCommands(patch as ConnectionFieldPatchInput);
   if (!ccmds.length) return { ok: true };
   return client.submitChangeKitCommands([kitChangeDesignConnection(designId, connectionId, ccmds)]);
 }
@@ -1189,9 +1199,10 @@ export async function writeKitStoreClientSchemaField(
   client: KitStoreClient,
   typeName: string,
   key: string,
-  value: SchemaEntityFieldValue,
+  value: unknown,
   entityId: string,
 ): Promise<SetResult> {
+  const valueCast = value as SchemaEntityFieldValue;
   const root = await client.fetchFullKit();
   let designId: string | null = null;
   if (typeName === "Piece") designId = __findDesignIdForPieceInKitDto(root, entityId);
@@ -1200,7 +1211,7 @@ export async function writeKitStoreClientSchemaField(
     typeName,
     entityId,
     key,
-    value,
+    valueCast,
     typeName === "Piece" || typeName === "Connection" ? designId : null,
   );
   if (!cmds.length) return { ok: false, error: { kind: "NotSupported", message: `${typeName}.${key}` } };
@@ -1209,11 +1220,11 @@ export async function writeKitStoreClientSchemaField(
 
 // #endregion 🔖ChangeKitCommand
 
-// #endregion 🔌WireTypes
+// #endregion 🔌JsonGraphQlDtoTypes
 
-// #region 🪢InternalReadWire
+// #region 🪢InternalReadBatch
 // Read command outputs are public {@link ReadDesignCommandOutput} / {@link ReadPieceCommandOutput} / {@link ReadTypeCommandOutput} above.
-// #endregion 🪢InternalReadWire
+// #endregion 🪢InternalReadBatch
 
 // #region 🧰GraphqlUtil
 
@@ -1311,13 +1322,10 @@ function __stripTopLevelJsonNulls(row: JsonObject | KitJsonObjectDto): JsonObjec
   return out;
 }
 
-/** @emoji 🧾 Wire JSON, `KitJsonTreeDto`, or typed bus {@link KitEvent} in subscription and lifecycle helpers. */
-type KitEventWirePayload = JsonValue | KitJsonTreeDto | KitEvent;
+/** @emoji 🧾 JSON, `KitJsonTreeDto`, or typed bus {@link KitEvent} in subscription and lifecycle helpers. */
 
 /** @emoji 🧾 Narrows subscription payloads to semio kit command lifecycle rows. */
-export function isKitCommandLifecycleEvent(
-  event: KitEventWirePayload | null | undefined,
-): event is KitCommandLifecycleEvent {
+export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
   if (event == null || typeof event !== "object" || Array.isArray(event)) return false;
   const c = (event as KitJsonObjectDto)["semioKitCommand"];
   if (c == null || typeof c !== "object" || Array.isArray(c)) return false;
@@ -1325,14 +1333,14 @@ export function isKitCommandLifecycleEvent(
   return typeof v["requestId"] === "string" && typeof v["commandKind"] === "string" && typeof v["phase"] === "string";
 }
 
-function __normalizeTopLevelKitEventJson(raw: KitEventWirePayload | null | undefined): KitJsonTreeDto | null {
+function __normalizeTopLevelKitEventJson(raw: unknown): KitJsonTreeDto | null {
   if (raw === "Changed") return { Changed: null } as KitJsonTreeDto;
   if (raw === "ValidationInvalidated") return { ValidationInvalidated: null } as KitJsonTreeDto;
   if (raw == null) return null;
   return raw as KitJsonTreeDto;
 }
 
-export function normalizeKitEventFromSubscription(raw: KitEventWirePayload | null | undefined): KitEvent | undefined {
+export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
   const raw0 = __normalizeTopLevelKitEventJson(raw);
   if (raw0 == null) return undefined;
   if (typeof raw0 === "string") return undefined;
@@ -2207,7 +2215,7 @@ export class KitStore {
       | undefined;
     if (hit != null && hit.changeKind != null) {
       const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommand[]) : [];
-      return { kind: kitChangeSemanticKindToWire(hit.changeKind, hit.changeKindOther ?? null), inverse: inv };
+      return { kind: kitChangeSemanticKindToGraphQl(hit.changeKind, hit.changeKindOther ?? null), inverse: inv };
     }
     throw new Error("changeKitWithInverse: missing batch row");
   }
@@ -2584,7 +2592,7 @@ export class KitStore {
       ) as { kit?: { typeByDtoId?: { bestRepresentation?: JsonValue } | null } | null };
       return {
         readTypeBestRepresentationCommand: {
-          representation: semioParseRepresentationNullableWire(gqlDataKitRoot(d)?.typeByDtoId?.bestRepresentation as KitJsonTreeDto),
+          representation: semioParseRepresentationNullableJson(gqlDataKitRoot(d)?.typeByDtoId?.bestRepresentation as KitJsonTreeDto),
         },
       };
     }
@@ -2839,7 +2847,7 @@ function kitClassifiedMutationTouchesConnection(ev: KitClassifiedMutationEvent, 
   return false;
 }
 
-/** @emoji 🧪 True when JSON subtree contains a string field `key` equal to `id`. */
+/** @emoji 🧪 True when JSON-like subtree (including kit command atoms) contains a string field `key` equal to `id`. */
 function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
   if (raw == null) return false;
   if (typeof raw === "string") return false;
@@ -2861,7 +2869,7 @@ function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
 export function kitEventTouchesDesignStrict(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
   if (isKitClassifiedMutationEvent(ev) && kitClassifiedMutationTouchesDesign(ev, designId)) return true;
-  const d = (ev as { Design?: { design_id?: string; event?: unknown } }).Design;
+  const d = (ev as { Design?: { design_id?: string; event?: JsonValue } }).Design;
   if (d && typeof d.design_id === "string" && d.design_id === designId) return true;
   if (jsonSubtreeHasIdKey(ev, "design_id", designId)) return true;
   const ca = (ev as { ChildAdded?: { parent?: { id?: string }; child?: { id?: string } } }).ChildAdded;
@@ -2876,7 +2884,7 @@ export function kitEventTouchesDesign(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
   if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
   if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: null }).ValidationInvalidated === null) return true;
-  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: unknown } }).FlattenInvalidated;
+  const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: readonly string[] } }).FlattenInvalidated;
   if (fi && typeof fi.design === "string" && fi.design === designId) return true;
   return kitEventTouchesDesignStrict(ev, designId);
 }
@@ -2963,7 +2971,7 @@ export function kitEventTouchesFolder(ev: KitEvent, folderId: string): boolean {
 // #region 🧩KitWasmBridgeMerged
 // #region 🔌KitStoreClientTypes
 
-export type KitStoreExecuteResult = { ok: true; result: unknown } | { ok: false; error: SetError };
+export type KitStoreExecuteResult = { ok: true; result: JsonValue } | { ok: false; error: SetError };
 
 export type WriteStatus =
   | { kind: "readonly"; pending: 0; lastError?: SetError }
@@ -2992,6 +3000,8 @@ export type SemioKitBridge = { fetchFullKit(): Promise<KitFullDto> };
 
 /** @emoji 🧾 Browser / test kit RPC surface used by React hooks (wraps {@link KitStore}). */
 export type KitStoreClient = SemioKitBridge & {
+  /** @emoji 🧾 Materialized read scope (see {@link WasmKitStoreClient#kitReadScope} / {@link getKitClientReadScope}). */
+  readonly kitReadScope: KitReadScope;
   getKitWriteScope(): KitWriteScope | null;
   setKitWriteScope(scope: KitWriteScope | null): void;
   finalizeKitWriteTransaction(): Promise<SetResult>;
@@ -3926,7 +3936,7 @@ export const FamilyIdSchema = z.object({ id: z.string() });
 
 // #region Coordinate
 export const CoordinateSchema = z.object({ u: z.number(), v: z.number() });
-export type CoordinatePlain = z.infer<typeof CoordinateSchema>;
+export type CoordinatePlain = ReadonlyDto<z.infer<typeof CoordinateSchema>>;
 export class Coordinate implements CoordinatePlain {
   u!: number;
   v!: number;
@@ -3939,12 +3949,12 @@ export class Coordinate implements CoordinatePlain {
   static deserialize(json: string): Coordinate { return new Coordinate(CoordinateSchema.parse(JSON.parse(json))); }
 }
 export const CoordinateDiffSchema = CoordinateSchema.partial();
-export type CoordinateDiff = z.infer<typeof CoordinateDiffSchema>;
+export type CoordinateDiff = ReadonlyDto<z.infer<typeof CoordinateDiffSchema>>;
 // #endregion Coordinate
 
 // #region Vec
 export const VecSchema = z.object({ u: z.number(), v: z.number() });
-export type VecPlain = z.infer<typeof VecSchema>;
+export type VecPlain = ReadonlyDto<z.infer<typeof VecSchema>>;
 export class Vec implements VecPlain {
   u!: number;
   v!: number;
@@ -3956,12 +3966,12 @@ export class Vec implements VecPlain {
   static deserialize(json: string): Vec { return new Vec(VecSchema.parse(JSON.parse(json))); }
 }
 export const VecDiffSchema = VecSchema.partial();
-export type VecDiff = z.infer<typeof VecDiffSchema>;
+export type VecDiff = ReadonlyDto<z.infer<typeof VecDiffSchema>>;
 // #endregion Vec
 
 // #region Point
 export const PointSchema = z.object({ x: z.number(), y: z.number(), z: z.number() });
-export type PointPlain = z.infer<typeof PointSchema>;
+export type PointPlain = ReadonlyDto<z.infer<typeof PointSchema>>;
 export class Point implements PointPlain {
   x!: number;
   y!: number;
@@ -3974,12 +3984,12 @@ export class Point implements PointPlain {
   static deserialize(json: string): Point { return new Point(PointSchema.parse(JSON.parse(json))); }
 }
 export const PointDiffSchema = PointSchema.partial();
-export type PointDiff = z.infer<typeof PointDiffSchema>;
+export type PointDiff = ReadonlyDto<z.infer<typeof PointDiffSchema>>;
 // #endregion Point
 
 // #region Vector
 export const VectorSchema = z.object({ x: z.number(), y: z.number(), z: z.number() });
-export type VectorPlain = z.infer<typeof VectorSchema>;
+export type VectorPlain = ReadonlyDto<z.infer<typeof VectorSchema>>;
 export class Vector implements VectorPlain {
   x!: number;
   y!: number;
@@ -3992,12 +4002,12 @@ export class Vector implements VectorPlain {
   static deserialize(json: string): Vector { return new Vector(VectorSchema.parse(JSON.parse(json))); }
 }
 export const VectorDiffSchema = VectorSchema.partial();
-export type VectorDiff = z.infer<typeof VectorDiffSchema>;
+export type VectorDiff = ReadonlyDto<z.infer<typeof VectorDiffSchema>>;
 // #endregion Vector
 
 // #region Plane
 export const PlaneSchema = z.object({ origin: PointSchema, xAxis: VectorSchema, yAxis: VectorSchema });
-export type PlanePlain = z.infer<typeof PlaneSchema>;
+export type PlanePlain = ReadonlyDto<z.infer<typeof PlaneSchema>>;
 export class Plane implements PlanePlain {
   origin!: Point;
   xAxis!: Vector;
@@ -4017,12 +4027,12 @@ export class Plane implements PlanePlain {
 }
 export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
   .extend({ origin: PointDiffSchema, xAxis: VectorDiffSchema, yAxis: VectorDiffSchema }).partial();
-export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
+export type PlaneDiff = ReadonlyDto<z.infer<typeof PlaneDiffSchema>>;
 // #endregion Plane
 
 // #region Camera
 export const CameraSchema = z.object({ position: PointSchema, forward: VectorSchema, up: VectorSchema });
-export type CameraPlain = z.infer<typeof CameraSchema>;
+export type CameraPlain = ReadonlyDto<z.infer<typeof CameraSchema>>;
 export class Camera implements CameraPlain {
   position!: Point;
   forward!: Vector;
@@ -4041,7 +4051,7 @@ export class Camera implements CameraPlain {
 }
 export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
   .extend({ position: PointDiffSchema, forward: VectorDiffSchema, up: VectorDiffSchema }).partial();
-export type CameraDiff = z.infer<typeof CameraDiffSchema>;
+export type CameraDiff = ReadonlyDto<z.infer<typeof CameraDiffSchema>>;
 // #endregion Camera
 
 // #endregion Weak Entities
@@ -4049,7 +4059,7 @@ export type CameraDiff = z.infer<typeof CameraDiffSchema>;
 // #region Attribute
 const DateProperty = () => z.string().optional();
 export const AttributeSchema = z.object({ id: z.string(), key: z.string(), value: z.string().optional(), definition: z.string().optional() });
-export type AttributePlain = z.infer<typeof AttributeSchema>;
+export type AttributePlain = ReadonlyDto<z.infer<typeof AttributeSchema>>;
 export class Attribute implements AttributePlain {
   id!: string; key!: string; value?: string; definition?: string;
   constructor(plain: AttributePlain) { Object.assign(this, AttributeSchema.parse(plain)); }
@@ -4062,22 +4072,22 @@ export class Attribute implements AttributePlain {
   static fromJson(json: string): Attribute { return new Attribute(AttributeSchema.parse(JSON.parse(json))); }
 }
 export const AttributeMetadataDtoSchema = AttributeSchema;
-export type AttributeMetadataDto = z.infer<typeof AttributeMetadataDtoSchema>;
+export type AttributeMetadataDto = ReadonlyDto<z.infer<typeof AttributeMetadataDtoSchema>>;
 export const AttributeShallowSchema = AttributeSchema;
-export type AttributeShallow = z.infer<typeof AttributeShallowSchema>;
+export type AttributeShallow = ReadonlyDto<z.infer<typeof AttributeShallowSchema>>;
 export const AttributeDiffSchema = AttributeSchema.partial();
-export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
+export type AttributeDiff = ReadonlyDto<z.infer<typeof AttributeDiffSchema>>;
 export const AttributesDiffSchema = z.object({
   removed: z.array(AttributeIdSchema).optional(),
   updated: z.array(z.object({ attribute: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
   added: z.array(z.any()).optional(),
 });
-export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
+export type AttributesDiff = ReadonlyDto<z.infer<typeof AttributesDiffSchema>>;
 // #endregion Attribute
 
 // #region Location
 export const LocationSchema = z.object({ id: z.string(), longitude: z.number().optional(), latitude: z.number().optional(), altitude: z.number().optional(), attributes: z.array(AttributeSchema).optional() });
-export type LocationPlain = z.infer<typeof LocationSchema>;
+export type LocationPlain = ReadonlyDto<z.infer<typeof LocationSchema>>;
 export class Location implements LocationPlain {
   id!: string; longitude?: number; latitude?: number; altitude?: number; attributes?: Attribute[];
   constructor(plain: LocationPlain) { const p = LocationSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4090,16 +4100,16 @@ export class Location implements LocationPlain {
   static deserialize(json: string): Location { return new Location(LocationSchema.parse(JSON.parse(json))); }
 }
 export const LocationMetadataDtoSchema = LocationSchema;
-export type LocationMetadataDto = z.infer<typeof LocationMetadataDtoSchema>;
+export type LocationMetadataDto = ReadonlyDto<z.infer<typeof LocationMetadataDtoSchema>>;
 export const LocationShallowSchema = LocationSchema;
-export type LocationShallow = z.infer<typeof LocationShallowSchema>;
+export type LocationShallow = ReadonlyDto<z.infer<typeof LocationShallowSchema>>;
 export const LocationDiffSchema = LocationSchema.partial().omit({ attributes: true }).extend({ attributes: AttributesDiffSchema.optional() });
-export type LocationDiff = z.infer<typeof LocationDiffSchema>;
+export type LocationDiff = ReadonlyDto<z.infer<typeof LocationDiffSchema>>;
 // #endregion Location
 
 // #region Author
 export const AuthorSchema = z.object({ id: z.string(), name: z.string(), email: z.string().optional(), role: z.string().optional(), rank: z.number().optional() });
-export type AuthorPlain = z.infer<typeof AuthorSchema>;
+export type AuthorPlain = ReadonlyDto<z.infer<typeof AuthorSchema>>;
 export class Author implements AuthorPlain {
   id!: string; name!: string; email?: string; role?: string; rank?: number;
   constructor(plain: AuthorPlain) { Object.assign(this, AuthorSchema.parse(plain)); }
@@ -4112,13 +4122,13 @@ export class Author implements AuthorPlain {
   static deserialize(json: string): Author { return new Author(AuthorSchema.parse(JSON.parse(json))); }
 }
 export const AuthorMetadataDtoSchema = AuthorSchema;
-export type AuthorMetadataDto = z.infer<typeof AuthorMetadataDtoSchema>;
+export type AuthorMetadataDto = ReadonlyDto<z.infer<typeof AuthorMetadataDtoSchema>>;
 export const AuthorShallowSchema = AuthorSchema;
-export type AuthorShallow = z.infer<typeof AuthorShallowSchema>;
+export type AuthorShallow = ReadonlyDto<z.infer<typeof AuthorShallowSchema>>;
 export const AuthorDiffSchema = AuthorSchema.partial();
-export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
+export type AuthorDiff = ReadonlyDto<z.infer<typeof AuthorDiffSchema>>;
 export const AuthorsDiffSchema = z.object({ removed: z.array(AuthorIdSchema).optional(), updated: z.array(z.object({ author: AuthorIdSchema, diff: AuthorDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
+export type AuthorsDiff = ReadonlyDto<z.infer<typeof AuthorsDiffSchema>>;
 // #endregion Author
 
 // #region File
@@ -4136,7 +4146,7 @@ export const FileSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
 });
-export type FilePlain = z.infer<typeof FileSchema>;
+export type FilePlain = ReadonlyDto<z.infer<typeof FileSchema>>;
 export class File implements FilePlain {
   id!: string;
   name?: string;
@@ -4160,13 +4170,13 @@ export class File implements FilePlain {
   static deserialize(json: string): File { return new File(FileSchema.parse(JSON.parse(json))); }
 }
 export const FileMetadataDtoSchema = FileSchema;
-export type FileMetadataDto = z.infer<typeof FileMetadataDtoSchema>;
+export type FileMetadataDto = ReadonlyDto<z.infer<typeof FileMetadataDtoSchema>>;
 export const FileShallowSchema = FileSchema;
-export type FileShallow = z.infer<typeof FileShallowSchema>;
+export type FileShallow = ReadonlyDto<z.infer<typeof FileShallowSchema>>;
 export const FileDiffSchema = FileSchema.partial();
-export type FileDiff = z.infer<typeof FileDiffSchema>;
+export type FileDiff = ReadonlyDto<z.infer<typeof FileDiffSchema>>;
 export const FilesDiffSchema = z.object({ removed: z.array(FileIdSchema).optional(), updated: z.array(z.object({ file: FileIdSchema, diff: FileDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type FilesDiff = z.infer<typeof FilesDiffSchema>;
+export type FilesDiff = ReadonlyDto<z.infer<typeof FilesDiffSchema>>;
 // #endregion File
 
 // #region Folder
@@ -4177,7 +4187,7 @@ export const FolderSchema = z.object({
   path: z.string().optional(),
   description: z.string().optional(),
 });
-export type FolderPlain = z.infer<typeof FolderSchema>;
+export type FolderPlain = ReadonlyDto<z.infer<typeof FolderSchema>>;
 export class Folder implements FolderPlain {
   id!: string;
   name?: string;
@@ -4194,18 +4204,18 @@ export class Folder implements FolderPlain {
   static deserialize(json: string): Folder { return new Folder(FolderSchema.parse(JSON.parse(json))); }
 }
 export const FolderMetadataDtoSchema = FolderSchema;
-export type FolderMetadataDto = z.infer<typeof FolderMetadataDtoSchema>;
+export type FolderMetadataDto = ReadonlyDto<z.infer<typeof FolderMetadataDtoSchema>>;
 export const FolderShallowSchema = FolderSchema;
-export type FolderShallow = z.infer<typeof FolderShallowSchema>;
+export type FolderShallow = ReadonlyDto<z.infer<typeof FolderShallowSchema>>;
 export const FolderDiffSchema = FolderSchema.partial();
-export type FolderDiff = z.infer<typeof FolderDiffSchema>;
+export type FolderDiff = ReadonlyDto<z.infer<typeof FolderDiffSchema>>;
 export const FoldersDiffSchema = z.object({ removed: z.array(FolderIdSchema).optional(), updated: z.array(z.object({ folder: FolderIdSchema, diff: FolderDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
+export type FoldersDiff = ReadonlyDto<z.infer<typeof FoldersDiffSchema>>;
 // #endregion Folder
 
 // #region Benchmark
 export const BenchmarkSchema = z.object({ id: z.string(), name: z.string(), min: z.number().optional(), max: z.number().optional(), minExcluded: z.boolean().optional(), maxExcluded: z.boolean().optional() });
-export type BenchmarkPlain = z.infer<typeof BenchmarkSchema>;
+export type BenchmarkPlain = ReadonlyDto<z.infer<typeof BenchmarkSchema>>;
 export class Benchmark implements BenchmarkPlain {
   id!: string; name!: string; min?: number; max?: number; minExcluded?: boolean; maxExcluded?: boolean;
   constructor(plain: BenchmarkPlain) { Object.assign(this, BenchmarkSchema.parse(plain)); }
@@ -4218,13 +4228,13 @@ export class Benchmark implements BenchmarkPlain {
   static fromJson(json: string): Benchmark { return new Benchmark(BenchmarkSchema.parse(JSON.parse(json))); }
 }
 export const BenchmarkMetadataDtoSchema = BenchmarkSchema;
-export type BenchmarkMetadataDto = z.infer<typeof BenchmarkMetadataDtoSchema>;
+export type BenchmarkMetadataDto = ReadonlyDto<z.infer<typeof BenchmarkMetadataDtoSchema>>;
 export const BenchmarkShallowSchema = BenchmarkSchema;
-export type BenchmarkShallow = z.infer<typeof BenchmarkShallowSchema>;
+export type BenchmarkShallow = ReadonlyDto<z.infer<typeof BenchmarkShallowSchema>>;
 export const BenchmarkDiffSchema = BenchmarkSchema.partial();
-export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
+export type BenchmarkDiff = ReadonlyDto<z.infer<typeof BenchmarkDiffSchema>>;
 export const BenchmarksDiffSchema = z.object({ removed: z.array(BenchmarkIdSchema).optional(), updated: z.array(z.object({ benchmark: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
+export type BenchmarksDiff = ReadonlyDto<z.infer<typeof BenchmarksDiffSchema>>;
 // #endregion Benchmark
 
 // #region Quality
@@ -4239,7 +4249,7 @@ export const QualitySchema = z.object({
   description: z.string().optional(),
   benchmarks: z.array(BenchmarkSchema).optional(),
 });
-export type QualityPlain = z.infer<typeof QualitySchema>;
+export type QualityPlain = ReadonlyDto<z.infer<typeof QualitySchema>>;
 export class Quality implements QualityPlain {
   id!: string;
   name?: string;
@@ -4260,13 +4270,13 @@ export class Quality implements QualityPlain {
   static deserialize(json: string): Quality { return new Quality(QualitySchema.parse(JSON.parse(json))); }
 }
 export const QualityMetadataDtoSchema = QualitySchema.omit({ benchmarks: true });
-export type QualityMetadataDto = z.infer<typeof QualityMetadataDtoSchema>;
+export type QualityMetadataDto = ReadonlyDto<z.infer<typeof QualityMetadataDtoSchema>>;
 export const QualityShallowSchema = QualitySchema;
-export type QualityShallow = z.infer<typeof QualityShallowSchema>;
+export type QualityShallow = ReadonlyDto<z.infer<typeof QualityShallowSchema>>;
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true }).extend({ benchmarks: BenchmarksDiffSchema.optional() });
-export type QualityDiff = z.infer<typeof QualityDiffSchema>;
+export type QualityDiff = ReadonlyDto<z.infer<typeof QualityDiffSchema>>;
 export const QualitiesDiffSchema = z.object({ removed: z.array(QualityIdSchema).optional(), updated: z.array(z.object({ quality: QualityIdSchema, diff: QualityDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
+export type QualitiesDiff = ReadonlyDto<z.infer<typeof QualitiesDiffSchema>>;
 // #endregion Quality
 
 // #region Port
@@ -4285,7 +4295,7 @@ export const PortSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
   maxChildren: z.number().optional(),
 });
-export type PortPlain = z.infer<typeof PortSchema>;
+export type PortPlain = ReadonlyDto<z.infer<typeof PortSchema>>;
 export class Port implements PortPlain {
   id!: string;
   name!: string;
@@ -4310,18 +4320,18 @@ export class Port implements PortPlain {
   static deserialize(json: string): Port { return new Port(PortSchema.parse(JSON.parse(json))); }
 }
 export const PortMetadataDtoSchema = PortSchema.omit({ qualities: true, attributes: true });
-export type PortMetadataDto = z.infer<typeof PortMetadataDtoSchema>;
+export type PortMetadataDto = ReadonlyDto<z.infer<typeof PortMetadataDtoSchema>>;
 export const PortShallowSchema = PortSchema;
-export type PortShallow = z.infer<typeof PortShallowSchema>;
+export type PortShallow = ReadonlyDto<z.infer<typeof PortShallowSchema>>;
 export const PortDiffSchema = PortSchema.partial().omit({ qualities: true, attributes: true }).extend({ qualities: QualitiesDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type PortDiff = z.infer<typeof PortDiffSchema>;
+export type PortDiff = ReadonlyDto<z.infer<typeof PortDiffSchema>>;
 export const PortsDiffSchema = z.object({ removed: z.array(PortIdSchema).optional(), updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+export type PortsDiff = ReadonlyDto<z.infer<typeof PortsDiffSchema>>;
 // #endregion Port
 
 // #region Family
 export const FamilySchema = z.object({ id: z.string(), name: z.string(), description: z.string().optional(), icon: z.string().optional(), ports: z.array(PortSchema).optional(), attributes: z.array(AttributeSchema).optional() });
-export type FamilyPlain = z.infer<typeof FamilySchema>;
+export type FamilyPlain = ReadonlyDto<z.infer<typeof FamilySchema>>;
 export class Family implements FamilyPlain {
   id!: string; name!: string; description?: string; icon?: string; ports?: Port[]; attributes?: Attribute[];
   constructor(plain: FamilyPlain) { const p = FamilySchema.parse(plain); Object.assign(this, p); this.ports = p.ports?.map((x) => new Port(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4334,13 +4344,13 @@ export class Family implements FamilyPlain {
   static deserialize(json: string): Family { return new Family(FamilySchema.parse(JSON.parse(json))); }
 }
 export const FamilyMetadataDtoSchema = FamilySchema.omit({ ports: true, attributes: true });
-export type FamilyMetadataDto = z.infer<typeof FamilyMetadataDtoSchema>;
+export type FamilyMetadataDto = ReadonlyDto<z.infer<typeof FamilyMetadataDtoSchema>>;
 export const FamilyShallowSchema = FamilySchema;
-export type FamilyShallow = z.infer<typeof FamilyShallowSchema>;
+export type FamilyShallow = ReadonlyDto<z.infer<typeof FamilyShallowSchema>>;
 export const FamilyDiffSchema = FamilySchema.partial().omit({ ports: true, attributes: true }).extend({ ports: PortsDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type FamilyDiff = z.infer<typeof FamilyDiffSchema>;
+export type FamilyDiff = ReadonlyDto<z.infer<typeof FamilyDiffSchema>>;
 export const FamiliesDiffSchema = z.object({ removed: z.array(FamilyIdSchema).optional(), updated: z.array(z.object({ family: FamilyIdSchema, diff: FamilyDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type FamiliesDiff = z.infer<typeof FamiliesDiffSchema>;
+export type FamiliesDiff = ReadonlyDto<z.infer<typeof FamiliesDiffSchema>>;
 // #endregion Family
 
 // #region Prop
@@ -4351,7 +4361,7 @@ export const PropSchema = z.object({
   unit: z.string().optional(),
   quality: QualityIdSchema.optional(),
 });
-export type PropPlain = z.infer<typeof PropSchema>;
+export type PropPlain = ReadonlyDto<z.infer<typeof PropSchema>>;
 export class Prop implements PropPlain {
   id!: string; key!: string; value?: string; unit?: string; quality?: QualityIdDto;
   constructor(plain: PropPlain) { Object.assign(this, PropSchema.parse(plain)); }
@@ -4364,18 +4374,18 @@ export class Prop implements PropPlain {
   static deserialize(json: string): Prop { return new Prop(PropSchema.parse(JSON.parse(json))); }
 }
 export const PropMetadataDtoSchema = PropSchema;
-export type PropMetadataDto = z.infer<typeof PropMetadataDtoSchema>;
+export type PropMetadataDto = ReadonlyDto<z.infer<typeof PropMetadataDtoSchema>>;
 export const PropShallowSchema = PropSchema;
-export type PropShallow = z.infer<typeof PropShallowSchema>;
+export type PropShallow = ReadonlyDto<z.infer<typeof PropShallowSchema>>;
 export const PropDiffSchema = PropSchema.partial();
-export type PropDiff = z.infer<typeof PropDiffSchema>;
+export type PropDiff = ReadonlyDto<z.infer<typeof PropDiffSchema>>;
 export const PropsDiffSchema = z.object({ removed: z.array(PropIdSchema).optional(), updated: z.array(z.object({ prop: PropIdSchema, diff: PropDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type PropsDiff = z.infer<typeof PropsDiffSchema>;
+export type PropsDiff = ReadonlyDto<z.infer<typeof PropsDiffSchema>>;
 // #endregion Prop
 
 // #region Tag
 export const TagSchema = z.object({ id: z.string(), name: z.string(), order: z.number().optional() });
-export type TagPlain = z.infer<typeof TagSchema>;
+export type TagPlain = ReadonlyDto<z.infer<typeof TagSchema>>;
 export class Tag implements TagPlain {
   id!: string; name!: string; order?: number;
   constructor(plain: TagPlain) { Object.assign(this, TagSchema.parse(plain)); }
@@ -4388,18 +4398,18 @@ export class Tag implements TagPlain {
   static deserialize(json: string): Tag { return new Tag(TagSchema.parse(JSON.parse(json))); }
 }
 export const TagMetadataDtoSchema = TagSchema;
-export type TagMetadataDto = z.infer<typeof TagMetadataDtoSchema>;
+export type TagMetadataDto = ReadonlyDto<z.infer<typeof TagMetadataDtoSchema>>;
 export const TagShallowSchema = TagSchema;
-export type TagShallow = z.infer<typeof TagShallowSchema>;
+export type TagShallow = ReadonlyDto<z.infer<typeof TagShallowSchema>>;
 export const TagDiffSchema = TagSchema.partial();
-export type TagDiff = z.infer<typeof TagDiffSchema>;
+export type TagDiff = ReadonlyDto<z.infer<typeof TagDiffSchema>>;
 export const TagsDiffSchema = z.object({ removed: z.array(TagIdSchema).optional(), updated: z.array(z.object({ tag: TagIdSchema, diff: TagDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type TagsDiff = z.infer<typeof TagsDiffSchema>;
+export type TagsDiff = ReadonlyDto<z.infer<typeof TagsDiffSchema>>;
 // #endregion Tag
 
 // #region Concept
 export const ConceptSchema = z.object({ id: z.string(), name: z.string(), description: z.string().optional(), order: z.number().optional() });
-export type ConceptPlain = z.infer<typeof ConceptSchema>;
+export type ConceptPlain = ReadonlyDto<z.infer<typeof ConceptSchema>>;
 export class Concept implements ConceptPlain {
   id!: string; name!: string; description?: string; order?: number;
   constructor(plain: ConceptPlain) { Object.assign(this, ConceptSchema.parse(plain)); }
@@ -4412,18 +4422,18 @@ export class Concept implements ConceptPlain {
   static deserialize(json: string): Concept { return new Concept(ConceptSchema.parse(JSON.parse(json))); }
 }
 export const ConceptMetadataDtoSchema = ConceptSchema;
-export type ConceptMetadataDto = z.infer<typeof ConceptMetadataDtoSchema>;
+export type ConceptMetadataDto = ReadonlyDto<z.infer<typeof ConceptMetadataDtoSchema>>;
 export const ConceptShallowSchema = ConceptSchema;
-export type ConceptShallow = z.infer<typeof ConceptShallowSchema>;
+export type ConceptShallow = ReadonlyDto<z.infer<typeof ConceptShallowSchema>>;
 export const ConceptDiffSchema = ConceptSchema.partial();
-export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
+export type ConceptDiff = ReadonlyDto<z.infer<typeof ConceptDiffSchema>>;
 export const ConceptsDiffSchema = z.object({ removed: z.array(ConceptIdSchema).optional(), updated: z.array(z.object({ concept: ConceptIdSchema, diff: ConceptDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
+export type ConceptsDiff = ReadonlyDto<z.infer<typeof ConceptsDiffSchema>>;
 // #endregion Concept
 
 // #region Representation
 export const RepresentationSchema = z.object({ id: z.string(), name: z.string().optional(), tags: z.array(TagIdSchema).optional(), file: FileIdSchema, description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
-export type RepresentationPlain = z.infer<typeof RepresentationSchema>;
+export type RepresentationPlain = ReadonlyDto<z.infer<typeof RepresentationSchema>>;
 export class Representation implements RepresentationPlain {
   id!: string; name?: string; tags?: TagIdDto[]; file!: FileIdDto; description?: string; attributes?: Attribute[];
   constructor(plain: RepresentationPlain) { const p = RepresentationSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4436,19 +4446,19 @@ export class Representation implements RepresentationPlain {
   static deserialize(json: string): Representation { return new Representation(RepresentationSchema.parse(JSON.parse(json))); }
 }
 export const RepresentationMetadataDtoSchema = RepresentationSchema.omit({ tags: true, attributes: true });
-export type RepresentationMetadataDto = z.infer<typeof RepresentationMetadataDtoSchema>;
+export type RepresentationMetadataDto = ReadonlyDto<z.infer<typeof RepresentationMetadataDtoSchema>>;
 export const RepresentationShallowSchema = RepresentationSchema;
-export type RepresentationShallow = z.infer<typeof RepresentationShallowSchema>;
+export type RepresentationShallow = ReadonlyDto<z.infer<typeof RepresentationShallowSchema>>;
 export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ attributes: true }).extend({ attributes: AttributesDiffSchema.optional() });
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
+export type RepresentationDiff = ReadonlyDto<z.infer<typeof RepresentationDiffSchema>>;
 export const RepresentationsDiffSchema = z.object({ removed: z.array(RepresentationIdSchema).optional(), updated: z.array(z.object({ representation: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
+export type RepresentationsDiff = ReadonlyDto<z.infer<typeof RepresentationsDiffSchema>>;
 // Removed: selectBestRepresentation, filterRepresentationsByTagIds, getAvailableTagIdsForRepresentations, getAllTagIdsFromRepresentations, findRepresentation, areSameRepresentation, SUPPORTED_3D_EXTENSIONS, isSupportedRepresentationExtension, validateRepresentationFile, RepresentationFileValidation — representation selection logic moved to semio/rs (Requirement 1.3)
 // #endregion Representation
 
 // #region Connector
 export const ConnectorSchema = z.object({ id: z.string(), name: z.string().optional(), t: z.number(), point: PointSchema, direction: VectorSchema, description: z.string().optional(), port: PortIdSchema.optional(), mandatory: z.boolean().optional(), maxChildren: z.number().int().optional(), props: z.array(PropSchema).optional(), attributes: z.array(AttributeSchema).optional() });
-export type ConnectorPlain = z.infer<typeof ConnectorSchema>;
+export type ConnectorPlain = ReadonlyDto<z.infer<typeof ConnectorSchema>>;
 export class Connector implements ConnectorPlain {
   id!: string; name?: string; t!: number; point!: Point; direction!: Vector; description?: string; port?: PortIdDto; mandatory?: boolean; maxChildren?: number; props?: Prop[]; attributes?: Attribute[];
   constructor(plain: ConnectorPlain) { const p = ConnectorSchema.parse(plain); Object.assign(this, p); this.point = new Point(p.point); this.direction = new Vector(p.direction); this.props = p.props?.map((x) => new Prop(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4461,13 +4471,13 @@ export class Connector implements ConnectorPlain {
   static deserialize(json: string): Connector { return new Connector(ConnectorSchema.parse(JSON.parse(json))); }
 }
 export const ConnectorMetadataDtoSchema = ConnectorSchema.omit({ props: true, attributes: true });
-export type ConnectorMetadataDto = z.infer<typeof ConnectorMetadataDtoSchema>;
+export type ConnectorMetadataDto = ReadonlyDto<z.infer<typeof ConnectorMetadataDtoSchema>>;
 export const ConnectorShallowSchema = ConnectorSchema.omit({ props: true }).extend({ props: z.array(PropMetadataDtoSchema).optional() });
-export type ConnectorShallow = z.infer<typeof ConnectorShallowSchema>;
+export type ConnectorShallow = ReadonlyDto<z.infer<typeof ConnectorShallowSchema>>;
 export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({ point: PointDiffSchema.optional(), direction: VectorDiffSchema.optional(), props: PropsDiffSchema.optional(), attributes: AttributesDiffSchema.optional(), maxChildren: z.number().int().nullable().optional() });
-export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
+export type ConnectorDiff = ReadonlyDto<z.infer<typeof ConnectorDiffSchema>>;
 export const ConnectorsDiffSchema = z.object({ removed: z.array(ConnectorIdSchema).optional(), updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
+export type ConnectorsDiff = ReadonlyDto<z.infer<typeof ConnectorsDiffSchema>>;
 // Removed: areConnectorsCompatible, unifyConnectorPortsAndCompatiblePortsForTypes, findConnector, findConnectorInType — connector compatibility moved to semio/rs (Requirement 1.5)
 // #endregion Connector
 
@@ -4501,7 +4511,7 @@ export const TypeSchema = z.object({
   deletedAt: z.string().optional(),
   deletedInChangeId: z.string().optional(),
 });
-export type TypePlain = z.infer<typeof TypeSchema>;
+export type TypePlain = ReadonlyDto<z.infer<typeof TypeSchema>>;
 export class Type {
   id!: string;
   name!: string;
@@ -4543,18 +4553,18 @@ export class Type {
   }
 }
 export const TypeMetadataDtoSchema = TypeSchema.omit({ representations: true, connectors: true, props: true, attributes: true, authors: true, concepts: true });
-export type TypeMetadataDto = z.infer<typeof TypeMetadataDtoSchema>;
+export type TypeMetadataDto = ReadonlyDto<z.infer<typeof TypeMetadataDtoSchema>>;
 export const TypeShallowSchema = TypeSchema.omit({ representations: true, connectors: true, props: true, attributes: true }).extend({ representations: z.array(RepresentationMetadataDtoSchema).optional(), connectors: z.array(ConnectorMetadataDtoSchema).optional(), props: z.array(PropMetadataDtoSchema).optional(), attributes: z.array(AttributeMetadataDtoSchema).optional() });
-export type TypeShallow = z.infer<typeof TypeShallowSchema>;
+export type TypeShallow = ReadonlyDto<z.infer<typeof TypeShallowSchema>>;
 export const TypeDiffSchema = TypeSchema.partial().omit({ representations: true, connectors: true, props: true, attributes: true }).extend({ representations: RepresentationsDiffSchema.optional(), connectors: ConnectorsDiffSchema.optional(), props: PropsDiffSchema.optional(), attributes: AttributesDiffSchema.optional(), description: z.string().nullable().optional(), icon: z.string().nullable().optional(), image: z.string().nullable().optional(), location: LocationIdSchema.nullable().optional(), folder: z.string().nullable().optional(), concepts: z.array(ConceptIdSchema).nullable().optional(), authors: z.array(AuthorIdSchema).nullable().optional(), families: z.array(FamilyIdSchema).nullable().optional(), lifecycle: z.enum(["active", "deleted"]).optional(), deletedByUserId: z.string().nullable().optional(), deletedByDisplayName: z.string().nullable().optional(), deletedAt: z.string().nullable().optional(), deletedInChangeId: z.string().nullable().optional() });
-export type TypeDiff = z.infer<typeof TypeDiffSchema>;
+export type TypeDiff = ReadonlyDto<z.infer<typeof TypeDiffSchema>>;
 export const TypesDiffSchema = z.object({ removed: z.array(TypeIdSchema).optional(), updated: z.array(z.object({ type: TypeIdSchema, diff: TypeDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type TypesDiff = z.infer<typeof TypesDiffSchema>;
+export type TypesDiff = ReadonlyDto<z.infer<typeof TypesDiffSchema>>;
 // #endregion Type
 
 // #region Layer
 export const LayerSchema = z.object({ id: z.string(), path: z.string(), isHidden: z.boolean().optional(), isLocked: z.boolean().optional(), color: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
-export type LayerPlain = z.infer<typeof LayerSchema>;
+export type LayerPlain = ReadonlyDto<z.infer<typeof LayerSchema>>;
 export class Layer implements LayerPlain {
   id!: string; path!: string; isHidden?: boolean; isLocked?: boolean; color?: string; description?: string; attributes?: Attribute[];
   constructor(plain: LayerPlain) { const p = LayerSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4567,18 +4577,18 @@ export class Layer implements LayerPlain {
   static deserialize(json: string): Layer { return new Layer(LayerSchema.parse(JSON.parse(json))); }
 }
 export const LayerMetadataDtoSchema = LayerSchema.omit({ attributes: true });
-export type LayerMetadataDto = z.infer<typeof LayerMetadataDtoSchema>;
+export type LayerMetadataDto = ReadonlyDto<z.infer<typeof LayerMetadataDtoSchema>>;
 export const LayerShallowSchema = LayerSchema;
-export type LayerShallow = z.infer<typeof LayerShallowSchema>;
+export type LayerShallow = ReadonlyDto<z.infer<typeof LayerShallowSchema>>;
 export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).extend({ attributes: AttributesDiffSchema.optional() });
-export type LayerDiff = z.infer<typeof LayerDiffSchema>;
+export type LayerDiff = ReadonlyDto<z.infer<typeof LayerDiffSchema>>;
 export const LayersDiffSchema = z.object({ removed: z.array(LayerIdSchema).optional(), updated: z.array(z.object({ layer: LayerIdSchema, diff: LayerDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type LayersDiff = z.infer<typeof LayersDiffSchema>;
+export type LayersDiff = ReadonlyDto<z.infer<typeof LayersDiffSchema>>;
 // #endregion Layer
 
 // #region Piece
 export const PieceSchema = z.object({ id: z.string(), name: z.string().optional(), type: TypeIdSchema.optional(), design: DesignIdSchema.optional(), plane: PlaneSchema.optional(), center: CoordinateSchema.optional(), scale: z.number().optional(), mirrorPlane: PlaneSchema.optional(), isHidden: z.boolean().optional(), isLocked: z.boolean().optional(), color: z.string().optional(), description: z.string().optional(), props: z.array(PropSchema).optional(), attributes: z.array(AttributeSchema).optional() });
-export type PiecePlain = z.infer<typeof PieceSchema>;
+export type PiecePlain = ReadonlyDto<z.infer<typeof PieceSchema>>;
 export class Piece {
   id!: string; name?: string; type?: TypeIdDto; design?: DesignIdDto; plane?: Plane; center?: Coordinate; scale?: number; mirrorPlane?: Plane; isHidden?: boolean; isLocked?: boolean; color?: string; description?: string; props?: Prop[]; attributes?: Attribute[];
   constructor(plain: PiecePlain) { const p = PieceSchema.parse(plain); Object.assign(this, p); this.plane = p.plane ? new Plane(p.plane) : undefined; this.center = p.center ? new Coordinate(p.center) : undefined; this.mirrorPlane = p.mirrorPlane ? new Plane(p.mirrorPlane) : undefined; this.props = p.props?.map((x) => new Prop(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4615,19 +4625,19 @@ export class Piece {
   }
 }
 export const PieceMetadataDtoSchema = PieceSchema.omit({ props: true, attributes: true });
-export type PieceMetadataDto = z.infer<typeof PieceMetadataDtoSchema>;
+export type PieceMetadataDto = ReadonlyDto<z.infer<typeof PieceMetadataDtoSchema>>;
 export const PieceShallowSchema = PieceSchema.omit({ props: true }).extend({ props: z.array(PropMetadataDtoSchema).optional() });
-export type PieceShallow = z.infer<typeof PieceShallowSchema>;
+export type PieceShallow = ReadonlyDto<z.infer<typeof PieceShallowSchema>>;
 export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: true, attributes: true }).extend({ plane: PlaneDiffSchema.optional(), props: PropsDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type PieceDiff = z.infer<typeof PieceDiffSchema>;
+export type PieceDiff = ReadonlyDto<z.infer<typeof PieceDiffSchema>>;
 export const PiecesDiffSchema = z.object({ removed: z.array(PieceIdSchema).optional(), updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
+export type PiecesDiff = ReadonlyDto<z.infer<typeof PiecesDiffSchema>>;
 // Removed: isFixedPiece, findPiece, findPieceConnections, findConnectorForPieceInConnection, getPieceRepresentationFileIds, getPieceRepresentationUrls, resolvePieceTypeForFlatten — domain logic moved to semio/rs
 // #endregion Piece
 
 // #region Group
 export const GroupSchema = z.object({ id: z.string(), pieces: z.array(PieceIdSchema), color: z.string().optional(), name: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
-export type GroupPlain = z.infer<typeof GroupSchema>;
+export type GroupPlain = ReadonlyDto<z.infer<typeof GroupSchema>>;
 export class Group implements GroupPlain {
   id!: string; pieces!: PieceIdDto[]; color?: string; name?: string; description?: string; attributes?: Attribute[];
   constructor(plain: GroupPlain) { const p = GroupSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4640,18 +4650,18 @@ export class Group implements GroupPlain {
   static deserialize(json: string): Group { return new Group(GroupSchema.parse(JSON.parse(json))); }
 }
 export const GroupDiffSchema = GroupSchema.partial().omit({ attributes: true }).extend({ attributes: AttributesDiffSchema.optional() });
-export type GroupDiff = z.infer<typeof GroupDiffSchema>;
+export type GroupDiff = ReadonlyDto<z.infer<typeof GroupDiffSchema>>;
 export const GroupsDiffSchema = z.object({ removed: z.array(GroupIdSchema).optional(), updated: z.array(z.object({ group: GroupIdSchema, diff: GroupDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type GroupsDiff = z.infer<typeof GroupsDiffSchema>;
+export type GroupsDiff = ReadonlyDto<z.infer<typeof GroupsDiffSchema>>;
 export const GroupMetadataDtoSchema = GroupSchema.omit({ pieces: true, attributes: true });
-export type GroupMetadataDto = z.infer<typeof GroupMetadataDtoSchema>;
+export type GroupMetadataDto = ReadonlyDto<z.infer<typeof GroupMetadataDtoSchema>>;
 export const GroupShallowSchema = GroupSchema;
-export type GroupShallow = z.infer<typeof GroupShallowSchema>;
+export type GroupShallow = ReadonlyDto<z.infer<typeof GroupShallowSchema>>;
 // #endregion Group
 
 // #region Side
 export const SideSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
-export type SidePlain = z.infer<typeof SideSchema>;
+export type SidePlain = ReadonlyDto<z.infer<typeof SideSchema>>;
 export class Side {
   #pieceId!: string;
   #designPieceId?: string;
@@ -4667,9 +4677,9 @@ export class Side {
   toPlain(): SidePlain { return SideSchema.parse({ piece: { id: this.#pieceId }, designPiece: this.#designPieceId ? { id: this.#designPieceId } : undefined, connector: this.#connectorId ? { id: this.#connectorId } : undefined }); }
 }
 export const SideDiffSchema = SideSchema.partial();
-export type SideDiff = z.infer<typeof SideDiffSchema>;
+export type SideDiff = ReadonlyDto<z.infer<typeof SideDiffSchema>>;
 export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
-export type SideIdPlain = z.infer<typeof SideIdSchema>;
+export type SideIdPlain = ReadonlyDto<z.infer<typeof SideIdSchema>>;
 export class SideId implements SideIdPlain {
   piece!: PieceIdDto; designPiece?: PieceIdDto; connector?: ConnectorIdDto;
   constructor(plain: SideIdPlain) { Object.assign(this, SideIdSchema.parse(plain)); }
@@ -4677,12 +4687,12 @@ export class SideId implements SideIdPlain {
   toPlain(): SideIdPlain { return SideIdSchema.parse(this as SideIdPlain); }
 }
 export const SidesDiffSchema = z.object({ removed: z.array(SideIdSchema).optional(), updated: z.array(z.object({ side: SideIdSchema, diff: SideDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type SidesDiff = z.infer<typeof SidesDiffSchema>;
+export type SidesDiff = ReadonlyDto<z.infer<typeof SidesDiffSchema>>;
 // #endregion Side
 
 // #region Connection
 export const ConnectionSchema = z.object({ id: z.string(), connected: SideSchema, connecting: SideSchema, gap: z.number().optional(), shift: z.number().optional(), rise: z.number().optional(), rotation: z.number().optional(), turn: z.number().optional(), tilt: z.number().optional(), u: z.number().optional(), v: z.number().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
-export type ConnectionPlain = z.infer<typeof ConnectionSchema>;
+export type ConnectionPlain = ReadonlyDto<z.infer<typeof ConnectionSchema>>;
 export class Connection implements ConnectionPlain {
   id!: string; connected!: Side; connecting!: Side; gap?: number; shift?: number; rise?: number; rotation?: number; turn?: number; tilt?: number; u?: number; v?: number; description?: string; attributes?: Attribute[];
   constructor(plain: ConnectionPlain) { const p = ConnectionSchema.parse(plain); Object.assign(this, p); this.connected = new Side(p.connected); this.connecting = new Side(p.connecting); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
@@ -4695,18 +4705,18 @@ export class Connection implements ConnectionPlain {
   toPlain(): ConnectionPlain { return ConnectionSchema.parse({ id: this.id, connected: this.connected.toPlain(), connecting: this.connecting.toPlain(), gap: this.gap, shift: this.shift, rise: this.rise, rotation: this.rotation, turn: this.turn, tilt: this.tilt, u: this.u, v: this.v, description: this.description, attributes: this.attributes?.map((a) => a.toPlain()) } as ConnectionPlain); }
 }
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ id: true, connected: true, connecting: true, attributes: true }).extend({ connected: SideDiffSchema.optional(), connecting: SideDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
+export type ConnectionDiff = ReadonlyDto<z.infer<typeof ConnectionDiffSchema>>;
 export const ConnectionsDiffSchema = z.object({ removed: z.array(ConnectionIdSchema).optional(), updated: z.array(z.object({ connection: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
+export type ConnectionsDiff = ReadonlyDto<z.infer<typeof ConnectionsDiffSchema>>;
 export const ConnectionMetadataDtoSchema = ConnectionSchema.omit({ attributes: true });
-export type ConnectionMetadataDto = z.infer<typeof ConnectionMetadataDtoSchema>;
+export type ConnectionMetadataDto = ReadonlyDto<z.infer<typeof ConnectionMetadataDtoSchema>>;
 export const ConnectionShallowSchema = ConnectionSchema;
-export type ConnectionShallow = z.infer<typeof ConnectionShallowSchema>;
+export type ConnectionShallow = ReadonlyDto<z.infer<typeof ConnectionShallowSchema>>;
 // #endregion Connection
 
 // #region Stat
 export const StatSchema = z.object({ id: z.string(), quality: QualityIdSchema, unit: z.string().optional(), min: z.number().optional(), minExcluded: z.boolean().optional(), max: z.number().optional(), maxExcluded: z.boolean().optional() });
-export type StatPlain = z.infer<typeof StatSchema>;
+export type StatPlain = ReadonlyDto<z.infer<typeof StatSchema>>;
 export class Stat implements StatPlain {
   id!: string; quality!: QualityIdDto; unit?: string; min?: number; minExcluded?: boolean; max?: number; maxExcluded?: boolean;
   constructor(plain: StatPlain) { Object.assign(this, StatSchema.parse(plain)); }
@@ -4719,13 +4729,13 @@ export class Stat implements StatPlain {
   static deserialize(json: string): Stat { return new Stat(StatSchema.parse(JSON.parse(json))); }
 }
 export const StatDiffSchema = StatSchema.partial();
-export type StatDiff = z.infer<typeof StatDiffSchema>;
+export type StatDiff = ReadonlyDto<z.infer<typeof StatDiffSchema>>;
 export const StatsDiffSchema = z.object({ removed: z.array(StatIdSchema).optional(), updated: z.array(z.object({ stat: StatIdSchema, diff: StatDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type StatsDiff = z.infer<typeof StatsDiffSchema>;
+export type StatsDiff = ReadonlyDto<z.infer<typeof StatsDiffSchema>>;
 export const StatMetadataDtoSchema = StatSchema;
-export type StatMetadataDto = z.infer<typeof StatMetadataDtoSchema>;
+export type StatMetadataDto = ReadonlyDto<z.infer<typeof StatMetadataDtoSchema>>;
 export const StatShallowSchema = StatSchema;
-export type StatShallow = z.infer<typeof StatShallowSchema>;
+export type StatShallow = ReadonlyDto<z.infer<typeof StatShallowSchema>>;
 // #endregion Stat
 
 // #region Design
@@ -4756,12 +4766,12 @@ export const DesignSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
 });
-export type DesignPlain = z.infer<typeof DesignSchema>;
+export type DesignPlain = ReadonlyDto<z.infer<typeof DesignSchema>>;
 
 export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({ pieces: PiecesDiffSchema.optional(), connections: ConnectionsDiffSchema.optional(), stats: StatsDiffSchema.optional(), props: PropsDiffSchema.optional(), layers: LayersDiffSchema.optional(), groups: GroupsDiffSchema.optional(), authors: AuthorsDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
-export type DesignDiff = z.infer<typeof DesignDiffSchema>;
+export type DesignDiff = ReadonlyDto<z.infer<typeof DesignDiffSchema>>;
 export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(), added: z.array(z.any()).optional() });
-export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
+export type DesignsDiff = ReadonlyDto<z.infer<typeof DesignsDiffSchema>>;
 
 /** @emoji ⚠️ Algorithm adapter / native REST error row. */
 export type AlgorithmError = { readonly code: string; readonly message: string };
@@ -4954,9 +4964,9 @@ export function normalizeDesignCopyResult(raw: unknown): OperationResult<Design>
 }
 
 export const DesignMetadataDtoSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true, authors: true, concepts: true });
-export type DesignMetadataDto = z.infer<typeof DesignMetadataDtoSchema>;
+export type DesignMetadataDto = ReadonlyDto<z.infer<typeof DesignMetadataDtoSchema>>;
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, attributes: true }).extend({ pieces: z.array(PieceMetadataDtoSchema).optional(), connections: z.array(ConnectionMetadataDtoSchema).optional(), stats: z.array(StatMetadataDtoSchema).optional(), props: z.array(PropMetadataDtoSchema).optional(), layers: z.array(LayerMetadataDtoSchema).optional(), groups: z.array(GroupMetadataDtoSchema).optional(), attributes: z.array(AttributeMetadataDtoSchema).optional() });
-export type DesignShallow = z.infer<typeof DesignShallowSchema>;
+export type DesignShallow = ReadonlyDto<z.infer<typeof DesignShallowSchema>>;
 // Removed: addPieceToDesignDiff, setPieceInDesignDiff, removePieceFromDesignDiff, addPiecesToDesignDiff, setPiecesInDesignDiff, removePiecesFromDesignDiff, addConnectionToDesignDiff, setConnectionInDesignDiff, removeConnectionFromDesignDiff, addConnectionsToDesignDiff, setConnectionsInDesignDiff, removeConnectionsFromDesignDiff, mergeDesigns, orientDesign, duplicateDesignDiffForIsolation — design-diff builder functions moved to semio/rs (Requirement 3.7)
 // #endregion Design
 
@@ -5088,11 +5098,11 @@ export async function kitStoreClientAddConnection(client: KitStoreClient, design
 
 // #region Kit
 export const KitKindSchema = z.enum(["dev", "local", "archive", "remote", "transport"]);
-export type KitKind = z.infer<typeof KitKindSchema>;
+export type KitKind = ReadonlyDto<z.infer<typeof KitKindSchema>>;
 export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
 
 export const KitFullDtoSchema = z.object({ id: z.string(), name: z.string(), version: z.string().optional(), types: z.array(TypeSchema).optional(), designs: z.array(DesignSchema).optional(), tags: z.array(TagSchema).optional(), concepts: z.array(ConceptSchema).optional(), families: z.array(FamilySchema).optional(), qualities: z.array(QualitySchema).optional(), files: z.array(FileSchema).optional(), folders: z.array(FolderSchema).optional(), authors: z.array(AuthorSchema).optional(), remote: z.string().optional(), homepage: z.string().optional(), license: z.string().optional(), preview: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional(), createdAt: DateProperty(), updatedAt: DateProperty() });
-export type KitFullDto = z.infer<typeof KitFullDtoSchema>;
+export type KitFullDto = ReadonlyDto<z.infer<typeof KitFullDtoSchema>>;
 
 function semioCoerceKitFullDtoFromJson(v: KitJsonTreeDto | KitFullDto): KitFullDto {
   return KitFullDtoSchema.parse(v);
@@ -5187,7 +5197,7 @@ function semioParseConnectionPlainArrayJson(v: KitJsonTreeDto | string | undefin
   return r.success ? r.data : [];
 }
 
-const DesignIncludedDesignWireSchema = z.object({
+const includedDesignInfoJsonZod = z.object({
   id: z.string(),
   designId: z.string(),
   connectionKind: z.string(),
@@ -5196,7 +5206,7 @@ const DesignIncludedDesignWireSchema = z.object({
   externalConnections: z.array(ConnectionSchema).optional(),
 });
 
-const PiecePlacementRowWireSchema = z.object({
+const piecePlacementRowJsonZod = z.object({
   pieceId: z.string(),
   plane: PlaneSchema,
   center: PointSchema,
@@ -5207,7 +5217,7 @@ const PiecePlacementRowWireSchema = z.object({
 });
 
 function semioParseDesignIncludedDesignArrayJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly IncludedDesignInfoDto[] {
-  const r = z.array(DesignIncludedDesignWireSchema).safeParse(Array.isArray(v) ? v : kitGraphqlJsonToReadonlyArray(v));
+  const r = z.array(includedDesignInfoJsonZod).safeParse(Array.isArray(v) ? v : kitGraphqlJsonToReadonlyArray(v));
   return r.success ? (r.data as readonly IncludedDesignInfoDto[]) : [];
 }
 
@@ -5215,7 +5225,7 @@ function semioParsePiecePlacementMapJson(rows: readonly unknown[] | undefined | 
   const m = new Map<string, PiecePlacementRowDto>();
   if (!Array.isArray(rows)) return m;
   for (const r of rows) {
-    const row = PiecePlacementRowWireSchema.safeParse(r);
+    const row = piecePlacementRowJsonZod.safeParse(r);
     if (row.success) m.set(row.data.pieceId, row.data);
   }
   return m;
@@ -5236,7 +5246,7 @@ function semioParseConnectionNullableJson(v: KitJsonTreeDto | undefined | null):
   return p.success ? p.data : null;
 }
 
-function semioParseRepresentationNullableWire(v: KitJsonTreeDto | undefined | null): RepresentationPlain | null {
+function semioParseRepresentationNullableJson(v: KitJsonTreeDto | undefined | null): RepresentationPlain | null {
   const p = RepresentationSchema.safeParse(v);
   return p.success ? p.data : null;
 }
@@ -5268,7 +5278,7 @@ export function normalizeKitFullDtoFolderPaths(dto: KitFullDto): KitFullDto {
     return seg;
   };
   const nextFolders = list.map((row) => ({ ...row, path: resolvePath(row, new Set()) }));
-  return { ...(dto as object), folders: nextFolders } as KitFullDto;
+  return { ...(dto as object), folders: nextFolders } as unknown as KitFullDto;
 }
 
 export class Kit {
@@ -5737,7 +5747,7 @@ export type KitBinaryStore = KitHostStore & {
 // #endregion KitStoreBinaryFacet
 
 export const KitDiffSchema = z.object({ types: TypesDiffSchema.optional(), designs: DesignsDiffSchema.optional() }).passthrough();
-export type KitDiff = z.infer<typeof KitDiffSchema>;
+export type KitDiff = ReadonlyDto<z.infer<typeof KitDiffSchema>>;
 // #endregion Kit
 
 // #region KitImportHelpers
@@ -6402,10 +6412,10 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(kitReadScopeToGraphQLInput(theKitReadScope)));
     });
 
-    it("kitChangeSemanticKindToWire maps GraphQL enum + other label", () => {
-      expect(kitChangeSemanticKindToWire("ADD_PIECE", null)).toBe("addPiece");
-      expect(kitChangeSemanticKindToWire("OTHER", "addFamily")).toEqual({ other: "addFamily" });
-      expect(kitChangeSemanticKindToWire("OTHER", null)).toBe("inferred");
+    it("kitChangeSemanticKindToGraphQl maps GraphQL enum + other label", () => {
+      expect(kitChangeSemanticKindToGraphQl("ADD_PIECE", null)).toBe("addPiece");
+      expect(kitChangeSemanticKindToGraphQl("OTHER", "addFamily")).toEqual({ other: "addFamily" });
+      expect(kitChangeSemanticKindToGraphQl("OTHER", null)).toBe("inferred");
     });
 
     it("normalizeKitEventFromSubscription passes flat classified mutation rows", () => {

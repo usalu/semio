@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: rename-js-dtos
    content: Rename `semio/js` DTO, ID, command, read, and event types to the single Rust-aligned DTO surface and remove duplicate aliases.
-   status: in_progress
+   status: completed
  - id: readonly-dtos
    content: Apply recursive read-only typing to all DTO aliases, including Zod-inferred full/shallow/metadata DTOs and command/event payload DTOs.
-   status: pending
+   status: completed
  - id: update-consumers
    content: Update `semio/react` and any other TypeScript consumers to use the new DTO names without legacy aliases.
-   status: pending
+   status: completed
  - id: extend-tests
    content: Extend existing embedded tests/type checks for the renamed read-only DTO surface and Rust-shaped command/read/event payloads.
-   status: pending
+   status: completed
  - id: verify
    content: Run focused JS and React build/test commands, then any affected layering check.
-   status: pending
+   status: completed
 isProject: false
 ---
 

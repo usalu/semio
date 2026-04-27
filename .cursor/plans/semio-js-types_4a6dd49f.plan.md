@@ -10,7 +10,7 @@ todos:
    status: completed
  - id: js-wire
    content: Refactor `semio/js/index.ts` GraphQL, event, patch, and store APIs to exact types with no forbidden tokens.
-   status: completed
+   status: in_progress
  - id: tests
    content: Extend existing Rust and JS tests to cover typed command/event/read behavior and run relevant checks.
    status: completed

@@ -42,11 +42,11 @@ async function openWasmKit(kit: Kit): Promise<KitStore> {
   return KitStore.open(dto);
 }
 
-async function readFlattenRows(ks: KitStore, designId: string): Promise<readonly DesignFlattenMapEntryWireDto[]> {
+async function readFlattenRows(ks: KitStore, designId: string): Promise<readonly DesignFlattenMapEntryDto[]> {
   return ks.readDesignFlattenMap(theKitReadScope, designId);
 }
 
-function piecesDiffFromFlattenRows(rows: readonly DesignFlattenMapEntryWireDto[]): NonNullable<DesignDiff["pieces"]> {
+function piecesDiffFromFlattenRows(rows: readonly DesignFlattenMapEntryDto[]): NonNullable<DesignDiff["pieces"]> {
   return {
     updated: rows.map((r) => ({
       piece: { id: r.pieceId },

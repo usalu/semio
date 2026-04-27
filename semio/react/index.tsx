@@ -169,20 +169,20 @@ export class SemioKitLiveReadStore {
   private readonly regs: Array<{
     key: string;
     fetch: () => Promise<unknown>;
-    affects: (ev: unknown) => boolean;
+    affects: (ev: KitEvent) => boolean;
     onChange: () => void;
   }> = [];
   private off: (() => void) | undefined;
 
   constructor(private readonly client: KitStoreClient) {
-    this.off = client.subscribe((ev) => {
+    this.off = client.subscribe((ev: KitEvent) => {
       for (const r of this.regs) {
         if (r.affects(ev)) void this.poll(r);
       }
     });
   }
 
-  subscribe(key: string, fetch: () => Promise<unknown>, affects: (ev: unknown) => boolean, onChange: () => void): () => void {
+  subscribe(key: string, fetch: () => Promise<unknown>, affects: (ev: KitEvent) => boolean, onChange: () => void): () => void {
     const r = { key, fetch, affects, onChange };
     this.regs.push(r);
     void this.poll(r);
@@ -691,7 +691,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     if (bridge) return bridge.submitChangeKitCommands([{ addFile: { file } }]);
     const snap = __kitHostPlainDtoFromStore(store);
     const nextFiles = [...((snap.files as unknown[]) ?? []), file as unknown];
-    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), files: nextFiles } as KitFullDto);
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), files: nextFiles } as unknown as KitFullDto);
     store.replace(Kit.fromPlain(merged));
     const adapter = __kitFolderAdapter(store);
     if (adapter && typeof Blob !== "undefined" && blobArg instanceof Blob) {
@@ -794,7 +794,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     if (bridge) return kitStoreClientAddChildByKind(bridge, "Folder", args[0]);
     const snap = __kitHostPlainDtoFromStore(store);
     const nextFolders = [...((snap.folders as unknown[]) ?? []), args[0] as Record<string, unknown>];
-    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders: nextFolders } as KitFullDto);
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders: nextFolders } as unknown as KitFullDto);
     store.replace(Kit.fromPlain(merged));
     const adapter = __kitFolderAdapter(store);
     if (adapter) {
@@ -829,7 +829,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
       }
       return row;
     });
-    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders } as KitFullDto);
+    const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders } as unknown as KitFullDto);
     const adapter = __kitFolderAdapter(store);
     if (adapter) {
       try {
@@ -2693,7 +2693,7 @@ export function KitScope({
 
   React.useEffect(() => {
     if (!kitClient) return;
-    return kitClient.subscribe((event: unknown) => {
+    return kitClient.subscribe((event: KitEvent) => {
       if (!isKitCommandLifecycleEvent(event)) return;
       const command = event.semioKitCommand;
       if (command.error) pushSetRejection(command.error);
@@ -4614,7 +4614,7 @@ export function useUpdateConnections(): {
 }
 
 /** @emoji 🧾 Normalizes live-read snapshot data into a placement metadata map (Map or plain record from older hubs). */
-function __semioPiecesPlacementWireMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowDto> {
+function __semioPiecesPlacementMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowDto> {
   if (data instanceof Map) return data as ReadonlyMap<string, PiecePlacementRowDto>;
   if (data && typeof data === "object" && !Array.isArray(data)) {
     return new Map(Object.entries(data as Record<string, PiecePlacementRowDto>));
@@ -4653,7 +4653,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<st
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
-  const value = __semioPiecesPlacementWireMapFromReadSnap(snap.data);
+  const value = __semioPiecesPlacementMapFromReadSnap(snap.data);
   const status: WriteStatus = !designId || !runtime.kitClient
     ? { kind: "readonly", pending: 0 }
     : snap.pending > 0
@@ -17175,21 +17175,27 @@ if (shouldRunReactEmbeddedTests) {
       fetchFullKit: async () => kitJsonFromStore(store) as KitFullDto,
       kitReadScope: theKitReadScope,
       submitChangeKitCommands: async (commands: readonly ChangeKitCommand[]) => {
-        const kit = kitJsonFromStore(store) as KitFullDto;
+        const kit: KitFullDto = JSON.parse(JSON.stringify(kitJsonFromStore(store))) as KitFullDto;
         for (const cmd of commands) {
           const c = cmd as Record<string, unknown>;
           if ("name" in c && c.name && typeof c.name === "object") {
             const nm = String((c.name as { name?: string }).name ?? "");
             if (nm.trim() === "") return { ok: false, error: { kind: "IllegalName", message: "name cannot be empty" } };
-            kit.name = nm;
+            (kit as { name: string }).name = nm;
           }
           if ("description" in c && c.description && typeof c.description === "object")
-            kit.description = (c.description as { description?: string | null }).description ?? undefined;
-          if ("icon" in c && c.icon && typeof c.icon === "object") kit.icon = (c.icon as { icon?: string | null }).icon ?? undefined;
-          if ("image" in c && c.image && typeof c.image === "object") kit.image = (c.image as { image?: string | null }).image ?? undefined;
-          if ("version" in c && c.version && typeof c.version === "object") kit.version = (c.version as { version?: string | null }).version ?? undefined;
-          if ("homepage" in c && c.homepage && typeof c.homepage === "object") kit.homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
-          if ("license" in c && c.license && typeof c.license === "object") kit.license = (c.license as { license?: string | null }).license ?? undefined;
+            (kit as { description?: string }).description =
+              (c.description as { description?: string | null }).description ?? undefined;
+          if ("icon" in c && c.icon && typeof c.icon === "object")
+            (kit as { icon?: string }).icon = (c.icon as { icon?: string | null }).icon ?? undefined;
+          if ("image" in c && c.image && typeof c.image === "object")
+            (kit as { image?: string }).image = (c.image as { image?: string | null }).image ?? undefined;
+          if ("version" in c && c.version && typeof c.version === "object")
+            (kit as { version?: string }).version = (c.version as { version?: string | null }).version ?? undefined;
+          if ("homepage" in c && c.homepage && typeof c.homepage === "object")
+            (kit as { homepage?: string }).homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
+          if ("license" in c && c.license && typeof c.license === "object")
+            (kit as { license?: string }).license = (c.license as { license?: string | null }).license ?? undefined;
         }
         store.replace(asKitInstance(kit));
         return { ok: true };

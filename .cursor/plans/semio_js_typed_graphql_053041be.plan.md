@@ -19,10 +19,10 @@ todos:
    status: completed
  - id: extend-tests
    content: Extend embedded semio/js tests and affected React tests to enforce no JS kit cache and typed GraphQL-only reads.
-   status: in_progress
+   status: completed
  - id: verify
    content: Run semio/js and semio/react build/test commands plus layering check if affected.
-   status: pending
+   status: completed
 isProject: false
 ---
 
