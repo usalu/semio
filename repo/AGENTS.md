@@ -277,7 +277,7 @@ bundle:
     examples:
       - "🌱mono🪆repo"
       - "👤semio📚js"
-      - "🧰repo⌨️cli"
+      - "🧰repo⌨️client"
   uri:
     scheme: "{{repo-id}}{{bundles-name}}/{{technology-name}}/{{bundle-name}}"
     examples:
@@ -292,7 +292,7 @@ folders:
     scheme: "{{(bundle-id|folder-id)?}}📁"
     examples:
       - "👤semio📚js📁"
-      - "🧰repo⌨️cli📁"
+      - "🧰repo⌨️client📁"
       - "👤semio📚js🗃️sketchpad📁"
   uri:
     scheme: "{{repo-id}}{{folders-name}}/{{folder-path-with-uri-encoded-names}}"
@@ -556,7 +556,7 @@ drafts:
   id:
     scheme: "{{resource-id}}📝"
     examples:
-      - "🧰repo⌨️cli📝"
+      - "🧰repo⌨️client📝"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -566,7 +566,7 @@ draft:
   id:
     scheme: "{{resource-id}}📝{{flat-title}}"
     examples:
-      - "🧰repo⌨️cli📝newarchitecture"
+      - "🧰repo⌨️client📝newarchitecture"
   uri:
     scheme: "{{repo-id}}{{code}}/{{uri-encoded-identifying-path}}"
     examples:
@@ -1248,7 +1248,7 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand",]
+          tests: ["{{test-id}}"] # e.g. ["","🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand",]
           timeout: "{{timeout}}" # seconds e.g. 600
       ended:
         DATA:
@@ -1256,8 +1256,8 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
-          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️cli🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+          succeeded: ["{{successful-test-id}}"] # e.g. ["🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand"]
+          failed: ["{{failed-test-id}}"] # e.g. ["🧰repo⌨️client🥼maintestgo🔖policytests🧪testpolicylistcommand"]
 
     build:
       starting:
@@ -1266,15 +1266,15 @@ event:
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          bundles: ["{{bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
+          bundles: ["{{bundle-id}}"] # e.g. ["🧰repo⌨️client","👤semio📚js"]
       ended:
         DATA:
           session: "{{session-id}}"
           second: "{{second-id}}"
           llm: "{{llm}}"
           transcript: "{{transcript-path}}"
-          succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
-          failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰repo⌨️cli","👤semio📚js"]
+          succeeded: ["{{successfully-built-bundle-id}}"] # e.g. ["🧰repo⌨️client","👤semio📚js"]
+          failed: ["{{failed-to-build-bundle-id}}"] # e.g. ["🧰repo⌨️client","👤semio📚js"]
 
     terminal:
       starting:

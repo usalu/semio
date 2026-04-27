@@ -1753,10 +1753,10 @@ suite("Entity Emoji Registry Test Suite", () => {
 suite("Entity ID Regex Matching Test Suite", () => {
   test("matches bare infrastructure technology ID (🧰)", () => {
     const regex = buildEntityIdRegex();
-    const text = "See 🧰repo⌨️cli for CLI details.";
+    const text = "See 🧰repo⌨️client for CLI details.";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 1, "should match one ID");
-    assert.strictEqual(matches[0][3], "🧰repo⌨️cli");
+    assert.strictEqual(matches[0][3], "🧰repo⌨️client");
   });
 
   test("matches bare user technology ID (👤)", () => {
@@ -1825,7 +1825,7 @@ suite("Entity ID Regex Matching Test Suite", () => {
 
   test("matches multiple IDs in same text", () => {
     const regex = buildEntityIdRegex();
-    const text = "Compare 🧰repo⌨️cli with 👤semio📚js and 🎯goalname";
+    const text = "Compare 🧰repo⌨️client with 👤semio📚js and 🎯goalname";
     const matches = [...text.matchAll(regex)];
     assert.strictEqual(matches.length, 3, "should match three IDs");
   });

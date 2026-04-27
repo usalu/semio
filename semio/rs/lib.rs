@@ -6615,11 +6615,7 @@ pub mod kit_read_scope {
     fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
         let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            g.sessions
-                .get(session_id)
-                .and_then(|s| s.draft(draft_id))
-                .ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?
-                .clone()
+            g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?.clone()
         };
         d.materialize_working_graph()
     }
@@ -6628,14 +6624,8 @@ pub mod kit_read_scope {
     fn materialize_transaction_read_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
         {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get(session_id)
-                .and_then(|s| s.draft(draft_id))
-                .ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
-            let _ = d
-                .open_transaction_ref(transaction_id)
-                .ok_or_else(|| SemioError::InvalidOperation("read scope: transaction is not the open transaction".into()))?;
+            let d = g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
+            let _ = d.open_transaction_ref(transaction_id).ok_or_else(|| SemioError::InvalidOperation("read scope: transaction is not the open transaction".into()))?;
         }
         materialize_draft_working_graph(kit, session_id, draft_id)
     }
@@ -6662,11 +6652,7 @@ pub mod kit_read_scope {
                 drop(g0);
                 return materialize_draft_working_graph(kit, session_id, draft_id);
             }
-            KitReadScope::Transaction {
-                session_id,
-                draft_id,
-                transaction_id,
-            } => {
+            KitReadScope::Transaction { session_id, draft_id, transaction_id } => {
                 drop(g0);
                 return materialize_transaction_read_graph(kit, session_id, draft_id, transaction_id);
             }
@@ -6768,9 +6754,16 @@ pub mod kit_backbone_wire {
     pub enum BackboneConfig {
         /// In-process only: no persistence; attach/detach are bookkeeping no-ops for shell/tests.
         Memory,
-        Dev { path: String },
-        Local { folder: String },
-        Remote { url: String, session_id: String },
+        Dev {
+            path: String,
+        },
+        Local {
+            folder: String,
+        },
+        Remote {
+            url: String,
+            session_id: String,
+        },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -7652,16 +7645,11 @@ pub mod kit_store_command {
             match self {
                 KitStoreCommand::AttachBackbone { config } => match config {
                     crate::kit_backbone_wire::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
-                    _ => Err(SemioError::InvalidOperation(
-                        "backbone attach (dev/local/remote) must be run via kit_store::KitStore::execute (semio-store control plane)".into(),
-                    )),
+                    _ => Err(SemioError::InvalidOperation("backbone attach (dev/local/remote) must be run via kit_store::KitStore::execute (semio-store control plane)".into())),
                 },
-                KitStoreCommand::DetachBackbone
-                | KitStoreCommand::SetActiveCheckpoint { .. }
-                | KitStoreCommand::ListConflicts
-                | KitStoreCommand::ResolveConflict { .. }
-                | KitStoreCommand::BackboneStatus
-                | KitStoreCommand::SyncNow => Err(SemioError::InvalidOperation("backbone and conflict commands must be run via kit_store::KitStore::execute (semio-store control plane)".into())),
+                KitStoreCommand::DetachBackbone | KitStoreCommand::SetActiveCheckpoint { .. } | KitStoreCommand::ListConflicts | KitStoreCommand::ResolveConflict { .. } | KitStoreCommand::BackboneStatus | KitStoreCommand::SyncNow => {
+                    Err(SemioError::InvalidOperation("backbone and conflict commands must be run via kit_store::KitStore::execute (semio-store control plane)".into()))
+                }
                 KitStoreCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
                     for c in commands {
@@ -7768,10 +7756,7 @@ pub mod kit_store_command {
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
-                    let sc = KitReadScope::Draft {
-                        session_id: sid.clone(),
-                        draft_id: did.clone(),
-                    };
+                    let sc = KitReadScope::Draft { session_id: sid.clone(), draft_id: did.clone() };
                     let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
                     let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
@@ -7868,18 +7853,18 @@ pub mod kit_store_command {
                 let mut inverse: Vec<crate::change_command::ChangeKitCommand> = Vec::new();
                 for tx in &d.transactions {
                     for ch in &tx.changes {
-                        forward.extend(ch.forward.iter().cloned());
+                        forward.extend(ch.flatten_forward_commands());
                     }
                 }
                 for tx in d.transactions.iter().rev() {
                     for ch in tx.changes.iter().rev() {
-                        inverse.extend(ch.inverse.iter().cloned());
+                        inverse.extend(ch.flatten_inverse_commands());
                     }
                 }
                 if forward.is_empty() {
                     return Err(SemioError::InvalidOperation("no change to finalize in draft".into()));
                 }
-                let kc = KitChange { forward, inverse, kind: KitChangeKind::Inferred, author: None, time: None };
+                let kc = KitChange { forward, inverse, children: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
                 (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
             if alt.is_some() {
@@ -7913,11 +7898,7 @@ pub mod kit_store_command {
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
-                    let sc = KitReadScope::Transaction {
-                        session_id: sid.clone(),
-                        draft_id: did.clone(),
-                        transaction_id: txid.clone(),
-                    };
+                    let sc = KitReadScope::Transaction { session_id: sid.clone(), draft_id: did.clone(), transaction_id: txid.clone() };
                     let view = kit_read_scope::resolve_read_graph(kit, &sc)?;
                     let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
@@ -7937,8 +7918,9 @@ pub mod kit_store_command {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             g.to_full_dto()
                         };
-                        let inverse = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                        let kind = ChangeKitCommand::declared_kind(&c);
+                        let kind = ChangeKitCommand::declared_kind(c);
+                        let kc = KitChange::lift_flat(kit, vec![c.clone()], kind, None, None).map_err(|e| SemioError::InvalidOperation(format!("lift kit change: {e}")))?;
+                        let _inverse = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                         let after = {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             g.to_full_dto()
@@ -7946,7 +7928,6 @@ pub mod kit_store_command {
                         if before == after {
                             continue;
                         }
-                        let kc = KitChange { forward: vec![c.clone()], inverse, kind, author: None, time: None };
                         {
                             let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             if let Some(tx) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)) {
@@ -8107,6 +8088,7 @@ pub mod kit_store_command {
                     let ch = KitChange {
                         forward: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: after_dto.clone() }],
                         inverse: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: before_dto.clone() }],
+                        children: vec![],
                         kind: KitChangeKind::UnifyCheckpoints,
                         author: None,
                         time: None,
@@ -13087,11 +13069,7 @@ pub mod diff {
 
     impl FamilyDiff {
         pub fn is_empty(&self) -> bool {
-            self.name.is_none()
-                && self.description.is_none()
-                && self.icon.is_none()
-                && self.ports.as_ref().map_or(true, |p| p.is_empty())
-                && self.attributes.as_ref().map_or(true, |a| a.is_empty())
+            self.name.is_none() && self.description.is_none() && self.icon.is_none() && self.ports.as_ref().map_or(true, |p| p.is_empty()) && self.attributes.as_ref().map_or(true, |a| a.is_empty())
         }
         pub fn merge(&self, b: &Self) -> Self {
             Self {
@@ -15480,9 +15458,7 @@ pub mod kit_change {
     //#region 🔖Imports
     use serde::{Deserialize, Serialize};
 
-    use crate::change_command::{
-        ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
-    };
+    use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
     use crate::design::DesignIdDto;
     use crate::error::SemioError;
     use crate::piece::PieceIdDto;
@@ -15515,7 +15491,7 @@ pub mod kit_change {
 
     //#region 🔖PieceChange
     /// 🧩 Scoped piece mutation under one design (inverse mirrors [`ChangePieceCommand::apply`] pairing).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceChange {
         pub design_id: DesignIdDto,
@@ -15535,79 +15511,57 @@ pub mod kit_change {
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
-                &[ChangeKitCommand::ChangeDesignCommands {
-                    design_id: self.design_id.clone(),
-                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                        piece_id: self.piece_id.clone(),
-                        commands: self.forward.clone(),
-                    }],
-                }],
+                &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.forward.clone() }] }],
             )
+            .map(|_| ())
         }
 
         /// 🧩 Applies [`Self::inverse`] to undo [`Self::forward`].
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
-                &[ChangeKitCommand::ChangeDesignCommands {
-                    design_id: self.design_id.clone(),
-                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                        piece_id: self.piece_id.clone(),
-                        commands: self.inverse.clone(),
-                    }],
-                }],
+                &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.inverse.clone() }] }],
             )
+            .map(|_| ())
         }
 
         /// 🧩 Flattened inverse [`ChangeKitCommand`] list (for checkpoint merge / storage).
         pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
-            vec![ChangeKitCommand::ChangeDesignCommands {
-                design_id: self.design_id.clone(),
-                commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                    piece_id: self.piece_id.clone(),
-                    commands: self.inverse.clone(),
-                }],
-            }]
+            vec![ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.inverse.clone() }] }]
         }
 
         /// 🧩 Flattened forward [`ChangeKitCommand`] list.
         pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
-            vec![ChangeKitCommand::ChangeDesignCommands {
-                design_id: self.design_id.clone(),
-                commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                    piece_id: self.piece_id.clone(),
-                    commands: self.forward.clone(),
-                }],
-            }]
+            vec![ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.forward.clone() }] }]
         }
     }
     //#endregion
 
-    //#region 🔖DesignAtomicsBlock
+    //#region 🔖KitDesignAtomicsBlock
     /// 🧩 Consecutive non-piece [`ChangeDesignCommand`] rows lifted with paired inverses.
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct DesignAtomicsBlock {
+    pub struct KitDesignAtomicsBlock {
         pub forward: Vec<ChangeDesignCommand>,
         pub inverse: Vec<ChangeDesignCommand>,
     }
 
     /// 🧩 Ordered segment under one design (preserves interleaving of piece vs other edits).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase", tag = "blockKind", content = "payload")]
-    pub enum DesignChangeBlock {
-        Atomics(DesignAtomicsBlock),
+    pub enum KitDesignChangeBlock {
+        Atomics(KitDesignAtomicsBlock),
         Piece(PieceChange),
     }
     //#endregion
 
-    //#region 🔖DesignChange
-    /// 🧩 Scoped design mutation tree (piece rows become [`DesignChangeBlock::Piece`]).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    //#region 🔖KitDesignChange
+    /// 🧩 Scoped design mutation tree (piece rows become [`KitDesignChangeBlock::Piece`]).
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct DesignChange {
+    pub struct KitDesignChange {
         pub design_id: DesignIdDto,
-        pub blocks: Vec<DesignChangeBlock>,
+        pub blocks: Vec<KitDesignChangeBlock>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -15616,23 +15570,17 @@ pub mod kit_change {
         pub time: Option<String>,
     }
 
-    impl DesignChange {
+    impl KitDesignChange {
         /// 🧩 Applies blocks in order.
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             for b in &self.blocks {
                 match b {
-                    DesignChangeBlock::Atomics(a) => {
+                    KitDesignChangeBlock::Atomics(a) => {
                         if !a.forward.is_empty() {
-                            ChangeKitCommand::apply_many(
-                                kit,
-                                &[ChangeKitCommand::ChangeDesignCommands {
-                                    design_id: self.design_id.clone(),
-                                    commands: a.forward.clone(),
-                                }],
-                            )?;
+                            ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: a.forward.clone() }]).map(|_| ())?;
                         }
                     }
-                    DesignChangeBlock::Piece(p) => p.apply_forward(kit)?,
+                    KitDesignChangeBlock::Piece(p) => p.apply_forward(kit)?,
                 }
             }
             Ok(())
@@ -15642,18 +15590,12 @@ pub mod kit_change {
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             for b in self.blocks.iter().rev() {
                 match b {
-                    DesignChangeBlock::Atomics(a) => {
+                    KitDesignChangeBlock::Atomics(a) => {
                         if !a.inverse.is_empty() {
-                            ChangeKitCommand::apply_many(
-                                kit,
-                                &[ChangeKitCommand::ChangeDesignCommands {
-                                    design_id: self.design_id.clone(),
-                                    commands: a.inverse.clone(),
-                                }],
-                            )?;
+                            ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: a.inverse.clone() }]).map(|_| ())?;
                         }
                     }
-                    DesignChangeBlock::Piece(p) => p.apply_backward(kit)?,
+                    KitDesignChangeBlock::Piece(p) => p.apply_backward(kit)?,
                 }
             }
             Ok(())
@@ -15664,15 +15606,12 @@ pub mod kit_change {
             let mut out = Vec::new();
             for b in &self.blocks {
                 match b {
-                    DesignChangeBlock::Atomics(a) => {
+                    KitDesignChangeBlock::Atomics(a) => {
                         if !a.forward.is_empty() {
-                            out.push(ChangeKitCommand::ChangeDesignCommands {
-                                design_id: self.design_id.clone(),
-                                commands: a.forward.clone(),
-                            });
+                            out.push(ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: a.forward.clone() });
                         }
                     }
-                    DesignChangeBlock::Piece(p) => out.extend(p.flatten_forward_commands()),
+                    KitDesignChangeBlock::Piece(p) => out.extend(p.flatten_forward_commands()),
                 }
             }
             out
@@ -15683,15 +15622,12 @@ pub mod kit_change {
             let mut out = Vec::new();
             for b in self.blocks.iter().rev() {
                 match b {
-                    DesignChangeBlock::Atomics(a) => {
+                    KitDesignChangeBlock::Atomics(a) => {
                         if !a.inverse.is_empty() {
-                            out.push(ChangeKitCommand::ChangeDesignCommands {
-                                design_id: self.design_id.clone(),
-                                commands: a.inverse.clone(),
-                            });
+                            out.push(ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: a.inverse.clone() });
                         }
                     }
-                    DesignChangeBlock::Piece(p) => out.extend(p.flatten_inverse_commands()),
+                    KitDesignChangeBlock::Piece(p) => out.extend(p.flatten_inverse_commands()),
                 }
             }
             out
@@ -15701,7 +15637,7 @@ pub mod kit_change {
 
     //#region 🔖TypeChange
     /// 🧩 Scoped type mutation under one type id (wraps [`ChangeTypeCommand`] batches).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeChange {
         pub type_id: TypeIdDto,
@@ -15718,48 +15654,30 @@ pub mod kit_change {
     impl TypeChange {
         /// 🧩 Applies [`Self::forward`].
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
-            ChangeKitCommand::apply_many(
-                kit,
-                &[ChangeKitCommand::ChangeTypeCommands {
-                    type_id: self.type_id.clone(),
-                    commands: self.forward.clone(),
-                }],
-            )
+            ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.forward.clone() }]).map(|_| ())
         }
 
         /// 🧩 Applies [`Self::inverse`].
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
-            ChangeKitCommand::apply_many(
-                kit,
-                &[ChangeKitCommand::ChangeTypeCommands {
-                    type_id: self.type_id.clone(),
-                    commands: self.inverse.clone(),
-                }],
-            )
+            ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.inverse.clone() }]).map(|_| ())
         }
 
         pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
-            vec![ChangeKitCommand::ChangeTypeCommands {
-                type_id: self.type_id.clone(),
-                commands: self.forward.clone(),
-            }]
+            vec![ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.forward.clone() }]
         }
 
         pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
-            vec![ChangeKitCommand::ChangeTypeCommands {
-                type_id: self.type_id.clone(),
-                commands: self.inverse.clone(),
-            }]
+            vec![ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.inverse.clone() }]
         }
     }
     //#endregion
 
     //#region 🔖Change
     /// 🌳 Typed child node under [`KitChange`] (kit root is always [`KitChange`], not this enum).
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize)]
     pub enum Change {
         Type(TypeChange),
-        Design(DesignChange),
+        Design(KitDesignChange),
         Piece(PieceChange),
     }
 
@@ -15803,7 +15721,7 @@ pub mod kit_change {
         *k == KitChangeKind::Inferred
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default)]
     pub struct KitChange {
         /// Kit-scoped forward commands (excludes nested type/design batches lifted into [`Self::children`]).
         pub forward: Vec<ChangeKitCommand>,
@@ -15827,8 +15745,7 @@ pub mod kit_change {
         pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
             for ch in &c.children {
-                ch.apply_forward(kit)
-                    .map_err(|e| crate::error::SetError::Internal(format!("kit change child forward: {e}")))?;
+                ch.apply_forward(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change child forward: {e}")))?;
             }
             Ok(())
         }
@@ -15836,8 +15753,7 @@ pub mod kit_change {
         /// Apply the backward (undo) step (reverse [`Self::children`], then kit [`Self::inverse`]).
         pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             for ch in c.children.iter().rev() {
-                ch.apply_backward(kit)
-                    .map_err(|e| crate::error::SetError::Internal(format!("kit change child backward: {e}")))?;
+                ch.apply_backward(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change child backward: {e}")))?;
             }
             ChangeKitCommand::apply_many(kit, &c.inverse).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
             Ok(())
@@ -15867,13 +15783,7 @@ pub mod kit_change {
 
         //#region 🔖Lift
         /// 🧮 Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
-        pub fn lift_flat(
-            kit: &crate::kit_graph::KitGraphRef,
-            forward: Vec<ChangeKitCommand>,
-            kind: KitChangeKind,
-            author: Option<String>,
-            time: Option<String>,
-        ) -> Result<Self, SemioError> {
+        pub fn lift_flat(kit: &crate::kit_graph::KitGraphRef, forward: Vec<ChangeKitCommand>, kind: KitChangeKind, author: Option<String>, time: Option<String>) -> Result<Self, SemioError> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             let twin = crate::kit_graph::KitGraph::from_full_dto(before);
             let mut kit_forward: Vec<ChangeKitCommand> = Vec::new();
@@ -15883,29 +15793,10 @@ pub mod kit_change {
             for cmd in forward {
                 match cmd {
                     ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
-                        let inv = ChangeKitCommand::inverse_commands_for_many(
-                            &twin,
-                            &[ChangeKitCommand::ChangeTypeCommands {
-                                type_id: type_id.clone(),
-                                commands: commands.clone(),
-                            }],
-                        )?;
+                        let inv = ChangeKitCommand::inverse_commands_for_many(&twin, &[ChangeKitCommand::ChangeTypeCommands { type_id: type_id.clone(), commands: commands.clone() }])?;
                         let inv_inner = unwrap_type_inverse(&inv, &type_id)?;
-                        ChangeKitCommand::apply_many(
-                            &twin,
-                            &[ChangeKitCommand::ChangeTypeCommands {
-                                type_id: type_id.clone(),
-                                commands: commands.clone(),
-                            }],
-                        )?;
-                        children.push(Change::Type(TypeChange {
-                            type_id,
-                            forward: commands,
-                            inverse: inv_inner,
-                            kind: KitChangeKind::Inferred,
-                            author: None,
-                            time: None,
-                        }));
+                        ChangeKitCommand::apply_many(&twin, &[ChangeKitCommand::ChangeTypeCommands { type_id: type_id.clone(), commands: commands.clone() }])?;
+                        children.push(Change::Type(TypeChange { type_id, forward: commands, inverse: inv_inner, kind: KitChangeKind::Inferred, author: None, time: None }));
                     }
                     ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
                         let design_change = lift_design_change_from_commands(&twin, design_id.clone(), commands)?;
@@ -15925,14 +15816,7 @@ pub mod kit_change {
                 inverse.extend(g);
             }
 
-            Ok(KitChange {
-                forward: kit_forward,
-                inverse,
-                children,
-                kind,
-                author,
-                time,
-            })
+            Ok(KitChange { forward: kit_forward, inverse, children, kind, author, time })
         }
         //#endregion
     }
@@ -15952,40 +15836,19 @@ pub mod kit_change {
         }
     }
 
-    fn lift_design_change_from_commands(
-        twin: &crate::kit_graph::KitGraphRef,
-        design_id: DesignIdDto,
-        commands: Vec<ChangeDesignCommand>,
-    ) -> Result<DesignChange, SemioError> {
-        let mut blocks: Vec<DesignChangeBlock> = Vec::new();
+    fn lift_design_change_from_commands(twin: &crate::kit_graph::KitGraphRef, design_id: DesignIdDto, commands: Vec<ChangeDesignCommand>) -> Result<KitDesignChange, SemioError> {
+        let mut blocks: Vec<KitDesignChangeBlock> = Vec::new();
         let mut buf: Vec<ChangeDesignCommand> = Vec::new();
 
-        fn flush_atomics(
-            twin: &crate::kit_graph::KitGraphRef,
-            design_id: &DesignIdDto,
-            buf: &mut Vec<ChangeDesignCommand>,
-            blocks: &mut Vec<DesignChangeBlock>,
-        ) -> Result<(), SemioError> {
+        fn flush_atomics(twin: &crate::kit_graph::KitGraphRef, design_id: &DesignIdDto, buf: &mut Vec<ChangeDesignCommand>, blocks: &mut Vec<KitDesignChangeBlock>) -> Result<(), SemioError> {
             if buf.is_empty() {
                 return Ok(());
             }
             let forward = std::mem::take(buf);
-            let inv_kit = ChangeKitCommand::inverse_commands_for_many(
-                twin,
-                &[ChangeKitCommand::ChangeDesignCommands {
-                    design_id: design_id.clone(),
-                    commands: forward.clone(),
-                }],
-            )?;
+            let inv_kit = ChangeKitCommand::inverse_commands_for_many(twin, &[ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: forward.clone() }])?;
             let inverse = unwrap_design_inverse(&inv_kit, design_id)?;
-            ChangeKitCommand::apply_many(
-                twin,
-                &[ChangeKitCommand::ChangeDesignCommands {
-                    design_id: design_id.clone(),
-                    commands: forward.clone(),
-                }],
-            )?;
-            blocks.push(DesignChangeBlock::Atomics(DesignAtomicsBlock { forward, inverse }));
+            ChangeKitCommand::apply_many(twin, &[ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: forward.clone() }]).map(|_| ())?;
+            blocks.push(KitDesignChangeBlock::Atomics(KitDesignAtomicsBlock { forward, inverse }));
             Ok(())
         }
 
@@ -15995,54 +15858,22 @@ pub mod kit_change {
                     flush_atomics(twin, &design_id, &mut buf, &mut blocks)?;
                     let inv_kit = ChangeKitCommand::inverse_commands_for_many(
                         twin,
-                        &[ChangeKitCommand::ChangeDesignCommands {
-                            design_id: design_id.clone(),
-                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                                piece_id: piece_id.clone(),
-                                commands: pcmds.clone(),
-                            }],
-                        }],
+                        &[ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: pcmds.clone() }] }],
                     )?;
                     let inv_cmds = unwrap_piece_inverse(&inv_kit, &design_id, &piece_id)?;
-                    ChangeKitCommand::apply_many(
-                        twin,
-                        &[ChangeKitCommand::ChangeDesignCommands {
-                            design_id: design_id.clone(),
-                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
-                                piece_id: piece_id.clone(),
-                                commands: pcmds.clone(),
-                            }],
-                        }],
-                    )?;
-                    blocks.push(DesignChangeBlock::Piece(PieceChange {
-                        design_id: design_id.clone(),
-                        piece_id,
-                        forward: pcmds,
-                        inverse: inv_cmds,
-                        kind: KitChangeKind::Inferred,
-                        author: None,
-                        time: None,
-                    }));
+                    ChangeKitCommand::apply_many(twin, &[ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: pcmds.clone() }] }])
+                        .map(|_| ())?;
+                    blocks.push(KitDesignChangeBlock::Piece(PieceChange { design_id: design_id.clone(), piece_id, forward: pcmds, inverse: inv_cmds, kind: KitChangeKind::Inferred, author: None, time: None }));
                 }
                 other => buf.push(other),
             }
         }
         flush_atomics(twin, &design_id, &mut buf, &mut blocks)?;
 
-        Ok(DesignChange {
-            design_id,
-            blocks,
-            kind: KitChangeKind::Inferred,
-            author: None,
-            time: None,
-        })
+        Ok(KitDesignChange { design_id, blocks, kind: KitChangeKind::Inferred, author: None, time: None })
     }
 
-    fn unwrap_piece_inverse(
-        inv: &[ChangeKitCommand],
-        expect_did: &DesignIdDto,
-        expect_pid: &PieceIdDto,
-    ) -> Result<Vec<ChangePieceCommand>, SemioError> {
+    fn unwrap_piece_inverse(inv: &[ChangeKitCommand], expect_did: &DesignIdDto, expect_pid: &PieceIdDto) -> Result<Vec<ChangePieceCommand>, SemioError> {
         let cmds = unwrap_design_inverse(inv, expect_did)?;
         match cmds.as_slice() {
             [ChangeDesignCommand::ChangePieceCommands { piece_id, commands }] if piece_id == expect_pid => Ok(commands.clone()),
@@ -16505,97 +16336,36 @@ pub mod events {
 
         let piece_ids_from_strings = |v: &[String]| v.iter().map(|s| Id::from(s.as_str())).collect::<Vec<Id>>();
 
-        match change.forward.as_slice() {
+        let flat = change.flatten_forward_commands();
+        match flat.as_slice() {
             [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeDesignCommand::Name { .. }) {
-                    KitEvent::RenamedDesign(RenamedDesignKitEvent {
-                        design_id: design_id.id.clone(),
-                        change: change.clone(),
-                    })
+                    KitEvent::RenamedDesign(RenamedDesignKitEvent { design_id: design_id.id.clone(), change: change.clone() })
                 } else {
-                    KitEvent::ChangedDesignCommands(ChangedDesignCommandsKitEvent {
-                        design_id: design_id.id.clone(),
-                        change: change.clone(),
-                    })
+                    KitEvent::ChangedDesignCommands(ChangedDesignCommandsKitEvent { design_id: design_id.id.clone(), change: change.clone() })
                 }
             }
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeTypeCommand::Name { .. }) {
-                    KitEvent::RenamedType(RenamedTypeKitEvent {
-                        type_id: type_id.id.clone(),
-                        change: change.clone(),
-                    })
+                    KitEvent::RenamedType(RenamedTypeKitEvent { type_id: type_id.id.clone(), change: change.clone() })
                 } else {
-                    KitEvent::ChangedTypeCommands(ChangedTypeCommandsKitEvent {
-                        type_id: type_id.id.clone(),
-                        change: change.clone(),
-                    })
+                    KitEvent::ChangedTypeCommands(ChangedTypeCommandsKitEvent { type_id: type_id.id.clone(), change: change.clone() })
                 }
             }
-            [ChangeKitCommand::DragPieces {
-                design_id,
-                piece_ids,
-                ..
-            }] => KitEvent::DraggedFlatCenterPiece(DraggedFlatCenterPieceKitEvent {
-                design_id: design_id.id.clone(),
-                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::MovePieces {
-                design_id,
-                piece_ids,
-                ..
-            }] => KitEvent::MovedPiecesFlatCenter(MovedPiecesFlatCenterKitEvent {
-                design_id: design_id.id.clone(),
-                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::ClusterPieces {
-                design_id,
-                piece_ids,
-                ..
-            }] => KitEvent::ClusteredPieces(ClusteredPiecesKitEvent {
-                design_id: design_id.id.clone(),
-                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::FixPieces {
-                design_id,
-                piece_ids,
-            }] => KitEvent::FixedPiecesFlatCenter(FixedPiecesFlatCenterKitEvent {
-                design_id: design_id.id.clone(),
-                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::FlattenDesign { design_id }] => KitEvent::FlattenedDesign(FlattenedDesignKitEvent {
-                design_id: design_id.id.clone(),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::ExpandNestedDesign {
-                parent_design_id,
-                nested_design_id,
-            }] => KitEvent::ExpandedNestedDesign(ExpandedNestedDesignKitEvent {
-                parent_design_id: parent_design_id.id.clone(),
-                nested_design_id: nested_design_id.id.clone(),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::DeleteConnection {
-                design_id,
-                connection_id,
-            }] => KitEvent::DeletedConnection(DeletedConnectionKitEvent {
-                design_id: design_id.id.clone(),
-                connection_id: connection_id.id.clone(),
-                change: change.clone(),
-            }),
-            [ChangeKitCommand::ChangePieceKind {
-                design_id,
-                piece_id,
-                ..
-            }] => KitEvent::ChangedPieceKind(ChangedPieceKindKitEvent {
-                design_id: design_id.id.clone(),
-                piece_id: piece_id.id.clone(),
-                change: change.clone(),
-            }),
+            [ChangeKitCommand::DragPieces { design_id, piece_ids, .. }] => {
+                KitEvent::DraggedFlatCenterPiece(DraggedFlatCenterPieceKitEvent { design_id: design_id.id.clone(), piece_ids: piece_ids_from_strings(piece_ids.as_slice()), change: change.clone() })
+            }
+            [ChangeKitCommand::MovePieces { design_id, piece_ids, .. }] => {
+                KitEvent::MovedPiecesFlatCenter(MovedPiecesFlatCenterKitEvent { design_id: design_id.id.clone(), piece_ids: piece_ids_from_strings(piece_ids.as_slice()), change: change.clone() })
+            }
+            [ChangeKitCommand::ClusterPieces { design_id, piece_ids, .. }] => KitEvent::ClusteredPieces(ClusteredPiecesKitEvent { design_id: design_id.id.clone(), piece_ids: piece_ids_from_strings(piece_ids.as_slice()), change: change.clone() }),
+            [ChangeKitCommand::FixPieces { design_id, piece_ids }] => KitEvent::FixedPiecesFlatCenter(FixedPiecesFlatCenterKitEvent { design_id: design_id.id.clone(), piece_ids: piece_ids_from_strings(piece_ids.as_slice()), change: change.clone() }),
+            [ChangeKitCommand::FlattenDesign { design_id }] => KitEvent::FlattenedDesign(FlattenedDesignKitEvent { design_id: design_id.id.clone(), change: change.clone() }),
+            [ChangeKitCommand::ExpandNestedDesign { parent_design_id, nested_design_id }] => {
+                KitEvent::ExpandedNestedDesign(ExpandedNestedDesignKitEvent { parent_design_id: parent_design_id.id.clone(), nested_design_id: nested_design_id.id.clone(), change: change.clone() })
+            }
+            [ChangeKitCommand::DeleteConnection { design_id, connection_id }] => KitEvent::DeletedConnection(DeletedConnectionKitEvent { design_id: design_id.id.clone(), connection_id: connection_id.id.clone(), change: change.clone() }),
+            [ChangeKitCommand::ChangePieceKind { design_id, piece_id, .. }] => KitEvent::ChangedPieceKind(ChangedPieceKindKitEvent { design_id: design_id.id.clone(), piece_id: piece_id.id.clone(), change: change.clone() }),
             _ => KitEvent::ChangedKit(ChangedKitEvent { change: change.clone() }),
         }
     }
@@ -16605,30 +16375,101 @@ pub mod events {
     pub enum KitEvent {
         Changed,
         FieldChanged(KitField),
-        Design { design_id: Id, event: DesignEvent },
-        Type { type_id: Id, event: TypeEvent },
-        Attribute { attribute_id: Id, event: AttributeEvent },
-        Author { author_id: Id, event: AuthorEvent },
-        Benchmark { benchmark_id: Id, event: BenchmarkEvent },
-        Concept { concept_id: Id, event: ConceptEvent },
-        Connection { connection_id: Id, event: ConnectionEvent },
-        Connector { connector_id: Id, event: ConnectorEvent },
-        File { file_id: Id, event: FileEvent },
-        Folder { folder_id: Id, event: FolderEvent },
-        Group { group_id: Id, event: GroupEvent },
-        Layer { layer_id: Id, event: LayerEvent },
-        Piece { piece_id: Id, event: PieceEvent },
-        Port { port_id: Id, event: PortEvent },
-        Tag { tag_id: Id, event: TagEvent },
-        Prop { prop_id: Id, event: PropEvent },
-        Quality { quality_id: Id, event: QualityEvent },
-        Representation { representation_id: Id, event: RepresentationEvent },
-        Side { side_id: Id, event: SideEvent },
-        Stat { stat_id: Id, event: StatEvent },
-        ChildAdded { parent: EntityRef, child: EntityRef },
-        ChildRemoved { parent: EntityRef, child: EntityRef },
-        HashInvalidated { entity: EntityRef },
-        FlattenInvalidated { design: Id, pieces: Vec<Id> },
+        Design {
+            design_id: Id,
+            event: DesignEvent,
+        },
+        Type {
+            type_id: Id,
+            event: TypeEvent,
+        },
+        Attribute {
+            attribute_id: Id,
+            event: AttributeEvent,
+        },
+        Author {
+            author_id: Id,
+            event: AuthorEvent,
+        },
+        Benchmark {
+            benchmark_id: Id,
+            event: BenchmarkEvent,
+        },
+        Concept {
+            concept_id: Id,
+            event: ConceptEvent,
+        },
+        Connection {
+            connection_id: Id,
+            event: ConnectionEvent,
+        },
+        Connector {
+            connector_id: Id,
+            event: ConnectorEvent,
+        },
+        File {
+            file_id: Id,
+            event: FileEvent,
+        },
+        Folder {
+            folder_id: Id,
+            event: FolderEvent,
+        },
+        Group {
+            group_id: Id,
+            event: GroupEvent,
+        },
+        Layer {
+            layer_id: Id,
+            event: LayerEvent,
+        },
+        Piece {
+            piece_id: Id,
+            event: PieceEvent,
+        },
+        Port {
+            port_id: Id,
+            event: PortEvent,
+        },
+        Tag {
+            tag_id: Id,
+            event: TagEvent,
+        },
+        Prop {
+            prop_id: Id,
+            event: PropEvent,
+        },
+        Quality {
+            quality_id: Id,
+            event: QualityEvent,
+        },
+        Representation {
+            representation_id: Id,
+            event: RepresentationEvent,
+        },
+        Side {
+            side_id: Id,
+            event: SideEvent,
+        },
+        Stat {
+            stat_id: Id,
+            event: StatEvent,
+        },
+        ChildAdded {
+            parent: EntityRef,
+            child: EntityRef,
+        },
+        ChildRemoved {
+            parent: EntityRef,
+            child: EntityRef,
+        },
+        HashInvalidated {
+            entity: EntityRef,
+        },
+        FlattenInvalidated {
+            design: Id,
+            pieces: Vec<Id>,
+        },
         ValidationInvalidated,
         /// @emoji Design rename; carries `KitChange` forward/inverse atoms.
         #[serde(rename = "renamedDesign")]
@@ -16659,7 +16500,10 @@ pub mod events {
         /// @emoji Fallback classified kit change (forward/inverse atoms).
         #[serde(rename = "changedKit")]
         ChangedKit(ChangedKitEvent),
-        SetRejected { event: Box<KitEvent>, error: crate::error::SetError },
+        SetRejected {
+            event: Box<KitEvent>,
+            error: crate::error::SetError,
+        },
         /// 📣 Correlates inbound kit control-plane requests with acceptance / outcome on the bus.
         SemioKitCommand {
             #[serde(rename = "requestId")]
@@ -19885,14 +19729,8 @@ pub mod kit_graph {
         pub fn set_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::with_undo(kit, || {
-                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
-                let kc = crate::kit_change::KitChange {
-                    forward: cmds.clone(),
-                    inverse: inv,
-                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
-                    author: None,
-                    time: None,
-                };
+                let kc = crate::kit_change::KitChange::lift_flat(kit, cmds.clone(), crate::change_command::ChangeKitCommand::batch_kind(&cmds), None, None).map_err(Self::map_semio_err)?;
+                let _inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
                 Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
@@ -20194,14 +20032,8 @@ pub mod kit_graph {
         pub fn add_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::with_undo(kit, || {
-                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
-                let kc = crate::kit_change::KitChange {
-                    forward: cmds.clone(),
-                    inverse: inv,
-                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
-                    author: None,
-                    time: None,
-                };
+                let kc = crate::kit_change::KitChange::lift_flat(kit, cmds.clone(), crate::change_command::ChangeKitCommand::batch_kind(&cmds), None, None).map_err(Self::map_semio_err)?;
+                let _inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
                 Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
@@ -20211,14 +20043,8 @@ pub mod kit_graph {
         pub fn remove_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::with_undo(kit, || {
-                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
-                let kc = crate::kit_change::KitChange {
-                    forward: cmds.clone(),
-                    inverse: inv,
-                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
-                    author: None,
-                    time: None,
-                };
+                let kc = crate::kit_change::KitChange::lift_flat(kit, cmds.clone(), crate::change_command::ChangeKitCommand::batch_kind(&cmds), None, None).map_err(Self::map_semio_err)?;
+                let _inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
                 Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
@@ -21804,17 +21630,7 @@ pub mod kit_graph {
                     let (plane, center) = flat.get(&pr.id).cloned().unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
                     let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
                     let dpt = *depth.get(&pr.id).unwrap_or(&0);
-                    out.insert(
-                        id_s.clone(),
-                        PiecePlacementMetadataRow {
-                            plane,
-                            center,
-                            fixed_piece_id: id_s.clone(),
-                            parent_piece_id,
-                            depth: dpt,
-                            path: vec![id_s],
-                        },
-                    );
+                    out.insert(id_s.clone(), PiecePlacementMetadataRow { plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
                 }
             }
             Ok(out)
@@ -27476,6 +27292,8 @@ pub mod kit_graphql {
     #[serde(transparent)]
     pub struct KitEventScalar(pub KitEvent);
 
+    /// Wire JSON for the kit subscription bus (same shape as `semio_rs::events::KitEvent`).
+    /// Classified mutations use top-level camelCase keys (`renamedDesign`, `changedKit`, …) each carrying a `change` object with `forward` and `inverse` `ChangeKitCommand` lists.
     #[Scalar(name = "KitEvent")]
     impl ScalarType for KitEventScalar {
         fn parse(_value: Value) -> InputValueResult<Self> {
@@ -27548,13 +27366,7 @@ pub mod kit_graphql {
 
     impl From<crate::author::AuthorShallowDto> for AuthorShallowRow {
         fn from(a: crate::author::AuthorShallowDto) -> Self {
-            Self {
-                id: a.id.to_string(),
-                name: a.name,
-                email: a.email,
-                role: a.role,
-                rank: a.rank,
-            }
+            Self { id: a.id.to_string(), name: a.name, email: a.email, role: a.role, rank: a.rank }
         }
     }
 
@@ -27633,47 +27445,53 @@ pub mod kit_graphql {
                 match work {
                     GraphWork::ChangeKitCommands { commands, reply } => {
                         let cmds = commands.clone();
-                        let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
-                        let r = KitGraph::with_undo(&graph, || {
-                            let inv = ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
-                            inverse_out = inv;
-                            Ok(())
-                        });
-                        if r.is_ok() && !cmds.is_empty() {
-                            let kc = crate::kit_change::KitChange {
-                                forward: cmds.clone(),
-                                inverse: inverse_out,
-                                kind: ChangeKitCommand::batch_kind(&cmds),
-                                author: None,
-                                time: None,
-                            };
-                            if let Ok(g) = graph.read() {
-                                g.event_bus.emit(crate::events::kit_event_from_kit_change(&kc));
+                        let kc_pre: std::result::Result<Option<crate::kit_change::KitChange>, crate::error::SetError> =
+                            if cmds.is_empty() { Ok(None) } else { crate::kit_change::KitChange::lift_flat(&graph, cmds.clone(), ChangeKitCommand::batch_kind(&cmds), None, None).map_err(KitGraph::map_semio_err).map(Some) };
+                        let r: crate::error::SetResult = match kc_pre {
+                            Err(e) => Err(e),
+                            Ok(kc_opt) => {
+                                let u = KitGraph::with_undo(&graph, || {
+                                    ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
+                                    Ok(())
+                                });
+                                if u.is_ok() {
+                                    if let Some(ref kc) = kc_opt {
+                                        if let Ok(g) = graph.read() {
+                                            g.event_bus.emit(crate::events::kit_event_from_kit_change(kc));
+                                        }
+                                    }
+                                }
+                                u
                             }
-                        }
+                        };
                         let _ = reply.send(r.map_err(|e| format!("{e:?}")));
                     }
                     GraphWork::ChangeKitWithInverse { commands, reply } => {
                         let cmds = commands.clone();
                         let kind = ChangeKitCommand::batch_kind(&cmds);
-                        let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
-                        let r = KitGraph::with_undo(&graph, || {
-                            let inv = ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
-                            inverse_out = inv;
-                            Ok(())
-                        });
-                        if r.is_ok() && !cmds.is_empty() {
-                            let kc = crate::kit_change::KitChange {
-                                forward: cmds,
-                                inverse: inverse_out.clone(),
-                                kind: kind.clone(),
-                                author: None,
-                                time: None,
-                            };
-                            if let Ok(g) = graph.read() {
-                                g.event_bus.emit(crate::events::kit_event_from_kit_change(&kc));
+                        let kc_pre: std::result::Result<Option<crate::kit_change::KitChange>, crate::error::SetError> =
+                            if cmds.is_empty() { Ok(None) } else { crate::kit_change::KitChange::lift_flat(&graph, cmds.clone(), kind.clone(), None, None).map_err(KitGraph::map_semio_err).map(Some) };
+                        let inverse_out: Vec<ChangeKitCommand> = match &kc_pre {
+                            Ok(Some(kc)) => kc.flatten_inverse_commands(),
+                            _ => Vec::new(),
+                        };
+                        let r: crate::error::SetResult = match kc_pre {
+                            Err(e) => Err(e),
+                            Ok(kc_opt) => {
+                                let u = KitGraph::with_undo(&graph, || {
+                                    ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
+                                    Ok(())
+                                });
+                                if u.is_ok() {
+                                    if let Some(ref kc) = kc_opt {
+                                        if let Ok(g) = graph.read() {
+                                            g.event_bus.emit(crate::events::kit_event_from_kit_change(kc));
+                                        }
+                                    }
+                                }
+                                u
                             }
-                        }
+                        };
                         let _ = reply.send(r.map(|_| (kind, inverse_out)).map_err(|e| format!("{e:?}")));
                     }
                     GraphWork::Vcs { command, reply } => {
@@ -27728,12 +27546,7 @@ pub mod kit_graphql {
     }
 
     /// 🌐 GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlVcsOverride`] (semio-store).
-    pub async fn execute_with_control_plane(
-        request_json: &str,
-        graph: KitGraphRef,
-        work_tx: async_channel::Sender<GraphWork>,
-        vcs: GraphQlVcsOverride,
-    ) -> Result<async_graphql::Response, Error> {
+    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlVcsOverride) -> Result<async_graphql::Response, Error> {
         let mut req = request_from_json(request_json)?;
         req = req.data(graph).data(work_tx).data(vcs);
         Ok(async_graphql::Response::from(schema().execute(req).await))
@@ -28152,21 +27965,10 @@ pub mod kit_graphql {
         use crate::kit_read_scope::KitReadScope as R;
         Ok(match scope {
             KitReadScopeInput::TheKit(_) => R::TheKit,
-            KitReadScopeInput::Checkpoint(c) => R::Checkpoint {
-                checkpoint_id: Id::from(c.checkpoint_id.as_str()),
-            },
-            KitReadScopeInput::Alternative(a) => R::Alternative {
-                alternative_id: Id::from(a.alternative_id.as_str()),
-            },
-            KitReadScopeInput::Draft(d) => R::Draft {
-                session_id: Id::from(d.session_id.as_str()),
-                draft_id: Id::from(d.draft_id.as_str()),
-            },
-            KitReadScopeInput::Transaction(t) => R::Transaction {
-                session_id: Id::from(t.session_id.as_str()),
-                draft_id: Id::from(t.draft_id.as_str()),
-                transaction_id: Id::from(t.transaction_id.as_str()),
-            },
+            KitReadScopeInput::Checkpoint(c) => R::Checkpoint { checkpoint_id: Id::from(c.checkpoint_id.as_str()) },
+            KitReadScopeInput::Alternative(a) => R::Alternative { alternative_id: Id::from(a.alternative_id.as_str()) },
+            KitReadScopeInput::Draft(d) => R::Draft { session_id: Id::from(d.session_id.as_str()), draft_id: Id::from(d.draft_id.as_str()) },
+            KitReadScopeInput::Transaction(t) => R::Transaction { session_id: Id::from(t.session_id.as_str()), draft_id: Id::from(t.draft_id.as_str()), transaction_id: Id::from(t.transaction_id.as_str()) },
         })
     }
 
@@ -28225,16 +28027,9 @@ pub mod kit_graphql {
                 }
             }
             let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx
-                .send(GraphWork::Vcs { command, reply: reply_tx })
-                .await
-                .map_err(|e| Error::new(format!("execute queue: {e}")))?;
-            reply_rx
-                .await
-                .map_err(|_| Error::new("kit actor dropped"))?
-                .map_err(|e| Error::new(format!("{e:?}")))
+            self.tx.send(GraphWork::Vcs { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
+            reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(format!("{e:?}")))
         }
-
     }
 
     async fn execute_batch(shell: &KitShellCtx, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
@@ -28260,42 +28055,17 @@ pub mod kit_graphql {
         use crate::typ::TypeIdDto;
         let did = DesignIdDto { id: Id::from(design_id) };
         match command {
-            DesignBatchCommandInput::ClusterPieces(input) => Ok(vec![C::ClusterPieces {
-                design_id: did,
-                piece_ids: input.piece_ids,
-                cluster_name: input.cluster_name,
-            }]),
-            DesignBatchCommandInput::DragPieces(input) => Ok(vec![C::DragPieces {
-                design_id: did,
-                piece_ids: input.piece_ids,
-                du: input.du,
-                dv: input.dv,
-            }]),
-            DesignBatchCommandInput::MovePieces(input) => Ok(vec![C::MovePieces {
-                design_id: did,
-                piece_ids: input.piece_ids,
-                gap: input.gap,
-                shift: input.shift,
-                rise: input.rise,
-            }]),
+            DesignBatchCommandInput::ClusterPieces(input) => Ok(vec![C::ClusterPieces { design_id: did, piece_ids: input.piece_ids, cluster_name: input.cluster_name }]),
+            DesignBatchCommandInput::DragPieces(input) => Ok(vec![C::DragPieces { design_id: did, piece_ids: input.piece_ids, du: input.du, dv: input.dv }]),
+            DesignBatchCommandInput::MovePieces(input) => Ok(vec![C::MovePieces { design_id: did, piece_ids: input.piece_ids, gap: input.gap, shift: input.shift, rise: input.rise }]),
             DesignBatchCommandInput::FixPieces(input) => Ok(vec![C::FixPieces { design_id: did, piece_ids: input.piece_ids }]),
             DesignBatchCommandInput::FlattenDesign(_) => Ok(vec![C::FlattenDesign { design_id: did }]),
-            DesignBatchCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign {
-                parent_design_id: did,
-                nested_design_id: DesignIdDto { id: Id::from(input.nested_design_id.as_str()) },
-            }]),
-            DesignBatchCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection {
-                design_id: did,
-                connection_id: ConnectionIdDto { id: Id::from(input.connection_id.as_str()) },
-            }]),
-            DesignBatchCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind {
-                design_id: did,
-                piece_id: PieceIdDto { id: Id::from(input.piece_id.as_str()) },
-                new_type_id: TypeIdDto { id: Id::from(input.new_type_id.as_str()) },
-            }]),
-            DesignBatchCommandInput::CreateHangingPieces(_) | DesignBatchCommandInput::CreateConnectedPiece(_) | DesignBatchCommandInput::CreateFixedPiece(_) => Err(Error::new(
-                "design canvas createHangingPieces/createConnectedPiece/createFixedPiece are not implemented as ChangeKitCommand yet; use a future transaction command variant",
-            )),
+            DesignBatchCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign { parent_design_id: did, nested_design_id: DesignIdDto { id: Id::from(input.nested_design_id.as_str()) } }]),
+            DesignBatchCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection { design_id: did, connection_id: ConnectionIdDto { id: Id::from(input.connection_id.as_str()) } }]),
+            DesignBatchCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind { design_id: did, piece_id: PieceIdDto { id: Id::from(input.piece_id.as_str()) }, new_type_id: TypeIdDto { id: Id::from(input.new_type_id.as_str()) } }]),
+            DesignBatchCommandInput::CreateHangingPieces(_) | DesignBatchCommandInput::CreateConnectedPiece(_) | DesignBatchCommandInput::CreateFixedPiece(_) => {
+                Err(Error::new("design canvas createHangingPieces/createConnectedPiece/createFixedPiece are not implemented as ChangeKitCommand yet; use a future transaction command variant"))
+            }
         }
     }
 
@@ -28326,7 +28096,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 SessionBatchCommandInput::CreateSession(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::NewSession).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::NewSession).await?;
                     let KitStoreCommandResult::NewSession { id } = res else {
                         return Err(Error::new("expected NewSession result"));
                     };
@@ -28350,7 +28120,7 @@ pub mod kit_graphql {
                 }
                 SessionBatchCommandInput::EndSession(_) => {
                     let id = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = shell.run_vcs_command( KitStoreCommand::EndSession { id }).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::EndSession { id }).await?;
                     let KitStoreCommandResult::EndSession { ok } = res else {
                         return Err(Error::new("expected EndSession result"));
                     };
@@ -28372,13 +28142,12 @@ pub mod kit_graphql {
                 }
                 SessionBatchCommandInput::CreateDraft(input) => {
                     let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: sid,
                             commands: vec![SessionCommand::NewDraft { checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from), alternative_id: input.target_alternative_id.as_deref().map(Id::from) }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     let draft_id = match res {
                         KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
                             crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
@@ -28422,13 +28191,12 @@ pub mod kit_graphql {
             match command {
                 DraftBatchCommandInput::FinalizeDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    let res = shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }] }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     let checkpoint_id = match res {
                         KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
                             crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
@@ -28457,7 +28225,7 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::AbortDraft(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    shell.run_vcs_command( KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
+                    shell.run_vcs_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::AbortDraft,
                         ok: Some(true),
@@ -28476,13 +28244,12 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::UndoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }] }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::UndoDraft,
                         ok: Some(true),
@@ -28501,13 +28268,12 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::RedoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }] }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::RedoDraft,
                         ok: Some(true),
@@ -28526,10 +28292,9 @@ pub mod kit_graphql {
                 }
                 DraftBatchCommandInput::StartTransaction(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    let res = shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] },
-                    )
-                    .await?;
+                    let res = shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] })
+                        .await?;
                     let new_transaction_id = match res {
                         KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
                             crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: draft_results } => match &draft_results[0] {
@@ -28574,16 +28339,15 @@ pub mod kit_graphql {
                 TransactionBatchCommandInput::ChangeKitCommands(change) => {
                     let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
                                 commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::ChangeKitCommands,
                         ok: Some(true),
@@ -28604,31 +28368,20 @@ pub mod kit_graphql {
                     let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
                     let k = ChangeKitCommand::batch_kind(&commands);
-                    let view = crate::kit_read_scope::resolve_read_graph(
-                        &shell.graph,
-                        &crate::kit_read_scope::KitReadScope::Transaction {
-                            session_id: session_id.clone(),
-                            draft_id: draft_id.clone(),
-                            transaction_id: txid.clone(),
-                        },
-                    )
-                    .map_err(|e| Error::new(e.to_string()))?;
+                    let view = crate::kit_read_scope::resolve_read_graph(&shell.graph, &crate::kit_read_scope::KitReadScope::Transaction { session_id: session_id.clone(), draft_id: draft_id.clone(), transaction_id: txid.clone() })
+                        .map_err(|e| Error::new(e.to_string()))?;
                     let inv = ChangeKitCommand::inverse_commands_for_many(&view, &commands).map_err(|e| Error::new(format!("{e:?}")))?;
                     let inv_gql: Vec<GqlChangeKitCommand> = inv.into_iter().map(GqlChangeKitCommand).collect();
                     let (ck, cko) = kit_change_semantic_fields(&k);
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
-                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                    id: txid.clone(),
-                                    commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
-                                }],
+                                commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::ChangeKitWithInverse,
                         ok: Some(true),
@@ -28663,19 +28416,15 @@ pub mod kit_graphql {
                         };
                         let commands = design_batch_command_to_change_kit_commands(&design_id, sub)?;
                         let count = commands.len() as i32;
-                        shell.run_vcs_command(
-                            KitStoreCommand::ExecuteSessionCommands {
+                        shell
+                            .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                                 id: session_id.clone(),
                                 commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                     id: draft_id.clone(),
-                                    commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands {
-                                        id: txid.clone(),
-                                        commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }],
-                                    }],
+                                    commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::ChangeKitCommands { commands }] }],
                                 }],
-                            },
-                        )
-                        .await?;
+                            })
+                            .await?;
                         results.push(KitStoreBatchResult {
                             kind,
                             ok: Some(true),
@@ -28694,16 +28443,15 @@ pub mod kit_graphql {
                     }
                 }
                 TransactionBatchCommandInput::FinalizeTransaction(_) => {
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
                                 commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Finalize] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::FinalizeTransaction,
                         ok: Some(true),
@@ -28721,16 +28469,15 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::AbortTransaction(_) => {
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
                                 commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Abort] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::AbortTransaction,
                         ok: Some(true),
@@ -28748,16 +28495,15 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::UndoTransaction(_) => {
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
                                 commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Undo] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::UndoTransaction,
                         ok: Some(true),
@@ -28775,16 +28521,15 @@ pub mod kit_graphql {
                     });
                 }
                 TransactionBatchCommandInput::RedoTransaction(_) => {
-                    shell.run_vcs_command(
-                        KitStoreCommand::ExecuteSessionCommands {
+                    shell
+                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
                                 commands: vec![crate::kit_draft::KitDraftCommand::ExecuteTransactionCommands { id: txid.clone(), commands: vec![crate::kit_transaction::TransactionCommand::Redo] }],
                             }],
-                        },
-                    )
-                    .await?;
+                        })
+                        .await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::RedoTransaction,
                         ok: Some(true),
@@ -28812,7 +28557,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 CheckpointBatchCommandInput::MarkRelease(_) => {
-                    shell.run_vcs_command( KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
+                    shell.run_vcs_command(KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::MarkRelease,
                         ok: Some(true),
@@ -28830,7 +28575,7 @@ pub mod kit_graphql {
                     });
                 }
                 CheckpointBatchCommandInput::SetActive(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
                     let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else {
                         return Err(Error::new("expected SetActiveCheckpoint result"));
                     };
@@ -28860,7 +28605,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 AlternativeBatchCommandInput::CreateAlternative(input) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
                     let KitStoreCommandResult::NewAlternative { id } = res else {
                         return Err(Error::new("expected NewAlternative result"));
                     };
@@ -28884,7 +28629,7 @@ pub mod kit_graphql {
                 }
                 AlternativeBatchCommandInput::UnifyAlternative(input) => {
                     let aid = alternative_id.clone().ok_or_else(|| Error::new("alternativeId is required"))?;
-                    shell.run_vcs_command( KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
+                    shell.run_vcs_command(KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
                     results.push(KitStoreBatchResult {
                         kind: KitStoreBatchResultKind::UnifyAlternative,
                         ok: Some(true),
@@ -28916,7 +28661,7 @@ pub mod kit_graphql {
                         BackboneConfigBatchInput::Local(v) => crate::kit_backbone_wire::BackboneConfig::Local { folder: v.folder },
                         BackboneConfigBatchInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
                     };
-                    let res = shell.run_vcs_command( KitStoreCommand::AttachBackbone { config }).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::AttachBackbone { config }).await?;
                     let KitStoreCommandResult::AttachBackbone { ok } = res else {
                         return Err(Error::new("expected AttachBackbone result"));
                     };
@@ -28937,7 +28682,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::DetachBackbone(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::DetachBackbone).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::DetachBackbone).await?;
                     let KitStoreCommandResult::DetachBackbone { ok } = res else {
                         return Err(Error::new("expected DetachBackbone result"));
                     };
@@ -28958,7 +28703,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::ListConflicts(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::ListConflicts).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::ListConflicts).await?;
                     let KitStoreCommandResult::ListConflicts { items } = res else {
                         return Err(Error::new("expected ListConflicts result"));
                     };
@@ -28984,7 +28729,7 @@ pub mod kit_graphql {
                         ConflictResolutionBatchInput::DropWip => crate::kit_backbone_wire::ConflictResolution::DropWip,
                         ConflictResolutionBatchInput::ForceOverwriteBackbone => crate::kit_backbone_wire::ConflictResolution::ForceOverwriteBackbone,
                     };
-                    let res = shell.run_vcs_command( KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
                     let KitStoreCommandResult::ResolveConflict { ok } = res else {
                         return Err(Error::new("expected ResolveConflict result"));
                     };
@@ -29005,7 +28750,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::BackboneStatus(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::BackboneStatus).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::BackboneStatus).await?;
                     let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else {
                         return Err(Error::new("expected BackboneStatus result"));
                     };
@@ -29026,7 +28771,7 @@ pub mod kit_graphql {
                     });
                 }
                 BackboneBatchCommandInput::SyncNow(_) => {
-                    let res = shell.run_vcs_command( KitStoreCommand::SyncNow).await?;
+                    let res = shell.run_vcs_command(KitStoreCommand::SyncNow).await?;
                     let KitStoreCommandResult::SyncNow { ok } = res else {
                         return Err(Error::new("expected SyncNow result"));
                     };
@@ -29173,25 +28918,14 @@ pub mod kit_graphql {
         GqlVector3 { x: v.x, y: v.y, z: v.z }
     }
     fn gql_plane_object(p: &Plane) -> GqlPlaneObject {
-        GqlPlaneObject {
-            origin: gql_point3(&p.origin),
-            x_axis: gql_vector3(&p.x_axis),
-            y_axis: gql_vector3(&p.y_axis),
-        }
+        GqlPlaneObject { origin: gql_point3(&p.origin), x_axis: gql_vector3(&p.x_axis), y_axis: gql_vector3(&p.y_axis) }
     }
     fn gql_coord3(c: &crate::geom::Coordinate) -> GqlCoordinate3 {
         // `geom::Coordinate` is 2D (u, v); GQL pose uses (x, y, z) with z = 0.
-        GqlCoordinate3 {
-            x: c.u,
-            y: c.v,
-            z: 0.0,
-        }
+        GqlCoordinate3 { x: c.u, y: c.v, z: 0.0 }
     }
     fn gql_pose_object(p: &crate::piece::PoseFullDto) -> GqlPoseObject {
-        GqlPoseObject {
-            plane: gql_plane_object(&p.plane),
-            center: gql_coord3(&p.center),
-        }
+        GqlPoseObject { plane: gql_plane_object(&p.plane), center: gql_coord3(&p.center) }
     }
 
     #[derive(Clone, Debug, SimpleObject)]
@@ -29422,14 +29156,7 @@ pub mod kit_graphql {
         async fn colored_connectors(&self) -> Result<Vec<KitColoredConnectorObject>> {
             let g = lock_graph(&self.0)?;
             let rows = crate::read::kit_colored_connector_rows(&*g);
-            Ok(rows
-                .into_iter()
-                .map(|r| KitColoredConnectorObject {
-                    type_id: GqlIdOnly { id: r.type_id.id.to_string() },
-                    connector_id: GqlIdOnly { id: r.connector_id.id.to_string() },
-                    color: r.color,
-                })
-                .collect())
+            Ok(rows.into_iter().map(|r| KitColoredConnectorObject { type_id: GqlIdOnly { id: r.type_id.id.to_string() }, connector_id: GqlIdOnly { id: r.connector_id.id.to_string() }, color: r.color }).collect())
         }
 
         /// 🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
@@ -29508,12 +29235,7 @@ pub mod kit_graphql {
             let mut alternatives: Vec<VcsAlternativeGql> = g
                 .alternatives
                 .values()
-                .map(|a| VcsAlternativeGql {
-                    id: a.id.to_string(),
-                    name: a.name.clone(),
-                    root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(),
-                    checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect(),
-                })
+                .map(|a| VcsAlternativeGql { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
             let mut sessions: Vec<VcsSessionGql> = g
@@ -29539,19 +29261,8 @@ pub mod kit_graphql {
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
-            let the_kit_line: Vec<String> = g
-                .the_kit_head
-                .as_ref()
-                .map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect())
-                .unwrap_or_default();
-            Ok(VcsStateGql {
-                the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
-                root: VcsRootGql { id: g.initial.id.to_string(), name: g.initial.name.clone() },
-                checkpoints,
-                alternatives,
-                sessions,
-                the_kit_line,
-            })
+            let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
+            Ok(VcsStateGql { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRootGql { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
         }
     }
 
@@ -29601,14 +29312,7 @@ pub mod kit_graphql {
         async fn flatten_map(&self) -> Result<Vec<DesignFlattenMapEntryObject>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let m = d.flatten_map();
-            let mut rows: Vec<DesignFlattenMapEntryObject> = m
-                .into_iter()
-                .map(|(piece_id, (plane, center))| DesignFlattenMapEntryObject {
-                    piece_id: piece_id.to_string(),
-                    plane: gql_plane_object(&plane),
-                    center: gql_coord3(&center),
-                })
-                .collect();
+            let mut rows: Vec<DesignFlattenMapEntryObject> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryObject { piece_id: piece_id.to_string(), plane: gql_plane_object(&plane), center: gql_coord3(&center) }).collect();
             rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
             Ok(rows)
         }
@@ -29634,8 +29338,7 @@ pub mod kit_graphql {
         async fn included_designs(&self) -> Result<Vec<IncludedDesignObject>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let v = crate::read::design_included_infos(&*d);
-            Ok(v
-                .into_iter()
+            Ok(v.into_iter()
                 .map(|x| IncludedDesignObject {
                     id: x.id.to_string(),
                     design_id: x.design_id.to_string(),
@@ -29659,15 +29362,7 @@ pub mod kit_graphql {
             let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
             let mut rows: Vec<PiecePlacementRowObject> = m
                 .into_iter()
-                .map(|(piece_id, r)| PiecePlacementRowObject {
-                    piece_id,
-                    plane: gql_plane_object(&r.plane),
-                    center: gql_coord3(&r.center),
-                    fixed_piece_id: r.fixed_piece_id,
-                    parent_piece_id: r.parent_piece_id,
-                    depth: r.depth,
-                    path: r.path,
-                })
+                .map(|(piece_id, r)| PiecePlacementRowObject { piece_id, plane: gql_plane_object(&r.plane), center: gql_coord3(&r.center), fixed_piece_id: r.fixed_piece_id, parent_piece_id: r.parent_piece_id, depth: r.depth, path: r.path })
                 .collect();
             rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
             Ok(rows)
@@ -29955,10 +29650,7 @@ pub mod wasm {
             let work_tx = self.work_tx.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req
-                    .data(graph)
-                    .data(work_tx)
-                    .data(crate::kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlVcsOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 let json = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -29977,10 +29669,7 @@ pub mod wasm {
             let cb = on_event.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req
-                    .data(graph)
-                    .data(work_tx)
-                    .data(crate::kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlVcsOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
@@ -30050,10 +29739,7 @@ mod tests {
             let out = futures_lite::future::block_on(async move {
                 let body = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
-                req = req
-                    .data(kit)
-                    .data(tx)
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
                 let schema = kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 serde_json::to_value(resp).expect("to json")
@@ -30070,10 +29756,7 @@ mod tests {
             let out = futures_lite::future::block_on(async move {
                 let body = r#"{"query":"query { kitStore { name } }"}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
-                req = req
-                    .data(kit)
-                    .data(tx)
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             assert!(out.get("data").and_then(|d| d.get("kitStore")).is_none(), "unscoped kitStore must not exist: {out:?}");
@@ -30125,10 +29808,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req
-                    .data(kit.clone())
-                    .data(tx.clone())
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             let rows = out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).expect("batch results");
@@ -30138,25 +29818,16 @@ mod tests {
             let (sid, did, tid) = (sid.expect("sessionId"), did.expect("draftId"), tid.expect("transactionId"));
 
             let draft_name = futures_lite::future::block_on(async {
-                let body = format!(
-                    r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"sessionId":"{}","draftId":"{}"}}}}}}}}"#,
-                    sid, did
-                );
+                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"sessionId":"{}","draftId":"{}"}}}}}}}}"#, sid, did);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
-                req = req
-                    .data(kit.clone())
-                    .data(tx.clone())
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 v["data"]["kit"]["name"].as_str().unwrap().to_string()
             });
             assert_eq!(draft_name, "in-tx");
 
             let tx_name = futures_lite::future::block_on(async {
-                let body = format!(
-                    r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"sessionId":"{}","draftId":"{}","transactionId":"{}"}}}}}}}}"#,
-                    sid, did, tid
-                );
+                let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"sessionId":"{}","draftId":"{}","transactionId":"{}"}}}}}}}}"#, sid, did, tid);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
                 req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
@@ -30193,10 +29864,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req
-                    .data(kit.clone())
-                    .data(tx.clone())
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 let rows = v.pointer("/data/kitStore/batch/results").and_then(|x| x.as_array()).expect("results");
                 let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).expect("sid");
@@ -30233,11 +29901,8 @@ mod tests {
                 req2 = req2.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req2).await)).expect("to json")
             });
-            let kinds: Vec<String> = out
-                .pointer("/data/kitStore/batch/results")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase())).collect())
-                .unwrap_or_default();
+            let kinds: Vec<String> =
+                out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase())).collect()).unwrap_or_default();
             assert!(kinds.iter().any(|k| k == "UNDO_TRANSACTION"), "{kinds:?}");
             assert!(kinds.iter().any(|k| k == "REDO_TRANSACTION"), "{kinds:?}");
         }
@@ -30259,30 +29924,18 @@ mod tests {
 
             assert_eq!(to_json(KitEvent::Changed), serde_json::Value::String("Changed".into()));
 
-            assert_eq!(
-                to_json(KitEvent::FieldChanged(KitField::Name)),
-                serde_json::json!({"FieldChanged": "Name"})
-            );
+            assert_eq!(to_json(KitEvent::FieldChanged(KitField::Name)), serde_json::json!({"FieldChanged": "Name"}));
 
             let did: Id = "design-a".into();
             assert_eq!(
-                to_json(KitEvent::Design {
-                    design_id: did.clone(),
-                    event: DesignEvent::Changed,
-                }),
+                to_json(KitEvent::Design { design_id: did.clone(), event: DesignEvent::Changed }),
                 serde_json::json!({
                     "Design": {"design_id": "design-a", "event": "Changed"}
                 })
             );
 
             assert_eq!(
-                to_json(KitEvent::SemioKitCommand {
-                    request_id: "req-1".to_string(),
-                    command_kind: "undo".to_string(),
-                    phase: SemioKitCommandPhase::Accepted,
-                    result: None,
-                    error: None,
-                }),
+                to_json(KitEvent::SemioKitCommand { request_id: "req-1".to_string(), command_kind: "undo".to_string(), phase: SemioKitCommandPhase::Accepted, result: None, error: None }),
                 serde_json::json!({
                     "SemioKitCommand": {
                         "requestId": "req-1",
@@ -30292,10 +29945,7 @@ mod tests {
                 })
             );
 
-            let rej = KitEvent::SetRejected {
-                event: Box::new(KitEvent::Changed),
-                error: SetError::NotFound("missing".into()),
-            };
+            let rej = KitEvent::SetRejected { event: Box::new(KitEvent::Changed), error: SetError::NotFound("missing".into()) };
             let j = to_json(rej);
             let inner = j.get("SetRejected").expect("SetRejected wrapper");
             assert!(inner.get("event").is_some());
@@ -30314,11 +29964,9 @@ mod tests {
 
             let did: Id = "design-a".into();
             let kc = KitChange {
-                forward: vec![ChangeKitCommand::ChangeDesignCommands {
-                    design_id: crate::design::DesignIdDto { id: did.clone() },
-                    commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }],
-                }],
+                forward: vec![ChangeKitCommand::ChangeDesignCommands { design_id: crate::design::DesignIdDto { id: did.clone() }, commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }] }],
                 inverse: vec![],
+                children: vec![],
                 kind: KitChangeKind::ModifyDesign,
                 author: None,
                 time: None,
@@ -30362,24 +30010,14 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req
-                    .data(kit.clone())
-                    .data(tx)
-                    .data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
                 let schema = kit_graphql::schema();
                 serde_json::to_value(async_graphql::Response::from(schema.execute(req).await)).expect("to json")
             });
             let errs = out.get("errors");
             assert!(errs.is_none() || errs.unwrap().as_array().map(|a| a.is_empty()).unwrap_or(false), "{out:?}");
-            let kinds: Vec<String> = out
-                .pointer("/data/kitStore/batch/results")
-                .and_then(|v| v.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase()))
-                        .collect()
-                })
-                .unwrap_or_default();
+            let kinds: Vec<String> =
+                out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase())).collect()).unwrap_or_default();
             assert!(kinds.iter().any(|k| k == "CHANGE_KIT_COMMANDS"), "{kinds:?}");
             assert_eq!(kit.read().expect("read").name, "gql-shell-after");
         }
@@ -30434,7 +30072,7 @@ mod tests {
         use crate::design::DesignFullDto;
         use crate::design::DesignIdDto;
         use crate::id::Id;
-        use crate::kit_change::{KitChange, KitChangeKind};
+        use crate::kit_change::{Change, KitChange, KitChangeKind};
         use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
         use crate::piece::PieceFullDto;
         use crate::piece::PieceIdDto;
@@ -30518,7 +30156,7 @@ mod tests {
             let cmds = vec![ChangeKitCommand::Name { name: "via-change".into() }];
             let tmp = KitGraph::from_full_dto(before.clone());
             let inv = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
-            let kc = KitChange { forward: cmds, inverse: inv, kind: KitChangeKind::Inferred, author: None, time: None };
+            let kc = KitChange { forward: cmds, inverse: inv, children: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
             KitChange::apply_forward(&kc, &kit).expect("forward");
             assert_eq!(kit.read().expect("read").name, "via-change");
             KitChange::apply_backward(&kc, &kit).expect("backward");
@@ -30624,6 +30262,102 @@ mod tests {
             pl.merge_into_baseline_dto(&mut tmp);
             assert_eq!(pl, KitDiff::between(&baseline, &tmp));
         }
+
+        //#region 🔖KitChangeTree
+        #[test]
+        fn lift_flat_kit_metadata_stays_in_forward_with_no_children() {
+            let (kit, _, _, _) = small_kit();
+            let flat = vec![ChangeKitCommand::Name { name: "lift-kit".into() }];
+            let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
+            assert!(kc.children.is_empty());
+            assert_eq!(
+                serde_json::to_value(&kc.flatten_forward_commands()).expect("json"),
+                serde_json::to_value(&flat).expect("json")
+            );
+        }
+
+        #[test]
+        fn lift_flat_drag_pieces_stays_kit_forward_not_design_child() {
+            let (kit, _, did, pid) = small_kit();
+            let flat = vec![ChangeKitCommand::DragPieces { design_id: DesignIdDto { id: did.clone() }, piece_ids: vec![pid.as_str().to_string()], du: 0.0, dv: 0.0 }];
+            let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
+            assert!(kc.children.is_empty());
+            assert_eq!(kc.forward.len(), 1);
+            assert!(matches!(&kc.forward[0], ChangeKitCommand::DragPieces { .. }));
+        }
+
+        #[test]
+        fn lift_flat_type_command_yields_type_child() {
+            let (kit, tid, _, _) = small_kit();
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tlift".into() }] }];
+            let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
+            assert!(kc.forward.is_empty());
+            assert_eq!(kc.children.len(), 1);
+            match &kc.children[0] {
+                Change::Type(t) => {
+                    assert_eq!(t.type_id.id, tid);
+                    assert_eq!(t.forward.len(), 1);
+                }
+                _ => panic!("expected Type change"),
+            }
+        }
+
+        #[test]
+        fn lift_flat_design_with_piece_splits_design_and_piece_blocks() {
+            let (kit, _, did, pid) = small_kit();
+            let flat = vec![ChangeKitCommand::ChangeDesignCommands {
+                design_id: DesignIdDto { id: did.clone() },
+                commands: vec![ChangeDesignCommand::Name { name: "Dl".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("Pl".into()) }] }],
+            }];
+            let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
+            assert_eq!(kc.children.len(), 1);
+            match &kc.children[0] {
+                Change::Design(d) => {
+                    assert_eq!(d.design_id.id, did);
+                    assert_eq!(d.blocks.len(), 2);
+                }
+                _ => panic!("expected Design change"),
+            }
+        }
+
+        #[test]
+        fn lift_flat_mixed_kit_and_type_preserves_flatten_order() {
+            let (kit, tid, _, _) = small_kit();
+            let flat = vec![ChangeKitCommand::Name { name: "mix".into() }, ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tx".into() }] }];
+            let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
+            assert_eq!(
+                serde_json::to_value(&kc.flatten_forward_commands()).expect("json"),
+                serde_json::to_value(&flat).expect("json")
+            );
+            assert_eq!(kc.forward.len(), 1);
+            assert_eq!(kc.children.len(), 1);
+        }
+
+        #[test]
+        fn lifted_kit_change_roundtrips_apply_on_store() {
+            let (kit, tid, _, _) = small_kit();
+            let before = kit.read().expect("read").to_full_dto();
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Trt".into() }] }];
+            let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
+            KitChange::apply_forward(&kc, &kit).expect("fwd");
+            assert_eq!(kit.read().expect("r").types[0].read().expect("tr").name, "Trt");
+            KitChange::apply_backward(&kc, &kit).expect("back");
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn flatten_inverse_matches_apply_many_inverse_for_flat_batch() {
+            let (kit, _, _, _) = small_kit();
+            let cmds = vec![ChangeKitCommand::Name { name: "flat-inv".into() }];
+            let tmp = KitGraph::from_full_dto(kit.read().expect("r").to_full_dto());
+            let inv_apply = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply tmp");
+            let kc = KitChange::lift_flat(&kit, cmds.clone(), KitChangeKind::Inferred, None, None).expect("lift");
+            assert_eq!(
+                serde_json::to_value(&kc.flatten_inverse_commands()).expect("json"),
+                serde_json::to_value(&inv_apply).expect("json")
+            );
+        }
+        //#endregion
     }
 
     mod diff {
@@ -31309,7 +31043,7 @@ mod tests {
             use std::sync::{Arc, RwLock};
 
             let kit: Arc<RwLock<KitGraph>> = Arc::new(RwLock::new(KitGraph::new("vcs-sqlite")));
-            let kc = KitChange { forward: vec![], inverse: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
+            let kc = KitChange { forward: vec![], inverse: vec![], children: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
             let cp = KitCheckpoint::new(None, vec![kc], Some("test".into()));
             let cp_id = cp.id.clone();
             {
@@ -33598,7 +33332,7 @@ pub use id::Id;
 pub use kit::{KitFullDto, KitGraphRef, KitGraphWeak, KitIdDto, KitMetadataDto, KitShallowDto, KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
-pub use kit_change::{KitChange, KitChangeKind};
+pub use kit_change::{Change, KitChange, KitChangeKind, KitDesignAtomicsBlock, KitDesignChange, KitDesignChangeBlock, PieceChange, TypeChange};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
 #[cfg(not(target_arch = "wasm32"))]
 pub use kit_conflict_registry::ConflictRegistry;

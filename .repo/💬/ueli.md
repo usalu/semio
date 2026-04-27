@@ -1033,6 +1033,11 @@ semio/rs:
 
 ---
 
+Refactor the graphql, event, change code to be more consistent and more integrated.
+Get rid of smelly old code.
+
+---
+
 Currently there is just a general KitChange.
 Introduce a proper Tree where every Change is a KitChange
 DesignChange, TypeChange, PieceChange.

@@ -7617,7 +7617,7 @@ func TestSpecExactIDs(t *testing.T) {
 		{"goal tickets", "tickets", map[string]interface{}{"parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫"},
 		{"section tickets", "tickets", map[string]interface{}{"parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🎫"},
 		{"ticket", "ticket", map[string]interface{}{"slug": "INTRODUCE-KEY-GUID-URI-MECHANISM", "parentId": "🎯r26021🎯runningsketchpad"}, "🎯r26021🎯runningsketchpad🎫introducekeyguidurimechanism"},
-		{"draft", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": "🧰repo⌨️cli"}, "🧰repo⌨️cli📝newarchitecture"},
+		{"draft", "draft", map[string]interface{}{"slug": "NEW-ARCHITECTURE", "parentId": "🧰repo⌨️client"}, "🧰repo⌨️client📝newarchitecture"},
 		{"todo", "todo", map[string]interface{}{"id": "INTRODUCE-PROPER-SYNC-MECHANISM", "parentId": "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore"}, "👤semio📚js🗃️sketchpad💻design🔖statemanagment🔖store🛠️createsketchpadstore📝introducepropersyncmechanism"},
 		{"general policy godfiles", "policy", map[string]interface{}{"id": "godfiles", "parentId": emojiText(EmojiFileCode)}, emojiText(EmojiFileCode) + emojiText(EmojiPolicy) + "godfiles"},
 		{"specific policy", "policy", map[string]interface{}{"id": "only-one-store", "parentId": emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store"}, emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleLibrary) + "js" + emojiText(EmojiFolderOrg) + "sketchpad" + emojiText(EmojiFileCode) + "design" + emojiText(EmojiSection) + "statemanagment" + emojiText(EmojiSection) + "store" + emojiText(EmojiPolicy) + "onlyonestore"},
@@ -22002,7 +22002,7 @@ func TestIsLicenseText(t *testing.T) {
 }
 
 func TestIsHeaderMetaLine(t *testing.T) {
-	if !isHeaderMetaLine("[🧰repo⌨️cli💻main](repo://p/i/repo/b/b/cli/f/main.go)") {
+	if !isHeaderMetaLine("[🧰repo⌨️client💻main](repo://p/i/repo/b/b/cli/f/main.go)") {
 		t.Error("should detect ID link")
 	}
 	if !isHeaderMetaLine("#region Header") {

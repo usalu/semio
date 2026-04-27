@@ -7,19 +7,19 @@ todos:
    status: completed
  - id: types
    content: Add the typed Change tree structs/enums and public exports in semio/rs/lib.rs.
-   status: in_progress
+   status: completed
  - id: builders
    content: Implement command-to-change-tree builders with explicit non-1:1 store/change mapping rules.
-   status: pending
+   status: completed
  - id: apply
    content: Refactor forward/backward application to walk the change tree while delegating to existing command apply logic.
-   status: pending
+   status: completed
  - id: tests
    content: Extend inline Rust tests for tree shape, cluster-as-kit behavior, and undo restoration.
-   status: pending
+   status: completed
  - id: verify
    content: Run fmt/check/test for semio/rs and fix any introduced diagnostics.
-   status: pending
+   status: completed
 isProject: false
 ---
 
