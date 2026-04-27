@@ -1033,6 +1033,14 @@ semio/rs:
 
 ---
 
+Currently there is just a general KitChange.
+Introduce a proper Tree where every Change is a KitChange
+DesignChange, TypeChange, PieceChange.
+Not that there is not always a 1to1 mapping betwenn Store and Change.
+e.g. ClusterDesignChange yiels a KitChange, not a DesignChange
+
+---
+
 Check semio/grapql and you will see that it is not clean.
 Refactor it.
 There MUST be no disitinction between Live, normal Stores, Gql, etc

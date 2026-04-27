@@ -7956,8 +7956,7 @@ pub mod kit_store_command {
                         }
                         {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
-                            g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                            g.event_bus.emit(crate::events::kit_event_from_kit_change(&kc));
                         }
                     }
                     Ok(TransactionCommandResult::ChangeKitCommands { count: n })
@@ -15478,10 +15477,19 @@ pub mod kit_diff {
 
 /// Command-list forward and inverse (see [`crate::change_command::ChangeKitCommand`]).
 pub mod kit_change {
+    //#region 🔖Imports
     use serde::{Deserialize, Serialize};
 
-    use crate::change_command::ChangeKitCommand;
+    use crate::change_command::{
+        ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
+    };
+    use crate::design::DesignIdDto;
+    use crate::error::SemioError;
+    use crate::piece::PieceIdDto;
+    use crate::typ::TypeIdDto;
+    //#endregion
 
+    //#region 🔖KitChangeKind
     /// Semantic kind for a [`KitChange`] (VCS and UI; replaces the old `KitOperation` wrapper).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
     #[serde(rename_all = "camelCase")]
@@ -15503,13 +15511,307 @@ pub mod kit_change {
         MarkRelease,
         Other(String),
     }
+    //#endregion
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default)]
+    //#region 🔖PieceChange
+    /// 🧩 Scoped piece mutation under one design (inverse mirrors [`ChangePieceCommand::apply`] pairing).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PieceChange {
+        pub design_id: DesignIdDto,
+        pub piece_id: PieceIdDto,
+        pub forward: Vec<ChangePieceCommand>,
+        pub inverse: Vec<ChangePieceCommand>,
+        #[serde(default, skip_serializing_if = "is_default_change_kind")]
+        pub kind: KitChangeKind,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub time: Option<String>,
+    }
+
+    impl PieceChange {
+        /// 🧩 Applies [`Self::forward`] as one nested design command batch.
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            ChangeKitCommand::apply_many(
+                kit,
+                &[ChangeKitCommand::ChangeDesignCommands {
+                    design_id: self.design_id.clone(),
+                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: self.piece_id.clone(),
+                        commands: self.forward.clone(),
+                    }],
+                }],
+            )
+        }
+
+        /// 🧩 Applies [`Self::inverse`] to undo [`Self::forward`].
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            ChangeKitCommand::apply_many(
+                kit,
+                &[ChangeKitCommand::ChangeDesignCommands {
+                    design_id: self.design_id.clone(),
+                    commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: self.piece_id.clone(),
+                        commands: self.inverse.clone(),
+                    }],
+                }],
+            )
+        }
+
+        /// 🧩 Flattened inverse [`ChangeKitCommand`] list (for checkpoint merge / storage).
+        pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
+            vec![ChangeKitCommand::ChangeDesignCommands {
+                design_id: self.design_id.clone(),
+                commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                    piece_id: self.piece_id.clone(),
+                    commands: self.inverse.clone(),
+                }],
+            }]
+        }
+
+        /// 🧩 Flattened forward [`ChangeKitCommand`] list.
+        pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
+            vec![ChangeKitCommand::ChangeDesignCommands {
+                design_id: self.design_id.clone(),
+                commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                    piece_id: self.piece_id.clone(),
+                    commands: self.forward.clone(),
+                }],
+            }]
+        }
+    }
+    //#endregion
+
+    //#region 🔖DesignAtomicsBlock
+    /// 🧩 Consecutive non-piece [`ChangeDesignCommand`] rows lifted with paired inverses.
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignAtomicsBlock {
+        pub forward: Vec<ChangeDesignCommand>,
+        pub inverse: Vec<ChangeDesignCommand>,
+    }
+
+    /// 🧩 Ordered segment under one design (preserves interleaving of piece vs other edits).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase", tag = "blockKind", content = "payload")]
+    pub enum DesignChangeBlock {
+        Atomics(DesignAtomicsBlock),
+        Piece(PieceChange),
+    }
+    //#endregion
+
+    //#region 🔖DesignChange
+    /// 🧩 Scoped design mutation tree (piece rows become [`DesignChangeBlock::Piece`]).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct DesignChange {
+        pub design_id: DesignIdDto,
+        pub blocks: Vec<DesignChangeBlock>,
+        #[serde(default, skip_serializing_if = "is_default_change_kind")]
+        pub kind: KitChangeKind,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub time: Option<String>,
+    }
+
+    impl DesignChange {
+        /// 🧩 Applies blocks in order.
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            for b in &self.blocks {
+                match b {
+                    DesignChangeBlock::Atomics(a) => {
+                        if !a.forward.is_empty() {
+                            ChangeKitCommand::apply_many(
+                                kit,
+                                &[ChangeKitCommand::ChangeDesignCommands {
+                                    design_id: self.design_id.clone(),
+                                    commands: a.forward.clone(),
+                                }],
+                            )?;
+                        }
+                    }
+                    DesignChangeBlock::Piece(p) => p.apply_forward(kit)?,
+                }
+            }
+            Ok(())
+        }
+
+        /// 🧩 Undoes blocks in reverse order.
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            for b in self.blocks.iter().rev() {
+                match b {
+                    DesignChangeBlock::Atomics(a) => {
+                        if !a.inverse.is_empty() {
+                            ChangeKitCommand::apply_many(
+                                kit,
+                                &[ChangeKitCommand::ChangeDesignCommands {
+                                    design_id: self.design_id.clone(),
+                                    commands: a.inverse.clone(),
+                                }],
+                            )?;
+                        }
+                    }
+                    DesignChangeBlock::Piece(p) => p.apply_backward(kit)?,
+                }
+            }
+            Ok(())
+        }
+
+        /// 🧩 Flatten forward into kit-level commands (preserves block order).
+        pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
+            let mut out = Vec::new();
+            for b in &self.blocks {
+                match b {
+                    DesignChangeBlock::Atomics(a) => {
+                        if !a.forward.is_empty() {
+                            out.push(ChangeKitCommand::ChangeDesignCommands {
+                                design_id: self.design_id.clone(),
+                                commands: a.forward.clone(),
+                            });
+                        }
+                    }
+                    DesignChangeBlock::Piece(p) => out.extend(p.flatten_forward_commands()),
+                }
+            }
+            out
+        }
+
+        /// 🧩 Flatten inverse for checkpoint merge (reverse block order).
+        pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
+            let mut out = Vec::new();
+            for b in self.blocks.iter().rev() {
+                match b {
+                    DesignChangeBlock::Atomics(a) => {
+                        if !a.inverse.is_empty() {
+                            out.push(ChangeKitCommand::ChangeDesignCommands {
+                                design_id: self.design_id.clone(),
+                                commands: a.inverse.clone(),
+                            });
+                        }
+                    }
+                    DesignChangeBlock::Piece(p) => out.extend(p.flatten_inverse_commands()),
+                }
+            }
+            out
+        }
+    }
+    //#endregion
+
+    //#region 🔖TypeChange
+    /// 🧩 Scoped type mutation under one type id (wraps [`ChangeTypeCommand`] batches).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TypeChange {
+        pub type_id: TypeIdDto,
+        pub forward: Vec<ChangeTypeCommand>,
+        pub inverse: Vec<ChangeTypeCommand>,
+        #[serde(default, skip_serializing_if = "is_default_change_kind")]
+        pub kind: KitChangeKind,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub time: Option<String>,
+    }
+
+    impl TypeChange {
+        /// 🧩 Applies [`Self::forward`].
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            ChangeKitCommand::apply_many(
+                kit,
+                &[ChangeKitCommand::ChangeTypeCommands {
+                    type_id: self.type_id.clone(),
+                    commands: self.forward.clone(),
+                }],
+            )
+        }
+
+        /// 🧩 Applies [`Self::inverse`].
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            ChangeKitCommand::apply_many(
+                kit,
+                &[ChangeKitCommand::ChangeTypeCommands {
+                    type_id: self.type_id.clone(),
+                    commands: self.inverse.clone(),
+                }],
+            )
+        }
+
+        pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
+            vec![ChangeKitCommand::ChangeTypeCommands {
+                type_id: self.type_id.clone(),
+                commands: self.forward.clone(),
+            }]
+        }
+
+        pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
+            vec![ChangeKitCommand::ChangeTypeCommands {
+                type_id: self.type_id.clone(),
+                commands: self.inverse.clone(),
+            }]
+        }
+    }
+    //#endregion
+
+    //#region 🔖Change
+    /// 🌳 Typed child node under [`KitChange`] (kit root is always [`KitChange`], not this enum).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+    pub enum Change {
+        Type(TypeChange),
+        Design(DesignChange),
+        Piece(PieceChange),
+    }
+
+    impl Change {
+        fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            match self {
+                Change::Type(t) => t.apply_forward(kit),
+                Change::Design(d) => d.apply_forward(kit),
+                Change::Piece(p) => p.apply_forward(kit),
+            }
+        }
+
+        fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+            match self {
+                Change::Type(t) => t.apply_backward(kit),
+                Change::Design(d) => d.apply_backward(kit),
+                Change::Piece(p) => p.apply_backward(kit),
+            }
+        }
+
+        fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
+            match self {
+                Change::Type(t) => t.flatten_forward_commands(),
+                Change::Design(d) => d.flatten_forward_commands(),
+                Change::Piece(p) => p.flatten_forward_commands(),
+            }
+        }
+
+        fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
+            match self {
+                Change::Type(t) => t.flatten_inverse_commands(),
+                Change::Design(d) => d.flatten_inverse_commands(),
+                Change::Piece(p) => p.flatten_inverse_commands(),
+            }
+        }
+    }
+    //#endregion
+
+    //#region 🔖KitChange
+    fn is_default_change_kind(k: &KitChangeKind) -> bool {
+        *k == KitChangeKind::Inferred
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct KitChange {
-        /// Forward commands, applied in order.
+        /// Kit-scoped forward commands (excludes nested type/design batches lifted into [`Self::children`]).
         pub forward: Vec<ChangeKitCommand>,
-        /// Inverse (undo) commands, applied in order to reverse [`KitChange::forward`].
+        /// Inverse commands for [`Self::forward`] only (nested scopes carry their own inverses).
         pub inverse: Vec<ChangeKitCommand>,
+        /// Typed children (type / design / piece scopes) applied after [`Self::forward`] on forward walks.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub children: Vec<Change>,
         /// Semantic label; defaults to [`KitChangeKind::Inferred`].
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
@@ -15519,23 +15821,235 @@ pub mod kit_change {
         pub time: Option<String>,
     }
 
-    fn is_default_change_kind(k: &KitChangeKind) -> bool {
-        *k == KitChangeKind::Inferred
-    }
-
     impl KitChange {
-        /// Apply the forward step to a store.
+        //#region 🔖Apply
+        /// Apply the forward step to a store (depth-first: kit [`Self::forward`], then [`Self::children`]).
         pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
+            for ch in &c.children {
+                ch.apply_forward(kit)
+                    .map_err(|e| crate::error::SetError::Internal(format!("kit change child forward: {e}")))?;
+            }
             Ok(())
         }
 
-        /// Apply the backward (undo) step to a store.
+        /// Apply the backward (undo) step (reverse [`Self::children`], then kit [`Self::inverse`]).
         pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
+            for ch in c.children.iter().rev() {
+                ch.apply_backward(kit)
+                    .map_err(|e| crate::error::SetError::Internal(format!("kit change child backward: {e}")))?;
+            }
             ChangeKitCommand::apply_many(kit, &c.inverse).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
             Ok(())
         }
+        //#endregion
+
+        //#region 🔖Flatten
+        /// Linear forward commands equivalent to this tree (for checkpoint merge and events).
+        pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
+            let mut out = self.forward.clone();
+            for ch in &self.children {
+                out.extend(ch.flatten_forward_commands());
+            }
+            out
+        }
+
+        /// Linear inverse commands for one-shot undo via [`ChangeKitCommand::apply_many`].
+        pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
+            let mut out = Vec::new();
+            for ch in self.children.iter().rev() {
+                out.extend(ch.flatten_inverse_commands());
+            }
+            out.extend(self.inverse.iter().cloned());
+            out
+        }
+        //#endregion
+
+        //#region 🔖Lift
+        /// 🧮 Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
+        pub fn lift_flat(
+            kit: &crate::kit_graph::KitGraphRef,
+            forward: Vec<ChangeKitCommand>,
+            kind: KitChangeKind,
+            author: Option<String>,
+            time: Option<String>,
+        ) -> Result<Self, SemioError> {
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let twin = crate::kit_graph::KitGraph::from_full_dto(before);
+            let mut kit_forward: Vec<ChangeKitCommand> = Vec::new();
+            let mut kit_inverse_groups: Vec<Vec<ChangeKitCommand>> = Vec::new();
+            let mut children: Vec<Change> = Vec::new();
+
+            for cmd in forward {
+                match cmd {
+                    ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
+                        let inv = ChangeKitCommand::inverse_commands_for_many(
+                            &twin,
+                            &[ChangeKitCommand::ChangeTypeCommands {
+                                type_id: type_id.clone(),
+                                commands: commands.clone(),
+                            }],
+                        )?;
+                        let inv_inner = unwrap_type_inverse(&inv, &type_id)?;
+                        ChangeKitCommand::apply_many(
+                            &twin,
+                            &[ChangeKitCommand::ChangeTypeCommands {
+                                type_id: type_id.clone(),
+                                commands: commands.clone(),
+                            }],
+                        )?;
+                        children.push(Change::Type(TypeChange {
+                            type_id,
+                            forward: commands,
+                            inverse: inv_inner,
+                            kind: KitChangeKind::Inferred,
+                            author: None,
+                            time: None,
+                        }));
+                    }
+                    ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
+                        let design_change = lift_design_change_from_commands(&twin, design_id.clone(), commands)?;
+                        children.push(Change::Design(design_change));
+                    }
+                    other => {
+                        let inv = ChangeKitCommand::inverse_commands_for_many(&twin, std::slice::from_ref(&other))?;
+                        ChangeKitCommand::apply_many(&twin, std::slice::from_ref(&other))?;
+                        kit_inverse_groups.push(inv);
+                        kit_forward.push(other);
+                    }
+                }
+            }
+
+            let mut inverse: Vec<ChangeKitCommand> = Vec::new();
+            for g in kit_inverse_groups.into_iter().rev() {
+                inverse.extend(g);
+            }
+
+            Ok(KitChange {
+                forward: kit_forward,
+                inverse,
+                children,
+                kind,
+                author,
+                time,
+            })
+        }
+        //#endregion
     }
+
+    //#region 🔖LiftHelpers
+    fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeIdDto) -> Result<Vec<ChangeTypeCommand>, SemioError> {
+        match inv {
+            [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] if type_id == expect_id => Ok(commands.clone()),
+            _ => Err(SemioError::InvalidOperation("inverse for ChangeTypeCommands mismatch".into())),
+        }
+    }
+
+    fn unwrap_design_inverse(inv: &[ChangeKitCommand], expect_did: &DesignIdDto) -> Result<Vec<ChangeDesignCommand>, SemioError> {
+        match inv {
+            [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] if design_id == expect_did => Ok(commands.clone()),
+            _ => Err(SemioError::InvalidOperation("inverse for ChangeDesignCommands mismatch".into())),
+        }
+    }
+
+    fn lift_design_change_from_commands(
+        twin: &crate::kit_graph::KitGraphRef,
+        design_id: DesignIdDto,
+        commands: Vec<ChangeDesignCommand>,
+    ) -> Result<DesignChange, SemioError> {
+        let mut blocks: Vec<DesignChangeBlock> = Vec::new();
+        let mut buf: Vec<ChangeDesignCommand> = Vec::new();
+
+        fn flush_atomics(
+            twin: &crate::kit_graph::KitGraphRef,
+            design_id: &DesignIdDto,
+            buf: &mut Vec<ChangeDesignCommand>,
+            blocks: &mut Vec<DesignChangeBlock>,
+        ) -> Result<(), SemioError> {
+            if buf.is_empty() {
+                return Ok(());
+            }
+            let forward = std::mem::take(buf);
+            let inv_kit = ChangeKitCommand::inverse_commands_for_many(
+                twin,
+                &[ChangeKitCommand::ChangeDesignCommands {
+                    design_id: design_id.clone(),
+                    commands: forward.clone(),
+                }],
+            )?;
+            let inverse = unwrap_design_inverse(&inv_kit, design_id)?;
+            ChangeKitCommand::apply_many(
+                twin,
+                &[ChangeKitCommand::ChangeDesignCommands {
+                    design_id: design_id.clone(),
+                    commands: forward.clone(),
+                }],
+            )?;
+            blocks.push(DesignChangeBlock::Atomics(DesignAtomicsBlock { forward, inverse }));
+            Ok(())
+        }
+
+        for cmd in commands {
+            match cmd {
+                ChangeDesignCommand::ChangePieceCommands { piece_id, commands: pcmds } => {
+                    flush_atomics(twin, &design_id, &mut buf, &mut blocks)?;
+                    let inv_kit = ChangeKitCommand::inverse_commands_for_many(
+                        twin,
+                        &[ChangeKitCommand::ChangeDesignCommands {
+                            design_id: design_id.clone(),
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                                piece_id: piece_id.clone(),
+                                commands: pcmds.clone(),
+                            }],
+                        }],
+                    )?;
+                    let inv_cmds = unwrap_piece_inverse(&inv_kit, &design_id, &piece_id)?;
+                    ChangeKitCommand::apply_many(
+                        twin,
+                        &[ChangeKitCommand::ChangeDesignCommands {
+                            design_id: design_id.clone(),
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands {
+                                piece_id: piece_id.clone(),
+                                commands: pcmds.clone(),
+                            }],
+                        }],
+                    )?;
+                    blocks.push(DesignChangeBlock::Piece(PieceChange {
+                        design_id: design_id.clone(),
+                        piece_id,
+                        forward: pcmds,
+                        inverse: inv_cmds,
+                        kind: KitChangeKind::Inferred,
+                        author: None,
+                        time: None,
+                    }));
+                }
+                other => buf.push(other),
+            }
+        }
+        flush_atomics(twin, &design_id, &mut buf, &mut blocks)?;
+
+        Ok(DesignChange {
+            design_id,
+            blocks,
+            kind: KitChangeKind::Inferred,
+            author: None,
+            time: None,
+        })
+    }
+
+    fn unwrap_piece_inverse(
+        inv: &[ChangeKitCommand],
+        expect_did: &DesignIdDto,
+        expect_pid: &PieceIdDto,
+    ) -> Result<Vec<ChangePieceCommand>, SemioError> {
+        let cmds = unwrap_design_inverse(inv, expect_did)?;
+        match cmds.as_slice() {
+            [ChangeDesignCommand::ChangePieceCommands { piece_id, commands }] if piece_id == expect_pid => Ok(commands.clone()),
+            _ => Err(SemioError::InvalidOperation("inverse for ChangePieceCommands mismatch".into())),
+        }
+    }
+    //#endregion
 }
 
 pub mod error {
@@ -15878,7 +16392,7 @@ pub mod events {
     /// @emoji Payload: design rename with forward and inverse command atoms.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticRenamedDesign {
+    pub struct RenamedDesignKitEvent {
         pub design_id: Id,
         pub change: crate::kit_change::KitChange,
     }
@@ -15886,7 +16400,7 @@ pub mod events {
     /// @emoji Payload: kind rename with forward and inverse command atoms.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticRenamedType {
+    pub struct RenamedTypeKitEvent {
         pub type_id: Id,
         pub change: crate::kit_change::KitChange,
     }
@@ -15894,7 +16408,7 @@ pub mod events {
     /// @emoji Payload: UV drag affecting flat placement for listed pieces.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticDraggedFlatCenterPiece {
+    pub struct DraggedFlatCenterPieceKitEvent {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
         pub change: crate::kit_change::KitChange,
@@ -15903,7 +16417,7 @@ pub mod events {
     /// @emoji Payload: domain-space move for listed pieces.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticMovedPiecesFlatCenter {
+    pub struct MovedPiecesFlatCenterKitEvent {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
         pub change: crate::kit_change::KitChange,
@@ -15912,7 +16426,7 @@ pub mod events {
     /// @emoji Payload: cluster pieces into a nested design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticClusteredPieces {
+    pub struct ClusteredPiecesKitEvent {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
         pub change: crate::kit_change::KitChange,
@@ -15921,7 +16435,7 @@ pub mod events {
     /// @emoji Payload: fix listed pieces in place.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticFixedPiecesFlatCenter {
+    pub struct FixedPiecesFlatCenterKitEvent {
         pub design_id: Id,
         pub piece_ids: Vec<Id>,
         pub change: crate::kit_change::KitChange,
@@ -15930,7 +16444,7 @@ pub mod events {
     /// @emoji Payload: flatten one design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticFlattenedDesign {
+    pub struct FlattenedDesignKitEvent {
         pub design_id: Id,
         pub change: crate::kit_change::KitChange,
     }
@@ -15938,7 +16452,7 @@ pub mod events {
     /// @emoji Payload: expand nested design into parent domain.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticExpandedNestedDesign {
+    pub struct ExpandedNestedDesignKitEvent {
         pub parent_design_id: Id,
         pub nested_design_id: Id,
         pub change: crate::kit_change::KitChange,
@@ -15947,7 +16461,7 @@ pub mod events {
     /// @emoji Payload: delete one connection in a design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticDeletedConnection {
+    pub struct DeletedConnectionKitEvent {
         pub design_id: Id,
         pub connection_id: Id,
         pub change: crate::kit_change::KitChange,
@@ -15956,7 +16470,7 @@ pub mod events {
     /// @emoji Payload: change resolved piece kind in a design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticChangedPieceKind {
+    pub struct ChangedPieceKindKitEvent {
         pub design_id: Id,
         pub piece_id: Id,
         pub change: crate::kit_change::KitChange,
@@ -15965,7 +16479,7 @@ pub mod events {
     /// @emoji Payload: nested design command batch.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticChangedDesignCommands {
+    pub struct ChangedDesignCommandsKitEvent {
         pub design_id: Id,
         pub change: crate::kit_change::KitChange,
     }
@@ -15973,7 +16487,7 @@ pub mod events {
     /// @emoji Payload: nested kind command batch.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticChangedTypeCommands {
+    pub struct ChangedTypeCommandsKitEvent {
         pub type_id: Id,
         pub change: crate::kit_change::KitChange,
     }
@@ -15981,31 +16495,12 @@ pub mod events {
     /// @emoji Payload: generic classified kit change.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SemanticAppliedKitChange {
+    pub struct ChangedKitEvent {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Semantically typed kit mutation with forward and inverse command atoms (`KitChange`).
-    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum SemanticKitEvent {
-        RenamedDesign(SemanticRenamedDesign),
-        RenamedType(SemanticRenamedType),
-        DraggedFlatCenterPiece(SemanticDraggedFlatCenterPiece),
-        MovedPiecesFlatCenter(SemanticMovedPiecesFlatCenter),
-        ClusteredPieces(SemanticClusteredPieces),
-        FixedPiecesFlatCenter(SemanticFixedPiecesFlatCenter),
-        FlattenedDesign(SemanticFlattenedDesign),
-        ExpandedNestedDesign(SemanticExpandedNestedDesign),
-        DeletedConnection(SemanticDeletedConnection),
-        ChangedPieceKind(SemanticChangedPieceKind),
-        ChangedDesignCommands(SemanticChangedDesignCommands),
-        ChangedTypeCommands(SemanticChangedTypeCommands),
-        AppliedKitChange(SemanticAppliedKitChange),
-    }
-
-    /// @emoji Classifies a recorded `KitChange` into a semantic subscription event (same forward/inverse atoms).
-    pub fn semantic_kit_event_from_kit_change(change: &crate::kit_change::KitChange) -> SemanticKitEvent {
+    /// @emoji Maps a recorded `KitChange` to one subscription `KitEvent` row (forward/inverse atoms on the payload).
+    pub fn kit_event_from_kit_change(change: &crate::kit_change::KitChange) -> KitEvent {
         use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangeTypeCommand};
 
         let piece_ids_from_strings = |v: &[String]| v.iter().map(|s| Id::from(s.as_str())).collect::<Vec<Id>>();
@@ -16013,12 +16508,12 @@ pub mod events {
         match change.forward.as_slice() {
             [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeDesignCommand::Name { .. }) {
-                    SemanticKitEvent::RenamedDesign(SemanticRenamedDesign {
+                    KitEvent::RenamedDesign(RenamedDesignKitEvent {
                         design_id: design_id.id.clone(),
                         change: change.clone(),
                     })
                 } else {
-                    SemanticKitEvent::ChangedDesignCommands(SemanticChangedDesignCommands {
+                    KitEvent::ChangedDesignCommands(ChangedDesignCommandsKitEvent {
                         design_id: design_id.id.clone(),
                         change: change.clone(),
                     })
@@ -16026,12 +16521,12 @@ pub mod events {
             }
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeTypeCommand::Name { .. }) {
-                    SemanticKitEvent::RenamedType(SemanticRenamedType {
+                    KitEvent::RenamedType(RenamedTypeKitEvent {
                         type_id: type_id.id.clone(),
                         change: change.clone(),
                     })
                 } else {
-                    SemanticKitEvent::ChangedTypeCommands(SemanticChangedTypeCommands {
+                    KitEvent::ChangedTypeCommands(ChangedTypeCommandsKitEvent {
                         type_id: type_id.id.clone(),
                         change: change.clone(),
                     })
@@ -16041,7 +16536,7 @@ pub mod events {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::DraggedFlatCenterPiece(SemanticDraggedFlatCenterPiece {
+            }] => KitEvent::DraggedFlatCenterPiece(DraggedFlatCenterPieceKitEvent {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
@@ -16050,7 +16545,7 @@ pub mod events {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::MovedPiecesFlatCenter(SemanticMovedPiecesFlatCenter {
+            }] => KitEvent::MovedPiecesFlatCenter(MovedPiecesFlatCenterKitEvent {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
@@ -16059,7 +16554,7 @@ pub mod events {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::ClusteredPieces(SemanticClusteredPieces {
+            }] => KitEvent::ClusteredPieces(ClusteredPiecesKitEvent {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
@@ -16067,19 +16562,19 @@ pub mod events {
             [ChangeKitCommand::FixPieces {
                 design_id,
                 piece_ids,
-            }] => SemanticKitEvent::FixedPiecesFlatCenter(SemanticFixedPiecesFlatCenter {
+            }] => KitEvent::FixedPiecesFlatCenter(FixedPiecesFlatCenterKitEvent {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
             }),
-            [ChangeKitCommand::FlattenDesign { design_id }] => SemanticKitEvent::FlattenedDesign(SemanticFlattenedDesign {
+            [ChangeKitCommand::FlattenDesign { design_id }] => KitEvent::FlattenedDesign(FlattenedDesignKitEvent {
                 design_id: design_id.id.clone(),
                 change: change.clone(),
             }),
             [ChangeKitCommand::ExpandNestedDesign {
                 parent_design_id,
                 nested_design_id,
-            }] => SemanticKitEvent::ExpandedNestedDesign(SemanticExpandedNestedDesign {
+            }] => KitEvent::ExpandedNestedDesign(ExpandedNestedDesignKitEvent {
                 parent_design_id: parent_design_id.id.clone(),
                 nested_design_id: nested_design_id.id.clone(),
                 change: change.clone(),
@@ -16087,7 +16582,7 @@ pub mod events {
             [ChangeKitCommand::DeleteConnection {
                 design_id,
                 connection_id,
-            }] => SemanticKitEvent::DeletedConnection(SemanticDeletedConnection {
+            }] => KitEvent::DeletedConnection(DeletedConnectionKitEvent {
                 design_id: design_id.id.clone(),
                 connection_id: connection_id.id.clone(),
                 change: change.clone(),
@@ -16096,12 +16591,12 @@ pub mod events {
                 design_id,
                 piece_id,
                 ..
-            }] => SemanticKitEvent::ChangedPieceKind(SemanticChangedPieceKind {
+            }] => KitEvent::ChangedPieceKind(ChangedPieceKindKitEvent {
                 design_id: design_id.id.clone(),
                 piece_id: piece_id.id.clone(),
                 change: change.clone(),
             }),
-            _ => SemanticKitEvent::AppliedKitChange(SemanticAppliedKitChange { change: change.clone() }),
+            _ => KitEvent::ChangedKit(ChangedKitEvent { change: change.clone() }),
         }
     }
 
@@ -16135,6 +16630,35 @@ pub mod events {
         HashInvalidated { entity: EntityRef },
         FlattenInvalidated { design: Id, pieces: Vec<Id> },
         ValidationInvalidated,
+        /// @emoji Design rename; carries `KitChange` forward/inverse atoms.
+        #[serde(rename = "renamedDesign")]
+        RenamedDesign(RenamedDesignKitEvent),
+        /// @emoji Kind rename; carries `KitChange` forward/inverse atoms.
+        #[serde(rename = "renamedType")]
+        RenamedType(RenamedTypeKitEvent),
+        #[serde(rename = "draggedFlatCenterPiece")]
+        DraggedFlatCenterPiece(DraggedFlatCenterPieceKitEvent),
+        #[serde(rename = "movedPiecesFlatCenter")]
+        MovedPiecesFlatCenter(MovedPiecesFlatCenterKitEvent),
+        #[serde(rename = "clusteredPieces")]
+        ClusteredPieces(ClusteredPiecesKitEvent),
+        #[serde(rename = "fixedPiecesFlatCenter")]
+        FixedPiecesFlatCenter(FixedPiecesFlatCenterKitEvent),
+        #[serde(rename = "flattenedDesign")]
+        FlattenedDesign(FlattenedDesignKitEvent),
+        #[serde(rename = "expandedNestedDesign")]
+        ExpandedNestedDesign(ExpandedNestedDesignKitEvent),
+        #[serde(rename = "deletedConnection")]
+        DeletedConnection(DeletedConnectionKitEvent),
+        #[serde(rename = "changedPieceKind")]
+        ChangedPieceKind(ChangedPieceKindKitEvent),
+        #[serde(rename = "changedDesignCommands")]
+        ChangedDesignCommands(ChangedDesignCommandsKitEvent),
+        #[serde(rename = "changedTypeCommands")]
+        ChangedTypeCommands(ChangedTypeCommandsKitEvent),
+        /// @emoji Fallback classified kit change (forward/inverse atoms).
+        #[serde(rename = "changedKit")]
+        ChangedKit(ChangedKitEvent),
         SetRejected { event: Box<KitEvent>, error: crate::error::SetError },
         /// 📣 Correlates inbound kit control-plane requests with acceptance / outcome on the bus.
         SemioKitCommand {
@@ -16150,10 +16674,6 @@ pub mod events {
             /// 📣 Populated when [`Self::SemioKitCommand::phase`] is `Failed`.
             #[serde(default, skip_serializing_if = "Option::is_none")]
             error: Option<crate::error::SetError>,
-        },
-        /// @emoji Typed semantic mutation with paired forward and inverse kit change commands.
-        SemanticChange {
-            event: SemanticKitEvent,
         },
     }
 
@@ -16191,7 +16711,19 @@ pub mod events {
                     events.push(Self::Changed);
                     events.push(self.clone());
                 }
-                Self::SemanticChange { .. } => {
+                Self::RenamedDesign(_)
+                | Self::RenamedType(_)
+                | Self::DraggedFlatCenterPiece(_)
+                | Self::MovedPiecesFlatCenter(_)
+                | Self::ClusteredPieces(_)
+                | Self::FixedPiecesFlatCenter(_)
+                | Self::FlattenedDesign(_)
+                | Self::ExpandedNestedDesign(_)
+                | Self::DeletedConnection(_)
+                | Self::ChangedPieceKind(_)
+                | Self::ChangedDesignCommands(_)
+                | Self::ChangedTypeCommands(_)
+                | Self::ChangedKit(_) => {
                     events.push(Self::Changed);
                     events.push(self.clone());
                 }
@@ -19361,7 +19893,7 @@ pub mod kit_graph {
                     author: None,
                     time: None,
                 };
-                Self::emit_semantic_kit_change_bus(kit, &kc);
+                Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -19533,11 +20065,10 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// @emoji Broadcast a typed semantic event (forward + inverse atoms) after a successful command apply.
-        pub(crate) fn emit_semantic_kit_change_bus(kit: &KitGraphRef, change: &crate::kit_change::KitChange) {
+        /// @emoji Broadcast a classified `KitEvent` (forward + inverse atoms) after a successful command apply.
+        pub(crate) fn emit_kit_change_event_bus(kit: &KitGraphRef, change: &crate::kit_change::KitChange) {
             if let Ok(g) = kit.read() {
-                let sem = crate::events::semantic_kit_event_from_kit_change(change);
-                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                g.event_bus.emit(crate::events::kit_event_from_kit_change(change));
             }
         }
 
@@ -19671,7 +20202,7 @@ pub mod kit_graph {
                     author: None,
                     time: None,
                 };
-                Self::emit_semantic_kit_change_bus(kit, &kc);
+                Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -19688,7 +20219,7 @@ pub mod kit_graph {
                     author: None,
                     time: None,
                 };
-                Self::emit_semantic_kit_change_bus(kit, &kc);
+                Self::emit_kit_change_event_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -26943,10 +27474,10 @@ pub mod kit_graphql {
     /// 📣 Same wire as the kit event bus; GraphQL scalar (output; not accepted as input variables).
     #[derive(Clone, Debug, serde::Serialize)]
     #[serde(transparent)]
-    pub struct GqlKitEvent(pub KitEvent);
+    pub struct KitEventScalar(pub KitEvent);
 
     #[Scalar(name = "KitEvent")]
-    impl ScalarType for GqlKitEvent {
+    impl ScalarType for KitEventScalar {
         fn parse(_value: Value) -> InputValueResult<Self> {
             Err(InputValueError::custom("KitEvent is output-only"))
         }
@@ -27116,9 +27647,8 @@ pub mod kit_graphql {
                                 author: None,
                                 time: None,
                             };
-                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
                             if let Ok(g) = graph.read() {
-                                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                                g.event_bus.emit(crate::events::kit_event_from_kit_change(&kc));
                             }
                         }
                         let _ = reply.send(r.map_err(|e| format!("{e:?}")));
@@ -27140,9 +27670,8 @@ pub mod kit_graphql {
                                 author: None,
                                 time: None,
                             };
-                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
                             if let Ok(g) = graph.read() {
-                                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                                g.event_bus.emit(crate::events::kit_event_from_kit_change(&kc));
                             }
                         }
                         let _ = reply.send(r.map(|_| (kind, inverse_out)).map_err(|e| format!("{e:?}")));
@@ -28525,7 +29054,7 @@ pub mod kit_graphql {
     pub struct RootSubscription;
 
     /// Pin-boxed stream (avoid `impl Stream + Send`: async-graphql derive keeps only the last trait bound).
-    type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<GqlKitEvent, Error>> + Send>>;
+    type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<KitEventScalar, Error>> + Send>>;
 
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
@@ -28536,7 +29065,7 @@ pub mod kit_graphql {
             Ok(Box::pin(stream! {
                 loop {
                     match rx.recv().await {
-                        Ok(ev) => yield Ok(GqlKitEvent(ev)),
+                        Ok(ev) => yield Ok(KitEventScalar(ev)),
                         Err(async_broadcast::RecvError::Closed) => break,
                         Err(async_broadcast::RecvError::Overflowed(_)) => {}
                     }
@@ -29720,10 +30249,10 @@ mod tests {
             use crate::error::SetError;
             use crate::events::{DesignEvent, KitEvent, KitField, SemioKitCommandPhase};
             use crate::id::Id;
-            use crate::kit_graphql::GqlKitEvent;
+            use crate::kit_graphql::KitEventScalar;
 
             let to_json = |ev: KitEvent| -> serde_json::Value {
-                let gql = GqlKitEvent(ev);
+                let gql = KitEventScalar(ev);
                 let v = gql.to_value();
                 v.into_json().expect("KitEvent scalar into_json")
             };
@@ -29774,14 +30303,14 @@ mod tests {
         }
 
         #[test]
-        fn gql_kit_event_semantic_change_serializes_renamed_design() {
+        fn gql_kit_event_renamed_design_serializes_flat() {
             use async_graphql::ScalarType;
 
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-            use crate::events::{semantic_kit_event_from_kit_change, KitEvent};
+            use crate::events::kit_event_from_kit_change;
             use crate::id::Id;
             use crate::kit_change::{KitChange, KitChangeKind};
-            use crate::kit_graphql::GqlKitEvent;
+            use crate::kit_graphql::KitEventScalar;
 
             let did: Id = "design-a".into();
             let kc = KitChange {
@@ -29794,13 +30323,11 @@ mod tests {
                 author: None,
                 time: None,
             };
-            let sem = semantic_kit_event_from_kit_change(&kc);
-            let gql = GqlKitEvent(KitEvent::SemanticChange { event: sem });
+            let ev = kit_event_from_kit_change(&kc);
+            let gql = KitEventScalar(ev);
             let v = gql.to_value();
-            let j = v.into_json().expect("semantic kit event json");
-            let wrapper = j.get("SemanticChange").expect("SemanticChange key");
-            let event = wrapper.get("event").expect("event");
-            let renamed = event.get("renamedDesign").expect("renamedDesign variant");
+            let j = v.into_json().expect("kit event json");
+            let renamed = j.get("renamedDesign").expect("renamedDesign key");
             assert_eq!(renamed.get("designId").and_then(|x| x.as_str()), Some("design-a"));
             let change = renamed.get("change").expect("change");
             assert!(change.get("forward").and_then(|x| x.as_array()).is_some());

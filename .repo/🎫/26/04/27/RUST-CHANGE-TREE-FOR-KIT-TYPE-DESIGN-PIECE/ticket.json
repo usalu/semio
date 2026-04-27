@@ -1,0 +1,10 @@
+{
+  "title": "Rust Change Tree for Kit Type Design Piece",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "Implement typed change tree in semio/rs: KitChange owns kit-scoped commands plus nested TypeChange, DesignChange, PieceChange children. Preserve ChangeKitCommand apply semantics; semantic ops like ClusterPieces stay kit-level.",
+  "goal": "🎯refactorkitapitoobjectorientedwithcentralizedchangemanagement",
+  "sessions": [
+    "⚪0513d4c5040e45ac91497b7e3c63da27"
+  ]
+}

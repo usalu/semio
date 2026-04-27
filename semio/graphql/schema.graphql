@@ -312,6 +312,10 @@ type KitColoredConnectorObject {
 	color: String!
 }
 
+"""
+Wire JSON for the kit subscription bus (same shape as `semio_rs::events::KitEvent`).
+Classified mutations use top-level camelCase keys (`renamedDesign`, `changedKit`, …) each carrying a `change` object with `forward` and `inverse` `ChangeKitCommand` lists.
+"""
 scalar KitEvent
 
 scalar KitFullSnapshot
