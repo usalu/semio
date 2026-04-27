@@ -928,11 +928,11 @@ func getTestExecutor(t *testing.T) *Executor {
 	}
 
 	rootDir = findTestRepoRoot(cwd)
-	executor, err := NewExecutor(rootDir)
+	ex, err := NewExecutor(rootDir)
 	if err != nil {
 		t.Fatalf("failed to create executor: %v", err)
 	}
-	return executor
+	return ex
 }
 
 // #endregion 🎼Helpers
@@ -1101,7 +1101,10 @@ func TestFilesNonEmpty(t *testing.T) {
 func TestBreachsNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
-	result, err := executor.ExecuteJSON(ctx, "{ breachs { id } }", nil)
+	// Unscoped breachs defaults to technology scope "semio" and runs full policy
+	// analysis across the tree (very slow). Single-file scope keeps the test
+	// representative while bounded.
+	result, err := executor.ExecuteJSON(ctx, `{ breachs(scope: "repo/client/main.go") { id } }`, nil)
 	if err != nil {
 		t.Fatalf("query failed: %v", err)
 	}
@@ -1366,7 +1369,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 			sections { id name }
 			definitions { id name kind }
 		}
-		breachs {
+		breachs(scope: "repo/client/main.go") {
 			id
 			file { id }
 			folder { id }
@@ -1497,7 +1500,7 @@ func TestNodesAndEdges(t *testing.T) {
 		statutes {
 			id
 		}
-		breachs {
+		breachs(scope: "repo/client/main.go") {
 			id
 			file { id }
 			folder { id }
@@ -7747,7 +7750,7 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
 		if child.ID == "codebase" {
@@ -7850,7 +7853,7 @@ func TestGoalTreeEntityIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	goalsNode := tree.Children[2]
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
@@ -7885,7 +7888,7 @@ func TestContributorTreeEntityIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "contributors" {
@@ -7912,7 +7915,7 @@ func TestCheckpointTreeEntityIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "checkpoints" {
@@ -8210,7 +8213,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
 		if child.ID == "codebase" {
@@ -8308,7 +8311,7 @@ func TestGoalTreeIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	goalsNode := tree.Children[2]
 	goalCount := 0
 	for _, c := range goalsNode.Children {
@@ -8351,7 +8354,7 @@ func TestContributorTreeIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "contributors" {
@@ -8393,7 +8396,7 @@ func TestCheckpointTreeIDs(t *testing.T) {
 	}
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	tree := BuildMonorepoTree(context.Background())
+	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "checkpoints" {
@@ -12602,7 +12605,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketRead returned error: %s", readResult.Error)
 	}
 
-	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Test summary", []string{"repo/client/main.go"}, "", true)
+	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Test summary", []string{"repo/client/package.json"}, "", true)
 	if closeResult.Error != "" {
 		t.Fatalf("ToolTicketClose returned error: %s", closeResult.Error)
 	}
@@ -12612,7 +12615,7 @@ func TestToolTicketLifecycle(t *testing.T) {
 		t.Fatalf("ToolTicketReopen returned error: %s", reopenResult.Error)
 	}
 
-	ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Final close", []string{"repo/client/main.go"}, "", true)
+	ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Final close", []string{"repo/client/package.json"}, "", true)
 	ticketPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 	os.RemoveAll(ticketPath)
 }
@@ -12664,7 +12667,7 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 		t.Fatal("ToolTicketOpen returned nil ticket")
 	}
 	defer func() {
-		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/client/main.go"}, "", true)
+		ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "cleanup", []string{"repo/client/package.json"}, "", true)
 		os.RemoveAll(GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug))
 	}()
 
@@ -12702,7 +12705,7 @@ func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
 		t.Fatalf("parseTicketPath(%q) error: %v", fullYearPath, err)
 	}
 
-	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/client/main.go"}, "", true)
+	closeResult := ToolTicketClose(year, month, day, slug, "Test summary", []string{"repo/client/package.json"}, "", true)
 	if closeResult.Error != "" {
 		t.Fatalf("ToolTicketClose with full year path returned error: %s", closeResult.Error)
 	}
@@ -13697,8 +13700,8 @@ func TestBuildMonorepoTree(t *testing.T) {
 	InvalidateTechnologyCache()
 
 	ctx := context.Background()
-	treeNoSections := BuildMonorepoTree(ctx)
-	treeSections := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+	treeNoSections := BuildMonorepoTreeCached(ctx)
+	treeSections := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true})
 
 	t.Run("builds tree with categories", func(t *testing.T) {
 		if treeNoSections == nil {
@@ -21359,6 +21362,9 @@ func TestEventIDsUseSemioRepoFormat(t *testing.T) {
 
 // 🧜#region ⏲️Mermaid
 func TestMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("walks all bundles for LOC treemap; too slow for -short runs on large monorepos")
+	}
 	root := findTestRepoRoot(".")
 	SetRootDir(root)
 	result := MermaidLocByTechnologiesBundlesFoldersFiles()
@@ -22768,11 +22774,34 @@ func TestLocCommand(t *testing.T) {
 		if got["Go"].Percent <= 0 || got[locAggTotal].Percent != 100 {
 			t.Fatalf("percents go=%v total=%v", got["Go"].Percent, got[locAggTotal].Percent)
 		}
+		if got["Go"].WipPercent != 100 || got[locAggTotal].WipPercent != 100 {
+			t.Fatalf("wip percents go=%v total=%v", got["Go"].WipPercent, got[locAggTotal].WipPercent)
+		}
+	})
+	t.Run("wip percent uses branch denominator for contributor rows", func(t *testing.T) {
+		langs := []string{"Go", "TypeScript", "C#", "Python", "Rust"}
+		by := map[string]map[string]locCumulativePair{
+			"alice": {"Go": {Added: 5, Removed: 1}},
+			"bob":   {"Go": {Added: 15, Removed: 3}},
+		}
+		branchDenom := locSumEditedPairs(map[string]locCumulativePair{
+			"Go": {Added: 20, Removed: 4},
+		}, locMakeNumstatLangSet(langs))
+		if branchDenom != 24 {
+			t.Fatalf("branch denom %d", branchDenom)
+		}
+		out := locByContributorsToSnapshot(by, langs, branchDenom)
+		if out["alice"]["Go"].WipPercent != 25 {
+			t.Fatalf("alice wip %% want 25 got %v", out["alice"]["Go"].WipPercent)
+		}
+		if out["bob"]["Go"].WipPercent != 75 {
+			t.Fatalf("bob wip %% want 75 got %v", out["bob"]["Go"].WipPercent)
+		}
 	})
 	t.Run("render markdown", func(t *testing.T) {
 		scan := map[string]int{"Go": 1, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 0, "Data": 0}
 		cum := map[string]locCumulativePair{"Go": {Added: 1, Removed: 1}}
-		r := &LocReport{Snapshot: locComposeLocReportSnapshot(cum, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"})}
+		r := &LocReport{Snapshot: locComposeLocReportSnapshot(cum, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"}, 0)}
 		var b strings.Builder
 		renderLocMarkdown(&b, r, false, false)
 		s := b.String()
@@ -22782,7 +22811,7 @@ func TestLocCommand(t *testing.T) {
 	})
 	t.Run("text no ansi for pipe", func(t *testing.T) {
 		scan := map[string]int{"Go": 1, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 0, "Data": 0}
-		r := &LocReport{Snapshot: locComposeLocReportSnapshot(map[string]locCumulativePair{}, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"})}
+		r := &LocReport{Snapshot: locComposeLocReportSnapshot(map[string]locCumulativePair{}, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"}, 0)}
 		var b strings.Builder
 		renderLocText(&b, r, false, false, false)
 		if strings.ContainsRune(b.String(), '\x1b') {

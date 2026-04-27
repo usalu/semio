@@ -102,23 +102,89 @@ export type SetResult =
 
 export type KitCommandLifecyclePhase = "accepted" | "succeeded" | "failed";
 
+/**
+ * @emoji 🧾 `KitChangeKind` on the wire (camelCase from `semio/rs`), plus any `other` label inside `other`.
+ */
+export type KitChangeKindWire =
+  | "inferred"
+  | "setKitMetadata"
+  | "addType"
+  | "removeType"
+  | "modifyType"
+  | "addDesign"
+  | "removeDesign"
+  | "modifyDesign"
+  | "addPiece"
+  | "removePiece"
+  | "connect"
+  | "disconnect"
+  | "unifyCheckpoints"
+  | "markRelease"
+  | (string & { readonly _semioExt?: 1 });
+
+/** @emoji 🪢 Recursive JSON from GraphQL / serde kit scalars (replaces ad hoc `Record<string, unknown>` at the boundary). */
+export type SemioJson = string | number | boolean | null | readonly SemioJson[] | { readonly [k: string]: SemioJson };
+
+/**
+ * @emoji 🧾 Tags accepted on `KitStore` shell / scoped batch mappers (matches `kitStore` batch and {@link WasmKitStoreClient} routing).
+ * @public
+ */
+export const SEMIO_SHELL_COMMAND_KINDS = {
+  changeKitCommands: 1,
+  changeKitWithInverse: 1,
+  undo: 1,
+  redo: 1,
+  clusterPieces: 1,
+  dragPieces: 1,
+  movePieces: 1,
+  fixPieces: 1,
+  flattenDesign: 1,
+  expandDesign: 1,
+  deleteConnection: 1,
+  changePieceType: 1,
+  createHangingPieces: 1,
+  createConnectedPiece: 1,
+  createFixedPiece: 1,
+  pasteDesignSelection: 1,
+  listConflicts: 1,
+  backboneStatus: 1,
+  attachBackbone: 1,
+  detachBackbone: 1,
+  resolveConflict: 1,
+  syncNow: 1,
+} as const;
+export type SemioShellCommandName = keyof typeof SEMIO_SHELL_COMMAND_KINDS;
+
 export type KitCommandLifecycleEvent = {
   semioKitCommand: {
     requestId: KitCommandRequestId;
-    commandKind: string;
+    commandKind: SemioShellCommandName | (string & { readonly _semioShellLabel?: 1 });
     phase: KitCommandLifecyclePhase;
-    result?: unknown;
+    result?: SemioJson;
     error?: SetError;
   };
 };
 
-/** @emoji 🧭 Backbone / conflict wire shapes (opaque JSON; native coordinator fills these). */
-export type BackboneConfig = Record<string, unknown>;
-export type BackboneStatusDto = Record<string, unknown>;
-export type ConflictResolution = Record<string, unknown>;
+export type KitBackboneConfigWire =
+  | { readonly Memory: null }
+  | { readonly Dev: { readonly path: string } }
+  | { readonly Local: { readonly folder: string } }
+  | { readonly Remote: { readonly url: string; readonly sessionId: string } };
+
+/** @emoji 🧭 Backbone / conflict wire shapes (serde-tagged, matches `kit_backbone_wire` in `semio/rs`). */
+export type BackboneConfig = KitBackboneConfigWire;
+export type BackboneStatusDto = {
+  readonly attached: boolean;
+  readonly kind?: string | null;
+  readonly backboneTip?: string | null;
+  readonly pendingWipCheckpoints: number;
+};
+/** @emoji 🧾 GraphQL `ConflictResolutionBatchInput` (matches `semio/graphql/schema.graphql`). */
+export type ConflictResolution = "DROP_WIP" | "FORCE_OVERWRITE_BACKBONE";
+export type KitCheckpointWire = { readonly [k: string]: SemioJson };
 export type KitConflict = {
   id: string;
-  wipCheckpoint: unknown;
+  wipCheckpoint: KitCheckpointWire;
   backboneTip?: string | null;
   reason: string;
   createdAt: string;
@@ -171,6 +237,14 @@ export type KitReadScope =
   | { readonly draft: { readonly sessionId: string; readonly draftId: string } }
   | { readonly transaction: { readonly sessionId: string; readonly draftId: string; readonly transactionId: string } };
 
+/** @emoji 🧾 GraphQL `KitReadScopeInput` (variables payload for `kitReadScope` queries). */
+export type KitReadScopeInputGraphQL =
+  | { readonly theKit: { readonly confirm: true } }
+  | { readonly checkpoint: { readonly checkpointId: string } }
+  | { readonly alternative: { readonly alternativeId: string } }
+  | { readonly draft: { readonly sessionId: string; readonly draftId: string } }
+  | { readonly transaction: { readonly sessionId: string; readonly draftId: string; readonly transactionId: string } };
+
 /** @emoji 🧭 Main committed kit line (default read scope). */
 export const theKitReadScope: KitReadScope = { theKit: null };
 
@@ -180,17 +254,16 @@ export function kitReadScopeKey(scope: KitReadScope): string {
 }
 
 /** @emoji 🧾 `KitReadScopeInput` object for async-graphql (camelCase, `theKit` uses `ConfirmOnlyInput`). */
-export function kitReadScopeToGraphQLInput(scope: KitReadScope): Record<string, unknown> {
+export function kitReadScopeToGraphQLInput(scope: KitReadScope): KitReadScopeInputGraphQL {
   if ("theKit" in scope) return { theKit: { confirm: true } };
   if ("checkpoint" in scope) return { checkpoint: { checkpointId: scope.checkpoint.checkpointId } };
   if ("alternative" in scope) return { alternative: { alternativeId: scope.alternative.alternativeId } };
   if ("draft" in scope) return { draft: { sessionId: scope.draft.sessionId, draftId: scope.draft.draftId } };
-  const t = scope as Extract<KitReadScope, { transaction: unknown }>;
   return {
     transaction: {
-      sessionId: t.transaction.sessionId,
-      draftId: t.transaction.draftId,
-      transactionId: t.transaction.transactionId,
+      sessionId: scope.transaction.sessionId,
+      draftId: scope.transaction.draftId,
+      transactionId: scope.transaction.transactionId,
     },
   };
 }
@@ -252,18 +325,52 @@ function __kitPlaneToBatchInput(plane: unknown): { origin: { x: number; y: numbe
 /** @emoji 🧾 Batch input for {@link KitStore.read} (per-command, same for all entries in a batch). */
 export type ReadWireBatch = readonly ReadKitCommand[];
 
-/** @emoji 🧾 One command’s read output object (per-command payload shape from rs). */
-export type ReadKitCommandOutput = Readonly<Record<string, unknown>>;
+/** @emoji 🧾 One entry in a {@link ReadWireBatch} (alias for consumers that say “read wire item”). */
+export type ReadWireItem = ReadKitCommand;
+
+export type ReadPieceCommandOutput =
+  | { readonly readPieceFlatPlaneCommand: { readonly flatPlane: SemioJson } }
+  | { readonly readPieceFlatCenterCommand: { readonly flatCenter: SemioJson } }
+  | { readonly readPieceParentConnectionFullCommand: { readonly connection: SemioJson } };
+
+export type ReadTypeCommandOutput = { readonly readTypeBestRepresentationCommand: { readonly representation: SemioJson } };
+
+export type ReadDesignCommandOutput =
+  | { readonly readDesignPiecesFullCommand: { readonly pieces: readonly SemioJson[] } }
+  | { readonly readDesignConnectionsFullCommand: { readonly connections: readonly SemioJson[] } }
+  | { readonly readDesignPieceCommands: { readonly results: readonly ReadPieceCommandOutput[] } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly groups: readonly (readonly { readonly id: string }[])[] } }
+  | { readonly readDesignIncludedDesignsCommand: { readonly designs: SemioJson } }
+  | { readonly readDesignQualitySumCommand: { readonly sum: number } }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly types: readonly { readonly id: string }[]; readonly designs: readonly { readonly id: string }[] } }
+  | { readonly readDesignIncludedDesignIdsCommand: { readonly designIds: readonly string[] } };
+
+/** @emoji 🧾 One command’s read output object (per-command payload shape from `semio/rs` GraphQL). */
+export type ReadKitCommandOutput =
+  | { readonly readKitFullCommand: { readonly full: SemioJson } }
+  | { readonly readKitShallowCommand: { readonly types: readonly SemioJson[]; readonly designs: readonly SemioJson[] } }
+  | { readonly readKitTypeIdsCommand: { readonly typeIds: readonly SemioJson[] } }
+  | { readonly readKitDesignIdsCommand: { readonly designIds: readonly SemioJson[] } }
+  | { readonly readKitTypesMetadataCommand: { readonly types: readonly SemioJson[] } }
+  | { readonly readKitDesignsMetadataCommand: { readonly designs: readonly SemioJson[] } }
+  | { readonly readKitTypesShallowCommand: { readonly types: readonly SemioJson[] } }
+  | { readonly readKitDesignsShallowCommand: { readonly designs: readonly SemioJson[] } }
+  | { readonly readKitAuthorsShallowCommand: { readonly authors: readonly SemioJson[] } }
+  | { readonly readKitMetadataCommand: { readonly metadata: SemioJson } }
+  | { readonly readKitColoredConnectorsCommand: { readonly rows: SemioJson } }
+  | { readonly readKitDesignCommands: { readonly results: readonly ReadDesignCommandOutput[] } }
+  | { readonly readKitTypeCommands: { readonly results: readonly ReadTypeCommandOutput[] } };
 
 /** @emoji 🧾 Batch output from {@link KitStore.read}. */
 export type ReadWireBatchResult = readonly ReadKitCommandOutput[];
 
-/** @emoji 📣 GraphQL `KitEvent` scalar + synthetic invalidation rows used by {@link WasmKitStoreClient}. */
+/**
+ * @emoji 📣 GraphQL `KitEvent` scalar + synthetic invalidation rows used by {@link WasmKitStoreClient};
+ * unknown tagged shapes (Design/Type/… from `semio/rs`) are {@link SemioJson} object trees.
+ */
+type KitEventEntity = { readonly [k: string]: SemioJson };
 export type KitEvent = Readonly<
-  | { readonly Changed: null }
-  | { readonly ValidationInvalidated: null }
-  | KitCommandLifecycleEvent
-  | Record<string, unknown>
+  { readonly Changed: null } | { readonly ValidationInvalidated: null } | KitCommandLifecycleEvent | KitEventEntity
 >;
 
 /** @emoji 🧾 Optional filter for {@link KitStore.subscribeFiltered}. */
@@ -804,10 +911,7 @@ export async function writeKitStoreClientSchemaField(
 // #endregion 🔌WireTypes
 
 // #region 🪢InternalReadWire
-/** @emoji 🪢 Aliases for `KitStore.read` mapper outputs. */
-type ReadDesignCommandOutput = ReadKitCommandOutput;
-type ReadPieceCommandOutput = ReadKitCommandOutput;
-type ReadTypeCommandOutput = ReadKitCommandOutput;
+// Read command outputs are public {@link ReadDesignCommandOutput} / {@link ReadPieceCommandOutput} / {@link ReadTypeCommandOutput} above.
 // #endregion 🪢InternalReadWire
 
 // #region 🧰GraphqlUtil
@@ -859,13 +963,13 @@ function gqlDataKitQueryRoot<T>(d: { kitStore?: T; kitReadScope?: T } | null | u
   return d.kitStore !== undefined && d.kitStore !== null ? d.kitStore : d.kitReadScope;
 }
 
-function kitGraphqlJsonToReadonlyArray(v: unknown): readonly unknown[] {
-  if (Array.isArray(v)) return v;
+function kitGraphqlJsonToReadonlyArray(v: unknown): readonly SemioJson[] {
+  if (Array.isArray(v)) return v as readonly SemioJson[];
   if (v == null) return [];
   if (typeof v === "string") {
     try {
       const p = JSON.parse(v) as unknown;
-      return Array.isArray(p) ? p : [];
+      return Array.isArray(p) ? (p as SemioJson[]) : [];
     } catch {
       return [];
     }
@@ -912,7 +1016,7 @@ function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
         requestId: requestIdRaw,
         commandKind: value.commandKind as string,
         phase: value.phase as KitCommandLifecyclePhase,
-        result: value.result,
+        result: (value.result as SemioJson | undefined) ?? undefined,
         error,
       },
     };
@@ -1259,16 +1363,16 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Full DTO for a {@link KitReadScope} (the kit line uses the WASM snapshot; other scopes use `kitReadScope` materialization). */
-  async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<Record<string, unknown>> {
+  async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<SemioJson> {
     if (isTheKitReadScope(scope)) {
-      return (await this.snapshot()) as Record<string, unknown>;
+      return (await this.snapshot()) as unknown as SemioJson;
     }
     const data = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { liveFullDto } }` }),
     ) as { kitStore?: { liveFullDto?: unknown } | null; kitReadScope?: { liveFullDto?: unknown } | null };
     const j = gqlDataKitQueryRoot(data)?.liveFullDto;
-    if (j && typeof j === "object" && !Array.isArray(j)) return j as Record<string, unknown>;
-    return {};
+    if (j && typeof j === "object" && !Array.isArray(j)) return j as SemioJson;
+    return (await this.snapshot()) as unknown as SemioJson;
   }
 
   async materializeAt(checkpointId: string): Promise<KitFullDto> {
@@ -1502,16 +1606,18 @@ export class KitStore {
     }
   }
 
-  private backboneBatchCommandsFromJson(kind: string, shellVariables: Record<string, unknown>): Record<string, unknown>[] | null {
+  private backboneBatchCommandsFromJson(kind: string, shellVariables: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>>[] | null {
     if (kind === "attachBackbone") {
-      const c = (shellVariables.config as Record<string, unknown> | null | undefined) ?? {};
-      let bcmd: Record<string, unknown> | null = null;
-      if (typeof c.path === "string") bcmd = { dev: { path: c.path } };
-      else if (typeof c.folder === "string") bcmd = { local: { folder: c.folder } };
-      else if (typeof c.url === "string" && typeof c.sessionId === "string")
-        bcmd = { remote: { url: c.url, sessionId: c.sessionId } };
-      else bcmd = { memory: { confirm: true } };
-      return [{ backbone: { commands: [{ attachBackbone: bcmd as Record<string, unknown> }] } }];
+      const c = (shellVariables.config as BackboneConfig | null | undefined) ?? { Memory: null };
+      const bcmd: Readonly<Record<string, unknown>> =
+        "Memory" in c
+          ? { memory: { confirm: true } }
+          : "Dev" in c
+            ? { dev: { path: c.Dev.path } }
+            : "Local" in c
+              ? { local: { folder: c.Local.folder } }
+              : { remote: { url: c.Remote.url, sessionId: c.Remote.sessionId } };
+      return [{ backbone: { commands: [{ attachBackbone: bcmd }] } }];
     }
     if (kind === "detachBackbone") return [{ backbone: { commands: [{ detachBackbone: { confirm: true } }] } }];
     if (kind === "listConflicts") return [{ backbone: { commands: [{ listConflicts: { confirm: true } }] } }];
@@ -1628,12 +1734,23 @@ export class KitStore {
     if (back) {
       const b = await this.runKitStoreBatch(back);
       const r0 = b.results[0] as
-        | { kind?: string; ok?: boolean | null; conflicts?: unknown; backbone?: unknown }
+        | { kind?: string; ok?: boolean | null; conflicts?: readonly unknown[] | null; backbone?: unknown }
         | undefined;
-      if (commandKind === "listConflicts") return r0?.conflicts ?? [];
-      if (commandKind === "backboneStatus") return r0?.backbone ?? {};
-      if (commandKind === "attachBackbone" || commandKind === "detachBackbone" || commandKind === "resolveConflict" || commandKind === "syncNow")
-        return { ok: r0?.ok };
+      if (commandKind === "listConflicts")
+        return ((r0?.conflicts as readonly unknown[] | undefined) ?? []) as readonly KitConflict[];
+      if (commandKind === "backboneStatus") {
+        const br = (r0?.backbone as Partial<BackboneStatusDto> | null | undefined) ?? {};
+        return {
+          attached: br.attached ?? false,
+          kind: br.kind,
+          backboneTip: br.backboneTip,
+          pendingWipCheckpoints: br.pendingWipCheckpoints ?? 0,
+        } satisfies BackboneStatusDto;
+      }
+      if (commandKind === "attachBackbone" || commandKind === "detachBackbone" || commandKind === "resolveConflict" || commandKind === "syncNow") {
+        if (r0?.ok === false) return { ok: false, error: { kind: "Internal" as const, message: `${commandKind} rejected` } };
+        return { ok: true } as const;
+      }
       return r0;
     }
     throw new Error(`submitShellJson: unhandled kind ${commandKind}`);
@@ -1710,34 +1827,30 @@ export class KitStore {
     return this.submitShell("redo", { variables: {} });
   }
 
-  async attachBackbone(cfg: BackboneConfig): Promise<unknown> {
-    const raw = await this.submitShellJson("attachBackbone", { config: cfg });
-    return (raw as { data?: { attachBackbone?: unknown } })?.data?.attachBackbone;
+  async attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
+    return (await this.submitShellJson("attachBackbone", { config: cfg })) as SetResult;
   }
 
-  async detachBackbone(): Promise<unknown> {
-    const raw = await this.submitShellJson("detachBackbone", {});
-    return (raw as { data?: { detachBackbone?: unknown } })?.data?.detachBackbone;
+  async detachBackbone(): Promise<SetResult> {
+    return (await this.submitShellJson("detachBackbone", {})) as SetResult;
   }
 
   async backboneStatus(): Promise<BackboneStatusDto> {
-    const raw = await this.submitShellJson("backboneStatus", {});
-    return ((raw as { data?: { backboneStatus?: BackboneStatusDto } })?.data?.backboneStatus ?? {}) as BackboneStatusDto;
+    return (await this.submitShellJson("backboneStatus", {})) as BackboneStatusDto;
   }
 
-  async listConflicts(): Promise<unknown> {
+  async listConflicts(): Promise<KitConflict[]> {
     const raw = await this.submitShellJson("listConflicts", {});
-    return (raw as { data?: { listConflicts?: unknown } })?.data?.listConflicts;
+    if (Array.isArray(raw)) return raw as KitConflict[];
+    return [];
   }
 
-  async resolveConflict(id: string, strategy: ConflictResolution): Promise<unknown> {
-    const raw = await this.submitShellJson("resolveConflict", { id, strategy });
-    return (raw as { data?: { resolveConflict?: unknown } })?.data?.resolveConflict;
+  async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
+    return (await this.submitShellJson("resolveConflict", { id, strategy })) as SetResult;
   }
 
-  async syncNow(): Promise<unknown> {
-    const raw = await this.submitShellJson("syncNow", {});
-    return (raw as { data?: { syncNow?: unknown } })?.data?.syncNow;
+  async syncNow(): Promise<SetResult> {
+    return (await this.submitShellJson("syncNow", {})) as SetResult;
   }
 
   /**
@@ -1784,6 +1897,22 @@ export class KitStore {
   }
 
   private async mapReadCommand(scope: KitReadScope, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
+    if ("readKitFullCommand" in c && c.readKitFullCommand === null) {
+      const d = (await (isTheKitReadScope(scope) ? this.snapshot() : this.materializedLiveJsonForReadScope(scope))) as SemioJson;
+      return { readKitFullCommand: { full: d } };
+    }
+    if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
+      const t = await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { typesShallow } }` });
+      const tdata = kitGraphqlData(t) as { kitReadScope?: { typesShallow?: unknown } };
+      const d = await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { designsShallow } }` });
+      const ddata = kitGraphqlData(d) as { kitReadScope?: { designsShallow?: unknown } };
+      return {
+        readKitShallowCommand: {
+          types: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(tdata)?.typesShallow),
+          designs: kitGraphqlJsonToReadonlyArray(gqlDataKitQueryRoot(ddata)?.designsShallow),
+        },
+      };
+    }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
       const d = kitGraphqlData(
         await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { typeIds } }` }),
@@ -1834,7 +1963,7 @@ export class KitStore {
       const d = kitGraphqlData(
         await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { kitMetadata { id name description icon image preview remote homepage license uri created updated version } } }` }),
       ) as { kitReadScope?: { kitMetadata?: unknown } };
-      return { readKitMetadataCommand: { metadata: gqlDataKitQueryRoot(d)?.kitMetadata } };
+      return { readKitMetadataCommand: { metadata: gqlDataKitQueryRoot(d)?.kitMetadata as SemioJson } };
     }
     if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
       const d = kitGraphqlData(
@@ -1842,7 +1971,7 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!) { kitReadScope(scope: $scope) { coloredConnectors { typeId { id } connectorId { id } color } } }`,
         }),
       ) as { kitReadScope?: { coloredConnectors?: unknown } };
-      return { readKitColoredConnectorsCommand: { rows: gqlDataKitQueryRoot(d)?.coloredConnectors } };
+      return { readKitColoredConnectorsCommand: { rows: gqlDataKitQueryRoot(d)?.coloredConnectors as SemioJson } };
     }
     if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
       const { id, commands } = c.readKitDesignCommands;
@@ -1905,7 +2034,7 @@ export class KitStore {
           variables: { id: designId },
         }),
       ) as { kitReadScope?: { designByDtoId?: { includedDesigns?: unknown } | null } | null };
-      return { readDesignIncludedDesignsCommand: { designs: gqlDataKitQueryRoot(d)?.designByDtoId?.includedDesigns } };
+      return { readDesignIncludedDesignsCommand: { designs: gqlDataKitQueryRoot(d)?.designByDtoId?.includedDesigns as SemioJson } };
     }
     if ("readDesignQualitySumCommand" in cmd && cmd.readDesignQualitySumCommand) {
       const qid = cmd.readDesignQualitySumCommand.qualityId.id;
@@ -1953,7 +2082,7 @@ export class KitStore {
           variables: { d: designId, p: pieceId },
         }),
       ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: unknown } | null } | null } | null };
-      return { readPieceFlatPlaneCommand: { flatPlane: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane } };
+      return { readPieceFlatPlaneCommand: { flatPlane: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane as SemioJson } };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
       const d = kitGraphqlData(
@@ -1962,7 +2091,7 @@ export class KitStore {
           variables: { d: designId, p: pieceId },
         }),
       ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null } | null };
-      return { readPieceFlatCenterCommand: { flatCenter: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter } };
+      return { readPieceFlatCenterCommand: { flatCenter: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter as SemioJson } };
     }
     if ("readPieceParentConnectionFullCommand" in cmd && cmd.readPieceParentConnectionFullCommand === null) {
       const d = kitGraphqlData(
@@ -1971,7 +2100,7 @@ export class KitStore {
           variables: { d: designId, p: pieceId },
         }),
       ) as { kitReadScope?: { designByDtoId?: { pieceByDtoId?: { parentConnection?: unknown } | null } | null } | null };
-      return { readPieceParentConnectionFullCommand: { connection: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnection } };
+      return { readPieceParentConnectionFullCommand: { connection: gqlDataKitQueryRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnection as SemioJson } };
     }
     throw new Error(`readPiece: ${Object.keys(cmd).join(",")}`);
   }
@@ -1985,7 +2114,7 @@ export class KitStore {
           variables: { id: typeId, tags: [...tags] },
         }),
       ) as { kitReadScope?: { typeByDtoId?: { bestRepresentation?: unknown } | null } | null };
-      return { readTypeBestRepresentationCommand: { representation: gqlDataKitQueryRoot(d)?.typeByDtoId?.bestRepresentation } };
+      return { readTypeBestRepresentationCommand: { representation: gqlDataKitQueryRoot(d)?.typeByDtoId?.bestRepresentation as SemioJson } };
     }
     throw new Error(`readType: ${Object.keys(cmd).join(",")}`);
   }
@@ -2337,11 +2466,11 @@ export type KitStoreClient = SemioKitBridge & {
   getAuthors(): Promise<readonly unknown[]>;
   getKitMetadata(): Promise<unknown>;
   backboneStatus(): Promise<BackboneStatusDto>;
-  attachBackbone(cfg: BackboneConfig): Promise<unknown>;
-  detachBackbone(): Promise<unknown>;
-  listConflicts(): Promise<unknown>;
-  resolveConflict(id: string, strategy: ConflictResolution): Promise<unknown>;
-  syncNow(): Promise<unknown>;
+  attachBackbone(cfg: BackboneConfig): Promise<SetResult>;
+  detachBackbone(): Promise<SetResult>;
+  listConflicts(): Promise<KitConflict[]>;
+  resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult>;
+  syncNow(): Promise<SetResult>;
   kitGraphql(): LiveKitRoot;
   subscribe(cb: (ev: KitEvent) => void): () => void;
   readPieceFlatPlane(designId: string, pieceId: string): Promise<unknown>;
@@ -2532,6 +2661,13 @@ class LiveType {
 
 // #region 🪜LiveReadHub
 
+/** 🧾 Default {@link SemioKitLiveReadStore#getSnapshot} when a key has not polled yet (stable ref for React). */
+const SEMIO_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
+
 export class SemioKitLiveReadStore {
   private readonly snap = new Map<string, KitStoreReadSnap>();
   private readonly regs: Array<{
@@ -2560,11 +2696,11 @@ export class SemioKitLiveReadStore {
   }
 
   getSnapshot(key: string): KitStoreReadSnap {
-    return this.snap.get(key) ?? { version: 0, data: [], pending: 0 };
+    return this.snap.get(key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
   }
 
   private async poll(r: { key: string; fetch: () => Promise<unknown>; onChange: () => void }): Promise<void> {
-    const cur = this.snap.get(r.key) ?? { version: 0, data: [], pending: 0 };
+    const cur = this.snap.get(r.key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
     this.snap.set(r.key, { version: cur.version, data: cur.data, pending: cur.pending + 1 });
     r.onChange();
     try {
@@ -2631,11 +2767,28 @@ export function getSemioKitViewStore(c: KitStoreClient): SemioKitViewStore {
   return v;
 }
 
+/** 🧾 Stable empty design-read snapshots for {@link SemioKitDesignReadStore}. */
+const SEMIO_KIT_DESIGN_READ_EMPTY_LIST: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
+const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze({}) as unknown,
+  pending: 0,
+}) as KitStoreReadSnap;
+
 export class SemioKitDesignReadStore {
+  private snapCache: { k: string; snap: KitStoreReadSnap } | null = null;
+
   constructor(private readonly client: KitStoreClient) {}
 
   subscribe(_designId: string, _field: KitDesignReadKind, onChange: () => void): () => void {
-    return this.client.subscribe(() => onChange());
+    return this.client.subscribe(() => {
+      this.snapCache = null;
+      onChange();
+    });
   }
 
   getSnapshot(designId: string, field: KitDesignReadKind): KitStoreReadSnap {
@@ -2643,14 +2796,30 @@ export class SemioKitDesignReadStore {
       designs?: readonly { id?: string; pieces?: readonly unknown[]; connections?: readonly unknown[] }[];
     };
     const d = (dto.designs ?? []).find((x) => String(x.id) === String(designId));
-    if (!d) return { version: 0, data: field === "metadata" ? {} : [], pending: 0 };
-    if (field === "pieces") return { version: 0, data: [...(d.pieces ?? [])], pending: 0 };
-    if (field === "connections") return { version: 0, data: [...(d.connections ?? [])], pending: 0 };
-    const meta: Record<string, unknown> = {};
-    for (const p of d.pieces ?? []) {
-      if (p && typeof p === "object" && "id" in (p as object)) meta[String((p as { id: string }).id)] = p;
+    if (!d) return field === "metadata" ? SEMIO_KIT_DESIGN_READ_EMPTY_META : SEMIO_KIT_DESIGN_READ_EMPTY_LIST;
+    let body: unknown;
+    if (field === "pieces") {
+      body = [...(d.pieces ?? [])];
+    } else if (field === "connections") {
+      body = [...(d.connections ?? [])];
+    } else {
+      const meta: Record<string, unknown> = {};
+      for (const p of d.pieces ?? []) {
+        if (p && typeof p === "object" && "id" in (p as object)) meta[String((p as { id: string }).id)] = p;
+      }
+      body = meta;
     }
-    return { version: 0, data: meta, pending: 0 };
+    let j: string;
+    try {
+      j = `${designId}\0${field}\0${JSON.stringify(body)}`;
+    } catch {
+      this.snapCache = null;
+      return { version: 0, data: body, pending: 0 };
+    }
+    if (this.snapCache?.k === j) return this.snapCache.snap;
+    const snap: KitStoreReadSnap = { version: 0, data: body, pending: 0 };
+    this.snapCache = { k: j, snap };
+    return snap;
   }
 }
 
@@ -2666,10 +2835,15 @@ export function getSemioKitDesignReadStore(c: KitStoreClient): SemioKitDesignRea
 }
 
 export class SemioKitShallowListReadStore {
+  private snapCache: { k: string; snap: KitStoreReadSnap } | null = null;
+
   constructor(private readonly client: KitStoreClient) {}
 
   subscribe(_kind: KitShallowListKind, onChange: () => void): () => void {
-    return this.client.subscribe(() => onChange());
+    return this.client.subscribe(() => {
+      this.snapCache = null;
+      onChange();
+    });
   }
 
   getSnapshot(kind: KitShallowListKind): KitStoreReadSnap {
@@ -2678,9 +2852,19 @@ export class SemioKitShallowListReadStore {
       types?: readonly unknown[];
       authors?: readonly unknown[];
     };
-    if (kind === "designs") return { version: 0, data: [...(dto.designs ?? [])], pending: 0 };
-    if (kind === "types") return { version: 0, data: [...(dto.types ?? [])], pending: 0 };
-    return { version: 0, data: [...(dto.authors ?? [])], pending: 0 };
+    const body =
+      kind === "designs" ? [...(dto.designs ?? [])] : kind === "types" ? [...(dto.types ?? [])] : [...(dto.authors ?? [])];
+    let j: string;
+    try {
+      j = `${kind}\0${JSON.stringify(body)}`;
+    } catch {
+      this.snapCache = null;
+      return { version: 0, data: body, pending: 0 };
+    }
+    if (this.snapCache?.k === j) return this.snapCache.snap;
+    const snap: KitStoreReadSnap = { version: 0, data: body, pending: 0 };
+    this.snapCache = { k: j, snap };
+    return snap;
   }
 }
 
@@ -2981,23 +3165,23 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.backboneStatus();
   }
 
-  attachBackbone(cfg: BackboneConfig): Promise<unknown> {
+  attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
     return this.ks.attachBackbone(cfg);
   }
 
-  detachBackbone(): Promise<unknown> {
+  detachBackbone(): Promise<SetResult> {
     return this.ks.detachBackbone();
   }
 
-  listConflicts(): Promise<unknown> {
+  listConflicts(): Promise<KitConflict[]> {
     return this.ks.listConflicts();
   }
 
-  resolveConflict(id: string, strategy: ConflictResolution): Promise<unknown> {
+  resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
     return this.ks.resolveConflict(id, strategy);
   }
 
-  syncNow(): Promise<unknown> {
+  syncNow(): Promise<SetResult> {
     return this.ks.syncNow();
   }
 }
@@ -3183,22 +3367,29 @@ class FallbackKitClient implements KitStoreClient {
     return this.kit;
   }
   async backboneStatus(): Promise<BackboneStatusDto> {
-    return {};
+    return { attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 };
   }
-  async attachBackbone(): Promise<unknown> {
-    return {};
+  async attachBackbone(_cfg: BackboneConfig): Promise<SetResult> {
+    void _cfg;
+    this.notify();
+    return { ok: true };
   }
-  async detachBackbone(): Promise<unknown> {
-    return {};
+  async detachBackbone(): Promise<SetResult> {
+    this.notify();
+    return { ok: true };
   }
-  async listConflicts(): Promise<unknown> {
+  async listConflicts(): Promise<KitConflict[]> {
     return [];
   }
-  async resolveConflict(): Promise<unknown> {
-    return {};
+  async resolveConflict(_id: string, _strategy: ConflictResolution): Promise<SetResult> {
+    void _id;
+    void _strategy;
+    this.notify();
+    return { ok: true };
   }
-  async syncNow(): Promise<unknown> {
-    return {};
+  async syncNow(): Promise<SetResult> {
+    this.notify();
+    return { ok: true };
   }
 
   setKitReadScope(_scope: KitReadScope): void {
@@ -3547,6 +3738,7 @@ export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 export const FileSchema = z.object({
   id: z.string(),
   name: z.string().optional(),
+  folder: FolderIdSchema.optional(),
   url: z.string().optional(),
   remote: z.string().optional(),
   mime: z.string().optional(),
@@ -3561,6 +3753,7 @@ export type FilePlain = z.infer<typeof FileSchema>;
 export class File implements FilePlain {
   id!: string;
   name?: string;
+  folder?: { id: string };
   url?: string;
   remote?: string;
   mime?: string;
@@ -4754,6 +4947,9 @@ export type KitHostStore = { getSnapshot(): KitHostStoreSnapshot; subscribe(onCh
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
+  /** 🧾 Cache so {@link getSnapshot} returns the same {@link Kit} instance while bridge DTO is unchanged (React useSyncExternalStore). */
+  private _bridgeDtoJson: string | undefined;
+  private _bridgeKitSnap: Kit | undefined;
   /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: KitLike) {
@@ -4761,11 +4957,37 @@ export class InMemoryKitStore implements KitHostStore {
   }
   getSnapshot(): KitHostStoreSnapshot {
     const c = (this as InMemoryKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
-    return { kit, sync: DEFAULT_KIT_SYNC };
+    if (!c) {
+      this._bridgeDtoJson = undefined;
+      this._bridgeKitSnap = undefined;
+      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
+    }
+    const dto = c.getDto() as KitLike;
+    let j: string;
+    try {
+      j = JSON.stringify(dto);
+    } catch {
+      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
+    }
+    if (this._bridgeDtoJson !== j) {
+      this._bridgeDtoJson = j;
+      this._bridgeKitSnap = asKitInstance(dto);
+    }
+    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
-  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) { try { l(); } catch { /* ignore */ } } }
+  replace(kit: Kit) {
+    this._kit = kit;
+    this._bridgeDtoJson = undefined;
+    this._bridgeKitSnap = undefined;
+    for (const l of this.listeners) {
+      try {
+        l();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 }
 
 export type KitJsonFileAdapter = { read: () => Promise<string>; write: (json: string) => Promise<void> };
@@ -4785,6 +5007,8 @@ export type KitFolderAdapter = {
 export class JsonFileKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
+  private _bridgeDtoJson: string | undefined;
+  private _bridgeKitSnap: Kit | undefined;
   /** @internal */
   readonly name = "JsonFileKitStore";
   private constructor(private readonly adapter: KitJsonFileAdapter, seed: Kit) { this._kit = seed; }
@@ -4795,16 +5019,39 @@ export class JsonFileKitStore implements KitHostStore {
   }
   getSnapshot(): KitHostStoreSnapshot {
     const c = (this as JsonFileKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
-    return { kit, sync: DEFAULT_KIT_SYNC };
+    if (!c) {
+      this._bridgeDtoJson = undefined;
+      this._bridgeKitSnap = undefined;
+      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
+    }
+    const dto = c.getDto() as KitLike;
+    let j: string;
+    try {
+      j = JSON.stringify(dto);
+    } catch {
+      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
+    }
+    if (this._bridgeDtoJson !== j) {
+      this._bridgeDtoJson = j;
+      this._bridgeKitSnap = asKitInstance(dto);
+    }
+    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
-  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void this.adapter.write(JSON.stringify(kit.toJSON())); }
+  replace(kit: Kit) {
+    this._kit = kit;
+    this._bridgeDtoJson = undefined;
+    this._bridgeKitSnap = undefined;
+    for (const l of this.listeners) l();
+    void this.adapter.write(JSON.stringify(kit.toJSON()));
+  }
 }
 
 export class FolderKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
+  private _bridgeDtoJson: string | undefined;
+  private _bridgeKitSnap: Kit | undefined;
   /** @internal */
   readonly name = "FolderKitStore";
   private constructor(private readonly adapter: KitFolderAdapter, seed: Kit) { this._kit = seed; }
@@ -4822,11 +5069,39 @@ export class FolderKitStore implements KitHostStore {
   }
   getSnapshot(): KitHostStoreSnapshot {
     const c = (this as FolderKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    const kit = c ? asKitInstance(c.getDto() as any) : this._kit;
-    return { kit, sync: DEFAULT_KIT_SYNC };
+    if (!c) {
+      this._bridgeDtoJson = undefined;
+      this._bridgeKitSnap = undefined;
+      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
+    }
+    const dto = c.getDto() as KitLike;
+    let j: string;
+    try {
+      j = JSON.stringify(dto);
+    } catch {
+      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
+    }
+    if (this._bridgeDtoJson !== j) {
+      this._bridgeDtoJson = j;
+      this._bridgeKitSnap = asKitInstance(dto);
+    }
+    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
-  replace(kit: Kit) { this._kit = kit; for (const l of this.listeners) l(); void (async () => { try { const enc = new TextEncoder().encode(JSON.stringify(kit.toJSON())); await this.adapter.writeKit(enc); } catch { /* ignore */ } })(); }
+  replace(kit: Kit) {
+    this._kit = kit;
+    this._bridgeDtoJson = undefined;
+    this._bridgeKitSnap = undefined;
+    for (const l of this.listeners) l();
+    void (async () => {
+      try {
+        const enc = new TextEncoder().encode(JSON.stringify(kit.toJSON()));
+        await this.adapter.writeKit(enc);
+      } catch {
+        /* ignore */
+      }
+    })();
+  }
 }
 
 export async function createJsonFileKitStore(adapter: KitJsonFileAdapter) { return await JsonFileKitStore.create(adapter); }

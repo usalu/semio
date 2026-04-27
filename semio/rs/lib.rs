@@ -15896,17 +15896,30 @@ pub mod events {
         FlattenInvalidated { design: Id, pieces: Vec<Id> },
         ValidationInvalidated,
         SetRejected { event: Box<KitEvent>, error: crate::error::SetError },
+        /// 📣 Correlates inbound kit control-plane requests with acceptance / outcome on the bus.
         SemioKitCommand {
             #[serde(rename = "requestId")]
             request_id: String,
             #[serde(rename = "commandKind")]
             command_kind: String,
-            phase: String,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            result: Option<serde_json::Value>,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            error: Option<serde_json::Value>,
+            /// 📣 `accepted` → `succeeded` | `failed` lifecycle; matches JS {@linkcode KitCommandLifecyclePhase}.
+            phase: SemioKitCommandPhase,
+            /// 📣 On success, optional batch semantic (see [`crate::change_command::ChangeKitCommand::batch_kind`] / [`crate::kit_change::KitChangeKind`]).
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            result: Option<crate::kit_change::KitChangeKind>,
+            /// 📣 Populated when [`Self::SemioKitCommand::phase`] is `Failed`.
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            error: Option<crate::error::SetError>,
         },
+    }
+
+    /// 📣 Subscription / GraphQL command lifecycle (camelCase in JSON).
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "lowercase")]
+    pub enum SemioKitCommandPhase {
+        Accepted,
+        Succeeded,
+        Failed,
     }
 
     impl KitEvent {
@@ -29385,7 +29398,7 @@ mod tests {
             use async_graphql::ScalarType;
 
             use crate::error::SetError;
-            use crate::events::{DesignEvent, KitEvent, KitField};
+            use crate::events::{DesignEvent, KitEvent, KitField, SemioKitCommandPhase};
             use crate::id::Id;
             use crate::kit_graphql::GqlKitEvent;
 
@@ -29417,7 +29430,7 @@ mod tests {
                 to_json(KitEvent::SemioKitCommand {
                     request_id: "req-1".to_string(),
                     command_kind: "undo".to_string(),
-                    phase: "accepted".to_string(),
+                    phase: SemioKitCommandPhase::Accepted,
                     result: None,
                     error: None,
                 }),

@@ -1,0 +1,27 @@
+{
+  "id": "sess-think",
+  "uri": "repo://session/sess-think",
+  "client": "cursor-chat",
+  "second": "2026-04-26T23:34:18Z",
+  "checkpoint": "f9eb5840e2c76b94eff37a8a1c4c651beb0f52a7",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "f9eb5840e2c76b94eff37a8a1c4c651beb0f52a7",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-04-26T23:34:18Z",
+        "session": "sess-think"
+      },
+      "native": {
+        "event": {
+          "session_id": "sess-think",
+          "text": "Planning repo modifications"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

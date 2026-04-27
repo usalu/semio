@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "go run ../mcp",
     "build": "node -e \"const cp=require('child_process');const ext=process.platform==='win32'?'.exe':'';cp.execFileSync('go',['build','-o','client'+ext,'../mcp'],{stdio:'inherit'});\"",
-    "test": "go test -v ./..."
+    "test": "go test -timeout 120s -count=1 -v ./...",
+    "test:quick": "go test -short -timeout 120s -count=1 -v ./..."
   },
   "author": {
     "name": "Ueli Saluz",

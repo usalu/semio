@@ -1,4 +1,3 @@
-// @ts-nocheck
 // #region ⚛️Header
 
 // Standalone React hooks bundle for semio.
@@ -22,7 +21,9 @@ import {
   normalizeKitFullDtoFolderPaths,
   kitReadScopeToGraphQLInput,
   theKitReadScope,
+  DesignMetadataDtoSchema,
   DesignSchema,
+  DesignShallowSchema,
   FamilySchema,
   FileSchema,
   FolderSchema,
@@ -101,11 +102,37 @@ import {
   TagSchema,
   TOLERANCE,
   Type,
+  TypeMetadataDtoSchema,
   TypeSchema,
+  TypeShallowSchema,
   TypeStore,
   Vector,
 } from "@semio/js";
-import type { KitChildEntityKind, KitEvent, KitFolderAdapter, KitReadScope, KitStoreClient, KitWriteScope, SetError, SetResult } from "@semio/js";
+import type {
+  BackboneConfig,
+  BackboneStatusDto,
+  ChangeKitCommandWire,
+  ConflictResolution,
+  DesignMetadataDto,
+  DesignShallow,
+  KitBinaryStore,
+  KitConflict,
+  KitEvent,
+  KitFileState,
+  KitFolderAdapter,
+  KitChildEntityKind,
+  KitHostStore,
+  KitHostStoreSnapshot,
+  KitJsonFileAdapter,
+  KitLike,
+  KitReadScope,
+  KitStoreClient,
+  KitWriteScope,
+  SetError,
+  SetResult,
+  TypeMetadataDto,
+  TypeShallow,
+} from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
@@ -458,7 +485,10 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     } else if (kind === "folder") {
       const rows = (plain.folders as unknown[] | undefined) ?? [];
       for (const fo of rows) {
-        if (fo && typeof fo === "object" && (fo as { id?: string }).id === entityId) (fo as { parent?: { id: string } }).parent = { id: folderId };
+        if (fo && typeof fo === "object" && (fo as { id?: string }).id === entityId) {
+          (fo as { parent?: { id: string } }).parent = { id: folderId };
+          delete (fo as { path?: string }).path;
+        }
       }
     } else {
       return { ok: false, error: { kind: "InvalidValue", message: `moveToFolder: unknown kind ${kind}` } };
@@ -501,7 +531,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
       try {
         const nf = args[0] as { id?: string; name?: string; parent?: { id?: string } };
         const rel = __kitSubfolderRelPath(merged, String(nf.id ?? ""));
-        if (rel) await adapter.createDirectory(rel);
+        if (rel) await (adapter.createDirectory as (path: string) => Promise<void>)(rel);
       } catch {
         /* ignore */
       }
@@ -523,7 +553,9 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     const snap = __kitHostPlainDtoFromStore(store);
     const folders = ((snap.folders as unknown[]) ?? []).map((row) => {
       if (row && typeof row === "object" && (row as { id?: string }).id === fid) {
-        return { ...(row as object), ...patch };
+        const mergedRow = { ...(row as object), ...patch } as Record<string, unknown>;
+        delete mergedRow.path;
+        return mergedRow;
       }
       return row;
     });
@@ -560,7 +592,8 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
 export { kitReadScopeKey, kitReadScopeToGraphQLInput, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
-export type { KitBinaryStore, KitFileState, KitHostStore, KitHostStoreSnapshot } from "@semio/js";
+export type { KitBinaryStore, KitFileState } from "@semio/js";
+export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
   KitStoreExecuteResult,
   KitDesignReadKind,
@@ -1046,8 +1079,8 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
         if (!metadata.ok || !metadata.diff) return [];
         return (design._connections ?? []).filter((connection) => {
           try {
-            const connectedId = connection.connected.wirePieceId().id;
-            const connectingId = connection.connecting.wirePieceId().id;
+            const connectedId = connection.connected.piece.id;
+            const connectingId = connection.connecting.piece.id;
             if (connectedId === piece.id) return metadata.diff.get(connectingId)?.parentPieceId === piece.id;
             if (connectingId === piece.id) return metadata.diff.get(connectedId)?.parentPieceId === piece.id;
             return false;
@@ -1061,10 +1094,10 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
     }
     if (fieldName === "alternativeTypes") return piece.alternativeTypes();
     if (fieldName === "alternativeDesigns") {
-      const nestedDesign = piece.design;
-      if (!nestedDesign || typeof nestedDesign.getDesignFamily !== "function") return [];
+      const alt = piece.design as (Design & { getDesignFamily?: () => readonly { id: string }[] }) | undefined;
+      if (!alt || typeof alt.getDesignFamily !== "function") return [];
       try {
-        return nestedDesign.getDesignFamily().filter((entry) => entry.id !== nestedDesign.id);
+        return alt.getDesignFamily!().filter((entry) => entry.id !== alt.id);
       } catch {
         return [];
       }
@@ -1207,7 +1240,7 @@ async function createNodeJsonFileAdapter(filePath: string) {
       try {
         return await fs.readFile(filePath, "utf8");
       } catch {
-        return null;
+        return "";
       }
     },
     async write(json: string) {
@@ -1247,7 +1280,7 @@ async function createNodeFolderAdapter(folderPath: string) {
       try {
         return new Uint8Array(await fs.readFile(kitDbPath));
       } catch {
-        return null;
+        return undefined;
       }
     },
     async writeKit(data: Uint8Array) {
@@ -1259,7 +1292,7 @@ async function createNodeFolderAdapter(folderPath: string) {
         const data = await fs.readFile(path.join(folderPath, relativePath));
         return new Blob([data]);
       } catch {
-        return null;
+        return undefined;
       }
     },
     async writeFile(relativePath: string, blob: Blob) {
@@ -1300,15 +1333,19 @@ async function createStoreFromBackbone(backbone: KitBackboneConfig | undefined, 
   if (resolvedBackbone.kind === "local") {
     return createFolderKitStore(await createNodeFolderAdapter(resolvedBackbone.folderPath), initialKit ? (asKitInstance(initialKit).toJSON() as any) : undefined);
   }
-  return createSessionKitStore({
-    serverUrl: resolvedBackbone.serverUrl,
-    sessionId: resolvedBackbone.sessionId,
-    kitName: resolvedBackbone.kitName,
-    personId: resolvedBackbone.personId,
-    clientId: resolvedBackbone.clientId,
-    authToken: resolvedBackbone.authToken,
-    readOnly: resolvedBackbone.readOnly,
-  });
+  if (resolvedBackbone.kind === "remote") {
+    return createSessionKitStore({
+      serverUrl: resolvedBackbone.serverUrl,
+      sessionId: resolvedBackbone.sessionId,
+      kitName: resolvedBackbone.kitName,
+      personId: resolvedBackbone.personId,
+      clientId: resolvedBackbone.clientId,
+      authToken: resolvedBackbone.authToken,
+      readOnly: resolvedBackbone.readOnly,
+    });
+  }
+  const k = (resolvedBackbone as { kind?: string }).kind;
+  throw new Error(`semio/react: unsupported backbone${k ? ` (kind: ${k})` : ""}`);
 }
 
 /** @emoji 📌Derives file/folder/remote/temporary from backbone or store constructor. */
@@ -1734,6 +1771,8 @@ export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapsho
   const runtime = useKitRuntimeSafe();
   const effectiveKitId = useResolvedKitIdentifier(explicitKitId);
   const scopeKey = useKitDataScopeKey();
+  const snapshotRef = React.useRef<KitHostStoreSnapshot | null>(null);
+  const storeRef = React.useRef<KitHostStore | null>(null);
   const subscribe = React.useCallback(
     (onStoreChange: () => void) => {
       if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
@@ -1744,15 +1783,40 @@ export function useKitStoreSnapshot(explicitKitId?: string): KitHostStoreSnapsho
     [runtime, effectiveKitId, scopeKey],
   );
   const getSnapshot = React.useCallback(() => {
-    if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
-      return runtime.store.getSnapshot();
+    if (!runtime || !effectiveKitId || runtime.kitId !== effectiveKitId) {
+      snapshotRef.current = null;
+      storeRef.current = null;
+      return null;
     }
-    return null;
+    const st = runtime.store;
+    if (storeRef.current !== st) {
+      storeRef.current = st;
+      snapshotRef.current = null;
+    }
+    const snap = st.getSnapshot();
+    const prev = snapshotRef.current;
+    if (
+      prev &&
+      prev.kit === snap.kit &&
+      prev.sync.status === snap.sync.status &&
+      prev.sync.dirty === snap.sync.dirty &&
+      prev.sync.readonly === snap.sync.readonly &&
+      prev.sync.lastSyncedAt === snap.sync.lastSyncedAt &&
+      prev.sync.error === snap.sync.error
+    ) {
+      return prev;
+    }
+    snapshotRef.current = snap;
+    return snap;
   }, [runtime, effectiveKitId, scopeKey]);
   return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-const EMPTY_KIT_READ_SNAP: KitStoreReadSnap = { version: 0, data: Object.freeze([]) as readonly unknown[], pending: 0 };
+const EMPTY_KIT_READ_SNAP: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
 
 /**
  * @emoji 📌 `useSyncExternalStore` on a `getSnapshot`/`subscribe` pair with a stable server snapshot.
@@ -1783,6 +1847,30 @@ const EMPTY_KIT_TYPES_METADATA: readonly unknown[] = [];
 const EMPTY_KIT_DESIGN_IDS: readonly string[] = [];
 const EMPTY_KIT_DESIGNS_METADATA: readonly unknown[] = [];
 
+/** 🧾 Stable {@link KitStoreReadSnap} identities for {@link useSemioReadSnap} idle branches (avoid React #520). */
+const EMPTY_KIT_READ_SNAP_WITH_TYPE_IDS: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: EMPTY_KIT_TYPE_IDS,
+  pending: 0,
+}) as KitStoreReadSnap;
+const EMPTY_KIT_READ_SNAP_WITH_TYPES_METADATA: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: EMPTY_KIT_TYPES_METADATA,
+  pending: 0,
+}) as KitStoreReadSnap;
+const EMPTY_KIT_READ_SNAP_WITH_DESIGN_IDS: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: EMPTY_KIT_DESIGN_IDS,
+  pending: 0,
+}) as KitStoreReadSnap;
+const EMPTY_KIT_READ_SNAP_WITH_DESIGNS_METADATA: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: EMPTY_KIT_DESIGNS_METADATA,
+  pending: 0,
+}) as KitStoreReadSnap;
+const EMPTY_KIT_READ_SNAP_FALSE: KitStoreReadSnap = Object.freeze({ version: 0, data: false as unknown, pending: 0 }) as KitStoreReadSnap;
+const EMPTY_KIT_READ_SNAP_ZERO: KitStoreReadSnap = Object.freeze({ version: 0, data: 0 as unknown, pending: 0 }) as KitStoreReadSnap;
+
 /** @emoji 📌 Type ids from live kit graph (`ReadKitTypeIdsCommand`); async hub + {@link KitStore.kindRowIds}. */
 export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]> {
   const runtime = useKitRuntime();
@@ -1811,7 +1899,7 @@ export function useTypesIds(explicitKitId?: string): HookTriad<readonly string[]
     [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_TYPE_IDS };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP_WITH_TYPE_IDS;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -1853,7 +1941,7 @@ export function useTypesMetadata(explicitKitId?: string): HookTriad<readonly unk
     [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_TYPES_METADATA };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP_WITH_TYPES_METADATA;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -1895,7 +1983,7 @@ export function useDesignsIds(explicitKitId?: string): HookTriad<readonly string
     [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_DESIGN_IDS };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP_WITH_DESIGN_IDS;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -1937,7 +2025,7 @@ export function useDesignsMetadata(explicitKitId?: string): HookTriad<readonly u
     [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return { ...EMPTY_KIT_READ_SNAP, data: EMPTY_KIT_DESIGNS_METADATA };
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP_WITH_DESIGNS_METADATA;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, runtime.kitId, resolved, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -2797,7 +2885,7 @@ export function useWriteIndicator(status: WriteStatus): {
   warning?: SetError;
 } {
   if (status.kind === "readonly") return { disabled: true, spinning: false };
-  if (status.kind === "pending") return { disabled: true, spinning: true, error: status.lastError, warning: undefined };
+  if (status.kind === "pending") return { disabled: true, spinning: true, error: undefined, warning: undefined };
   if (status.kind === "error") return { disabled: false, spinning: false, error: status.lastError };
   return { disabled: false, spinning: false };
 }
@@ -3158,7 +3246,7 @@ export function useCanUndo(): HookTriad<boolean> {
     [runtime.kitClient],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: false };
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP_FALSE;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot("canUndo");
   }, [runtime.kitClient]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -3185,7 +3273,7 @@ export function useCanRedo(): HookTriad<boolean> {
     [runtime.kitClient],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: false };
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP_FALSE;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot("canRedo");
   }, [runtime.kitClient]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4328,7 +4416,7 @@ function mergeWriteStatuses(...statuses: WriteStatus[]): WriteStatus {
  */
 export type UseTypesResult = {
   types: any[];
-  shallowTypes: TypeShallowDto[];
+  shallowTypes: TypeShallow[];
   typesMetadata: TypeMetadataDto[];
   typeIds: string[];
   createType: (dto: unknown) => Promise<SetResult>;
@@ -4345,14 +4433,14 @@ export function useTypes(): UseTypesResult {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => (t as Type).toShallow());
+    return types.map((t) => TypeShallowSchema.parse((t as Type).toPlain()));
   }, [types]);
 
   const typesMetadata = React.useMemo(() => {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => (t as Type).toMeta());
+    return types.map((t) => TypeMetadataDtoSchema.parse((t as Type).toPlain()));
   }, [types]);
 
   const typeIds = React.useMemo(() => {
@@ -4380,7 +4468,7 @@ export function useTypes(): UseTypesResult {
  */
 export type UseDesignsResult = {
   designs: any[];
-  shallowDesigns: DesignShallowDto[];
+  shallowDesigns: DesignShallow[];
   designsMetadata: DesignMetadataDto[];
   designIds: string[];
   createDesign: (dto: unknown) => Promise<SetResult>;
@@ -4397,14 +4485,14 @@ export function useDesigns(): UseDesignsResult {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => (d as Design).toShallow());
+    return designs.map((d) => DesignShallowSchema.parse((d as Design).toPlain()));
   }, [designs]);
 
   const designsMetadata = React.useMemo(() => {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => (d as Design).toMeta());
+    return designs.map((d) => DesignMetadataDtoSchema.parse((d as Design).toPlain()));
   }, [designs]);
 
   const designIds = React.useMemo(() => {
@@ -4434,7 +4522,7 @@ export function useAuthors(): HookRead<any[]> {
 
 export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<any> {
   const [map, status] = usePiecesMetadataMap(designId);
-  const value = React.useMemo(() => (pieceId ? map[pieceId] : undefined), [map, pieceId]);
+  const value = React.useMemo(() => (pieceId && map != null ? map[pieceId] : undefined), [map, pieceId]);
   return [value, status] as const;
 }
 
@@ -4609,7 +4697,7 @@ export function useIncludedDesigns(designId?: string): HookRead<any[]> {
     [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4653,7 +4741,7 @@ export function useDesignClusterableGroups(designId?: string, selection?: Readon
     [runtime.kitClient, designId, readScope, key, selectionDep, selection],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4695,7 +4783,7 @@ export function useDesignQualitySum(designId?: string, qualityId?: string): Hook
     [runtime.kitClient, designId, qualityId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId || !qualityId) return { ...EMPTY_KIT_READ_SNAP, data: 0 };
+    if (!runtime.kitClient || !designId || !qualityId) return EMPTY_KIT_READ_SNAP_ZERO;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, qualityId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4773,7 +4861,7 @@ export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
     [runtime.kitClient],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient) return { ...EMPTY_KIT_READ_SNAP, data: [] as unknown[] };
+    if (!runtime.kitClient) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4815,7 +4903,7 @@ export function useReplacableTypes(designId?: string, pieceIds?: string[]): Hook
     [runtime.kitClient, designId, readScope, key, pieceKey],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    if (!runtime.kitClient || !designId || !pieceKey) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key, pieceKey]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4857,7 +4945,7 @@ export function useReplacableDesigns(designId?: string, pieceIds?: string[]): Ho
     [runtime.kitClient, designId, readScope, key, pieceKey],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId || !pieceKey) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    if (!runtime.kitClient || !designId || !pieceKey) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key, pieceKey]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -4896,7 +4984,7 @@ export function useExplodeableDesignNodes(designId?: string): HookRead<string[]>
     [runtime.kitClient, designId, readScope, key],
   );
   const getSnap = React.useCallback(() => {
-    if (!runtime.kitClient || !designId) return { ...EMPTY_KIT_READ_SNAP, data: [] as string[] };
+    if (!runtime.kitClient || !designId) return EMPTY_KIT_READ_SNAP;
     return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
   }, [runtime.kitClient, designId, key]);
   const snap = useSemioReadSnap(subscribe, getSnap, getSnap);
@@ -5242,7 +5330,7 @@ export function useKitCommandEngineExplicitOrigin(kitStore: KitHostStore | null)
 }
 
 /** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes. */
-export function useOpenKitShallows(): KitShallowDto[] {
+export function useOpenKitShallows(): Kit[] {
   const reg = useKitRegistry();
   const idsKey = reg.list().slice().sort().join("|");
   const [tick, setTick] = React.useState(0);
@@ -5260,7 +5348,7 @@ export function useOpenKitShallows(): KitShallowDto[] {
         .list()
         .map((kid) => reg.get(kid))
         .filter((e): e is KitRegistryEntry => e != null)
-        .map((e) => e.store.getSnapshot().kit as KitShallowDto),
+        .map((e) => e.store.getSnapshot().kit),
     [reg, idsKey, tick],
   );
 }
@@ -5426,20 +5514,16 @@ export type {
   Connector,
   CoordinatePlain,
   DesignDiff,
+  DesignMetadataDto,
   DesignDiffOperationResult,
   DesignOperationResult,
   DesignPlain,
-  DesignShallowDto,
+  DesignShallow,
   FlatMerkleCacheEntry,
   Id,
-  KitBinaryStore,
   KitDiff,
-  KitFileState,
   KitFolderAdapter,
   KitJsonFileAdapter,
-  KitShallowDto,
-  KitHostStore,
-  KitHostStoreSnapshot,
   MoveVector,
   OperationResult,
   PieceDiff,
@@ -5447,7 +5531,8 @@ export type {
   Port,
   QualityDiff,
   TypeDiff,
-  TypeShallowDto,
+  TypeShallow,
+  TypeMetadataDto,
 } from "@semio/js";
 export { normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
 export type { KitCommandContext, KitCommandResult } from "@semio/js";
@@ -16527,11 +16612,11 @@ export const schemaHooks = Object.freeze({
 });
 
 export function useSchemaHook(hookName: string, idValue?: string): HookTriad<any> {
-  const hook = schemaHooks[hookName];
+  const hook = (schemaHooks as Readonly<Record<string, (idValue?: string) => HookTriad<unknown> | undefined>>)[hookName];
   if (typeof hook !== "function") {
     return [undefined, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
   }
-  return hook(idValue);
+  return hook(idValue) as HookTriad<any>;
 }
 
 // #endregion ⚛️Direct Domain Exports
@@ -16555,8 +16640,8 @@ if (shouldRunReactEmbeddedTests) {
     ({
       getDto: () => kitJsonFromStore(store),
       getSnapshot: async () => kitJsonFromStore(store),
-      submitChangeKitCommands: async (commands) => {
-        const kit = kitJsonFromStore(store) as Record<string, unknown>;
+      submitChangeKitCommands: async (commands: readonly ChangeKitCommandWire[]) => {
+        const kit = kitJsonFromStore(store) as KitFullDto;
         for (const cmd of commands) {
           const c = cmd as Record<string, unknown>;
           if ("name" in c && c.name && typeof c.name === "object") {
@@ -16565,12 +16650,12 @@ if (shouldRunReactEmbeddedTests) {
             kit.name = nm;
           }
           if ("description" in c && c.description && typeof c.description === "object")
-            kit.description = (c.description as { description?: string | null }).description;
-          if ("icon" in c && c.icon && typeof c.icon === "object") kit.icon = (c.icon as { icon?: string | null }).icon;
-          if ("image" in c && c.image && typeof c.image === "object") kit.image = (c.image as { image?: string | null }).image;
-          if ("version" in c && c.version && typeof c.version === "object") kit.version = (c.version as { version?: string | null }).version;
-          if ("homepage" in c && c.homepage && typeof c.homepage === "object") kit.homepage = (c.homepage as { homepage?: string | null }).homepage;
-          if ("license" in c && c.license && typeof c.license === "object") kit.license = (c.license as { license?: string | null }).license;
+            kit.description = (c.description as { description?: string | null }).description ?? undefined;
+          if ("icon" in c && c.icon && typeof c.icon === "object") kit.icon = (c.icon as { icon?: string | null }).icon ?? undefined;
+          if ("image" in c && c.image && typeof c.image === "object") kit.image = (c.image as { image?: string | null }).image ?? undefined;
+          if ("version" in c && c.version && typeof c.version === "object") kit.version = (c.version as { version?: string | null }).version ?? undefined;
+          if ("homepage" in c && c.homepage && typeof c.homepage === "object") kit.homepage = (c.homepage as { homepage?: string | null }).homepage ?? undefined;
+          if ("license" in c && c.license && typeof c.license === "object") kit.license = (c.license as { license?: string | null }).license ?? undefined;
         }
         store.replace(asKitInstance(kit));
         return { ok: true };
@@ -16612,12 +16697,12 @@ if (shouldRunReactEmbeddedTests) {
       redo: async () => ({ ok: true }),
       canUndo: async () => false,
       canRedo: async () => false,
-      backboneStatus: async () => ({}),
-      attachBackbone: async () => ({}),
-      detachBackbone: async () => ({}),
-      listConflicts: async () => [],
-      resolveConflict: async () => ({}),
-      syncNow: async () => ({}),
+      backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
+      attachBackbone: async () => ({ ok: true } as const),
+      detachBackbone: async () => ({ ok: true } as const),
+      listConflicts: async () => [] as const,
+      resolveConflict: async () => ({ ok: true } as const),
+      syncNow: async () => ({ ok: true } as const),
       getKitWriteScope: () => null,
       setKitWriteScope: () => {},
       finalizeKitWriteTransaction: async () => ({ ok: true }),
@@ -16625,7 +16710,7 @@ if (shouldRunReactEmbeddedTests) {
       subscribe: (cb: (ev: any) => void) => store.subscribe(() => cb({ kind: "test" })),
       setKitReadScope: (_s: import("@semio/js").KitReadScope) => {},
       dispose: () => {},
-    }) as KitStoreClient;
+    }) as unknown as KitStoreClient;
 
   describe("pipeline hooks", () => {
     it("useKitName rejects empty required name via kit client", async () => {
@@ -16658,7 +16743,7 @@ if (shouldRunReactEmbeddedTests) {
         return null;
       }
 
-      render(React.createElement(KitScope, { store, kitClient }, React.createElement(Probe)));
+      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
 
       await waitFor(() => {
         expect(setName).toBeDefined();
@@ -16713,7 +16798,7 @@ if (shouldRunReactEmbeddedTests) {
         return null;
       }
 
-      render(React.createElement(KitScope, { store, kitClient }, React.createElement(Probe)));
+      render(React.createElement(KitScope, { store, kitClient, children: React.createElement(Probe) }));
       await waitFor(() => {
         expect(setLicense).toBeDefined();
         expect(client).not.toBeNull();
@@ -16828,7 +16913,7 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const kitClient = createTestKitClient(store);
-      let shallows: KitShallowDto[] = [];
+      let shallows: Kit[] = [];
       let hasKit = false;
       let pkind: KitPersistenceInfo["kind"] | undefined;
       function Probe() {
@@ -16866,7 +16951,7 @@ if (shouldRunReactEmbeddedTests) {
       const emit = (event: any) => {
         for (const listener of listeners) listener(event);
       };
-      const stub: import("@semio/js").KitStoreClient = {
+      const stub = {
         ...createTestKitClient(store),
         subscribe: (cb: (ev: any) => void) => {
           listeners.add(cb);
@@ -16878,7 +16963,7 @@ if (shouldRunReactEmbeddedTests) {
           emit({ semioKitCommand: { requestId: "r1", commandKind: "clusterPieces", phase: "failed", error: { kind: "InvalidValue", message: "bad cluster" } } });
           return { ok: false, error: { kind: "InvalidValue", message: "bad cluster" }, requestId: "r1" };
         },
-      };
+      } as unknown as KitStoreClient;
       let events: SchemaPropertyEvent[] = [];
       let errors: SetError[] = [];
       function Probe() {
@@ -16893,7 +16978,7 @@ if (shouldRunReactEmbeddedTests) {
         }, [run]);
         return null;
       }
-      render(React.createElement(KitScope, { store, kitClient: stub }, React.createElement(Probe)));
+      render(React.createElement(KitScope, { store, kitClient: stub, children: React.createElement(Probe) }));
       await waitFor(() => expect(events.some((event) => event.requestId === "r1" && event.phase === "failed")).toBe(true));
       expect(errors.some((error) => error.message === "bad cluster")).toBe(true);
     });
@@ -16916,7 +17001,7 @@ if (shouldRunReactEmbeddedTests) {
         ],
       });
       const store = new InMemoryKitStore(kit);
-      const stub: import("@semio/js").KitStoreClient = {
+      const stub: KitStoreClient = {
         getDto: () => store.getSnapshot().kit.toJSON(),
         getSnapshot: async () => store.getSnapshot().kit.toJSON(),
         getKitWriteScope: () => null,
@@ -16950,16 +17035,27 @@ if (shouldRunReactEmbeddedTests) {
         redo: async () => ({ ok: true }) as const,
         canUndo: async () => false,
         canRedo: async () => false,
-        backboneStatus: async () => ({}),
-        attachBackbone: async () => ({}),
-        detachBackbone: async () => ({}),
+        backboneStatus: async () => ({ attached: false, kind: null, backboneTip: null, pendingWipCheckpoints: 0 }),
+        attachBackbone: async () => ({ ok: true } as const),
+        detachBackbone: async () => ({ ok: true } as const),
         listConflicts: async () => [],
-        resolveConflict: async () => ({}),
-        syncNow: async () => ({}),
+        resolveConflict: async () => ({ ok: true } as const),
+        syncNow: async () => ({ ok: true } as const),
+        readPieceFlatPlane: async () => undefined,
+        readPieceFlatCenter: async () => undefined,
+        readPieceParentConnectionFull: async () => undefined,
+        readDesignIncludedDesigns: async () => [],
+        readDesignClusterableGroups: async () => [],
+        readDesignQualitySum: async () => 0,
+        readTypeBestRepresentation: async () => undefined,
+        readColoredConnectors: async () => [],
+        readDesignReplaceableCatalogTypes: async () => [],
+        readDesignReplaceableCatalogDesigns: async () => [],
+        readDesignIncludedDesignIds: async () => [],
         subscribe: () => () => {},
         setKitReadScope: () => {},
         dispose: () => {},
-      };
+      } as KitStoreClient;
       let seen: SetError[] = [];
       function Probe() {
         const { run } = useClusterPieces();
@@ -16972,7 +17068,7 @@ if (shouldRunReactEmbeddedTests) {
         }, [run]);
         return null;
       }
-      render(React.createElement(KitScope, { store, kitClient: stub }, React.createElement(Probe)));
+      render(React.createElement(KitScope, { store, kitClient: stub, children: React.createElement(Probe) }));
       await waitFor(() => expect(seen.length).toBeGreaterThan(0));
       expect(seen[0]?.message).toContain("stub-cluster");
     });
@@ -17003,11 +17099,12 @@ if (shouldRunReactEmbeddedTests) {
         got = useKitDataScope();
         return null;
       }
-      const tree = React.createElement(
-        KitScope,
-        { store, kitClient: client, kitReadScope: ck },
-        React.createElement(Leaf, null),
-      );
+      const tree = React.createElement(KitScope, {
+        store,
+        kitClient: client,
+        kitReadScope: ck,
+        children: React.createElement(Leaf, null),
+      });
       const { unmount } = render(tree);
       await waitFor(() => {
         if (!got || !("checkpoint" in got) || (got as { checkpoint: { checkpointId: string } }).checkpoint.checkpointId !== "cpx") {

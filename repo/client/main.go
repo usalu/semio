@@ -8235,13 +8235,14 @@ const (
 )
 
 // 💿LocLangStats holds the data fields for a line-of-code per-language metrics record.
-// 📊LocLangStats: per-row LOC, optional % of Total, and git delta sums.
+// 📊LocLangStats: per-row LOC, % of tree Total, % of branch WIP churn, and git delta sums.
 type LocLangStats struct {
-	Loc     int     `json:"loc"`
-	Percent float64 `json:"percent"`
-	Edited  int     `json:"edited"`
-	Added   int     `json:"added"`
-	Removed int     `json:"removed"`
+	Loc         int     `json:"loc"`
+	Percent     float64 `json:"percent"`
+	WipPercent  float64 `json:"wip_percent"`
+	Edited      int     `json:"edited"`
+	Added       int     `json:"added"`
+	Removed     int     `json:"removed"`
 }
 
 // 💿LocReport: JSON payload for `loc` output and rendering.
@@ -8604,8 +8605,38 @@ func locApplyPercents(rows map[string]LocLangStats) {
 	}
 }
 
+// 📊 locSumEditedPairs sums added+removed across all weighted buckets (branch WIP impulse on the logged ref).
+func locSumEditedPairs(m map[string]locCumulativePair, w map[string]bool) int {
+	var t int
+	for l := range w {
+		if p, ok := m[l]; ok {
+			t += p.Added + p.Removed
+		}
+	}
+	return t
+}
+
+// 🧮 locApplyWipPercents sets WipPercent from edited-line churn: each row vs globalDenom (0 = use Total.Edited).
+func locApplyWipPercents(rows map[string]LocLangStats, globalDenom int) {
+	denom := globalDenom
+	if denom <= 0 {
+		denom = rows[locAggTotal].Edited
+	}
+	if denom <= 0 {
+		for k, s := range rows {
+			s.WipPercent = 0
+			rows[k] = s
+		}
+		return
+	}
+	for k, s := range rows {
+		s.WipPercent = math.Round(10000*float64(s.Edited)/float64(denom)) / 100
+		rows[k] = s
+	}
+}
+
 // 📊 locComposeLocReportSnapshot merges scan counts, git deltas, and aggregate Code/Total rows with percents.
-func locComposeLocReportSnapshot(c map[string]locCumulativePair, scanned map[string]int, languages []string) map[string]LocLangStats {
+func locComposeLocReportSnapshot(c map[string]locCumulativePair, scanned map[string]int, languages []string, wipGlobalDenom int) map[string]LocLangStats {
 	w := locMakeNumstatLangSet(languages)
 	out := make(map[string]LocLangStats)
 	codeOrder := []string{"TypeScript", "Go", "C#", "Python", "Rust"}
@@ -8642,6 +8673,7 @@ func locComposeLocReportSnapshot(c map[string]locCumulativePair, scanned map[str
 		Removed: totalRemoved,
 	}
 	locApplyPercents(out)
+	locApplyWipPercents(out, wipGlobalDenom)
 	return out
 }
 
@@ -8668,7 +8700,7 @@ func locSortedRowKeys(rows map[string]LocLangStats) []string {
 
 // 🔗 locMergeCumulativeCloc materializes LocLangStats rows (scan replaces cloc).
 func locMergeCumulativeCloc(c map[string]locCumulativePair, scanned map[string]int, languages []string) map[string]LocLangStats {
-	return locComposeLocReportSnapshot(c, scanned, languages)
+	return locComposeLocReportSnapshot(c, scanned, languages, 0)
 }
 
 // 💿LocCumulative: exported for tests; mirrors locCumulativePair from numstat.
@@ -8765,13 +8797,13 @@ func locParseNumstatLog(stdout string, langW map[string]bool) ([]locRawCommit, e
 
 // 🔧 locByContributorsToSnapshot builds a contributor -> language -> stats map; loc=0 in leaf rows.
 // 🧩 locByContributorsToSnapshot builds contributor breakdown from by-contrib cumulative pairs.
-func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, languages []string) map[string]map[string]LocLangStats {
+func locByContributorsToSnapshot(m map[string]map[string]locCumulativePair, languages []string, branchWipDenom int) map[string]map[string]LocLangStats {
 	if m == nil {
 		return nil
 	}
 	out := make(map[string]map[string]LocLangStats, len(m))
 	for alias, lp := range m {
-		out[alias] = locComposeLocReportSnapshot(lp, locZeroScanCounts(languages), languages)
+		out[alias] = locComposeLocReportSnapshot(lp, locZeroScanCounts(languages), languages, branchWipDenom)
 	}
 	return out
 }
@@ -8791,8 +8823,10 @@ func locIsLastCommitOfDayUTC(commits []locRawCommit, i int) bool {
 func locBuildHistory(repo string, languages []string, byContrib, verbose bool, commits []locRawCommit, contribFilter string) ([]LocHistoryEntry, error) {
 	langW := locMakeNumstatLangSet(languages)
 	running := make(map[string]locCumulativePair)
+	runningBranch := make(map[string]locCumulativePair)
 	for l := range langW {
 		running[l] = locCumulativePair{}
+		runningBranch[l] = locCumulativePair{}
 	}
 	byContRun := make(map[string]map[string]locCumulativePair)
 	if byContrib {
@@ -8802,6 +8836,15 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 	var lastScan map[string]int
 	filt := strings.TrimSpace(contribFilter)
 	for i, c := range commits {
+		for l, p := range c.Delta {
+			if !langW[l] {
+				continue
+			}
+			br := runningBranch[l]
+			br.Added += p.Added
+			br.Removed += p.Removed
+			runningBranch[l] = br
+		}
 		alias := locContributorAlias(c.Author, c.AuthorMail)
 		if filt != "" && !strings.EqualFold(filt, alias) {
 			continue
@@ -8840,17 +8883,18 @@ func locBuildHistory(repo string, languages []string, byContrib, verbose bool, c
 		if lastScan == nil {
 			lastScan = locZeroScanCounts(languages)
 		}
+		wipBranchDenom := locSumEditedPairs(runningBranch, langW)
 		iso := time.Unix(c.WhenUnix, 0).UTC().Format(time.RFC3339)
 		authorKey := locContributorAlias(c.Author, c.AuthorMail)
 		entry := LocHistoryEntry{SHA: c.SHA, Date: iso, Author: authorKey}
 		if byContrib {
 			row := make(map[string]map[string]LocLangStats, len(byContRun))
 			for a, m2 := range byContRun {
-				row[a] = locComposeLocReportSnapshot(m2, locZeroScanCounts(languages), languages)
+				row[a] = locComposeLocReportSnapshot(m2, locZeroScanCounts(languages), languages, wipBranchDenom)
 			}
 			entry.ByContributors = row
 		} else {
-			entry.Languages = locMergeCumulativeCloc(running, lastScan, languages)
+			entry.Languages = locComposeLocReportSnapshot(running, lastScan, languages, wipBranchDenom)
 		}
 		hist = append(hist, entry)
 	}
@@ -8898,7 +8942,8 @@ func runLocCommand(cmd *cobra.Command, config *Config, languages []string, histo
 	if err != nil {
 		return err
 	}
-	snap := locMergeCumulativeCloc(cumForSnap, cl, languages)
+	wipBranchDenom := locSumEditedPairs(cumAll, locMakeNumstatLangSet(languages))
+	snap := locComposeLocReportSnapshot(cumForSnap, cl, languages, wipBranchDenom)
 	rep := LocReport{Snapshot: snap, Branch: ""}
 	if logRef != "" {
 		rep.Branch = logRef
@@ -8922,7 +8967,7 @@ func runLocCommand(cmd *cobra.Command, config *Config, languages []string, histo
 				}
 			}
 		}
-		rep.ByContributors = locByContributorsToSnapshot(byUse, languages)
+		rep.ByContributors = locByContributorsToSnapshot(byUse, languages, wipBranchDenom)
 	}
 	if history {
 		h, err := locBuildHistory(repoRoot, languages, byContrib, verbose, commits, cf)
@@ -9028,16 +9073,16 @@ func locMarkdownTable(title string, rows map[string]LocLangStats, withLoc bool) 
 		b.WriteString("### " + title + "\n\n")
 	}
 	if withLoc {
-		b.WriteString("| Category | loc | % | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: |\n")
+		b.WriteString("| Category | loc | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n")
 		for _, l := range langs {
 			st := rows[l]
-			b.WriteString(fmt.Sprintf("| %s | %d | %.2f%% | %d | %d | %d |\n", l, st.Loc, st.Percent, st.Edited, st.Added, st.Removed))
+			b.WriteString(fmt.Sprintf("| %s | %d | %.2f%% | %.2f%% | %d | %d | %d |\n", l, st.Loc, st.Percent, st.WipPercent, st.Edited, st.Added, st.Removed))
 		}
 	} else {
-		b.WriteString("| Category | % | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: |\n")
+		b.WriteString("| Category | % | wip% | edited | added | removed |\n| --- | ---: | ---: | ---: | ---: | ---: |\n")
 		for _, l := range langs {
 			st := rows[l]
-			b.WriteString(fmt.Sprintf("| %s | %.2f%% | %d | %d | %d |\n", l, st.Percent, st.Edited, st.Added, st.Removed))
+			b.WriteString(fmt.Sprintf("| %s | %.2f%% | %.2f%% | %d | %d | %d |\n", l, st.Percent, st.WipPercent, st.Edited, st.Added, st.Removed))
 		}
 	}
 	return b.String()
@@ -9106,16 +9151,16 @@ func locTextTable(w io.Writer, title string, rows map[string]LocLangStats, isTTY
 		return
 	}
 	if withLoc {
-		fmt.Fprintf(w, "%-14s%8s%8s%8s%8s%8s\n", "Category", "loc", "%", "edited", "added", "removed")
+		fmt.Fprintf(w, "%-14s%8s%7s%7s%8s%8s%8s\n", "Category", "loc", "%", "wip", "edited", "added", "removed")
 		for _, l := range keys {
 			s := rows[l]
-			fmt.Fprintf(w, "%-14s%8d%7.1f%%%8d%8d%8d\n", l, s.Loc, s.Percent, s.Edited, s.Added, s.Removed)
+			fmt.Fprintf(w, "%-14s%8d%6.1f%%%6.1f%%%8d%8d%8d\n", l, s.Loc, s.Percent, s.WipPercent, s.Edited, s.Added, s.Removed)
 		}
 	} else {
-		fmt.Fprintf(w, "%-14s%8s%8s%8s%8s\n", "Category", "%", "edited", "added", "removed")
+		fmt.Fprintf(w, "%-14s%7s%7s%8s%8s%8s\n", "Category", "%", "wip", "edited", "added", "removed")
 		for _, l := range keys {
 			s := rows[l]
-			fmt.Fprintf(w, "%-14s%7.1f%%%8d%8d%8d\n", l, s.Percent, s.Edited, s.Added, s.Removed)
+			fmt.Fprintf(w, "%-14s%6.1f%%%6.1f%%%8d%8d%8d\n", l, s.Percent, s.WipPercent, s.Edited, s.Added, s.Removed)
 		}
 	}
 }
@@ -9126,6 +9171,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
+		Long:  "Counts tracked files via git (not cloc). Rebuild client.exe after upgrades: go build -o repo/client/client.exe ./repo/client. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors.",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
@@ -24276,15 +24322,8 @@ func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue boo
 }
 
 // 🔖ToolTicketList MUST complete the operation successfully.
+// Always lists from ticket storage without building the full monorepo tree.
 func ToolTicketList(year, month, day *int) ToolResult {
-	if year == nil && month == nil && day == nil {
-		result := toolResultFromTreeList(TreeNodeTicket)
-		tickets, err := ListTickets(nil, nil, nil)
-		if err == nil {
-			result.Data = tickets
-		}
-		return result
-	}
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
 		return toolErrorResult(err)
@@ -24482,13 +24521,29 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noM
 }
 
 // 🔖ToolGoalList MUST complete the operation successfully.
+// Lists goals from `.repo/🎯` only — avoids BuildMonorepoTree (full repo walk) while
+// keeping the same markdown lines as goal nodes in the monorepo tree.
 func ToolGoalList() ToolResult {
-	result := toolResultFromTreeList(TreeNodeGoal)
 	goals, err := ListGoals()
-	if err == nil {
-		result.Data = goals
+	if err != nil {
+		return toolErrorResult(err)
 	}
-	return result
+	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
+	output := NewOutput()
+	var sb strings.Builder
+	for _, g := range goals {
+		goalCreatedAt := ""
+		sb.WriteString(renderEntityMarkdown("goal", map[string]interface{}{
+			"id":          g.ID,
+			"title":       g.Title,
+			"status":      g.Status,
+			"dueDate":     g.DueDate,
+			"createdAt":   goalCreatedAt,
+			"description": g.Description,
+		}) + "\n")
+	}
+	output.Plain(sb.String())
+	return ToolResult{Output: *output, Data: goals}
 }
 
 // 🔖ToolGoalClose MUST complete the operation successfully.
@@ -36120,10 +36175,17 @@ func ToolFix(scopeRaw string) ToolResult {
 }
 
 // 📜ToolPolicyList MUST complete the operation successfully.
+// Uses registered policy metadata only — avoids building the monorepo tree.
 func ToolPolicyList() ToolResult {
-	result := toolResultFromTreeList(TreeNodePolicy)
-	result.Data = GetRegisteredPolicies()
-	return result
+	allPolicies := GetRegisteredPolicies()
+	var sb strings.Builder
+	for _, p := range allPolicies {
+		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
+		sb.WriteString(renderEntityMarkdown("policy", pData) + "\n")
+	}
+	output := NewOutput()
+	output.Plain(sb.String())
+	return ToolResult{Output: *output, Data: allPolicies}
 }
 
 // 🌳ToolPolicyTree MUST complete the operation successfully.
