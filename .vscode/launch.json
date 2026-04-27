@@ -211,7 +211,7 @@
       "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev semio/sketchpad",
+      "command": "npx nx dev @semio/sketchpad",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -262,7 +262,7 @@
       "name": "🛠️dev👤semio⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev semio/vscode",
+      "command": "npx nx dev @semio/vscode",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -379,7 +379,7 @@
       "name": "🛠️dev🧰repo⌨️vscode (integrated)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npx nx dev repo/vscode",
+      "command": "npx nx dev repo",
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -441,6 +441,13 @@
       "runtimeArgs": ["run", "build:engine"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "📦build👤semio🔗graphql",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npx nx build semio/graphql",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "📦build👤semio🌐sites",

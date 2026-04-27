@@ -953,6 +953,19 @@ semio/js:
 
 ---
 
+Refactor everything to have 100% acurate types.
+Record<> MUST NOT remain.
+unknown MUST NOT remain.
+Extend semio/rs which produces semio/graphql if necessary (both are unfinished and not clean)
+
+---
+
+Refactor the store, graphql, event, change code to be more consistent and more integrated.
+Align it perfectly with semio/rs
+Get rid of smelly old code.
+
+---
+
 Every single Event MUST be 100% semantic and typed.
 Every event has the kit change (forward kit change commands and inverse kit change commands)
 e.g. RenamedDesignEvent, DraggedFlatCenterPieceEvent
@@ -1030,6 +1043,14 @@ export interface KitStoreClient {
 ### 🦀rs
 
 semio/rs:
+
+---
+
+Currently there is just a general KitChange.
+Introduce a proper Tree where every Change is a KitChange
+DesignChange, TypeChange, PieceChange.
+Not that there is not always a 1to1 mapping betwenn Store and Change.
+e.g. ClusterDesignChange yiels a KitChange, not a DesignChange
 
 ---
 
@@ -1530,6 +1551,15 @@ Update the rest to match metabolism json
 ### ⚛️react
 
 semio/react:
+
+---
+
+Refactor the hooks and scopes to be more consistent and more integrated with store, graphql, event, change code.
+Align it perfectly with semio/rs and semio/js.
+Get rid of smelly old code.
+
+---
+
 Create a react library that exports all semio hooks.
 
 Work with providers.

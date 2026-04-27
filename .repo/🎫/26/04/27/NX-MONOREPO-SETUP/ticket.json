@@ -1,0 +1,10 @@
+{
+  "title": "Nx Monorepo Setup",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Align npm workspaces with Nx projects, tighten nx.json, standardize project metadata, validate graph and targets.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪d3a3a586171341aa82da0f14d77a012b"
+  ]
+}

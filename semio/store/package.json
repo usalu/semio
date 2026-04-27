@@ -2,7 +2,7 @@
   "name": "@semio/store",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "semio/store",
+  "sourceRoot": ".",
   "projectType": "application",
   "scripts": {
     "build": "cargo build --release -p semio-store",

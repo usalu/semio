@@ -55,7 +55,7 @@ self.onmessage = async (ev) => {
       post({ op: "done", reqId: msg.reqId });
       return;
     }
-    post({ op: "error", message: "unknown op " + (msg.op ?? "") });
+    post({ op: "error", message: "unrecognized op " + (msg.op ?? "") });
   } catch (e) {
     post({ op: "error", reqId: msg?.reqId, message: String(e) });
   }
@@ -150,7 +150,7 @@ export function kitChangeSemanticKindToWire(
     if (other != null && other.length > 0) return { other } as const;
     return "inferred";
   }
-  const m: Record<Exclude<KitChangeSemanticKindGql, "OTHER">, KitChangeKindWire> = {
+  const m: { readonly [K in Exclude<KitChangeSemanticKindGql, "OTHER">]: KitChangeKindWire } = {
     INFERRED: "inferred",
     SET_KIT_METADATA: "setKitMetadata",
     ADD_TYPE: "addType",
@@ -179,6 +179,30 @@ export type SemioKitWireTreeDto =
   | null
   | readonly SemioKitWireTreeDto[]
   | SemioKitWireStructDto;
+
+/** @emoji 🧱 Parsed JSON tree (strict surface; no `Record<>` / `unknown`). */
+export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
+/** @emoji 🧱 JSON object node (string-keyed). */
+export type JsonObject = { readonly [key: string]: JsonValue };
+
+/** @emoji 🧾 GraphQL `variables` map (string-keyed JSON). */
+export type GraphQlVariables = JsonObject;
+
+/** @emoji 🧾 `JSON.parse` with a {@link JsonValue} root (GraphQL transport, config knobs). */
+function parseJsonValue(text: string): JsonValue {
+  return JSON.parse(text) as JsonValue;
+}
+
+/** @emoji 🧾 True for JSON object nodes (excludes arrays / null). */
+function isJsonObjectNode(v: JsonValue | SemioKitWireTreeDto | null | undefined): v is JsonObject | SemioKitWireStructDto {
+  return v != null && typeof v === "object" && !Array.isArray(v);
+}
+
+/** @emoji 🧾 GraphQL HTTP/FFI response envelope before unwrapping `data`. */
+type KitGraphqlResponseEnvelope<TData> = Readonly<{
+  data?: TData | null;
+  errors?: readonly { readonly message?: string }[];
+}>;
 
 /**
  * @emoji 🧾 Tags accepted on `KitStore` control-plane batch mappers (`kitStore.batch` and {@link WasmKitStoreClient} routing).
@@ -331,30 +355,36 @@ function isTheKitReadScope(s: KitReadScope): boolean {
 /** @emoji 🧭 Active VCS session/draft/open-transaction anchor for kit control-plane `kitStore.batch` writes. */
 export type KitWriteScope = { readonly sessionId: string; readonly draftId: string; readonly transactionId: string };
 
-function __normKitStoreBatchKind(k: unknown): string {
+function __normKitStoreBatchKind(k: string | number | boolean | null | undefined): string {
   return String(k ?? "")
     .replace(/([a-z])([A-Z])/g, "$1_$2")
     .replace(/[\s-]+/g, "_")
     .toUpperCase();
 }
 
-function __vec3(obj: unknown): { x: number; y: number; z: number } | null {
-  if (!obj || typeof obj !== "object") return null;
-  const o = obj as Record<string, unknown>;
-  const x = Number(o.x);
-  const y = Number(o.y);
-  const z = Number(o.z);
+function __coerceAxisComponent(v: SemioKitWireTreeDto | undefined): number {
+  if (v === undefined) return Number.NaN;
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string") return Number(v);
+  return Number.NaN;
+}
+
+function __vec3(obj: SemioKitWireTreeDto | null | undefined): { x: number; y: number; z: number } | null {
+  if (!isJsonObjectNode(obj)) return null;
+  const x = __coerceAxisComponent(obj["x"]);
+  const y = __coerceAxisComponent(obj["y"]);
+  const z = __coerceAxisComponent(obj["z"]);
   if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
   return { x, y, z };
 }
 
 /** @emoji 🧾 Maps a loose plane DTO into GraphQL `PlaneInputBatch` (camelCase axes). */
-function __kitPlaneToBatchInput(plane: unknown): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } | null {
-  if (!plane || typeof plane !== "object") return null;
-  const p = plane as Record<string, unknown>;
-  const origin = p.origin ?? p.Origin;
-  const xa = p.xAxis ?? p.x_axis ?? p.XAxis;
-  const ya = p.yAxis ?? p.y_axis ?? p.YAxis;
+function __kitPlaneToBatchInput(plane: SemioKitWireTreeDto | null | undefined): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } | null {
+  if (!isJsonObjectNode(plane)) return null;
+  const p = plane;
+  const origin = p["origin"] ?? p["Origin"];
+  const xa = p["xAxis"] ?? p["x_axis"] ?? p["XAxis"];
+  const ya = p["yAxis"] ?? p["y_axis"] ?? p["YAxis"];
   const o = __vec3(origin);
   const xAxis = __vec3(xa);
   const yAxis = __vec3(ya);
@@ -653,6 +683,14 @@ export type ChangeKitCommandWire =
   | { readonly deleteConnection: { readonly designId: KitIdWire; readonly connectionId: KitIdWire } }
   | { readonly changePieceKind: { readonly designId: KitIdWire; readonly pieceId: KitIdWire; readonly newTypeId: KitIdWire } };
 
+/** @emoji 🧾 GraphQL `ConflictBatchRecord` row (matches `semio/graphql/schema.graphql`). */
+export type ConflictBatchRecordWire = Readonly<{
+  id: string;
+  backboneTip?: string | null;
+  reason: string;
+  createdAt: string;
+}>;
+
 /** @emoji 🧾 One row from GraphQL `KitStoreBatchResult` (camelCase wire). */
 export type KitStoreBatchResultRow = Readonly<{
   kind: string;
@@ -663,7 +701,7 @@ export type KitStoreBatchResultRow = Readonly<{
   changeKind?: KitChangeSemanticKindGql | null;
   changeKindOther?: string | null;
   inverse?: readonly ChangeKitCommandWire[] | null;
-  conflicts?: readonly unknown[] | null;
+  conflicts?: readonly ConflictBatchRecordWire[] | null;
   backbone?: { attached: boolean; kind?: string | null; tip?: string | null } | null;
 }>;
 
@@ -810,15 +848,49 @@ export function connectionDiffWireKeyForDataKey(dataKey: string): string {
   return dataKey;
 }
 
+/** @emoji 🧾 UI/schema partial for piece field writes (maps to {@link ChangePieceCommandWire}). */
+export type PieceFieldPatchInput = Readonly<{
+  name?: string | null;
+  description?: string | null;
+  plane?: SemioKitWireTreeDto;
+  center?: SemioKitWireTreeDto;
+  scale?: number | string | null;
+  mirrorPlane?: SemioKitWireTreeDto;
+  hidden?: boolean;
+  isHidden?: boolean;
+  locked?: boolean;
+  isLocked?: boolean;
+  color?: string | null;
+  type?: string | SemioKitWireStructDto | null;
+}>;
+
+/** @emoji 🧾 UI/schema partial for connection field writes. */
+export type ConnectionFieldPatchInput = Readonly<{
+  gap?: number | string | null;
+  shift?: number | string | null;
+  rise?: number | string | null;
+  rotation?: number | string | null;
+  turn?: number | string | null;
+  tilt?: number | string | null;
+  x?: number | string | null;
+  y?: number | string | null;
+  u?: number | string | null;
+  v?: number | string | null;
+  description?: string | null;
+}>;
+
+/** @emoji 🧾 Value bucket for `buildSchemaEntityChangeCommands` (schema hooks). */
+export type SchemaEntityFieldWireValue = SemioKitWireTreeDto | string | number | boolean | null;
+
 /** @emoji 🧾 Converts a piece field patch into nested `changePieceCommands` wire entries. */
-export function piecePatchToWireCommands(patch: Record<string, unknown>): ChangePieceCommandWire[] {
+export function piecePatchToWireCommands(patch: PieceFieldPatchInput): ChangePieceCommandWire[] {
   const out: ChangePieceCommandWire[] = [];
   if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
   if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
-  if ("plane" in patch) out.push({ plane: { plane: patch.plane as SemioKitWireTreeDto } });
-  if ("center" in patch) out.push({ center: { center: patch.center as SemioKitWireTreeDto } });
+  if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
+  if ("center" in patch) out.push({ center: { center: patch.center } });
   if ("scale" in patch) out.push({ scale: { scale: typeof patch.scale === "number" ? patch.scale : Number(patch.scale) } });
-  if ("mirrorPlane" in patch) out.push({ mirrorPlane: { mirrorPlane: patch.mirrorPlane as SemioKitWireTreeDto } });
+  if ("mirrorPlane" in patch) out.push({ mirrorPlane: { mirrorPlane: patch.mirrorPlane } });
   if ("hidden" in patch) out.push({ hidden: { hidden: Boolean(patch.hidden) } });
   if ("isHidden" in patch) out.push({ hidden: { hidden: Boolean(patch.isHidden) } });
   if ("locked" in patch) out.push({ locked: { locked: Boolean(patch.locked) } });
@@ -833,10 +905,10 @@ export function piecePatchToWireCommands(patch: Record<string, unknown>): Change
 }
 
 /** @emoji 🧾 Converts a connection field patch into nested `changeConnectionCommands` wire entries. */
-export function connectionPatchToWireCommands(patch: Record<string, unknown>): ChangeConnectionCommandWire[] {
+export function connectionPatchToWireCommands(patch: ConnectionFieldPatchInput): ChangeConnectionCommandWire[] {
   const out: ChangeConnectionCommandWire[] = [];
-  const num = (v: unknown) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
-  const opt = (v: unknown): number | null => (v == null ? null : num(v));
+  const num = (v: string | number | null | undefined) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
+  const opt = (v: string | number | null | undefined): number | null => (v == null ? null : num(v));
   if ("gap" in patch) out.push({ gap: { value: opt(patch.gap) } });
   if ("shift" in patch) out.push({ shift: { value: opt(patch.shift) } });
   if ("rise" in patch) out.push({ rise: { value: opt(patch.rise) } });
@@ -859,7 +931,7 @@ export function buildSchemaEntityChangeCommands(
   kind: string,
   id: string,
   field: string,
-  value: unknown,
+  value: SchemaEntityFieldWireValue,
   designId: string | null,
 ): readonly ChangeKitCommandWire[] {
   switch (kind) {
@@ -968,7 +1040,7 @@ export function buildSchemaEntityChangeCommands(
   }
 }
 
-function oneChangeTypeCommandForField(field: string, value: unknown): ChangeTypeCommandWire | null {
+function oneChangeTypeCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeTypeCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -979,7 +1051,7 @@ function oneChangeTypeCommandForField(field: string, value: unknown): ChangeType
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeDesignCommandForField(field: string, value: unknown): ChangeDesignCommandWire | null {
+function oneChangeDesignCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeDesignCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -987,19 +1059,19 @@ function oneChangeDesignCommandForField(field: string, value: unknown): ChangeDe
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeAuthorCommandForField(field: string, value: unknown): ChangeAuthorCommandWire | null {
+function oneChangeAuthorCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeAuthorCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "email") return { email: { email: String(value ?? "") } } as const;
   if (field === "role") return { role: { role: (value as string) ?? null } } as const;
   if (field === "rank") return { rank: { rank: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeTagCommandForField(field: string, value: unknown): ChangeTagCommandWire | null {
+function oneChangeTagCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeTagCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "order" || field === "orderIndex") return { order: { order: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeFileCommandForField(field: string, value: unknown): ChangeFileCommandWire | null {
+function oneChangeFileCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFileCommandWire | null {
   if (field === "url") return { url: { url: String(value ?? "") } } as const;
   if (field === "mime") return { mime: { mime: (value as string) ?? null } } as const;
   if (field === "size") return { size: { size: (value as number) ?? null } } as const;
@@ -1009,12 +1081,12 @@ function oneChangeFileCommandForField(field: string, value: unknown): ChangeFile
   if (field === "updated" || field === "updatedAt") return { updated: { updated: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeFolderCommandForField(field: string, value: unknown): ChangeFolderCommandWire | null {
+function oneChangeFolderCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFolderCommandWire | null {
   if (field === "path") return { path: { path: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeQualityCommandForField(field: string, value: unknown): ChangeKitQualityCommandWire | null {
+function oneChangeQualityCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeKitQualityCommandWire | null {
   if (field === "key") return { key: { key: String(value ?? "") } } as const;
   if (field === "value") return { value: { value: (value as string) ?? null } } as const;
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
@@ -1022,19 +1094,19 @@ function oneChangeQualityCommandForField(field: string, value: unknown): ChangeK
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangePortCommandForField(field: string, value: unknown): ChangePortCommandWire | null {
+function oneChangePortCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangePortCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeConceptCommandForField(field: string, value: unknown): ChangeConceptCommandWire | null {
+function oneChangeConceptCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeConceptCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "order" || field === "orderIndex") return { order: { order: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeFamilyCommandForField(field: string, value: unknown): ChangeFamilyCommandWire | null {
+function oneChangeFamilyCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFamilyCommandWire | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -1055,7 +1127,7 @@ export async function resolveDesignIdForPieceOrConnection(
   entityKind: string,
   entityId: string,
 ): Promise<string | null> {
-  const snap = (await client.getSnapshot()) as Record<string, unknown>;
+  const snap = await client.getSnapshot();
   if (entityKind === "Piece") return __findDesignIdForPieceInKitDto(snap, entityId);
   if (entityKind === "Connection") return __findDesignIdForConnectionInKitDto(snap, entityId);
   return null;
@@ -1066,10 +1138,9 @@ export async function kitStoreClientUpdatePiece(
   client: KitStoreClient,
   designId: string,
   pieceId: string,
-  patch: unknown,
+  patch: PieceFieldPatchInput,
 ): Promise<SetResult> {
-  const rec = patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {};
-  const pcmds = piecePatchToWireCommands(rec);
+  const pcmds = piecePatchToWireCommands(patch);
   if (!pcmds.length) return { ok: true };
   return client.submitChangeKitCommands([kitWireChangeDesignPiece(designId, pieceId, pcmds)]);
 }
@@ -1079,33 +1150,22 @@ export async function kitStoreClientUpdateConnection(
   client: KitStoreClient,
   designId: string,
   connectionId: string,
-  patch: unknown,
+  patch: ConnectionFieldPatchInput,
 ): Promise<SetResult> {
-  const rec = patch && typeof patch === "object" && patch !== null ? (patch as Record<string, unknown>) : {};
-  const ccmds = connectionPatchToWireCommands(rec);
+  const ccmds = connectionPatchToWireCommands(patch);
   if (!ccmds.length) return { ok: true };
   return client.submitChangeKitCommands([kitWireChangeDesignConnection(designId, connectionId, ccmds)]);
 }
 
-function __findDesignIdForPieceInKitDto(kit: Record<string, unknown>, pieceId: string): string | null {
-  const designs = kit.designs;
-  if (!Array.isArray(designs)) return null;
-  for (const d of designs) {
-    if (d == null || typeof d !== "object") continue;
-    const o = d as { id?: string; pieces?: readonly unknown[] };
-    const p = o.pieces;
-    if (Array.isArray(p) && p.some((x) => x && typeof x === "object" && (x as { id?: string }).id === pieceId)) return String(o.id ?? "");
+function __findDesignIdForPieceInKitDto(kit: KitFullDto, pieceId: string): string | null {
+  for (const d of kit.designs ?? []) {
+    if (d.pieces?.some((p) => p.id === pieceId)) return d.id;
   }
   return null;
 }
-function __findDesignIdForConnectionInKitDto(kit: Record<string, unknown>, connectionId: string): string | null {
-  const designs = kit.designs;
-  if (!Array.isArray(designs)) return null;
-  for (const d of designs) {
-    if (d == null || typeof d !== "object") continue;
-    const o = d as { id?: string; connections?: readonly unknown[] };
-    const c = o.connections;
-    if (Array.isArray(c) && c.some((x) => x && typeof x === "object" && (x as { id?: string }).id === connectionId)) return String(o.id ?? "");
+function __findDesignIdForConnectionInKitDto(kit: KitFullDto, connectionId: string): string | null {
+  for (const d of kit.designs ?? []) {
+    if (d.connections?.some((c) => c.id === connectionId)) return d.id;
   }
   return null;
 }
@@ -1118,7 +1178,7 @@ export async function writeKitStoreClientSchemaField(
   client: KitStoreClient,
   typeName: string,
   key: string,
-  value: unknown,
+  value: SchemaEntityFieldWireValue,
   entityId: string,
 ): Promise<SetResult> {
   const bridge = client as { getDto?: () => KitFullDto };
@@ -1147,15 +1207,16 @@ export async function writeKitStoreClientSchemaField(
 
 // #region 🧰GraphqlUtil
 
-function normalizeRustSetError(raw: unknown): SetError {
-  if (raw == null || typeof raw !== "object") return { kind: "Internal", message: "invalid error payload" };
-  const o = raw as Record<string, unknown>;
-  const kind = typeof o.kind === "string" ? (o.kind as SetErrorKind) : "Internal";
-  const message = typeof o.message === "string" ? o.message : JSON.stringify(raw);
+function normalizeRustSetError(raw: JsonValue | SemioKitWireTreeDto): SetError {
+  if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return { kind: "Internal", message: "invalid error payload" };
+  if (!isJsonObjectNode(raw)) return { kind: "Internal", message: "invalid error payload" };
+  const o = raw;
+  const kind = typeof o["kind"] === "string" ? (o["kind"] as SetErrorKind) : "Internal";
+  const message = typeof o["message"] === "string" ? o["message"] : JSON.stringify(raw);
   return { kind, message };
 }
 
-function normalizeWasmThrownKitError(err: unknown): SetError {
+function normalizeWasmThrownKitError(err: { toString(): string }): SetError {
   const message = String(err).replace(/^Error:\s*/, "").trim();
   const lower = message.toLowerCase();
   if (lower.includes("illegal name") || lower.includes("cannot be empty")) return { kind: "IllegalName", message };
@@ -1180,11 +1241,12 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
   });
 }
 
-function kitGraphqlData(response: unknown): Record<string, unknown> {
+function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TData {
   if (response == null || typeof response !== "object") throw new Error("kitGraphql: response is not an object");
-  const r = response as { data?: Record<string, unknown> | null; errors?: readonly { message?: string }[] };
+  const r = response;
   if (Array.isArray(r.errors) && r.errors.length > 0) throw new Error(r.errors[0]?.message ?? "GraphQL error");
-  if (r.data != null && typeof r.data === "object") return r.data as Record<string, unknown>;
+  const d = r.data;
+  if (d != null && typeof d === "object") return d;
   throw new Error("kitGraphql: no data in response");
 }
 
@@ -1194,13 +1256,13 @@ function gqlDataKitRoot<T>(d: { kit?: T } | null | undefined): T | undefined {
   return d.kit;
 }
 
-function kitGraphqlJsonToReadonlyArray(v: unknown): readonly SemioKitWireTreeDto[] {
-  if (Array.isArray(v)) return v as readonly SemioKitWireTreeDto[];
+function kitGraphqlJsonToReadonlyArray(v: SemioKitWireTreeDto | string | null | undefined): readonly SemioKitWireTreeDto[] {
+  if (Array.isArray(v)) return v;
   if (v == null) return [];
   if (typeof v === "string") {
     try {
-      const p = JSON.parse(v) as unknown;
-      return Array.isArray(p) ? (p as SemioKitWireTreeDto[]) : [];
+      const p: JsonValue = parseJsonValue(v);
+      return Array.isArray(p) ? p : [];
     } catch {
       return [];
     }
@@ -1208,21 +1270,29 @@ function kitGraphqlJsonToReadonlyArray(v: unknown): readonly SemioKitWireTreeDto
   return [];
 }
 
+function __mutableJsonObjectCopy(row: JsonObject | SemioKitWireStructDto): { [k: string]: JsonValue } {
+  const o: { [k: string]: JsonValue } = {};
+  for (const [k, v] of Object.entries(row)) {
+    o[k] = v as JsonValue;
+  }
+  return o;
+}
+
 /** @emoji 🧾 Maps GraphQL `TypeMetadataObject` / `DesignMetadataObject` field names to {@link TypeSchema} / {@link DesignSchema} wire keys (`createdAt`, `virtual`, …). */
-function __normalizeTypeOrDesignMetadataWireRow(row: Record<string, unknown>): Record<string, unknown> {
-  const out = { ...row };
-  if (out["createdAt"] === undefined && typeof out["created"] === "string") out["createdAt"] = out["created"];
-  if ("created" in out) delete out["created"];
-  if (out["updatedAt"] === undefined && typeof out["updated"] === "string") out["updatedAt"] = out["updated"];
-  if ("updated" in out) delete out["updated"];
-  if (out["virtual"] === undefined && typeof out["typeVirtual"] === "boolean") out["virtual"] = out["typeVirtual"];
-  if ("typeVirtual" in out) delete out["typeVirtual"];
+function __normalizeTypeOrDesignMetadataWireRow(row: JsonObject | SemioKitWireStructDto): JsonObject {
+  const out = __mutableJsonObjectCopy(row);
+  if (out["createdAt"] === undefined && typeof out["created"] === "string") out["createdAt"] = out["created"] as string;
+  delete out["created"];
+  if (out["updatedAt"] === undefined && typeof out["updated"] === "string") out["updatedAt"] = out["updated"] as string;
+  delete out["updated"];
+  if (out["virtual"] === undefined && typeof out["typeVirtual"] === "boolean") out["virtual"] = out["typeVirtual"] as boolean;
+  delete out["typeVirtual"];
   return out;
 }
 
 /** @emoji 🧾 GraphQL JSON uses `null` for absent scalars; Zod `.optional()` expects omission — drop top-level `null` entries before parse. */
-function __stripTopLevelJsonNulls(row: Record<string, unknown>): Record<string, unknown> {
-  const out = { ...row };
+function __stripTopLevelJsonNulls(row: JsonObject | SemioKitWireStructDto): JsonObject {
+  const out = __mutableJsonObjectCopy(row);
   for (const k of Object.keys(out)) {
     if (out[k] === null) delete out[k];
   }
@@ -1230,45 +1300,48 @@ function __stripTopLevelJsonNulls(row: Record<string, unknown>): Record<string, 
 }
 
 /** @emoji 🧾 Narrows subscription payloads to semio kit command lifecycle rows. */
-export function isKitCommandLifecycleEvent(event: unknown): event is KitCommandLifecycleEvent {
-  const c = (event as { semioKitCommand?: unknown } | null)?.semioKitCommand;
-  if (c == null || typeof c !== "object") return false;
-  const v = c as Record<string, unknown>;
-  return typeof v.requestId === "string" && typeof v.commandKind === "string" && typeof v.phase === "string";
+export function isKitCommandLifecycleEvent(event: JsonValue | SemioKitWireTreeDto | null | undefined): event is KitCommandLifecycleEvent {
+  const c = (isJsonObjectNode(event) ? event : null)?.["semioKitCommand"];
+  if (c == null || typeof c !== "object" || Array.isArray(c)) return false;
+  const v = c as JsonObject;
+  return typeof v["requestId"] === "string" && typeof v["commandKind"] === "string" && typeof v["phase"] === "string";
 }
 
-function __normalizeTopLevelKitEventWire(raw: unknown): unknown {
-  if (raw === "Changed") return { Changed: null };
-  if (raw === "ValidationInvalidated") return { ValidationInvalidated: null };
-  return raw;
+function __normalizeTopLevelKitEventWire(raw: JsonValue | SemioKitWireTreeDto | null | undefined): SemioKitWireTreeDto | null {
+  if (raw === "Changed") return { Changed: null } as KitEvent as SemioKitWireTreeDto;
+  if (raw === "ValidationInvalidated") return { ValidationInvalidated: null } as KitEvent as SemioKitWireTreeDto;
+  if (raw == null) return null;
+  return raw as SemioKitWireTreeDto;
 }
 
-export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
+export function normalizeKitEventFromSubscription(raw: JsonValue | SemioKitWireTreeDto | null | undefined): KitEvent | undefined {
   const raw0 = __normalizeTopLevelKitEventWire(raw);
-  if (raw0 == null || typeof raw0 !== "object") return undefined;
-  const top = raw0 as Record<string, unknown>;
-  /** serde externally-tagged enum: `{ "SemioKitCommand": { requestId, ... } }` */
-  const lifecycleWrapper: unknown =
-    top.semioKitCommand !== undefined
+  if (raw0 == null) return undefined;
+  if (typeof raw0 === "string") return undefined;
+  if (typeof raw0 !== "object" || Array.isArray(raw0)) return undefined;
+  const top = raw0 as SemioKitWireStructDto;
+  const lifecycleWrapper: SemioKitWireTreeDto =
+    top["semioKitCommand"] !== undefined
       ? raw0
-      : top.SemioKitCommand !== undefined
-        ? { semioKitCommand: top.SemioKitCommand }
+      : top["SemioKitCommand"] !== undefined
+        ? { semioKitCommand: top["SemioKitCommand"] as SemioKitWireTreeDto }
         : raw0;
-  if (isKitCommandLifecycleEvent({ semioKitCommand: (lifecycleWrapper as { semioKitCommand?: unknown }).semioKitCommand })) {
-    const command = (lifecycleWrapper as { semioKitCommand: unknown }).semioKitCommand;
-    const value = command as Record<string, unknown>;
-    const requestIdRaw = value.requestId;
-    if (typeof requestIdRaw !== "string" || typeof value.commandKind !== "string" || typeof value.phase !== "string") return undefined;
+  const w = isJsonObjectNode(lifecycleWrapper) ? lifecycleWrapper : null;
+  const command = w?.["semioKitCommand"];
+  if (isKitCommandLifecycleEvent({ semioKitCommand: command })) {
+    if (command == null || typeof command !== "object" || Array.isArray(command)) return undefined;
+    const value = command as JsonObject;
+    const requestIdRaw = value["requestId"];
+    if (typeof requestIdRaw !== "string" || typeof value["commandKind"] !== "string" || typeof value["phase"] !== "string") return undefined;
+    const errRaw = value["error"];
     const error =
-      value.error && typeof value.error === "object"
-        ? normalizeRustSetError(value.error as Record<string, unknown>)
-        : undefined;
+      errRaw != null && typeof errRaw === "object" && !Array.isArray(errRaw) ? normalizeRustSetError(errRaw as JsonValue) : undefined;
     return {
       semioKitCommand: {
         requestId: requestIdRaw,
-        commandKind: value.commandKind as string,
-        phase: value.phase as KitCommandLifecyclePhase,
-        result: (value.result as SemioKitWireTreeDto | undefined) ?? undefined,
+        commandKind: value["commandKind"] as string,
+        phase: value["phase"] as KitCommandLifecyclePhase,
+        result: (value["result"] as SemioKitWireTreeDto | undefined) ?? undefined,
         error,
       },
     };
@@ -1280,11 +1353,11 @@ type KitGraphqlHandle = { execute(requestJson: string): Promise<string> };
 
 async function kitGraphqlRun(
   handle: KitGraphqlHandle,
-  body: { query: string; variables?: Record<string, unknown>; operationName?: string },
+  body: { query: string; variables?: GraphQlVariables; operationName?: string },
   timeoutMs?: number,
-): Promise<unknown> {
+): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
   const json = await withTimeout(handle.execute(JSON.stringify(body)), timeoutMs ?? 0, "graphql");
-  return JSON.parse(json) as unknown;
+  return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
 }
 
 // #endregion 🧰GraphqlUtil
@@ -5957,7 +6030,7 @@ export class KitEntityStore {
     return this._version;
   }
 
-  async patchField(field: string, value: unknown): Promise<SetResult> {
+  async patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     void field;
     void value;
     return Promise.resolve({
@@ -6344,7 +6417,7 @@ export class PieceStore {
     return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ addProp: { prop } }])]);
   }
 
-  patchField(field: string, value: unknown): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     if (field === "name") return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ name: { name: String(value) } }])]);
     if (field === "description")
       return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ description: { description: value as string | null } }])]);
@@ -6409,7 +6482,7 @@ export class ConnectionStore {
     return this.root.deleteConnection(this.designId, this.id);
   }
 
-  patchField(field: string, value: unknown): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     if (field === "rise") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ rise: { value: Number(value) } }])]);
     if (field === "description")
       return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ description: { value: value as string | null } }])]);
@@ -6453,7 +6526,7 @@ export class FamilyStore {
     ]);
   }
 
-  patchField(field: string, value: unknown): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     if (field === "description")
       return this.root.submitChangeKitCommands([
         { changeFamilyCommands: { familyId: { id: this.id }, commands: [{ description: { description: value as string | null } }] } },
@@ -6494,7 +6567,7 @@ export class FileStore {
     return FileSchema.parse(raw);
   }
 
-  patchField(field: string, value: unknown): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     const fid = { id: this.id };
     if (field === "url") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ url: { url: String(value) } }] } }]);
     if (field === "mime") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ mime: { mime: value as string | null } }] } }]);
@@ -6538,7 +6611,7 @@ export class FolderStore {
     return FolderSchema.parse(raw);
   }
 
-  patchField(field: string, value: unknown): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
     const folderId = { id: this.id };
     if (field === "path") return this.root.submitChangeKitCommands([{ changeFolderCommands: { folderId, commands: [{ path: { path: String(value) } }] } }]);
     if (field === "description")
