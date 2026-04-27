@@ -8,7 +8,16 @@ input AlternativeBatchInput {
 	commands: [AlternativeBatchCommandInput!]!
 }
 
-scalar AuthorShallowList
+"""
+🌐 One author row from [`crate::author::AuthorShallowDto`] (replaces the former `AuthorShallowList` scalar).
+"""
+type AuthorShallowRow {
+	id: String!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
+}
 
 input BackboneBatchCommandInput @oneOf {
 	attachBackbone: BackboneConfigBatchInput
@@ -276,15 +285,33 @@ type IncludedDesignObject {
 	externalConnections: ConnectionFullList!
 }
 
+"""
+🧾 Known semantic labels for a [`crate::kit_change::KitChangeKind`] batch (see `changeKindOther` when [`KitChangeSemanticKind::Other`]).
+"""
+enum KitChangeSemanticKind {
+	INFERRED
+	SET_KIT_METADATA
+	ADD_TYPE
+	REMOVE_TYPE
+	MODIFY_TYPE
+	ADD_DESIGN
+	REMOVE_DESIGN
+	MODIFY_DESIGN
+	ADD_PIECE
+	REMOVE_PIECE
+	CONNECT
+	DISCONNECT
+	UNIFY_CHECKPOINTS
+	MARK_RELEASE
+	OTHER
+}
+
 type KitColoredConnectorObject {
 	typeId: GqlIdOnly!
 	connectorId: GqlIdOnly!
 	color: String!
 }
 
-"""
-📣 Opaque JSON matching `semio/rs` `KitEvent` (externally tagged). Includes `SemanticChange.event` (`SemanticKitEvent`) with `change.forward` / `change.inverse` as `ChangeKitCommand` lists for every semantic mutation.
-"""
 scalar KitEvent
 
 scalar KitFullSnapshot
@@ -392,7 +419,7 @@ type KitStore {
 	"""
 	🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
 	"""
-	authorsShallow: AuthorShallowList!
+	authorsShallow: [AuthorShallowRow!]!
 	"""
 	Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
 	"""
@@ -428,9 +455,13 @@ type KitStoreBatchResult {
 	backbone: BackboneBatchStatus
 	conflicts: [ConflictBatchRecord!]
 	"""
-	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; discriminant of [`crate::kit_change::KitChangeKind`].
 	"""
-	changeKind: String
+	changeKind: KitChangeSemanticKind
+	"""
+	🧾 When [`Self::change_kind`] is [`KitChangeSemanticKind::Other`], the free-form semantic label from Rust.
+	"""
+	changeKindOther: String
 	"""
 	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
 	"""

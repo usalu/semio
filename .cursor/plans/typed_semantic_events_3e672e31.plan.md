@@ -7,25 +7,25 @@ todos:
    status: completed
  - id: rs-event-model
    content: Add typed semantic kit-change event structs and command-to-event classification in semio/rs.
-   status: in_progress
+   status: completed
  - id: rs-emission
    content: Emit semantic events with forward and inverse commands from all mutation paths.
-   status: pending
+   status: completed
  - id: graphql-contract
    content: Update the GraphQL schema to expose or document the typed event contract from Rust.
-   status: pending
+   status: completed
  - id: js-types
    content: Replace loose semio/js KitEvent typing with explicit semantic event and kit-change wire types.
-   status: pending
+   status: completed
  - id: js-filters
    content: Refactor semio/js event filters to use typed targets and change commands.
-   status: pending
+   status: completed
  - id: tests
    content: Extend existing Rust and JS embedded tests for semantic events and inverse commands.
-   status: pending
+   status: completed
  - id: verify
    content: Run focused Rust, JS build, JS test, and layering checks.
-   status: pending
+   status: completed
 isProject: false
 ---
 

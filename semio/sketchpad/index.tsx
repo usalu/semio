@@ -41,6 +41,8 @@ import {
   DesignShallowDto,
   DiffStatus,
   executeSemioKitCommand,
+  kitHostRedo,
+  kitHostUndo,
   Folder,
   getKitPorts,
   getKitRegistryBridge,
@@ -6462,10 +6464,10 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
 }
 
 function scheduleAuthoritativeKitUndo(kitStore: KitHostStore) {
-  void executeSemioKitCommand(kitStore, "semio.kit.undo", "semio.sketchpad.transaction.undo");
+  void kitHostUndo(kitStore);
 }
 function scheduleAuthoritativeKitRedo(kitStore: KitHostStore) {
-  void executeSemioKitCommand(kitStore, "semio.kit.redo", "semio.sketchpad.transaction.redo");
+  void kitHostRedo(kitStore);
 }
 
 /**

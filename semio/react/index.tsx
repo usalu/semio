@@ -113,7 +113,13 @@ import type {
   BackboneStatusDto,
   ChangeKitCommandWire,
   ConflictResolution,
+  ConnectionDiff,
+  ConnectionId,
+  ConnectionPlain,
+  DesignDiff,
+  DesignId,
   DesignMetadataDto,
+  DesignPlain,
   DesignShallow,
   KitBinaryStore,
   KitConflict,
@@ -128,12 +134,18 @@ import type {
   KitReadScope,
   KitStoreClient,
   KitWriteScope,
+  PieceDiff,
+  PieceId,
+  PiecePlain,
   PiecePlacementRowWireDto,
   PlanePlain,
   SemioKitWireTreeDto,
   SetError,
   SetResult,
+  TypeDiff,
+  TypeId,
   TypeMetadataDto,
+  TypePlain,
   TypeShallow,
 } from "@semio/js";
 import type { ReactNode, SetStateAction } from "react";
@@ -213,33 +225,33 @@ function __kitHostBridge(store: KitHostStore): KitStoreClient | undefined {
  * Sketchpad MUST use this shape instead of `{ command: string; args: unknown[] }`.
  */
 export type KitHostGraphOp =
-  | { op: "deleteKitSelection"; typeIds: readonly unknown[]; designIds: readonly unknown[] }
-  | { op: "addKitChildType"; body: unknown }
-  | { op: "addKitChildTypes"; bodies: readonly unknown[] }
-  | { op: "removeKitType"; id: unknown }
-  | { op: "removeKitTypes"; ids: readonly unknown[] }
-  | { op: "addKitChildDesign"; body: unknown }
-  | { op: "addKitChildDesigns"; bodies: readonly unknown[] }
-  | { op: "removeKitDesign"; id: unknown }
-  | { op: "removeKitDesigns"; ids: readonly unknown[] }
-  | { op: "setEntityPatch"; entity: "Type" | "Design"; id: unknown; patch: unknown }
-  | { op: "patchTypes"; updates: readonly { type: unknown; diff: unknown }[] }
-  | { op: "patchDesigns"; updates: readonly { design: unknown; diff: unknown }[] }
-  | { op: "addDesignPiece"; designId: unknown; piece: unknown }
-  | { op: "addDesignPieces"; designId: unknown; pieces: readonly unknown[] }
-  | { op: "removeDesignPiece"; designId: unknown; pieceId: unknown }
-  | { op: "removeDesignPieces"; designId: unknown; pieceIds: readonly unknown[] }
-  | { op: "addDesignConnection"; designId: unknown; connection: unknown }
-  | { op: "addDesignConnections"; designId: unknown; connections: readonly unknown[] }
-  | { op: "deleteConnection"; designId: unknown; connectionId: unknown }
-  | { op: "deleteConnections"; designId: unknown; connectionIds: readonly unknown[] }
-  | { op: "patchPiece"; designId: unknown; pieceId: unknown; diff: unknown }
-  | { op: "patchPieces"; designId: unknown; updates: readonly { piece: unknown; diff: unknown }[] }
-  | { op: "patchConnection"; designId: unknown; connectionId: unknown; diff: unknown }
-  | { op: "patchConnectionMany"; designId: unknown; rows: readonly { id: string; diff: unknown }[] }
-  | { op: "clusterPieces"; designId: unknown; pieceIds: readonly unknown[]; clusterName: string }
-  | { op: "expandDesign"; parentDesignId: unknown; nestedDesignId: unknown }
-  | { op: "removeDesignPiecesAndConnections"; designId: unknown; pieceIds: readonly unknown[]; connectionIds: readonly unknown[] };
+  | { op: "deleteKitSelection"; typeIds: readonly TypeId[]; designIds: readonly DesignId[] }
+  | { op: "addKitChildType"; body: TypePlain }
+  | { op: "addKitChildTypes"; bodies: readonly TypePlain[] }
+  | { op: "removeKitType"; id: TypeId }
+  | { op: "removeKitTypes"; ids: readonly TypeId[] }
+  | { op: "addKitChildDesign"; body: DesignPlain }
+  | { op: "addKitChildDesigns"; bodies: readonly DesignPlain[] }
+  | { op: "removeKitDesign"; id: DesignId }
+  | { op: "removeKitDesigns"; ids: readonly DesignId[] }
+  | { op: "setEntityPatch"; entity: "Type"; id: TypeId; patch: TypeDiff } | { op: "setEntityPatch"; entity: "Design"; id: DesignId; patch: DesignDiff }
+  | { op: "patchTypes"; updates: readonly { type: TypeId; diff: TypeDiff }[] }
+  | { op: "patchDesigns"; updates: readonly { design: DesignId; diff: DesignDiff }[] }
+  | { op: "addDesignPiece"; designId: DesignId; piece: PiecePlain }
+  | { op: "addDesignPieces"; designId: DesignId; pieces: readonly PiecePlain[] }
+  | { op: "removeDesignPiece"; designId: DesignId; pieceId: PieceId }
+  | { op: "removeDesignPieces"; designId: DesignId; pieceIds: readonly PieceId[] }
+  | { op: "addDesignConnection"; designId: DesignId; connection: ConnectionPlain }
+  | { op: "addDesignConnections"; designId: DesignId; connections: readonly ConnectionPlain[] }
+  | { op: "deleteConnection"; designId: DesignId; connectionId: ConnectionId }
+  | { op: "deleteConnections"; designId: DesignId; connectionIds: readonly ConnectionId[] }
+  | { op: "patchPiece"; designId: DesignId; pieceId: PieceId; diff: PieceDiff }
+  | { op: "patchPieces"; designId: DesignId; updates: readonly { piece: PieceId; diff: PieceDiff }[] }
+  | { op: "patchConnection"; designId: DesignId; connectionId: ConnectionId; diff: ConnectionDiff }
+  | { op: "patchConnectionMany"; designId: DesignId; rows: readonly { id: string; diff: ConnectionDiff }[] }
+  | { op: "clusterPieces"; designId: DesignId; pieceIds: readonly PieceId[]; clusterName: string }
+  | { op: "expandDesign"; parentDesignId: DesignId; nestedDesignId: DesignId }
+  | { op: "removeDesignPiecesAndConnections"; designId: DesignId; pieceIds: readonly PieceId[]; connectionIds: readonly ConnectionId[] };
 
 /** @emoji 🧾 Applies {@link KitHostGraphOp} through the live {@link KitStoreClient} bridge. */
 export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp): Promise<SetResult> {
@@ -405,6 +417,20 @@ export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp
     }
   }
   return { ok: false, error: { kind: "Internal", message: "applyKitHostGraphOp: unreachable" } };
+}
+
+/** @emoji 🧾 VCS undo via the optional {@link KitStoreClient} bridge (typed alternative to `executeSemioKitCommand` undo). */
+export async function kitHostUndo(store: KitHostStore): Promise<SetResult> {
+  const bridge = __kitHostBridge(store);
+  if (!bridge) return { ok: false, error: { kind: "Internal", message: "kitHostUndo: no kit bridge" } };
+  return bridge.undo();
+}
+
+/** @emoji 🧾 VCS redo via the optional {@link KitStoreClient} bridge (typed alternative to `executeSemioKitCommand` redo). */
+export async function kitHostRedo(store: KitHostStore): Promise<SetResult> {
+  const bridge = __kitHostBridge(store);
+  if (!bridge) return { ok: false, error: { kind: "Internal", message: "kitHostRedo: no kit bridge" } };
+  return bridge.redo();
 }
 
 /** @emoji 🧾 String-command entry retained for sketchpad host flows; prefer {@link applyKitHostGraphOp} for graph edits. */

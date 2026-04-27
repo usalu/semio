@@ -15875,68 +15875,133 @@ pub mod events {
         Attribute { attribute_id: Id, event: AttributeEvent },
     }
 
+    /// @emoji Payload: design rename with forward and inverse command atoms.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticRenamedDesign {
+        pub design_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: kind rename with forward and inverse command atoms.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticRenamedType {
+        pub type_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: UV drag affecting flat placement for listed pieces.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticDraggedFlatCenterPiece {
+        pub design_id: Id,
+        pub piece_ids: Vec<Id>,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: domain-space move for listed pieces.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticMovedPiecesFlatCenter {
+        pub design_id: Id,
+        pub piece_ids: Vec<Id>,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: cluster pieces into a nested design.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticClusteredPieces {
+        pub design_id: Id,
+        pub piece_ids: Vec<Id>,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: fix listed pieces in place.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticFixedPiecesFlatCenter {
+        pub design_id: Id,
+        pub piece_ids: Vec<Id>,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: flatten one design.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticFlattenedDesign {
+        pub design_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: expand nested design into parent domain.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticExpandedNestedDesign {
+        pub parent_design_id: Id,
+        pub nested_design_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: delete one connection in a design.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticDeletedConnection {
+        pub design_id: Id,
+        pub connection_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: change resolved piece kind in a design.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticChangedPieceKind {
+        pub design_id: Id,
+        pub piece_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: nested design command batch.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticChangedDesignCommands {
+        pub design_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: nested kind command batch.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticChangedTypeCommands {
+        pub type_id: Id,
+        pub change: crate::kit_change::KitChange,
+    }
+
+    /// @emoji Payload: generic classified kit change.
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SemanticAppliedKitChange {
+        pub change: crate::kit_change::KitChange,
+    }
+
     /// @emoji Semantically typed kit mutation with forward and inverse command atoms (`KitChange`).
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum SemanticKitEvent {
-        RenamedDesign {
-            design_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        RenamedType {
-            type_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        DraggedFlatCenterPiece {
-            design_id: Id,
-            piece_ids: Vec<Id>,
-            change: crate::kit_change::KitChange,
-        },
-        MovedPiecesFlatCenter {
-            design_id: Id,
-            piece_ids: Vec<Id>,
-            change: crate::kit_change::KitChange,
-        },
-        ClusteredPieces {
-            design_id: Id,
-            piece_ids: Vec<Id>,
-            change: crate::kit_change::KitChange,
-        },
-        FixedPiecesFlatCenter {
-            design_id: Id,
-            piece_ids: Vec<Id>,
-            change: crate::kit_change::KitChange,
-        },
-        FlattenedDesign {
-            design_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        ExpandedNestedDesign {
-            parent_design_id: Id,
-            nested_design_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        DeletedConnection {
-            design_id: Id,
-            connection_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        ChangedPieceKind {
-            design_id: Id,
-            piece_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        ChangedDesignCommands {
-            design_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        ChangedTypeCommands {
-            type_id: Id,
-            change: crate::kit_change::KitChange,
-        },
-        AppliedKitChange {
-            change: crate::kit_change::KitChange,
-        },
+        RenamedDesign(SemanticRenamedDesign),
+        RenamedType(SemanticRenamedType),
+        DraggedFlatCenterPiece(SemanticDraggedFlatCenterPiece),
+        MovedPiecesFlatCenter(SemanticMovedPiecesFlatCenter),
+        ClusteredPieces(SemanticClusteredPieces),
+        FixedPiecesFlatCenter(SemanticFixedPiecesFlatCenter),
+        FlattenedDesign(SemanticFlattenedDesign),
+        ExpandedNestedDesign(SemanticExpandedNestedDesign),
+        DeletedConnection(SemanticDeletedConnection),
+        ChangedPieceKind(SemanticChangedPieceKind),
+        ChangedDesignCommands(SemanticChangedDesignCommands),
+        ChangedTypeCommands(SemanticChangedTypeCommands),
+        AppliedKitChange(SemanticAppliedKitChange),
     }
 
     /// @emoji Classifies a recorded `KitChange` into a semantic subscription event (same forward/inverse atoms).
@@ -15948,95 +16013,95 @@ pub mod events {
         match change.forward.as_slice() {
             [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeDesignCommand::Name { .. }) {
-                    SemanticKitEvent::RenamedDesign {
+                    SemanticKitEvent::RenamedDesign(SemanticRenamedDesign {
                         design_id: design_id.id.clone(),
                         change: change.clone(),
-                    }
+                    })
                 } else {
-                    SemanticKitEvent::ChangedDesignCommands {
+                    SemanticKitEvent::ChangedDesignCommands(SemanticChangedDesignCommands {
                         design_id: design_id.id.clone(),
                         change: change.clone(),
-                    }
+                    })
                 }
             }
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] => {
                 if commands.len() == 1 && matches!(&commands[0], ChangeTypeCommand::Name { .. }) {
-                    SemanticKitEvent::RenamedType {
+                    SemanticKitEvent::RenamedType(SemanticRenamedType {
                         type_id: type_id.id.clone(),
                         change: change.clone(),
-                    }
+                    })
                 } else {
-                    SemanticKitEvent::ChangedTypeCommands {
+                    SemanticKitEvent::ChangedTypeCommands(SemanticChangedTypeCommands {
                         type_id: type_id.id.clone(),
                         change: change.clone(),
-                    }
+                    })
                 }
             }
             [ChangeKitCommand::DragPieces {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::DraggedFlatCenterPiece {
+            }] => SemanticKitEvent::DraggedFlatCenterPiece(SemanticDraggedFlatCenterPiece {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::MovePieces {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::MovedPiecesFlatCenter {
+            }] => SemanticKitEvent::MovedPiecesFlatCenter(SemanticMovedPiecesFlatCenter {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::ClusterPieces {
                 design_id,
                 piece_ids,
                 ..
-            }] => SemanticKitEvent::ClusteredPieces {
+            }] => SemanticKitEvent::ClusteredPieces(SemanticClusteredPieces {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::FixPieces {
                 design_id,
                 piece_ids,
-            }] => SemanticKitEvent::FixedPiecesFlatCenter {
+            }] => SemanticKitEvent::FixedPiecesFlatCenter(SemanticFixedPiecesFlatCenter {
                 design_id: design_id.id.clone(),
                 piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
                 change: change.clone(),
-            },
-            [ChangeKitCommand::FlattenDesign { design_id }] => SemanticKitEvent::FlattenedDesign {
+            }),
+            [ChangeKitCommand::FlattenDesign { design_id }] => SemanticKitEvent::FlattenedDesign(SemanticFlattenedDesign {
                 design_id: design_id.id.clone(),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::ExpandNestedDesign {
                 parent_design_id,
                 nested_design_id,
-            }] => SemanticKitEvent::ExpandedNestedDesign {
+            }] => SemanticKitEvent::ExpandedNestedDesign(SemanticExpandedNestedDesign {
                 parent_design_id: parent_design_id.id.clone(),
                 nested_design_id: nested_design_id.id.clone(),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::DeleteConnection {
                 design_id,
                 connection_id,
-            }] => SemanticKitEvent::DeletedConnection {
+            }] => SemanticKitEvent::DeletedConnection(SemanticDeletedConnection {
                 design_id: design_id.id.clone(),
                 connection_id: connection_id.id.clone(),
                 change: change.clone(),
-            },
+            }),
             [ChangeKitCommand::ChangePieceKind {
                 design_id,
                 piece_id,
                 ..
-            }] => SemanticKitEvent::ChangedPieceKind {
+            }] => SemanticKitEvent::ChangedPieceKind(SemanticChangedPieceKind {
                 design_id: design_id.id.clone(),
                 piece_id: piece_id.id.clone(),
                 change: change.clone(),
-            },
-            _ => SemanticKitEvent::AppliedKitChange { change: change.clone() },
+            }),
+            _ => SemanticKitEvent::AppliedKitChange(SemanticAppliedKitChange { change: change.clone() }),
         }
     }
 

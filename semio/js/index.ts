@@ -123,6 +123,52 @@ export type KitChangeKindWire =
   | { readonly other: string }
   | (string & { readonly _semioExt?: 1 });
 
+/** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKindWire} via {@linkcode kitChangeSemanticKindToWire}. */
+export type KitChangeSemanticKindGql =
+  | "INFERRED"
+  | "SET_KIT_METADATA"
+  | "ADD_TYPE"
+  | "REMOVE_TYPE"
+  | "MODIFY_TYPE"
+  | "ADD_DESIGN"
+  | "REMOVE_DESIGN"
+  | "MODIFY_DESIGN"
+  | "ADD_PIECE"
+  | "REMOVE_PIECE"
+  | "CONNECT"
+  | "DISCONNECT"
+  | "UNIFY_CHECKPOINTS"
+  | "MARK_RELEASE"
+  | "OTHER";
+
+/** @emoji 🧾 Maps batch `changeKind` + `changeKindOther` into {@linkcode KitChangeKindWire} (camelCase unit or `{ other }` for extension labels). */
+export function kitChangeSemanticKindToWire(
+  gql: KitChangeSemanticKindGql | null | undefined,
+  other: string | null | undefined,
+): KitChangeKindWire {
+  if (gql === "OTHER" || gql == null) {
+    if (other != null && other.length > 0) return { other } as const;
+    return "inferred";
+  }
+  const m: Record<Exclude<KitChangeSemanticKindGql, "OTHER">, KitChangeKindWire> = {
+    INFERRED: "inferred",
+    SET_KIT_METADATA: "setKitMetadata",
+    ADD_TYPE: "addType",
+    REMOVE_TYPE: "removeType",
+    MODIFY_TYPE: "modifyType",
+    ADD_DESIGN: "addDesign",
+    REMOVE_DESIGN: "removeDesign",
+    MODIFY_DESIGN: "modifyDesign",
+    ADD_PIECE: "addPiece",
+    REMOVE_PIECE: "removePiece",
+    CONNECT: "connect",
+    DISCONNECT: "disconnect",
+    UNIFY_CHECKPOINTS: "unifyCheckpoints",
+    MARK_RELEASE: "markRelease",
+  };
+  return m[gql as Exclude<KitChangeSemanticKindGql, "OTHER">] ?? "inferred";
+}
+
 /** @emoji 🪢 Object branch for GraphQL / serde wire trees (explicit string slots, no `Record` alias). */
 export type SemioKitWireStructDto = { readonly [slot: string]: SemioKitWireTreeDto };
 /** @emoji 🪢 Recursive wire tree from GraphQL / serde kit scalars. */
@@ -284,19 +330,6 @@ function isTheKitReadScope(s: KitReadScope): boolean {
 // #region 🔖KitWriteScope
 /** @emoji 🧭 Active VCS session/draft/open-transaction anchor for kit control-plane `kitStore.batch` writes. */
 export type KitWriteScope = { readonly sessionId: string; readonly draftId: string; readonly transactionId: string };
-
-/** @emoji 🧾 One row from GraphQL `KitStoreBatchResult` (camelCase wire). */
-export type KitStoreBatchResultRow = Readonly<{
-  kind: string;
-  ok?: boolean | null;
-  sessionId?: string | null;
-  draftId?: string | null;
-  transactionId?: string | null;
-  changeKind?: string | null;
-  inverse?: readonly unknown[] | null;
-  conflicts?: readonly unknown[] | null;
-  backbone?: { attached: boolean; kind?: string | null; tip?: string | null } | null;
-}>;
 
 function __normKitStoreBatchKind(k: unknown): string {
   return String(k ?? "")
@@ -619,6 +652,20 @@ export type ChangeKitCommandWire =
   | { readonly expandNestedDesign: { readonly parentDesignId: KitIdWire; readonly nestedDesignId: KitIdWire } }
   | { readonly deleteConnection: { readonly designId: KitIdWire; readonly connectionId: KitIdWire } }
   | { readonly changePieceKind: { readonly designId: KitIdWire; readonly pieceId: KitIdWire; readonly newTypeId: KitIdWire } };
+
+/** @emoji 🧾 One row from GraphQL `KitStoreBatchResult` (camelCase wire). */
+export type KitStoreBatchResultRow = Readonly<{
+  kind: string;
+  ok?: boolean | null;
+  sessionId?: string | null;
+  draftId?: string | null;
+  transactionId?: string | null;
+  changeKind?: KitChangeSemanticKindGql | null;
+  changeKindOther?: string | null;
+  inverse?: readonly ChangeKitCommandWire[] | null;
+  conflicts?: readonly unknown[] | null;
+  backbone?: { attached: boolean; kind?: string | null; tip?: string | null } | null;
+}>;
 
 /** @emoji 🧾 Forward + inverse command atoms on the subscription bus (`KitChange` from `semio/rs`). */
 export type KitChangeWire = Readonly<{
@@ -1375,7 +1422,7 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind ok count changeKind inverse sessionId draftId transactionId checkpointId alternativeId backbone { attached kind tip } conflicts { id backboneTip reason createdAt } } } } } }`;
+const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind ok count changeKind changeKindOther inverse sessionId draftId transactionId checkpointId alternativeId backbone { attached kind tip } conflicts { id backboneTip reason createdAt } } } } } }`;
 
 /**
  * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
@@ -1850,7 +1897,8 @@ export class KitStore {
       kind?: string;
       ok?: boolean | null;
       count?: number | null;
-      changeKind?: string | null;
+      changeKind?: KitChangeSemanticKindGql | null;
+      changeKindOther?: string | null;
       inverse?: unknown;
       conflicts?: readonly Record<string, unknown>[];
       backbone?: Record<string, unknown> | null;
@@ -1869,7 +1917,8 @@ export class KitStore {
         kind?: string;
         ok?: boolean | null;
         count?: number | null;
-        changeKind?: string | null;
+        changeKind?: KitChangeSemanticKindGql | null;
+        changeKindOther?: string | null;
         inverse?: unknown;
         conflicts?: readonly Record<string, unknown>[];
         backbone?: Record<string, unknown> | null;
@@ -1961,9 +2010,19 @@ export class KitStore {
         { changeKitWithInverse: { commands: (shellVariables.commands as readonly unknown[]) ?? [] } } as Record<string, unknown>,
       ]);
       const hit = [...rows].reverse().find((r) => __normKitStoreBatchKind(r.kind) === "CHANGE_KIT_WITH_INVERSE") as
-        | { changeKind?: string; inverse?: unknown }
+        | { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: unknown }
         | undefined;
-      if (hit != null && typeof hit.changeKind === "string") return { data: { changeKitWithInverse: { kind: hit.changeKind, inverse: hit.inverse } } };
+      if (hit != null && hit.changeKind != null) {
+        const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommandWire[]) : [];
+        return {
+          data: {
+            changeKitWithInverse: {
+              kind: kitChangeSemanticKindToWire(hit.changeKind, hit.changeKindOther ?? null),
+              inverse: inv,
+            },
+          },
+        };
+      }
       throw new Error("changeKitWithInverse: missing batch row");
     }
     const back = this.backboneBatchCommandsFromJson(commandKind, shellVariables);
@@ -1992,12 +2051,12 @@ export class KitStore {
     throw new Error(`submitShellJson: unhandled kind ${commandKind}`);
   }
 
-  async changeKitWithInverse(commands: unknown): Promise<{ kind: string; inverse: unknown }> {
+  async changeKitWithInverse(commands: unknown): Promise<{ kind: KitChangeKindWire; inverse: readonly ChangeKitCommandWire[] }> {
     const raw = (await this.submitShellJson("changeKitWithInverse", { commands: commands as never })) as {
-      data?: { changeKitWithInverse?: { kind: string; inverse: unknown } };
+      data?: { changeKitWithInverse?: { kind: KitChangeKindWire; inverse: readonly ChangeKitCommandWire[] } };
     };
     const inner = raw?.data?.changeKitWithInverse;
-    if (!inner || typeof inner.kind !== "string") throw new Error("changeKitWithInverse: missing payload in batch result");
+    if (!inner || inner.kind == null) throw new Error("changeKitWithInverse: missing payload in batch result");
     return inner;
   }
 
@@ -6486,6 +6545,12 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
 
     it("kitReadScopeKey normalizes the main line scope for cache keys", () => {
       expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(kitReadScopeToGraphQLInput(theKitReadScope)));
+    });
+
+    it("kitChangeSemanticKindToWire maps GraphQL enum + other label", () => {
+      expect(kitChangeSemanticKindToWire("ADD_PIECE", null)).toBe("addPiece");
+      expect(kitChangeSemanticKindToWire("OTHER", "addFamily")).toEqual({ other: "addFamily" });
+      expect(kitChangeSemanticKindToWire("OTHER", null)).toBe("inferred");
     });
 
     it("normalizeKitEventFromSubscription parses SemanticChange rows", () => {
