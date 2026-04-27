@@ -1,0 +1,66 @@
+
+        fn rename_piece_apply(kit: &KitGraphRef, design_id: &Id, piece_id: &PieceIdDto, name: &Option<String>) -> Result<Vec<ChangeDesignCommand>> {
+            let pref = {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+                let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                dr.piece(piece_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.id.clone() })?
+            };
+            let old = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.name.clone();
+            pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_name(name.clone()).map_err(se)?;
+            if old == *name {
+                Ok(vec![])
+            } else {
+                Ok(vec![ChangeDesignCommand::RenamePiece { piece_id: piece_id.clone(), name: old }])
+            }
+        }
+
+        fn set_piece_description_apply(kit: &KitGraphRef, design_id: &Id, piece_id: &PieceIdDto, description: &Option<String>) -> Result<Vec<ChangeDesignCommand>> {
+            let pref = {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+                let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                dr.piece(piece_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.id.clone() })?
+            };
+            let old = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.description.clone();
+            pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_description(description.clone()).map_err(se)?;
+            if old == *description {
+                Ok(vec![])
+            } else {
+                Ok(vec![ChangeDesignCommand::SetPieceDescription { piece_id: piece_id.clone(), description: old }])
+            }
+        }
+
+        fn set_piece_plane_apply(kit: &KitGraphRef, design_id: &Id, piece_id: &PieceIdDto, plane: &Option<Plane>) -> Result<Vec<ChangeDesignCommand>> {
+            let pref = {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+                let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                dr.piece(piece_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.id.clone() })?
+            };
+            let old = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.pose.plane;
+            pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_plane(plane.clone()).map_err(se)?;
+            if old == *plane {
+                Ok(vec![])
+            } else {
+                Ok(vec![ChangeDesignCommand::SetPiecePlane { piece_id: piece_id.clone(), plane: old }])
+            }
+        }
+
+        fn set_piece_center_apply(kit: &KitGraphRef, design_id: &Id, piece_id: &PieceIdDto, center: &Option<Coordinate>) -> Result<Vec<ChangeDesignCommand>> {
+            let pref = {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+                let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                dr.piece(piece_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.id.clone() })?
+            };
+            let old = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.pose.center;
+            pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_center(center.unwrap_or(old)).map_err(se)?;
+            if center.is_none() || Some(old) == *center {
+                Ok(vec![])
+            } else if Some(old) == *center {
+                Ok(vec![])
+            } else {
+                Ok(vec![ChangeDesignCommand::SetPieceCenter { piece_id: piece_id.clone(), center: Some(old) }])
+            }
+        }

@@ -3151,9 +3151,40 @@ pub mod change_command {
         SetFamilies { families: Vec<FamilyIdDto> },
         AddPiece { piece: PieceFullDto },
         RemovePiece { piece_id: PieceIdDto },
+        RenamePiece { piece_id: PieceIdDto, name: Option<String> },
+        SetPieceDescription { piece_id: PieceIdDto, description: Option<String> },
+        SetPiecePlane { piece_id: PieceIdDto, plane: Option<Plane> },
+        SetPieceCenter { piece_id: PieceIdDto, center: Option<Coordinate> },
+        SetPieceColor { piece_id: PieceIdDto, color: Option<String> },
+        SetPieceKind { piece_id: PieceIdDto, kind_id: Option<TypeIdDto> },
+        SetPieceScale { piece_id: PieceIdDto, scale: Option<f64> },
+        SetPieceMirrorPlane { piece_id: PieceIdDto, mirror_plane: Option<Plane> },
+        SetPieceHidden { piece_id: PieceIdDto, hidden: Option<bool> },
+        SetPieceLocked { piece_id: PieceIdDto, locked: Option<bool> },
+        SetPieceStableId { piece_id: PieceIdDto, stable_id: Id },
+        AddPieceProp { piece_id: PieceIdDto, prop: PropFullDto },
+        RemovePieceProp { piece_id: PieceIdDto, prop_id: PropIdDto },
+        ChangePiecePropCommands { piece_id: PieceIdDto, prop_id: PropIdDto, commands: Vec<ChangePropCommand> },
+        AddPieceAttribute { piece_id: PieceIdDto, attribute: AttributeFullDto },
+        RemovePieceAttribute { piece_id: PieceIdDto, id: AttributeIdDto },
+        ChangePieceAttributeCommands { piece_id: PieceIdDto, id: AttributeIdDto, commands: Vec<ChangeAttributeCommand> },
+        FixPiece { piece_id: PieceIdDto },
         ChangePieceCommands { piece_id: PieceIdDto, commands: Vec<ChangePieceCommand> },
         AddConnection { connection: ConnectionFullDto },
         RemoveConnection { connection_id: ConnectionIdDto },
+        SetConnectionGap { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionShift { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionRise { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionRotation { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionTurn { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionTilt { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionAxisU { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionAxisV { connection_id: ConnectionIdDto, value: Option<f64> },
+        SetConnectionDescription { connection_id: ConnectionIdDto, description: Option<String> },
+        ReplaceConnectionAttachedSide { connection_id: ConnectionIdDto, side: SideMetadataDto },
+        ReplaceConnectionConnectingSide { connection_id: ConnectionIdDto, side: SideMetadataDto },
+        AddConnectionAttribute { connection_id: ConnectionIdDto, attribute: AttributeFullDto },
+        RemoveConnectionAttribute { connection_id: ConnectionIdDto, id: AttributeIdDto },
         ChangeConnectionCommands { connection_id: ConnectionIdDto, commands: Vec<ChangeConnectionCommand> },
         AddLayer { layer: LayerFullDto },
         RemoveLayer { layer_id: LayerIdDto },
@@ -7251,12 +7282,6 @@ pub mod kit_store {
             self.graph.read().expect("kit").subscribe()
         }
 
-        pub fn execute_vcs(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
-            let (tx, rx) = mpsc::channel();
-            self.wip_tx.send(WipMsg::Exec { cmd, reply: tx }).map_err(|_| SemioError::InvalidOperation("wip store closed".into()))?;
-            rx.recv().map_err(|_| SemioError::InvalidOperation("wip reply missing".into()))?
-        }
-
         pub fn execute(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
             match cmd {
                 KitStoreCommand::Batch { commands } => {
@@ -7291,7 +7316,11 @@ pub mod kit_store {
                     self.sync_now()?;
                     Ok(KitStoreCommandResult::SyncNow { ok: true })
                 }
-                other => self.execute_vcs(other),
+                other => {
+                    let (tx, rx) = mpsc::channel();
+                    self.wip_tx.send(WipMsg::Exec { cmd: other, reply: tx }).map_err(|_| SemioError::InvalidOperation("wip store closed".into()))?;
+                    rx.recv().map_err(|_| SemioError::InvalidOperation("wip reply missing".into()))?
+                }
             }
         }
 
@@ -19528,7 +19557,7 @@ pub mod kit_graph {
         }
 
         ///
-        pub fn execute_vcs(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+        pub fn execute(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
             cmd.execute(kit)
         }
 
@@ -25411,7 +25440,7 @@ pub mod io {
             children
         }
 
-        fn save_kit_vcs(tx: &Transaction<'_>, g: &KitGraph, kit_id: &Id) -> Result<()> {
+        fn save_kit(tx: &Transaction<'_>, g: &KitGraph, kit_id: &Id) -> Result<()> {
             let mut cp_ids: Vec<&Id> = g.checkpoints.keys().collect();
             cp_ids.sort_by_key(|id| id.as_str());
             for cp_id in cp_ids {
@@ -26462,7 +26491,7 @@ pub mod io {
                     insert_attribute(&tx, attribute, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
 
-                save_kit_vcs(&tx, self, &dto.id)?;
+                save_kit(&tx, self, &dto.id)?;
 
                 tx.commit()?;
                 Ok(())
@@ -26904,7 +26933,7 @@ pub mod kit_graphql {
                         let _ = reply.send(r.map(|pre| (pre.kind, pre.inverse_flat)).map_err(|e| format!("{e:?}")));
                     }
                     GraphWork::Vcs { command, reply } => {
-                        let r = KitGraph::execute_vcs(&graph, command).map_err(|e| e.to_string());
+                        let r = KitGraph::execute(&graph, command).map_err(|e| e.to_string());
                         let _ = reply.send(r);
                     }
                     GraphWork::Custom { run, reply } => {
@@ -31522,18 +31551,18 @@ mod tests {
             inner.types.push(t);
             inner.initial = inner.to_full_dto();
             let k = Arc::new(RwLock::new(inner));
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31545,7 +31574,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            KitGraph::execute_vcs(
+            KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -31603,18 +31632,18 @@ mod tests {
         #[test]
         fn transaction_change_undo_redo() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31626,7 +31655,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let res = KitGraph::execute_vcs(
+            let res = KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -31686,11 +31715,11 @@ mod tests {
         #[test]
         fn draft_undo_across_transactions() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
@@ -31698,7 +31727,7 @@ mod tests {
                 _ => panic!(),
             };
             let run_tx = |name: &str| {
-                let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                     .expect("st")
                 {
                     kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31710,7 +31739,7 @@ mod tests {
                     },
                     _ => panic!(),
                 };
-                KitGraph::execute_vcs(
+                KitGraph::execute(
                     &k,
                     KitStoreCommand::ExecuteSessionCommands {
                         id: sid.clone(),
@@ -31736,7 +31765,7 @@ mod tests {
                 let g = k.read().expect("g");
                 assert_eq!(read_type_name(&*g, &tid), "A2");
             }
-            KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
+            KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
             {
                 let g = k.read().expect("g");
                 assert_eq!(read_type_name(&*g, &tid), "A1");
@@ -31746,18 +31775,18 @@ mod tests {
         #[test]
         fn finalize_to_checkpoint_first_has_none_parent() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let txid = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31769,7 +31798,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp = match KitGraph::execute_vcs(
+            let cp = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -31811,18 +31840,18 @@ mod tests {
         #[test]
         fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31834,7 +31863,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp_main = match KitGraph::execute_vcs(
+            let cp_main = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid.clone(),
@@ -31867,11 +31896,11 @@ mod tests {
                 _ => panic!(),
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
-            let alt_id = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
+            let alt_id = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
+            let did1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
@@ -31879,7 +31908,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let tx1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31891,7 +31920,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _ = KitGraph::execute_vcs(
+            let _ = KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -31928,18 +31957,18 @@ mod tests {
         #[test]
         fn alternative_share_checkpoints() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -31951,7 +31980,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp0 = match KitGraph::execute_vcs(
+            let cp0 = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -31983,11 +32012,11 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let a1 = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
+            let a1 = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let a2 = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
+            let a2 = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
@@ -32000,18 +32029,18 @@ mod tests {
         #[test]
         fn tx_undo_updates_live_snapshot_after_multiple_changes() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -32029,7 +32058,7 @@ mod tests {
             };
 
             let run_tx = |command: TransactionCommand| {
-                KitGraph::execute_vcs(
+                KitGraph::execute(
                     &k,
                     KitStoreCommand::ExecuteSessionCommands {
                         id: sid.clone(),
@@ -32060,7 +32089,7 @@ mod tests {
                 "Step1"
             );
 
-            let can_redo = match KitGraph::execute_vcs(
+            let can_redo = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -32087,18 +32116,18 @@ mod tests {
         #[test]
         fn unify_alternative_replaces_list_with_root_and_new() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx0 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -32110,7 +32139,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp0 = match KitGraph::execute_vcs(
+            let cp0 = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid.clone(),
@@ -32142,18 +32171,18 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let alt = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
+            let alt = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
+            let did1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx1 = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -32165,7 +32194,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _cp1 = match KitGraph::execute_vcs(
+            let _cp1 = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -32202,7 +32231,7 @@ mod tests {
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
                 g.materialize_at(Some(&t))
             };
-            let _ = KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
+            let _ = KitGraph::execute(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
@@ -32217,18 +32246,18 @@ mod tests {
         #[test]
         fn release_caches_materialized_kit() {
             let (k, tid) = make_kit_with_type();
-            let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+            let sid = match KitGraph::execute(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+            let did = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
                 .expect("st")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -32240,7 +32269,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let cp = match KitGraph::execute_vcs(
+            let cp = match KitGraph::execute(
                 &k,
                 KitStoreCommand::ExecuteSessionCommands {
                     id: sid,
@@ -32272,7 +32301,7 @@ mod tests {
                 },
                 _ => panic!(),
             };
-            let _ = KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
+            let _ = KitGraph::execute(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
             let g = k.read().expect("g");
             let mk = g.checkpoints.get(&cp).expect("cp").release.as_ref().expect("mk");
             let computed = mk.compute();

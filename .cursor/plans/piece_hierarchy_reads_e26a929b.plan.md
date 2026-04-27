@@ -4,19 +4,19 @@ overview: Move piece hierarchy metadata from the `DesignStore.piecePlacement` ag
 todos:
  - id: rust-piece-fields
    content: Add Rust PieceStore hierarchy fields and remove DesignStore piecePlacement aggregate.
-   status: in_progress
+   status: completed
  - id: graphql-regenerate
    content: Regenerate and inspect the GraphQL schema for the new PieceStore shape.
-   status: pending
+   status: completed
  - id: js-read-adapter
    content: Update semio/js getPiecesMetadata to query PieceStore fields and rebuild the existing metadata map.
-   status: pending
+   status: completed
  - id: react-downstream
    content: Adjust React hook comments/types and update downstream consumers that referenced the removed aggregate directly.
-   status: pending
+   status: completed
  - id: verify
    content: Run focused Rust, GraphQL, JS/React, and downstream validation commands.
-   status: pending
+   status: completed
 isProject: false
 ---
 

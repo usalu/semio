@@ -1,0 +1,1151 @@
+input AlternativeCommandInput @oneOf {
+	createAlternative: CreateAlternativeInput
+	unifyAlternative: MessageOnlyInput
+}
+
+type AlternativeDto {
+	id: String!
+	name: String!
+	root: String!
+	checkpoints: [String!]!
+}
+
+input AlternativeInput {
+	alternativeId: String
+	commands: [AlternativeCommandInput!]!
+}
+
+type AttributeFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	definition: String
+}
+
+type AttributeShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	definition: String
+}
+
+type AuthorFullDto {
+	id: Id!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
+}
+
+type AuthorShallowDto {
+	id: Id!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
+}
+
+input BackboneCommandInput @oneOf {
+	attachBackbone: BackboneConfigInput
+	detachBackbone: ConfirmOnlyInput
+	listConflicts: ConfirmOnlyInput
+	resolveConflict: ResolveConflictInput
+	backboneStatus: ConfirmOnlyInput
+	syncNow: ConfirmOnlyInput
+}
+
+input BackboneConfigInput @oneOf {
+	memory: ConfirmOnlyInput
+	dev: DevBackboneInput
+	local: LocalBackboneInput
+	remote: RemoteBackboneInput
+}
+
+input BackboneInput {
+	commands: [BackboneCommandInput!]!
+}
+
+enum BackboneKind {
+	MEMORY
+	DEV
+	LOCAL
+	REMOTE
+}
+
+type BackboneStatus {
+	attached: Boolean!
+	kind: BackboneKind
+	kindOther: String
+	tip: String
+}
+
+type BenchmarkFullDto {
+	id: Id!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
+}
+
+type BenchmarkMetadataDto {
+	id: Id!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
+}
+
+scalar ChangeKitCommand
+
+input ChangeKitCommandsInput {
+	commands: [ChangeKitCommand!]!
+}
+
+input ChangePieceTypeInput {
+	pieceId: String!
+	newTypeId: String!
+}
+
+input CheckpointCommandInput @oneOf {
+	markRelease: ConfirmOnlyInput
+	setActive: ConfirmOnlyInput
+}
+
+type CheckpointDto {
+	id: String!
+	parent: String
+	message: String
+	time: String
+	authors: [String!]!
+	hash: String!
+	isRelease: Boolean!
+	changeCount: Int!
+}
+
+input CheckpointInput {
+	checkpointId: String
+	commands: [CheckpointCommandInput!]!
+}
+
+input ClusterPiecesInput {
+	pieceIds: [String!]!
+	clusterName: String!
+}
+
+type ConceptFullDto {
+	id: Id!
+	name: String!
+	description: String
+	order: Int
+}
+
+type ConceptShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	order: Int
+}
+
+input ConfirmOnlyInput {
+	confirm: Boolean
+}
+
+type ConflictRecord {
+	id: String!
+	backboneTip: String
+	reason: String!
+	createdAt: String!
+}
+
+enum ConflictResolutionInput {
+	DROP_WIP
+	FORCE_OVERWRITE_BACKBONE
+}
+
+type Connection {
+	id: String!
+	container: DesignStore!
+	metadata: ConnectionMetadataDto!
+	shallow: ConnectionShallowDto!
+	full: ConnectionFullDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+	description: String
+}
+
+type ConnectionFullDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+	attributes: [AttributeFullDto!]!
+}
+
+type ConnectionMetadataDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+}
+
+type ConnectionShallowDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+	attributes: [AttributeShallowDto!]!
+}
+
+type Connector {
+	id: String!
+	code: String!
+	description: String
+	container: TypeStore!
+	metadata: ConnectorMetadataDto!
+	shallow: ConnectorShallowDto!
+	full: ConnectorFullDto!
+}
+
+type ConnectorFullDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+	qualities: [QualityFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type ConnectorIdDto {
+	id: Id!
+}
+
+type ConnectorMetadataDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+}
+
+type ConnectorShallowDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+	qualities: [QualityShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type Coordinate {
+	u: Float!
+	v: Float!
+}
+
+input CountInput {
+	count: Int
+}
+
+input CreateAlternativeInput {
+	name: String!
+	fromCheckpointId: String
+}
+
+input CreateConnectedPieceInput {
+	parentPiece: String!
+	parentPort: String!
+	childType: String!
+	childPort: String!
+}
+
+input CreateDraftInput {
+	parentCheckpointId: String
+	targetAlternativeId: String
+}
+
+input CreateFixedPieceInput {
+	typeId: String!
+	plane: PlaneInput!
+}
+
+input CreateHangingPiecesInput {
+	typeIds: [String!]!
+	plane: PlaneInput!
+}
+
+input DeleteConnectionInput {
+	connectionId: String!
+}
+
+input DesignCommandInput @oneOf {
+	clusterPieces: ClusterPiecesInput
+	dragPieces: DragPiecesInput
+	movePieces: MovePiecesInput
+	fixPieces: PieceIdsInput
+	flattenDesign: ConfirmOnlyInput
+	expandDesign: ExpandDesignInput
+	deleteConnection: DeleteConnectionInput
+	changePieceType: ChangePieceTypeInput
+	createHangingPieces: CreateHangingPiecesInput
+	createConnectedPiece: CreateConnectedPieceInput
+	createFixedPiece: CreateFixedPieceInput
+}
+
+type DesignFlattenMapEntryDto {
+	pieceId: Id!
+	plane: Plane!
+	center: Coordinate!
+}
+
+type DesignFullDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: LocationIdDto
+	unit: String
+	created: String
+	updated: String
+	kit: KitIdDto
+	families: [FamilyIdDto!]!
+	pieces: [PieceFullDto!]!
+	connections: [ConnectionFullDto!]!
+	layers: [LayerFullDto!]!
+	groups: [GroupFullDto!]!
+	authors: [AuthorFullDto!]!
+	concepts: [ConceptFullDto!]!
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+	stats: [StatFullDto!]!
+}
+
+type DesignIdDto {
+	id: Id!
+}
+
+input DesignInput {
+	designId: String!
+	commands: [DesignCommandInput!]!
+}
+
+type DesignMetadataDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: LocationIdDto
+	unit: String
+	created: String
+	updated: String
+	kit: KitIdDto
+}
+
+type DesignShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: LocationIdDto
+	unit: String
+	created: String
+	updated: String
+	kit: KitIdDto
+	families: [FamilyIdDto!]!
+	pieces: [PieceShallowDto!]!
+	connections: [ConnectionShallowDto!]!
+	layers: [LayerShallowDto!]!
+	groups: [GroupShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+	stats: [StatShallowDto!]!
+}
+
+type DesignStore {
+	id: String!
+	name: String!
+	description: String
+	container: KitStore!
+	metadata: DesignMetadataDto!
+	shallow: DesignShallowDto!
+	full: DesignFullDto!
+	pieces: [PieceStore!]!
+	pieceByDtoId(id: String!): PieceStore
+	connections: [Connection!]!
+	piecesFull: [PieceFullDto!]!
+	connectionsFull: [ConnectionFullDto!]!
+	flattenMap: [DesignFlattenMapEntryDto!]!
+	clusterableGroups(selection: [String!]!): [[String!]!]!
+	qualitySum(qualityId: String!): Float!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!
+	includedDesigns: [IncludedDesignInfoDto!]!
+	includedDesignIds: [String!]!
+}
+
+input DevBackboneInput {
+	path: String!
+}
+
+input DraftCommandInput @oneOf {
+	finalizeDraft: MessageOnlyInput
+	abortDraft: ConfirmOnlyInput
+	undoDraft: CountInput
+	redoDraft: CountInput
+	startTransaction: ConfirmOnlyInput
+	transaction: TransactionInput
+}
+
+type DraftDto {
+	id: String!
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
+input DraftInput {
+	draftId: String
+	commands: [DraftCommandInput!]!
+}
+
+input DragPiecesInput {
+	pieceIds: [String!]!
+	du: Float!
+	dv: Float!
+}
+
+input ExpandDesignInput {
+	nestedDesignId: String!
+}
+
+type FamilyIdDto {
+	id: Id!
+}
+
+type FileIdDto {
+	id: Id!
+}
+
+type FileShallowDto {
+	id: Id!
+	url: String!
+	mime: String
+	size: Int
+	hash: String
+	description: String
+	created: String
+	updated: String
+}
+
+type FolderShallowDto {
+	id: Id!
+	path: String!
+	description: String
+}
+
+type GroupFullDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	icon: String
+	pieces: [PieceIdDto!]!
+}
+
+type GroupShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	icon: String
+	pieces: [PieceIdDto!]!
+}
+
+scalar Id
+
+enum IncludedDesignConnectionKind {
+	CONNECTED
+	FIXED
+}
+
+type IncludedDesignInfoDto {
+	id: Id!
+	designId: Id!
+	connectionKind: IncludedDesignConnectionKind!
+	center: Coordinate
+	plane: Plane
+	externalConnections: [ConnectionFullDto!]!
+}
+
+enum KitChangeSemanticKind {
+	INFERRED
+	SET_KIT_METADATA
+	ADD_TYPE
+	REMOVE_TYPE
+	MODIFY_TYPE
+	ADD_DESIGN
+	REMOVE_DESIGN
+	MODIFY_DESIGN
+	ADD_PIECE
+	REMOVE_PIECE
+	CONNECT
+	DISCONNECT
+	UNIFY_CHECKPOINTS
+	MARK_RELEASE
+	OTHER
+}
+
+type KitColoredConnectorDto {
+	typeId: TypeIdDto!
+	connectorId: ConnectorIdDto!
+	color: String!
+}
+
+scalar KitEvent
+
+scalar KitFullSnapshot
+
+type KitIdDto {
+	id: Id!
+}
+
+type KitMetadataDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+}
+
+input KitReadScopeAlternativeInput {
+	alternativeId: String!
+}
+
+input KitReadScopeCheckpointInput {
+	checkpointId: String!
+}
+
+input KitReadScopeDraftInput {
+	sessionId: String!
+	draftId: String!
+}
+
+input KitReadScopeInput @oneOf {
+	theKit: ConfirmOnlyInput
+	checkpoint: KitReadScopeCheckpointInput
+	alternative: KitReadScopeAlternativeInput
+	draft: KitReadScopeDraftInput
+	transaction: KitReadScopeTransactionInput
+}
+
+input KitReadScopeTransactionInput {
+	sessionId: String!
+	draftId: String!
+	transactionId: String!
+}
+
+type KitShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+	types: [TypeShallowDto!]!
+	designs: [DesignShallowDto!]!
+	files: [FileShallowDto!]!
+	folders: [FolderShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type KitStore {
+	name: String!
+	designByDtoId(id: String!): DesignStore
+	typeByDtoId(id: String!): TypeStore
+	description: String
+	types: [TypeStore!]!
+	designs: [DesignStore!]!
+	coloredConnectors: [KitColoredConnectorDto!]!
+	fullDto: KitFullSnapshot!
+	theKitDto: KitFullSnapshot!
+	materializeAt(checkpointId: String): KitFullSnapshot!
+	metadata: KitMetadataDto!
+	shallow: KitShallowDto!
+	vcsState: StateDto!
+}
+
+input KitStoreCommandInput @oneOf {
+	session: SessionInput
+	checkpoint: CheckpointInput
+	alternative: AlternativeInput
+	backbone: BackboneInput
+}
+
+input KitStoreInput {
+	clientMutationId: String
+	commands: [KitStoreCommandInput!]!
+}
+
+type KitStoreMutation {
+	batch(input: KitStoreInput!): KitStorePayload!
+}
+
+type KitStorePayload {
+	clientMutationId: String
+	results: [KitStoreResult!]!
+}
+
+type KitStoreResult {
+	kind: KitStoreResultKind!
+	ok: Boolean
+	count: Int
+	sessionId: String
+	draftId: String
+	transactionId: String
+	checkpointId: String
+	alternativeId: String
+	backbone: BackboneStatus
+	conflicts: [ConflictRecord!]
+	changeKind: KitChangeSemanticKind
+	changeKindOther: String
+	inverse: [ChangeKitCommand!]
+}
+
+enum KitStoreResultKind {
+	CHANGE_KIT_COMMANDS
+	CHANGE_KIT_WITH_INVERSE
+	CLUSTER_PIECES
+	DRAG_PIECES
+	MOVE_PIECES
+	FIX_PIECES
+	FLATTEN_DESIGN
+	EXPAND_DESIGN
+	DELETE_CONNECTION
+	CHANGE_PIECE_TYPE
+	CREATE_HANGING_PIECES
+	CREATE_CONNECTED_PIECE
+	CREATE_FIXED_PIECE
+	NEW_SESSION
+	END_SESSION
+	NEW_DRAFT
+	START_TRANSACTION
+	FINALIZE_DRAFT
+	ABORT_DRAFT
+	UNDO_DRAFT
+	REDO_DRAFT
+	FINALIZE_TRANSACTION
+	ABORT_TRANSACTION
+	UNDO_TRANSACTION
+	REDO_TRANSACTION
+	MARK_RELEASE
+	SET_ACTIVE_CHECKPOINT
+	NEW_ALTERNATIVE
+	UNIFY_ALTERNATIVE
+	ATTACH_BACKBONE
+	DETACH_BACKBONE
+	LIST_CONFLICTS
+	RESOLVE_CONFLICT
+	BACKBONE_STATUS
+	SYNC_NOW
+}
+
+type LayerFullDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
+}
+
+type LayerShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
+}
+
+input LocalBackboneInput {
+	folder: String!
+}
+
+type LocationIdDto {
+	id: Id!
+}
+
+input MessageOnlyInput {
+	message: String!
+}
+
+input MovePiecesInput {
+	pieceIds: [String!]!
+	gap: Float!
+	shift: Float!
+	rise: Float!
+}
+
+type Mutation {
+	kitStore: KitStoreMutation!
+}
+
+type PieceFullDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type PieceIdDto {
+	id: Id!
+}
+
+input PieceIdsInput {
+	pieceIds: [String!]!
+}
+
+type PieceMetadataDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+}
+
+type PieceShallowDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type PieceStore {
+	id: String!
+	name: String
+	description: String
+	container: DesignStore!
+	metadata: PieceMetadataDto!
+	shallow: PieceShallowDto!
+	full: PieceFullDto!
+	flatPlane: Plane!
+	flatCenter: Coordinate!
+	flatPose: PoseFullDto!
+	scale: Float
+	refType: TypeStore
+	parentConnection: Connection
+	parentPiece: PieceStore
+	depth: Int!
+	path: [PieceStore!]!
+}
+
+type Plane {
+	origin: Point!
+	xAxis: Vector!
+	yAxis: Vector!
+}
+
+input PlaneInput {
+	origin: PointInput!
+	xAxis: VectorInput!
+	yAxis: VectorInput!
+}
+
+type Point {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+input PointInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type PortIdDto {
+	id: Id!
+}
+
+type PoseFullDto {
+	plane: Plane!
+	center: Coordinate!
+}
+
+type PropFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	quality: QualityIdDto
+}
+
+type PropShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+}
+
+type QualityFullDto {
+	id: Id!
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	benchmarks: [BenchmarkFullDto!]!
+}
+
+type QualityIdDto {
+	id: Id!
+}
+
+type QualityShallowDto {
+	id: Id!
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	benchmarks: [BenchmarkMetadataDto!]!
+}
+
+type Query {
+	kit(scope: KitReadScopeInput!): KitStore!
+}
+
+input RemoteBackboneInput {
+	url: String!
+	sessionId: String!
+}
+
+type ReplaceableCatalogStore {
+	types: [TypeStore!]!
+	designs: [DesignStore!]!
+}
+
+type Representation {
+	id: String!
+	url: String!
+	description: String
+	container: TypeStore!
+	metadata: RepresentationMetadataDto!
+	shallow: RepresentationShallowDto!
+	full: RepresentationFullDto!
+}
+
+type RepresentationFullDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type RepresentationMetadataDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+}
+
+type RepresentationShallowDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+input ResolveConflictInput {
+	conflictId: String!
+	strategy: ConflictResolutionInput!
+}
+
+type RootDto {
+	id: String!
+	name: String!
+}
+
+input SessionCommandInput @oneOf {
+	createSession: ConfirmOnlyInput
+	endSession: ConfirmOnlyInput
+	createDraft: CreateDraftInput
+	draft: DraftInput
+}
+
+type SessionDto {
+	id: String!
+	drafts: [DraftDto!]!
+}
+
+input SessionInput {
+	sessionId: String
+	commands: [SessionCommandInput!]!
+}
+
+type SideMetadataDto {
+	id: Id!
+	piece: PieceIdDto!
+	port: PortIdDto
+	designPiece: PieceIdDto
+	connector: ConnectorIdDto
+}
+
+type StatFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	description: String
+}
+
+type StatShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	description: String
+}
+
+type StateDto {
+	theKitHead: String
+	root: RootDto!
+	checkpoints: [CheckpointDto!]!
+	alternatives: [AlternativeDto!]!
+	sessions: [SessionDto!]!
+	theKitLine: [String!]!
+}
+
+type Subscription {
+	eventStream: KitEvent!
+}
+
+type TagFullDto {
+	id: Id!
+	name: String!
+	order: Int
+}
+
+type TagShallowDto {
+	id: Id!
+	name: String!
+	order: Int
+}
+
+input TransactionCommandInput @oneOf {
+	changeKitCommands: ChangeKitCommandsInput
+	changeKitWithInverse: ChangeKitCommandsInput
+	design: DesignInput
+	finalizeTransaction: ConfirmOnlyInput
+	abortTransaction: ConfirmOnlyInput
+	undoTransaction: CountInput
+	redoTransaction: CountInput
+}
+
+input TransactionInput {
+	transactionId: String
+	commands: [TransactionCommandInput!]!
+}
+
+type TypeFullDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	isAbstract: Boolean
+	unit: String
+	location: LocationIdDto
+	created: String
+	updated: String
+	families: [FamilyIdDto!]!
+	connectors: [ConnectorFullDto!]!
+	representations: [RepresentationFullDto!]!
+	authors: [AuthorFullDto!]!
+	concepts: [ConceptFullDto!]!
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type TypeIdDto {
+	id: Id!
+}
+
+type TypeMetadataDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	isAbstract: Boolean
+	unit: String
+	location: LocationIdDto
+	created: String
+	updated: String
+}
+
+type TypeShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	isAbstract: Boolean
+	unit: String
+	location: LocationIdDto
+	created: String
+	updated: String
+	families: [FamilyIdDto!]!
+	connectors: [ConnectorShallowDto!]!
+	representations: [RepresentationShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type TypeStore {
+	id: String!
+	name: String!
+	description: String
+	container: KitStore!
+	metadata: TypeMetadataDto!
+	shallow: TypeShallowDto!
+	full: TypeFullDto!
+	connectors: [Connector!]!
+	representations: [Representation!]!
+	bestRepresentation(tagIds: [String!]!): Representation
+}
+
+type Vector {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+input VectorInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Indicates that an Input Object is a OneOf Input Object (and thus requires exactly one of its field be provided)
+"""
+directive @oneOf on INPUT_OBJECT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}
