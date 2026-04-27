@@ -403,7 +403,7 @@ type DesignStore {
 	id: String!
 	name: String!
 	description: String
-	container: KitStore!
+	container: Kit!
 	metadata: DesignMetadataDto!
 	shallow: DesignShallowDto!
 	full: DesignFullDto!
@@ -518,6 +518,22 @@ type IncludedDesignInfoDto {
 	externalConnections: [ConnectionFullDto!]!
 }
 
+type Kit {
+	name: String!
+	designByDtoId(id: String!): DesignStore
+	typeByDtoId(id: String!): TypeStore
+	description: String
+	types: [TypeStore!]!
+	designs: [DesignStore!]!
+	coloredConnectors: [KitColoredConnectorDto!]!
+	fullDto: KitFullSnapshot!
+	theKitDto: KitFullSnapshot!
+	materializeAt(checkpointId: String): KitFullSnapshot!
+	metadata: KitMetadataDto!
+	shallow: KitShallowDto!
+	vcsState: StateDto!
+}
+
 enum KitChangeSemanticKind {
 	INFERRED
 	SET_KIT_METADATA
@@ -617,22 +633,6 @@ type KitShallowDto {
 	qualities: [QualityShallowDto!]!
 	props: [PropShallowDto!]!
 	attributes: [AttributeShallowDto!]!
-}
-
-type KitStore {
-	name: String!
-	designByDtoId(id: String!): DesignStore
-	typeByDtoId(id: String!): TypeStore
-	description: String
-	types: [TypeStore!]!
-	designs: [DesignStore!]!
-	coloredConnectors: [KitColoredConnectorDto!]!
-	fullDto: KitFullSnapshot!
-	theKitDto: KitFullSnapshot!
-	materializeAt(checkpointId: String): KitFullSnapshot!
-	metadata: KitMetadataDto!
-	shallow: KitShallowDto!
-	vcsState: StateDto!
 }
 
 input KitStoreCommandInput @oneOf {
@@ -902,7 +902,7 @@ type QualityShallowDto {
 }
 
 type Query {
-	kit(scope: KitReadScopeInput!): KitStore!
+	kit(scope: KitReadScopeInput!): Kit!
 }
 
 input RemoteBackboneInput {
@@ -1111,7 +1111,7 @@ type TypeStore {
 	id: String!
 	name: String!
 	description: String
-	container: KitStore!
+	container: Kit!
 	metadata: TypeMetadataDto!
 	shallow: TypeShallowDto!
 	full: TypeFullDto!

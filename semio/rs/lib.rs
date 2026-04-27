@@ -72,7 +72,6 @@ pub mod read {
         pub color: String,
     }
 
-
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommand {
@@ -22063,6 +22062,11 @@ pub mod piece {
             path
         }
 
+        /// 🪜Hierarchy depth from root/fixed ancestor (`path().len() - 1`).
+        pub fn depth(&self) -> i32 {
+            i32::try_from(self.path().len().saturating_sub(1)).unwrap_or(0)
+        }
+
         /// 🔁Returns connector-valid replacement kinds and designs for this piece inside its host design.
         pub fn alternatives(&self) -> PieceAlternatives {
             let Some(design_ref) = self.parent_design.upgrade() else {
@@ -27910,7 +27914,7 @@ pub mod kit_graphql {
         pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
-    #[Object(name = "ReplaceableCatalog")]
+    #[Object(name = "ReplaceableCatalogStore")]
     impl ReplaceableCatalogNode {
         async fn types(&self) -> Result<Vec<TypeNode>> {
             Ok(self.types.iter().cloned().map(TypeNode).collect())
@@ -27942,7 +27946,7 @@ pub mod kit_graphql {
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsCheckpointDto")]
+    #[graphql(name = "CheckpointDto")]
     struct CheckpointDto {
         id: String,
         parent: Option<String>,
@@ -27954,7 +27958,7 @@ pub mod kit_graphql {
         change_count: usize,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsAlternativeDto")]
+    #[graphql(name = "AlternativeDto")]
     struct AlternativeDto {
         id: String,
         name: String,
@@ -27962,7 +27966,7 @@ pub mod kit_graphql {
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsDraftDto")]
+    #[graphql(name = "DraftDto")]
     struct DraftDto {
         id: String,
         parent_checkpoint: Option<String>,
@@ -27974,19 +27978,19 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsSessionDto")]
+    #[graphql(name = "SessionDto")]
     struct SessionDto {
         id: String,
         drafts: Vec<DraftDto>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsRootDto")]
+    #[graphql(name = "RootDto")]
     struct RootDto {
         id: String,
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsStateDto")]
+    #[graphql(name = "StateDto")]
     struct StateDto {
         the_kit_head: Option<String>,
         root: RootDto,
@@ -27996,7 +28000,7 @@ pub mod kit_graphql {
         the_kit_line: Vec<String>,
     }
 
-    #[Object(name = "Kit")]
+    #[Object(name = "KitStore")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
@@ -28102,7 +28106,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Design")]
+    #[Object(name = "DesignStore")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
@@ -28193,16 +28197,6 @@ pub mod kit_graphql {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             Ok(crate::read::design_included_design_ids(&*d).into_iter().map(|x| x.id.to_string()).collect())
         }
-
-        async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<crate::kit_graph::PiecePlacementMetadataDto>> {
-            let gref: &KitGraphRef = ctx.data()?;
-            let g = lock_graph(gref)?;
-            let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
-            let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
-            let mut rows: Vec<crate::kit_graph::PiecePlacementMetadataDto> = m.into_values().collect();
-            rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
-            Ok(rows)
-        }
     }
 
     #[Object(name = "PieceStore")]
@@ -28267,6 +28261,32 @@ pub mod kit_graphql {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionNode))
         }
+
+        async fn parent_piece(&self) -> Result<Option<PieceNode>> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.parent_piece.as_ref().and_then(|w| w.upgrade()).map(PieceNode))
+        }
+
+        async fn depth(&self) -> Result<i32> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.depth())
+        }
+
+        async fn path(&self) -> Result<Vec<PieceNode>> {
+            let (steps, design_weak) = {
+                let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+                (p.path(), p.parent_design.clone())
+            };
+            let design = design_weak.upgrade().ok_or_else(|| Error::new("design container missing for piece"))?;
+            let dr = design.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let mut out: Vec<PieceNode> = Vec::new();
+            for step in steps {
+                if let Some(pr) = dr.piece(step.id.as_str()) {
+                    out.push(PieceNode(pr));
+                }
+            }
+            Ok(out)
+        }
     }
 
     #[Object(name = "TypeStore")]
@@ -28322,7 +28342,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "ConnectorStore")]
+    #[Object(name = "Connector")]
     impl ConnectorNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
@@ -28357,7 +28377,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "RepresentationStore")]
+    #[Object(name = "Representation")]
     impl RepresentationNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
@@ -28392,7 +28412,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "ConnectionStore")]
+    #[Object(name = "Connection")]
     impl ConnectionNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
@@ -28654,15 +28674,31 @@ mod tests {
         fn assert_graphql_schema_hygiene(s: &str) {
             assert!(!s.contains("Gql"), "SDL must not expose ad hoc Gql* names");
             assert!(!s.contains("AuthorShallowRow") && !s.contains("RowObject"), "SDL must not expose legacy *Row graph wrappers");
+            assert!(!s.contains("piecePlacement"), "SDL must not expose design-level piecePlacement aggregate");
+            assert!(!s.contains("PiecePlacementMetadataDto"), "SDL must not declare PiecePlacementMetadataDto");
+            assert!(s.contains("parentPiece:") && s.contains("depth: Int!") && s.contains("path: [PieceStore!]!"), "SDL must expose PieceStore hierarchy fields");
             for bad in ["TypeShallowList", "DesignShallowList", "PieceFullList", "ConnectionFullList"] {
                 assert!(!s.contains(bad), "SDL must not declare list scalar {bad}");
             }
-            for required in ["type KitStore", "type DesignStore", "type PieceStore", "type TypeStore", "type ConnectionStore", "type ConnectorStore", "type RepresentationStore"] {
+            for required in [
+                "type KitStore",
+                "type DesignStore",
+                "type PieceStore",
+                "type TypeStore",
+                "type Connection",
+                "type Connector",
+                "type Representation",
+                "type ReplaceableCatalogStore",
+            ] {
                 assert!(s.contains(required), "SDL must declare {required}");
             }
-            for forbidden_entity in ["\ntype Design\n", "\ntype Piece\n", "\ntype Type\n", "\ntype Connection\n", "\ntype Connector\n", "\ntype Representation\n"] {
+            for forbidden_entity in ["\ntype Design\n", "\ntype Piece\n", "\ntype Type\n", "\ntype ConnectionStore\n", "\ntype ConnectorStore\n", "\ntype RepresentationStore\n", "\ntype Kit\n"] {
                 assert!(!s.contains(forbidden_entity), "SDL must not declare bare entity {forbidden_entity:?}");
             }
+            assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"), "replaceable catalog resolver");
+            assert!(s.contains("types: [TypeStore!]!") && s.contains("designs: [DesignStore!]!"), "ReplaceableCatalog exposes store refs");
+            assert!(s.contains("container: KitStore!") && s.contains("container: DesignStore!"), "container back-refs use *Store SDL names");
+            assert!(s.contains("metadata: DesignMetadataDto!") && s.contains("shallow: DesignShallowDto!"), "Design DTO tiers");
         }
 
         #[test]
