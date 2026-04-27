@@ -60,7 +60,6 @@ pub mod read {
         pub id: Id,
         #[serde(rename = "designId")]
         pub design_id: Id,
-        /// Wire JSON uses `"type"`; GraphQL exposes `connectionKind`.
         #[serde(rename = "type")]
         #[graphql(name = "connectionKind")]
         pub connection_kind: IncludedDesignConnectionKind,
@@ -75,7 +74,7 @@ pub mod read {
     /// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
-    pub struct KitColoredConnectorRowDto {
+    pub struct KitColoredConnectorDto {
         pub type_id: TypeIdDto,
         pub connector_id: crate::connector::ConnectorIdDto,
         pub color: String,
@@ -103,15 +102,11 @@ pub mod read {
         ReadKitUpdatedCommand,
         ReadKitTypesFullCommand,
         ReadKitTypesShallowCommand,
-        /// Stable type id list (kit graph order).
         ReadKitTypeIdsCommand,
-        /// Per-type metadata rows (no full type payload).
         ReadKitTypesMetadataCommand,
         ReadKitDesignsFullCommand,
         ReadKitDesignsShallowCommand,
-        /// Stable design id list (kit graph order).
         ReadKitDesignIdsCommand,
-        /// Per-design metadata rows (no full design payload).
         ReadKitDesignsMetadataCommand,
         ReadKitFilesFullCommand,
         ReadKitFilesShallowCommand,
@@ -134,7 +129,6 @@ pub mod read {
         ReadKitPropsShallowCommand,
         ReadKitAttributesFullCommand,
         ReadKitAttributesShallowCommand,
-        /// Per-connector UI colors derived from port id (see JS `colorPortsForTypes` / `getColorForText`).
         ReadKitColoredConnectorsCommand,
         ReadKitTypeCommands {
             id: TypeIdDto,
@@ -237,7 +231,7 @@ pub mod read {
         ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
         ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
         ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-        ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorRowDto> },
+        ReadKitColoredConnectorsCommand { rows: Vec<KitColoredConnectorDto> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
         ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
         ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -289,12 +283,10 @@ pub mod read {
         ReadTypePropsShallowCommand,
         ReadTypeAttributesFullCommand,
         ReadTypeAttributesShallowCommand,
-        /// All ports on families referenced by this type (see [`TypeStore::port`] for single-id resolution).
         ReadTypePortsFullCommand,
         ReadTypeConnectorForPortIdCommand {
             port_id: PortIdDto,
         },
-        /// Tag ids to score representations (Jaccard + filter; see JS `selectBestRepresentation` / `findRepresentation`).
         ReadTypeBestRepresentationCommand {
             tag_ids: Vec<Id>,
         },
@@ -431,21 +423,16 @@ pub mod read {
         ReadDesignStatsFullCommand,
         ReadDesignStatsShallowCommand,
         ReadDesignFlattenMapCommand,
-        /// Connected component groups among `selection` (see JS `getClusterableGroups`).
         ReadDesignClusterableGroupsCommand {
             selection: Vec<PieceIdDto>,
         },
-        /// Child design stubs linked via connection sides (`designPiece` wire), with incident connections.
         ReadDesignIncludedDesignsCommand,
-        /// Sum of numeric props for `qualityId` over pieces (piece prop overrides type prop). See JS `sumQualityInDesign`.
         ReadDesignQualitySumCommand {
             quality_id: QualityIdDto,
         },
-        /// Replacement kind/design ids for `selection` (see [`DesignStore::replaceable_catalog_candidates`]).
         ReadDesignReplaceableCatalogCommand {
             selection: Vec<PieceIdDto>,
         },
-        /// Design ids referenced as `designPiece` on connection sides (explode / include list).
         ReadDesignIncludedDesignIdsCommand,
         ReadDesignFamilyCommands {
             id: FamilyIdDto,
@@ -2173,8 +2160,8 @@ pub mod read {
         VARI[i][j].to_string()
     }
 
-    pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorRowDto> {
-        let mut out: Vec<KitColoredConnectorRowDto> = Vec::new();
+    pub(crate) fn kit_colored_connector_rows(g: &KitGraph) -> Vec<KitColoredConnectorDto> {
+        let mut out: Vec<KitColoredConnectorDto> = Vec::new();
         for t in &g.types {
             let Ok(tr) = t.read() else { continue };
             let tid = TypeIdDto { id: tr.id.clone() };
@@ -2182,7 +2169,7 @@ pub mod read {
                 let Ok(co) = c.read() else { continue };
                 let dto = co.to_full_dto();
                 let key = dto.port.as_ref().map(|p| p.id.as_str().to_string()).unwrap_or_else(|| co.id.as_str().to_string());
-                out.push(KitColoredConnectorRowDto { type_id: tid.clone(), connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() }, color: color_string_for_id_text(&key) });
+                out.push(KitColoredConnectorDto { type_id: tid.clone(), connector_id: crate::connector::ConnectorIdDto { id: co.id.clone() }, color: color_string_for_id_text(&key) });
             }
         }
         out
@@ -2818,7 +2805,6 @@ pub mod change_command {
         Version {
             version: Option<String>,
         },
-        /// Replace the entire kit graph from a snapshot (inverse is the previous [`KitFullDto`]).
         ReplaceKitFromFullDto {
             dto: KitFullDto,
         },
@@ -2917,7 +2903,6 @@ pub mod change_command {
             design_id: DesignIdDto,
             commands: Vec<ChangeDesignCommand>,
         },
-        /// Flattened port index for family-owned ports.
         ChangeKitPortCommands {
             port_id: PortIdDto,
             commands: Vec<ChangePortCommand>,
@@ -2933,20 +2918,17 @@ pub mod change_command {
             commands: Vec<ChangeFamilyCommand>,
         },
         // --- design-canvas / layout batch (semantic: twin + one [`KitGraph::apply_kit_diff`]) ---
-        /// 🧩 Cluster selected pieces into a new nested design; inverse is prior [`Self::ReplaceKitFromFullDto`] when state changes.
         ClusterPieces {
             design_id: DesignIdDto,
             piece_ids: Vec<String>,
             cluster_name: String,
         },
-        /// 🧩 Drag pieces in UV.
         DragPieces {
             design_id: DesignIdDto,
             piece_ids: Vec<String>,
             du: f64,
             dv: f64,
         },
-        /// 🧩 Move pieces in domain space.
         MovePieces {
             design_id: DesignIdDto,
             piece_ids: Vec<String>,
@@ -2954,26 +2936,21 @@ pub mod change_command {
             shift: f64,
             rise: f64,
         },
-        /// 🧩 Fix selected pieces in place.
         FixPieces {
             design_id: DesignIdDto,
             piece_ids: Vec<String>,
         },
-        /// 🧩 Flatten one design (read-only flatten report + replace design DTO on apply path).
         FlattenDesign {
             design_id: DesignIdDto,
         },
-        /// 🧩 Expand a nested child design’s pieces/connections into the parent’s domain.
         ExpandNestedDesign {
             parent_design_id: DesignIdDto,
             nested_design_id: DesignIdDto,
         },
-        /// 🧩 Remove a connection in a design.
         DeleteConnection {
             design_id: DesignIdDto,
             connection_id: ConnectionIdDto,
         },
-        /// 🧩 Set a piece’s type (delegates to nested [`ChangeDesignCommands`] in [`Self::apply_mutation`]).
         ChangePieceKind {
             design_id: DesignIdDto,
             piece_id: PieceIdDto,
@@ -3084,7 +3061,6 @@ pub mod change_command {
         Stock {
             stock: Option<i64>,
         },
-        /// Maps to `TypeStore::set_virtual` (serde wire: `typeVirtual` when camelCased on this variant name).
         TypeVirtual {
             value: Option<bool>,
         },
@@ -3684,7 +3660,6 @@ pub mod change_command {
     // --- impl: ChangeKitCommand ---
 
     impl ChangeKitCommand {
-        /// Declared semantic kind for VCS/UI (batch uses last non-[`KitChangeKind::Inferred`]).
         pub fn declared_kind(&self) -> KitChangeKind {
             match self {
                 ChangeKitCommand::Name { .. }
@@ -3753,12 +3728,10 @@ pub mod change_command {
 
         // #region 🔖CommandDiff
 
-        /// 🧮 Computes the concrete kit diff for this command without mutating the caller's kit graph.
         pub fn kit_diff(&self, kit: &KitGraphRef) -> Result<KitDiff> {
             Self::kit_diff_many(kit, std::slice::from_ref(self))
         }
 
-        /// 🧮 Computes the concrete kit diff for ordered commands without mutating the caller's kit graph.
         pub fn kit_diff_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             if cmds.is_empty() {
@@ -3772,7 +3745,6 @@ pub mod change_command {
             Ok(KitDiff::between_dto(&before, &after))
         }
 
-        /// ↩️ Builds undo commands for ordered commands without mutating the caller's kit graph.
         pub fn inverse_commands_for_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
@@ -3792,7 +3764,6 @@ pub mod change_command {
 
         // #endregion
 
-        /// Build the [`crate::kit_diff::KitDiff`] a command would perform relative to a baseline, plus inverses (twin only).
         pub fn plan_kit_diff(&self, baseline: &KitFullDto) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
             let twin = KitGraph::from_full_dto(baseline.clone());
             let inv = self.apply_mutation(&twin)?;
@@ -3801,7 +3772,6 @@ pub mod change_command {
             Ok((d, inv))
         }
 
-        /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_diff`].
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             let twin = KitGraph::from_full_dto(b0.clone());
@@ -3814,7 +3784,6 @@ pub mod change_command {
             Ok(inv)
         }
 
-        /// Like [`Self::apply`] for each command, using one shared throwaway buffer and a single live write.
         pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
@@ -3838,7 +3807,6 @@ pub mod change_command {
             Ok(out)
         }
 
-        /// Isolated throwaway path: inverses and mutation target only the passed graph (twin, not the live ref).
         fn apply_mutation(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
@@ -4275,7 +4243,6 @@ pub mod change_command {
             Ok(inv)
         }
 
-        /// Best-effort batch simplification (extend as more patterns emerge).
         pub fn compact(cmds: Vec<ChangeKitCommand>) -> Vec<ChangeKitCommand> {
             let mut out: Vec<ChangeKitCommand> = Vec::with_capacity(cmds.len());
             for c in cmds {
@@ -4324,7 +4291,6 @@ pub mod change_command {
     // the editor size limit. See the remaining impls appended below.
 
     impl ChangeTypeCommand {
-        /// Returns inverse fragments (forward order) — the caller will reverse for nesting.
         pub fn apply(&self, kit: &KitGraphRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
             let t = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
             match self {
@@ -4695,7 +4661,6 @@ pub mod change_command {
     }
 
     impl ChangeDesignCommand {
-        /// Inverse atoms in forward order; [`ChangeKitCommand`] reverses the batch.
         pub fn apply(&self, kit: &KitGraphRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             match self {
@@ -6101,7 +6066,6 @@ pub mod kit_checkpoint {
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct KitCheckpoint {
-        /// Content-addressed checkpoint id (blake3 over parent + serialized changes).
         pub id: Id,
         pub parent: Option<Id>,
         pub changes: Vec<KitChange>,
@@ -6128,13 +6092,11 @@ pub mod kit_checkpoint {
     }
 
     impl KitCheckpoint {
-        /// Build a new checkpoint object with a content-addressed id (blake3).
         pub fn new(parent: Option<Id>, changes: Vec<KitChange>, message: Option<String>) -> Self {
             let id = Self::compute_id(parent.as_ref(), &changes);
             Self { id, parent, changes, message, time: None, authors: Vec::new(), release: None }
         }
 
-        /// Content-addressed checkpoint id from parent checkpoint id + change list.
         pub fn compute_id(parent: Option<&Id>, changes: &[KitChange]) -> Id {
             let payload = serde_json::json!({
                 "parent": parent.map(|p| p.as_str()),
@@ -6144,12 +6106,10 @@ pub mod kit_checkpoint {
             crate::id::Id::from_blake3_canonical(&s)
         }
 
-        /// Walk `self -> root` via `parent` links in `map`, returning ids from root to leaf.
         pub fn chain_root_to_leaf(&self, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
             Self::chain_root_to_leaf_from(&self.id, map)
         }
 
-        /// Walk `at -> root` via `parent` links in `map`, returning ids from root to leaf.
         pub fn chain_root_to_leaf_from(at: &Id, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
             let mut out = vec![at.clone()];
             let mut cur = at.clone();
@@ -6168,7 +6128,6 @@ pub mod kit_checkpoint {
             out
         }
 
-        /// Rebuild [`crate::kit_graph::KitGraph::children`] from checkpoint parent links.
         pub fn rebuild_children_map(checkpoints: &HashMap<Id, KitCheckpoint>) -> HashMap<Option<Id>, Vec<Id>> {
             let mut children: HashMap<Option<Id>, Vec<Id>> = HashMap::new();
             for (cid, cp) in checkpoints {
@@ -6180,7 +6139,6 @@ pub mod kit_checkpoint {
             children
         }
 
-        /// Materialize the kit DTO at `at` (inclusive) by replaying all checkpoint changes
         /// from `initial` along the parent chain.
         pub fn materialize(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFullDto {
             let Some(at_id) = at else {
@@ -6199,7 +6157,6 @@ pub mod kit_checkpoint {
             out
         }
 
-        /// Like [`Self::materialize`], but returns a live [`KitGraphRef`] for [`crate::read::ReadKitCommand`] execution.
         pub fn materialize_graph(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
             let Some(at_id) = at else {
                 return KitGraph::from_full_dto(initial.clone());
@@ -6216,7 +6173,6 @@ pub mod kit_checkpoint {
             k
         }
 
-        /// Mark this checkpoint as a release by snapshotting the materialized kit.
         pub fn mark_as_release(&mut self, initial: KitFullDto, all_checkpoints: &HashMap<Id, KitCheckpoint>) {
             let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
             let mut change_list: Vec<KitChange> = Vec::new();
@@ -6240,16 +6196,12 @@ pub mod kit_alternative {
     pub struct KitAlternative {
         pub id: Id,
         pub name: String,
-        /// Main-line fork point; `None` when the line starts from the initial kit (no main-line checkpoint).
-        /// Alternatives with a fork use `Some` (main-line checkpoint id).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub root: Option<Id>,
-        /// Ordered checkpoint ids (may share ids with other alternatives).
         pub checkpoints: Vec<Id>,
     }
 
     impl KitAlternative {
-        /// `from_checkpoint: Some(cp)` = fork from that main-line checkpoint. `None` = empty line from initial (no checkpoints in the store yet, or a pure alt line before a first commit).
         pub fn new(name: String, from_checkpoint: Option<Id>) -> Self {
             let id = Id::new_v7();
             match from_checkpoint {
@@ -6258,17 +6210,14 @@ pub mod kit_alternative {
             }
         }
 
-        /// Latest checkpoint id on this alternative (the working tip).
         pub fn tip(&self) -> Option<&Id> {
             self.checkpoints.last()
         }
 
-        /// Append a new checkpoint id to this alternative's line.
         pub fn append(&mut self, cp: Id) {
             self.checkpoints.push(cp);
         }
 
-        /// Collapse this alternative to `[anchor, new_tip]`.
         pub fn collapse_to(&mut self, new_tip: Id) {
             let anchor = self.root.clone().or_else(|| self.checkpoints.first().cloned()).expect("alt collapse");
             self.root = Some(anchor.clone());
@@ -6324,32 +6273,27 @@ pub mod kit_transaction {
             Self { id, changes: Vec::new(), redo_changes: Vec::new(), state: TransactionState::Open }
         }
 
-        /// True while more [`KitChange`]s can be appended via [`Transaction::record`].
         pub fn is_open(&self) -> bool {
             matches!(self.state, TransactionState::Open)
         }
 
-        /// Record a new change (clears redo stack, as in a standard undo/redo tree).
         pub fn record(&mut self, change: KitChange) {
             self.changes.push(change);
             self.redo_changes.clear();
         }
 
-        /// Pop the last recorded change for an undo step.
         pub fn undo_last(&mut self) -> Option<KitChange> {
             let ch = self.changes.pop()?;
             self.redo_changes.push(ch.clone());
             Some(ch)
         }
 
-        /// Pop the last undone change for a redo step.
         pub fn redo_last(&mut self) -> Option<KitChange> {
             let ch = self.redo_changes.pop()?;
             self.changes.push(ch.clone());
             Some(ch)
         }
 
-        /// Move this transaction to the `Finalized` state.
         pub fn mark_finalized(&mut self) {
             self.state = TransactionState::Finalized;
         }
@@ -6411,34 +6355,27 @@ pub mod kit_draft {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Draft {
         pub id: Id,
-        /// `None` = base is [`KitStore.initial`] only (no checkpoint yet on that line).
         pub parent_checkpoint: Option<Id>,
-        /// When set, commits extend this alternative's checkpoint list instead of `the_kit_head`.
         pub target_alternative: Option<Id>,
         pub before: KitFullDto,
         pub transactions: Vec<Transaction>,
         pub redo_transactions: Vec<Transaction>,
-        /// Open transaction for `ChangeKitCommands` (at most one).
         pub open_transaction: Option<Transaction>,
     }
 
     impl Draft {
-        /// Build a new draft rooted at a materialized `before` snapshot.
         pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFullDto) -> Self {
             Self { id: Id::new_v7(), parent_checkpoint, target_alternative, before, transactions: Vec::new(), redo_transactions: Vec::new(), open_transaction: None }
         }
 
-        /// Id of the currently-open transaction (if any).
         pub fn open_tx_id(&self) -> Option<&Id> {
             self.open_transaction.as_ref().map(|t| &t.id)
         }
 
-        /// True if a transaction is currently open on this draft.
         pub fn has_open_transaction(&self) -> bool {
             self.open_transaction.is_some()
         }
 
-        /// Start a new transaction; fails if one is already open.
         pub fn start_transaction(&mut self) -> crate::error::Result<Id> {
             if self.open_transaction.is_some() {
                 return Err(crate::error::SemioError::InvalidOperation("transaction already open".into()));
@@ -6448,17 +6385,14 @@ pub mod kit_draft {
             Ok(tid)
         }
 
-        /// Borrow the open transaction matching `txid` (if any).
         pub fn open_transaction_mut(&mut self, txid: &Id) -> Option<&mut Transaction> {
             self.open_transaction.as_mut().filter(|t| t.id == *txid)
         }
 
-        /// Borrow the open transaction matching `txid` (if any).
         pub fn open_transaction_ref(&self, txid: &Id) -> Option<&Transaction> {
             self.open_transaction.as_ref().filter(|t| t.id == *txid)
         }
 
-        /// Move the open transaction (if it matches `txid`) to finalized and onto the stack.
         pub fn finalize_transaction(&mut self, txid: &Id) -> crate::error::Result<()> {
             let mut tx = self.open_transaction.take().filter(|t| t.id == *txid).ok_or_else(|| crate::error::SemioError::InvalidOperation("no tx to finalize".into()))?;
             tx.mark_finalized();
@@ -6466,27 +6400,22 @@ pub mod kit_draft {
             Ok(())
         }
 
-        /// Take the currently-open transaction without pushing it onto the stack.
         pub fn take_open_transaction(&mut self, txid: &Id) -> crate::error::Result<Transaction> {
             self.open_transaction.take().filter(|t| t.id == *txid).ok_or_else(|| crate::error::SemioError::InvalidOperation("tx id mismatch".into()))
         }
 
-        /// Pop the most recent finalized transaction (for draft-level undo).
         pub fn pop_finalized(&mut self) -> Option<Transaction> {
             self.transactions.pop()
         }
 
-        /// Push a transaction onto the redo stack.
         pub fn push_redo_transaction(&mut self, tx: Transaction) {
             self.redo_transactions.push(tx);
         }
 
-        /// Pop the most recent entry from the redo stack.
         pub fn pop_redo_transaction(&mut self) -> Option<Transaction> {
             self.redo_transactions.pop()
         }
 
-        /// Push a finalized transaction onto the main stack.
         pub fn push_finalized(&mut self, tx: Transaction) {
             self.transactions.push(tx);
         }
@@ -6499,7 +6428,6 @@ pub mod kit_draft {
             !self.redo_transactions.is_empty()
         }
 
-        /// 🧮 Throwaway materialization of the draft’s working state (base + finalized transactions + open transaction), for scoped reads.
         pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphRef> {
             let k = KitGraph::from_full_dto(self.before.clone());
             for tx in &self.transactions {
@@ -6592,7 +6520,6 @@ pub mod kit_read_scope {
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitReadScope {
-        /// Live coordinator graph (sessions, drafts, WIP); same handle source as the former unscoped `Query.kitStore`.
         TheKit,
         Checkpoint {
             #[serde(rename = "checkpointId")]
@@ -6739,7 +6666,6 @@ pub mod kit_session {
         ReadKitCommands {
             results: Vec<ReadKitCommandOutput>,
         },
-        /// Field name on the wire is `draftId` (struct-variant fields are not covered by the enum’s `rename_all`).
         NewDraft {
             #[serde(rename = "draftId")]
             draft_id: Id,
@@ -6761,7 +6687,6 @@ pub mod kit_backbone_wire {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum BackboneConfig {
-        /// In-process only: no persistence; attach/detach are bookkeeping no-ops for shell/tests.
         Memory,
         Dev {
             path: String,
@@ -7398,7 +7323,6 @@ pub mod kit_store {
             rx.recv().map_err(|_| SemioError::InvalidOperation("wip reply missing".into()))?
         }
 
-        /// JSON-RPC / control-plane entry: backbone + conflict commands, plus recursive `Batch`, else wip graph.
         pub fn execute(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
             match cmd {
                 KitStoreCommand::Batch { commands } => {
@@ -7502,27 +7426,22 @@ pub mod kit_store_command {
     type KitFullDto = crate::kit_graph::KitFullDto;
 
     impl KitGraph {
-        /// Materialize the DTO view of the main `the_kit` line.
         pub fn the_kit_dto(&self) -> KitFullDto {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
         }
 
-        /// Materialize a DTO at an arbitrary checkpoint (or the initial snapshot).
         pub fn materialize_at(&self, at: Option<&Id>) -> KitFullDto {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
         }
 
-        /// Live [`KitGraphRef`] at `at` (same replay rules as [`Self::materialize_at`]).
         pub fn materialize_graph_at(&self, at: Option<&Id>) -> crate::kit_graph::KitGraphRef {
             KitCheckpoint::materialize_graph(&self.initial, &self.checkpoints, at)
         }
 
-        /// Latest checkpoint id of a given alternative, if any.
         pub fn alternative_tip(&self, aid: &Id) -> Option<Id> {
             self.alternatives.get(aid).and_then(|a| a.tip().cloned())
         }
 
-        /// Validate a draft base (`checkpoint`, `alternative`) pair against the live tree.
         pub fn is_valid_draft_base(&self, cp: Option<&Id>, alt: Option<&Id>) -> bool {
             match (alt, cp) {
                 (None, None) => self.the_kit_head.is_none(),
@@ -7532,8 +7451,6 @@ pub mod kit_store_command {
             }
         }
 
-        /// Replace the live graph from a full DTO while preserving the VCS tree,
-        /// event bus, and in-memory undo/transaction state.
         pub fn replace_live_graph(kit: &KitGraphRef, d: KitFullDto) -> Result<()> {
             KitGraph::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
@@ -7550,7 +7467,6 @@ pub mod kit_store_command {
         EndSession {
             id: Id,
         },
-        /// Branch: first checkpoint in the new alternative list. Omit (or `null`) to start an empty
         /// alternative from the **initial** kit (no main-line checkpoint, e.g. no commits yet).
         NewAlternative {
             #[serde(rename = "fromCheckpoint", default, skip_serializing_if = "Option::is_none")]
@@ -7569,7 +7485,6 @@ pub mod kit_store_command {
             id: Id,
             commands: Vec<KitAlternativeCommand>,
         },
-        /// Attach an authoritative backbone (Dev JSON, Local SQLite folder, or Remote hub).
         AttachBackbone {
             config: crate::kit_backbone_wire::BackboneConfig,
         },
@@ -7585,7 +7500,6 @@ pub mod kit_store_command {
         },
         BackboneStatus,
         SyncNow,
-        /// Run many commands in order (e.g. JSON array at WASM boundary).
         Batch {
             commands: Vec<KitStoreCommand>,
         },
@@ -7647,9 +7561,7 @@ pub mod kit_store_command {
     }
 
     impl KitStoreCommand {
-        /// Top-level VCS / CRUD command dispatch.
         ///
-        /// Locks the kit store internally as needed.
         pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
             match self {
                 KitStoreCommand::AttachBackbone { config } => match config {
@@ -7722,7 +7634,6 @@ pub mod kit_store_command {
     }
 
     impl SessionCommand {
-        /// Execute a session-scoped command against `kit[sid]`.
         pub fn execute(self, kit: &KitGraphRef, sid: &Id) -> Result<SessionCommandResult> {
             match self {
                 SessionCommand::ReadKitCommands { scope, commands } => {
@@ -7761,7 +7672,6 @@ pub mod kit_store_command {
     }
 
     impl KitDraftCommand {
-        /// Execute a draft-scoped command against `kit[sid][did]`.
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
@@ -7903,7 +7813,6 @@ pub mod kit_store_command {
     }
 
     impl TransactionCommand {
-        /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
         pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
@@ -8017,7 +7926,6 @@ pub mod kit_store_command {
     }
 
     impl KitCheckpointCommand {
-        /// Execute a checkpoint-scoped command.
         pub fn execute(self, kit: &KitGraphRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
             match self {
                 KitCheckpointCommand::ReadKitCommands { commands } => {
@@ -8046,7 +7954,6 @@ pub mod kit_store_command {
     }
 
     impl KitAlternativeCommand {
-        /// Execute an alternative-scoped command.
         pub fn execute(self, kit: &KitGraphRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
             match self {
                 KitAlternativeCommand::ReadKitCommands { commands } => {
@@ -9141,7 +9048,6 @@ pub mod connection {
             KitEvent::Connection { connection_id: self.id.clone(), event }
         }
 
-        /// Invalidate this connection and all design-level aggregates (flatten, validation).
         pub(crate) fn notify_aggregate_change(&self) {
             self.hash_cache.invalidate();
             self.child_plane_matrix.invalidate();
@@ -9266,14 +9172,12 @@ pub mod connection {
             self.notify_aggregate_change();
         }
 
-        /// World-space child plane from parent plane and connector geometry (Python `computeChildPlaneDict`).
         pub fn compute_child_plane_for_flatten(&self, parent_plane: &Plane, parent_connector: &ConnectorStore, child_connector: &ConnectorStore) -> Plane {
             let (pp, pd) = connector_anchor_ports(parent_connector);
             let (cp, cd) = connector_anchor_ports(child_connector);
             flatten_math::compute_child_plane(parent_plane, pp, pd, cp, cd, self.gap.unwrap_or(0.0), self.shift.unwrap_or(0.0), self.rise.unwrap_or(0.0), self.rotation.unwrap_or(0.0), self.turn.unwrap_or(0.0), self.tilt.unwrap_or(0.0))
         }
 
-        /// UV-style center for child piece (Python BFS `child_center`).
         pub fn compute_child_center_for_flatten(&self, parent_center: Coordinate, parent_connector: &ConnectorStore) -> Coordinate {
             let (_, pd) = connector_anchor_ports(parent_connector);
             let connection_u = self.x.unwrap_or(0.0);
@@ -9341,7 +9245,6 @@ pub mod connection {
             }
         }
 
-        /// Optional parent/child [`SideFullDto`] pair for flattening when `child_id` is on this connection.
         pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side::SideFullDto, crate::side::SideFullDto)> {
             let (a, b) = self.flatten_parent_and_child_sides(child_id)?;
             let sa = a.read().ok()?.to_full_dto();
@@ -9349,7 +9252,6 @@ pub mod connection {
             Some((sa, sb))
         }
 
-        /// 4×4 transform cache for child plane (column-major rows for JSON stability). Defaults to identity when unset.
         pub fn child_plane_matrix_rows(&self) -> [[f64; 4]; 4] {
             let m = self.child_plane_matrix.get_or_init(|| nalgebra::Matrix4::identity());
             let mut out = [[0f64; 4]; 4];
@@ -9424,7 +9326,6 @@ pub mod connector {
         pub port: Option<PortStoreWeak>,
         pub qualities: Vec<QualityStoreRef>,
         pub attributes: Vec<AttributeStore>,
-        /// Back-reference to the owning type.
         pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
@@ -9448,7 +9349,6 @@ pub mod connector {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorShallowDto {
         pub id: Id,
-        /// Metabolism sometimes omits both; see [`ConnectorFullDto::code`].
         #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9464,7 +9364,6 @@ pub mod connector {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectorFullDto {
         pub id: Id,
-        /// Exporters may omit a connector label; `name` in C# is an alias of our `code`.
         #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10059,16 +9958,13 @@ pub mod design {
             }
         }
 
-        /// Like [`Self::invalidate_hash`] but does not bubble to the parent kit (avoids deadlock when
         /// the kit already holds its write lock, e.g. during nested `DesignStore` mutations).
         pub(crate) fn invalidate_hash_local(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
         }
 
-        /// Invalidate flatten caches and emit flatten + derived events for all pieces in this design.
         ///
-        /// When a [`crate::piece::PieceStore`] mutator bubbles here, it **holds that piece's write
         /// lock**; pass its id so we can still list it in `FlattenInvalidated` without blocking on
         /// `read()` (which would deadlock).
         pub fn invalidate_flatten(&self) {
@@ -10231,7 +10127,6 @@ pub mod design {
             Ok(())
         }
 
-        /// Flattened world-space plane and center per piece id (BFS, Python `flattenDesignDict`).
         pub fn flatten_map(&self) -> HashMap<Id, (Plane, Coordinate)> {
             self.flatten_cache.get_or_init(|| {
                 let Some(k) = self.parent_kit.upgrade() else {
@@ -10649,7 +10544,6 @@ pub mod design {
             type_ref.connectors.iter().map(Self::connector_port_ref).collect()
         }
 
-        /// 🔁Returns replacement kinds and designs for a piece selection while preserving connector-valid boundaries.
         pub(crate) fn replaceable_catalog_candidates(&self, selection_piece_ids: &[Id]) -> PieceAlternatives {
             let Some(parent_kit) = self.parent_kit.upgrade() else {
                 return PieceAlternatives::default();
@@ -10693,7 +10587,6 @@ pub mod design {
         }
         // #endregion
 
-        /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
         /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
         /// validation invalidation (e.g. [`KitGraph::invalidate_validation`] on the parent kit).
         pub fn delete_pieces(&mut self, piece_ids: &[Id]) -> usize {
@@ -11418,7 +11311,6 @@ pub mod design {
             Ok(())
         }
 
-        /// 🧩 Add one piece from a full DTO (semantic command path; no [`crate::diff::DesignDiff`]).
         pub(crate) fn semantic_add_piece(&mut self, piece: PieceFullDto, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
@@ -11434,7 +11326,6 @@ pub mod design {
             Ok(())
         }
 
-        /// 🧩 Remove one connection by id (semantic command path).
         pub(crate) fn semantic_remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
@@ -11445,7 +11336,6 @@ pub mod design {
             Ok(())
         }
 
-        /// 🧩 Add one connection from full DTO (semantic command path).
         pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFullDto, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
@@ -11463,7 +11353,6 @@ pub mod design {
             Ok(())
         }
 
-        /// Compute a forward/backward sparse [`crate::diff::DesignChange`] by baking implicit poses
         /// (see [`crate::piece::PieceStore::fix_on_design`]) until stable.
         pub fn flatten_change(&mut self) -> crate::report::SemioReport<crate::diff::DesignChange> {
             use crate::diff::DesignChange;
@@ -11582,8 +11471,6 @@ pub mod design {
             }
         }
 
-        /// Rebuild design graph from DTO (pieces, connections with [`SideStore`] ends, nested leaves).
-        /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct designs in host code.
         pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
             let DesignFullDto {
                 id,
@@ -13253,12 +13140,10 @@ pub mod diff {
             }
         }
 
-        /// DTO-level delta (pieces/connections and design metadata) for tests / tooling.
         pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
             Self::between_dto(before, after)
         }
 
-        /// DTO-level delta (pieces/connections and design metadata) for tests / tooling.
         pub fn between_dto(before: &DesignFullDto, after: &DesignFullDto) -> Self {
             let mut d = DesignDiff::default();
             if before.name != after.name {
@@ -13347,7 +13232,6 @@ pub mod diff {
             d
         }
 
-        /// 🧩 Apply [`Self::between_dto`]-shaped diff onto a full design (semantic kit-diff materialize).
         pub fn merge_into_full_dto(&self, d: &mut crate::design::DesignFullDto) {
             if let Some(n) = &self.name {
                 d.name = n.clone();
@@ -14950,7 +14834,6 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        /// Alias for [`Self::between_dto`].
         pub fn between(before: &KitFullDto, after: &KitFullDto) -> Self {
             Self::between_dto(before, after)
         }
@@ -15007,7 +14890,6 @@ pub mod kit_diff {
             }
         }
 
-        /// Single-design patch lifted to kit scope (for command folding).
         pub fn for_design(design_id: Id, d: DesignDiff) -> Self {
             if d.is_empty() {
                 return Self::default();
@@ -15015,7 +14897,6 @@ pub mod kit_diff {
             Self { designs: Some(DesignsDiff { removed: vec![], updated: vec![DesignDiffUpdate { design_id, diff: d }], added: vec![] }), ..Default::default() }
         }
 
-        /// 🧩 Materialize a [`KitFullDto`] in place: inverse shape of [`Self::between_dto`] for sparse `KitDiff` from that API.
         pub fn merge_into_baseline_dto(&self, k: &mut KitFullDto) {
             if let Some(n) = &self.name {
                 k.name = n.clone();
@@ -15151,7 +15032,6 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        /// Structural delta from `before` to `after` kit DTOs (for debugging / tooling).
         pub fn between_dto(before: &KitFullDto, after: &KitFullDto) -> Self {
             let mut d = Self::default();
             if before.name != after.name {
@@ -15494,7 +15374,6 @@ pub mod kit_change {
     }
 
     impl PieceChange {
-        /// 🧩 Applies [`Self::forward`] as one nested design command batch.
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
@@ -15503,7 +15382,6 @@ pub mod kit_change {
             .map(|_| ())
         }
 
-        /// 🧩 Applies [`Self::inverse`] to undo [`Self::forward`].
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
@@ -15512,12 +15390,10 @@ pub mod kit_change {
             .map(|_| ())
         }
 
-        /// 🧩 Flattened inverse [`ChangeKitCommand`] list (for checkpoint merge / storage).
         pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
             vec![ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.inverse.clone() }] }]
         }
 
-        /// 🧩 Flattened forward [`ChangeKitCommand`] list.
         pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
             vec![ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.forward.clone() }] }]
         }
@@ -15558,7 +15434,6 @@ pub mod kit_change {
     }
 
     impl KitDesignChange {
-        /// 🧩 Applies blocks in order.
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             for b in &self.blocks {
                 match b {
@@ -15573,7 +15448,6 @@ pub mod kit_change {
             Ok(())
         }
 
-        /// 🧩 Undoes blocks in reverse order.
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             for b in self.blocks.iter().rev() {
                 match b {
@@ -15588,7 +15462,6 @@ pub mod kit_change {
             Ok(())
         }
 
-        /// 🧩 Flatten forward into kit-level commands (preserves block order).
         pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
             let mut out = Vec::new();
             for b in &self.blocks {
@@ -15604,7 +15477,6 @@ pub mod kit_change {
             out
         }
 
-        /// 🧩 Flatten inverse for checkpoint merge (reverse block order).
         pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
             let mut out = Vec::new();
             for b in self.blocks.iter().rev() {
@@ -15639,12 +15511,10 @@ pub mod kit_change {
     }
 
     impl TypeChange {
-        /// 🧩 Applies [`Self::forward`].
         pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.forward.clone() }]).map(|_| ())
         }
 
-        /// 🧩 Applies [`Self::inverse`].
         pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.inverse.clone() }]).map(|_| ())
         }
@@ -15710,14 +15580,10 @@ pub mod kit_change {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default)]
     pub struct KitChange {
-        /// Kit-scoped forward commands (excludes nested type/design batches lifted into [`Self::children`]).
         pub forward: Vec<ChangeKitCommand>,
-        /// Inverse commands for [`Self::forward`] only (nested scopes carry their own inverses).
         pub inverse: Vec<ChangeKitCommand>,
-        /// Typed children (type / design / piece scopes) applied after [`Self::forward`] on forward walks.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub children: Vec<Change>,
-        /// Semantic label; defaults to [`KitChangeKind::Inferred`].
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -15737,7 +15603,6 @@ pub mod kit_change {
             Ok(())
         }
 
-        /// Apply the backward (undo) step (reverse [`Self::children`], then kit [`Self::inverse`]).
         pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             for ch in c.children.iter().rev() {
                 ch.apply_backward(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change child backward: {e}")))?;
@@ -15757,7 +15622,6 @@ pub mod kit_change {
             out
         }
 
-        /// Linear inverse commands for one-shot undo via [`ChangeKitCommand::apply_many`].
         pub fn flatten_inverse_commands(&self) -> Vec<ChangeKitCommand> {
             let mut out = Vec::new();
             for ch in self.children.iter().rev() {
@@ -16458,10 +16322,8 @@ pub mod events {
             pieces: Vec<Id>,
         },
         ValidationInvalidated,
-        /// @emoji Design rename; carries `KitChange` forward/inverse atoms.
         #[serde(rename = "renamedDesign")]
         RenamedDesign(RenamedDesignKitEvent),
-        /// @emoji Kind rename; carries `KitChange` forward/inverse atoms.
         #[serde(rename = "renamedType")]
         RenamedType(RenamedTypeKitEvent),
         #[serde(rename = "draggedFlatCenterPiece")]
@@ -16484,14 +16346,12 @@ pub mod events {
         ChangedDesignCommands(ChangedDesignCommandsKitEvent),
         #[serde(rename = "changedTypeCommands")]
         ChangedTypeCommands(ChangedTypeCommandsKitEvent),
-        /// @emoji Fallback classified kit change (forward/inverse atoms).
         #[serde(rename = "changedKit")]
         ChangedKit(ChangedKitEvent),
         SetRejected {
             event: Box<KitEvent>,
             error: crate::error::SetError,
         },
-        /// 📣 Correlates inbound kit control-plane requests with acceptance / outcome on the bus.
         SemioKitCommand {
             #[serde(rename = "requestId")]
             request_id: String,
@@ -16597,7 +16457,6 @@ pub mod events {
     #[derive(Debug)]
     pub struct EventBus {
         sender: Sender<KitEvent>,
-        /// Keeps the channel open when no [`Receiver`] is subscribed yet (dropping the initial
         /// receiver from [`broadcast`] would close the channel and break all later subscribers).
         #[allow(dead_code)]
         _inactive: InactiveReceiver<KitEvent>,
@@ -17298,7 +17157,6 @@ pub mod file {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct FileShallowDto {
         pub id: Id,
-        /// Metabolism: payload is often in `blob` (data URL) or a human `name`; we prefer a direct `url` when present.
         #[serde(default, alias = "blob", alias = "name")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17736,7 +17594,6 @@ pub mod geom {
             u: f64,
             v: f64,
         },
-        /// Flat JSON `x`/`y` (three floats) — treated as (u, v) with any z dropped.
         Xy {
             x: f64,
             y: f64,
@@ -17764,12 +17621,10 @@ pub mod geom {
             Self { u, v }
         }
 
-        /// Fast path for in-memory / entity [`HashWriter`] (tag-based) — not the Python Merkle.
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.f64(self.u).f64(self.v);
         }
 
-        /// Python `hash_coordinate` (prefix "Coordinate" + u + v)
         pub fn merkle_hash(&self) -> String {
             let mut w = MerkleWriter::new();
             w.string("Coordinate");
@@ -17812,7 +17667,6 @@ pub mod geom {
             w.digest()
         }
 
-        /// Translate by a direction vector.
         pub fn add_vec(&self, v: &Vector) -> Point {
             Point::new(self.x + v.x, self.y + v.y, self.z + v.z)
         }
@@ -18258,22 +18112,18 @@ pub mod id {
     pub struct Id(String);
 
     impl Id {
-        /// Produces a fresh UUIDv7 (monotonic) wrapped as a `Id`.
         pub fn new_v7() -> Self {
             Self(uuid::Uuid::now_v7().to_string())
         }
 
-        /// Content-addressed id from canonical JSON (e.g. checkpoint parent + changes).
         pub fn from_blake3_canonical(canonical: &str) -> Self {
             Self(hex::encode(blake3::hash(canonical.as_bytes()).as_bytes()))
         }
 
-        /// Borrow the underlying string slice.
         pub fn as_str(&self) -> &str {
             &self.0
         }
 
-        /// Consume the [`Id`], returning the inner [`String`].
         pub fn into_string(self) -> String {
             self.0
         }
@@ -18504,12 +18354,10 @@ pub mod merkle {
             self.parts.extend(b);
         }
 
-        /// Python `writeString(s)` — `>I` length big-endian + utf-8
         pub fn string(&mut self, s: &str) {
             self.write_string_bytes(s);
         }
 
-        /// Python `writeNumber(n)` — as decimal string, formatted like JS Number.toString
         pub fn number(&mut self, n: f64) {
             self.write_string_bytes(&format_number(n));
         }
@@ -18518,12 +18366,10 @@ pub mod merkle {
             self.parts.push(u8::from(b));
         }
 
-        /// Python `writeHash` — 64-char hex digest written as a string
         pub fn sub_hash(&mut self, h: &str) {
             self.write_string_bytes(h);
         }
 
-        /// Sorted hex hashes, count big-endian, then each string
         pub fn hash_list_sorted(&mut self, mut hashes: Vec<String>) {
             hashes.sort();
             self.parts.extend((hashes.len() as u32).to_be_bytes());
@@ -18532,7 +18378,6 @@ pub mod merkle {
             }
         }
 
-        /// Sorted id strings, count big-endian, then each string
         pub fn id_list_sorted(&mut self, mut ids: Vec<String>) {
             ids.sort();
             self.parts.extend((ids.len() as u32).to_be_bytes());
@@ -18620,37 +18465,28 @@ pub mod kit_graph {
         pub qualities: Vec<QualityStoreRef>,
         pub props: Vec<PropStoreRef>,
         pub attributes: Vec<AttributeStoreRef>,
-        /// Flattened port index for family-owned ports.
         pub ports: Vec<PortStoreRef>,
         pub families: Vec<FamilyStoreRef>,
         pub locations: Vec<LocationStoreRef>,
-        /// Broadcast bus for graph change notifications (kit holds strong ref).
         pub(crate) event_bus: Arc<EventBus>,
         hash_cache: Cache<String>,
         validation_cache: Cache<ValidationResult>,
-        /// Bounded undo history (before/after full snapshots; same wire shape as `KitFullDto`).
         undo_past: Vec<UndoStep>,
         undo_future: Vec<UndoStep>,
-        /// When &gt; 0, `with_undo` does not record and does not clear redo (replace/undo path).
         undo_inhibit: u32,
         // --- Kit version control (see `kit_store_command`, `kit_checkpoint`, …) ---
-        /// Root snapshot; materialization replays `checkpoints` from here.
         pub initial: KitFullDto,
         pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
         pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
-        /// Tip of the main (non-alternative) committed line.
         pub the_kit_head: Option<Id>,
         pub sessions: std::collections::HashMap<Id, crate::kit_session::Session>,
-        /// Reverse index: parent checkpoint id -> child ids.
         pub children: std::collections::HashMap<Option<Id>, Vec<Id>>,
     }
 
     /// @emoji Pre-lift snapshot for a [`ChangeKitCommand`] batch: semantic kind, optional change tree, flattened inverse atoms.
     pub(crate) struct ControlPlanePreBatch {
-        /// `None` when `commands` is empty; otherwise the lifted change tree.
         pub kc: Option<crate::kit_change::KitChange>,
         pub kind: crate::kit_change::KitChangeKind,
-        /// @emoji Undo atoms in wire order (from pre-apply `KitChange::flatten_inverse_commands`).
         pub inverse_flat: Vec<ChangeKitCommand>,
     }
 
@@ -18790,7 +18626,6 @@ pub mod kit_graph {
     }
 
     impl KitFullDto {
-        /// Resolve a port id from nested `families[*].ports`.
         pub fn find_port_dto(&self, id: &Id) -> Option<&PortFullDto> {
             for p in &self.ports {
                 if &p.id == id {
@@ -18878,7 +18713,6 @@ pub mod kit_graph {
             EntityRef::new(EntityKind::Kit, self.id.clone())
         }
 
-        /// Subscribe to all [`KitEvent`]s for this kit (MPMC broadcast).
         pub fn subscribe(&self) -> Receiver<KitEvent> {
             self.event_bus.subscribe()
         }
@@ -19120,7 +18954,6 @@ pub mod kit_graph {
             self.designs.iter().find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        /// Find the id of the owning design for a piece id.
         #[allow(dead_code)]
         pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
             for d in &self.designs {
@@ -19145,14 +18978,12 @@ pub mod kit_graph {
             self.qualities.iter().find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        /// Flatten a design by id: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
         pub fn flatten_design(&self, design_id: &str) -> Result<SemioReport<crate::diff::DesignChange>> {
             let d = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
             Ok(dw.flatten_change())
         }
 
-        /// 🧩 Add a piece to a design (semantic command path; no [`crate::diff::DesignDiff`]).
         pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFullDto) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
@@ -19163,7 +18994,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🧩 Remove pieces from a design (semantic).
         pub fn semantic_remove_design_pieces(&mut self, design_id: &str, piece_ids: &[Id]) -> Result<()> {
             if piece_ids.is_empty() {
                 return Ok(());
@@ -19175,7 +19005,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🧩 Remove one connection (semantic).
         pub fn semantic_remove_design_connection(&mut self, design_id: &str, connection_id: &Id) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_remove_connection(connection_id)?;
@@ -19184,7 +19013,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🧩 Add one connection (semantic).
         pub fn semantic_add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFullDto) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let design_weak = Arc::downgrade(&dref);
@@ -19194,7 +19022,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🌐 Parse entity kind label from JS (`"Piece"`, `"Kit"`, …).
         pub fn parse_entity_kind(s: &str) -> std::result::Result<EntityKind, SetError> {
             match s {
                 "Kit" => Ok(EntityKind::Kit),
@@ -19237,7 +19064,6 @@ pub mod kit_graph {
             Err(SetError::NotFound(format!("connection {connection_id}")))
         }
 
-        /// 🧩 Turn a [`crate::diff::PieceDiff`] into [`ChangePieceCommand`]s (semantic; no apply).
         fn piece_diff_to_change_commands(d: &crate::diff::PieceDiff) -> std::result::Result<Vec<crate::change_command::ChangePieceCommand>, SetError> {
             use crate::change_command::ChangePieceCommand;
             if d.props.as_ref().is_some_and(|p| !p.is_empty()) || d.attributes.as_ref().is_some_and(|a| !a.is_empty()) {
@@ -19280,7 +19106,6 @@ pub mod kit_graph {
             Ok(out)
         }
 
-        /// 🧩 [`crate::diff::ConnectionDiff`] → [`ChangeConnectionCommand`]s.
         fn connection_diff_to_change_commands(d: &crate::diff::ConnectionDiff) -> std::result::Result<Vec<crate::change_command::ChangeConnectionCommand>, SetError> {
             use crate::change_command::ChangeConnectionCommand;
             if d.attributes.as_ref().is_some_and(|a| !a.is_empty()) {
@@ -19323,7 +19148,6 @@ pub mod kit_graph {
             Ok(out)
         }
 
-        /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
         pub fn change_kit_commands_for_field_patch(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
@@ -19741,13 +19565,11 @@ pub mod kit_graph {
             })
         }
 
-        /// 🌐 Worker boundary: set one scalar field via [`ChangeKitCommand`] batch + undo snapshot.
         pub fn set_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
         }
 
-        /// 🌐 Read one field as JSON (read-only).
         pub fn get_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
@@ -19822,12 +19644,10 @@ pub mod kit_graph {
             }
         }
 
-        /// Central content write: replace materialized kit DTO, preserving `event_bus` and VCS/undo.
         pub fn apply_kit_state(kit: &KitGraphRef, after: KitFullDto) -> SetResult {
             Self::replace_from_full_dto(kit, after)
         }
 
-        /// 🧩 Sole mutating entry for kit content from a structural diff: merge into current DTO snapshot, replace graph, reconcile events.
         pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
             if diff.is_empty() {
                 return Ok(crate::kit_diff::KitDiff::default());
@@ -19842,7 +19662,6 @@ pub mod kit_graph {
             Ok(crate::kit_diff::KitDiff::between(&b0, &a))
         }
 
-        /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
         pub fn replace_from_full_dto(kit: &KitGraphRef, d: KitFullDto) -> SetResult {
             let new_arc = Self::from_full_dto(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
@@ -19883,14 +19702,11 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
         ///
-        /// Delegates to the OO dispatcher [`crate::kit_store_command::KitStoreCommand::execute`].
         pub fn execute_vcs(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
             cmd.execute(kit)
         }
 
-        /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit`).
         pub fn with_undo<F>(kit: &KitGraphRef, f: F) -> SetResult
         where
             F: FnOnce() -> SetResult,
@@ -19914,14 +19730,12 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// @emoji Broadcast a classified `KitEvent` (forward + inverse atoms) after a successful command apply.
         pub(crate) fn emit_kit_change_event_bus(kit: &KitGraphRef, change: &crate::kit_change::KitChange) {
             if let Ok(g) = kit.read() {
                 g.event_bus.emit(crate::events::kit_event_from_kit_change(change));
             }
         }
 
-        /// @emoji Lifts a batch to [`ControlPlanePreBatch`] without mutating the live graph.
         pub(crate) fn control_plane_pre_batch(kit: &KitGraphRef, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePreBatch, SetError> {
             use crate::kit_change::KitChange;
             let kind = ChangeKitCommand::batch_kind(commands);
@@ -19933,7 +19747,6 @@ pub mod kit_graph {
             Ok(ControlPlanePreBatch { kc: Some(kc), kind, inverse_flat })
         }
 
-        /// @emoji GraphQL / WASM: pre-lift, `with_undo` + `apply_many`, then emit; returns pre-batch for inverse/semantic replies.
         pub(crate) fn control_plane_batch_apply_with_undo(kit: &KitGraphRef, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePreBatch, SetError> {
             let pre = Self::control_plane_pre_batch(kit, commands)?;
             Self::with_undo(kit, || {
@@ -19949,7 +19762,6 @@ pub mod kit_graph {
             Ok(pre)
         }
 
-        /// @emoji One command inside an open draft transaction: lift, `apply`, record on DTO change, then emit. `Ok(true)` when a change row was recorded.
         pub(crate) fn open_transaction_apply_one_command(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id, c: &ChangeKitCommand) -> std::result::Result<bool, SemioError> {
             use crate::kit_change::KitChange;
             let before = {
@@ -19978,7 +19790,6 @@ pub mod kit_graph {
             Ok(recorded)
         }
 
-        /// Pop last applied state and restore `before` snapshot.
         pub fn undo(kit: &KitGraphRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20011,7 +19822,6 @@ pub mod kit_graph {
             }
         }
 
-        /// Re-apply a popped redo step.
         pub fn redo(kit: &KitGraphRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20096,13 +19906,11 @@ pub mod kit_graph {
             }
         }
 
-        /// Add a child entity under `parent` (`Kit → Family`, `Design → Piece`).
         pub fn add_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
         }
 
-        /// Remove a child entity from `parent` (`Kit → Family`, `Design → Piece`).
         pub fn remove_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
@@ -20340,7 +20148,6 @@ pub mod kit_graph {
             }
         }
 
-        /// C# / Metabolism JSON: props use `quality: { id }` without a separate `key`; keys come from the kit's quality catalog.
         fn wire_compat_resolve_prop_keys_in_kit_dto(d: &mut KitFullDto) {
             let m = Self::quality_key_index(&d.qualities);
             for p in &mut d.props {
@@ -20363,7 +20170,6 @@ pub mod kit_graph {
             }
         }
 
-        /// Hydrate the full kit graph from a [`KitFullDto`].
         pub fn from_full_dto(mut d: KitFullDto) -> KitGraphRef {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let vcs_root = d.clone();
@@ -20685,7 +20491,6 @@ pub mod kit_graph {
             }
         }
 
-        /// Resolve a port anywhere on the kit through its families.
         pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
             for p in &self.ports {
                 if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
@@ -20737,7 +20542,6 @@ pub mod kit_graph {
             kit.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect()
         }
 
-        /// Rebuild one type from `to_full_dto` + sparse [`crate::diff::TypeDiff`] (remove → insert).
         pub fn apply_type_diff_fragment(kit: &KitGraphRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
             if fragment.is_empty() {
                 return Ok(());
@@ -20778,7 +20582,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// Insert a type from a full DTO (same shape as `from_full_dto` hydration for one type).
         pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
@@ -20794,7 +20597,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// Remove a type and return its [`TypeFullDto`] for undo, or `None` if missing.
         pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20862,7 +20664,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// Insert a family (with ports) onto the kit graph.
         pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
@@ -20917,7 +20718,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// Remove a family and return its [`FamilyFullDto`] for undo, or `None` if missing.
         pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
             let fid = Id::from(family_id);
             let pos = {
@@ -21210,7 +21010,6 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        /// Remove a design and return its [`DesignFullDto`] for undo, or `None` if missing.
         pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -21233,7 +21032,6 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        /// Replace a design with a new full DTO (same id), preserving kit order (semantic; no diffs).
         pub fn replace_design_full(kit: &KitGraphRef, new_dto: DesignFullDto) -> SetResult {
             use crate::design::DesignStore;
             let id_str = new_dto.id.as_str().to_string();
@@ -21263,7 +21061,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🧩 Clustering without undo wrapper (twin or tests); live callers use [`ChangeKitCommand::ClusterPieces`].
         pub fn cluster_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
@@ -21332,7 +21129,6 @@ pub mod kit_graph {
             Ok(())
         }
 
-        /// 🧩 [`crate::change_command::ChangeKitCommand::ClusterPieces`] on the live kit.
         pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
@@ -21351,7 +21147,6 @@ pub mod kit_graph {
             false
         }
 
-        /// 🧩 See [`ChangeKitCommand::DragPieces`].
         pub fn drag_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
@@ -21481,7 +21276,6 @@ pub mod kit_graph {
             ChangeKitCommand::DeleteConnection { design_id: DesignIdDto { id: Id::from(design_id) }, connection_id: ConnectionIdDto { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        /// Compute flattened design DTO and replace that design in the graph.
         pub fn flatten_design_apply_unchecked(kit: &KitGraphRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let after_full: DesignFullDto = {
@@ -21627,7 +21421,6 @@ pub mod kit_graph {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
-        /// 🧩 Structured piece placement map (see [`Self::get_pieces_metadata_json`] for JSON interop).
         pub fn piece_placement_metadata(&self, design_id: &str) -> std::result::Result<HashMap<String, PiecePlacementMetadataDto>, SetError> {
             let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -22506,27 +22299,22 @@ pub mod piece {
             Ok(())
         }
 
-        /// World-space plane from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_plane(&self) -> Plane {
             self.flat_plane.get_or_init(|| self.pose.plane.or_else(|| self.computed_flat_plane()).unwrap_or_else(Plane::world_xy))
         }
 
-        /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coordinate {
             self.flat_center.get_or_init(|| self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default())
         }
 
-        /// Pose from explicit [`PoseStore`] fields (local), for fixed / root pieces.
         pub fn pose_full_dto(&self) -> PoseFullDto {
             PoseFullDto { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
         }
 
-        /// World-space flat pose (uses [`Self::flat_plane`] / [`Self::flat_center`]).
         pub fn flat_pose_full_dto(&self) -> PoseFullDto {
             PoseFullDto { plane: self.flat_plane(), center: self.flat_center() }
         }
 
-        /// 🧭Path from the fixed (root) piece down to and including this piece, computed by
         /// recursing into the parent piece's path and appending this piece's id.
         pub fn path(&self) -> Vec<PieceIdDto> {
             let mut path = self.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.path())).unwrap_or_default();
@@ -22546,12 +22334,10 @@ pub mod piece {
             design.replaceable_catalog_candidates(std::slice::from_ref(&self.id))
         }
 
-        /// 🔁Returns connector-valid replacement kinds for this piece inside its host design.
         pub fn alternative_types(&self) -> Vec<TypeStoreRef> {
             self.alternatives().types
         }
 
-        /// 🔁Returns connector-valid replacement designs for this piece inside its host design.
         pub fn alternative_designs(&self) -> Vec<DesignStoreRef> {
             self.alternatives().designs
         }
@@ -22750,7 +22536,6 @@ pub mod piece {
             }
         }
 
-        /// 🖐️Drag this piece in center-space; connected pieces update their parent connection while
         /// fixed pieces update their own center and invalidate descendant center caches.
         pub fn drag(&mut self, du: f64, dv: f64) -> SetResult {
             if let Some(parent_connection) = self.parent_connection.as_ref().and_then(|w| w.upgrade()) {
@@ -22770,7 +22555,6 @@ pub mod piece {
             Ok(())
         }
 
-        /// 🧭Move this piece in plane-space and invalidate descendant plane caches.
         pub fn r#move(&mut self, gap: f64, shift: f64, rise: f64) -> SetResult {
             let base = self.pose.plane.unwrap_or_else(|| self.flat_plane());
             let translation = Self::domain_move_translation_world(&base, gap, shift, rise);
@@ -22781,7 +22565,6 @@ pub mod piece {
             Ok(())
         }
 
-        /// 📌Fix this piece and its immediate children at their current flat poses, then detach the
         /// parent and child connections that made those poses implicit.
         pub fn fix(&mut self) -> SetResult {
             let Some(design_ref) = self.parent_design.upgrade() else {
@@ -22798,7 +22581,6 @@ pub mod piece {
             self.fix_on_design(&mut *design)
         }
 
-        /// Same as [`Self::fix`], but uses an already-write-locked [`crate::design::DesignStore`] to
         /// avoid re-entrant `RwLock` deadlocks (e.g. [`crate::design::DesignStore::flatten_change`]).
         pub(crate) fn fix_on_design(&mut self, design: &mut crate::design::DesignStore) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
@@ -22980,7 +22762,6 @@ pub mod port {
         pub t: Option<f64>,
         pub point: Option<Point>,
         pub direction: Option<Vector>,
-        /// Weak refs to compatible ports (resolved from wire `compatiblePorts` after the full port map exists).
         pub compatible_ports: Vec<PortStoreWeak>,
         pub qualities: Vec<QualityStoreRef>,
         pub attributes: Vec<AttributeStore>,
@@ -23134,7 +22915,6 @@ pub mod port {
             PortMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        /// Serialised `compatiblePorts`: ids in wire order; when graph is not wired, emit stored ids from [`PortFullDto`] load is not kept — use `to_full_dto` after hydration only for round-trip.
         pub fn to_shallow_dto(&self) -> PortShallowDto {
             let m = self.to_metadata_dto();
             let compatible_ports: Vec<PortIdDto> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() }))).collect();
@@ -23223,7 +23003,6 @@ pub mod port {
             Ok(())
         }
 
-        /// Resolve [`PortIdDto`] list to weak refs using the kit’s family-owned port table.
         pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit_graph::KitGraph) {
             self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
         }
@@ -23468,7 +23247,6 @@ pub mod prop {
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
-        /// Catalog link when the wire DTO used `quality: { id }` instead of a stable `key` (see [`PropFullDto::quality`]).
         pub quality: Option<crate::quality::QualityIdDto>,
         pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
@@ -23505,13 +23283,11 @@ pub mod prop {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropFullDto {
         pub id: Id,
-        /// May be empty on wire when `quality` carries the catalog id (see [`PropFullDto::quality`]).
         #[serde(default)]
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        /// Metabolism / C#: property references a catalog [`crate::quality::QualityStore`] by id.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub quality: Option<crate::quality::QualityIdDto>,
     }
@@ -24100,7 +23876,6 @@ pub mod representation {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct RepresentationFullDto {
         pub id: Id,
-        /// Metabolism uses `name` (and sometimes `blob`) for the same role as our canonical `url`.
         #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24215,7 +23990,6 @@ pub mod representation {
             Ok(())
         }
 
-        /// Wire an optional file reference; pass `None` to clear.
         pub fn set_file(&mut self, file: Option<crate::file::FileStoreWeak>) -> crate::error::SetResult {
             self.file = file;
             self.invalidate_hash();
@@ -24284,7 +24058,6 @@ pub mod side {
         pub id: Id,
         pub piece: PieceStoreWeak,
         pub port: Option<PortStoreWeak>,
-        /// Optional "design piece" for designs that include other designs.
         pub design_piece: Option<PieceStoreWeak>,
         pub parent_connection: Option<ConnectionStoreWeak>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -24302,7 +24075,6 @@ pub mod side {
 
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     pub struct SideMetadataDto {
-        /// C# connection sides often omit; generated when materializing a [`SideStore`].
         #[serde(default = "new_side_dto_id")]
         pub id: Id,
         pub piece: crate::piece::PieceIdDto,
@@ -24310,7 +24082,6 @@ pub mod side {
         pub port: Option<crate::port::PortIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
         pub design_piece: Option<crate::piece::PieceIdDto>,
-        /// C#: `connector` on this side; we resolve the [`crate::port::PortIdDto`] in [`crate::design::wire_side_from_dto`].
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "connector")]
         pub connector: Option<crate::connector::ConnectorIdDto>,
     }
@@ -25263,7 +25034,6 @@ pub mod typ {
             self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        /// Best representation for `tagIds` (JS `selectBestRepresentation` / `findRepresentation` using Jaccard on tag id sets).
         pub fn best_representation_for_tag_ids(&self, tag_ids: &[Id]) -> Option<RepresentationFullDto> {
             if self.representations.is_empty() {
                 return None;
@@ -25365,8 +25135,6 @@ pub mod typ {
             }
         }
 
-        /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
-        /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct types in host code.
         pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
             let TypeFullDto { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
@@ -25790,7 +25558,6 @@ pub mod io {
             value.map(|flag| flag != 0)
         }
 
-        /// Piece center is 2D [`Coordinate`] (u, v); optional third DB column is unused (old 3D row layout).
         fn piece_center_parts(value: Option<&Coordinate>) -> (Option<f64>, Option<f64>, Option<f64>) {
             match value {
                 Some(c) => (Some(c.u), Some(c.v), None),
@@ -27405,17 +27172,14 @@ pub mod kit_graphql {
             commands: Vec<ChangeKitCommand>,
             reply: oneshot::Sender<std::result::Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), String>>,
         },
-        /// Internal VCS graph command (not exposed as JSON in GraphQL).
-         {
+        Vcs {
             command: KitStoreCommand,
             reply: oneshot::Sender<std::result::Result<KitStoreCommandResult, String>>,
         },
-        /// Arbitrary synchronous graph mutation (single-writer queue).
         Custom {
             run: Box<dyn FnOnce() -> std::result::Result<(), String> + Send>,
             reply: oneshot::Sender<std::result::Result<(), String>>,
         },
-        /// Like [`GraphWork::Custom`] but preserves [`crate::error::SetResult`] for JS `js_settle_set`.
         CustomSetResult {
             run: Box<dyn FnOnce() -> crate::error::SetResult + Send>,
             reply: oneshot::Sender<crate::error::SetResult>,
@@ -27557,9 +27321,7 @@ pub mod kit_graphql {
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum TransactionBatchCommandInput {
         ChangeKitCommands(ChangeKitCommandsBatchInput),
-        /// 🧾 Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
         ChangeKitWithInverse(ChangeKitCommandsBatchInput),
-        /// 🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
         Design(DesignBatchInput),
         FinalizeTransaction(ConfirmOnlyInput),
         AbortTransaction(ConfirmOnlyInput),
@@ -27614,7 +27376,6 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum BackboneConfigBatchInput {
-        /// Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
         Memory(ConfirmOnlyInput),
         Dev(DevBackboneBatchInput),
         Local(LocalBackboneBatchInput),
@@ -27791,7 +27552,6 @@ pub mod kit_graphql {
     #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchResultKind {
         ChangeKitCommands,
-        /// 🧾 Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
         ChangeKitWithInverse,
         ClusterPieces,
         DragPieces,
@@ -27850,7 +27610,6 @@ pub mod kit_graphql {
     struct BackboneBatchStatus {
         attached: bool,
         kind: Option<BackboneKindBatch>,
-        /// 🧾 Populated when the backbone driver reports a non-standard `kind` string.
         kind_other: Option<String>,
         tip: Option<String>,
     }
@@ -27875,11 +27634,8 @@ pub mod kit_graphql {
         alternative_id: Option<String>,
         backbone: Option<BackboneBatchStatus>,
         conflicts: Option<Vec<ConflictBatchRecord>>,
-        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; discriminant of [`crate::kit_change::KitChangeKind`].
         change_kind: Option<KitChangeSemanticKind>,
-        /// 🧾 When [`Self::change_kind`] is [`KitChangeSemanticKind::Other`], the free-form semantic label from Rust.
         change_kind_other: Option<String>,
-        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
         inverse: Option<Vec<GqlChangeKitCommand>>,
     }
 
@@ -27941,7 +27697,6 @@ pub mod kit_graphql {
 
     #[Object(name = "Query")]
     impl RootQuery {
-        /// 🌐 **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
         async fn kit(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let rs = kit_read_scope_from_gql(scope)?;
@@ -27954,7 +27709,6 @@ pub mod kit_graphql {
 
     #[Object(name = "Mutation")]
     impl RootMutation {
-        /// Control-plane kit mutations (batched commands, VCS, design canvas).
         async fn kit_store(&self) -> KitStoreMutation {
             KitStoreMutation
         }
@@ -27965,7 +27719,6 @@ pub mod kit_graphql {
 
     #[Object(name = "KitStoreMutation")]
     impl KitStoreMutation {
-        /// Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` entry point.
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
@@ -28433,7 +28186,6 @@ pub mod kit_graphql {
 
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
-        /// Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
         async fn event_stream(&self, ctx: &Context<'_>) -> Result<KitEventSubscriptionStream> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let mut rx = lock_graph(&graph)?.subscribe();
@@ -28462,13 +28214,13 @@ pub mod kit_graphql {
         schema().sdl()
     }
 
-    /// Row for `Design.replaceableCatalog` (resolved kit kinds and designs).
+    ///  for `Design.replaceableCatalog` (resolved kit kinds and designs).
     pub struct ReplaceableCatalogNode {
         pub types: Vec<crate::typ::TypeStoreRef>,
         pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
-    #[Object(name = "ReplaceableCatalog")]
+    #[Object(name = "ReplaceableCatalogStore")]
     impl ReplaceableCatalogNode {
         async fn types(&self) -> Result<Vec<TypeNode>> {
             Ok(self.types.iter().cloned().map(TypeNode).collect())
@@ -28508,7 +28260,7 @@ pub mod kit_graphql {
 
     // #subregion KitGraphqlStores
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "CheckpointDto")]
+    #[graphql(name = "VcsCheckpointStore")]
     struct CheckpointDto {
         id: String,
         parent: Option<String>,
@@ -28552,7 +28304,7 @@ pub mod kit_graphql {
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "StateDto")]
+    #[graphql(name = "VcsStateStore")]
     struct StateDto {
         the_kit_head: Option<String>,
         root: RootDto,
@@ -28563,7 +28315,7 @@ pub mod kit_graphql {
     }
     // #endregion
 
-    #[Object(name = "Kit")]
+    #[Object(name = "KitStore")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
@@ -28592,7 +28344,7 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignNode).collect())
         }
 
-        async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorRowDto>> {
+        async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorDto>> {
             let g = lock_graph(&self.0)?;
             Ok(crate::read::kit_colored_connector_rows(&*g))
         }
@@ -28669,7 +28421,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Design")]
+    #[Object(name = "DesignStore")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
@@ -28685,7 +28437,7 @@ pub mod kit_graphql {
 
         async fn container(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
-            let _ = lock_graph(&g)?;
+            let _kit_read = lock_graph(&g)?;
             Ok(KitStoreNode(g))
         }
 
@@ -28705,7 +28457,6 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(PieceNode).collect())
         }
 
-        /// 🌐 Resolves a piece by persisted DTO id within this design.
         async fn piece_by_dto_id(&self, id: String) -> Result<Option<PieceNode>> {
             let target = Id::from(id.as_str());
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -28716,13 +28467,11 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionNode).collect())
         }
 
-        /// 🌐 `PieceFullDto` list (semio read batch); prefer [`Self::pieces`] in graph UI.
         async fn pieces_full(&self) -> Result<Vec<crate::piece::PieceFullDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             Ok(d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect())
         }
 
-        /// 🌐 `ConnectionFullDto` list; prefer [`Self::connections`] in graph UI.
         async fn connections_full(&self) -> Result<Vec<crate::connection::ConnectionFullDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             Ok(d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect())
@@ -28763,7 +28512,6 @@ pub mod kit_graphql {
             Ok(crate::read::design_included_design_ids(&*d).into_iter().map(|x| x.id.to_string()).collect())
         }
 
-        /// 🌐 Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
         async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<crate::kit_graph::PiecePlacementMetadataDto>> {
             let gref: &KitGraphRef = ctx.data()?;
             let g = lock_graph(gref)?;
@@ -28775,7 +28523,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "PieceStore")]
+    #[Object(name = "Piece")]
     impl PieceNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
@@ -28787,6 +28535,26 @@ pub mod kit_graphql {
 
         async fn description(&self) -> Result<Option<String>> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
+        }
+
+        async fn container(&self) -> Result<DesignNode> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            p.parent_design
+                .upgrade()
+                .map(DesignNode)
+                .ok_or_else(|| Error::new("design container missing for piece"))
+        }
+
+        async fn metadata(&self) -> Result<crate::piece::PieceMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::piece::PieceShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::piece::PieceFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_full_dto())
         }
 
         async fn flat_plane(&self) -> Result<Plane> {
@@ -28808,20 +28576,18 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
         }
 
-        /// Strong ref to the resolved kind for this piece (in-memory, not a lookup by id).
         async fn ref_type(&self) -> Result<Option<TypeNode>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeNode))
         }
 
-        /// Parent connection when the piece is linked through a connection.
         async fn parent_connection(&self) -> Result<Option<ConnectionNode>> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionNode))
         }
     }
 
-    #[Object(name = "TypeStore")]
+    #[Object(name = "Type")]
     impl TypeNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())
@@ -28835,6 +28601,26 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.description.clone())
         }
 
+        async fn container(&self) -> Result<KitStoreNode> {
+            let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
+            t.parent_kit
+                .upgrade()
+                .map(KitStoreNode)
+                .ok_or_else(|| Error::new("kit container missing for type"))
+        }
+
+        async fn metadata(&self) -> Result<crate::typ::TypeMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::typ::TypeShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::typ::TypeFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_full_dto())
+        }
+
         async fn connectors(&self) -> Result<Vec<ConnectorNode>> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(ConnectorNode).collect())
         }
@@ -28843,7 +28629,6 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationNode).collect())
         }
 
-        /// Best matching representation for tag selection.
         async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<RepresentationNode>> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
@@ -28855,7 +28640,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "ConnectorStore")]
+    #[Object(name = "Connector")]
     impl ConnectorNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
@@ -28864,9 +28649,33 @@ pub mod kit_graphql {
         async fn code(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.code.clone())
         }
+
+        async fn description(&self) -> Result<Option<String>> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.description.clone())
+        }
+
+        async fn container(&self) -> Result<TypeNode> {
+            let c = self.0.read().map_err(|_| Error::new("connector lock poisoned"))?;
+            c.parent_type
+                .upgrade()
+                .map(TypeNode)
+                .ok_or_else(|| Error::new("type container missing for connector"))
+        }
+
+        async fn metadata(&self) -> Result<crate::connector::ConnectorMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::connector::ConnectorShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::connector::ConnectorFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_full_dto())
+        }
     }
 
-    #[Object(name = "RepresentationStore")]
+    #[Object(name = "Representation")]
     impl RepresentationNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
@@ -28879,12 +28688,52 @@ pub mod kit_graphql {
         async fn description(&self) -> Result<Option<String>> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.description.clone())
         }
+
+        async fn container(&self) -> Result<TypeNode> {
+            let r = self.0.read().map_err(|_| Error::new("representation lock poisoned"))?;
+            r.parent_type
+                .upgrade()
+                .map(TypeNode)
+                .ok_or_else(|| Error::new("type container missing for representation"))
+        }
+
+        async fn metadata(&self) -> Result<crate::representation::RepresentationMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::representation::RepresentationShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::representation::RepresentationFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_full_dto())
+        }
     }
 
-    #[Object(name = "ConnectionStore")]
+    #[Object(name = "Connection")]
     impl ConnectionNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
+        }
+
+        async fn container(&self) -> Result<DesignNode> {
+            let c = self.0.read().map_err(|_| Error::new("connection lock poisoned"))?;
+            c.parent_design
+                .upgrade()
+                .map(DesignNode)
+                .ok_or_else(|| Error::new("design container missing for connection"))
+        }
+
+        async fn metadata(&self) -> Result<crate::connection::ConnectionMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::connection::ConnectionShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::connection::ConnectionFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_full_dto())
         }
 
         async fn gap(&self) -> Result<Option<f64>> {
@@ -29046,9 +28895,6 @@ pub mod wasm {
             serde_wasm_bindgen::to_value(&g.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        /// 🌐 GraphQL queries / mutations over WASM. `request_json` is `{"query": "...", "variables"?: {...}, "operationName"?: "..."}`.
-        /// Resolves with **one complete JSON document** (the full GraphQL response: `{ "data": ..., "errors": ... }`).
-        /// Subscriptions MUST use [`KitStoreHandle::subscribe`] — this method only returns the single response.
         #[wasm_bindgen(js_name = execute)]
         pub fn execute(&self, request_json: &str) -> js_sys::Promise {
             let req_json = request_json.to_string();
@@ -29064,8 +28910,6 @@ pub mod wasm {
             })
         }
 
-        /// 🌐 GraphQL subscription over WASM. `on_event` is invoked **once per event** with a **complete JSON document**
-        /// (the full per-event GraphQL response: `{ "data": ..., "errors": ... }`). The returned `Promise` resolves when
         /// the upstream stream completes (or `on_event` throws — the stream is then dropped).
         #[wasm_bindgen(js_name = subscribe)]
         pub fn subscribe(&self, request_json: &str, on_event: &js_sys::Function) -> js_sys::Promise {
