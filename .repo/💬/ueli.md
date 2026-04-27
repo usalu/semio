@@ -1060,6 +1060,11 @@ semio/rs:
 
 ---
 
+Remove `piecePlacement: [PiecePlacementMetadataDto!]!` completly from DesignStore and instead add `parentPiece:Piece`, `depth:Int` and `path:[Piece!]!` to PieceStore.
+Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+
+---
+
 The code (including the exposed graphql api) is not clean.
 Start consolidating, aligning and refactoring everything.
 

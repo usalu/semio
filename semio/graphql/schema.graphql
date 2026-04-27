@@ -8,11 +8,37 @@ input AlternativeBatchInput {
 	commands: [AlternativeBatchCommandInput!]!
 }
 
-"""
-🌐 One author row from [`crate::author::AuthorShallowDto`] (replaces the former `AuthorShallowList` scalar).
-"""
-type AuthorShallowRow {
+type AlternativeDto {
 	id: String!
+	name: String!
+	root: String!
+	checkpoints: [String!]!
+}
+
+type AttributeFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	definition: String
+}
+
+type AttributeShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	definition: String
+}
+
+type AuthorFullDto {
+	id: Id!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
+}
+
+type AuthorShallowDto {
+	id: Id!
 	name: String!
 	email: String!
 	role: String
@@ -34,18 +60,41 @@ input BackboneBatchInput {
 
 type BackboneBatchStatus {
 	attached: Boolean!
-	kind: String
+	kind: BackboneKindBatch
+	kindOther: String
 	tip: String
 }
 
 input BackboneConfigBatchInput @oneOf {
-	"""
-	Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
-	"""
 	memory: ConfirmOnlyInput
 	dev: DevBackboneBatchInput
 	local: LocalBackboneBatchInput
 	remote: RemoteBackboneBatchInput
+}
+
+enum BackboneKindBatch {
+	MEMORY
+	DEV
+	LOCAL
+	REMOTE
+}
+
+type BenchmarkFullDto {
+	id: Id!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
+}
+
+type BenchmarkMetadataDto {
+	id: Id!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
 }
 
 scalar ChangeKitCommand
@@ -74,6 +123,20 @@ input ClusterPiecesBatchInput {
 	clusterName: String!
 }
 
+type ConceptFullDto {
+	id: Id!
+	name: String!
+	description: String
+	order: Int
+}
+
+type ConceptShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	order: Int
+}
+
 input ConfirmOnlyInput {
 	confirm: Boolean
 }
@@ -92,6 +155,10 @@ enum ConflictResolutionBatchInput {
 
 type Connection {
 	id: String!
+	container: DesignStore!
+	metadata: ConnectionMetadataDto!
+	shallow: ConnectionShallowDto!
+	full: ConnectionFullDto!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -103,11 +170,95 @@ type Connection {
 	description: String
 }
 
-scalar ConnectionFullList
+type ConnectionFullDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+	attributes: [AttributeFullDto!]!
+}
+
+type ConnectionMetadataDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+}
+
+type ConnectionShallowDto {
+	id: Id!
+	connected: SideMetadataDto!
+	connecting: SideMetadataDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	x: Float
+	y: Float
+	description: String
+	attributes: [AttributeShallowDto!]!
+}
 
 type Connector {
 	id: String!
 	code: String!
+	description: String
+	container: Type!
+	metadata: ConnectorMetadataDto!
+	shallow: ConnectorShallowDto!
+	full: ConnectorFullDto!
+}
+
+type ConnectorFullDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+	qualities: [QualityFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type ConnectorIdDto {
+	id: Id!
+}
+
+type ConnectorMetadataDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+}
+
+type ConnectorShallowDto {
+	id: Id!
+	code: String!
+	description: String
+	port: PortIdDto
+	qualities: [QualityShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type Coordinate {
+	u: Float!
+	v: Float!
 }
 
 input CountInput {
@@ -145,36 +296,6 @@ input DeleteConnectionBatchInput {
 	connectionId: String!
 }
 
-type Design {
-	id: String!
-	name: String!
-	description: String
-	pieces: [Piece!]!
-	"""
-	🌐 Resolves a piece by persisted DTO id within this design.
-	"""
-	pieceByDtoId(id: String!): Piece
-	connections: [Connection!]!
-	"""
-	🌐 `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
-	"""
-	piecesFull: PieceFullList!
-	"""
-	🌐 `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
-	"""
-	connectionsFull: ConnectionFullList!
-	flattenMap: [DesignFlattenMapEntryObject!]!
-	clusterableGroups(selection: [String!]!): [[String!]!]!
-	qualitySum(qualityId: String!): Float!
-	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
-	includedDesigns: [IncludedDesignObject!]!
-	includedDesignIds: [String!]!
-	"""
-	🌐 Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
-	"""
-	piecePlacement: [PiecePlacementRowObject!]!
-}
-
 input DesignBatchCommandInput @oneOf {
 	clusterPieces: ClusterPiecesBatchInput
 	dragPieces: DragPiecesBatchInput
@@ -194,26 +315,100 @@ input DesignBatchInput {
 	commands: [DesignBatchCommandInput!]!
 }
 
-type DesignFlattenMapEntryObject {
-	pieceId: String!
-	plane: GqlPlaneObject!
-	center: GqlCoordinate3!
+type DesignFlattenMapEntryDto {
+	pieceId: Id!
+	plane: Plane!
+	center: Coordinate!
 }
 
-type DesignMetadataObject {
-	id: String!
+type DesignFullDto {
+	id: Id!
 	name: String!
 	description: String
 	icon: String
 	image: String
-	location: GqlIdOnly
+	location: LocationIdDto
 	unit: String
 	created: String
 	updated: String
-	kit: GqlIdOnly
+	kit: KitIdDto
+	families: [FamilyIdDto!]!
+	pieces: [PieceFullDto!]!
+	connections: [ConnectionFullDto!]!
+	layers: [LayerFullDto!]!
+	groups: [GroupFullDto!]!
+	authors: [AuthorFullDto!]!
+	concepts: [ConceptFullDto!]!
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+	stats: [StatFullDto!]!
 }
 
-scalar DesignShallowList
+type DesignIdDto {
+	id: Id!
+}
+
+type DesignMetadataDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: LocationIdDto
+	unit: String
+	created: String
+	updated: String
+	kit: KitIdDto
+}
+
+type DesignShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: LocationIdDto
+	unit: String
+	created: String
+	updated: String
+	kit: KitIdDto
+	families: [FamilyIdDto!]!
+	pieces: [PieceShallowDto!]!
+	connections: [ConnectionShallowDto!]!
+	layers: [LayerShallowDto!]!
+	groups: [GroupShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+	stats: [StatShallowDto!]!
+}
+
+type DesignStore {
+	id: String!
+	name: String!
+	description: String
+	container: KitStore!
+	metadata: DesignMetadataDto!
+	shallow: DesignShallowDto!
+	full: DesignFullDto!
+	pieces: [Piece!]!
+	pieceByDtoId(id: String!): Piece
+	connections: [Connection!]!
+	piecesFull: [PieceFullDto!]!
+	connectionsFull: [ConnectionFullDto!]!
+	flattenMap: [DesignFlattenMapEntryDto!]!
+	clusterableGroups(selection: [String!]!): [[String!]!]!
+	qualitySum(qualityId: String!): Float!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!
+	includedDesigns: [IncludedDesignInfoDto!]!
+	includedDesignIds: [String!]!
+	piecePlacement: [PiecePlacementMetadataDto!]!
+}
 
 input DevBackboneBatchInput {
 	path: String!
@@ -233,6 +428,17 @@ input DraftBatchInput {
 	commands: [DraftBatchCommandInput!]!
 }
 
+type DraftDto {
+	id: String!
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
 input DragPiecesBatchInput {
 	pieceIds: [String!]!
 	du: Float!
@@ -243,51 +449,65 @@ input ExpandDesignBatchInput {
 	nestedDesignId: String!
 }
 
-type GqlCoordinate3 {
-	x: Float!
-	y: Float!
-	z: Float!
+type FamilyIdDto {
+	id: Id!
 }
 
-type GqlIdOnly {
-	id: String!
+type FileIdDto {
+	id: Id!
 }
 
-type GqlPlaneObject {
-	origin: GqlPoint3!
-	xAxis: GqlVector3!
-	yAxis: GqlVector3!
+type FileShallowDto {
+	id: Id!
+	url: String!
+	mime: String
+	size: Int
+	hash: String
+	description: String
+	created: String
+	updated: String
 }
 
-type GqlPoint3 {
-	x: Float!
-	y: Float!
-	z: Float!
+type FolderShallowDto {
+	id: Id!
+	path: String!
+	description: String
 }
 
-type GqlPoseObject {
-	plane: GqlPlaneObject!
-	center: GqlCoordinate3!
+type GroupFullDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	icon: String
+	pieces: [PieceIdDto!]!
 }
 
-type GqlVector3 {
-	x: Float!
-	y: Float!
-	z: Float!
+type GroupShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	icon: String
+	pieces: [PieceIdDto!]!
 }
 
-type IncludedDesignObject {
-	id: String!
-	designId: String!
-	connectionKind: String!
-	center: GqlCoordinate3
-	plane: GqlPlaneObject
-	externalConnections: ConnectionFullList!
+scalar Id
+
+enum IncludedDesignConnectionKind {
+	CONNECTED
+	FIXED
 }
 
-"""
-🧾 Known semantic labels for a [`crate::kit_change::KitChangeKind`] batch (see `changeKindOther` when [`KitChangeSemanticKind::Other`]).
-"""
+type IncludedDesignInfoDto {
+	id: Id!
+	designId: Id!
+	connectionKind: IncludedDesignConnectionKind!
+	center: Coordinate
+	plane: Plane
+	externalConnections: [ConnectionFullDto!]!
+}
+
 enum KitChangeSemanticKind {
 	INFERRED
 	SET_KIT_METADATA
@@ -306,22 +526,22 @@ enum KitChangeSemanticKind {
 	OTHER
 }
 
-type KitColoredConnectorObject {
-	typeId: GqlIdOnly!
-	connectorId: GqlIdOnly!
+type KitColoredConnectorDto {
+	typeId: TypeIdDto!
+	connectorId: ConnectorIdDto!
 	color: String!
 }
 
-"""
-Wire JSON for the kit subscription bus (same shape as `semio_rs::events::KitEvent`).
-Classified mutations use top-level camelCase keys (`renamedDesign`, `changedKit`, …) each carrying a `change` object with `forward` and `inverse` `ChangeKitCommand` lists.
-"""
 scalar KitEvent
 
 scalar KitFullSnapshot
 
-type KitMetadataObject {
-	id: String!
+type KitIdDto {
+	id: Id!
+}
+
+type KitMetadataDto {
+	id: Id!
 	name: String!
 	description: String
 	icon: String
@@ -349,9 +569,6 @@ input KitReadScopeDraftInput {
 	draftId: String!
 }
 
-"""
-GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
-"""
 input KitReadScopeInput @oneOf {
 	theKit: ConfirmOnlyInput
 	checkpoint: KitReadScopeCheckpointInput
@@ -366,68 +583,46 @@ input KitReadScopeTransactionInput {
 	transactionId: String!
 }
 
+type KitShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+	types: [TypeShallowDto!]!
+	designs: [DesignShallowDto!]!
+	files: [FileShallowDto!]!
+	folders: [FolderShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
 type KitStore {
 	name: String!
-	"""
-	🌐 Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
-	"""
-	designByDtoId(id: String!): Design
-	"""
-	🌐 Resolves a kit [`crate::typ::TypeStore`] by persisted DTO id.
-	"""
+	designByDtoId(id: String!): DesignStore
 	typeByDtoId(id: String!): Type
 	description: String
-	"""
-	🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
-	"""
-	typeIds: [String!]!
-	"""
-	🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
-	"""
-	designIds: [String!]!
 	types: [Type!]!
-	designs: [Design!]!
-	"""
-	🌐 Per-type metadata rows.
-	"""
-	typesMetadata: [TypeMetadataObject!]!
-	"""
-	🌐 Per-design metadata rows.
-	"""
-	designsMetadata: [DesignMetadataObject!]!
-	"""
-	🌐 Colored connector index rows.
-	"""
-	coloredConnectors: [KitColoredConnectorObject!]!
-	"""
-	🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
-	"""
+	designs: [DesignStore!]!
+	coloredConnectors: [KitColoredConnectorDto!]!
 	fullDto: KitFullSnapshot!
-	"""
-	`the_kit` line DTO (committed main line).
-	"""
 	theKitDto: KitFullSnapshot!
 	materializeAt(checkpointId: String): KitFullSnapshot!
-	"""
-	🌐 Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
-	"""
-	kitMetadata: KitMetadataObject!
-	"""
-	🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
-	"""
-	designsShallow: DesignShallowList!
-	"""
-	🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
-	"""
-	typesShallow: TypeShallowList!
-	"""
-	🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
-	"""
-	authorsShallow: [AuthorShallowRow!]!
-	"""
-	Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
-	"""
-	vcsState: VcsStateGql!
+	metadata: KitMetadataDto!
+	shallow: KitShallowDto!
+	vcsState: VcsStateStore!
 }
 
 input KitStoreBatchCommandInput @oneOf {
@@ -458,25 +653,13 @@ type KitStoreBatchResult {
 	alternativeId: String
 	backbone: BackboneBatchStatus
 	conflicts: [ConflictBatchRecord!]
-	"""
-	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; discriminant of [`crate::kit_change::KitChangeKind`].
-	"""
 	changeKind: KitChangeSemanticKind
-	"""
-	🧾 When [`Self::change_kind`] is [`KitChangeSemanticKind::Other`], the free-form semantic label from Rust.
-	"""
 	changeKindOther: String
-	"""
-	🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
-	"""
 	inverse: [ChangeKitCommand!]
 }
 
 enum KitStoreBatchResultKind {
 	CHANGE_KIT_COMMANDS
-	"""
-	🧾 Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
-	"""
 	CHANGE_KIT_WITH_INVERSE
 	CLUSTER_PIECES
 	DRAG_PIECES
@@ -514,14 +697,35 @@ enum KitStoreBatchResultKind {
 }
 
 type KitStoreMutation {
-	"""
-	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` entry point.
-	"""
 	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
+}
+
+type LayerFullDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
+}
+
+type LayerShallowDto {
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
 }
 
 input LocalBackboneBatchInput {
 	folder: String!
+}
+
+type LocationIdDto {
+	id: Id!
 }
 
 input MessageOnlyInput {
@@ -536,9 +740,6 @@ input MovePiecesBatchInput {
 }
 
 type Mutation {
-	"""
-	Control-plane kit mutations (batched commands, VCS, design canvas).
-	"""
 	kitStore: KitStoreMutation!
 }
 
@@ -546,34 +747,89 @@ type Piece {
 	id: String!
 	name: String
 	description: String
-	flatPlane: GqlPlaneObject!
-	flatCenter: GqlCoordinate3!
-	flatPose: GqlPoseObject!
+	container: DesignStore!
+	metadata: PieceMetadataDto!
+	shallow: PieceShallowDto!
+	full: PieceFullDto!
+	flatPlane: Plane!
+	flatCenter: Coordinate!
+	flatPose: PoseFullDto!
 	scale: Float
-	"""
-	Strong ref to the resolved type for this piece (in-memory, not a lookup by id).
-	"""
 	refType: Type
-	"""
-	Parent connection when the piece is linked through a connection.
-	"""
 	parentConnection: Connection
 }
 
-scalar PieceFullList
+type PieceFullDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type PieceIdDto {
+	id: Id!
+}
 
 input PieceIdsBatchInput {
 	pieceIds: [String!]!
 }
 
-type PiecePlacementRowObject {
-	pieceId: String!
-	plane: GqlPlaneObject!
-	center: GqlCoordinate3!
+type PieceMetadataDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+}
+
+type PiecePlacementMetadataDto {
+	pieceId: Id!
+	plane: Plane!
+	center: Coordinate!
 	fixedPieceId: String!
 	parentPieceId: String
 	depth: Int!
 	path: [String!]!
+}
+
+type PieceShallowDto {
+	id: Id!
+	name: String
+	description: String
+	plane: Plane
+	center: Coordinate
+	scale: Float
+	mirrorPlane: Plane
+	hidden: Boolean
+	locked: Boolean
+	color: String
+	kind: TypeIdDto
+	design: DesignIdDto
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
+}
+
+type Plane {
+	origin: Point!
+	xAxis: Vector!
+	yAxis: Vector!
 }
 
 input PlaneInputBatch {
@@ -582,16 +838,67 @@ input PlaneInputBatch {
 	yAxis: VectorInputBatch!
 }
 
+type Point {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
 input PointInputBatch {
 	x: Float!
 	y: Float!
 	z: Float!
 }
 
+type PortIdDto {
+	id: Id!
+}
+
+type PoseFullDto {
+	plane: Plane!
+	center: Coordinate!
+}
+
+type PropFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	quality: QualityIdDto
+}
+
+type PropShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+}
+
+type QualityFullDto {
+	id: Id!
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	benchmarks: [BenchmarkFullDto!]!
+}
+
+type QualityIdDto {
+	id: Id!
+}
+
+type QualityShallowDto {
+	id: Id!
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	benchmarks: [BenchmarkMetadataDto!]!
+}
+
 type Query {
-	"""
-	🌐 **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
-	"""
 	kit(scope: KitReadScopeInput!): KitStore!
 }
 
@@ -600,26 +907,56 @@ input RemoteBackboneBatchInput {
 	sessionId: String!
 }
 
-type ReplaceableCatalog {
-	"""
-	🌐
-	"""
-	typeIds: [String!]!
-	"""
-	🌐
-	"""
-	designIds: [String!]!
+type ReplaceableCatalogStore {
+	types: [Type!]!
+	designs: [DesignStore!]!
 }
 
 type Representation {
 	id: String!
 	url: String!
 	description: String
+	container: Type!
+	metadata: RepresentationMetadataDto!
+	shallow: RepresentationShallowDto!
+	full: RepresentationFullDto!
+}
+
+type RepresentationFullDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type RepresentationMetadataDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+}
+
+type RepresentationShallowDto {
+	id: Id!
+	url: String!
+	description: String
+	file: FileIdDto
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	attributes: [AttributeShallowDto!]!
 }
 
 input ResolveConflictBatchInput {
 	conflictId: String!
 	strategy: ConflictResolutionBatchInput!
+}
+
+type RootDto {
+	id: String!
+	name: String!
 }
 
 input SessionBatchCommandInput @oneOf {
@@ -634,22 +971,54 @@ input SessionBatchInput {
 	commands: [SessionBatchCommandInput!]!
 }
 
+type SessionDto {
+	id: String!
+	drafts: [DraftDto!]!
+}
+
+type SideMetadataDto {
+	id: Id!
+	piece: PieceIdDto!
+	port: PortIdDto
+	designPiece: PieceIdDto
+	connector: ConnectorIdDto
+}
+
+type StatFullDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	description: String
+}
+
+type StatShallowDto {
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	description: String
+}
+
 type Subscription {
-	"""
-	Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
-	"""
 	eventStream: KitEvent!
+}
+
+type TagFullDto {
+	id: Id!
+	name: String!
+	order: Int
+}
+
+type TagShallowDto {
+	id: Id!
+	name: String!
+	order: Int
 }
 
 input TransactionBatchCommandInput @oneOf {
 	changeKitCommands: ChangeKitCommandsBatchInput
-	"""
-	🧾 Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
-	"""
 	changeKitWithInverse: ChangeKitCommandsBatchInput
-	"""
-	🧾 Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
-	"""
 	design: DesignBatchInput
 	finalizeTransaction: ConfirmOnlyInput
 	abortTransaction: ConfirmOnlyInput
@@ -666,38 +1035,80 @@ type Type {
 	id: String!
 	name: String!
 	description: String
+	container: KitStore!
+	metadata: TypeMetadataDto!
+	shallow: TypeShallowDto!
+	full: TypeFullDto!
 	connectors: [Connector!]!
 	representations: [Representation!]!
-	"""
-	Best matching representation for tag selection.
-	"""
 	bestRepresentation(tagIds: [String!]!): Representation
 }
 
-type TypeMetadataObject {
-	id: String!
+type TypeFullDto {
+	id: Id!
 	name: String!
 	description: String
 	icon: String
 	image: String
 	stock: Int
-	typeVirtual: Boolean
+	isAbstract: Boolean
 	unit: String
-	location: GqlIdOnly
+	location: LocationIdDto
+	created: String
+	updated: String
+	families: [FamilyIdDto!]!
+	connectors: [ConnectorFullDto!]!
+	representations: [RepresentationFullDto!]!
+	authors: [AuthorFullDto!]!
+	concepts: [ConceptFullDto!]!
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
+type TypeIdDto {
+	id: Id!
+}
+
+type TypeMetadataDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	isAbstract: Boolean
+	unit: String
+	location: LocationIdDto
 	created: String
 	updated: String
 }
 
-scalar TypeShallowList
-
-type VcsAlternativeGql {
-	id: String!
+type TypeShallowDto {
+	id: Id!
 	name: String!
-	root: String!
-	checkpoints: [String!]!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	isAbstract: Boolean
+	unit: String
+	location: LocationIdDto
+	created: String
+	updated: String
+	families: [FamilyIdDto!]!
+	connectors: [ConnectorShallowDto!]!
+	representations: [RepresentationShallowDto!]!
+	authors: [AuthorShallowDto!]!
+	concepts: [ConceptShallowDto!]!
+	tags: [TagShallowDto!]!
+	qualities: [QualityShallowDto!]!
+	props: [PropShallowDto!]!
+	attributes: [AttributeShallowDto!]!
 }
 
-type VcsCheckpointGql {
+type VcsCheckpointStore {
 	id: String!
 	parent: String
 	message: String
@@ -708,34 +1119,19 @@ type VcsCheckpointGql {
 	changeCount: Int!
 }
 
-type VcsDraftGql {
-	id: String!
-	parentCheckpoint: String
-	targetAlternative: String
-	finalizedTransactionCount: Int!
-	redoTransactionCount: Int!
-	openTransactionId: String
-	canUndo: Boolean!
-	canRedo: Boolean!
-}
-
-type VcsRootGql {
-	id: String!
-	name: String!
-}
-
-type VcsSessionGql {
-	id: String!
-	drafts: [VcsDraftGql!]!
-}
-
-type VcsStateGql {
+type VcsStateStore {
 	theKitHead: String
-	root: VcsRootGql!
-	checkpoints: [VcsCheckpointGql!]!
-	alternatives: [VcsAlternativeGql!]!
-	sessions: [VcsSessionGql!]!
+	root: RootDto!
+	checkpoints: [VcsCheckpointStore!]!
+	alternatives: [AlternativeDto!]!
+	sessions: [SessionDto!]!
 	theKitLine: [String!]!
+}
+
+type Vector {
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
 input VectorInputBatch {

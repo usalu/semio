@@ -1,12 +1,8 @@
 //! semio rust implementation
 #![allow(clippy::new_without_default)]
 
-/// Exhaustive read-only kit graph commands; each variant maps to a typed [`ReadKitCommandOutput`].
-/// Executed against a **scoped** materialized [`kit_graph::KitGraph`] (see [`crate::kit_read_scope::resolve_read_graph`] and `ReadKitCommand::execute` / `execute_many`).
 pub mod read {
     #![allow(clippy::result_large_err)]
-    // Machine-generated read command surface: exhaustive commands + outputs, live `KitGraph` execution.
-    // Regenerate: `python gen_read_module.py` from semio/rs (optional; hand-edit for tweaks).
 
     use serde::{Deserialize, Serialize};
 
@@ -36,7 +32,6 @@ pub mod read {
     use crate::tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto};
     use crate::typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStoreRef};
 
-    /// 🧩 How a nested design is referenced from host connections (wire `type` string).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, async_graphql::Enum)]
     #[serde(rename_all = "lowercase")]
     pub enum IncludedDesignConnectionKind {
@@ -44,7 +39,6 @@ pub mod read {
         Fixed,
     }
 
-    /// One row of [`crate::design::DesignStore::flatten_map`].
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct DesignFlattenMapEntryDto {
@@ -53,7 +47,6 @@ pub mod read {
         pub center: Coordinate,
     }
 
-    /// Included child design stub referenced from connections (port of [`getIncludedDesigns`](DesignStore::included_design_infos) in JS).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct IncludedDesignInfoDto {
@@ -71,7 +64,6 @@ pub mod read {
         pub external_connections: Vec<ConnectionFullDto>,
     }
 
-    /// One connector row for UI port coloring (stable CSS color string; mirrors JS `getColorForText` on port id).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct KitColoredConnectorDto {
@@ -80,7 +72,6 @@ pub mod read {
         pub color: String,
     }
 
-    // --- Kit ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -247,7 +238,6 @@ pub mod read {
         ReadKitAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Type ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -381,7 +371,6 @@ pub mod read {
         ReadTypeAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Design ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -653,7 +642,6 @@ pub mod read {
         },
     }
 
-    // --- Piece ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -733,7 +721,6 @@ pub mod read {
         ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Connection ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -793,7 +780,6 @@ pub mod read {
         ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
     }
 
-    // --- Side ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -819,7 +805,6 @@ pub mod read {
         ReadSideDesignPieceIdCommand { design_piece: Option<PieceIdDto> },
     }
 
-    // --- Port ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -869,7 +854,6 @@ pub mod read {
         ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Connector ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -907,7 +891,6 @@ pub mod read {
         ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Representation ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -951,7 +934,6 @@ pub mod read {
         ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Family ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -989,7 +971,6 @@ pub mod read {
         ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- File ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1023,7 +1004,6 @@ pub mod read {
         ReadFileUpdatedCommand { updated: Option<String> },
     }
 
-    // --- Folder ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1047,7 +1027,6 @@ pub mod read {
         ReadFolderDescriptionCommand { description: Option<String> },
     }
 
-    // --- Location ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1079,7 +1058,6 @@ pub mod read {
         ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
-    // --- Layer ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1111,7 +1089,6 @@ pub mod read {
         ReadLayerLockedCommand { locked: Option<bool> },
     }
 
-    // --- Group ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1141,7 +1118,6 @@ pub mod read {
         ReadGroupPiecesCommand { pieces: Vec<PieceIdDto> },
     }
 
-    // --- Author ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1169,7 +1145,6 @@ pub mod read {
         ReadAuthorRankCommand { rank: Option<i64> },
     }
 
-    // --- Concept ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1195,7 +1170,6 @@ pub mod read {
         ReadConceptOrderCommand { order: Option<i64> },
     }
 
-    // --- Tag ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1219,7 +1193,6 @@ pub mod read {
         ReadTagOrderCommand { order: Option<i64> },
     }
 
-    // --- Quality ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1255,7 +1228,6 @@ pub mod read {
         ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
     }
 
-    // --- Benchmark ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1285,7 +1257,6 @@ pub mod read {
         ReadBenchmarkMaxExcludedCommand { max_excluded: Option<bool> },
     }
 
-    // --- Prop ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1311,7 +1282,6 @@ pub mod read {
         ReadPropQualityIdCommand { quality: Option<QualityIdDto> },
     }
 
-    // --- Attribute ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1337,7 +1307,6 @@ pub mod read {
         ReadAttributeDefinitionCommand { definition: Option<String> },
     }
 
-    // --- Stat ---
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -1372,7 +1341,6 @@ pub mod read {
     use crate::typ::TypeStore;
     use crate::{error::Result, error::SemioError};
 
-    // --- helpers ----------------------------------------------------------------
 
     fn lp(s: &'static str) -> SemioError {
         SemioError::LockPoisoned(s)
@@ -1429,7 +1397,6 @@ pub mod read {
         out
     }
 
-    // --- small entity executes ---------------------------------------------------
 
     impl ReadStatCommand {
         pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
@@ -2105,9 +2072,7 @@ pub mod read {
         }
     }
 
-    // --- design-domain reads (port of previous JS: getClusterableGroups, getIncludedDesigns, sumQualityInDesign) —
 
-    /// Stable CSS `color-mix` string for a port/connector id (see JS `getColorForText`).
     fn color_string_for_id_text(text: &str) -> String {
         if text.is_empty() {
             return "var(--foreground)".to_string();
@@ -2633,7 +2598,6 @@ pub mod read {
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    // Granular change commands: run against `KitGraphRef`, inverses for undo.
     use crate::attribute::AttributeFullDto;
     use crate::attribute::AttributeIdDto;
     use crate::attribute::AttributeStore;
@@ -2723,7 +2687,6 @@ pub mod change_command {
         d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
     }
 
-    /// Match [`crate::design::connection_from_full_dto`] / `wire_side_from_dto` for one side.
     fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadataDto) -> Result<()> {
         let index = build_piece_index(d);
         {
@@ -2768,7 +2731,6 @@ pub mod change_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeKitCommand {
-        // --- kit metadata (mirrors set_* on [`KitStore`]) ---
         Name {
             name: String,
         },
@@ -2808,7 +2770,6 @@ pub mod change_command {
         ReplaceKitFromFullDto {
             dto: KitFullDto,
         },
-        // --- life-cycle (kit-scoped) ---
         AddType {
             r#type: TypeFullDto,
         },
@@ -2869,7 +2830,6 @@ pub mod change_command {
         RemoveKitAttribute {
             id: AttributeIdDto,
         },
-        // --- in-place field edits (mirrors per-entity set_*; ids scope to this kit) ---
         ChangeFileCommands {
             file_id: FileIdDto,
             commands: Vec<ChangeFileCommand>,
@@ -2894,7 +2854,6 @@ pub mod change_command {
             quality_id: QualityIdDto,
             commands: Vec<ChangeKitQualityCommand>,
         },
-        // --- nested scoping ---
         ChangeTypeCommands {
             type_id: TypeIdDto,
             commands: Vec<ChangeTypeCommand>,
@@ -2917,7 +2876,6 @@ pub mod change_command {
             family_id: FamilyIdDto,
             commands: Vec<ChangeFamilyCommand>,
         },
-        // --- design-canvas / layout batch (semantic: twin + one [`KitGraph::apply_kit_diff`]) ---
         ClusterPieces {
             design_id: DesignIdDto,
             piece_ids: Vec<String>,
@@ -2958,7 +2916,6 @@ pub mod change_command {
         },
     }
 
-    /// Per-field on [`crate::family::FamilyStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeFamilyCommand {
@@ -2970,7 +2927,6 @@ pub mod change_command {
         ChangePortCommands { port_id: PortIdDto, commands: Vec<ChangePortCommand> },
     }
 
-    /// Per-field on [`crate::file::FileStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeFileCommand {
@@ -2983,7 +2939,6 @@ pub mod change_command {
         Updated { updated: Option<String> },
     }
 
-    /// Per-field on [`crate::folder::FolderStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeFolderCommand {
@@ -2991,7 +2946,6 @@ pub mod change_command {
         Description { description: Option<String> },
     }
 
-    /// Per-field on kit-level [`crate::author::AuthorStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeAuthorCommand {
@@ -3001,7 +2955,6 @@ pub mod change_command {
         Rank { rank: Option<i64> },
     }
 
-    /// Per-field on kit-level [`crate::concept::ConceptStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeConceptCommand {
@@ -3010,7 +2963,6 @@ pub mod change_command {
         Order { order: Option<i64> },
     }
 
-    /// Per-field on kit-level [`crate::tag::TagStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeTagCommand {
@@ -3018,7 +2970,6 @@ pub mod change_command {
         Order { order: Option<i64> },
     }
 
-    /// Quality on the kit (not on a type/port), including benchmarks.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeKitQualityCommand {
@@ -3042,7 +2993,6 @@ pub mod change_command {
         MaxExcluded { max_excluded: Option<bool> },
     }
 
-    /// Per-field commands on a [`crate::typ::TypeStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeTypeCommand {
@@ -3147,7 +3097,6 @@ pub mod change_command {
         },
     }
 
-    /// Per-field on kit/family-scoped [`crate::port::PortStore`].
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangePortCommand {
@@ -3657,7 +3606,6 @@ pub mod change_command {
         }
     }
 
-    // --- impl: ChangeKitCommand ---
 
     impl ChangeKitCommand {
         pub fn declared_kind(&self) -> KitChangeKind {
@@ -3726,7 +3674,6 @@ pub mod change_command {
             k
         }
 
-        // #region 🔖CommandDiff
 
         pub fn kit_diff(&self, kit: &KitGraphRef) -> Result<KitDiff> {
             Self::kit_diff_many(kit, std::slice::from_ref(self))
@@ -3762,7 +3709,6 @@ pub mod change_command {
             Ok(out)
         }
 
-        // #endregion
 
         pub fn plan_kit_diff(&self, baseline: &KitFullDto) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
             let twin = KitGraph::from_full_dto(baseline.clone());
@@ -4287,7 +4233,6 @@ pub mod change_command {
         }
     }
 
-    // NOTE: ChangeTypeCommand::apply, ChangeDesignCommand, etc. continue in a second part to stay under
     // the editor size limit. See the remaining impls appended below.
 
     impl ChangeTypeCommand {
@@ -6139,7 +6084,6 @@ pub mod kit_checkpoint {
             children
         }
 
-        /// from `initial` along the parent chain.
         pub fn materialize(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFullDto {
             let Some(at_id) = at else {
                 return initial.clone();
@@ -6509,14 +6453,12 @@ pub mod kit_draft {
         Nothing,
     }
 }
-/// ## 📍KitReadScope: canonical wire for which view of the kit to run [`crate::read::ReadKitCommand`]s against.
 pub mod kit_read_scope {
     use crate::error::{Result, SemioError};
     use crate::id::Id;
     use crate::kit_graph::KitGraphRef;
     use serde::{Deserialize, Serialize};
 
-    /// 🧭 Names exactly one of: the live kit authority (`theKit`), a checkpoint, an alternative tip, a draft, or the open transaction within a draft.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitReadScope {
@@ -6547,7 +6489,6 @@ pub mod kit_read_scope {
 
     use crate::kit_draft::Draft as KitDraft;
 
-    /// 🧮 Materialize a throwaway graph: draft `before` + finalized transaction stack + the open transaction’s current `changes` (if any), matching the live WIP.
     fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
         let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -6556,7 +6497,6 @@ pub mod kit_read_scope {
         d.materialize_working_graph()
     }
 
-    /// 🧮 Same as [`materialize_draft_working_graph`] but verify `transaction_id` matches the open transaction (reads follow live undo/redo within that transaction).
     fn materialize_transaction_read_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
         {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -6566,11 +6506,9 @@ pub mod kit_read_scope {
         materialize_draft_working_graph(kit, session_id, draft_id)
     }
 
-    /// ↪️ Resolves a [`KitReadScope`] to a `KitGraphRef` suitable for [`ReadKitCommand::execute_many`].
     pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
         let g0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
         let view = match scope {
-            // 🧾 `TheKit` reads use the **live** coordinator graph (sessions, drafts, WIP) — same authority as the former `Query.kitStore`; checkpoint/materialized scopes stay throwaway graphs.
             KitReadScope::TheKit => {
                 drop(g0);
                 return Ok(kit.clone());
@@ -6677,7 +6615,6 @@ pub mod kit_session {
     }
 }
 
-/// Serde wire types for backbone configuration and conflict records (native + wasm).
 pub mod kit_backbone_wire {
     use serde::{Deserialize, Serialize};
 
@@ -6993,7 +6930,6 @@ pub mod backbone {
         Remote(RemoteBackbone),
     }
 
-    /// No-op backbone: coordinator keeps slot filled; `persist_full` accepts without I/O.
     #[derive(Clone, Debug, Default)]
     pub struct MemoryBackbone;
 
@@ -7258,7 +7194,6 @@ pub mod kit_store {
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
-    /// Control plane: wip graph actor + coordinator + optional backbone attachment (native).
     pub struct KitStore {
         graph: KitGraphRef,
         wip_tx: mpsc::Sender<WipMsg>,
@@ -7467,7 +7402,6 @@ pub mod kit_store_command {
         EndSession {
             id: Id,
         },
-        /// alternative from the **initial** kit (no main-line checkpoint, e.g. no commits yet).
         NewAlternative {
             #[serde(rename = "fromCheckpoint", default, skip_serializing_if = "Option::is_none")]
             from_checkpoint: Option<Id>,
@@ -7787,7 +7721,6 @@ pub mod kit_store_command {
                 (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
             if alt.is_some() {
-                // Alternative drafts apply eagerly to the shared live graph; snapshot the change on the
                 // branch, then roll the live graph back to the main-line parent checkpoint.
                 KitChange::apply_backward(&kc, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
@@ -8021,7 +7954,6 @@ pub mod attribute {
     pub type AttributeStoreRef = std::sync::Arc<RwLock<AttributeStore>>;
     pub type AttributeStoreWeak = Weak<RwLock<AttributeStore>>;
 
-    /// A name/value pair attached to pretty much any domain entity.
     #[derive(Debug)]
     pub struct AttributeStore {
         pub id: Id,
@@ -8281,7 +8213,6 @@ pub mod author {
     pub type AuthorStoreRef = std::sync::Arc<RwLock<AuthorStore>>;
     pub type AuthorStoreWeak = Weak<RwLock<AuthorStore>>;
 
-    /// A human author attached to a design, type, or kit.
     #[derive(Debug)]
     pub struct AuthorStore {
         pub id: Id,
@@ -8501,7 +8432,6 @@ pub mod benchmark {
     pub type BenchmarkStoreRef = std::sync::Arc<RwLock<BenchmarkStore>>;
     pub type BenchmarkStoreWeak = Weak<RwLock<BenchmarkStore>>;
 
-    /// Numeric range benchmark used to qualify quality measurements.
     #[derive(Debug)]
     pub struct BenchmarkStore {
         pub id: Id,
@@ -8698,7 +8628,6 @@ pub mod concept {
     pub type ConceptStoreRef = std::sync::Arc<RwLock<ConceptStore>>;
     pub type ConceptStoreWeak = Weak<RwLock<ConceptStore>>;
 
-    /// Conceptual / semantic label grouping types and designs.
     #[derive(Debug)]
     pub struct ConceptStore {
         pub id: Id,
@@ -8896,7 +8825,6 @@ pub mod connection {
     pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
     pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
 
-    /// Join between two [`crate::piece::PieceStore`] instances.
     #[derive(Debug)]
     pub struct ConnectionStore {
         pub id: Id,
@@ -9002,7 +8930,6 @@ pub mod connection {
         pub attributes: Vec<AttributeFullDto>,
     }
 
-    /// Default anchor for a connector until geometry lives on [`ConnectorStore`] in the wire format.
     pub fn connector_anchor_ports(_c: &ConnectorStore) -> (Point, Vector) {
         (Point::ZERO, Vector::Z)
     }
@@ -9317,7 +9244,6 @@ pub mod connector {
     pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
     pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
 
-    /// A named socket on a [`crate::typ::TypeStore`] that references a concrete port.
     #[derive(Debug)]
     pub struct ConnectorStore {
         pub id: Id,
@@ -9548,7 +9474,6 @@ pub mod design {
     pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
     pub type DesignStoreWeak = Weak<RwLock<DesignStore>>;
 
-    /// A placed/composed design: a scene of pieces joined by connections.
     #[derive(Debug)]
     pub struct DesignStore {
         pub id: Id,
@@ -9708,7 +9633,6 @@ pub mod design {
         typ.connectors.first().cloned()
     }
 
-    /// Effective port for a side: explicit [`SideMetadataDto::port`], or resolved from [`SideMetadataDto::connector`] on the piece's type.
     pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadataDto, pref: &PieceStoreRef) -> Option<crate::port::PortIdDto> {
         if let Some(p) = &meta.port {
             return Some(p.clone());
@@ -9866,7 +9790,6 @@ pub mod design {
             emit_weak(&self.event_bus, ev);
         }
 
-        // #region 🔖FlattenParentage
         pub(crate) fn rewire_piece_flatten_parents(&self) {
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for piece in &self.pieces {
@@ -9929,7 +9852,6 @@ pub mod design {
                 }
             }
         }
-        // #endregion
 
         pub(crate) fn entity_ref(&self) -> EntityRef {
             EntityRef::new(EntityKind::Design, self.id.clone())
@@ -9958,14 +9880,12 @@ pub mod design {
             }
         }
 
-        /// the kit already holds its write lock, e.g. during nested `DesignStore` mutations).
         pub(crate) fn invalidate_hash_local(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
         }
 
         ///
-        /// lock**; pass its id so we can still list it in `FlattenInvalidated` without blocking on
         /// `read()` (which would deadlock).
         pub fn invalidate_flatten(&self) {
             self.invalidate_flatten_with_locked_piece(None);
@@ -10375,7 +10295,6 @@ pub mod design {
             self.groups.iter().find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        // #region 🔁PieceAlternatives
         fn side_piece_id(side: &SideStoreRef) -> Option<Id> {
             side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())))
         }
@@ -10585,9 +10504,7 @@ pub mod design {
                 .collect();
             alternatives
         }
-        // #endregion
 
-        /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
         /// validation invalidation (e.g. [`KitGraph::invalidate_validation`] on the parent kit).
         pub fn delete_pieces(&mut self, piece_ids: &[Id]) -> usize {
             self.delete_pieces_inner(piece_ids, true)
@@ -11353,7 +11270,6 @@ pub mod design {
             Ok(())
         }
 
-        /// (see [`crate::piece::PieceStore::fix_on_design`]) until stable.
         pub fn flatten_change(&mut self) -> crate::report::SemioReport<crate::diff::DesignChange> {
             use crate::diff::DesignChange;
             use crate::error::SetError;
@@ -11637,7 +11553,6 @@ pub mod design {
 }
 
 pub mod diff {
-    // Sparse structural diffs (mirror Semio.cs: removed → updated → added). Included by `pub mod diff` in lib.rs.
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
@@ -11682,7 +11597,6 @@ pub mod diff {
         }
     }
 
-    /// Forward + backward sparse design deltas (replaces old `DesignChange`).
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct DesignDiffPair {
@@ -11698,10 +11612,8 @@ pub mod diff {
         pub after: Option<DesignFullDto>,
     }
 
-    /// Back-compat name for [`DesignDiffPair`].
     pub type DesignChange = DesignDiffPair;
 
-    // --- Attribute ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AttributeDiff {
@@ -11761,7 +11673,6 @@ pub mod diff {
         }
     }
 
-    // --- Prop ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PropDiff {
@@ -11818,7 +11729,6 @@ pub mod diff {
         }
     }
 
-    // --- Benchmark ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarkDiff {
@@ -11885,7 +11795,6 @@ pub mod diff {
         }
     }
 
-    // --- Quality ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct QualityDiff {
@@ -11953,7 +11862,6 @@ pub mod diff {
         }
     }
 
-    // --- Author / Concept / Tag (design & type scoped copies) ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AuthorDiff {
@@ -12122,7 +12030,6 @@ pub mod diff {
         }
     }
 
-    // --- Stat ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StatDiff {
@@ -12180,7 +12087,6 @@ pub mod diff {
         }
     }
 
-    // --- Layer / Group ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct LayerDiff {
@@ -12312,7 +12218,6 @@ pub mod diff {
         }
     }
 
-    // --- Piece ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceDiff {
@@ -12409,7 +12314,6 @@ pub mod diff {
         }
     }
 
-    // --- Connection ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionDiff {
@@ -12500,7 +12404,6 @@ pub mod diff {
         }
     }
 
-    // --- Port / Connector / Representation ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PortDiff {
@@ -12713,7 +12616,6 @@ pub mod diff {
         }
     }
 
-    /// Added/removed [`FamilyIdDto`] refs on a [`crate::typ::TypeFullDto`].
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FamilyIdsDiff {
@@ -12738,7 +12640,6 @@ pub mod diff {
         }
     }
 
-    // --- Type ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeDiff {
@@ -12859,7 +12760,6 @@ pub mod diff {
         }
     }
 
-    // --- File / Folder (kit scoped) ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FileDiff {
@@ -12928,7 +12828,6 @@ pub mod diff {
         }
     }
 
-    // --- Family (kit-level [`FamilyFullDto`]) ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FamilyDiff {
@@ -13050,7 +12949,6 @@ pub mod diff {
         }
     }
 
-    // --- Design (scoped diff, no design id) ---
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct DesignDiff {
@@ -14041,7 +13939,6 @@ pub mod diff {
         d
     }
 
-    /// 🏠 Delta between two kit-level [`FamilyFullDto`] snapshots (ports + attributes nested like files).
     pub fn family_full_delta(b: &FamilyFullDto, a: &FamilyFullDto) -> FamilyDiff {
         let mut d = FamilyDiff::default();
         if b.name != a.name {
@@ -14304,7 +14201,6 @@ pub mod diff {
         d
     }
 
-    // --- Merge sparse diffs into full DTOs (central `apply_diff` / kit patch) ---
 
     pub fn merge_file_diff_into_full(fd: &mut FileFullDto, d: &FileDiff) {
         if let Some(v) = &d.url {
@@ -14673,7 +14569,6 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    /// Apply a sparse [`TypeDiff`] onto an in-memory [`TypeFullDto`] (then re-hydrate the live type).
     pub fn merge_type_diff_into_full(fd: &mut TypeFullDto, d: &TypeDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
@@ -14736,7 +14631,6 @@ pub mod diff {
 }
 
 pub mod kit_diff {
-    // Kit-scoped sparse diff. Included by `pub mod kit_diff` in lib.rs.
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
@@ -15320,7 +15214,6 @@ pub mod kit_diff {
     }
 }
 
-/// Command-list forward and inverse (see [`crate::change_command::ChangeKitCommand`]).
 pub mod kit_change {
     //#region 🔖Imports
     use serde::{Deserialize, Serialize};
@@ -15409,7 +15302,6 @@ pub mod kit_change {
         pub inverse: Vec<ChangeDesignCommand>,
     }
 
-    /// 🧩 Ordered segment under one design (preserves interleaving of piece vs other edits).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase", tag = "blockKind", content = "payload")]
     pub enum KitDesignChangeBlock {
@@ -15740,7 +15632,6 @@ pub mod error {
 
     use crate::id::Id;
 
-    /// 🧾 User-visible / wire rejection for a single field write (WASM + hooks).
     #[derive(Error, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(tag = "kind", content = "message")]
     pub enum SetError {
@@ -15932,7 +15823,6 @@ pub mod events {
 
     use crate::id::Id;
 
-    /// 🧭Entity discriminator for [`KitEvent`] payloads.
     #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub enum EntityKind {
         Kit,
@@ -15961,7 +15851,6 @@ pub mod events {
         Location,
     }
 
-    /// 🪪Stable identity for event payloads.
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub struct EntityRef {
         pub kind: EntityKind,
@@ -16071,7 +15960,6 @@ pub mod events {
         Attribute { attribute_id: Id, event: AttributeEvent },
     }
 
-    /// @emoji Payload: design rename with forward and inverse command atoms.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct RenamedDesignKitEvent {
@@ -16079,7 +15967,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: kind rename with forward and inverse command atoms.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct RenamedTypeKitEvent {
@@ -16087,7 +15974,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: UV drag affecting flat placement for listed pieces.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct DraggedFlatCenterPieceKitEvent {
@@ -16096,7 +15982,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: domain-space move for listed pieces.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct MovedPiecesFlatCenterKitEvent {
@@ -16105,7 +15990,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: cluster pieces into a nested design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ClusteredPiecesKitEvent {
@@ -16114,7 +15998,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: fix listed pieces in place.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct FixedPiecesFlatCenterKitEvent {
@@ -16123,7 +16006,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: flatten one design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct FlattenedDesignKitEvent {
@@ -16131,7 +16013,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: expand nested design into parent domain.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ExpandedNestedDesignKitEvent {
@@ -16140,7 +16021,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: delete one connection in a design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct DeletedConnectionKitEvent {
@@ -16149,7 +16029,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: change resolved piece kind in a design.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ChangedPieceKindKitEvent {
@@ -16158,7 +16037,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: nested design command batch.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ChangedDesignCommandsKitEvent {
@@ -16166,7 +16044,6 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: nested kind command batch.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ChangedTypeCommandsKitEvent {
@@ -16174,14 +16051,12 @@ pub mod events {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Payload: generic classified kit change.
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ChangedKitEvent {
         pub change: crate::kit_change::KitChange,
     }
 
-    /// @emoji Maps a recorded `KitChange` to one subscription `KitEvent` row (forward/inverse atoms on the payload).
     pub fn kit_event_from_kit_change(change: &crate::kit_change::KitChange) -> KitEvent {
         use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangeTypeCommand};
 
@@ -16221,7 +16096,6 @@ pub mod events {
         }
     }
 
-    /// 📣All observable changes on a kit graph.
     #[derive(Clone, Debug, serde::Serialize)]
     pub enum KitEvent {
         Changed,
@@ -16357,18 +16231,14 @@ pub mod events {
             request_id: String,
             #[serde(rename = "commandKind")]
             command_kind: String,
-            /// 📣 `accepted` → `succeeded` | `failed` lifecycle; matches JS {@linkcode KitCommandLifecyclePhase}.
             phase: SemioKitCommandPhase,
-            /// 📣 On success, optional batch semantic (see [`crate::change_command::ChangeKitCommand::batch_kind`] / [`crate::kit_change::KitChangeKind`]).
             #[serde(default, skip_serializing_if = "Option::is_none")]
             result: Option<crate::kit_change::KitChangeKind>,
-            /// 📣 Populated when [`Self::SemioKitCommand::phase`] is `Failed`.
             #[serde(default, skip_serializing_if = "Option::is_none")]
             error: Option<crate::error::SetError>,
         },
     }
 
-    /// 📣 Subscription / GraphQL command lifecycle (camelCase in JSON).
     #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "lowercase")]
     pub enum SemioKitCommandPhase {
@@ -16453,11 +16323,9 @@ pub mod events {
         }
     }
 
-    /// 🛰️Broadcast channel wrapper; cloneable [`Sender`] shares one channel.
     #[derive(Debug)]
     pub struct EventBus {
         sender: Sender<KitEvent>,
-        /// receiver from [`broadcast`] would close the channel and break all later subscribers).
         #[allow(dead_code)]
         _inactive: InactiveReceiver<KitEvent>,
     }
@@ -16799,7 +16667,6 @@ pub(crate) mod event_wire {
         }
     }
 
-    /// Re-point all `parent_kit` weak links at `kit` after in-place graph replacement (undo/redo).
     pub(crate) fn rewire_parent_kits(kit: &KitGraphRef) {
         let kw = Arc::downgrade(kit);
         let kg = kit.read().expect("kit read");
@@ -16850,7 +16717,6 @@ pub(crate) mod event_wire {
         }
     }
 
-    /// Field-level bus sync after a whole-graph replace from DTOs (families and similar).
     pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFullDto, after: &crate::kit_graph::KitFullDto) {
         use std::collections::HashMap;
 
@@ -16945,7 +16811,6 @@ pub(crate) mod flatten_math {
         Plane { origin: Point::new(ox, oy, oz), x_axis: Vector::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]), y_axis: Vector::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]) }
     }
 
-    // Quaternion (qx,qy,qz,qw) from two unit vectors
     fn quat_from_unit_vectors_full(v_from: Vector3<f64>, v_to: Vector3<f64>) -> (f64, f64, f64, f64) {
         let vf = normalize(v_from);
         let vt = normalize(v_to);
@@ -17018,7 +16883,6 @@ pub(crate) mod flatten_math {
         (x / FLATTEN_TOLERANCE).round() * FLATTEN_TOLERANCE
     }
 
-    /// `parent_connector` / `child_connector`: local anchor point + direction in type space.
     pub(crate) fn compute_child_plane(parent_plane: &Plane, parent_point: Point, parent_direction: Vector, child_point: Point, child_direction: Vector, gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> Plane {
         let parent_matrix = plane_to_matrix(parent_plane);
         let parent_pt = v3p(parent_point);
@@ -17088,7 +16952,6 @@ pub(crate) mod flatten_math {
     pub(crate) const FLATTEN_VERTICAL_V_EXTRA: f64 = 1.0;
     pub(crate) const FLATTEN_HORIZONTAL_SCALE: f64 = 3.0633;
 
-    /// UV center for child from parent center and connection u/v (matches Python BFS).
     pub(crate) fn compute_child_center_uv(parent_center: Coordinate, connection_u: f64, connection_v: f64, parent_connector_dir_z: f64, parent_t: f64) -> Coordinate {
         let pu = parent_center.u;
         let pv = parent_center.v;
@@ -17115,7 +16978,6 @@ pub mod file {
     pub type FileStoreRef = Arc<RwLock<FileStore>>;
     pub type FileStoreWeak = Weak<RwLock<FileStore>>;
 
-    /// External resource referenced by a kit (3D model, texture, etc.).
     #[derive(Debug)]
     pub struct FileStore {
         pub id: Id,
@@ -17173,7 +17035,6 @@ pub mod file {
         pub updated: Option<String>,
     }
 
-    /// Wire shape for [`FileFullDto`] (Metabolism: `name` + `blob` + `folder`, no top-level `url`).
     #[derive(Deserialize)]
     struct FileFullDtoWire {
         id: Id,
@@ -17421,7 +17282,6 @@ pub mod folder {
     pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
     pub type FolderStoreWeak = Weak<RwLock<FolderStore>>;
 
-    /// Logical folder grouping files inside a kit.
     #[derive(Debug)]
     pub struct FolderStore {
         pub id: Id,
@@ -17580,7 +17440,6 @@ pub mod geom {
     use crate::hash::HashWriter;
     use crate::merkle::Writer as MerkleWriter;
 
-    /// 2D diagram coordinate (`hash_coordinate` in `semio/py/main.py` — "Coordinate" + u + v).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Coordinate {
         pub u: f64,
@@ -17636,10 +17495,8 @@ pub mod geom {
         }
     }
 
-    /// 2D screen offset (Python `hash_vec` "Vec" + u + v). Same field layout as [`Coordinate`].
     pub type Uv = Coordinate;
 
-    /// 3D point (`hash_point` in `semio/py/main.py`).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Point {
         pub x: f64,
@@ -17672,7 +17529,6 @@ pub mod geom {
         }
     }
 
-    /// 3D direction (`hash_vector` in `semio/py/main.py`). Not necessarily unit length.
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Vector {
         pub x: f64,
@@ -17719,7 +17575,6 @@ pub mod geom {
         }
     }
 
-    /// Oriented plane: origin, x-axis, y-axis (Python `hash_plane`).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq, SimpleObject)]
     pub struct Plane {
         #[serde(default)]
@@ -17758,7 +17613,6 @@ pub mod geom {
         }
     }
 
-    /// View camera (`hash_camera` in `semio/py/main.py` — position, forward, up).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Camera {
         #[serde(default)]
@@ -17787,8 +17641,6 @@ pub mod geom {
     }
 }
 
-/// 🌍Geographic or named `Location` entity (kit-level table). Wire shape uses `{ id, longitude, latitude, … }`.
-/// See `hash_location` in `semio/py/main.py`.
 pub mod location {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock};
@@ -17903,7 +17755,6 @@ pub mod group {
     pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
     pub type GroupStoreWeak = Weak<RwLock<GroupStore>>;
 
-    /// User-defined group of pieces inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct GroupStore {
         pub id: Id,
@@ -18105,7 +17956,6 @@ pub mod id {
     use std::fmt;
     use std::ops::Deref;
 
-    /// Stable identity used at serialization boundaries and as a dictionary key when
     /// resolving DTOs into the in-memory graph. Never used for in-graph traversal.
     #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
     #[serde(transparent)]
@@ -18207,9 +18057,7 @@ pub mod hash {
     use sha2::{Digest, Sha256};
     use std::sync::Mutex;
 
-    /// Interior-mutable lazy cache. Enables `invalidate_*(&self)` on entities so
     /// children can bubble invalidation via `parent.read()?.invalidate_hash()`
-    /// without acquiring a write lock on the parent.
     #[derive(Debug)]
     pub struct Cache<T> {
         inner: Mutex<Option<T>>,
@@ -18239,7 +18087,6 @@ pub mod hash {
         }
     }
 
-    /// Stable content-hash writer that feeds `sha2::Sha256` with deterministic
     /// string primitives. Used by domain entities to produce their own canonical
     /// hash fingerprint on demand.
     pub struct HashWriter {
@@ -18324,12 +18171,9 @@ pub mod hash {
     }
 }
 
-/// 🧾Merkle writer matching `semio/py/main.py` `HashWriter` (SHA-256 over structured bytestream).
-/// Used to produce the same `digest()` values as `hash_coordinate` / `hash_kit` / … in Python.
 pub mod merkle {
     use sha2::{Digest, Sha256};
 
-    /// Same rules as `main.py` `\_format_number_for_hash`.
     pub fn format_number(n: f64) -> String {
         if n.is_finite() && n.fract() == 0.0 {
             format!("{}", n as i64)
@@ -18338,7 +18182,6 @@ pub mod merkle {
         }
     }
 
-    /// Structured writer — byte layout matches `HashWriter` in `semio/py/main.py`.
     pub struct Writer {
         parts: Vec<u8>,
     }
@@ -18432,14 +18275,12 @@ pub mod kit_graph {
     pub type KitGraphRef = Arc<RwLock<KitGraph>>;
     pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
 
-    /// 🧾 One undo step as JSON `KitFullDto` values (keeps `KitStore` before `KitFullDto` in this module).
     #[derive(Clone, Debug)]
     struct UndoStep {
         before: serde_json::Value,
         after: serde_json::Value,
     }
 
-    /// Root aggregate: a kit owns all components of the system.
     #[derive(Debug)]
     pub struct KitGraph {
         pub id: Id,
@@ -18474,7 +18315,6 @@ pub mod kit_graph {
         undo_past: Vec<UndoStep>,
         undo_future: Vec<UndoStep>,
         undo_inhibit: u32,
-        // --- Kit version control (see `kit_store_command`, `kit_checkpoint`, …) ---
         pub initial: KitFullDto,
         pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
         pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
@@ -18483,7 +18323,6 @@ pub mod kit_graph {
         pub children: std::collections::HashMap<Option<Id>, Vec<Id>>,
     }
 
-    /// @emoji Pre-lift snapshot for a [`ChangeKitCommand`] batch: semantic kind, optional change tree, flattened inverse atoms.
     pub(crate) struct ControlPlanePreBatch {
         pub kc: Option<crate::kit_change::KitChange>,
         pub kind: crate::kit_change::KitChangeKind,
@@ -18643,7 +18482,6 @@ pub mod kit_graph {
         }
     }
 
-    /// 🧩 Per-piece derived placement row (same structure as the former `get_pieces_metadata_json` map values).
     #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct PiecePlacementMetadataDto {
@@ -20030,7 +19868,6 @@ pub mod kit_graph {
                 }
             }
 
-            // Simple cycle heuristic: in each design, if there are more connections than pieces, flag.
             for d in &self.designs {
                 if let Ok(d) = d.read() {
                     if d.connections.len() > d.pieces.len() && !d.pieces.is_empty() {
@@ -20355,7 +20192,6 @@ pub mod kit_graph {
                 type_refs.push(t);
             }
 
-            // Connection sides resolve ports with `kit.read().port_by_id` during design hydration; kit-level
             // and family port lists must be present on [`KitStore`] before [`DesignStore::hydrate_from_full_dto`].
             {
                 let kw = Arc::downgrade(&kit);
@@ -21527,10 +21363,8 @@ pub mod kit_graph {
     }
 }
 
-/// Historical `semio::kit` path; new code should use [`kit_graph`].
 pub mod kit {
     pub use super::kit_graph::*;
-    /// Back-compat alias for the in-memory kit graph ([`KitGraph`]).
     pub type KitStore = KitGraph;
     pub type KitStoreRef = KitGraphRef;
     pub type KitStoreWeak = KitGraphWeak;
@@ -21547,7 +21381,6 @@ pub mod layer {
     pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
     pub type LayerStoreWeak = Weak<RwLock<LayerStore>>;
 
-    /// Visual layer inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct LayerStore {
         pub id: Id,
@@ -21775,14 +21608,12 @@ pub mod piece {
     pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
     pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
 
-    /// 🔁Replacement catalog for one piece selection, grouped into compatible kinds and designs.
     #[derive(Clone, Debug, Default)]
     pub struct PieceAlternatives {
         pub types: Vec<TypeStoreRef>,
         pub designs: Vec<DesignStoreRef>,
     }
 
-    // #region 📍Pose
     /// 📍Owned placement container for a piece's explicit plane and center.
     #[derive(Debug, Default)]
     pub struct PoseStore {
@@ -21804,9 +21635,7 @@ pub mod piece {
             }
         }
     }
-    // #endregion
 
-    /// Placed instance of a [`crate::typ::TypeStore`] inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct PieceStore {
         pub id: Id,
@@ -21835,7 +21664,6 @@ pub mod piece {
         pub id: Id,
     }
 
-    /// Explicit plane + center placement (world or local), used by read commands and narrow piece views.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     #[serde(rename_all = "camelCase")]
     pub struct PoseFullDto {
@@ -21843,7 +21671,6 @@ pub mod piece {
         pub center: Coordinate,
     }
 
-    /// Invariant: piece has a defined pose and is not attached via parent piece/connection.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FixedPieceOutputDto {
@@ -21851,7 +21678,6 @@ pub mod piece {
         pub pose: PoseFullDto,
     }
 
-    /// Invariant: piece is attached under a parent piece and connection; includes derived world-space flat pose.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectedPieceOutputDto {
@@ -21861,7 +21687,6 @@ pub mod piece {
         pub flat_pose: PoseFullDto,
     }
 
-    /// Serializable replacement catalog for [`PieceAlternatives`] (ids only).
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceAlternativesDto {
@@ -22315,14 +22140,12 @@ pub mod piece {
             PoseFullDto { plane: self.flat_plane(), center: self.flat_center() }
         }
 
-        /// recursing into the parent piece's path and appending this piece's id.
         pub fn path(&self) -> Vec<PieceIdDto> {
             let mut path = self.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.path())).unwrap_or_default();
             path.push(self.to_id_dto());
             path
         }
 
-        // #region 🔁PieceAlternatives
         /// 🔁Returns connector-valid replacement kinds and designs for this piece inside its host design.
         pub fn alternatives(&self) -> PieceAlternatives {
             let Some(design_ref) = self.parent_design.upgrade() else {
@@ -22341,9 +22164,7 @@ pub mod piece {
         pub fn alternative_designs(&self) -> Vec<DesignStoreRef> {
             self.alternatives().designs
         }
-        // #endregion
 
-        // #region 🔖PieceMovement
         fn domain_normalize_vector(v: Vector) -> Vector {
             let n = v.length();
             if n < 1e-12 {
@@ -22536,7 +22357,6 @@ pub mod piece {
             }
         }
 
-        /// fixed pieces update their own center and invalidate descendant center caches.
         pub fn drag(&mut self, du: f64, dv: f64) -> SetResult {
             if let Some(parent_connection) = self.parent_connection.as_ref().and_then(|w| w.upgrade()) {
                 let mut connection = parent_connection.write().map_err(|_| SetError::LockPoisoned("connection".into()))?;
@@ -22565,7 +22385,6 @@ pub mod piece {
             Ok(())
         }
 
-        /// parent and child connections that made those poses implicit.
         pub fn fix(&mut self) -> SetResult {
             let Some(design_ref) = self.parent_design.upgrade() else {
                 let (flat_plane, flat_center) = self.detach_flat_pose();
@@ -22581,7 +22400,6 @@ pub mod piece {
             self.fix_on_design(&mut *design)
         }
 
-        /// avoid re-entrant `RwLock` deadlocks (e.g. [`crate::design::DesignStore::flatten_change`]).
         pub(crate) fn fix_on_design(&mut self, design: &mut crate::design::DesignStore) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
             let parent_connection_id = self.parent_connection.as_ref().and_then(|connection| connection.upgrade()).and_then(|connection| connection.read().ok().map(|connection| connection.id.clone()));
@@ -22629,7 +22447,6 @@ pub mod piece {
             design.invalidate_validation();
             Ok(())
         }
-        // #endregion
 
         pub fn hash(&self) -> String {
             self.hash_cache.get_or_init(|| {
@@ -22750,7 +22567,6 @@ pub mod port {
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
 
-    /// Kit/family-scoped port (canonical: `name`, `compatiblePorts` / `compatibleFamilies` id refs). See `hash_port` in `semio/py/main.py`.
     #[derive(Debug)]
     pub struct PortStore {
         pub id: Id,
@@ -23073,7 +22889,6 @@ pub mod port {
     }
 }
 
-/// A named family of compatible [`crate::port::PortStore`]s at kit scope. See `metabolism.kit.semio.json` `families`.
 pub mod family {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
@@ -23239,7 +23054,6 @@ pub mod prop {
     pub type PropStoreRef = std::sync::Arc<RwLock<PropStore>>;
     pub type PropStoreWeak = Weak<RwLock<PropStore>>;
 
-    /// A typed property value (distinct from free-form Attributes: props carry
     /// meaning in the domain, attributes are auxiliary metadata).
     #[derive(Debug)]
     pub struct PropStore {
@@ -23279,7 +23093,6 @@ pub mod prop {
         pub unit: Option<String>,
     }
 
-    /// Wire: either `key` or `quality: { id }` (resolved to `key` from kit `qualities` in [`crate::kit_graph::KitGraph::from_full_dto`]).
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PropFullDto {
         pub id: Id,
@@ -23446,7 +23259,6 @@ pub mod quality {
     pub type QualityStoreRef = Arc<RwLock<QualityStore>>;
     pub type QualityStoreWeak = Weak<RwLock<QualityStore>>;
 
-    /// Measurable/named quality that can be attached to ports, types, designs, etc.
     #[derive(Debug)]
     pub struct QualityStore {
         pub id: Id,
@@ -23736,7 +23548,6 @@ pub mod quality {
 pub mod report {
     use serde::{Deserialize, Serialize};
 
-    /// A single note attached to the outcome of an operation.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct OperationNote {
         #[serde(default)]
@@ -23755,7 +23566,6 @@ pub mod report {
         Error,
     }
 
-    /// Outcome of an operation, always carrying the completeness flag and the
     /// collected notes. For structural operations the payload lives in `value`.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct SemioReport<T> {
@@ -23790,7 +23600,6 @@ pub mod report {
         }
     }
 
-    /// Outcome of a validation pass.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ValidationResult {
         pub is_valid: bool,
@@ -23826,7 +23635,6 @@ pub mod representation {
     pub type RepresentationStoreRef = Arc<RwLock<RepresentationStore>>;
     pub type RepresentationStoreWeak = Weak<RwLock<RepresentationStore>>;
 
-    /// Rendering / geometric representation of a [`crate::typ::TypeStore`].
     #[derive(Debug)]
     pub struct RepresentationStore {
         pub id: Id,
@@ -24052,7 +23860,6 @@ pub mod side {
     pub type SideStoreRef = Arc<RwLock<SideStore>>;
     pub type SideStoreWeak = Weak<RwLock<SideStore>>;
 
-    /// One end of a [`crate::connection::ConnectionStore`].
     #[derive(Debug)]
     pub struct SideStore {
         pub id: Id,
@@ -24237,7 +24044,6 @@ pub mod stat {
     pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
     pub type StatStoreWeak = Weak<RwLock<StatStore>>;
 
-    /// Computed/summary stat attached to a design or kit (e.g. piece count).
     #[derive(Debug)]
     pub struct StatStore {
         pub id: Id,
@@ -24435,7 +24241,6 @@ pub mod tag {
     pub type TagStoreRef = std::sync::Arc<RwLock<TagStore>>;
     pub type TagStoreWeak = Weak<RwLock<TagStore>>;
 
-    /// Freely choosable label used for filtering/grouping in the UI.
     #[derive(Debug)]
     pub struct TagStore {
         pub id: Id,
@@ -24631,7 +24436,6 @@ pub mod typ {
     pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
     pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
 
-    /// Reusable component definition: a type.
     #[derive(Debug)]
     pub struct TypeStore {
         pub id: Id,
@@ -25457,7 +25261,6 @@ pub mod io {
         use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
 
         impl KitGraph {
-            /// Parse a kit from a JSON string into a fully hydrated graph.
             pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
                 let dto: KitFullDto = serde_json::from_str(s)?;
                 Ok(KitGraph::from_full_dto(dto))
@@ -25472,14 +25275,12 @@ pub mod io {
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            /// Load a dev kit from a JSON file containing a fully embedded snapshot.
             pub fn load_json_file(path: &Path) -> Result<KitGraphRef> {
                 let payload = fs::read_to_string(path)?;
                 Self::from_json_str(&payload)
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            /// Save a dev kit as a pretty JSON file containing the full embedded snapshot.
             pub fn save_json_file(&self, path: &Path) -> Result<()> {
                 if let Some(parent) = path.parent() {
                     if !parent.as_os_str().is_empty() {
@@ -26682,7 +26483,6 @@ pub mod io {
         }
 
         impl KitGraph {
-            /// Write the full kit graph to a normalized SQLite database at `path`.
             pub fn save_sqlite(&self, path: &Path) -> Result<()> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
@@ -26747,7 +26547,6 @@ pub mod io {
                 Ok(())
             }
 
-            /// Load a full kit graph from a normalized SQLite database at `path`.
             pub fn load_sqlite(path: &Path) -> Result<KitGraphRef> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
@@ -26909,7 +26708,6 @@ pub mod io {
         }
 
         impl KitGraph {
-            /// Load a local kit folder containing `.semio/kit.db` and regular asset files.
             pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphRef> {
                 let kit = KitGraph::load_sqlite(&local_db_path(folder_path))?;
                 let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
@@ -26917,7 +26715,6 @@ pub mod io {
                 Ok(KitGraph::from_full_dto(dto))
             }
 
-            /// Save a local kit folder with `.semio/kit.db` plus externalized file payloads.
             pub fn save_local_folder(&self, folder_path: &Path) -> Result<()> {
                 fs::create_dir_all(folder_path.join(LOCAL_DIR))?;
                 let mut dto = self.to_full_dto();
@@ -26997,7 +26794,6 @@ pub mod io {
         }
 
         impl KitGraph {
-            /// Create a remote hub session seeded with the current full kit snapshot.
             pub fn create_remote_session(&self, hub_url: &str) -> Result<RemoteKitSession> {
                 let hub_url = normalize_hub_url(hub_url);
                 let request = CreateRemoteSessionRequest { kit_name: self.name.clone(), kit: serde_json::to_value(self.to_full_dto())? };
@@ -27005,14 +26801,12 @@ pub mod io {
                 Ok(RemoteKitSession { hub_url, session_id: response.session_id, kit_id: response.kit_id, owner_token: response.owner_token })
             }
 
-            /// Load a full kit snapshot from a remote hub session.
             pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphRef> {
                 let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
                 let dto: KitFullDto = serde_json::from_value(response.kit)?;
                 Ok(KitGraph::from_full_dto(dto))
             }
 
-            /// Replace the persisted hub snapshot for an existing remote session.
             pub fn save_remote_session(&self, remote: &RemoteKitSession) -> Result<()> {
                 let payload = ReplaceRemoteSnapshotRequest { kit: serde_json::to_value(self.to_full_dto())? };
                 ureq::put(&remote_snapshot_url(&remote.hub_url, &remote.session_id)).set("Authorization", &format!("Bearer {}", remote.owner_token)).send_json(payload).map_err(map_http_error)?;
@@ -27039,7 +26833,6 @@ pub mod io {
         const KIT_JSON: &str = "kit.json";
 
         impl KitGraph {
-            /// Preferred API (plan): write `kit.json` into a zip at `path`.
             pub fn save_zip(&self, path: &Path) -> Result<()> {
                 let file = File::create(path)?;
                 let mut zip = ZipWriter::new(file);
@@ -27050,7 +26843,6 @@ pub mod io {
                 Ok(())
             }
 
-            /// Preferred API (plan): read `kit.json` from a zip at `path`.
             pub fn load_zip(path: &Path) -> Result<KitGraphRef> {
                 let file = File::open(path)?;
                 let mut archive = ZipArchive::new(file)?;
@@ -27073,7 +26865,6 @@ pub mod io {
 
 //#region 🔖KitGraphql
 /// 🌐 `async-graphql` kit control plane: queries traverse live [`Arc<RwLock<_>>`] stores;
-/// mutations run through a single **inbound** actor queue; **outbound** events are [`KitEvent`]s from the live graph.
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
@@ -27099,7 +26890,6 @@ pub mod kit_graphql {
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
 
-    // #subregion GqlControlPlaneScalars
     /// 🧾 `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(transparent)]
@@ -27118,13 +26908,10 @@ pub mod kit_graphql {
         }
     }
 
-    /// 📣 Same wire as the kit event bus; GraphQL scalar (output; not accepted as input variables).
     #[derive(Clone, Debug, serde::Serialize)]
     #[serde(transparent)]
     pub struct KitEventScalar(pub KitEvent);
 
-    /// Wire JSON for the kit subscription bus (same shape as `semio_rs::events::KitEvent`).
-    /// Classified mutations use top-level camelCase keys (`renamedDesign`, `changedKit`, …) each carrying a `change` object with `forward` and `inverse` `ChangeKitCommand` lists.
     #[Scalar(name = "KitEvent")]
     impl ScalarType for KitEventScalar {
         fn parse(_value: Value) -> InputValueResult<Self> {
@@ -27153,16 +26940,13 @@ pub mod kit_graphql {
         }
     }
 
-    // #endregion
 
-    /// 🌐 Optional native [`crate::kit_store::KitStore`]: when present (e.g. semio-store), `run_vcs_command` uses [`crate::kit_store::KitStore::execute`] (coordinator + backbone). Otherwise the graph actor uses [`KitStoreCommand::execute`] on the WIP graph only.
     #[derive(Clone, Default)]
     pub struct GraphQlOverride {
         #[cfg(not(target_arch = "wasm32"))]
         pub native: Option<Arc<crate::kit_store::KitStore>>,
     }
 
-    /// Queued work for the per-handle WASM actor ([`super::wasm::KitStoreHandle`]).
     pub enum GraphWork {
         ChangeKitCommands {
             commands: Vec<ChangeKitCommand>,
@@ -27186,7 +26970,6 @@ pub mod kit_graphql {
         },
     }
 
-    /// Spawn the single-writer loop for one [`KitGraphRef`] (zero busy-wait: `recv().await`).
     pub fn spawn_actor(graph: KitGraphRef, rx: async_channel::Receiver<GraphWork>) {
         let kmain = async move {
             while let Ok(work) = rx.recv().await {
@@ -27199,7 +26982,7 @@ pub mod kit_graphql {
                         let r = KitGraph::control_plane_batch_apply_with_undo(&graph, &commands);
                         let _ = reply.send(r.map(|pre| (pre.kind, pre.inverse_flat)).map_err(|e| format!("{e:?}")));
                     }
-                    GraphWork:: { command, reply } => {
+                    GraphWork::Vcs { command, reply } => {
                         let r = KitGraph::execute_vcs(&graph, command).map_err(|e| e.to_string());
                         let _ = reply.send(r);
                     }
@@ -27229,7 +27012,6 @@ pub mod kit_graphql {
         this.read().map_err(|_| Error::new("kit graph lock poisoned"))
     }
 
-    /// Build GraphQL request from a JSON POST body (`query`, optional `variables`, `operationName`).
     pub fn request_from_json(request_json: &str) -> Result<Request> {
         #[derive(serde::Deserialize)]
         struct Body {
@@ -27250,7 +27032,6 @@ pub mod kit_graphql {
         Ok(req)
     }
 
-    /// 🌐 GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlOverride`] (semio-store).
     pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlOverride) -> Result<async_graphql::Response, Error> {
         let mut req = request_from_json(request_json)?;
         req = req.data(graph).data(work_tx).data(vcs);
@@ -27529,7 +27310,6 @@ pub mod kit_graphql {
         message: String,
     }
 
-    /// 🧾 Known semantic labels for a [`crate::kit_change::KitChangeKind`] batch (see `changeKindOther` when [`KitChangeSemanticKind::Other`]).
     #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum KitChangeSemanticKind {
         Inferred,
@@ -27649,7 +27429,6 @@ pub mod kit_graphql {
         results: Vec<KitStoreBatchResult>,
     }
 
-    /// GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum KitReadScopeInput {
         TheKit(ConfirmOnlyInput),
@@ -27714,7 +27493,6 @@ pub mod kit_graphql {
         }
     }
 
-    /// 🌐 Nested GraphQL mutation namespace for kit store command batches.
     pub struct KitStoreMutation;
 
     #[Object(name = "KitStoreMutation")]
@@ -27728,7 +27506,6 @@ pub mod kit_graphql {
         }
     }
 
-    /// 🌐 Single kit handle + actor queue: replaces `async_graphql::Context` data for control-plane batch dispatch.
     #[derive(Clone)]
     struct KitShellCtx {
         graph: KitGraphRef,
@@ -27745,7 +27522,7 @@ pub mod kit_graphql {
                 }
             }
             let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx.send(GraphWork:: { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
+            self.tx.send(GraphWork::Vcs { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
             reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(format!("{e:?}")))
         }
     }
@@ -27763,7 +27540,6 @@ pub mod kit_graphql {
         Ok(KitStoreBatchPayload { client_mutation_id: input.client_mutation_id, results })
     }
 
-    /// 🧾 Map one design batch command to [`ChangeKitCommand`] atoms for transaction execution.
     fn design_batch_command_to_change_kit_commands(design_id: &str, command: DesignBatchCommandInput) -> Result<Vec<ChangeKitCommand>, Error> {
         use crate::change_command::ChangeKitCommand as C;
         use crate::connection::ConnectionIdDto;
@@ -28181,7 +27957,6 @@ pub mod kit_graphql {
 
     pub struct RootSubscription;
 
-    /// Pin-boxed stream (avoid `impl Stream + Send`: async-graphql derive keeps only the last trait bound).
     type KitEventSubscriptionStream = Pin<Box<dyn Stream<Item = std::result::Result<KitEventScalar, Error>> + Send>>;
 
     #[Subscription(name = "Subscription")]
@@ -28209,18 +27984,16 @@ pub mod kit_graphql {
         SCHEMA.get_or_init(|| Schema::build(RootQuery, RootMutation, RootSubscription).finish())
     }
 
-    /// 🔗Return the canonical GraphQL SDL generated from the Rust control plane.
     pub fn schema_sdl() -> String {
         schema().sdl()
     }
 
-    ///  for `Design.replaceableCatalog` (resolved kit kinds and designs).
     pub struct ReplaceableCatalogNode {
         pub types: Vec<crate::typ::TypeStoreRef>,
         pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
-    #[Object(name = "ReplaceableCatalogStore")]
+    #[Object(name = "ReplaceableCatalog")]
     impl ReplaceableCatalogNode {
         async fn types(&self) -> Result<Vec<TypeNode>> {
             Ok(self.types.iter().cloned().map(TypeNode).collect())
@@ -28230,37 +28003,29 @@ pub mod kit_graphql {
         }
     }
 
-    /// 🌐 GraphQL projection of [`KitGraphRef`] (required: async-graphql orphan rules for external `Arc`).
     #[derive(Clone)]
     pub struct KitStoreNode(pub KitGraphRef);
 
-    /// 🌐 GraphQL projection of [`DesignStoreRef`].
     #[derive(Clone)]
     pub struct DesignNode(pub DesignStoreRef);
 
-    /// 🌐 GraphQL projection of [`PieceStoreRef`].
     #[derive(Clone)]
     pub struct PieceNode(pub PieceStoreRef);
 
-    /// 🌐 GraphQL projection of [`TypeStoreRef`].
     #[derive(Clone)]
     pub struct TypeNode(pub TypeStoreRef);
 
-    /// 🌐 GraphQL projection of [`ConnectionStoreRef`].
     #[derive(Clone)]
     pub struct ConnectionNode(pub ConnectionStoreRef);
 
-    /// 🌐 GraphQL projection of [`ConnectorStoreRef`].
     #[derive(Clone)]
     pub struct ConnectorNode(pub ConnectorStoreRef);
 
-    /// 🌐 GraphQL projection of [`RepresentationStoreRef`].
     #[derive(Clone)]
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
-    // #subregion KitGraphqlStores
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsCheckpointStore")]
+    #[graphql(name = "VcsCheckpointDto")]
     struct CheckpointDto {
         id: String,
         parent: Option<String>,
@@ -28272,7 +28037,7 @@ pub mod kit_graphql {
         change_count: usize,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "AlternativeDto")]
+    #[graphql(name = "VcsAlternativeDto")]
     struct AlternativeDto {
         id: String,
         name: String,
@@ -28280,7 +28045,7 @@ pub mod kit_graphql {
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "DraftDto")]
+    #[graphql(name = "VcsDraftDto")]
     struct DraftDto {
         id: String,
         parent_checkpoint: Option<String>,
@@ -28292,19 +28057,19 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "SessionDto")]
+    #[graphql(name = "VcsSessionDto")]
     struct SessionDto {
         id: String,
         drafts: Vec<DraftDto>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "RootDto")]
+    #[graphql(name = "VcsRootDto")]
     struct RootDto {
         id: String,
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsStateStore")]
+    #[graphql(name = "VcsStateDto")]
     struct StateDto {
         the_kit_head: Option<String>,
         root: RootDto,
@@ -28313,9 +28078,8 @@ pub mod kit_graphql {
         sessions: Vec<SessionDto>,
         the_kit_line: Vec<String>,
     }
-    // #endregion
 
-    #[Object(name = "KitStore")]
+    #[Object(name = "Kit")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
@@ -28421,7 +28185,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "DesignStore")]
+    #[Object(name = "Design")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
@@ -28438,6 +28202,7 @@ pub mod kit_graphql {
         async fn container(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let _kit_read = lock_graph(&g)?;
+            drop(_kit_read);
             Ok(KitStoreNode(g))
         }
 
@@ -28787,7 +28552,6 @@ pub mod wasm {
     use crate::kit_graph::{KitGraph, KitGraphRef};
     use async_graphql::futures_util::StreamExt;
 
-    /// 🌐 Install panic hook once per WASM load (call before other kit work).
     #[wasm_bindgen(js_name = boot)]
     pub fn boot() {
         console_error_panic_hook::set_once();
@@ -28871,7 +28635,6 @@ pub mod wasm {
         s.trim().to_ascii_lowercase().replace(|c: char| c.is_whitespace(), "-")
     }
 
-    /// 🌐 Stateful [`KitGraphRef`] + single-writer queue; **control plane** is [`KitStoreHandle::execute`] (GraphQL).
     #[wasm_bindgen]
     pub struct KitStoreHandle {
         inner: KitGraphRef,
@@ -28910,7 +28673,6 @@ pub mod wasm {
             })
         }
 
-        /// the upstream stream completes (or `on_event` throws — the stream is then dropped).
         #[wasm_bindgen(js_name = subscribe)]
         pub fn subscribe(&self, request_json: &str, on_event: &js_sys::Function) -> js_sys::Promise {
             let req_json = request_json.to_string();
@@ -28967,7 +28729,23 @@ mod tests {
             let s = kit_graphql::schema_sdl();
             assert!(!s.contains("scalar JSON"), "SDL must not declare generic JSON; use named scalars");
             assert!(!s.contains("JSON!"), "SDL must not use JSON output fields");
+            assert_graphql_schema_hygiene(&s);
             assert_eq!(s, checked_in, "run `npx nx build semio/graphql` to regenerate semio/graphql/schema.graphql from semio/rs");
+        }
+
+        /// 🧾 Guards for cleaned store/DTO GraphQL surface (see repo cleanup plan).
+        fn assert_graphql_schema_hygiene(s: &str) {
+            assert!(!s.contains("Gql"), "SDL must not expose ad hoc Gql* names");
+            assert!(!s.contains("Row"), "SDL must not expose *Row graph types");
+            for bad in ["TypeShallowList", "DesignShallowList", "PieceFullList", "ConnectionFullList"] {
+                assert!(!s.contains(bad), "SDL must not declare list scalar {bad}");
+            }
+            for required in ["type KitStore", "type DesignStore", "type PieceStore", "type TypeStore", "type ConnectionStore", "type ConnectorStore", "type RepresentationStore"] {
+                assert!(s.contains(required), "SDL must declare {required}");
+            }
+            for forbidden_entity in ["\ntype Design\n", "\ntype Piece\n", "\ntype Type\n", "\ntype Connection\n", "\ntype Connector\n", "\ntype Representation\n"] {
+                assert!(!s.contains(forbidden_entity), "SDL must not declare bare entity {forbidden_entity:?}");
+            }
         }
 
         #[test]
@@ -29354,7 +29132,6 @@ mod tests {
         }
     }
 
-    /// Round-trip tests for [`crate::change_command::ChangeKitCommand`] forward + inverse.
     mod change_command_rt {
         use std::sync::{Arc, RwLock};
 
@@ -29641,7 +29418,6 @@ mod tests {
         //#endregion
     }
 
-    /// @emoji [`KitGraph::control_plane_pre_batch`], `control_plane_batch_apply_with_undo`, and per-command transaction lift share classified [`crate::events::KitEvent`] inputs.
     mod control_plane {
         use std::sync::{Arc, RwLock};
 
@@ -30298,7 +30074,6 @@ mod tests {
         }
     }
 
-    /// Metabolism reference kit: deserialise + hydrate must preserve kit-level families and ports nested on families.
     #[cfg(not(target_arch = "wasm32"))]
     mod metabolism_kit {
         use std::path::Path;
@@ -30601,7 +30376,6 @@ mod tests {
             use crate::side::SideMetadataDto;
             use crate::typ::{TypeFullDto, TypeIdDto};
 
-            /// Drain all currently queued events from a broadcast receiver (non-blocking).
             pub fn drain(rx: &mut async_broadcast::Receiver<KitEvent>) -> Vec<KitEvent> {
                 let mut out = Vec::new();
                 while let Ok(e) = rx.try_recv() {
@@ -30615,7 +30389,6 @@ mod tests {
                 EntityRef::new(EntityKind::Kit, g)
             }
 
-            /// Minimal kit with one type, one design, one piece (valid type ref).
             pub fn kit_with_piece() -> (KitGraphRef, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
@@ -30633,7 +30406,6 @@ mod tests {
                 (kit, type_id, design_id, piece_id)
             }
 
-            /// One design with a layer and one piece (piece required for valid design content).
             pub fn kit_with_layer() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
@@ -30657,7 +30429,6 @@ mod tests {
                 (kit, design_id, layer_id)
             }
 
-            /// Design with one group referencing the single piece.
             pub fn kit_with_group() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
@@ -30702,7 +30473,6 @@ mod tests {
                 (kit, type_id, conn_id)
             }
 
-            /// Kit with one type containing one port (for port setter tests).
             pub fn kit_with_type_only() -> (KitGraphRef, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
@@ -30733,7 +30503,6 @@ mod tests {
                 (kit, file_id)
             }
 
-            /// One design, two pieces, one connection (for connection / side tests).
             pub fn kit_with_connection() -> (KitGraphRef, Id, Id, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
@@ -30769,7 +30538,6 @@ mod tests {
                 (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
-            /// Design metadata change with a single piece: typed design field, flatten+derived, kit hash, validation.
             pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::DesignField) {
                 assert!(
                     evs.iter().any(|event| matches!(
@@ -30835,7 +30603,6 @@ mod tests {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
             }
 
-            /// Assert kit metadata changes emit a root typed field event, kit hash, and validation.
             pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: crate::events::KitField) {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::FieldChanged(f) if *f == field)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_ref)), "{evs:?}");
@@ -31800,7 +31567,6 @@ mod tests {
             let t = Arc::new(RwLock::new(TypeStore::new("T")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
-            // VCS base materialization replays from `initial`; keep it in sync with the live graph.
             inner.initial = inner.to_full_dto();
             let k = Arc::new(RwLock::new(inner));
             let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
@@ -31937,7 +31703,6 @@ mod tests {
                         },
                         _ => panic!(),
                     };
-                    // [change, read Mid, undo, read T0]
                     let (read1, read2) = (&tr[1], &tr[3]);
                     match (read1, read2) {
                         (crate::kit_transaction::TransactionCommandResult::ReadKitCommands { results: a }, crate::kit_transaction::TransactionCommandResult::ReadKitCommands { results: b }) => {
@@ -32093,7 +31858,6 @@ mod tests {
         #[test]
         fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
             let (k, tid) = make_kit_with_type();
-            // First checkpoint on main
             let sid = match KitGraph::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
@@ -32150,12 +31914,10 @@ mod tests {
                 _ => panic!(),
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
-            // Branch from cp_main
             let alt_id = match KitGraph::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            // Draft on alternative tip
             let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
             {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
@@ -32376,7 +32138,6 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            // cp0 on main: T0->M
             let did0 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
@@ -32432,7 +32193,6 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            // extend alt: cp0 -> cp1
             let did1 = match KitGraph::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
                     crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
