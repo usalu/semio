@@ -4791,6 +4791,83 @@ pub mod change_command {
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
                 }
+                ChangeDesignCommand::RenamePiece { piece_id, name } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Name { name: name.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceDescription { piece_id, description } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Description { description: description.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPiecePlane { piece_id, plane } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Plane { plane: plane.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceCenter { piece_id, center } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Center { center: center.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceColor { piece_id, color } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Color { color: color.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceKind { piece_id, kind_id } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Type { type_id: kind_id.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceScale { piece_id, scale } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Scale { scale: scale.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceMirrorPlane { piece_id, mirror_plane } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::MirrorPlane { mirror_plane: mirror_plane.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceHidden { piece_id, hidden } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Hidden { hidden: hidden.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceLocked { piece_id, locked } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Locked { locked: locked.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetPieceStableId { piece_id, stable_id } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Id { id: stable_id.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::AddPieceProp { piece_id, prop } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::AddProp { prop: prop.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::RemovePieceProp { piece_id, prop_id } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::RemoveProp { prop_id: prop_id.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::ChangePiecePropCommands { piece_id, prop_id, commands } => {
+                    ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: piece_id.clone(),
+                        commands: vec![ChangePieceCommand::ChangePropCommands { prop_id: prop_id.clone(), commands: commands.clone() }],
+                    }
+                    .apply(kit, design_id)
+                }
+                ChangeDesignCommand::AddPieceAttribute { piece_id, attribute } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::AddAttribute { attribute: attribute.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::RemovePieceAttribute { piece_id, id } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::RemoveAttribute { id: id.clone() }] }
+                        .apply(kit, design_id)
+                }
+                ChangeDesignCommand::ChangePieceAttributeCommands { piece_id, id, commands } => {
+                    ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: piece_id.clone(),
+                        commands: vec![ChangePieceCommand::ChangeAttributeCommands { id: id.clone(), commands: commands.clone() }],
+                    }
+                    .apply(kit, design_id)
+                }
+                ChangeDesignCommand::FixPiece { piece_id } => {
+                    ChangeDesignCommand::ChangePieceCommands { piece_id: piece_id.clone(), commands: vec![ChangePieceCommand::Fix] }.apply(kit, design_id)
+                }
                 ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
                     let mut inverses: Vec<ChangePieceCommand> = Vec::new();
                     for c in commands {
@@ -4825,6 +4902,45 @@ pub mod change_command {
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
+                }
+                ChangeDesignCommand::SetConnectionGap { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Gap { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionShift { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Shift { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionRise { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Rise { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionRotation { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Rotation { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionTurn { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Turn { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionTilt { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Tilt { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionAxisU { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::X { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionAxisV { connection_id, value } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Y { value: value.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::SetConnectionDescription { connection_id, description } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::Description { value: description.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::ReplaceConnectionAttachedSide { connection_id, side } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::ReplaceConnected { side: side.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::ReplaceConnectionConnectingSide { connection_id, side } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::ReplaceConnecting { side: side.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::AddConnectionAttribute { connection_id, attribute } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::AddConnectionAttribute { attribute: attribute.clone() }] }.apply(kit, design_id)
+                }
+                ChangeDesignCommand::RemoveConnectionAttribute { connection_id, id } => {
+                    ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: vec![ChangeConnectionCommand::RemoveConnectionAttribute { id: id.clone() }] }.apply(kit, design_id)
                 }
                 ChangeDesignCommand::ChangeConnectionCommands { connection_id, commands } => {
                     let mut inv = Vec::new();
@@ -8000,7 +8116,7 @@ pub mod attribute {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct AttributeIdDto {
         pub id: Id,
     }
@@ -8023,7 +8139,7 @@ pub mod attribute {
         pub definition: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct AttributeFullDto {
         pub id: Id,
         pub key: String,
@@ -9531,7 +9647,7 @@ pub mod design {
         flatten_cache: Cache<HashMap<Id, (Plane, Coordinate)>>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct DesignIdDto {
         pub id: Id,
     }
@@ -17694,7 +17810,7 @@ pub mod location {
         hash_cache: crate::hash::Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct LocationIdDto {
         pub id: Id,
     }
@@ -21604,13 +21720,12 @@ pub mod piece {
         flat_center: Cache<Coordinate>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct PieceIdDto {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct PoseFullDto {
         pub plane: Plane,
         pub center: Coordinate,
@@ -21699,7 +21814,7 @@ pub mod piece {
         pub attributes: Vec<AttributeShallowDto>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct PieceFullDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23043,7 +23158,7 @@ pub mod prop {
         pub unit: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct PropFullDto {
         pub id: Id,
         #[serde(default)]
@@ -23228,7 +23343,7 @@ pub mod quality {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct QualityIdDto {
         pub id: Id,
     }
@@ -24413,7 +24528,7 @@ pub mod typ {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct TypeIdDto {
         pub id: Id,
     }

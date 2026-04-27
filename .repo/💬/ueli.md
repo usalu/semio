@@ -1066,6 +1066,14 @@ e.g. there are distinct *Store, *Node, *StoreNode implementations which must be 
 
 ---
 
+Remove `coloredConnectors: [KitColoredConnectorDto!]!` completly from KitStore and instead add `color:Color`, to ConnectorStore.
+Previously it was a pure function that needed the complete kit.
+Now it MUST be object-oriented and cached (and only update when the depencies change).
+The color is derived from the port and the compatible ports from the connector.
+Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
+
+---
+
 Remove `piecePlacement: [PiecePlacementMetadataDto!]!` completly from DesignStore and instead add `parentPiece:Piece`, `depth:Int` and `path:[Piece!]!` to PieceStore.
 Also remove it downstrean and adjust all callers of this function, such as semio/js, semio/react, semio/sketchpad, semio/algorithms, semio/ui
 

@@ -1,0 +1,40 @@
+{
+  "id": "e91c45e1-bffc-45bd-98e5-6314e47e32fa",
+  "uri": "repo://session/e91c45e1-bffc-45bd-98e5-6314e47e32fa",
+  "client": "claude-code",
+  "second": "2026-04-27T16:28:44Z",
+  "checkpoint": "3cce45b65a2186d53bf7e743e36010b5f16d61c4",
+  "contributor": "unknown",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\e91c45e1-bffc-45bd-98e5-6314e47e32fa.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "3cce45b65a2186d53bf7e743e36010b5f16d61c4",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-27T16:28:44Z",
+        "session": "e91c45e1-bffc-45bd-98e5-6314e47e32fa",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\e91c45e1-bffc-45bd-98e5-6314e47e32fa.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "e91c45e1-bffc-45bd-98e5-6314e47e32fa",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\e91c45e1-bffc-45bd-98e5-6314e47e32fa.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.git\\hooks\\post-commit",
+            "old_string": "if command -v go \u003e/dev/null 2\u003e\u00261; then\n  go run ./repo/cli hook version.checkpoint.ended\n  exit $?\nfi\nif [ -f \"$repo_root/repo/cli/cli\" ]; then\n  ./repo/cli/cli hook version.checkpoint.ended\n  exit $?\nfi\nif [ -f \"$repo_root/repo/cli/cli.exe\" ]; then\n  \"$repo_root/repo/cli/cli.exe\" hook version.checkpoint.ended\n  exit $?\nfi",
+            "new_string": "if [ -f \"$repo_root/repo/client/client.exe\" ]; then\n  \"$repo_root/repo/client/client.exe\" hook version.checkpoint.ended\n  exit $?\nfi\nif [ -f \"$repo_root/repo/client/client\" ]; then\n  \"$repo_root/repo/client/client\" hook version.checkpoint.ended\n  exit $?\nfi\nif command -v go \u003e/dev/null 2\u003e\u00261; then\n  go run ./repo/client hook version.checkpoint.ended\n  exit $?\nfi",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    }
+  ]
+}
