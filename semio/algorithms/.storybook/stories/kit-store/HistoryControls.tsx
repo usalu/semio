@@ -1,5 +1,5 @@
 // #region 🧲Header
-// VCS: `kitStore.batch` (`newSession`, `batch`, …) via `storybookKitGraphqlExecuteStoreCommand` + `KitStoreHandle.execute` / `subscribe`.
+// VCS: legacy tagged commands → `storybookKitGraphqlExecuteStoreCommand` (`Mutation.session`, no `kitStore.batch`).
 // Also hosts the 🌳KitTreeGraph window renderer so both the button grid and the GitKraken-style
 // history live next to the VCS domain model (single source of truth for wiring-to-store).
 // #endregion
@@ -131,9 +131,13 @@ export const HistoryControls: React.FC<{
     }
     void (async () => {
       try {
-        const r = await storybookKitGraphqlExecuteStoreCommand(gqlHandle(), o);
+        const payload: object =
+          "executeSessionCommands" in o && altId.trim()
+            ? { executeSessionCommands: { ...(o as { executeSessionCommands: Record<string, unknown> }).executeSessionCommands, alternativeId: altId.trim() } }
+            : o;
+        const r = await storybookKitGraphqlExecuteStoreCommand(gqlHandle(), payload);
         onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
-        applyKitStoreCommandResultIds(r, {
+        applyKitStoreCommandResultIds(r.ok === true ? r.result : null, {
           onSessionId,
           onDraftId,
           onTxId,
@@ -189,13 +193,15 @@ export const HistoryControls: React.FC<{
         <B disabled={!canVcs} onClick={() => ex("end", { endSession: { id: sessionId } })}>
           End session
         </B>
-        <B disabled={!canVcs} onClick={() => readGql("kit name", { query: `query { kitStore { name } }` })}>
+        <B disabled={!canVcs} onClick={() => readGql("kit name", { query: `query { session { wip { theKit { name } } } }` })}>
           Read kit name
         </B>
         <B
           disabled={!canVcs}
           onClick={() =>
-            readGql("kit summary", { query: `query { kitStore { name description kitMetadataJson } }` })
+            readGql("kit summary", {
+              query: `query { session { wip { theKit { name description metadata { id name description icon image preview remote homepage license uri created updated version } } } } }`,
+            })
           }
         >
           Read kit full

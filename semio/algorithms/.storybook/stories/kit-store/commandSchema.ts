@@ -49,7 +49,6 @@ export const ALL_READ_KIT_COMMAND_KEYS: readonly string[] = [
   "readKitPropsShallowCommand",
   "readKitAttributesFullCommand",
   "readKitAttributesShallowCommand",
-  "readKitColoredConnectorsCommand",
   "readKitTypeCommands",
   "readKitDesignCommands",
   "readKitFileCommands",
@@ -228,30 +227,40 @@ export const CHANGE_TYPE_COMMAND_KEYS = [
 export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
   {
     id: "rk-full",
-    label: "GraphQL: kitStore name + description + kitMetadataJson",
-    json: j({ query: `query { kitStore { name description kitMetadataJson } }` }),
+    label: "GraphQL: session.wip.theKit name + description + metadata",
+    json: j({
+      query: `query { session { wip { theKit { name description metadata { id name description icon image preview remote homepage license uri created updated version } } } } }`,
+    }),
   },
-  { id: "rk-name", label: "GraphQL: kitStore { name }", json: j({ query: `query { kitStore { name } }` }) },
-  { id: "rk-types", label: "GraphQL: typesShallowJson", json: j({ query: `query { kitStore { typesShallowJson } }` }) },
-  { id: "rk-designs", label: "GraphQL: designsShallowJson", json: j({ query: `query { kitStore { designsShallowJson } }` }) },
+  { id: "rk-name", label: "GraphQL: session.wip.theKit { name }", json: j({ query: `query { session { wip { theKit { name } } } }` }) },
+  {
+    id: "rk-types",
+    label: "GraphQL: session.wip.theKit shallow.types",
+    json: j({ query: `query { session { wip { theKit { shallow { types { id name } } } } } }` }),
+  },
+  {
+    id: "rk-designs",
+    label: "GraphQL: session.wip.theKit shallow.designs",
+    json: j({ query: `query { session { wip { theKit { shallow { designs { id name } } } } } }` }),
+  },
   {
     id: "rk-desc",
-    label: "GraphQL: kitStore { description }",
-    json: j({ query: `query { kitStore { description } }` }),
+    label: "GraphQL: session.wip.theKit { description }",
+    json: j({ query: `query { session { wip { theKit { description } } } }` }),
   },
   {
     id: "rk-type-nested",
-    label: "GraphQL: typeForId { name }",
+    label: "GraphQL: session.wip.theKit type(id) { name }",
     json: j({
-      query: `query($id: String!) { kitStore { typeForId(id: $id) { name } } }`,
+      query: `query($id: String!) { session { wip { theKit { type(id: $id) { name } } } } }`,
       variables: { id: "PLACEHOLDER_TYPE_ID" },
     }),
   },
   {
     id: "rk-computed",
-    label: "GraphQL: designForId { flattenMap }",
+    label: "GraphQL: session.wip.theKit design(id) { flattenMap }",
     json: j({
-      query: `query($id: String!) { kitStore { designForId(id: $id) { flattenMap } } }`,
+      query: `query($id: String!) { session { wip { theKit { design(id: $id) { flattenMap } } } } }`,
       variables: { id: "PLACEHOLDER_DESIGN_ID" },
     }),
   },

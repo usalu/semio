@@ -1060,6 +1060,16 @@ semio/rs:
 
 ---
 
+Pieces MUST not have plane and center directly but have optional pose {center, plane} and always computed and cached flatPose.
+
+---
+
+Remove all FullDto, MetdataDto, ShallowDto from the implementation.
+Leave in semio/js the Dtos as grapqhl queries.
+Just remove it from semio/rs and hence from semio/graphql.
+
+---
+
 The code (including the exposed graphql api) is not clean.
 Start consolidating, aligning and refactoring everything.
 e.g. there are distinct *Store, *Node, *StoreNode implementations which must be merged into *Store.

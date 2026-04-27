@@ -46,6 +46,11 @@ function storybookKitGraphqlData(response: unknown): Record<string, unknown> {
   throw new Error("kitGraphql: no data in response");
 }
 
+async function sbGqlMut(handle: StorybookKitGraphqlHandle, query: string, variables?: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const json = await handle.execute(JSON.stringify({ query, variables }));
+  return storybookKitGraphqlData(JSON.parse(json) as unknown);
+}
+
 /** @emoji 🌐 Runs one GraphQL document over a handle; resolves with the **complete JSON** response. */
 export async function storybookKitGraphqlRun(
   handle: Pick<KitStoreHandle, "execute">,
@@ -59,20 +64,181 @@ export type StorybookKitStoreExecuteResult =
   | { ok: true; result: unknown }
   | { ok: false; error: { kind: string; message: string } };
 
-/** @emoji 🧭 `kitStore.batch` (sync GraphQL mutation; replaces shell + subscription wait). */
-async function storybookKitStoreBatch(handle: StorybookKitGraphqlHandle, commands: readonly unknown[]): Promise<Record<string, unknown>> {
-  const mutBody = {
-    query: `mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind ok sessionId draftId transactionId } } } }`,
-    variables: { input: { commands: [...commands] } },
-  };
-  const mutJson = await handle.execute(JSON.stringify(mutBody));
-  const resp = JSON.parse(mutJson) as {
-    data?: { kitStore?: { batch?: { results?: readonly Record<string, unknown>[] } } };
-    errors?: { message?: string }[];
-  };
-  if (resp.errors?.length) throw new Error(resp.errors[0]?.message ?? "GraphQL error");
-  const results = resp.data?.kitStore?.batch?.results;
-  return { results: results ?? [] };
+function str(v: unknown): string | undefined {
+  return typeof v === "string" && v.length > 0 ? v : undefined;
+}
+
+function altIn(
+  payload: { alternativeId?: string | null },
+  draftBlock: { alternativeId?: string | null } | null,
+  newDraft: { alternativeId?: string | null } | null,
+): string {
+  const a = str(payload.alternativeId) ?? str(draftBlock?.alternativeId) ?? str(newDraft?.alternativeId);
+  if (!a) throw new Error("Storybook VCS: set Alternative id (drafts/transactions are alternative-scoped in GraphQL)");
+  return a;
+}
+
+/** @emoji 🧾 Maps legacy `executeSessionCommands` / nested draft-transaction shapes to `Mutation.session` (no `kitStore.batch`). */
+async function storybookExecuteSessionCommands(
+  handle: StorybookKitGraphqlHandle,
+  value: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const commands = value["commands"];
+  if (!Array.isArray(commands) || commands.length === 0) throw new Error("executeSessionCommands.commands");
+  const results: unknown[] = [];
+  for (const raw of commands) {
+    if (raw == null || typeof raw !== "object" || Array.isArray(raw)) throw new Error("session command object expected");
+    const c = raw as Record<string, unknown>;
+    const k = Object.keys(c);
+    if (k.length !== 1) throw new Error("single tagged session command");
+    const t = k[0]!;
+    if (t === "newDraft") {
+      const nd = c["newDraft"] as Record<string, unknown> | null;
+      if (!nd) throw new Error("newDraft");
+      const aid = altIn(value as { alternativeId?: string | null }, null, nd);
+      const pcp = nd["checkpointId"] == null ? null : String(nd["checkpointId"]);
+      const d = await sbGqlMut(
+        handle,
+        `mutation($aid: KitAlternativeIdIn!, $pcp: String) { session { alternative(id: $aid) { createDraft(parentCheckpointId: $pcp) { id } } } }`,
+        { aid: { id: aid }, pcp: pcp && pcp.length > 0 ? pcp : null },
+      );
+      const id = str(((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["createDraft"] as Record<string, unknown> | undefined)?.["id"]);
+      results.push({ newDraft: { draftId: id ?? "" } });
+      continue;
+    }
+    if (t === "executeKitDraftCommands") {
+      const ek = c["executeKitDraftCommands"] as Record<string, unknown> | null;
+      if (!ek) throw new Error("executeKitDraftCommands");
+      const draftId = str(ek["id"]);
+      if (!draftId) throw new Error("executeKitDraftCommands.id");
+      const aid = altIn(value as { alternativeId?: string | null }, ek, null);
+      const dcmds = ek["commands"];
+      if (!Array.isArray(dcmds)) throw new Error("executeKitDraftCommands.commands");
+      for (const dc of dcmds) {
+        if (dc == null || typeof dc !== "object" || Array.isArray(dc)) throw new Error("draft command object");
+        const dco = dc as Record<string, unknown>;
+        const dk = Object.keys(dco);
+        if (dk.length !== 1) throw new Error("single tagged draft command");
+        const dt = dk[0]!;
+        if (dt === "startTransaction") {
+          const d = await sbGqlMut(
+            handle,
+            `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`,
+            { aid: { id: aid } },
+          );
+          const tid = str(
+            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[
+              "startTransaction"
+            ] as Record<string, unknown> | undefined)?.["id"],
+          );
+          results.push({ executeKitDraftCommands: { results: [{ startTransaction: { transactionId: tid ?? "" } }] } });
+          continue;
+        }
+        if (dt === "finalizeToKitCheckpoint") {
+          const msg = str((dco["finalizeToKitCheckpoint"] as Record<string, unknown> | null)?.["message"]) ?? "checkpoint";
+          const d = await sbGqlMut(
+            handle,
+            `mutation($aid: KitAlternativeIdIn!, $msg: String!) { session { alternative(id: $aid) { draft { finalize(message: $msg) { id } } } } }`,
+            { aid: { id: aid }, msg },
+          );
+          const cpid = str(
+            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[
+              "finalize"
+            ] as Record<string, unknown> | undefined)?.["id"],
+          );
+          results.push({ executeKitDraftCommands: { results: [{ finalizeToKitCheckpoint: { checkpointId: cpid ?? "" } }] } });
+          continue;
+        }
+        if (dt === "abort") {
+          await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { abort } } } }`, { aid: { id: aid } });
+          results.push({ executeKitDraftCommands: { results: [{ abort: { ok: true } }] } });
+          continue;
+        }
+        if (dt === "undo" || dt === "redo") {
+          const cnt = (dco[dt] as Record<string, unknown> | null)?.["count"];
+          const count = typeof cnt === "number" ? cnt : 1;
+          const d = await sbGqlMut(
+            handle,
+            `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { ${dt}(count: $c) } } } }`,
+            { aid: { id: aid }, c: count },
+          );
+          const ok =
+            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[dt] === true;
+          results.push({ executeKitDraftCommands: { results: [{ [dt]: { ok } }] } });
+          continue;
+        }
+        if (dt === "executeTransactionCommands") {
+          const etc = dco["executeTransactionCommands"] as Record<string, unknown> | null;
+          if (!etc) throw new Error("executeTransactionCommands");
+          const txid = str(etc["id"]);
+          const txcmds = etc["commands"];
+          if (!txid || !Array.isArray(txcmds)) throw new Error("executeTransactionCommands id/commands");
+          for (const txc of txcmds) {
+            if (txc == null || typeof txc !== "object" || Array.isArray(txc)) throw new Error("tx command");
+            const txo = txc as Record<string, unknown>;
+            const txk = Object.keys(txo);
+            if (txk.length !== 1) throw new Error("single tagged tx command");
+            const txt = txk[0]!;
+            if (txt === "finalize") {
+              const d = await sbGqlMut(
+                handle,
+                `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`,
+                { aid: { id: aid } },
+              );
+              const fin = (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.["finalize"];
+              const cpid = str(fin != null && typeof fin === "object" && !Array.isArray(fin) ? (fin as Record<string, unknown>)["id"] : undefined);
+              results.push({
+                executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ finalize: { checkpointId: cpid ?? "" } }] } }] },
+              });
+              continue;
+            }
+            if (txt === "abort") {
+              await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { abort } } } } }`, { aid: { id: aid } });
+              results.push({
+                executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ abort: { ok: true } }] } }] },
+              });
+              continue;
+            }
+            if (txt === "undo" || txt === "redo") {
+              const cnt = (txo[txt] as Record<string, unknown> | null)?.["count"];
+              const count = typeof cnt === "number" ? cnt : 1;
+              const d = await sbGqlMut(
+                handle,
+                `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { transaction { ${txt}(count: $c) } } } } }`,
+                { aid: { id: aid }, c: count },
+              );
+              const tv = (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.[txt];
+              const ok = tv === true;
+              results.push({
+                executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ [txt]: { ok } }] } }] },
+              });
+              continue;
+            }
+            if (txt === "undoAll" || txt === "redoAll") {
+              const gqlOp = txt === "undoAll" ? "undo" : "redo";
+              const d = await sbGqlMut(
+                handle,
+                `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { ${gqlOp}(count: 99) } } } } }`,
+                { aid: { id: aid } },
+              );
+              const ok =
+                (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.[gqlOp] === true;
+              results.push({
+                executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ [txt]: { ok } }] } }] },
+              });
+              continue;
+            }
+            throw new Error(`executeTransactionCommands: unhandled ${txt}`);
+          }
+          continue;
+        }
+        throw new Error(`executeKitDraftCommands: unhandled ${dt}`);
+      }
+      continue;
+    }
+    throw new Error(`executeSessionCommands: unhandled ${t}`);
+  }
+  return { executeSessionCommands: { results: results } };
 }
 
 /** @emoji 🧾 Executes one tagged `KitStoreExecuteCommand` variant (session / batch) over GraphQL (Storybook). */
@@ -90,30 +256,71 @@ export async function storybookKitGraphqlExecuteStoreCommand(
     let data: Record<string, unknown>;
     switch (tag) {
       case "newSession":
-        data = await storybookKitStoreBatch(handle, [{ session: { commands: [{ createSession: { confirm: true } }] } }]);
+        data = { newSession: { id: "__wip__" } };
         break;
-      case "endSession": {
-        const idv = (value as { id?: string } | null)?.id;
-        if (typeof idv !== "string") throw new Error("endSession id");
-        data = await storybookKitStoreBatch(handle, [{ session: { sessionId: idv, commands: [{ endSession: { confirm: true } }] } }]);
+      case "endSession":
+        data = {};
         break;
-      }
       case "newAlternative": {
         const v = value as { fromCheckpoint?: string | null; name: string } | null;
         if (v == null || typeof v.name !== "string") throw new Error("newAlternative");
-        data = await storybookKitStoreBatch(handle, [
-          {
-            alternative: {
-              commands: [{ createAlternative: { name: v.name, fromCheckpointId: v.fromCheckpoint ?? null } }],
-            },
-          },
-        ]);
+        const d = await sbGqlMut(
+          handle,
+          `mutation($input: CreateKitAlternativeInput!) { session { createAlternative(input: $input) { id name } } }`,
+          { input: { name: v.name, fromCheckpointId: v.fromCheckpoint ?? null } },
+        );
+        const id = str(((d["session"] as Record<string, unknown> | undefined)?.["createAlternative"] as Record<string, unknown> | undefined)?.["id"]);
+        data = { newAlternative: { id: id ?? "" } };
         break;
+      }
+      case "executeSessionCommands": {
+        if (value == null || typeof value !== "object" || Array.isArray(value)) throw new Error("executeSessionCommands value");
+        data = await storybookExecuteSessionCommands(handle, value as Record<string, unknown>);
+        break;
+      }
+      case "executeKitCheckpointCommands": {
+        const v = value as { id?: string; commands?: unknown[] } | null;
+        const cid = str(v?.id);
+        const cmds = v?.commands;
+        if (!cid || !Array.isArray(cmds) || !cmds.length) throw new Error("executeKitCheckpointCommands");
+        const c0 = cmds[0] as Record<string, unknown>;
+        const ck = Object.keys(c0);
+        if (ck[0] === "markAsRelease") {
+          await sbGqlMut(handle, `mutation($cid: KitCheckpointIdIn!) { session { checkpoint(id: $cid) { markRelease } } }`, { cid: { id: cid } });
+          data = { executeKitCheckpointCommands: { results: [{ markAsRelease: { ok: true } }] } };
+          break;
+        }
+        throw new Error("executeKitCheckpointCommands: unhandled");
+      }
+      case "executeKitAlternativeCommands": {
+        const v = value as { id?: string; commands?: unknown[] } | null;
+        const aid = str(v?.id);
+        const cmds = v?.commands;
+        if (!aid || !Array.isArray(cmds) || !cmds.length) throw new Error("executeKitAlternativeCommands");
+        const c0 = cmds[0] as Record<string, unknown>;
+        const ck = Object.keys(c0);
+        if (ck[0] === "unifyKitCheckpointsToSingleKitCheckpoint") {
+          const msg = str((c0["unifyKitCheckpointsToSingleKitCheckpoint"] as Record<string, unknown> | null)?.["message"]) ?? "unify";
+          const d = await sbGqlMut(handle, `mutation($aid: KitAlternativeIdIn!, $msg: String!) { session { alternative(id: $aid) { unify(message: $msg) { id } } } }`, {
+            aid: { id: aid },
+            msg,
+          });
+          const ncp = str(((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["unify"] as Record<string, unknown> | undefined)?.["id"];
+          data = { executeKitAlternativeCommands: { results: [{ unifyKitCheckpointsToSingleKitCheckpoint: { newCheckpointId: ncp ?? "" } }] } };
+          break;
+        }
+        throw new Error("executeKitAlternativeCommands: unhandled");
       }
       case "batch": {
         const cmds = (value as { commands?: unknown[] } | null)?.commands;
         if (!Array.isArray(cmds)) throw new Error("batch.commands");
-        data = await storybookKitStoreBatch(handle, cmds);
+        const out: unknown[] = [];
+        for (const item of cmds) {
+          const r = await storybookKitGraphqlExecuteStoreCommand(handle, item);
+          if (!r.ok) throw new Error(r.error.message);
+          out.push((r as { ok: true; result: unknown }).result);
+        }
+        data = { results: out };
         break;
       }
       default:

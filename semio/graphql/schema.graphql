@@ -573,6 +573,8 @@ type KitFullDto {
 	locations: [LocationFullDto!]!
 }
 
+scalar KitFullSnapshot
+
 type KitGraph {
 	id: String!
 	container: KitSession
@@ -649,6 +651,10 @@ type KitStore {
 	draft: KitDraft
 	transaction: KitTransaction
 	full: KitFullDto!
+	"""
+	🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFullDto` subfield.
+	"""
+	fullSnapshot: KitFullSnapshot!
 	metadata: KitMetadataDto!
 	shallow: KitShallowDto!
 	id: String

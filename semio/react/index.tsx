@@ -21,7 +21,6 @@ import {
   kitReadScopeKey,
   kitStoreFromKitStoreClient,
   normalizeKitFullDtoFolderPaths,
-  kitReadScopeToGraphQLInput,
   theKitReadScope,
   DesignMetadataDtoSchema,
   DesignSchema,
@@ -84,7 +83,6 @@ import {
   getStoredKitFileUrls,
   ICON_WIDTH,
   id,
-  importKitToPlain,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
   Kit,
@@ -692,7 +690,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     const snap = __kitHostPlainDtoFromStore(store);
     const nextFiles = [...((snap.files as unknown[]) ?? []), file as unknown];
     const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), files: nextFiles } as unknown as KitFullDto);
-    store.replace(Kit.fromPlain(merged));
+    store.replace(Kit.fromDto(merged));
     const adapter = __kitFolderAdapter(store);
     if (adapter && typeof Blob !== "undefined" && blobArg instanceof Blob) {
       try {
@@ -795,7 +793,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
     const snap = __kitHostPlainDtoFromStore(store);
     const nextFolders = [...((snap.folders as unknown[]) ?? []), args[0] as Record<string, unknown>];
     const merged = normalizeKitFullDtoFolderPaths({ ...(snap as object), folders: nextFolders } as unknown as KitFullDto);
-    store.replace(Kit.fromPlain(merged));
+    store.replace(Kit.fromDto(merged));
     const adapter = __kitFolderAdapter(store);
     if (adapter) {
       try {
@@ -840,7 +838,7 @@ export async function executeSemioKitCommand(store: KitHostStore, command: strin
         /* ignore */
       }
     }
-    store.replace(Kit.fromPlain(merged));
+    store.replace(Kit.fromDto(merged));
     return { ok: true };
   }
   return { ok: false, error: { kind: "NotSupported", message: `unhandled ${command}` } };
@@ -861,7 +859,7 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 // #endregion 🔖KitHostCommandDispatch
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
-export { getKitClientReadScope, kitReadScopeKey, kitReadScopeToGraphQLInput, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
+export { getKitClientReadScope, kitReadScopeKey, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState } from "@semio/js";
 export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
@@ -1313,7 +1311,7 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
     const found = id ? findLivePiece(state.kit, id) : undefined;
     if (!found) return undefined;
     const { piece, design } = found;
-    if (fieldName === "kind") return piece.wireDesignAsPieceId() ? "DESIGN" : piece.wireTypeId() ? "TYPE" : undefined;
+    if (fieldName === "kind") return piece.dtoDesignAsPieceId() ? "DESIGN" : piece.dtoTypeId() ? "TYPE" : undefined;
     if (fieldName === "flatPlane") return piece.flatPlane();
     if (fieldName === "flatCenter") return piece.flatCenter();
     if (fieldName === "parentPiece") {
@@ -1385,7 +1383,7 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
     const pieces: Piece[] = [];
     for (const design of state.kit.designs ?? []) {
       for (const piece of design.pieces ?? []) {
-        if (piece.wireTypeId()?.id === liveType.id) pieces.push(piece);
+        if (piece.dtoTypeId()?.id === liveType.id) pieces.push(piece);
       }
     }
     return pieces;
@@ -4923,14 +4921,14 @@ export function useTypes(): UseTypesResult {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => TypeShallowSchema.parse((t as Type).toPlain()));
+    return types.map((t) => TypeShallowSchema.parse((t as Type).toDto()));
   }, [types]);
 
   const typesMetadata = React.useMemo(() => {
     if (!Array.isArray(types)) {
       return [];
     }
-    return types.map((t) => TypeMetadataDtoSchema.parse((t as Type).toPlain()));
+    return types.map((t) => TypeMetadataDtoSchema.parse((t as Type).toDto()));
   }, [types]);
 
   const typeIds = React.useMemo(() => {
@@ -4975,14 +4973,14 @@ export function useDesigns(): UseDesignsResult {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => DesignShallowSchema.parse((d as Design).toPlain()));
+    return designs.map((d) => DesignShallowSchema.parse((d as Design).toDto()));
   }, [designs]);
 
   const designsMetadata = React.useMemo(() => {
     if (!Array.isArray(designs)) {
       return [];
     }
-    return designs.map((d) => DesignMetadataDtoSchema.parse((d as Design).toPlain()));
+    return designs.map((d) => DesignMetadataDtoSchema.parse((d as Design).toDto()));
   }, [designs]);
 
   const designIds = React.useMemo(() => {
@@ -5330,7 +5328,7 @@ export function useTypeBestRepresentation(typeId?: string, tagIds?: ReadonlyArra
   return [snap.data, status] as const;
 }
 
-/** Colored connector rows for the kit (`readKitColoredConnectorsCommand`). */
+/** Colored connector rows from `session.wip` materialized store `types { connectors { color { css } } }`. */
 export function useKitColoredConnectors(): HookRead<ReadonlyArray<unknown>> {
   const runtime = useKitRuntime();
   const key = "kcc";
@@ -6024,7 +6022,6 @@ export {
   getStoredKitFileUrls,
   ICON_WIDTH,
   id,
-  importKitToPlain,
   InMemoryKitStore,
   isBrowserReadableFileUrl,
   Kit,

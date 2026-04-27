@@ -13,13 +13,13 @@ todos:
    status: completed
  - id: js
    content: Rewrite semio/js/index.ts queries/mutations to session.wip/authorative + nested mutation tree; drop sessionId + coloredConnectors; update fluent helper API and contract assertions.
-   status: in_progress
+   status: completed
  - id: react-sketchpad
    content: Update semio/react/index.tsx hooks and semio/sketchpad/index.tsx (and semio/algorithms storybook + semio/ui consumers) to the new tree; read connector color from connector.color.
-   status: pending
+   status: completed
  - id: tests-verify
    content: Extend kit_graphql_smoke and end-to-end Rust tests; run cargo + nx + sketchpad typecheck; capture [DEBUG] logs for create→finalize cycle then strip them and close the ticket.
-   status: pending
+   status: completed
 isProject: false
 ---
 

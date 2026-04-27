@@ -352,6 +352,13 @@ export type PiecePlacementRowDto = Readonly<{
   readonly path: readonly string[];
 }>;
 
+/** @emoji 🧾 Connector color row from `types { connectors { color { css } } }` on the materialized kit store. */
+export type KitColoredConnectorRowDto = Readonly<{
+  readonly typeId: TypeIdDto;
+  readonly connectorId: ConnectorIdDto;
+  readonly color: string;
+}>;
+
 /** @emoji 🧾 One `design.includedDesigns` entry (`IncludedDesignObject`). */
 export type IncludedDesignInfoDto = Readonly<{
   readonly id: string;
@@ -1529,11 +1536,11 @@ export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { eventStream }`;
 /**
  * @emoji 🔗 Main-line full kit DTO via `Query.session.wip.theKit.full` — must stay aligned with `semio/graphql/schema.graphql`.
  */
-export const KIT_SCOPED_FULL_DTO_QUERY = `query { session { wip { theKit { full } } } }` as const;
+export const KIT_SCOPED_FULL_DTO_QUERY = `query { session { wip { theKit { fullSnapshot } } } }` as const;
 
 /** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} on {@link theKitReadScope} (after {@link kitGraphqlData}). */
 export type KitGraphqlDataKitScopedFullDto = Readonly<{
-  readonly session: Readonly<{ readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly full: KitJsonTreeDto }> | null }> }> | null;
+  readonly session: Readonly<{ readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly fullSnapshot: KitJsonTreeDto }> | null }> }> | null;
 }>;
 
 /**
@@ -1618,6 +1625,11 @@ export class KitStore {
     return gqlDataSessionWipKitStore(data, scope) ?? ({} as JsonObject);
   }
 
+  /** @emoji 🧾 Session/wip {@link KitStore} JSON fragment for a read scope (used by live reads such as connector colors). */
+  async kitStoreGraphqlFieldsForReadScope(scope: KitReadScope, innerOnKitStore: string): Promise<JsonObject> {
+    return this.gqlKitReadOnlyScope(scope, innerOnKitStore);
+  }
+
   /** @emoji 🧾 Runs a session/wip/store query merging `extra` variables (e.g. `id` for `design(id: $id)`). */
   private async gqlRunSessionWipStore(scope: KitReadScope, innerOnKitStore: string, extra: GraphQlVariables = {} as GraphQlVariables): Promise<JsonValue> {
     const { query, variables } = kitSessionWipStoreSelect(scope, innerOnKitStore);
@@ -1685,21 +1697,22 @@ export class KitStore {
     this.transport.dispose();
   }
 
-  /** @internal One `Query.session.wip.theKit { full }` read to verify GraphQL after WASM init (no local kit cache). */
+  /** @internal One `Query.session.wip.theKit { fullSnapshot }` read to verify GraphQL after WASM init (no local kit cache). */
   private async warmGraphqlRead(): Promise<void> {
     await this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
-  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via `Query.session.wip.*.store` (`full`); sole full-kit read path (no WASM `snapshot` fallback). */
+  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via `Query.session.wip.*.store` (`fullSnapshot` scalar); sole full-kit read path (no WASM `snapshot` fallback). */
   async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<KitFullDto> {
     this.ensureAlive();
-    const { query, variables } = kitSessionWipStoreSelect(scope, "full");
+    const { query, variables } = kitSessionWipStoreSelect(scope, "fullSnapshot");
     const data = kitGraphqlData(
       await kitGraphqlRunTyped<JsonValue>(this.graphqlHandle(), { query, variables }, this.timeoutMs),
     ) as JsonValue;
-    const j = gqlDataSessionWipKitStore(data, scope)?.["full"];
+    const raw = gqlDataSessionWipKitStore(data, scope)?.["fullSnapshot"] as JsonValue | undefined;
+    const j: JsonValue = typeof raw === "string" ? parseJsonValue(raw) : raw == null ? null : (raw as JsonValue);
     if (j == null || typeof j !== "object" || Array.isArray(j)) {
-      throw new Error("kitGraphql: full missing or not an object for the given read scope");
+      throw new Error("kitGraphql: fullSnapshot missing or not an object for the given read scope");
     }
     return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
   }
@@ -1718,7 +1731,7 @@ export class KitStore {
   async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRun({
-        query: `query { session { wip { theKit { id } checkpoints { id parent { id } message time authors hash isRelease changeCount } alternatives { id name draft { id canUndo canRedo openTransaction { id } } } } } } }`,
+        query: `query { session { wip { theKit { id } checkpoints { id parent { id } message time authors hash isRelease changeCount } alternatives { id name draft { id canUndo canRedo openTransaction { id } } } } } }`,
       }),
     ) as JsonValue;
     const wip = (data as { session?: { wip?: JsonObject } }).session?.wip ?? {};
@@ -1801,105 +1814,115 @@ export class KitStore {
     }
   }
 
-  /** @emoji 🧾 Updates {@link KitStore.kitWriteSessionId} / draft / transaction ids from `kitStore.batch` rows. */
-  private absorbWriteAnchorsFromBatchResults(results: readonly JsonObject[]): void {
-    for (const raw of results) {
-      const k = __normKitStoreBatchKind(raw.kind);
-      if (k === "NEW_SESSION" && typeof raw.sessionId === "string") this.kitWriteSessionId = raw.sessionId;
-      if (k === "NEW_DRAFT" && typeof raw.draftId === "string") this.kitWriteDraftId = raw.draftId;
-      if (k === "START_TRANSACTION" && typeof raw.transactionId === "string") this.kitWriteTransactionId = raw.transactionId;
-      if (k === "FINALIZE_TRANSACTION" || k === "ABORT_TRANSACTION") this.kitWriteTransactionId = null;
-      if (k === "FINALIZE_DRAFT" || k === "ABORT_DRAFT") {
-        this.kitWriteDraftId = null;
-        this.kitWriteTransactionId = null;
-      }
-      if (k === "END_SESSION") {
-        this.kitWriteSessionId = null;
-        this.kitWriteDraftId = null;
-        this.kitWriteTransactionId = null;
-      }
+  /** @emoji 🧾 Ensures {@link KitStore.kitWriteAlternativeId} / draft / open transaction exist for nested `Mutation.session` writes. */
+  private async ensureWriteGraph(): Promise<string> {
+    let aid = this.kitWriteAlternativeId;
+    if (!aid) {
+      const data = kitGraphqlData(
+        await this.gqlRun({ query: `mutation { session { createAlternative(input: { name: "wip" }) { id } } }` }),
+      ) as { session?: { createAlternative?: { id?: string } } };
+      aid = data.session?.createAlternative?.id ?? "";
+      if (!aid) throw new Error("ensureWriteGraph: createAlternative missing id");
+      this.kitWriteAlternativeId = aid;
     }
+    let did = this.kitWriteDraftId;
+    if (!did) {
+      const data = kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { createDraft { id } } } }`,
+          variables: { aid: { id: aid } },
+        }),
+      ) as { session?: { alternative?: { createDraft?: { id?: string } } } };
+      did = data.session?.alternative?.createDraft?.id ?? "";
+      if (!did) throw new Error("ensureWriteGraph: createDraft missing id");
+      this.kitWriteDraftId = did;
+    }
+    let tid = this.kitWriteTransactionId;
+    if (!tid) {
+      const data = kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`,
+          variables: { aid: { id: aid } },
+        }),
+      ) as { session?: { alternative?: { draft?: { startTransaction?: { id?: string } } } } };
+      tid = data.session?.alternative?.draft?.startTransaction?.id ?? "";
+      if (!tid) throw new Error("ensureWriteGraph: startTransaction missing id");
+      this.kitWriteTransactionId = tid;
+    }
+    return aid;
   }
 
-  /** @emoji 🧾 Wraps transaction commands in `session → draft → transaction` batch shape (auto-starts missing levels). */
-  private buildSessionScopedTopLevelCommand(innerTxCommands: readonly JsonObject[]): JsonObject {
-    const sid = this.kitWriteSessionId;
-    const did = this.kitWriteDraftId;
-    const tid = this.kitWriteTransactionId;
-
-    const transactionPayload: JsonObjectMutable = { commands: [...innerTxCommands] as unknown as JsonValue[] };
-    if (tid) transactionPayload.transactionId = tid as JsonValue;
-
-    const draftCommands: unknown[] = [];
-    if (!tid) draftCommands.push({ startTransaction: { confirm: true } });
-    draftCommands.push({ transaction: transactionPayload });
-
-    const draftPayload: JsonObjectMutable = { commands: draftCommands as JsonValue[] };
-    if (did) draftPayload.draftId = did as JsonValue;
-
-    const sessionCommands: unknown[] = [];
-    if (!sid) sessionCommands.push({ createSession: { confirm: true } });
-    if (!did) sessionCommands.push({ createDraft: {} });
-    sessionCommands.push({ draft: draftPayload });
-
-    const sessionPayload: JsonObjectMutable = { commands: sessionCommands as JsonValue[] };
-    if (sid) sessionPayload.sessionId = sid as JsonValue;
-    return { session: sessionPayload } as JsonObject;
-  }
-
-  /** @emoji 🧾 Runs `kitStore.batch` with one session subtree that applies `innerTxCommands` inside an open transaction. */
+  /** @emoji 🧾 Runs `Mutation.session` nested draft transaction commands (auto-starts alternative/draft/transaction). */
   private async runScopedTransactionBatch(innerTxCommands: readonly JsonObject[]): Promise<readonly JsonObject[]> {
-    const top = this.buildSessionScopedTopLevelCommand(innerTxCommands);
-    const batch = await this.runKitStoreBatch([top as JsonObject]);
-    this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
-    return batch.results as JsonObject[];
+    const aid = await this.ensureWriteGraph();
+    const results: JsonObject[] = [];
+    for (const inner of innerTxCommands) {
+      if ("changeKitCommands" in inner && inner.changeKitCommands != null && typeof inner.changeKitCommands === "object") {
+        const cmds = (inner.changeKitCommands as { commands?: unknown }).commands;
+        kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($aid: KitAlternativeIdIn!, $cmds: [ChangeKitCommand!]!) { session { alternative(id: $aid) { draft { transaction { changeKit(commands: $cmds) } } } } }`,
+            variables: { aid: { id: aid }, cmds: [...((cmds as readonly ChangeKitCommand[] | undefined) ?? [])] },
+          }),
+        );
+        results.push({ ok: true, kind: "CHANGE_KIT" } as JsonObject);
+        continue;
+      }
+      if ("design" in inner && inner.design != null && typeof inner.design === "object") {
+        const des = inner.design as { designId?: unknown; commands?: readonly JsonObject[] };
+        const designId = String(des.designId ?? "");
+        const dcmds = des.commands ?? [];
+        if (dcmds.length === 0) throw new Error("runScopedTransactionBatch: design.commands empty");
+        kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($aid: KitAlternativeIdIn!, $did: String!, $cmds: [DesignCommandInput!]!) { session { alternative(id: $aid) { draft { transaction { design(id: $did) { applyCommands(commands: $cmds) } } } } } }`,
+            variables: { aid: { id: aid }, did: designId, cmds: [...dcmds] },
+          }),
+        );
+        results.push({ ok: true, kind: "DESIGN_APPLY" } as JsonObject);
+        continue;
+      }
+      throw new Error(`runScopedTransactionBatch: unsupported ${Object.keys(inner).join(",")}`);
+    }
+    return results;
   }
 
-  /** @emoji 🧭 Exposes the last session/draft/transaction anchors inferred from batch results (or {@link KitStore.setKitWriteScope}). */
+  /** @emoji 🧭 Exposes the last alternative/draft/transaction anchors (or {@link KitStore.setKitWriteScope}). */
   getKitWriteScope(): KitWriteScope | null {
-    const s = this.kitWriteSessionId;
+    const a = this.kitWriteAlternativeId;
     const d = this.kitWriteDraftId;
     const t = this.kitWriteTransactionId;
-    if (s && d && t) return { sessionId: s, draftId: d, transactionId: t };
+    if (a && d && t) return { alternativeId: a, draftId: d, transactionId: t };
     return null;
   }
 
   /** @emoji 🧭 Pins the VCS write anchor (pass `null` to clear). */
   setKitWriteScope(scope: KitWriteScope | null): void {
     if (scope == null) {
-      this.kitWriteSessionId = null;
+      this.kitWriteAlternativeId = null;
       this.kitWriteDraftId = null;
       this.kitWriteTransactionId = null;
       return;
     }
-    this.kitWriteSessionId = scope.sessionId;
+    this.kitWriteAlternativeId = scope.alternativeId;
     this.kitWriteDraftId = scope.draftId;
     this.kitWriteTransactionId = scope.transactionId;
   }
 
   /** @emoji 🧾 Finalizes the active kit write transaction (commits atoms into the draft). */
   async finalizeKitWriteTransaction(): Promise<SetResult> {
-    const t = this.kitWriteTransactionId;
-    const d = this.kitWriteDraftId;
-    const s = this.kitWriteSessionId;
-    if (!s || !d || !t) return { ok: false, error: { kind: "Internal", message: "finalizeKitWriteTransaction: no open transaction" } };
+    const aid = this.kitWriteAlternativeId;
+    if (!aid || !this.kitWriteDraftId || !this.kitWriteTransactionId) {
+      return { ok: false, error: { kind: "Internal", message: "finalizeKitWriteTransaction: no open transaction" } };
+    }
     try {
-      const batch = await this.runKitStoreBatch([
-        {
-          session: {
-            sessionId: s,
-            commands: [
-              {
-                draft: {
-                  draftId: d,
-                  commands: [{ transaction: { transactionId: t, commands: [{ finalizeTransaction: { confirm: true } }] } }],
-                },
-              },
-            ],
-          },
-        },
-      ]);
-      this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
+      kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`,
+          variables: { aid: { id: aid } },
+        }),
+      );
+      this.kitWriteTransactionId = null;
       return { ok: true };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
@@ -1908,180 +1931,110 @@ export class KitStore {
 
   /** @emoji 🧾 Aborts the active kit write transaction (drops uncommitted atoms). */
   async abortKitWriteTransaction(): Promise<SetResult> {
-    const t = this.kitWriteTransactionId;
-    const d = this.kitWriteDraftId;
-    const s = this.kitWriteSessionId;
-    if (!s || !d || !t) return { ok: false, error: { kind: "Internal", message: "abortKitWriteTransaction: no open transaction" } };
+    const aid = this.kitWriteAlternativeId;
+    if (!aid || !this.kitWriteDraftId || !this.kitWriteTransactionId) {
+      return { ok: false, error: { kind: "Internal", message: "abortKitWriteTransaction: no open transaction" } };
+    }
     try {
-      const batch = await this.runKitStoreBatch([
-        {
-          session: {
-            sessionId: s,
-            commands: [
-              {
-                draft: {
-                  draftId: d,
-                  commands: [{ transaction: { transactionId: t, commands: [{ abortTransaction: { confirm: true } }] } }],
-                },
-              },
-            ],
-          },
-        },
-      ]);
-      this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
+      kitGraphqlData(
+        await this.gqlRun({
+          query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { abort } } } } } }`,
+          variables: { aid: { id: aid } },
+        }),
+      );
+      this.kitWriteTransactionId = null;
       return { ok: true };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
   }
 
-  private backboneBatchCommandsFromJson(kind: string, batchVariables: Readonly<JsonObject>): Readonly<JsonObject>[] | null {
-    if (kind === "attachBackbone") {
-      const c = (batchVariables.config as BackboneConfig | null | undefined) ?? { Memory: null };
-      const bcmd: Readonly<JsonObject> =
-        "Memory" in c ? { memory: { confirm: true } } : "Dev" in c ? { dev: { path: c.Dev.path } } : "Local" in c ? { local: { folder: c.Local.folder } } : { remote: { url: c.Remote.url, sessionId: c.Remote.sessionId } };
-      return [{ backbone: { commands: [{ attachBackbone: bcmd }] } }];
-    }
-    if (kind === "detachBackbone") return [{ backbone: { commands: [{ detachBackbone: { confirm: true } }] } }];
-    if (kind === "listConflicts") return [{ backbone: { commands: [{ listConflicts: { confirm: true } }] } }];
-    if (kind === "backboneStatus") return [{ backbone: { commands: [{ backboneStatus: { confirm: true } }] } }];
-    if (kind === "syncNow") return [{ backbone: { commands: [{ syncNow: { confirm: true } }] } }];
-    if (kind === "resolveConflict")
-      return [
-        {
-          backbone: {
-            commands: [
-              {
-                resolveConflict: {
-                  conflictId: String(batchVariables.id),
-                  strategy: batchVariables.strategy,
-                },
-              },
-            ],
-          },
-        },
-      ];
-    return null;
-  }
-
-  /** @emoji 🧾 `kitStore.batch` control-plane entry (session, checkpoint, alternative, backbone). */
-  private async runKitStoreBatch(
-    commands: readonly JsonObject[],
-    clientMutationId?: string,
-  ): Promise<{
-    clientMutationId?: string | null;
-    results: readonly {
-      kind?: string;
-      ok?: boolean | null;
-      count?: number | null;
-      changeKind?: KitChangeSemanticKindGql | null;
-      changeKindOther?: string | null;
-      inverse?: readonly ChangeKitCommand[] | null;
-      conflicts?: readonly JsonObject[];
-      backbone?: JsonObject | null;
-    }[];
-  }> {
-    this.ensureAlive();
-    const data = kitGraphqlData(
-      await this.gqlRun({
-        query: KIT_STORE_BATCH_MUTATION,
-        variables: { input: { clientMutationId: clientMutationId ?? null, commands: [...commands] } },
-      }),
-    ) as { kitStore: { batch: { clientMutationId?: string | null; results: readonly JsonObject[] } } };
-    return data.kitStore.batch as {
-      clientMutationId?: string | null;
-      results: readonly {
-        kind?: string;
-        ok?: boolean | null;
-        count?: number | null;
-        changeKind?: KitChangeSemanticKindGql | null;
-        changeKindOther?: string | null;
-        inverse?: readonly ChangeKitCommand[] | null;
-        conflicts?: readonly JsonObject[];
-        backbone?: JsonObject | null;
-      }[];
-    };
-  }
-
-  /** @emoji 🧾 Top-level `backbone` batch that returns {@link SetResult} (attach, detach, resolve, sync). */
+  /** @emoji 🧾 Top-level `session.backbone` mutations returning {@link SetResult}. */
   private async runBackboneBatchSetResult(kind: string, variables: Readonly<JsonObject>): Promise<SetResult> {
     this.ensureAlive();
-    const back = this.backboneBatchCommandsFromJson(kind, variables);
-    if (!back) return { ok: false, error: { kind: "Internal", message: `backbone batch: unsupported ${kind}` } };
     try {
-      const b = await this.runKitStoreBatch(back);
-      const r0 = b.results[0] as { ok?: boolean } | undefined;
-      if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: `${kind} rejected` } };
-      return { ok: true };
+      if (kind === "attachBackbone") {
+        const c = (variables.config as BackboneConfig | null | undefined) ?? { Memory: null };
+        const cfg: JsonObject =
+          "Memory" in c
+            ? { memory: { confirm: true } }
+            : "Dev" in c
+              ? { dev: { path: c.Dev.path } }
+              : "Local" in c
+                ? { local: { folder: c.Local.folder } }
+                : { remote: { url: c.Remote.url, sessionId: c.Remote.sessionId } };
+        kitGraphqlData(await this.gqlRun({ query: `mutation($c: BackboneConfigInput!) { session { backbone { attach(config: $c) { attached } } } } }`, variables: { c: cfg } }));
+        return { ok: true };
+      }
+      if (kind === "detachBackbone") {
+        kitGraphqlData(await this.gqlRun({ query: `mutation { session { backbone { detach } } }` }));
+        return { ok: true };
+      }
+      if (kind === "syncNow") {
+        kitGraphqlData(await this.gqlRun({ query: `mutation { session { backbone { syncNow } } }` }));
+        return { ok: true };
+      }
+      if (kind === "resolveConflict") {
+        kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($id: String!, $strategy: ConflictResolutionInput!) { session { backbone { resolveConflict(id: $id, strategy: $strategy) } } } }`,
+            variables: { id: String(variables.id), strategy: variables.strategy },
+          }),
+        );
+        return { ok: true };
+      }
+      return { ok: false, error: { kind: "Internal", message: `backbone batch: unsupported ${kind}` } };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
   }
 
-  /** @emoji 🧾 Backbone batch rows that surface conflicts or status DTOs. */
+  /** @emoji 🧾 Backbone reads: conflicts list or attach status via GraphQL. */
   private async runBackboneBatchTypedRead<T>(kind: "listConflicts" | "backboneStatus"): Promise<T> {
     this.ensureAlive();
-    const back = this.backboneBatchCommandsFromJson(kind, {});
-    if (!back) throw new Error(`backbone batch read: unsupported ${kind}`);
-    const b = await this.runKitStoreBatch(back);
-    const r0 = b.results[0] as { conflicts?: readonly ConflictBatchRecord[] | null; backbone?: JsonValue } | undefined;
-    if (kind === "listConflicts") return ((r0?.conflicts as readonly ConflictBatchRecord[] | undefined) ?? []) as T;
-    const br = (r0?.backbone as Partial<BackboneStatusDto> | null | undefined) ?? {};
+    if (kind === "listConflicts") {
+      const data = kitGraphqlData(
+        await this.gqlRun({ query: `query { session { conflicts { id reason createdAt wipCheckpoint { id } backboneTip { id } } } }` }),
+      ) as { session?: { conflicts?: readonly ConflictBatchRecord[] } };
+      return ((data.session?.conflicts as readonly ConflictBatchRecord[] | undefined) ?? []) as T;
+    }
+    const data = kitGraphqlData(
+      await this.gqlRun({ query: `mutation { session { backbone { status { attached kind kindOther tip } } } }` }),
+    ) as { session?: { backbone?: { status?: Partial<BackboneStatusDto> & { tip?: string | null } } } };
+    const br = data.session?.backbone?.status ?? {};
     return {
       attached: br.attached ?? false,
-      kind: br.kind,
-      backboneTip: br.backboneTip,
-      pendingWipCheckpoints: br.pendingWipCheckpoints ?? 0,
+      kind: br.kind ?? null,
+      backboneTip: br.tip ?? null,
+      pendingWipCheckpoints: 0,
     } as T;
   }
 
-  /** @emoji 🧾 VCS undo/redo via `kitStore.batch` (open transaction or draft stack). */
+  /** @emoji 🧾 VCS undo/redo via nested `Mutation.session` (open transaction or draft stack). */
   private async runVcsUndoRedo(kind: "undo" | "redo"): Promise<SetResult> {
     this.ensureAlive();
-    const t = this.kitWriteTransactionId;
+    const aid = this.kitWriteAlternativeId;
     const d = this.kitWriteDraftId;
-    const s = this.kitWriteSessionId;
+    const t = this.kitWriteTransactionId;
     try {
-      if (t && s && d) {
-        const inner = kind === "undo" ? ({ undoTransaction: { count: 1 } } as const) : ({ redoTransaction: { count: 1 } } as const);
-        const b = await this.runKitStoreBatch([
-          {
-            session: {
-              sessionId: s,
-              commands: [
-                {
-                  draft: {
-                    draftId: d,
-                    commands: [{ transaction: { transactionId: t, commands: [inner] } }],
-                  },
-                },
-              ],
-            },
-          } as unknown as JsonObject,
-        ]);
-        const r0 = b.results[0] as { ok?: boolean } | undefined;
-        if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
+      if (t && aid && d) {
+        const field = kind === "undo" ? "undo(count: 1)" : "redo(count: 1)";
+        kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { ${field} } } } } } }`,
+            variables: { aid: { id: aid } },
+          }),
+        );
         return { ok: true };
       }
-      if (s && d) {
-        const inner = kind === "undo" ? ({ undoDraft: { count: 1 } } as const) : ({ redoDraft: { count: 1 } } as const);
-        const b = await this.runKitStoreBatch([
-          {
-            session: {
-              sessionId: s,
-              commands: [
-                {
-                  draft: {
-                    draftId: d,
-                    commands: [inner],
-                  },
-                },
-              ],
-            },
-          } as unknown as JsonObject,
-        ]);
-        const r0 = b.results[0] as { ok?: boolean } | undefined;
-        if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
+      if (aid && d) {
+        const field = kind === "undo" ? "undo(count: 1)" : "redo(count: 1)";
+        kitGraphqlData(
+          await this.gqlRun({
+            query: `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { ${field} } } } } }`,
+            variables: { aid: { id: aid } },
+          }),
+        );
         return { ok: true };
       }
       return {
@@ -2111,13 +2064,21 @@ export class KitStore {
 
   async changeKitWithInverse(commands: unknown): Promise<{ kind: KitChangeKind; inverse: readonly ChangeKitCommand[] }> {
     this.ensureAlive();
-    const rows = await this.runScopedTransactionBatch([{ changeKitWithInverse: { commands: (commands as readonly unknown[]) ?? [] } } as JsonObject]);
-    const hit = [...rows].reverse().find((r) => __normKitStoreBatchKind(r.kind) === "CHANGE_KIT_WITH_INVERSE") as { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: readonly ChangeKitCommand[] } | undefined;
-    if (hit != null && hit.changeKind != null) {
-      const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommand[]) : [];
-      return { kind: kitChangeSemanticKindToGraphQl(hit.changeKind, hit.changeKindOther ?? null), inverse: inv };
+    const aid = await this.ensureWriteGraph();
+    const data = kitGraphqlData(
+      await this.gqlRun({
+        query: `mutation($aid: KitAlternativeIdIn!, $cmds: [ChangeKitCommand!]!) { session { alternative(id: $aid) { draft { transaction { changeKitWithInverse(commands: $cmds) { changeKind inverse } } } } } }`,
+        variables: { aid: { id: aid }, cmds: Array.isArray(commands) ? ([...commands] as ChangeKitCommand[]) : [] },
+      }),
+    ) as JsonObject;
+    const hit = ((((data["session"] as JsonObject | undefined)?.["alternative"] as JsonObject | undefined)?.["draft"] as JsonObject | undefined)?.[
+      "transaction"
+    ] as JsonObject | undefined)?.["changeKitWithInverse"] as JsonObject | undefined;
+    if (hit != null && hit["changeKind"] != null) {
+      const inv = Array.isArray(hit["inverse"]) ? (hit["inverse"] as readonly ChangeKitCommand[]) : [];
+      return { kind: hit["changeKind"] as KitChangeKind, inverse: inv };
     }
-    throw new Error("changeKitWithInverse: missing batch row");
+    throw new Error("changeKitWithInverse: missing response");
   }
 
   async clusterPieces(designId: string, pieceIds: readonly string[], clusterName: string): Promise<SetResult> {
@@ -2361,93 +2322,69 @@ export class KitStore {
       return { readDesignClusterableGroupsCommand: { groups } };
     }
     if ("readDesignIncludedDesignsCommand" in cmd && cmd.readDesignIncludedDesignsCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { includedDesigns } } }`,
-          variables: { id: designId },
-        }),
-      ) as { kit?: { designByDtoId?: { includedDesigns?: JsonValue } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { includedDesigns }`, { id: designId });
       return {
         readDesignIncludedDesignsCommand: {
-          designs: semioParseDesignIncludedDesignArrayJson((gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["includedDesigns"] as KitJsonTreeDto | readonly KitJsonTreeDto[]),
+          designs: semioParseDesignIncludedDesignArrayJson((gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["includedDesigns"] as KitJsonTreeDto | readonly KitJsonTreeDto[]),
         },
       };
     }
     if ("readDesignQualitySumCommand" in cmd && cmd.readDesignQualitySumCommand) {
       const qid = cmd.readDesignQualitySumCommand.qualityId.id;
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!, $qid: String!) { kit(scope: $scope) { designByDtoId(id: $id) { qualitySum(qualityId: $qid) } } }`,
-          variables: { id: designId, qid },
-        }),
-      ) as { kit?: { designByDtoId?: { qualitySum?: number } | null } | null };
-      return { readDesignQualitySumCommand: { sum: (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["qualitySum"] ?? 0 } };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { qualitySum(qualityId: $qid) }`, { id: designId, qid });
+      const q = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["qualitySum"];
+      const sum = typeof q === "number" && !Number.isNaN(q) ? q : Number(q ?? 0);
+      return { readDesignQualitySumCommand: { sum } };
     }
     if ("readDesignReplaceableCatalogCommand" in cmd && cmd.readDesignReplaceableCatalogCommand) {
       const sel = cmd.readDesignReplaceableCatalogCommand.selection.map((s) => s.id);
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kit(scope: $scope) { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { types { id } designs { id } } } } }`,
-          variables: { id: designId, sel },
-        }),
-      ) as { kit?: { designByDtoId?: { replaceableCatalog?: { types?: readonly JsonObject[]; designs?: readonly JsonObject[] } } | null } | null };
-      const rc = (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["replaceableCatalog"];
-      const typeRows = Array.isArray(rc?.types) ? rc!.types : [];
-      const designRows = Array.isArray(rc?.designs) ? rc!.designs : [];
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { replaceableCatalog(selection: $sel) { types { id } designs { id } } }`, { id: designId, sel });
+      const rc = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["replaceableCatalog"] as JsonObject | undefined;
+      const typeRows = Array.isArray(rc?.["types"]) ? (rc["types"] as unknown[]) : [];
+      const designRows = Array.isArray(rc?.["designs"]) ? (rc["designs"] as unknown[]) : [];
       return {
         readDesignReplaceableCatalogCommand: {
-          types: typeRows.map((r) => ({ id: typeof r.id === "string" ? r.id : String((r as { id?: unknown }).id ?? "") })),
-          designs: designRows.map((r) => ({ id: typeof r.id === "string" ? r.id : String((r as { id?: unknown }).id ?? "") })),
+          types: typeRows.map((r: unknown) => ({
+            id: typeof (r as { id?: unknown })?.id === "string" ? (r as { id: string }).id : String((r as { id?: unknown }).id ?? ""),
+          })),
+          designs: designRows.map((r: unknown) => ({
+            id: typeof (r as { id?: unknown })?.id === "string" ? (r as { id: string }).id : String((r as { id?: unknown }).id ?? ""),
+          })),
         },
       };
     }
     if ("readDesignIncludedDesignIdsCommand" in cmd && cmd.readDesignIncludedDesignIdsCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { includedDesignIds } } }`,
-          variables: { id: designId },
-        }),
-      ) as { kit?: { designByDtoId?: { includedDesignIds?: string[] } | null } | null };
-      return { readDesignIncludedDesignIdsCommand: { designIds: (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["includedDesignIds"] ?? [] } };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { includedDesignIds }`, { id: designId });
+      const rawIds = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["includedDesignIds"];
+      const designIds = Array.isArray(rawIds) ? rawIds.map((x: unknown) => String(x)) : [];
+      return { readDesignIncludedDesignIdsCommand: { designIds } };
     }
     throw new Error(`readDesign: ${Object.keys(cmd).join(",")}`);
   }
 
   private async mapPieceRead(scope: KitReadScope, designId: string, pieceId: string, cmd: ReadPieceCommand): Promise<ReadPieceCommandOutput> {
     if ("readPieceFlatPlaneCommand" in cmd && cmd.readPieceFlatPlaneCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatPlane } } } }`,
-          variables: { d: designId, p: pieceId },
-        }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: JsonValue } | null } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $d) { pieceByDtoId(id: $p) { flatPlane } }`, { d: designId, p: pieceId });
+      const piece = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["pieceByDtoId"] as JsonObject | undefined;
       return {
-        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson((gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["pieceByDtoId"] as JsonObject | undefined)?.["flatPlane"] as KitJsonTreeDto) },
+        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson(piece?.["flatPlane"] as KitJsonTreeDto) },
       };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatCenter } } } }`,
-          variables: { d: designId, p: pieceId },
-        }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: JsonValue } | null } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $d) { pieceByDtoId(id: $p) { flatCenter } }`, { d: designId, p: pieceId });
+      const piece = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["pieceByDtoId"] as JsonObject | undefined;
       return {
         readPieceFlatCenterCommand: {
-          flatCenter: semioParseCoordinateNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter as KitJsonTreeDto),
+          flatCenter: semioParseCoordinateNullableJson(piece?.["flatCenter"] as KitJsonTreeDto),
         },
       };
     }
     if ("readPieceParentConnectionFullCommand" in cmd && cmd.readPieceParentConnectionFullCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnection { id gap shift rise rotation turn tilt u v description } } } } }`,
-          variables: { d: designId, p: pieceId },
-        }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { parentConnection?: JsonValue } | null } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $d) { pieceByDtoId(id: $p) { parentConnection { id gap shift rise rotation turn tilt u v description } } }`, { d: designId, p: pieceId });
+      const piece = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["pieceByDtoId"] as JsonObject | undefined;
       return {
         readPieceParentConnectionFullCommand: {
-          connection: semioParseConnectionNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnection as KitJsonTreeDto),
+          connection: semioParseConnectionNullableJson(piece?.["parentConnection"] as KitJsonTreeDto),
         },
       };
     }
@@ -2457,15 +2394,10 @@ export class KitStore {
   private async mapTypeRead(scope: KitReadScope, typeId: string, cmd: ReadTypeCommand): Promise<ReadTypeCommandOutput> {
     if ("readTypeBestRepresentationCommand" in cmd && cmd.readTypeBestRepresentationCommand) {
       const tags = cmd.readTypeBestRepresentationCommand.tagIds;
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!, $tags: [String!]!) { kit(scope: $scope) { typeByDtoId(id: $id) { bestRepresentation(tagIds: $tags) } } }`,
-          variables: { id: typeId, tags: [...tags] },
-        }),
-      ) as { kit?: { typeByDtoId?: { bestRepresentation?: JsonValue } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `type(id: $id) { bestRepresentation(tagIds: $tags) }`, { id: typeId, tags: [...tags] });
       return {
         readTypeBestRepresentationCommand: {
-          representation: semioParseRepresentationNullableJson(gqlDataKitRoot(d)?.typeByDtoId?.bestRepresentation as KitJsonTreeDto),
+          representation: semioParseRepresentationNullableJson((gqlDataSessionWipKitStore(d, scope)?.["type"] as JsonObject | undefined)?.["bestRepresentation"] as KitJsonTreeDto),
         },
       };
     }
@@ -2473,13 +2405,9 @@ export class KitStore {
   }
 
   async getPiecesMetadata(scope: KitReadScope, designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
-    const d = kitGraphqlData(
-      await this.gqlRunWithReadScope(scope, {
-        query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { pieces { id depth path { id } parentPiece { id } flatPlane { origin { x y z } xAxis { x y z } yAxis { x y z } } flatCenter { u v } } } } } }`,
-        variables: { id: designId },
-      }),
-    ) as { kit?: { designByDtoId?: { pieces?: readonly JsonValue[] } | null } | null };
-    const pieces = gqlDataKitRoot(d)?.designByDtoId?.pieces;
+    const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { pieces { id depth path { id } parentPiece { id } flatPlane { origin { x y z } xAxis { x y z } yAxis { x y z } } flatCenter { u v } } }`, { id: designId });
+    const rawPieces = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["pieces"];
+    const pieces = Array.isArray(rawPieces) ? rawPieces : [];
     return semioParsePiecePlacementMapJson(pieces);
   }
 
@@ -2949,12 +2877,27 @@ export class LiveKitRoot {
     return new LiveType(this.ks, this.readScope, typeId);
   }
 
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
-    return this.ks.read(this.readScope, [{ readKitColoredConnectorsCommand: null }]).then((out) => {
-      const row = out[0];
-      if (row && "readKitColoredConnectorsCommand" in row) return row.readKitColoredConnectorsCommand.rows;
-      return [];
-    });
+  async readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
+    const store = await this.ks.kitStoreGraphqlFieldsForReadScope(this.readScope, "types { id connectors { id color { css } } }");
+    const types = store["types"] as JsonValue;
+    if (!Array.isArray(types)) return [];
+    const out: KitColoredConnectorRowDto[] = [];
+    for (const t of types) {
+      if (!t || typeof t !== "object" || Array.isArray(t)) continue;
+      const to = t as JsonObject;
+      const tid = String(to["id"] ?? "");
+      const conns = to["connectors"];
+      if (!Array.isArray(conns)) continue;
+      for (const c of conns) {
+        if (!c || typeof c !== "object" || Array.isArray(c)) continue;
+        const co = c as JsonObject;
+        const cid = String(co["id"] ?? "");
+        const col = co["color"] as JsonObject | undefined;
+        const css = col != null && typeof col === "object" && typeof col["css"] === "string" ? (col["css"] as string) : "";
+        if (tid && cid) out.push({ typeId: { id: tid }, connectorId: { id: cid }, color: css });
+      }
+    }
+    return out;
   }
 }
 
@@ -3127,12 +3070,9 @@ export function kitEventAffectsTypeScopedRead(ev: KitEvent, typeId?: string): bo
   return kitEventTouchesType(ev as KitEvent, typeId);
 }
 
-/** @emoji 🧭 Colored connector rows are kit-wide; invalidate on broad graph changes. */
+/** @emoji 🧭 Colored connector rows follow kit-wide GraphQL reads; invalidate on any kit event. */
 export function kitEventAffectsKitColoredConnectorsRead(ev: KitEvent): boolean {
-  if (ev == null || typeof ev !== "object") return true;
-  const e = ev as KitEvent;
-  if ("Changed" in e && (e as { Changed?: null }).Changed === null) return true;
-  if ("ValidationInvalidated" in e && (e as { ValidationInvalidated?: null }).ValidationInvalidated === null) return true;
+  void ev;
   return true;
 }
 
@@ -5982,6 +5922,15 @@ export type KitSyncSnapshot = { status: string; dirty: boolean; readonly: boolea
 export const DEFAULT_KIT_SYNC: Readonly<KitSyncSnapshot> = Object.freeze({ status: "idle", dirty: false, readonly: false, lastSyncedAt: null, error: null });
 export type KitStoreSnapshot = { kit: Kit; sync: KitSyncSnapshot };
 export type KitHostStore = { getSnapshot(): KitStoreSnapshot; subscribe(onChange: () => void): () => void; replace(kit: Kit): void };
+/** @emoji 🧾 Alias for hosts that still import `KitHostStoreSnapshot` from `@semio/js`. */
+export type KitHostStoreSnapshot = KitStoreSnapshot;
+/** @emoji 🧾 Plain DTO aliases for React/schema bridges (same as `*Dto` types). */
+export type DesignPlain = DesignDto;
+export type TypePlain = TypeDto;
+export type PiecePlain = PieceDto;
+export type ConnectionPlain = ConnectionDto;
+export type PlanePlain = PlaneDto;
+export type CoordinatePlain = CoordinateDto;
 
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
@@ -6878,9 +6827,8 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
 
   describe("semio-js KitStore", () => {
-    it("KIT_SCOPED_FULL_DTO_QUERY dtos Query.kit(scope) { fullDto }", () => {
-      expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("kit(scope:");
-      expect(KIT_SCOPED_FULL_DTO_QUERY).toMatch(/fullDto/);
+    it("KIT_SCOPED_FULL_DTO_QUERY matches Query.session.wip.theKit { fullSnapshot }", () => {
+      expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("session { wip { theKit { fullSnapshot");
     });
 
     it("KitStore has no JS snapshot() full-read method (use theKit / materialized GraphQL only)", () => {
@@ -6915,7 +6863,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
     });
 
     it("kitReadScopeKey normalizes the main line scope for cache keys", () => {
-      expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(kitReadScopeToGraphQLInput(theKitReadScope)));
+      expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(theKitReadScope));
     });
 
     it("kitChangeSemanticKindToGraphQl maps GraphQL enum + other label", () => {
@@ -7082,7 +7030,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   });
 
   describe("semio-js GraphQL dto contract", () => {
-    it("KIT_STORE_BATCH_MUTATION and KIT_EVENT_STREAM_SUBSCRIPTION align with schema.graphql", async () => {
+    it("KIT_SESSION_QUERY_ENTRY and KIT_EVENT_STREAM_SUBSCRIPTION align with schema.graphql", async () => {
       const { readFileSync } = await import("node:fs");
       const { resolve, dirname } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
@@ -7097,13 +7045,11 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         }
       }
       expect(sdl.length).toBeGreaterThan(100);
-      expect(sdl).toContain("type KitStoreMutation");
-      expect(sdl).toContain("batch(input: KitStoreInput!");
-      expect(sdl).toContain("type KitStorePayload");
+      expect(sdl).toContain("session: KitSession!");
+      expect(sdl).toContain("type KitSessionMutation");
+      expect(sdl).not.toContain("type KitStoreMutation");
       expect(sdl).toMatch(/eventStream\s*[:(]/);
-      expect(KIT_STORE_BATCH_MUTATION).toContain("mutation($input: KitStoreInput!)");
-      expect(KIT_STORE_BATCH_MUTATION).toContain("kitStore { batch(input: $input)");
-      expect(KIT_STORE_BATCH_MUTATION).toContain("results { kind");
+      expect(KIT_SESSION_QUERY_ENTRY).toContain("session { id wip");
       expect(KIT_EVENT_STREAM_SUBSCRIPTION).toBe("subscription { eventStream }");
     });
   });

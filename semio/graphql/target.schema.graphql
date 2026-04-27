@@ -1,4 +1,4 @@
-input AlternativeCommandInput @oneOf {
+input AlternativeInput @oneOf {
 	createAlternative: CreateAlternativeInput
 	unifyAlternative: MessageOnlyInput
 }
@@ -12,7 +12,7 @@ type AlternativeDto {
 
 input AlternativeInput {
 	alternativeId: String
-	commands: [AlternativeCommandInput!]!
+	commands: [AlternativeInput!]!
 }
 
 type AttributeOutput {
@@ -45,7 +45,7 @@ type AuthorShallowDto {
 	rank: Int
 }
 
-input BackboneCommandInput @oneOf {
+input BackboneInput @oneOf {
 	attachBackbone: BackboneConfigInput
 	detachBackbone: ConfirmOnlyInput
 	listConflicts: ConfirmOnlyInput
@@ -62,7 +62,7 @@ input BackboneConfigInput @oneOf {
 }
 
 input BackboneInput {
-	commands: [BackboneCommandInput!]!
+	commands: [BackboneInput!]!
 }
 
 enum BackboneKind {
@@ -97,10 +97,10 @@ type BenchmarkMetadataDto {
 	maxExcluded: Boolean
 }
 
-scalar ChangeKitCommand
+scalar ChangeKit
 
-input ChangeKitCommandsInput {
-	commands: [ChangeKitCommand!]!
+input ChangeKitsInput {
+	commands: [ChangeKit!]!
 }
 
 input ChangePieceTypeInput {
@@ -108,7 +108,7 @@ input ChangePieceTypeInput {
 	newTypeId: String!
 }
 
-input CheckpointCommandInput @oneOf {
+input CheckpointInput @oneOf {
 	markRelease: ConfirmOnlyInput
 	setActive: ConfirmOnlyInput
 }
@@ -126,7 +126,7 @@ type CheckpointDto {
 
 input CheckpointInput {
 	checkpointId: String
-	commands: [CheckpointCommandInput!]!
+	commands: [CheckpointInput!]!
 }
 
 input ClusterPiecesInput {
@@ -166,7 +166,7 @@ enum ConflictResolutionInput {
 
 type Connection {
 	id: String!
-	container: DesignStore!
+	container: Design!
 	metadata: ConnectionMetadataDto!
 	shallow: ConnectionShallowDto!
 	full: ConnectionOutput!
@@ -232,7 +232,7 @@ type Connector {
 	id: String!
 	code: String!
 	description: String
-	container: TypeStore!
+	container: Type!
 	metadata: ConnectorMetadataDto!
 	shallow: ConnectorShallowDto!
 	full: ConnectorOutput!
@@ -307,7 +307,7 @@ input DeleteConnectionInput {
 	connectionId: String!
 }
 
-input DesignCommandInput @oneOf {
+input DesignInput @oneOf {
 	clusterPieces: ClusterPiecesInput
 	dragPieces: DragPiecesInput
 	movePieces: MovePiecesInput
@@ -358,7 +358,7 @@ type DesignIdDto {
 
 input DesignInput {
 	designId: String!
-	commands: [DesignCommandInput!]!
+	commands: [DesignInput!]!
 }
 
 type DesignMetadataDto {
@@ -399,23 +399,23 @@ type DesignShallowDto {
 	stats: [StatShallowDto!]!
 }
 
-type DesignStore {
+type Design {
 	id: String!
 	name: String!
 	description: String
-	container: KitStore!
+	container: Kit!
 	metadata: DesignMetadataDto!
 	shallow: DesignShallowDto!
 	full: DesignOutput!
-	pieces: [PieceStore!]!
-	pieceByDtoId(id: String!): PieceStore
+	pieces: [Piece!]!
+	pieceByDtoId(id: String!): Piece
 	connections: [Connection!]!
 	piecesFull: [PieceOutput!]!
 	connectionsFull: [ConnectionOutput!]!
 	flattenMap: [DesignFlattenMapEntryDto!]!
 	clusterableGroups(selection: [String!]!): [[String!]!]!
 	qualitySum(qualityId: String!): Float!
-	replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
 	includedDesigns: [IncludedDesignInfoDto!]!
 	includedDesignIds: [String!]!
 }
@@ -424,7 +424,7 @@ input DevBackboneInput {
 	path: String!
 }
 
-input DraftCommandInput @oneOf {
+input DraftInput @oneOf {
 	finalizeDraft: MessageOnlyInput
 	abortDraft: ConfirmOnlyInput
 	undoDraft: CountInput
@@ -446,7 +446,7 @@ type DraftDto {
 
 input DraftInput {
 	draftId: String
-	commands: [DraftCommandInput!]!
+	commands: [DraftInput!]!
 }
 
 input DragPiecesInput {
@@ -518,7 +518,7 @@ type IncludedDesignInfoDto {
 	externalConnections: [ConnectionOutput!]!
 }
 
-enum KitChangeSemanticKind {
+enum ChangeSemanticKind {
 	INFERRED
 	SET_KIT_METADATA
 	ADD_TYPE
@@ -619,25 +619,25 @@ type KitShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-input KitStoreCommandInput @oneOf {
+input KitInput @oneOf {
 	session: SessionInput
 	checkpoint: CheckpointInput
 	alternative: AlternativeInput
 	backbone: BackboneInput
 }
 
-input KitStoreInput {
+input KitInput {
 	clientMutationId: String
-	commands: [KitStoreCommandInput!]!
+	commands: [KitInput!]!
 }
 
-type KitStorePayload {
+type KitPayload {
 	clientMutationId: String
-	results: [KitStoreResult!]!
+	results: [KitResult!]!
 }
 
-type KitStoreResult {
-	kind: KitStoreResultKind!
+type KitResult {
+	kind: KitResultKind!
 	ok: Boolean
 	count: Int
 	sessionId: String
@@ -647,12 +647,12 @@ type KitStoreResult {
 	alternativeId: String
 	backbone: BackboneStatus
 	conflicts: [ConflictRecord!]
-	changeKind: KitChangeSemanticKind
+	changeKind: ChangeSemanticKind
 	changeKindOther: String
-	inverse: [ChangeKitCommand!]
+	inverse: [ChangeKit!]
 }
 
-enum KitStoreResultKind {
+enum KitResultKind {
 	CHANGE_KIT_COMMANDS
 	CHANGE_KIT_WITH_INVERSE
 	CLUSTER_PIECES
@@ -786,11 +786,11 @@ type PieceShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type PieceStore {
+type Piece {
 	id: String!
 	name: String
 	description: String
-	container: DesignStore!
+	container: Design!
 	metadata: PieceMetadataDto!
 	shallow: PieceShallowDto!
 	full: PieceOutput!
@@ -798,11 +798,11 @@ type PieceStore {
 	flatCenter: Coordinate!
 	flatPose: PoseOutput!
 	scale: Float
-	refType: TypeStore
+	refType: Type
 	parentConnection: Connection
-	parentPiece: PieceStore
+	parentPiece: Piece
 	depth: Int!
-	path: [PieceStore!]!
+	path: [Piece!]!
 }
 
 type Plane {
@@ -882,16 +882,16 @@ input RemoteBackboneInput {
 	sessionId: String!
 }
 
-type ReplaceableCatalogStore {
-	types: [TypeStore!]!
-	designs: [DesignStore!]!
+type ReplaceableCatalog {
+	types: [Type!]!
+	designs: [Design!]!
 }
 
 type Representation {
 	id: String!
 	url: String!
 	description: String
-	container: TypeStore!
+	container: Type!
 	metadata: RepresentationMetadataDto!
 	shallow: RepresentationShallowDto!
 	full: RepresentationOutput!
@@ -934,7 +934,7 @@ type RootDto {
 	name: String!
 }
 
-input SessionCommandInput @oneOf {
+input SessionInput @oneOf {
 	createSession: ConfirmOnlyInput
 	endSession: ConfirmOnlyInput
 	createDraft: CreateDraftInput
@@ -948,7 +948,7 @@ type SessionDto {
 
 input SessionInput {
 	sessionId: String
-	commands: [SessionCommandInput!]!
+	commands: [SessionInput!]!
 }
 
 type SideMetadataDto {
@@ -1000,9 +1000,9 @@ type TagShallowDto {
 	order: Int
 }
 
-input TransactionCommandInput @oneOf {
-	changeKitCommands: ChangeKitCommandsInput
-	changeKitWithInverse: ChangeKitCommandsInput
+input TransactionInput @oneOf {
+	changeKits: ChangeKitsInput
+	changeKitWithInverse: ChangeKitsInput
 	design: DesignInput
 	finalizeTransaction: ConfirmOnlyInput
 	abortTransaction: ConfirmOnlyInput
@@ -1012,7 +1012,7 @@ input TransactionCommandInput @oneOf {
 
 input TransactionInput {
 	transactionId: String
-	commands: [TransactionCommandInput!]!
+	commands: [TransactionInput!]!
 }
 
 type TypeOutput {
@@ -1052,11 +1052,6 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 directive @oneOf on INPUT_OBJECT
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
-scalar ID
-scalar TypeId
-scalar DesignId
-scalar KitId
-
 input VectorInput {
 	x: Float!
 	y: Float!
@@ -1069,124 +1064,114 @@ type Vector {
 	z: Float!
 }
 
-type TypeStore {
-	id: String!
+type Type {
+	id: ID!
 	name: String!
 	description: String
-	container: KitStore!
+	container: Kit!
 	connectors: [Connector!]!
 	representations: [Representation!]!
-	bestRepresentation(tagIds: [String!]!): Representation
+	bestRepresentation(tagIds: [ID!]!): Representation
 }
 
 
-type KitChange {
-	forwards: [KitOperation!]!
-	backwards: [KitOperation!]!
+
+type Change {
+	forwards: [Operation!]!
+	backwards: [Operation!]!
 }
 
-type KitStore{
+type Transaction {
 	id: ID!
-	container: KitGraph
-	checkpoint: Checkpoint!
-	draft: KitDraft
-	transaction: KitTransaction
+}
+
+type Kit{
+	id: ID!
+	hash: String
+	container: Graph
+	checkpoint: Checkpoint
+	draft: Draft
+	transaction: Transaction
 	name: String!
 	description: String
 	...
-	design(id:DesignId): DesignStore
-	designs: [DesignStore!]!
-	type(id: TypeId!): TypeStore
-	types: [TypeStore!]!
+	design(id: ID!): Design
+	designs: [Design!]!
+	type(id: ID!): Type
+	types: [Type!]!
 	...
 }
 
-type KitAlternative {
+type Checkpoint {
+	id: ID
+	hash: String
+	timestamp: Timestamp
+	authors: [Author!]!
+	parentCheckpoint: Checkpoint
+	parent: Kit
+	message: String
+}
+
+type Alternative {
 	id: ID!
-	container: KitGraph
+	hash: String
+	container: Graph
 	name: String!
 	start: Checkpoint!
 	checkpoints: [Checkpoint!]!
-	store: KitStore!
-	draft: KitDraft
-	transaction: KitTransaction
+	store: Kit!
+	draft: Draft
+	transaction: Transaction
 }
 
-type KitGraph  {
+type Graph  {
 	id:ID!
-	container: KitSession
-	theKit: KitStore
-	alternative(id: KitAlternativeIdDto!): KitAlternative
-	alternatives: [KitAlternative!]!
-	checkpoint(id:KitCheckpointIdDto!): KitCheckpoint
-	checkpoints: [KitCheckpoint!]!
+	hash: String
+	container: Session
+	theKit: Kit
+	alternative(id: ID!): Alternative
+	alternatives: [Alternative!]!
+	checkpoint(id:ID!): Checkpoint
+	checkpoints: [Checkpoint!]!
+	release(id: ID!): Checkpoint
+	releases: [Checkpoint!]!
 }
 
-type KitSession {
+type Session {
 	id: ID!
-	wip: KitGraph!
-	authorative: KitGraph
-	conflicts: [KitConflict!]!
+	startedAt: Timestamp
 }
 
 type Query {
-	session(): KitSession!
-}
-
-input RenameKitCommandRequest {
-	name: String
-}
-
-input ChangeKitDescriptionCommandRequest {
-	description: String
-}
-
-input ChangeKitCommandRequest @oneOf {
-	rename: RenameKitCommandRequest
-	changeDescription: ChangeKitDescriptionCommandRequest
-}
-
-input TransactionKitCommandRequest {
-	draftId: KitDraftId
-	transactionId: KitTransactionId
-	command:ChangeKitCommandRequest
-}
-
-
-input KitGraphCommandRequest @oneOf {
-	change: TransactionKitCommandRequest
-	vc: VersionControlCommandRequest
+	session: Session!
+	wip: Graph!
+	authorative: Graph
+	conflicts: [Conflict!]!
 }
 
 type Mutation {
-	execute(request: KitGraphCommandRequest!): ID!
+	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
+	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
+	createFixedPiece(pose: PoseInput!, name: String, description: String): ID!
 }
 
-interface KitEvent {
+interface Event {
   id: ID!
   timestamp: Timestamp!
 }
 
-interface KitGraphCommandResponse implements KitEvent {
+interface Response implements Event {
 	id: ID!
 	timestamp: Timestamp!
 	requestId: ID!
+	errors: 
 }
 
-interface KitChangeEvent implements KitEvent {
-  	change: KitChange
+interface ChangedKit implements KitEvent {
+  	change: Change
 }
 
-# The leaf/child nodes
-type UserCreatedEvent implements KitGraphCommandResponse {
-  eventId: ID!
-  timestamp: String!
-  eventType: String!
-  userId: ID!
-  email: String!
-}
-
-type UserDeletedEvent implements UserEvent & BaseEvent {
+type RenamedKit implements UserEvent & BaseEvent {
   eventId: ID!
   timestamp: String!
   eventType: String!

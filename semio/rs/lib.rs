@@ -10672,11 +10672,8 @@ pub mod design {
             if let Some(v) = &d.description {
                 dto.description = v.clone();
             }
-            if let Some(v) = &d.plane {
-                dto.plane = *v;
-            }
-            if let Some(v) = &d.center {
-                dto.center = *v;
+            if let Some(v) = &d.pose {
+                dto.pose = v.clone();
             }
             if let Some(v) = &d.scale {
                 dto.scale = *v;
@@ -12354,8 +12351,7 @@ pub mod diff {
     pub struct PieceDiff {
         pub name: Option<Option<String>>,
         pub description: Option<Option<String>>,
-        pub plane: Option<Option<Plane>>,
-        pub center: Option<Option<Coordinate>>,
+        pub pose: Option<Option<crate::piece::PoseDto>>,
         pub scale: Option<Option<f64>>,
         #[serde(rename = "mirrorPlane", default)]
         pub mirror_plane: Option<Option<Plane>>,
@@ -12375,8 +12371,7 @@ pub mod diff {
         pub fn is_empty(&self) -> bool {
             self.name.is_none()
                 && self.description.is_none()
-                && self.plane.is_none()
-                && self.center.is_none()
+                && self.pose.is_none()
                 && self.scale.is_none()
                 && self.mirror_plane.is_none()
                 && self.hidden.is_none()
@@ -12391,8 +12386,7 @@ pub mod diff {
             Self {
                 name: merge_opt_nested(&self.name, &b.name, |_, y| y.clone()),
                 description: merge_opt_nested(&self.description, &b.description, |_, y| y.clone()),
-                plane: merge_opt_nested(&self.plane, &b.plane, |_, y| y.clone()),
-                center: merge_opt_nested(&self.center, &b.center, |_, y| y.clone()),
+                pose: merge_opt_nested(&self.pose, &b.pose, |_, y| y.clone()),
                 scale: merge_opt_nested(&self.scale, &b.scale, |_, y| y.clone()),
                 mirror_plane: merge_opt_nested(&self.mirror_plane, &b.mirror_plane, |_, y| y.clone()),
                 hidden: merge_opt_nested(&self.hidden, &b.hidden, |_, y| y.clone()),
@@ -13366,11 +13360,8 @@ pub mod diff {
             if let Some(v) = &d.description {
                 dto.description = v.clone();
             }
-            if let Some(v) = &d.plane {
-                dto.plane = *v;
-            }
-            if let Some(v) = &d.center {
-                dto.center = *v;
+            if let Some(v) = &d.pose {
+                dto.pose = v.clone();
             }
             if let Some(v) = &d.scale {
                 dto.scale = *v;
@@ -13488,11 +13479,8 @@ pub mod diff {
         if b.description != a.description {
             d.description = Some(a.description.clone());
         }
-        if b.plane != a.plane {
-            d.plane = Some(a.plane);
-        }
-        if b.center != a.center {
-            d.center = Some(a.center);
+        if b.pose != a.pose {
+            d.pose = Some(a.pose.clone());
         }
         if b.scale != a.scale {
             d.scale = Some(a.scale);
@@ -19071,11 +19059,10 @@ pub mod kit_graph {
             if let Some(v) = &d.description {
                 out.push(ChangePieceCommand::Description { description: v.clone() });
             }
-            if let Some(v) = &d.plane {
-                out.push(ChangePieceCommand::Plane { plane: v.clone() });
-            }
-            if let Some(v) = &d.center {
-                out.push(ChangePieceCommand::Center { center: v.clone() });
+            if let Some(v) = &d.pose {
+                let (plane, center) = v.as_ref().map(|p| (p.plane, p.center)).unwrap_or((None, None));
+                out.push(ChangePieceCommand::Plane { plane });
+                out.push(ChangePieceCommand::Center { center });
             }
             if let Some(v) = &d.scale {
                 out.push(ChangePieceCommand::Scale { scale: v.clone() });
@@ -21799,8 +21786,7 @@ pub mod piece {
         pub parent_design: DesignStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
-        flat_plane: Cache<Plane>,
-        flat_center: Cache<Coordinate>,
+        flat_pose: Cache<PoseFullDto>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
@@ -21812,6 +21798,16 @@ pub mod piece {
     pub struct PoseFullDto {
         pub plane: Plane,
         pub center: Coordinate,
+    }
+
+    /// 📐Optional pose with independently-optional plane and center for piece storage.
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PoseDto {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub plane: Option<Plane>,
+        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
+        pub center: Option<Coordinate>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -21845,9 +21841,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
-        pub center: Option<Coordinate>,
+        pub pose: Option<PoseDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -21873,9 +21867,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
-        pub center: Option<Coordinate>,
+        pub pose: Option<PoseDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -21905,9 +21897,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
-        pub center: Option<Coordinate>,
+        pub pose: Option<PoseDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -21949,8 +21939,7 @@ pub mod piece {
                 parent_design: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
-                flat_plane: Cache::default(),
-                flat_center: Cache::default(),
+                flat_pose: Cache::default(),
             }
         }
 
@@ -21973,8 +21962,7 @@ pub mod piece {
                 parent_design: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
-                flat_plane: Cache::default(),
-                flat_center: Cache::default(),
+                flat_pose: Cache::default(),
             }
         }
 
@@ -22011,16 +21999,15 @@ pub mod piece {
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
-            self.pose.plane = d.plane;
-            self.pose.center = d.center;
+            self.pose.plane = d.pose.as_ref().and_then(|p| p.plane);
+            self.pose.center = d.pose.as_ref().and_then(|p| p.center);
             self.scale = d.scale;
             self.mirror_plane = d.mirror_plane;
             self.hidden = d.hidden;
             self.locked = d.locked;
             self.color = d.color;
             self.hash_cache.invalidate();
-            self.flat_plane.invalidate();
-            self.flat_center.invalidate();
+            self.flat_pose.invalidate();
         }
 
         pub(crate) fn apply_full_dto(&mut self, d: PieceFullDto, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
@@ -22028,8 +22015,7 @@ pub mod piece {
                 id: d.id,
                 name: d.name,
                 description: d.description,
-                plane: d.plane,
-                center: d.center,
+                pose: d.pose.clone(),
                 scale: d.scale,
                 mirror_plane: d.mirror_plane,
                 hidden: d.hidden,
@@ -22052,8 +22038,7 @@ pub mod piece {
         }
 
         pub fn invalidate_flat_pose(&self) {
-            self.flat_plane.invalidate();
-            self.flat_center.invalidate();
+            self.flat_pose.invalidate();
         }
 
         pub(crate) fn set_flatten_parent_refs(&mut self, parent_piece: Option<PieceStoreWeak>, parent_connection: Option<ConnectionStoreWeak>) {
@@ -22267,12 +22252,19 @@ pub mod piece {
             Ok(())
         }
 
+        pub fn flat_pose(&self) -> PoseFullDto {
+            self.flat_pose.get_or_init(|| PoseFullDto {
+                plane: self.pose.plane.or_else(|| self.computed_flat_plane()).unwrap_or_else(Plane::world_xy),
+                center: self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default(),
+            })
+        }
+
         pub fn flat_plane(&self) -> Plane {
-            self.flat_plane.get_or_init(|| self.pose.plane.or_else(|| self.computed_flat_plane()).unwrap_or_else(Plane::world_xy))
+            self.flat_pose().plane
         }
 
         pub fn flat_center(&self) -> Coordinate {
-            self.flat_center.get_or_init(|| self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default())
+            self.flat_pose().center
         }
 
         pub fn pose_full_dto(&self) -> PoseFullDto {
@@ -22280,7 +22272,7 @@ pub mod piece {
         }
 
         pub fn flat_pose_full_dto(&self) -> PoseFullDto {
-            PoseFullDto { plane: self.flat_plane(), center: self.flat_center() }
+            self.flat_pose()
         }
 
         pub fn path(&self) -> Vec<PieceIdDto> {
@@ -22442,7 +22434,7 @@ pub mod piece {
         }
 
         fn invalidate_flat_centers_below(&self) {
-            self.flat_center.invalidate();
+            self.flat_pose.invalidate();
             let Some(design) = self.parent_design.upgrade() else {
                 return;
             };
@@ -22466,7 +22458,7 @@ pub mod piece {
                         continue;
                     };
                     if let Ok(child) = child_ref.read() {
-                        child.flat_center.invalidate();
+                        child.flat_pose.invalidate();
                         queue.push_back(child.id.clone());
                     };
                 }
@@ -22474,7 +22466,7 @@ pub mod piece {
         }
 
         fn invalidate_flat_planes_below(&self) {
-            self.flat_plane.invalidate();
+            self.flat_pose.invalidate();
             let Some(design) = self.parent_design.upgrade() else {
                 return;
             };
@@ -22498,7 +22490,7 @@ pub mod piece {
                         continue;
                     };
                     if let Ok(child) = child_ref.read() {
-                        child.flat_plane.invalidate();
+                        child.flat_pose.invalidate();
                         queue.push_back(child.id.clone());
                     };
                 }
@@ -22636,12 +22628,16 @@ pub mod piece {
         pub fn to_metadata_dto(&self) -> PieceMetadataDto {
             let r#type = self.type_ref.as_ref().and_then(|t| t.upgrade()).and_then(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() }));
             let design = self.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| crate::design::DesignIdDto { id: d.id.clone() }));
+            let pose = if self.pose.plane.is_some() || self.pose.center.is_some() {
+                Some(PoseDto { plane: self.pose.plane, center: self.pose.center })
+            } else {
+                None
+            };
             PieceMetadataDto {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
-                plane: self.pose.plane,
-                center: self.pose.center,
+                pose,
                 scale: self.scale,
                 mirror_plane: self.mirror_plane,
                 hidden: self.hidden,
@@ -22658,8 +22654,7 @@ pub mod piece {
                 id: m.id,
                 name: m.name,
                 description: m.description,
-                plane: m.plane,
-                center: m.center,
+                pose: m.pose,
                 scale: m.scale,
                 mirror_plane: m.mirror_plane,
                 hidden: m.hidden,
@@ -22678,8 +22673,7 @@ pub mod piece {
                 id: m.id,
                 name: m.name,
                 description: m.description,
-                plane: m.plane,
-                center: m.center,
+                pose: m.pose,
                 scale: m.scale,
                 mirror_plane: m.mirror_plane,
                 hidden: m.hidden,
@@ -27062,7 +27056,7 @@ pub mod kit_graphql {
     use crate::geom::{Coordinate, Plane};
     use crate::id::Id;
     use crate::kit_alternative::{KitAlternativeCommand, KitAlternativeCommandResult};
-    use crate::kit_checkpoint::{KitCheckpointCommand, KitCheckpointCommandResult};
+    use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
     use crate::kit_read_scope::KitReadScope;
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult, TransactionState};
@@ -27538,7 +27532,10 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug)]
     enum KitStoreMount {
+        /// Main line materialized at `the_kit_head` (must exist in `checkpoints` when non-empty graph history applies).
         MainLine { checkpoint_id: Id },
+        /// Main line before any checkpoint exists: same materialization as `materialize_graph_at(None)`, with `checkpoint` exposing the root snapshot id until the first real head is set.
+        InitialMainLine { root_snapshot_id: Id },
         Alternative { alternative_id: Id },
         Draft { alternative_id: Option<Id>, draft_id: Id },
         Transaction { alternative_id: Option<Id>, draft_id: Id, transaction_id: Id },
@@ -27552,13 +27549,18 @@ pub mod kit_graphql {
     }
 
     impl KitStoreGraphql {
-        fn main_line_at_head(layout: &KitGraphRef) -> Result<Option<Self>> {
-            let head = { let g = lock_graph(layout)?; g.the_kit_head.clone() };
-            let Some(ref hid) = head else {
-                return Ok(None);
-            };
-            let view = { let g = lock_graph(layout)?; g.materialize_graph_at(Some(hid)) };
-            Ok(Some(Self { view, layout: layout.clone(), mount: KitStoreMount::MainLine { checkpoint_id: hid.clone() } }))
+        fn main_line_at_head(layout: &KitGraphRef) -> Result<Self> {
+            let g = lock_graph(layout)?;
+            let head = g.the_kit_head.clone();
+            let view = g.materialize_graph_at(head.as_ref());
+            match head {
+                Some(hid) => Ok(Self { view, layout: layout.clone(), mount: KitStoreMount::MainLine { checkpoint_id: hid } }),
+                None => Ok(Self {
+                    view,
+                    layout: layout.clone(),
+                    mount: KitStoreMount::InitialMainLine { root_snapshot_id: g.initial.id.clone() },
+                }),
+            }
         }
 
         fn from_checkpoint(layout: &KitGraphRef, checkpoint_id: Id) -> Result<Self> {
@@ -27603,6 +27605,7 @@ pub mod kit_graphql {
         fn base_checkpoint_id(&self) -> Result<Id> {
             match &self.mount {
                 KitStoreMount::MainLine { checkpoint_id } => Ok(checkpoint_id.clone()),
+                KitStoreMount::InitialMainLine { root_snapshot_id } => Ok(root_snapshot_id.clone()),
                 KitStoreMount::Alternative { alternative_id } => {
                     let g = lock_graph(&self.layout)?;
                     let tip = g.alternative_tip(alternative_id);
@@ -28138,7 +28141,7 @@ pub mod kit_graphql {
         }
 
         async fn the_kit(&self) -> Result<Option<KitStoreGraphql>> {
-            KitStoreGraphql::main_line_at_head(&self.layout)
+            Ok(Some(KitStoreGraphql::main_line_at_head(&self.layout)?))
         }
 
         async fn alternatives(&self) -> Result<Vec<KitAlternativeGraphql>> {
@@ -28230,6 +28233,17 @@ pub mod kit_graphql {
         }
     }
 
+    /// Resolves a persisted checkpoint row, or `Ok(None)` for the virtual root checkpoint used when `the_kit_head` is unset (initial kit line).
+    fn graphql_checkpoint_row<'a>(g: &'a KitGraph, checkpoint_id: &Id) -> Result<Option<&'a KitCheckpoint>> {
+        if let Some(c) = g.checkpoints.get(checkpoint_id) {
+            return Ok(Some(c));
+        }
+        if checkpoint_id == &g.initial.id && g.the_kit_head.is_none() {
+            return Ok(None);
+        }
+        Err(Error::new("checkpoint missing"))
+    }
+
     #[Object(name = "KitCheckpoint")]
     impl KitCheckpointGraphql {
         async fn id(&self) -> Result<String> {
@@ -28246,22 +28260,34 @@ pub mod kit_graphql {
 
         async fn parent(&self) -> Result<Option<KitCheckpointGraphql>> {
             let g = lock_graph(&self.layout)?;
-            let c = g.checkpoints.get(&self.checkpoint_id).ok_or_else(|| Error::new("checkpoint missing"))?;
-            Ok(c.parent.as_ref().map(|pid| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: pid.clone() }))
+            match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => Ok(c.parent.as_ref().map(|pid| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: pid.clone() })),
+                None => Ok(None),
+            }
         }
 
         async fn message(&self) -> Result<Option<String>> {
-            Ok(lock_graph(&self.layout)?.checkpoints.get(&self.checkpoint_id).and_then(|c| c.message.clone()))
+            let g = lock_graph(&self.layout)?;
+            Ok(match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => c.message.clone(),
+                None => None,
+            })
         }
 
         async fn time(&self) -> Result<Option<String>> {
-            Ok(lock_graph(&self.layout)?.checkpoints.get(&self.checkpoint_id).and_then(|c| c.time.clone()))
+            let g = lock_graph(&self.layout)?;
+            Ok(match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => c.time.clone(),
+                None => None,
+            })
         }
 
         async fn authors(&self) -> Result<Vec<String>> {
             let g = lock_graph(&self.layout)?;
-            let c = g.checkpoints.get(&self.checkpoint_id).ok_or_else(|| Error::new("checkpoint missing"))?;
-            Ok(c.authors.iter().map(|a| a.to_string()).collect())
+            Ok(match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => c.authors.iter().map(|a| a.to_string()).collect(),
+                None => Vec::new(),
+            })
         }
 
         async fn hash(&self) -> Result<String> {
@@ -28269,13 +28295,19 @@ pub mod kit_graphql {
         }
 
         async fn is_release(&self) -> Result<bool> {
-            Ok(lock_graph(&self.layout)?.checkpoints.get(&self.checkpoint_id).map(|c| c.release.is_some()).unwrap_or(false))
+            let g = lock_graph(&self.layout)?;
+            Ok(match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => c.release.is_some(),
+                None => false,
+            })
         }
 
         async fn change_count(&self) -> Result<i32> {
             let g = lock_graph(&self.layout)?;
-            let c = g.checkpoints.get(&self.checkpoint_id).ok_or_else(|| Error::new("checkpoint missing"))?;
-            Ok(c.changes.len() as i32)
+            Ok(match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
+                Some(c) => c.changes.len() as i32,
+                None => 0,
+            })
         }
     }
 
@@ -28595,6 +28627,11 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.view)?.to_full_dto())
         }
 
+        /// 🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFullDto` subfield.
+        async fn full_snapshot(&self) -> Result<GqlKitFullSnapshot> {
+            Ok(GqlKitFullSnapshot(lock_graph(&self.view)?.to_full_dto()))
+        }
+
         async fn metadata(&self) -> Result<crate::kit_graph::KitMetadataDto> {
             Ok(lock_graph(&self.view)?.to_metadata_dto())
         }
@@ -28698,7 +28735,7 @@ pub mod kit_graphql {
                 .parent_kit
                 .upgrade()
                 .ok_or_else(|| Error::new("kit container missing for design"))?;
-            KitStoreGraphql::main_line_at_head(&g)?.ok_or_else(|| Error::new("the kit has no head"))
+            KitStoreGraphql::main_line_at_head(&g)
         }
 
         async fn metadata(&self) -> Result<crate::design::DesignMetadataDto> {
@@ -28880,7 +28917,7 @@ pub mod kit_graphql {
         async fn container(&self) -> Result<KitStoreGraphql> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             let g = t.parent_kit.upgrade().ok_or_else(|| Error::new("kit container missing for type"))?;
-            KitStoreGraphql::main_line_at_head(&g)?.ok_or_else(|| Error::new("the kit has no head"))
+            KitStoreGraphql::main_line_at_head(&g)
         }
 
         async fn metadata(&self) -> Result<crate::typ::TypeMetadataDto> {
@@ -30055,9 +30092,9 @@ mod tests {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceFullDto { id: root_id.clone(), plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                         PieceFullDto { id: middle_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
-                        PieceFullDto { id: leaf_id.clone(), plane: leaf_plane, r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: leaf_id.clone(), pose: leaf_plane.map(|p| PoseDto { plane: Some(p), center: None }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                     ],
                     connections: vec![
                         ConnectionFullDto {

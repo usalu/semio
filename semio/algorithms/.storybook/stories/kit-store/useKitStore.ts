@@ -65,7 +65,7 @@ export function useKitStore(seedKit: unknown) {
     `{\n  "name": { "name": "Kit (story edit)" }\n}`,
   );
   const [readJson, setReadJson] = React.useState(
-    `{\n  "query": "query { kitStore { name } }"\n}`,
+    `{\n  "query": "query { session { wip { theKit { name } } } }"\n}`,
   );
   const [executeJson, setExecuteJson] = React.useState(`{ "newSession": null }`);
 
