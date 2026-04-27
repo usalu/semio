@@ -6579,10 +6579,11 @@ pub mod kit_read_scope {
     use crate::kit_graph::KitGraphRef;
     use serde::{Deserialize, Serialize};
 
-    /// 🧭 Names exactly one of: the committed mainline, a checkpoint, an alternative tip, a draft, or the open transaction within a draft.
+    /// 🧭 Names exactly one of: the live kit authority (`theKit`), a checkpoint, an alternative tip, a draft, or the open transaction within a draft.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitReadScope {
+        /// Live coordinator graph (sessions, drafts, WIP); same handle source as the former unscoped `Query.kitStore`.
         TheKit,
         Checkpoint {
             #[serde(rename = "checkpointId")]
@@ -26903,27 +26904,10 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchCommandInput {
-        Live(LiveBatchInput),
         Session(SessionBatchInput),
         Checkpoint(CheckpointBatchInput),
         Alternative(AlternativeBatchInput),
         Backbone(BackboneBatchInput),
-    }
-
-    #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
-    struct LiveBatchInput {
-        commands: Vec<LiveBatchCommandInput>,
-    }
-
-    #[derive(Clone, Debug, OneofObject, serde::Serialize, serde::Deserialize)]
-    enum LiveBatchCommandInput {
-        ChangeKitCommands(ChangeKitCommandsBatchInput),
-        Design(DesignBatchInput),
-        ChangeKitWithInverse(ChangeKitCommandsBatchInput),
-        /// 🧾 WIP graph undo stack only (not draft/transaction scoped).
-        Undo(ConfirmOnlyInput),
-        /// 🧾 WIP graph redo stack only (not draft/transaction scoped).
-        Redo(ConfirmOnlyInput),
     }
 
     #[derive(Clone, Debug, InputObject, serde::Serialize, serde::Deserialize)]
@@ -27203,8 +27187,6 @@ pub mod kit_graphql {
         CreateHangingPieces,
         CreateConnectedPiece,
         CreateFixedPiece,
-        Undo,
-        Redo,
         NewSession,
         EndSession,
         NewDraft,
@@ -27327,13 +27309,8 @@ pub mod kit_graphql {
 
     #[Object(name = "Query")]
     impl RootQuery {
-        /// Live kit graph root (strong handles: nested fields return the same in-memory `Arc` stores).
-        async fn kit_store(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
-            Ok(KitStoreNode(ctx.data::<KitGraphRef>()?.clone()))
-        }
-
-        /// Materialized kit view for **scoped** reads (the kit, checkpoint, alternative, draft, or open transaction), matching [`KitReadScope`].
-        async fn kit_read_scope(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
+        /// 🌐 **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
+        async fn kit(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
             let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let rs = kit_read_scope_from_gql(scope)?;
             let view = crate::kit_read_scope::resolve_read_graph(&g, &rs).map_err(|e| Error::new(e.to_string()))?;
@@ -27432,7 +27409,6 @@ pub mod kit_graphql {
         let mut results = Vec::new();
         for command in input.commands {
             match command {
-                KitStoreBatchCommandInput::Live(batch) => execute_live_batch(shell, batch, &mut results).await?,
                 KitStoreBatchCommandInput::Session(batch) => execute_session_batch(shell, batch, &mut results).await?,
                 KitStoreBatchCommandInput::Checkpoint(batch) => execute_checkpoint_batch(shell, batch, &mut results).await?,
                 KitStoreBatchCommandInput::Alternative(batch) => execute_alternative_batch(shell, batch, &mut results).await?,
@@ -27508,89 +27484,6 @@ pub mod kit_graphql {
             x_axis: crate::geom::Vector { x: input.x_axis.x, y: input.x_axis.y, z: input.x_axis.z },
             y_axis: crate::geom::Vector { x: input.y_axis.x, y: input.y_axis.y, z: input.y_axis.z },
         }
-    }
-
-    async fn execute_live_batch(shell: &KitShellCtx, batch: LiveBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
-        for command in batch.commands {
-            match command {
-                LiveBatchCommandInput::ChangeKitCommands(change) => {
-                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
-                    let count = commands.len() as i32;
-                    shell.run_graph_change(commands).await?;
-                    results.push(KitStoreBatchResult {
-                        kind: KitStoreBatchResultKind::ChangeKitCommands,
-                        ok: Some(true),
-                        count: Some(count),
-                        session_id: None,
-                        draft_id: None,
-                        transaction_id: None,
-                        checkpoint_id: None,
-                        alternative_id: None,
-                        backbone: None,
-                        conflicts: None,
-                        change_kind: None,
-                        inverse: None,
-                    });
-                }
-                LiveBatchCommandInput::ChangeKitWithInverse(change) => {
-                    let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
-                    let (k, inv) = shell.run_change_kit_with_inverse(commands).await?;
-                    let inv_gql: Vec<GqlChangeKitCommand> = inv.into_iter().map(GqlChangeKitCommand).collect();
-                    results.push(KitStoreBatchResult {
-                        kind: KitStoreBatchResultKind::ChangeKitWithInverse,
-                        ok: Some(true),
-                        count: None,
-                        session_id: None,
-                        draft_id: None,
-                        transaction_id: None,
-                        checkpoint_id: None,
-                        alternative_id: None,
-                        backbone: None,
-                        conflicts: None,
-                        change_kind: Some(kit_change_kind_gql(&k)),
-                        inverse: Some(inv_gql),
-                    });
-                }
-                LiveBatchCommandInput::Design(design) => execute_design_batch(shell, design, results).await?,
-                LiveBatchCommandInput::Undo(_) => {
-                    let graph = shell.graph.clone();
-                    shell.run_custom_set_result(Box::new(move || KitGraph::undo(&graph))).await?;
-                    results.push(KitStoreBatchResult {
-                        kind: KitStoreBatchResultKind::Undo,
-                        ok: Some(true),
-                        count: None,
-                        session_id: None,
-                        draft_id: None,
-                        transaction_id: None,
-                        checkpoint_id: None,
-                        alternative_id: None,
-                        backbone: None,
-                        conflicts: None,
-                        change_kind: None,
-                        inverse: None,
-                    });
-                }
-                LiveBatchCommandInput::Redo(_) => {
-                    let graph = shell.graph.clone();
-                    shell.run_custom_set_result(Box::new(move || KitGraph::redo(&graph))).await?;
-                    results.push(KitStoreBatchResult {
-                        kind: KitStoreBatchResultKind::Redo,
-                        ok: Some(true),
-                        count: None,
-                        session_id: None,
-                        draft_id: None,
-                        transaction_id: None,
-                        checkpoint_id: None,
-                        alternative_id: None,
-                        backbone: None,
-                        conflicts: None,
-                        change_kind: None,
-                        inverse: None,
-                    });
-                }
-            }
-        }
-        Ok(())
     }
 
     async fn execute_design_batch(shell: &KitShellCtx, batch: DesignBatchInput, results: &mut Vec<KitStoreBatchResult>) -> Result<()> {
@@ -28660,16 +28553,6 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.0)?.name.clone())
         }
 
-        /// 🌐 Same as the former WASM `canUndo` / `canRedo` helpers.
-        async fn can_undo(&self) -> Result<bool> {
-            Ok(KitGraph::can_undo(&self.0))
-        }
-
-        /// 🌐 Same as the former WASM `canUndo` / `canRedo` helpers.
-        async fn can_redo(&self) -> Result<bool> {
-            Ok(KitGraph::can_redo(&self.0))
-        }
-
         /// 🌐 Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
         async fn design_by_dto_id(&self, id: String) -> Result<Option<DesignNode>> {
             let g = lock_graph(&self.0)?;
@@ -28766,8 +28649,8 @@ pub mod kit_graphql {
                 .collect())
         }
 
-        /// Full kit DTO snapshot (materialized live graph).
-        async fn live_full_dto(&self) -> Result<GqlKitFullSnapshot> {
+        /// 🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
+        async fn full_dto(&self) -> Result<GqlKitFullSnapshot> {
             Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.to_full_dto()))
         }
 
@@ -29383,7 +29266,7 @@ mod tests {
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async move {
-                let body = r#"{"query":"query { kitStore { name } }"}"#;
+                let body = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
                 req = req
                     .data(kit)
@@ -29393,8 +29276,188 @@ mod tests {
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 serde_json::to_value(resp).expect("to json")
             });
-            let name = out.get("data").and_then(|d| d.get("kitStore")).and_then(|k| k.get("name")).and_then(|n| n.as_str());
+            let name = out.get("data").and_then(|d| d.get("kit")).and_then(|k| k.get("name")).and_then(|n| n.as_str());
             assert_eq!(name, Some("gql-name"));
+        }
+
+        #[test]
+        fn query_legacy_kit_store_root_is_absent() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("x")));
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let out = futures_lite::future::block_on(async move {
+                let body = r#"{"query":"query { kitStore { name } }"}"#;
+                let mut req = kit_graphql::request_from_json(body).expect("json");
+                req = req
+                    .data(kit)
+                    .data(tx)
+                    .data(kit_graphql::GraphQlVcsOverride::default());
+                serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
+            });
+            assert!(out.get("data").and_then(|d| d.get("kitStore")).is_none(), "unscoped kitStore must not exist: {out:?}");
+            assert!(out.get("errors").is_some(), "expected GraphQL errors for removed kitStore field: {out:?}");
+        }
+
+        #[test]
+        fn kit_batch_live_variant_removed() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("live-off")));
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let out = futures_lite::future::block_on(async {
+                let body = serde_json::json!({
+                    "query": "mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind } } } }",
+                    "variables": { "input": { "commands": [{ "live": { "commands": [{ "undo": { "confirm": true } }] } }] } }
+                });
+                let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
+            });
+            assert!(out.get("errors").is_some() || out.pointer("/data/kitStore/batch").is_none(), "live batch must be rejected: {out:?}");
+        }
+
+        #[test]
+        fn scoped_kit_reads_resolve_for_draft_and_transaction_after_batch() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("scoped-read")));
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let out = futures_lite::future::block_on(async {
+                let body = serde_json::json!({
+                    "query": "mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind sessionId draftId transactionId } } } }",
+                    "variables": {
+                        "input": {
+                            "commands": [{
+                                "session": {
+                                    "commands": [
+                                        { "createSession": { "confirm": true } },
+                                        { "createDraft": {} },
+                                        { "draft": { "commands": [
+                                            { "startTransaction": { "confirm": true } },
+                                            { "transaction": { "commands": [
+                                                { "changeKitCommands": { "commands": [{ "name": { "name": "in-tx" } }] } }
+                                            ]}}
+                                        ]}}
+                                    ]
+                                }
+                            }]
+                        }
+                    }
+                });
+                let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
+                req = req
+                    .data(kit.clone())
+                    .data(tx.clone())
+                    .data(kit_graphql::GraphQlVcsOverride::default());
+                serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
+            });
+            let rows = out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).expect("batch results");
+            let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str()));
+            let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str()));
+            let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str()));
+            let (sid, did, tid) = (sid.expect("sessionId"), did.expect("draftId"), tid.expect("transactionId"));
+
+            let draft_name = futures_lite::future::block_on(async {
+                let body = format!(
+                    r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"sessionId":"{}","draftId":"{}"}}}}}}}}"#,
+                    sid, did
+                );
+                let mut req = kit_graphql::request_from_json(&body).expect("json");
+                req = req
+                    .data(kit.clone())
+                    .data(tx.clone())
+                    .data(kit_graphql::GraphQlVcsOverride::default());
+                let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
+                v["data"]["kit"]["name"].as_str().unwrap().to_string()
+            });
+            assert_eq!(draft_name, "in-tx");
+
+            let tx_name = futures_lite::future::block_on(async {
+                let body = format!(
+                    r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"sessionId":"{}","draftId":"{}","transactionId":"{}"}}}}}}}}"#,
+                    sid, did, tid
+                );
+                let mut req = kit_graphql::request_from_json(&body).expect("json");
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
+                v["data"]["kit"]["name"].as_str().unwrap().to_string()
+            });
+            assert_eq!(tx_name, "in-tx");
+        }
+
+        #[test]
+        fn transaction_undo_redo_batch_rows_remain_without_live_undo() {
+            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("undo-rows")));
+            let (tx, rx) = async_channel::unbounded();
+            kit_graphql::spawn_actor(kit.clone(), rx);
+            let out = futures_lite::future::block_on(async {
+                let body = serde_json::json!({
+                    "query": "mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind sessionId draftId transactionId } } } }",
+                    "variables": {
+                        "input": {
+                            "commands": [{
+                                "session": {
+                                    "commands": [
+                                        { "createSession": { "confirm": true } },
+                                        { "createDraft": {} },
+                                        { "draft": { "commands": [
+                                            { "startTransaction": { "confirm": true } },
+                                            { "transaction": { "commands": [
+                                                { "changeKitCommands": { "commands": [{ "name": { "name": "row-a" } }] } }
+                                            ]}}
+                                        ]}}
+                                    ]
+                                }
+                            }]
+                        }
+                    }
+                });
+                let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
+                req = req
+                    .data(kit.clone())
+                    .data(tx.clone())
+                    .data(kit_graphql::GraphQlVcsOverride::default());
+                let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
+                let rows = v.pointer("/data/kitStore/batch/results").and_then(|x| x.as_array()).expect("results");
+                let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).expect("sid");
+                let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).expect("did");
+                let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).expect("tid");
+
+                let body2 = serde_json::json!({
+                    "query": "mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind } } } }",
+                    "variables": {
+                        "input": {
+                            "commands": [{
+                                "session": {
+                                    "sessionId": sid,
+                                    "commands": [{
+                                        "draft": {
+                                            "draftId": did,
+                                            "commands": [{
+                                                "transaction": {
+                                                    "transactionId": tid,
+                                                    "commands": [
+                                                        { "undoTransaction": { "count": 1 } },
+                                                        { "redoTransaction": { "count": 1 } }
+                                                    ]
+                                                }
+                                            }]
+                                        }
+                                    }]
+                                }
+                            }]
+                        }
+                    }
+                });
+                let mut req2 = kit_graphql::request_from_json(&serde_json::to_string(&body2).expect("body")).expect("json");
+                req2 = req2.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req2).await)).expect("to json")
+            });
+            let kinds: Vec<String> = out
+                .pointer("/data/kitStore/batch/results")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|row| row.get("kind").and_then(|k| k.as_str()).map(|s| s.to_ascii_uppercase())).collect())
+                .unwrap_or_default();
+            assert!(kinds.iter().any(|k| k == "UNDO_TRANSACTION"), "{kinds:?}");
+            assert!(kinds.iter().any(|k| k == "REDO_TRANSACTION"), "{kinds:?}");
         }
 
         #[test]
@@ -32678,18 +32741,18 @@ mod wasm_handle_tests {
     }
 
     #[wasm_bindgen_test(async)]
-    async fn kit_graphql_query_kit_store_name() {
+    async fn kit_graphql_query_scoped_kit_name() {
         crate::wasm::boot();
         let kit = KitGraph::new("wasm-gql-name");
         let dto = kit.to_full_dto();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
 
-        let req = r#"{"query":"query { kitStore { name } }"}"#;
+        let req = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
         let prom = h.execute(req);
         let raw = wasm_bindgen_futures::JsFuture::from(prom).await.expect("graphql execute future");
         let json = raw.as_string().expect("execute resolves with a JSON string (one complete response)");
         let v: serde_json::Value = serde_json::from_str(&json).expect("complete JSON response");
-        assert_eq!(v["data"]["kitStore"]["name"], "wasm-gql-name", "expected kitStore.name in response: {json}");
+        assert_eq!(v["data"]["kit"]["name"], "wasm-gql-name", "expected kit(scope).name in response: {json}");
     }
 }
 
