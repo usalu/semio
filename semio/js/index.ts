@@ -5299,8 +5299,8 @@ export class Design {
   get connections(): Connection[] | undefined {
     return this._connections;
   }
-  constructor(dto: DesignDto | Design) {
-    const dto: DesignDto = dto instanceof Design ? dto.toDto() : dto;
+  constructor(dtoIn: DesignDto | Design) {
+    const dto = dtoIn instanceof Design ? dtoIn.toDto() : dtoIn;
     const p = DesignSchema.parse(dto);
     const { connections: _wcon, pieces: _wp, ...rest } = p;
     Object.assign(this, rest);

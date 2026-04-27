@@ -19996,7 +19996,7 @@ pub mod kit_graph {
 
         pub fn from_full_dto(mut d: KitFullDto) -> KitGraphRef {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
-            let vcs_root = d.clone();
+            let root = d.clone();
             let KitFullDto {
                 id,
                 name,
@@ -20069,7 +20069,7 @@ pub mod kit_graph {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                initial: vcs_root,
+                initial: root,
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
@@ -25455,7 +25455,7 @@ pub mod io {
             Ok(())
         }
 
-        fn load_kit_vcs_into(conn: &SqlConnection, g: &mut KitGraph) -> Result<()> {
+        fn load_kit_into(conn: &SqlConnection, g: &mut KitGraph) -> Result<()> {
             let kit_id = g.id.clone();
             g.the_kit_head = conn
                 .query_row("SELECT head_checkpoint_id FROM kit_main_line WHERE kit_id = ?1", params![kit_id.as_str()], |row| {
@@ -26363,13 +26363,13 @@ pub mod io {
 
         fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFullDto, KitFullDto)> {
             let mut stmt = conn.prepare(
-                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
+                "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, initial_json
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
             let row = rows.next()?.expect("kit row must exist in sqlite persistence");
             let id = Id::from(row.get::<_, String>(0)?);
-            let vcs_initial: KitFullDto = serde_json::from_str(&row.get::<_, String>(12)?)?;
+            let initial: KitFullDto = serde_json::from_str(&row.get::<_, String>(12)?)?;
             Ok((
                 KitFullDto {
                     id: id.clone(),
@@ -26399,7 +26399,7 @@ pub mod io {
                     families: load_families(conn, &id)?,
                     locations: Vec::new(),
                 },
-                vcs_initial,
+                initial,
             ))
         }
 
@@ -26411,14 +26411,14 @@ pub mod io {
                 clear_schema(&tx)?;
 
                 let dto = self.to_full_dto();
-                let vcs_initial_json = serde_json::to_string(&self.initial)?;
+                let initial_json = serde_json::to_string(&self.initial)?;
                 tx.execute("INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))", params![SCHEMA_VERSION, SCHEMA_ENGINE])?;
                 tx.execute(
                     "INSERT INTO kit (
                         id, name, description, icon, image, preview,
-                        remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
+                        remote, homepage, license, uri, created_at, updated_at, initial_json
                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated, vcs_initial_json,],
+                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated, initial_json,],
                 )?;
 
                 for (ordinal, folder) in dto.folders.iter().enumerate() {
@@ -26471,12 +26471,12 @@ pub mod io {
             pub fn load_sqlite(path: &Path) -> Result<KitGraphRef> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
-                let (dto, vcs_initial) = load_kit_dto(&conn)?;
+                let (dto, initial) = load_kit_dto(&conn)?;
                 let kit = KitGraph::from_full_dto(dto);
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    g.initial = vcs_initial;
-                    load_kit_vcs_into(&conn, &mut g)?;
+                    g.initial = initial;
+                    load_kit_into(&conn, &mut g)?;
                 }
                 Ok(kit)
             }
@@ -27435,7 +27435,7 @@ pub mod kit_graphql {
     }
 
     impl KitShellCtx {
-        async fn run_vcs_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
+        async fn run_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 if let Some(ref store) = self.vcs.native {
@@ -27511,7 +27511,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 SessionCommandInput::CreateSession(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::NewSession).await?;
+                    let res = shell.run_command(KitStoreCommand::NewSession).await?;
                     let KitStoreCommandResult::NewSession { id } = res else {
                         return Err(Error::new("expected NewSession result"));
                     };
@@ -27521,7 +27521,7 @@ pub mod kit_graphql {
                 }
                 SessionCommandInput::EndSession(_) => {
                     let id = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
-                    let res = shell.run_vcs_command(KitStoreCommand::EndSession { id }).await?;
+                    let res = shell.run_command(KitStoreCommand::EndSession { id }).await?;
                     let KitStoreCommandResult::EndSession { ok } = res else {
                         return Err(Error::new("expected EndSession result"));
                     };
@@ -27530,7 +27530,7 @@ pub mod kit_graphql {
                 SessionCommandInput::CreateDraft(input) => {
                     let sid = session_id.clone().ok_or_else(|| Error::new("sessionId is required"))?;
                     let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: sid,
                             commands: vec![SessionCommand::NewDraft { checkpoint_id: input.parent_checkpoint_id.as_deref().map(Id::from), alternative_id: input.target_alternative_id.as_deref().map(Id::from) }],
                         })
@@ -27565,7 +27565,7 @@ pub mod kit_graphql {
                 DraftCommandInput::FinalizeDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::FinalizeToKitCheckpoint { message: input.message }] }],
                         })
@@ -27584,13 +27584,13 @@ pub mod kit_graphql {
                 }
                 DraftCommandInput::AbortDraft(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
-                    shell.run_vcs_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
+                    shell.run_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Abort] }] }).await?;
                     results.push(KitStoreResult { ok: Some(true), ..empty_kit_store_batch_result(KitStoreResultKind::AbortDraft) });
                 }
                 DraftCommandInput::UndoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Undo { count: input.count.unwrap_or(1) }] }],
                         })
@@ -27600,7 +27600,7 @@ pub mod kit_graphql {
                 DraftCommandInput::RedoDraft(input) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::Redo { count: input.count.unwrap_or(1) }] }],
                         })
@@ -27610,7 +27610,7 @@ pub mod kit_graphql {
                 DraftCommandInput::StartTransaction(_) => {
                     let did = draft_id.clone().ok_or_else(|| Error::new("draftId is required"))?;
                     let res = shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] })
+                        .run_command(KitStoreCommand::ExecuteSessionCommands { id: session_id.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did, commands: vec![crate::kit_draft::KitDraftCommand::StartTransaction] }] })
                         .await?;
                     let new_transaction_id = match res {
                         KitStoreCommandResult::ExecuteSessionCommands { results: inner } => match &inner[0] {
@@ -27643,7 +27643,7 @@ pub mod kit_graphql {
                     let commands: Vec<ChangeKitCommand> = change.commands.into_iter().map(|c| c.0).collect();
                     let count = commands.len() as i32;
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27663,7 +27663,7 @@ pub mod kit_graphql {
                     let inv_gql: Vec<GqlChangeKitCommand> = pre.inverse_flat.into_iter().map(GqlChangeKitCommand).collect();
                     let (ck, cko) = kit_change_semantic_fields(&k);
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27700,7 +27700,7 @@ pub mod kit_graphql {
                         let commands = design_batch_command_to_change_kit_commands(&design_id, sub)?;
                         let count = commands.len() as i32;
                         shell
-                            .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                            .run_command(KitStoreCommand::ExecuteSessionCommands {
                                 id: session_id.clone(),
                                 commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                     id: draft_id.clone(),
@@ -27713,7 +27713,7 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::FinalizeTransaction(_) => {
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27725,7 +27725,7 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::AbortTransaction(_) => {
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27737,7 +27737,7 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::UndoTransaction(_) => {
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27749,7 +27749,7 @@ pub mod kit_graphql {
                 }
                 TransactionCommandInput::RedoTransaction(_) => {
                     shell
-                        .run_vcs_command(KitStoreCommand::ExecuteSessionCommands {
+                        .run_command(KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
                             commands: vec![SessionCommand::ExecuteKitDraftCommands {
                                 id: draft_id.clone(),
@@ -27770,11 +27770,11 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 CheckpointCommandInput::MarkRelease(_) => {
-                    shell.run_vcs_command(KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
+                    shell.run_command(KitStoreCommand::ExecuteKitCheckpointCommands { id: Id::from(checkpoint_id.as_str()), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
                     results.push(KitStoreResult { ok: Some(true), checkpoint_id: Some(checkpoint_id.clone()), ..empty_kit_store_batch_result(KitStoreResultKind::MarkRelease) });
                 }
                 CheckpointCommandInput::SetActive(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
+                    let res = shell.run_command(KitStoreCommand::SetActiveCheckpoint { id: Some(Id::from(checkpoint_id.as_str())) }).await?;
                     let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else {
                         return Err(Error::new("expected SetActiveCheckpoint result"));
                     };
@@ -27790,7 +27790,7 @@ pub mod kit_graphql {
         for command in batch.commands {
             match command {
                 AlternativeCommandInput::CreateAlternative(input) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
+                    let res = shell.run_command(KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
                     let KitStoreCommandResult::NewAlternative { id } = res else {
                         return Err(Error::new("expected NewAlternative result"));
                     };
@@ -27800,7 +27800,7 @@ pub mod kit_graphql {
                 }
                 AlternativeCommandInput::UnifyAlternative(input) => {
                     let aid = alternative_id.clone().ok_or_else(|| Error::new("alternativeId is required"))?;
-                    shell.run_vcs_command(KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
+                    shell.run_command(KitStoreCommand::ExecuteKitAlternativeCommands { id: aid, commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: input.message }] }).await?;
                     results.push(KitStoreResult { ok: Some(true), alternative_id: alternative_id.clone().map(|id| id.to_string()), ..empty_kit_store_batch_result(KitStoreResultKind::UnifyAlternative) });
                 }
             }
@@ -27818,21 +27818,21 @@ pub mod kit_graphql {
                         BackboneConfigInput::Local(v) => crate::kit_backbone_wire::BackboneConfig::Local { folder: v.folder },
                         BackboneConfigInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
                     };
-                    let res = shell.run_vcs_command(KitStoreCommand::AttachBackbone { config }).await?;
+                    let res = shell.run_command(KitStoreCommand::AttachBackbone { config }).await?;
                     let KitStoreCommandResult::AttachBackbone { ok } = res else {
                         return Err(Error::new("expected AttachBackbone result"));
                     };
                     results.push(KitStoreResult { ok: Some(ok), ..empty_kit_store_batch_result(KitStoreResultKind::AttachBackbone) });
                 }
                 BackboneCommandInput::DetachBackbone(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::DetachBackbone).await?;
+                    let res = shell.run_command(KitStoreCommand::DetachBackbone).await?;
                     let KitStoreCommandResult::DetachBackbone { ok } = res else {
                         return Err(Error::new("expected DetachBackbone result"));
                     };
                     results.push(KitStoreResult { ok: Some(ok), ..empty_kit_store_batch_result(KitStoreResultKind::DetachBackbone) });
                 }
                 BackboneCommandInput::ListConflicts(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::ListConflicts).await?;
+                    let res = shell.run_command(KitStoreCommand::ListConflicts).await?;
                     let KitStoreCommandResult::ListConflicts { items } = res else {
                         return Err(Error::new("expected ListConflicts result"));
                     };
@@ -27844,14 +27844,14 @@ pub mod kit_graphql {
                         ConflictResolutionInput::DropWip => crate::kit_backbone_wire::ConflictResolution::DropWip,
                         ConflictResolutionInput::ForceOverwriteBackbone => crate::kit_backbone_wire::ConflictResolution::ForceOverwriteBackbone,
                     };
-                    let res = shell.run_vcs_command(KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
+                    let res = shell.run_command(KitStoreCommand::ResolveConflict { id: Id::from(input.conflict_id.as_str()), strategy }).await?;
                     let KitStoreCommandResult::ResolveConflict { ok } = res else {
                         return Err(Error::new("expected ResolveConflict result"));
                     };
                     results.push(KitStoreResult { ok: Some(ok), ..empty_kit_store_batch_result(KitStoreResultKind::ResolveConflict) });
                 }
                 BackboneCommandInput::BackboneStatus(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::BackboneStatus).await?;
+                    let res = shell.run_command(KitStoreCommand::BackboneStatus).await?;
                     let KitStoreCommandResult::BackboneStatus { attached, kind, tip } = res else {
                         return Err(Error::new("expected BackboneStatus result"));
                     };
@@ -27865,7 +27865,7 @@ pub mod kit_graphql {
                     results.push(KitStoreResult { ok: Some(true), backbone: Some(BackboneStatus { attached, kind, kind_other, tip: tip.map(|id| id.to_string()) }), ..empty_kit_store_batch_result(KitStoreResultKind::BackboneStatus) });
                 }
                 BackboneCommandInput::SyncNow(_) => {
-                    let res = shell.run_vcs_command(KitStoreCommand::SyncNow).await?;
+                    let res = shell.run_command(KitStoreCommand::SyncNow).await?;
                     let KitStoreCommandResult::SyncNow { ok } = res else {
                         return Err(Error::new("expected SyncNow result"));
                     };
@@ -28055,7 +28055,7 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.0)?.to_shallow_dto())
         }
 
-        async fn vcs_state(&self) -> Result<StateDto> {
+        async fn state(&self) -> Result<StateDto> {
             let g = lock_graph(&self.0)?;
             let mut checkpoints: Vec<CheckpointDto> = g
                 .checkpoints
@@ -30091,7 +30091,7 @@ mod tests {
         }
 
         #[test]
-        fn sqlite_vcs_roundtrip() {
+        fn sqlite_roundtrip() {
             use std::sync::{Arc, RwLock};
 
             let kit: Arc<RwLock<KitGraph>> = Arc::new(RwLock::new(KitGraph::new("vcs-sqlite")));
@@ -31446,7 +31446,7 @@ mod tests {
         }
     }
 
-    mod vcs_command_tests {
+    mod command_tests {
         use std::sync::{Arc, RwLock};
 
         use crate::change_command::ChangeKitCommand;
@@ -31515,7 +31515,7 @@ mod tests {
         }
 
         #[test]
-        fn vcs_session_draft_checkpoint_roundtrip() {
+        fn session_draft_checkpoint_roundtrip() {
             let mut inner = KitGraph::new("p");
             let t = Arc::new(RwLock::new(TypeStore::new("T")));
             let tid = t.read().expect("tr").id.clone();

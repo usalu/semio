@@ -40,7 +40,7 @@ assertSchema(queryBody.includes("kitStore: KitStore!") && queryBody.includes("ki
 const mutationBody = definitionBody("type Mutation");
 assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
 const kitStoreMutationBody = definitionBody("type KitStoreMutation");
-assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreBatchInput!): KitStoreBatchPayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
+assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreInput!): KitStorePayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
 const subscriptionBody = definitionBody("type Subscription");
 assertSchema(subscriptionBody.includes("eventStream: JSON!"), "Subscription MUST expose the Rust event stream");
 const kitBody = definitionBody("type KitStore");

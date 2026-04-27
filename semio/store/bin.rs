@@ -15,7 +15,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use semio::id::Id;
 use semio::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
-use semio::kit_graphql::{GraphQlVcsOverride, GraphWork};
+use semio::kit_graphql::{GraphQlOverride, GraphWork};
 use semio::kit_store::KitStore;
 use serde::Deserialize;
 use tokio::net::TcpListener;
@@ -220,7 +220,7 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
     if !installed && matches!(is_mutation_request(&body), Ok(true)) {
         return graphql_error(StatusCode::SERVICE_UNAVAILABLE, "no kit: send POST /install with { \"create\": { \"dto\": { ... } } } first");
     }
-    let vcs = GraphQlVcsOverride { native: Some(rt.store.clone()) };
+    let vcs = GraphQlOverride { native: Some(rt.store.clone()) };
     let resp = match semio::kit_graphql::execute_with_control_plane(&body, rt.store.graph().clone(), rt.work_tx, vcs).await {
         Ok(r) => r,
         Err(e) => return bad_request(format!("{e:?}")),
@@ -322,7 +322,7 @@ mod tests {
 
     fn batch_mutation_with_fields(extra: &str) -> String {
         format!(
-            r"mutation Batch($input: KitStoreBatchInput!) {{
+            r"mutation Batch($input: KitStoreInput!) {{
   kitStore {{
     batch(input: $input) {{
       clientMutationId
@@ -330,6 +330,9 @@ mod tests {
         kind
         ok
         count
+        sessionId
+        draftId
+        transactionId
         backbone {{ attached kind tip }}
         conflicts {{ id backboneTip reason createdAt }}
         {extra}
@@ -412,12 +415,17 @@ mod tests {
             Some(json!({
                 "input": {
                     "commands": [{
-                        "live": {
-                            "commands": [{
-                                "changeKitCommands": {
-                                    "commands": [{ "name": { "name": "Renamed" } }]
-                                }
-                            }]
+                        "session": {
+                            "commands": [
+                                { "createSession": { "confirm": true } },
+                                { "createDraft": {} },
+                                { "draft": { "commands": [
+                                    { "startTransaction": { "confirm": true } },
+                                    { "transaction": { "commands": [
+                                        { "changeKitCommands": { "commands": [{ "name": { "name": "Renamed" } }] } }
+                                    ]}}
+                                ]}}
+                            ]
                         }
                     }]
                 }
@@ -427,9 +435,22 @@ mod tests {
         if m1.get("errors").is_some() {
             return Err(format!("graphql m1: {m1}").into());
         }
+        let rows = m1.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).ok_or("m1 results")?;
+        let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).ok_or("sessionId")?;
+        let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).ok_or("draftId")?;
+        let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).ok_or("transactionId")?;
 
-        let q2 = post_gql(&client, &base, "query { kitStore { liveFullDto } }", None).await?;
-        let name = q2.pointer("/data/kitStore/liveFullDto/name").and_then(|n| n.as_str()).ok_or("liveFullDto.name")?;
+        let q2 = post_gql(
+            &client,
+            &base,
+            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
+            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
+        )
+        .await?;
+        if q2.get("errors").is_some() {
+            return Err(format!("graphql q2: {q2}").into());
+        }
+        let name = q2.pointer("/data/kit/metadata/name").and_then(|n| n.as_str()).ok_or("metadata.name")?;
         assert_eq!(name, "Renamed");
 
         let m3 = post_gql(
@@ -439,8 +460,19 @@ mod tests {
             Some(json!({
                 "input": {
                     "commands": [{
-                        "live": {
-                            "commands": [{ "undo": { "confirm": true } }]
+                        "session": {
+                            "sessionId": sid,
+                            "commands": [{
+                                "draft": {
+                                    "draftId": did,
+                                    "commands": [{
+                                        "transaction": {
+                                            "transactionId": tid,
+                                            "commands": [{ "undoTransaction": { "count": 1 } }]
+                                        }
+                                    }]
+                                }
+                            }]
                         }
                     }]
                 }
@@ -451,8 +483,17 @@ mod tests {
             return Err(format!("graphql m3: {m3}").into());
         }
 
-        let q4 = post_gql(&client, &base, "query { kitStore { liveFullDto } }", None).await?;
-        let name2 = q4.pointer("/data/kitStore/liveFullDto/name").and_then(|n| n.as_str()).ok_or("name2")?;
+        let q4 = post_gql(
+            &client,
+            &base,
+            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
+            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
+        )
+        .await?;
+        if q4.get("errors").is_some() {
+            return Err(format!("graphql q4: {q4}").into());
+        }
+        let name2 = q4.pointer("/data/kit/metadata/name").and_then(|n| n.as_str()).ok_or("name2")?;
         assert_eq!(name2, "A");
 
         server.abort();
@@ -475,12 +516,17 @@ mod tests {
             Some(json!({
                 "input": {
                     "commands": [{
-                        "live": {
-                            "commands": [{
-                                "changeKitCommands": {
-                                    "commands": [{ "name": { "name": "Q" } }]
-                                }
-                            }]
+                        "session": {
+                            "commands": [
+                                { "createSession": { "confirm": true } },
+                                { "createDraft": {} },
+                                { "draft": { "commands": [
+                                    { "startTransaction": { "confirm": true } },
+                                    { "transaction": { "commands": [
+                                        { "changeKitCommands": { "commands": [{ "name": { "name": "Q" } }] } }
+                                    ]}}
+                                ]}}
+                            ]
                         }
                     }]
                 }
@@ -490,9 +536,22 @@ mod tests {
         if m3.get("errors").is_some() {
             return Err(format!("execute: {m3}").into());
         }
+        let rows = m3.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).ok_or("m3 results")?;
+        let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).ok_or("sessionId")?;
+        let did = rows.iter().find_map(|r| r.get("draftId").and_then(|x| x.as_str())).ok_or("draftId")?;
+        let tid = rows.iter().find_map(|r| r.get("transactionId").and_then(|x| x.as_str())).ok_or("transactionId")?;
 
-        let q4 = post_gql(&client, &base, "query { kitStore { liveFullDto } }", None).await?;
-        let name = q4.pointer("/data/kitStore/liveFullDto/name").and_then(|n| n.as_str());
+        let q4 = post_gql(
+            &client,
+            &base,
+            "query($scope: KitReadScopeInput!) { kit(scope: $scope) { metadata { name } } }",
+            Some(json!({ "scope": { "transaction": { "sessionId": sid, "draftId": did, "transactionId": tid } } })),
+        )
+        .await?;
+        if q4.get("errors").is_some() {
+            return Err(format!("q4: {q4}").into());
+        }
+        let name = q4.pointer("/data/kit/metadata/name").and_then(|n| n.as_str());
         assert_eq!(name, Some("Q"));
 
         server.abort();
@@ -574,7 +633,7 @@ mod tests {
             return Err(format!("m4: {m4}").into());
         }
         assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/attached"), Some(&json!(true)));
-        assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/kind"), Some(&json!("dev")));
+        assert_eq!(m4.pointer("/data/kitStore/batch/results/0/backbone/kind"), Some(&json!("DEV")));
 
         let m5 = post_gql(
             &client,

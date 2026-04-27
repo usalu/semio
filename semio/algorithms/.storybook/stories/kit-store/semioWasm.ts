@@ -62,7 +62,7 @@ export type StorybookKitStoreExecuteResult =
 /** @emoji 🧭 `kitStore.batch` (sync GraphQL mutation; replaces shell + subscription wait). */
 async function storybookKitStoreBatch(handle: StorybookKitGraphqlHandle, commands: readonly unknown[]): Promise<Record<string, unknown>> {
   const mutBody = {
-    query: `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { results { kind ok sessionId draftId transactionId } } } }`,
+    query: `mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind ok sessionId draftId transactionId } } } }`,
     variables: { input: { commands: [...commands] } },
   };
   const mutJson = await handle.execute(JSON.stringify(mutBody));
