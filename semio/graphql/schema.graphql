@@ -282,6 +282,9 @@ type KitColoredConnectorObject {
 	color: String!
 }
 
+"""
+📣 Opaque JSON matching `semio/rs` `KitEvent` (externally tagged). Includes `SemanticChange.event` (`SemanticKitEvent`) with `change.forward` / `change.inverse` as `ChangeKitCommand` lists for every semantic mutation.
+"""
 scalar KitEvent
 
 scalar KitFullSnapshot

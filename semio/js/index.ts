@@ -120,6 +120,7 @@ export type KitChangeKindWire =
   | "disconnect"
   | "unifyCheckpoints"
   | "markRelease"
+  | { readonly other: string }
   | (string & { readonly _semioExt?: 1 });
 
 /** @emoji 🪢 Object branch for GraphQL / serde wire trees (explicit string slots, no `Record` alias). */
@@ -430,10 +431,14 @@ export type ReadWireBatchResult = readonly ReadKitCommandOutput[];
 
 /**
  * @emoji 📣 GraphQL `KitEvent` scalar + synthetic invalidation rows used by {@link WasmKitStoreClient};
- * unknown tagged shapes (Design/Type/… from `semio/rs`) are {@link SemioKitWireTreeDto} object trees.
+ * field-level rows remain {@link SemioKitWireStructDto}; semantic mutations use {@link KitSemanticChangeEvent}.
  */
 export type KitEvent = Readonly<
-  { readonly Changed: null } | { readonly ValidationInvalidated: null } | KitCommandLifecycleEvent | SemioKitWireStructDto
+  | { readonly Changed: null }
+  | { readonly ValidationInvalidated: null }
+  | KitCommandLifecycleEvent
+  | KitSemanticChangeEvent
+  | SemioKitWireStructDto
 >;
 
 /** @emoji 🧾 Optional filter for {@link KitStore.subscribeFiltered}. */
@@ -604,7 +609,50 @@ export type ChangeKitCommandWire =
   | { readonly addKitAttribute: { readonly attribute: AttributePlain } }
   | { readonly removeKitAttribute: { readonly id: KitIdWire } }
   | { readonly addFile: { readonly file: FilePlain } }
-  | { readonly removeFile: { readonly fileId: KitIdWire } };
+  | { readonly removeFile: { readonly fileId: KitIdWire } }
+  | { readonly replaceKitFromFullDto: { readonly dto: KitFullDto } }
+  | { readonly clusterPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly clusterName: string } }
+  | { readonly dragPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly du: number; readonly dv: number } }
+  | { readonly movePieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly gap: number; readonly shift: number; readonly rise: number } }
+  | { readonly fixPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[] } }
+  | { readonly flattenDesign: { readonly designId: KitIdWire } }
+  | { readonly expandNestedDesign: { readonly parentDesignId: KitIdWire; readonly nestedDesignId: KitIdWire } }
+  | { readonly deleteConnection: { readonly designId: KitIdWire; readonly connectionId: KitIdWire } }
+  | { readonly changePieceKind: { readonly designId: KitIdWire; readonly pieceId: KitIdWire; readonly newTypeId: KitIdWire } };
+
+/** @emoji 🧾 Forward + inverse command atoms on the subscription bus (`KitChange` from `semio/rs`). */
+export type KitChangeWire = Readonly<{
+  readonly forward: readonly ChangeKitCommandWire[];
+  readonly inverse: readonly ChangeKitCommandWire[];
+  readonly kind?: KitChangeKindWire;
+  readonly author?: string | null;
+  readonly time?: string | null;
+}>;
+
+/** @emoji 🧾 Semantic mutation payload nested under `KitEvent.SemanticChange` (camelCase variant keys from `semio/rs`). */
+export type SemanticKitEventWire = Readonly<
+  | { readonly renamedDesign: { readonly designId: string; readonly change: KitChangeWire } }
+  | { readonly renamedType: { readonly typeId: string; readonly change: KitChangeWire } }
+  | { readonly draggedFlatCenterPiece: { readonly designId: string; readonly pieceIds: readonly string[]; readonly change: KitChangeWire } }
+  | { readonly movedPiecesFlatCenter: { readonly designId: string; readonly pieceIds: readonly string[]; readonly change: KitChangeWire } }
+  | { readonly clusteredPieces: { readonly designId: string; readonly pieceIds: readonly string[]; readonly change: KitChangeWire } }
+  | { readonly fixedPiecesFlatCenter: { readonly designId: string; readonly pieceIds: readonly string[]; readonly change: KitChangeWire } }
+  | { readonly flattenedDesign: { readonly designId: string; readonly change: KitChangeWire } }
+  | { readonly expandedNestedDesign: { readonly parentDesignId: string; readonly nestedDesignId: string; readonly change: KitChangeWire } }
+  | { readonly deletedConnection: { readonly designId: string; readonly connectionId: string; readonly change: KitChangeWire } }
+  | { readonly changedPieceKind: { readonly designId: string; readonly pieceId: string; readonly change: KitChangeWire } }
+  | { readonly changedDesignCommands: { readonly designId: string; readonly change: KitChangeWire } }
+  | { readonly changedTypeCommands: { readonly typeId: string; readonly change: KitChangeWire } }
+  | { readonly appliedKitChange: { readonly change: KitChangeWire } }
+>;
+
+/** @emoji 🧾 Typed semantic row on the kit event bus (paired forward/inverse commands). */
+export type KitSemanticChangeEvent = Readonly<{ readonly SemanticChange: { readonly event: SemanticKitEventWire } }>;
+
+/** @emoji 🧾 True when {@link KitEvent} is a {@link KitSemanticChangeEvent}. */
+export function isKitSemanticChangeEvent(ev: KitEvent): ev is KitSemanticChangeEvent {
+  return typeof ev === "object" && ev !== null && "SemanticChange" in ev;
+}
 
 /** @emoji 🧾 Wrap nested piece commands under one design id. */
 export function kitWireChangeDesignPiece(
@@ -1076,7 +1124,7 @@ function __normalizeTopLevelKitEventWire(raw: unknown): unknown {
   return raw;
 }
 
-function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
+export function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
   const raw0 = __normalizeTopLevelKitEventWire(raw);
   if (raw0 == null || typeof raw0 !== "object") return undefined;
   const top = raw0 as Record<string, unknown>;
@@ -1105,6 +1153,14 @@ function normalizeKitEventFromSubscription(raw: unknown): KitEvent | undefined {
         error,
       },
     };
+  }
+  const scWrap = top.SemanticChange !== undefined ? top.SemanticChange : top.semanticChange;
+  if (scWrap != null && typeof scWrap === "object") {
+    const scObj = scWrap as Record<string, unknown>;
+    const ev = scObj.event;
+    if (ev != null && typeof ev === "object") {
+      return { SemanticChange: { event: ev as SemanticKitEventWire } };
+    }
   }
   return raw0 as KitEvent;
 }
@@ -2509,6 +2565,80 @@ export async function openKit(initialKit: KitFullDto, opts?: KitStoreOpenOptions
 // #endregion 🧰OpenKit
 
 // #region KitEventEntityFilter
+/** @emoji 🧾 Whether a {@link KitChangeWire} references a design id in forward or inverse commands. */
+function kitChangeWireTouchesDesignId(change: KitChangeWire, designId: string): boolean {
+  for (const cmd of [...change.forward, ...change.inverse]) {
+    if (jsonSubtreeHasIdKey(cmd, "designId", designId)) return true;
+    if (jsonSubtreeHasIdKey(cmd, "design_id", designId)) return true;
+    if (jsonSubtreeHasIdKey(cmd, "parentDesignId", designId)) return true;
+    if (jsonSubtreeHasIdKey(cmd, "nestedDesignId", designId)) return true;
+  }
+  return false;
+}
+
+/** @emoji 🧾 Whether a {@link SemanticKitEventWire} concerns the given design id. */
+function semanticKitEventWireTouchesDesign(ev: SemanticKitEventWire, designId: string): boolean {
+  if ("renamedDesign" in ev && ev.renamedDesign.designId === designId) return true;
+  if ("draggedFlatCenterPiece" in ev && ev.draggedFlatCenterPiece.designId === designId) return true;
+  if ("movedPiecesFlatCenter" in ev && ev.movedPiecesFlatCenter.designId === designId) return true;
+  if ("clusteredPieces" in ev && ev.clusteredPieces.designId === designId) return true;
+  if ("fixedPiecesFlatCenter" in ev && ev.fixedPiecesFlatCenter.designId === designId) return true;
+  if ("flattenedDesign" in ev && ev.flattenedDesign.designId === designId) return true;
+  if (
+    "expandedNestedDesign" in ev &&
+    (ev.expandedNestedDesign.parentDesignId === designId || ev.expandedNestedDesign.nestedDesignId === designId)
+  )
+    return true;
+  if ("deletedConnection" in ev && ev.deletedConnection.designId === designId) return true;
+  if ("changedPieceKind" in ev && ev.changedPieceKind.designId === designId) return true;
+  if ("changedDesignCommands" in ev && ev.changedDesignCommands.designId === designId) return true;
+  if ("appliedKitChange" in ev && kitChangeWireTouchesDesignId(ev.appliedKitChange.change, designId)) return true;
+  return false;
+}
+
+/** @emoji 🧾 Whether a {@link SemanticKitEventWire} concerns the given kind id. */
+function semanticKitEventWireTouchesType(ev: SemanticKitEventWire, typeId: string): boolean {
+  if ("renamedType" in ev && ev.renamedType.typeId === typeId) return true;
+  if ("changedTypeCommands" in ev && ev.changedTypeCommands.typeId === typeId) return true;
+  if ("changedPieceKind" in ev && jsonSubtreeHasIdKey(ev.changedPieceKind.change as unknown, "newTypeId", typeId)) return true;
+  if ("appliedKitChange" in ev) {
+    const ch = ev.appliedKitChange.change;
+    for (const cmd of [...ch.forward, ...ch.inverse]) {
+      if (jsonSubtreeHasIdKey(cmd, "typeId", typeId)) return true;
+      if (jsonSubtreeHasIdKey(cmd, "type_id", typeId)) return true;
+    }
+  }
+  return false;
+}
+
+/** @emoji 🧾 Whether a {@link SemanticKitEventWire} concerns the given piece in a design. */
+function semanticKitEventWireTouchesPiece(ev: SemanticKitEventWire, designId: string, pieceId: string): boolean {
+  if ("changedPieceKind" in ev && ev.changedPieceKind.designId === designId && ev.changedPieceKind.pieceId === pieceId) return true;
+  if ("draggedFlatCenterPiece" in ev && ev.draggedFlatCenterPiece.designId === designId && ev.draggedFlatCenterPiece.pieceIds.includes(pieceId))
+    return true;
+  if ("movedPiecesFlatCenter" in ev && ev.movedPiecesFlatCenter.designId === designId && ev.movedPiecesFlatCenter.pieceIds.includes(pieceId))
+    return true;
+  if ("clusteredPieces" in ev && ev.clusteredPieces.designId === designId && ev.clusteredPieces.pieceIds.includes(pieceId)) return true;
+  if ("fixedPiecesFlatCenter" in ev && ev.fixedPiecesFlatCenter.designId === designId && ev.fixedPiecesFlatCenter.pieceIds.includes(pieceId))
+    return true;
+  if ("changedDesignCommands" in ev && ev.changedDesignCommands.designId === designId) {
+    return jsonSubtreeHasIdKey(ev.changedDesignCommands.change as unknown, "pieceId", pieceId);
+  }
+  if ("appliedKitChange" in ev && kitChangeWireTouchesDesignId(ev.appliedKitChange.change, designId)) {
+    return jsonSubtreeHasIdKey(ev.appliedKitChange.change as unknown, "pieceId", pieceId);
+  }
+  return false;
+}
+
+/** @emoji 🧾 Whether a {@link SemanticKitEventWire} concerns the given connection in a design. */
+function semanticKitEventWireTouchesConnection(ev: SemanticKitEventWire, designId: string, connectionId: string): boolean {
+  if ("deletedConnection" in ev && ev.deletedConnection.designId === designId && ev.deletedConnection.connectionId === connectionId) return true;
+  if (semanticKitEventWireTouchesDesign(ev, designId) && "appliedKitChange" in ev) {
+    return jsonSubtreeHasIdKey(ev.appliedKitChange.change as unknown, "connectionId", connectionId);
+  }
+  return false;
+}
+
 /** @emoji 🧪 True when JSON subtree contains a string field `key` equal to `id`. */
 function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
   if (raw == null) return false;
@@ -2530,6 +2660,7 @@ function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
 /** @emoji 🧭 Design-scoped kit events (excludes bare `Changed` and `FlattenInvalidated`, which are handled separately per subscriber). */
 export function kitEventTouchesDesignStrict(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
+  if (isKitSemanticChangeEvent(ev) && semanticKitEventWireTouchesDesign(ev.SemanticChange.event, designId)) return true;
   const d = (ev as { Design?: { design_id?: string; event?: unknown } }).Design;
   if (d && typeof d.design_id === "string" && d.design_id === designId) return true;
   if (jsonSubtreeHasIdKey(ev, "design_id", designId)) return true;
@@ -2553,6 +2684,7 @@ export function kitEventTouchesDesign(ev: KitEvent, designId: string): boolean {
 /** @emoji 🧭 Type-scoped events (no bare `Changed`). */
 export function kitEventTouchesTypeStrict(ev: KitEvent, typeId: string): boolean {
   if (typeId === "") return false;
+  if (isKitSemanticChangeEvent(ev) && semanticKitEventWireTouchesType(ev.SemanticChange.event, typeId)) return true;
   const t = (ev as { Type?: { type_id?: string } }).Type;
   if (t && typeof t.type_id === "string" && t.type_id === typeId) return true;
   if (jsonSubtreeHasIdKey(ev, "type_id", typeId)) return true;
@@ -2574,6 +2706,7 @@ export function kitEventTouchesType(ev: KitEvent, typeId: string): boolean {
 /** @emoji 🧭 Piece-scoped events (design-scoped strict + piece id + flatten rows). */
 export function kitEventTouchesPiece(ev: KitEvent, designId: string, pieceId: string): boolean {
   if (pieceId === "") return false;
+  if (isKitSemanticChangeEvent(ev) && semanticKitEventWireTouchesPiece(ev.SemanticChange.event, designId, pieceId)) return true;
   if (kitEventTouchesDesignStrict(ev, designId)) return true;
   const p = (ev as { Piece?: { piece_id?: string } }).Piece;
   if (p && typeof p.piece_id === "string" && p.piece_id === pieceId) return true;
@@ -2590,6 +2723,7 @@ export function kitEventTouchesPiece(ev: KitEvent, designId: string, pieceId: st
 /** @emoji 🧭 Connection-scoped events (design-scoped strict + connection id). */
 export function kitEventTouchesConnection(ev: KitEvent, designId: string, connectionId: string): boolean {
   if (connectionId === "") return false;
+  if (isKitSemanticChangeEvent(ev) && semanticKitEventWireTouchesConnection(ev.SemanticChange.event, designId, connectionId)) return true;
   if (kitEventTouchesDesignStrict(ev, designId)) return true;
   const c = (ev as { Connection?: { connection_id?: string } }).Connection;
   if (c && typeof c.connection_id === "string" && c.connection_id === connectionId) return true;
@@ -6352,6 +6486,35 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
 
     it("kitReadScopeKey normalizes the main line scope for cache keys", () => {
       expect(kitReadScopeKey(theKitReadScope)).toBe(JSON.stringify(kitReadScopeToGraphQLInput(theKitReadScope)));
+    });
+
+    it("normalizeKitEventFromSubscription parses SemanticChange rows", () => {
+      const raw = {
+        SemanticChange: {
+          event: {
+            renamedDesign: {
+              designId: "d1",
+              change: { forward: [] as const, inverse: [] as const, kind: "modifyDesign" as const },
+            },
+          },
+        },
+      };
+      const out = normalizeKitEventFromSubscription(raw);
+      expect(out).toBeDefined();
+      expect(isKitSemanticChangeEvent(out!)).toBe(true);
+      if (isKitSemanticChangeEvent(out!)) {
+        expect("renamedDesign" in out.SemanticChange.event).toBe(true);
+      }
+    });
+
+    it("kitEventTouchesDesignStrict matches renamedDesign semantic events", () => {
+      const ev = {
+        SemanticChange: {
+          event: { renamedDesign: { designId: "dx", change: { forward: [], inverse: [] } } },
+        },
+      } as const satisfies KitSemanticChangeEvent;
+      expect(kitEventTouchesDesignStrict(ev, "dx")).toBe(true);
+      expect(kitEventTouchesDesignStrict(ev, "other")).toBe(false);
     });
 
     it("read batch returns typed rows", async () => {

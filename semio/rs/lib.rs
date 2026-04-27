@@ -7950,9 +7950,14 @@ pub mod kit_store_command {
                         {
                             let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             if let Some(tx) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)) {
-                                tx.record(kc);
+                                tx.record(kc.clone());
                                 n += 1;
                             }
+                        }
+                        {
+                            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
+                            g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
                         }
                     }
                     Ok(TransactionCommandResult::ChangeKitCommands { count: n })
@@ -15870,8 +15875,173 @@ pub mod events {
         Attribute { attribute_id: Id, event: AttributeEvent },
     }
 
+    /// @emoji Semantically typed kit mutation with forward and inverse command atoms (`KitChange`).
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum SemanticKitEvent {
+        RenamedDesign {
+            design_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        RenamedType {
+            type_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        DraggedFlatCenterPiece {
+            design_id: Id,
+            piece_ids: Vec<Id>,
+            change: crate::kit_change::KitChange,
+        },
+        MovedPiecesFlatCenter {
+            design_id: Id,
+            piece_ids: Vec<Id>,
+            change: crate::kit_change::KitChange,
+        },
+        ClusteredPieces {
+            design_id: Id,
+            piece_ids: Vec<Id>,
+            change: crate::kit_change::KitChange,
+        },
+        FixedPiecesFlatCenter {
+            design_id: Id,
+            piece_ids: Vec<Id>,
+            change: crate::kit_change::KitChange,
+        },
+        FlattenedDesign {
+            design_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        ExpandedNestedDesign {
+            parent_design_id: Id,
+            nested_design_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        DeletedConnection {
+            design_id: Id,
+            connection_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        ChangedPieceKind {
+            design_id: Id,
+            piece_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        ChangedDesignCommands {
+            design_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        ChangedTypeCommands {
+            type_id: Id,
+            change: crate::kit_change::KitChange,
+        },
+        AppliedKitChange {
+            change: crate::kit_change::KitChange,
+        },
+    }
+
+    /// @emoji Classifies a recorded `KitChange` into a semantic subscription event (same forward/inverse atoms).
+    pub fn semantic_kit_event_from_kit_change(change: &crate::kit_change::KitChange) -> SemanticKitEvent {
+        use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangeTypeCommand};
+
+        let piece_ids_from_strings = |v: &[String]| v.iter().map(|s| Id::from(s.as_str())).collect::<Vec<Id>>();
+
+        match change.forward.as_slice() {
+            [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] => {
+                if commands.len() == 1 && matches!(&commands[0], ChangeDesignCommand::Name { .. }) {
+                    SemanticKitEvent::RenamedDesign {
+                        design_id: design_id.id.clone(),
+                        change: change.clone(),
+                    }
+                } else {
+                    SemanticKitEvent::ChangedDesignCommands {
+                        design_id: design_id.id.clone(),
+                        change: change.clone(),
+                    }
+                }
+            }
+            [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] => {
+                if commands.len() == 1 && matches!(&commands[0], ChangeTypeCommand::Name { .. }) {
+                    SemanticKitEvent::RenamedType {
+                        type_id: type_id.id.clone(),
+                        change: change.clone(),
+                    }
+                } else {
+                    SemanticKitEvent::ChangedTypeCommands {
+                        type_id: type_id.id.clone(),
+                        change: change.clone(),
+                    }
+                }
+            }
+            [ChangeKitCommand::DragPieces {
+                design_id,
+                piece_ids,
+                ..
+            }] => SemanticKitEvent::DraggedFlatCenterPiece {
+                design_id: design_id.id.clone(),
+                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::MovePieces {
+                design_id,
+                piece_ids,
+                ..
+            }] => SemanticKitEvent::MovedPiecesFlatCenter {
+                design_id: design_id.id.clone(),
+                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::ClusterPieces {
+                design_id,
+                piece_ids,
+                ..
+            }] => SemanticKitEvent::ClusteredPieces {
+                design_id: design_id.id.clone(),
+                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::FixPieces {
+                design_id,
+                piece_ids,
+            }] => SemanticKitEvent::FixedPiecesFlatCenter {
+                design_id: design_id.id.clone(),
+                piece_ids: piece_ids_from_strings(piece_ids.as_slice()),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::FlattenDesign { design_id }] => SemanticKitEvent::FlattenedDesign {
+                design_id: design_id.id.clone(),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::ExpandNestedDesign {
+                parent_design_id,
+                nested_design_id,
+            }] => SemanticKitEvent::ExpandedNestedDesign {
+                parent_design_id: parent_design_id.id.clone(),
+                nested_design_id: nested_design_id.id.clone(),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::DeleteConnection {
+                design_id,
+                connection_id,
+            }] => SemanticKitEvent::DeletedConnection {
+                design_id: design_id.id.clone(),
+                connection_id: connection_id.id.clone(),
+                change: change.clone(),
+            },
+            [ChangeKitCommand::ChangePieceKind {
+                design_id,
+                piece_id,
+                ..
+            }] => SemanticKitEvent::ChangedPieceKind {
+                design_id: design_id.id.clone(),
+                piece_id: piece_id.id.clone(),
+                change: change.clone(),
+            },
+            _ => SemanticKitEvent::AppliedKitChange { change: change.clone() },
+        }
+    }
+
     /// 📣All observable changes on a kit graph.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize)]
+    #[derive(Clone, Debug, serde::Serialize)]
     pub enum KitEvent {
         Changed,
         FieldChanged(KitField),
@@ -15916,6 +16086,10 @@ pub mod events {
             #[serde(default, skip_serializing_if = "Option::is_none")]
             error: Option<crate::error::SetError>,
         },
+        /// @emoji Typed semantic mutation with paired forward and inverse kit change commands.
+        SemanticChange {
+            event: SemanticKitEvent,
+        },
     }
 
     /// 📣 Subscription / GraphQL command lifecycle (camelCase in JSON).
@@ -15949,6 +16123,10 @@ pub mod events {
                 Self::SetRejected { .. } => events.push(self.clone()),
                 Self::Changed => events.push(self.clone()),
                 Self::FieldChanged(_) => {
+                    events.push(Self::Changed);
+                    events.push(self.clone());
+                }
+                Self::SemanticChange { .. } => {
                     events.push(Self::Changed);
                     events.push(self.clone());
                 }
@@ -19110,7 +19288,15 @@ pub mod kit_graph {
         pub fn set_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::with_undo(kit, || {
-                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let kc = crate::kit_change::KitChange {
+                    forward: cmds.clone(),
+                    inverse: inv,
+                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
+                    author: None,
+                    time: None,
+                };
+                Self::emit_semantic_kit_change_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -19282,6 +19468,14 @@ pub mod kit_graph {
             Ok(())
         }
 
+        /// @emoji Broadcast a typed semantic event (forward + inverse atoms) after a successful command apply.
+        pub(crate) fn emit_semantic_kit_change_bus(kit: &KitGraphRef, change: &crate::kit_change::KitChange) {
+            if let Ok(g) = kit.read() {
+                let sem = crate::events::semantic_kit_event_from_kit_change(change);
+                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+            }
+        }
+
         /// Pop last applied state and restore `before` snapshot.
         pub fn undo(kit: &KitGraphRef) -> SetResult {
             let step = {
@@ -19404,7 +19598,15 @@ pub mod kit_graph {
         pub fn add_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::with_undo(kit, || {
-                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let kc = crate::kit_change::KitChange {
+                    forward: cmds.clone(),
+                    inverse: inv,
+                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
+                    author: None,
+                    time: None,
+                };
+                Self::emit_semantic_kit_change_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -19413,7 +19615,15 @@ pub mod kit_graph {
         pub fn remove_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::with_undo(kit, || {
-                crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let inv = crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
+                let kc = crate::kit_change::KitChange {
+                    forward: cmds.clone(),
+                    inverse: inv,
+                    kind: crate::change_command::ChangeKitCommand::batch_kind(&cmds),
+                    author: None,
+                    time: None,
+                };
+                Self::emit_semantic_kit_change_bus(kit, &kc);
                 Ok(())
             })
         }
@@ -26730,19 +26940,25 @@ pub mod kit_graphql {
         }
     }
 
-    #[derive(Clone, Debug)]
-    struct GqlAuthorShallowList(Vec<crate::author::AuthorShallowDto>);
+    /// 🌐 One author row from [`crate::author::AuthorShallowDto`] (replaces the former `AuthorShallowList` scalar).
+    #[derive(Clone, Debug, SimpleObject)]
+    struct AuthorShallowRow {
+        id: String,
+        name: String,
+        email: String,
+        role: Option<String>,
+        rank: Option<i64>,
+    }
 
-    #[Scalar(name = "AuthorShallowList")]
-    impl ScalarType for GqlAuthorShallowList {
-        fn parse(value: Value) -> InputValueResult<Self> {
-            let v = value.into_json()?;
-            let a: Vec<crate::author::AuthorShallowDto> = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
-            Ok(GqlAuthorShallowList(a))
-        }
-
-        fn to_value(&self) -> Value {
-            Value::from_json(serde_json::to_value(&self.0).expect("ok")).expect("v")
+    impl From<crate::author::AuthorShallowDto> for AuthorShallowRow {
+        fn from(a: crate::author::AuthorShallowDto) -> Self {
+            Self {
+                id: a.id.to_string(),
+                name: a.name,
+                email: a.email,
+                role: a.role,
+                rank: a.rank,
+            }
         }
     }
 
@@ -26820,17 +27036,50 @@ pub mod kit_graphql {
             while let Ok(work) = rx.recv().await {
                 match work {
                     GraphWork::ChangeKitCommands { commands, reply } => {
-                        let r = KitGraph::with_undo(&graph, || ChangeKitCommand::apply_many(&graph, &commands).map(|_| ()).map_err(KitGraph::map_semio_err));
-                        let _ = reply.send(r.map_err(|e| format!("{e:?}")));
-                    }
-                    GraphWork::ChangeKitWithInverse { commands, reply } => {
-                        let kind = ChangeKitCommand::batch_kind(&commands);
+                        let cmds = commands.clone();
                         let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
                         let r = KitGraph::with_undo(&graph, || {
-                            let inv = ChangeKitCommand::apply_many(&graph, &commands).map_err(KitGraph::map_semio_err)?;
+                            let inv = ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
                             inverse_out = inv;
                             Ok(())
                         });
+                        if r.is_ok() && !cmds.is_empty() {
+                            let kc = crate::kit_change::KitChange {
+                                forward: cmds.clone(),
+                                inverse: inverse_out,
+                                kind: ChangeKitCommand::batch_kind(&cmds),
+                                author: None,
+                                time: None,
+                            };
+                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
+                            if let Ok(g) = graph.read() {
+                                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                            }
+                        }
+                        let _ = reply.send(r.map_err(|e| format!("{e:?}")));
+                    }
+                    GraphWork::ChangeKitWithInverse { commands, reply } => {
+                        let cmds = commands.clone();
+                        let kind = ChangeKitCommand::batch_kind(&cmds);
+                        let mut inverse_out: Vec<ChangeKitCommand> = Vec::new();
+                        let r = KitGraph::with_undo(&graph, || {
+                            let inv = ChangeKitCommand::apply_many(&graph, &cmds).map_err(KitGraph::map_semio_err)?;
+                            inverse_out = inv;
+                            Ok(())
+                        });
+                        if r.is_ok() && !cmds.is_empty() {
+                            let kc = crate::kit_change::KitChange {
+                                forward: cmds,
+                                inverse: inverse_out.clone(),
+                                kind: kind.clone(),
+                                author: None,
+                                time: None,
+                            };
+                            let sem = crate::events::semantic_kit_event_from_kit_change(&kc);
+                            if let Ok(g) = graph.read() {
+                                g.event_bus.emit(crate::events::KitEvent::SemanticChange { event: sem });
+                            }
+                        }
                         let _ = reply.send(r.map(|_| (kind, inverse_out)).map_err(|e| format!("{e:?}")));
                     }
                     GraphWork::Vcs { command, reply } => {
@@ -27171,6 +27420,26 @@ pub mod kit_graphql {
         message: String,
     }
 
+    /// 🧾 Known semantic labels for a [`crate::kit_change::KitChangeKind`] batch (see `changeKindOther` when [`KitChangeSemanticKind::Other`]).
+    #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+    enum KitChangeSemanticKind {
+        Inferred,
+        SetKitMetadata,
+        AddType,
+        RemoveType,
+        ModifyType,
+        AddDesign,
+        RemoveDesign,
+        ModifyDesign,
+        AddPiece,
+        RemovePiece,
+        Connect,
+        Disconnect,
+        UnifyCheckpoints,
+        MarkRelease,
+        Other,
+    }
+
     #[derive(Clone, Debug, Enum, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
     enum KitStoreBatchResultKind {
         ChangeKitCommands,
@@ -27238,8 +27507,10 @@ pub mod kit_graphql {
         alternative_id: Option<String>,
         backbone: Option<BackboneBatchStatus>,
         conflicts: Option<Vec<ConflictBatchRecord>>,
-        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
-        change_kind: Option<String>,
+        /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; discriminant of [`crate::kit_change::KitChangeKind`].
+        change_kind: Option<KitChangeSemanticKind>,
+        /// 🧾 When [`Self::change_kind`] is [`KitChangeSemanticKind::Other`], the free-form semantic label from Rust.
+        change_kind_other: Option<String>,
         /// 🧾 Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
         inverse: Option<Vec<GqlChangeKitCommand>>,
     }
@@ -27434,14 +27705,24 @@ pub mod kit_graphql {
         }
     }
 
-    /// 🧾 `KitChangeKind` as a single GraphQL `String` (unit variants serialize as JSON string; [`KitChangeKind::Other`] is the raw label).
-    fn kit_change_kind_gql(k: &crate::kit_change::KitChangeKind) -> String {
+    fn kit_change_semantic_fields(k: &crate::kit_change::KitChangeKind) -> (Option<KitChangeSemanticKind>, Option<String>) {
+        use crate::kit_change::KitChangeKind as K;
         match k {
-            crate::kit_change::KitChangeKind::Other(s) => s.clone(),
-            o => {
-                let v = serde_json::to_value(o).ok();
-                v.and_then(|x| x.as_str().map(|s| s.to_string())).unwrap_or_else(|| format!("{o:?}"))
-            }
+            K::Inferred => (Some(KitChangeSemanticKind::Inferred), None),
+            K::SetKitMetadata => (Some(KitChangeSemanticKind::SetKitMetadata), None),
+            K::AddType => (Some(KitChangeSemanticKind::AddType), None),
+            K::RemoveType => (Some(KitChangeSemanticKind::RemoveType), None),
+            K::ModifyType => (Some(KitChangeSemanticKind::ModifyType), None),
+            K::AddDesign => (Some(KitChangeSemanticKind::AddDesign), None),
+            K::RemoveDesign => (Some(KitChangeSemanticKind::RemoveDesign), None),
+            K::ModifyDesign => (Some(KitChangeSemanticKind::ModifyDesign), None),
+            K::AddPiece => (Some(KitChangeSemanticKind::AddPiece), None),
+            K::RemovePiece => (Some(KitChangeSemanticKind::RemovePiece), None),
+            K::Connect => (Some(KitChangeSemanticKind::Connect), None),
+            K::Disconnect => (Some(KitChangeSemanticKind::Disconnect), None),
+            K::UnifyCheckpoints => (Some(KitChangeSemanticKind::UnifyCheckpoints), None),
+            K::MarkRelease => (Some(KitChangeSemanticKind::MarkRelease), None),
+            K::Other(s) => (Some(KitChangeSemanticKind::Other), Some(s.clone())),
         }
     }
 
@@ -27469,6 +27750,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27490,6 +27772,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27522,6 +27805,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27573,6 +27857,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27591,6 +27876,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27615,6 +27901,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27639,6 +27926,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27671,6 +27959,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27713,6 +28002,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27731,6 +28021,7 @@ pub mod kit_graphql {
                     .map_err(|e| Error::new(e.to_string()))?;
                     let inv = ChangeKitCommand::inverse_commands_for_many(&view, &commands).map_err(|e| Error::new(format!("{e:?}")))?;
                     let inv_gql: Vec<GqlChangeKitCommand> = inv.into_iter().map(GqlChangeKitCommand).collect();
+                    let (ck, cko) = kit_change_semantic_fields(&k);
                     shell.run_vcs_command(
                         KitStoreCommand::ExecuteSessionCommands {
                             id: session_id.clone(),
@@ -27755,7 +28046,8 @@ pub mod kit_graphql {
                         alternative_id: None,
                         backbone: None,
                         conflicts: None,
-                        change_kind: Some(kit_change_kind_gql(&k)),
+                        change_kind: ck,
+                        change_kind_other: cko,
                         inverse: Some(inv_gql),
                     });
                 }
@@ -27802,6 +28094,7 @@ pub mod kit_graphql {
                             backbone: None,
                             conflicts: None,
                             change_kind: None,
+                            change_kind_other: None,
                             inverse: None,
                         });
                     }
@@ -27829,6 +28122,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27855,6 +28149,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27881,6 +28176,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27907,6 +28203,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27934,6 +28231,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27954,6 +28252,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -27985,6 +28284,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28003,6 +28303,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28037,6 +28338,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28057,6 +28359,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28078,6 +28381,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: Some(conflicts),
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28102,6 +28406,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28122,6 +28427,7 @@ pub mod kit_graphql {
                         backbone: Some(BackboneBatchStatus { attached, kind, tip: tip.map(|id| id.to_string()) }),
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28142,6 +28448,7 @@ pub mod kit_graphql {
                         backbone: None,
                         conflicts: None,
                         change_kind: None,
+                        change_kind_other: None,
                         inverse: None,
                     });
                 }
@@ -28581,10 +28888,9 @@ pub mod kit_graphql {
         }
 
         /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
-        async fn authors_shallow(&self) -> Result<GqlAuthorShallowList> {
+        async fn authors_shallow(&self) -> Result<Vec<AuthorShallowRow>> {
             let g = lock_graph(&self.0)?;
-            let v: Vec<_> = g.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect();
-            Ok(GqlAuthorShallowList(v))
+            Ok(g.authors.iter().filter_map(|a| a.read().ok().map(|r| AuthorShallowRow::from(r.to_shallow_dto()))).collect())
         }
 
         /// Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
@@ -29400,6 +29706,40 @@ mod tests {
             let inner = j.get("SetRejected").expect("SetRejected wrapper");
             assert!(inner.get("event").is_some());
             assert!(inner.get("error").is_some());
+        }
+
+        #[test]
+        fn gql_kit_event_semantic_change_serializes_renamed_design() {
+            use async_graphql::ScalarType;
+
+            use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
+            use crate::events::{semantic_kit_event_from_kit_change, KitEvent};
+            use crate::id::Id;
+            use crate::kit_change::{KitChange, KitChangeKind};
+            use crate::kit_graphql::GqlKitEvent;
+
+            let did: Id = "design-a".into();
+            let kc = KitChange {
+                forward: vec![ChangeKitCommand::ChangeDesignCommands {
+                    design_id: crate::design::DesignIdDto { id: did.clone() },
+                    commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }],
+                }],
+                inverse: vec![],
+                kind: KitChangeKind::ModifyDesign,
+                author: None,
+                time: None,
+            };
+            let sem = semantic_kit_event_from_kit_change(&kc);
+            let gql = GqlKitEvent(KitEvent::SemanticChange { event: sem });
+            let v = gql.to_value();
+            let j = v.into_json().expect("semantic kit event json");
+            let wrapper = j.get("SemanticChange").expect("SemanticChange key");
+            let event = wrapper.get("event").expect("event");
+            let renamed = event.get("renamedDesign").expect("renamedDesign variant");
+            assert_eq!(renamed.get("designId").and_then(|x| x.as_str()), Some("design-a"));
+            let change = renamed.get("change").expect("change");
+            assert!(change.get("forward").and_then(|x| x.as_array()).is_some());
+            assert!(change.get("inverse").and_then(|x| x.as_array()).is_some());
         }
 
         #[test]
@@ -30948,8 +31288,13 @@ mod tests {
                 kit.write().unwrap().set_name("b".into()).unwrap();
                 let ea = drain(&mut a);
                 let eb = drain(&mut b);
-                assert_eq!(ea, eb);
+                assert_eq!(ea.len(), eb.len());
                 assert!(!ea.is_empty());
+                for (i, (xa, xb)) in ea.iter().zip(eb.iter()).enumerate() {
+                    let ja = serde_json::to_value(xa).unwrap_or(serde_json::Value::Null);
+                    let jb = serde_json::to_value(xb).unwrap_or(serde_json::Value::Null);
+                    assert_eq!(ja, jb, "event stream mismatch at {i}");
+                }
             }
 
             #[test]
@@ -30968,7 +31313,7 @@ mod tests {
                 let mut rx = kit.read().unwrap().subscribe();
                 drop(kit);
                 let r = futures_lite::future::block_on(rx.recv());
-                assert_eq!(r, Err(async_broadcast::RecvError::Closed));
+                assert!(matches!(r, Err(async_broadcast::RecvError::Closed)));
             }
         }
 

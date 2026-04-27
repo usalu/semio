@@ -953,6 +953,13 @@ semio/js:
 
 ---
 
+Every single Event MUST be 100% semantic and typed.
+Every event has the kit change (forward kit change commands and inverse kit change commands)
+e.g. RenamedDesignEvent, DraggedFlatCenterPieceEvent
+Adjust semio/rs if necessary (it is not clean yet). You can use the generated semio/graphql to gain insights.
+
+---
+
 Everything MUST be 100% typesafe. No Record, no strings, no json.
 Extend semio/rs with semio/graphql if necessary.
 
@@ -8135,11 +8142,48 @@ Steps:
    e.g. `git push origin 🐙ueli🎆26🌙04☀️20🚩`
 3. Squash all linear changes. If there are rebase conflicts, discard the changes until the rebase is successful.
    e.g. `git rebase -s -S -i HEAD~10`
-4. Checkout parent commit before the squashed commit
-5. Compute loc from the parent commit
-   e.g. on Windows: `cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust`
-6. Save the loc locally
-7. Checkout the squashed commit and rename
+4. Reset the
+   e.g.
+
+```
+🐙ueli🎆26🌙04☀️20🔀
+🎆26🌙04☀️20
+- 🧬 Finish GraphQL and OpenAPI store API surface
+- 🦀 Refactor Rust kit API to OO methods with async backbones
+- 🔧 Refactor Rust apply_diff implementation
+- 🧾 Normalize historical ticket status metadata
+- ♻️ Add reuse research knowledge base with prompts, taxonomy pages, and seed entities
+🎆26🌙04☀️19
+- 👪 Introduce Family as first-class entity across Semio languages and assets
+- 🧹 Remove parent fields from Type and Design entities
+- 🔄 Regenerate metabolism kit diffs after family migration
+- 🎯 Add goals MCP resource and refresh agent instructions
+🎆26🌙04☀️18
+- 🧱 Refactor Semio TypeScript kit object model
+🎆26🌙04☀️17
+- 🧰 Refactor Kit APIs to stateful OO flow across TypeScript, Go, Rust, Python, and .NET
+- 🧩 Reimplement kit diffs as JSON Patch on JSON kits
+- 🧪 Externalize shared fixtures and align cross-language test parity
+- 🧮 Add Merkle hash cache contract and fixtures for flattenDesign
+- 🧭 Add kit graph support and generated class documentation
+- 🏠 Rename Semio server to Semio Hub
+- 🕹️ Centralize Sketchpad state, logging, and store dispatch flow
+- ⚡ Fix Sketchpad drag, delete story, metabolism import, and flatten cache regressions
+- 📊 Add Semio benchmark coverage and VS Code launch support
+🎆26🌙04☀️16
+- 🛡️ Add admin dashboard and Kubernetes cluster deployment
+- 🔁 Enforce transactions and fix diff display flow
+- 🪟 Fix empty Kit and Design app viewers
+- 🔄 Fix GitHub synchronization CLI
+- 🌐 Fix Play site deployed asset loading
+- 📦 Separate Sketchpad runtime assets and remove bundled runtime artifacts
+- 🧭 Reorder Sketchpad toolbar groups
+- 🧹 Strip Semio, Coda, and Playwright MCP entries from agent configs
+🎆26🌙04☀️15
+- 🧭 Update repo CLI filtering, tests, and VS Code icon assets
+- 🛠️ Adjust devcontainer, MCP, Kiro, Cursor, and Windsurf agent configs
+Signed-off-by: Ueli Saluz <ueli@semio-tech.com>
+```
 
 Introduce a command for renaming.
 Rename all files that are not git ignored.
