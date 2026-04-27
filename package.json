@@ -61,6 +61,7 @@
     "build:desktop": "npx nx build semio/desktop",
     "build:3dm": "cross-env NODE_OPTIONS=--max-old-space-size=8192 npx nx run-many -t build -p @semio/rhino @semio/3dm-ui",
     "build:assets": "npm --workspace semio/assets run build",
+    "build:repo-cli": "npm run build:repo-client",
     "build:repo-client": "npx nx build repo/client",
     "build:repo-server": "npx nx build repo/server",
     "build:repo-vscode": "npx nx build repo/vscode",

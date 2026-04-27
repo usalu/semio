@@ -1400,9 +1400,30 @@ function inferPersistenceFromInit(init: { backbone?: KitBackboneConfig; store?: 
 // #region ⚛️Context
 
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
-/** @emoji 🧭 Active {@link KitReadScope} for read hooks / `WasmKitDataScope` (default main line). */
+
+/**
+ * @emoji 🧭 One bridge: host kit id, materialized read scope, and optional VCS write anchors (set by {@link KitScope}).
+ */
+export type SemioKitScopedView = {
+  kitId: string;
+  kitReadScope: KitReadScope;
+  kitWriteScope: KitWriteScope | null;
+};
+
+const SemioKitScopedViewContext = React.createContext<SemioKitScopedView | null>(null);
+
+/** @emoji 🧭 `null` outside {@link KitScope}. */
+export function useSemioKitScopedView(): SemioKitScopedView | null {
+  return React.useContext(SemioKitScopedViewContext);
+}
+
+/**
+ * @emoji 🧭 Active {@link KitReadScope} for read hooks: {@link SemioKitScopedViewContext} when inside {@link KitScope}, else this default (main line).
+ */
 export const KitDataScopeContext = React.createContext<KitReadScope>(theKitReadScope);
 export function useKitDataScope(): KitReadScope {
+  const s = React.useContext(SemioKitScopedViewContext);
+  if (s) return s.kitReadScope;
   return React.useContext(KitDataScopeContext);
 }
 
@@ -1796,9 +1817,11 @@ export const KitScopeContext = KitShellScopeContext;
  * @emoji 📌 Resolves kit id: explicit argument, then {@link useKitShellScope}, then {@link useActiveKitId}.
  */
 export function useResolvedKitIdentifier(explicitKitId?: string): string | undefined {
+  const semio = useSemioKitScopedView();
   const bridged = useKitShellScope();
   const active = useActiveKitId();
   if (explicitKitId != null && String(explicitKitId) !== "") return String(explicitKitId);
+  if (semio != null && String(semio.kitId) !== "") return String(semio.kitId);
   if (bridged?.id) return bridged.id;
   if (active != null && active !== "") return active;
   return undefined;
@@ -2097,32 +2120,194 @@ export function useKitSnapshotTriad(explicitKitId?: string): HookTriad<KitHostSt
   return kitReadonlyTriad(snap);
 }
 
-/** @emoji 📌 Kit `types` array from live store snapshot (RS-backed). */
+const EMPTY_KIT_ENTITY_LIST: any[] = [];
+
+/** @emoji 📌 Kit `types` from `KitStore.read` `readKitFullCommand` (RS materialization, not host DTO scan). */
 export function useTypesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
-  const raw = snap?.kit?.types;
-  return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+  const runtime = useKitRuntime();
+  const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-types-full:${scopeKey}:${resolved ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+        onChange();
+        return () => {};
+      }
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_ENTITY_LIST;
+          const out = await ks.read(readScope, [{ readKitFullCommand: null }]);
+          const row = out[0];
+          if (!row || !("readKitFullCommand" in row)) return EMPTY_KIT_ENTITY_LIST;
+          const t = row.readKitFullCommand.full.types;
+          return Array.isArray(t) ? t : EMPTY_KIT_ENTITY_LIST;
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
+    },
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const s = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const raw = s.data;
+  const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : s.pending > 0
+        ? { kind: "pending", pending: s.pending }
+        : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Kit `designs` array from live store snapshot (RS-backed). */
+/** @emoji 📌 Kit `designs` from `KitStore.read` `readKitFullCommand` (RS materialization). */
 export function useDesignsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
-  const raw = snap?.kit?.designs;
-  return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+  const runtime = useKitRuntime();
+  const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-designs-full:${scopeKey}:${resolved ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+        onChange();
+        return () => {};
+      }
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_ENTITY_LIST;
+          const out = await ks.read(readScope, [{ readKitFullCommand: null }]);
+          const row = out[0];
+          if (!row || !("readKitFullCommand" in row)) return EMPTY_KIT_ENTITY_LIST;
+          const t = row.readKitFullCommand.full.designs;
+          return Array.isArray(t) ? t : EMPTY_KIT_ENTITY_LIST;
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
+    },
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const s = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const raw = s.data;
+  const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : s.pending > 0
+        ? { kind: "pending", pending: s.pending }
+        : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Kit `files` array from live store snapshot (RS-backed). */
+/** @emoji 📌 Kit `files` from `KitStore.read` `readKitFullCommand` (RS materialization). */
 export function useFilesFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
-  const raw = snap?.kit?.files;
-  return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+  const runtime = useKitRuntime();
+  const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-files-full:${scopeKey}:${resolved ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+        onChange();
+        return () => {};
+      }
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_ENTITY_LIST;
+          const out = await ks.read(readScope, [{ readKitFullCommand: null }]);
+          const row = out[0];
+          if (!row || !("readKitFullCommand" in row)) return EMPTY_KIT_ENTITY_LIST;
+          const t = row.readKitFullCommand.full.files;
+          return Array.isArray(t) ? t : EMPTY_KIT_ENTITY_LIST;
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
+    },
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const s = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const raw = s.data;
+  const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : s.pending > 0
+        ? { kind: "pending", pending: s.pending }
+        : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
-/** @emoji 📌 Kit `tags` array from live store snapshot (RS-backed). */
+/** @emoji 📌 Kit `tags` from `KitStore.read` `readKitFullCommand` (RS materialization). */
 export function useTagsFull(explicitKitId?: string): HookTriad<any[]> {
-  const snap = useKitStoreSnapshot(explicitKitId);
-  const raw = snap?.kit?.tags;
-  return kitReadonlyTriad(Array.isArray(raw) ? raw : []);
+  const runtime = useKitRuntime();
+  const resolved = useResolvedKitIdentifier(explicitKitId);
+  const scopeKey = useKitDataScopeKey();
+  const readScope = useKitDataScope();
+  const key = `k-tags-full:${scopeKey}:${resolved ?? ""}`;
+  const subscribe = React.useCallback(
+    (onChange: () => void) => {
+      if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) {
+        onChange();
+        return () => {};
+      }
+      const c = runtime.kitClient;
+      return getSemioKitLiveReadStore(c).subscribe(
+        key,
+        async () => {
+          const ks = kitStoreFromKitStoreClient(c);
+          if (!ks) return EMPTY_KIT_ENTITY_LIST;
+          const out = await ks.read(readScope, [{ readKitFullCommand: null }]);
+          const row = out[0];
+          if (!row || !("readKitFullCommand" in row)) return EMPTY_KIT_ENTITY_LIST;
+          const t = row.readKitFullCommand.full.tags;
+          return Array.isArray(t) ? t : EMPTY_KIT_ENTITY_LIST;
+        },
+        kitEventAffectsCanUndoRedo,
+        onChange,
+      );
+    },
+    [runtime.kitClient, runtime.kitId, resolved, scopeKey, readScope, key],
+  );
+  const getSnap = React.useCallback(() => {
+    if (!runtime.kitClient || !resolved || runtime.kitId !== resolved) return EMPTY_KIT_READ_SNAP;
+    return getSemioKitLiveReadStore(runtime.kitClient).getSnapshot(key);
+  }, [runtime.kitClient, runtime.kitId, resolved, key]);
+  const s = useSemioReadSnap(subscribe, getSnap, getSnap);
+  const raw = s.data;
+  const value = Array.isArray(raw) ? raw : EMPTY_KIT_ENTITY_LIST;
+  const status: WriteStatus =
+    !runtime.kitClient || !resolved || runtime.kitId !== resolved
+      ? { kind: "readonly", pending: 0 }
+      : s.pending > 0
+        ? { kind: "pending", pending: s.pending }
+        : { kind: "idle", pending: 0 };
+  return [value, noopAsyncSet, status] as const;
 }
 
 export type KitScopeProps = {
@@ -2372,6 +2557,15 @@ export function KitScope({
 
   const activeKitId = kitIdProp ?? snapshot.kit?.id;
 
+  const semioKitScopedView = React.useMemo<SemioKitScopedView>(
+    () => ({
+      kitId: String(activeKitId ?? ""),
+      kitReadScope: kitReadScopeProp,
+      kitWriteScope: kitWriteScopeProp === undefined ? (kitClient?.getKitWriteScope() ?? null) : kitWriteScopeProp,
+    }),
+    [activeKitId, kitReadScopeProp, kitWriteScopeProp, kitClient],
+  );
+
   const value = React.useMemo<KitRuntimeContextValue>(
     () => ({
       store,
@@ -2391,8 +2585,8 @@ export function KitScope({
   );
 
   return React.createElement(
-    KitDataScopeContext.Provider,
-    { value: kitReadScopeProp },
+    SemioKitScopedViewContext.Provider,
+    { value: semioKitScopedView },
     React.createElement(KitRuntimeContext.Provider, { value }, children),
   );
 }
@@ -5507,7 +5701,8 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
     return [undefined, noopAsyncSet, SCHEMA_HOOK_READONLY_STATUS] as const;
   }
   const value = readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
-  const classicWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
+  /** DTO index allows writes when the Rust `submitKitChangeCommands` path does not cover this field. */
+  const schemaScanWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
   const rustTarget = React.useMemo(() => resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope), [runtime.kitClient, runtime.snapshot.kit.id, runtime.canWrite, typeName, fieldName, idValue, scope]);
   const [pending, setPending] = React.useState(0);
   const [lastErr, setLastErr] = React.useState<SetError | undefined>(undefined);
@@ -5542,12 +5737,12 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
         }
         return r;
       }
-      if (!classicWritable) {
+      if (!schemaScanWritable) {
         return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
       }
       return await runtime.setFieldValue(typeName, fieldName, resolved, idValue, scope);
     },
-    [runtime, rustTarget, classicWritable, typeName, fieldName, idValue, scope, value],
+    [runtime, rustTarget, schemaScanWritable, typeName, fieldName, idValue, scope, value],
   );
 
   const status: WriteStatus = React.useMemo(() => {
@@ -5557,8 +5752,8 @@ function useSchemaFieldState(typeName: string, fieldName: string, idValue?: stri
       if (lastErr) return { kind: "error", pending: 0, lastError: lastErr } as const;
       return SCHEMA_HOOK_IDLE_STATUS;
     }
-    return classicWritable ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
-  }, [rustTarget, runtime.kitClient, runtime.canWrite, pending, lastErr, classicWritable]);
+    return schemaScanWritable ? SCHEMA_HOOK_IDLE_STATUS : SCHEMA_HOOK_READONLY_STATUS;
+  }, [rustTarget, runtime.kitClient, runtime.canWrite, pending, lastErr, schemaScanWritable]);
 
   return [value, setValue, status] as const;
 }

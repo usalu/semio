@@ -515,7 +515,7 @@ enum KitStoreBatchResultKind {
 
 type KitStoreMutation {
 	"""
-	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
+	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` entry point.
 	"""
 	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
 }

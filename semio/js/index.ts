@@ -181,10 +181,10 @@ export type SemioKitWireTreeDto =
   | SemioKitWireStructDto;
 
 /**
- * @emoji 🧾 Tags accepted on `KitStore` shell / scoped batch mappers (matches `kitStore` batch and {@link WasmKitStoreClient} routing).
+ * @emoji 🧾 Tags accepted on `KitStore` control-plane batch mappers (`kitStore.batch` and {@link WasmKitStoreClient} routing).
  * @public
  */
-export const SEMIO_SHELL_COMMAND_KINDS = {
+export const SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS = {
   changeKitCommands: 1,
   changeKitWithInverse: 1,
   undo: 1,
@@ -208,12 +208,12 @@ export const SEMIO_SHELL_COMMAND_KINDS = {
   resolveConflict: 1,
   syncNow: 1,
 } as const;
-export type SemioShellCommandName = keyof typeof SEMIO_SHELL_COMMAND_KINDS;
+export type SemioKitStoreControlCommandName = keyof typeof SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS;
 
 export type KitCommandLifecycleEvent = {
   semioKitCommand: {
     requestId: KitCommandRequestId;
-    commandKind: SemioShellCommandName | (string & { readonly _semioShellLabel?: 1 });
+    commandKind: SemioKitStoreControlCommandName | (string & { readonly _semioStoreControlLabel?: 1 });
     phase: KitCommandLifecyclePhase;
     result?: SemioKitWireTreeDto;
     error?: SetError;
@@ -597,7 +597,7 @@ export type ChangePortCommandWire =
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } };
 
-/** @emoji 🧾 Top-level `ChangeKitCommand` JSON for `changeKitCommands` shell variables. */
+/** @emoji 🧾 Top-level `ChangeKitCommand` JSON for `changeKitCommands` batch variables. */
 export type ChangeKitCommandWire =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
@@ -852,7 +852,7 @@ export function connectionPatchToWireCommands(patch: Record<string, unknown>): C
 }
 
 /**
- * @emoji 🧾 Maps a schema entity + field to `changeKitCommands` wires for `submitChangeKitCommands` (React + kit shell).
+ * @emoji 🧾 Maps a schema entity + field to `changeKitCommands` wires for `submitChangeKitCommands` (React + kit store).
  * `designId` is required for Piece/Connection; otherwise pass `null`.
  */
 export function buildSchemaEntityChangeCommands(
@@ -1041,7 +1041,7 @@ function oneChangeFamilyCommandForField(field: string, value: unknown): ChangeFa
   return null;
 }
 
-/** @emoji 🧾 Shorthand for `client.submitChangeKitCommands` (shell / React). */
+/** @emoji 🧾 Shorthand for `client.submitChangeKitCommands` (React / tests). */
 export async function submitKitChangeCommands(
   client: KitStoreClient,
   commands: readonly ChangeKitCommandWire[],
@@ -1111,7 +1111,7 @@ function __findDesignIdForConnectionInKitDto(kit: Record<string, unknown>, conne
 }
 
 /**
- * @emoji 🧾 Writes a single field on a top-level or nested entity via `changeKitCommands` (React / kit shell).
+ * @emoji 🧾 Writes a single field on a top-level or nested entity via `changeKitCommands` (React / kit store).
  * `key` is the DTO / schema data key (e.g. `name`, `icon`).
  */
 export async function writeKitStoreClientSchemaField(
@@ -1486,7 +1486,11 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind ok count changeKind changeKindOther inverse sessionId draftId transactionId checkpointId alternativeId backbone { attached kind tip } conflicts { id backboneTip reason createdAt } } } } } }`;
+/** @emoji 🔗 `Mutation.kitStore.batch` selection; must stay aligned with `semio/graphql/schema.graphql`. */
+export const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreBatchInput!) { kitStore { batch(input: $input) { clientMutationId results { kind ok count changeKind changeKindOther inverse sessionId draftId transactionId checkpointId alternativeId backbone { attached kind tip } conflicts { id backboneTip reason createdAt } } } } } }`;
+
+/** @emoji 🔗 Root subscription document for `Subscription.eventStream` (kit scalar stream). */
+export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { eventStream }`;
 
 /**
  * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
@@ -1575,6 +1579,17 @@ export class KitStore {
     return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? {}) });
   }
 
+  /** @emoji 🧾 Single `Query.kit(scope: …) { … }` selection using only `$scope` (dedupes scoped read strings). */
+  private async gqlKitReadOnlyScope(scope: KitReadScope, innerSelection: string): Promise<Record<string, unknown>> {
+    const data = kitGraphqlData(
+      await this.gqlRunWithReadScope(scope, {
+        query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { ${innerSelection} } }`,
+      }),
+    ) as { kit?: Record<string, unknown> | null };
+    const k = gqlDataKitRoot(data);
+    return (k != null && typeof k === "object" && !Array.isArray(k) ? k : {}) as Record<string, unknown>;
+  }
+
   /** @emoji 📣 Subscribe to kit GraphQL subscription events (RxJS-free public surface). */
   subscribe(handler: (event: KitEvent) => void): Unsubscribe {
     const sub = this.fanout.subscribe({ next: handler });
@@ -1611,7 +1626,7 @@ export class KitStore {
     if (this.gqlLoopRunning) return;
     this.gqlLoopRunning = true;
     void this.transport
-      .subscribe(JSON.stringify({ query: "subscription { eventStream }" }), (eventJson: string) => {
+      .subscribe(JSON.stringify({ query: KIT_EVENT_STREAM_SUBSCRIPTION }), (eventJson: string) => {
         try {
           const msg = JSON.parse(eventJson) as { data?: { eventStream?: unknown } | null; errors?: unknown[] };
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
@@ -1645,14 +1660,12 @@ export class KitStore {
     return JSON.parse(json) as KitFullDto;
   }
 
+  /** @emoji 🧾 Main-line live kit (same DTO as {@link KitStore.read} `readKitFullCommand` on {@link theKitReadScope}). */
   async theKit(): Promise<KitFullDto> {
-    const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(theKitReadScope, {
-        query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { theKitDto } }`,
-      }),
-    );
-    const j = (data as { kit?: { theKitDto?: unknown } }).kit?.theKitDto;
-    return j as KitFullDto;
+    const r = await this.read(theKitReadScope, [{ readKitFullCommand: null }]);
+    const first = r[0];
+    if (first && "readKitFullCommand" in first) return first.readKitFullCommand.full;
+    return this.snapshot();
   }
 
   /** @emoji 🧾 Full DTO JSON for a {@link KitReadScope} via scoped `Query.kit` (`fullDto`). */
@@ -1717,9 +1730,9 @@ export class KitStore {
   }
 
 
-  /** @emoji 🧾 Maps shell `commandKind` + `variables` to one `TransactionBatchCommandInput` entry (draft/transaction scoped). */
-  private scopedInnerCommandFromShell(commandKind: string, shellPayload: Record<string, unknown>): Record<string, unknown> | null {
-    const v = (shellPayload.variables as Record<string, unknown> | null | undefined) ?? {};
+  /** @emoji 🧾 Maps control-plane canvas `commandKind` + `variables` to one `TransactionBatchCommandInput` entry (draft/transaction scoped). */
+  private scopedTransactionInnerFromControl(commandKind: string, variables: Record<string, unknown>): Record<string, unknown> | null {
+    const v = variables;
     const designCommand = (sub: Record<string, unknown>, designId: string) => ({
       design: { designId, commands: [sub] },
     });
@@ -1779,7 +1792,6 @@ export class KitStore {
         if (!pl) return null;
         return designCommand({ createFixedPiece: { typeId: String(v.typeId), plane: pl } }, String(v.designId)) as Record<string, unknown>;
       }
-      case "pasteDesignSelection":
       default:
         return null;
     }
@@ -1919,9 +1931,9 @@ export class KitStore {
     }
   }
 
-  private backboneBatchCommandsFromJson(kind: string, shellVariables: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>>[] | null {
+  private backboneBatchCommandsFromJson(kind: string, batchVariables: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>>[] | null {
     if (kind === "attachBackbone") {
-      const c = (shellVariables.config as BackboneConfig | null | undefined) ?? { Memory: null };
+      const c = (batchVariables.config as BackboneConfig | null | undefined) ?? { Memory: null };
       const bcmd: Readonly<Record<string, unknown>> =
         "Memory" in c
           ? { memory: { confirm: true } }
@@ -1943,8 +1955,8 @@ export class KitStore {
             commands: [
               {
                 resolveConflict: {
-                  conflictId: String(shellVariables.id),
-                  strategy: shellVariables.strategy,
+                  conflictId: String(batchVariables.id),
+                  strategy: batchVariables.strategy,
                 },
               },
             ],
@@ -1954,7 +1966,7 @@ export class KitStore {
     return null;
   }
 
-  /** @emoji 🧾 `kitStore.batch` (replaces the removed async shell + event subscription). */
+  /** @emoji 🧾 `kitStore.batch` control-plane entry (session, checkpoint, alternative, backbone). */
   private async runKitStoreBatch(commands: readonly Record<string, unknown>[], clientMutationId?: string): Promise<{
     clientMutationId?: string | null;
     results: readonly {
@@ -1990,69 +2002,87 @@ export class KitStore {
     };
   }
 
-  /**
-   * @emoji 🧭 Former shell dispatch: backbone → `backbone` batch; undo/redo → draft/transaction VCS batch; kit/design → scoped session transaction.
-   */
-  private async submitShell(commandKind: string, shellPayload: Record<string, unknown>): Promise<SetResult> {
+  /** @emoji 🧾 Top-level `backbone` batch that returns {@link SetResult} (attach, detach, resolve, sync). */
+  private async runBackboneBatchSetResult(kind: string, variables: Readonly<Record<string, unknown>>): Promise<SetResult> {
     this.ensureAlive();
-    const bc = this.backboneBatchCommandsFromJson(commandKind, (shellPayload.variables as Record<string, unknown>) ?? {});
-    if (bc) {
-      try {
-        const b = await this.runKitStoreBatch(bc);
-        const r0 = b.results[0] as { ok?: boolean } | undefined;
-        if (r0 && r0.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: backbone op rejected" } };
-        return { ok: true };
-      } catch (e) {
-        return { ok: false, error: { kind: "Internal", message: String(e) } };
-      }
+    const back = this.backboneBatchCommandsFromJson(kind, variables);
+    if (!back) return { ok: false, error: { kind: "Internal", message: `backbone batch: unsupported ${kind}` } };
+    try {
+      const b = await this.runKitStoreBatch(back);
+      const r0 = b.results[0] as { ok?: boolean } | undefined;
+      if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: `${kind} rejected` } };
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
-    if (commandKind === "undo" || commandKind === "redo") {
-      const t = this.kitWriteTransactionId;
-      const d = this.kitWriteDraftId;
-      const s = this.kitWriteSessionId;
-      try {
-        if (t && s && d) {
-          const inner =
-            commandKind === "undo" ? ({ undoTransaction: { count: 1 } } as const) : ({ redoTransaction: { count: 1 } } as const);
-          const b = await this.runKitStoreBatch([
-            {
-              session: {
-                sessionId: s,
-                commands: [
-                  {
-                    draft: {
-                      draftId: d,
-                      commands: [{ transaction: { transactionId: t, commands: [inner] } }],
-                    },
+  }
+
+  /** @emoji 🧾 Backbone batch rows that surface conflicts or status DTOs. */
+  private async runBackboneBatchTypedRead<T>(kind: "listConflicts" | "backboneStatus"): Promise<T> {
+    this.ensureAlive();
+    const back = this.backboneBatchCommandsFromJson(kind, {});
+    if (!back) throw new Error(`backbone batch read: unsupported ${kind}`);
+    const b = await this.runKitStoreBatch(back);
+    const r0 = b.results[0] as { conflicts?: readonly unknown[] | null; backbone?: unknown } | undefined;
+    if (kind === "listConflicts") return ((r0?.conflicts as readonly unknown[] | undefined) ?? []) as T;
+    const br = (r0?.backbone as Partial<BackboneStatusDto> | null | undefined) ?? {};
+    return {
+      attached: br.attached ?? false,
+      kind: br.kind,
+      backboneTip: br.backboneTip,
+      pendingWipCheckpoints: br.pendingWipCheckpoints ?? 0,
+    } as T;
+  }
+
+  /** @emoji 🧾 VCS undo/redo via `kitStore.batch` (open transaction or draft stack). */
+  private async runVcsUndoRedo(kind: "undo" | "redo"): Promise<SetResult> {
+    this.ensureAlive();
+    const t = this.kitWriteTransactionId;
+    const d = this.kitWriteDraftId;
+    const s = this.kitWriteSessionId;
+    try {
+      if (t && s && d) {
+        const inner = kind === "undo" ? ({ undoTransaction: { count: 1 } } as const) : ({ redoTransaction: { count: 1 } } as const);
+        const b = await this.runKitStoreBatch([
+          {
+            session: {
+              sessionId: s,
+              commands: [
+                {
+                  draft: {
+                    draftId: d,
+                    commands: [{ transaction: { transactionId: t, commands: [inner] } }],
                   },
-                ],
-              },
+                },
+              ],
             },
-          ]);
-          const r0 = b.results[0] as { ok?: boolean } | undefined;
-          if (r0 && r0.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
-          return { ok: true };
-        }
-        if (s && d) {
-          const inner =
-            commandKind === "undo" ? ({ undoDraft: { count: 1 } } as const) : ({ redoDraft: { count: 1 } } as const);
-          const b = await this.runKitStoreBatch([
-            { session: { sessionId: s, commands: [{ draft: { draftId: d, commands: [inner] } }] } },
-          ]);
-          const r0 = b.results[0] as { ok?: boolean } | undefined;
-          if (r0 && r0.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
-          return { ok: true };
-        }
-        return {
-          ok: false,
-          error: { kind: "Internal", message: "undo/redo requires an active draft or open transaction (set anchors via scoped writes)" },
-        };
-      } catch (e) {
-        return { ok: false, error: { kind: "Internal", message: String(e) } };
+          },
+        ]);
+        const r0 = b.results[0] as { ok?: boolean } | undefined;
+        if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
+        return { ok: true };
       }
+      if (s && d) {
+        const inner = kind === "undo" ? ({ undoDraft: { count: 1 } } as const) : ({ redoDraft: { count: 1 } } as const);
+        const b = await this.runKitStoreBatch([{ session: { sessionId: s, commands: [{ draft: { draftId: d, commands: [inner] } }] } }]);
+        const r0 = b.results[0] as { ok?: boolean } | undefined;
+        if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
+        return { ok: true };
+      }
+      return {
+        ok: false,
+        error: { kind: "Internal", message: "undo/redo requires an active draft or open transaction (set anchors via scoped writes)" },
+      };
+    } catch (e) {
+      return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
-    const inner = this.scopedInnerCommandFromShell(commandKind, shellPayload);
-    if (inner == null) return { ok: false, error: { kind: "NotSupported", message: `no batch mapping for ${commandKind}` } };
+  }
+
+  /** @emoji 🧾 Design/canvas ops mapped into scoped `session → draft → transaction` batch. */
+  private async runScopedCanvasControl(kind: string, variables: Record<string, unknown>): Promise<SetResult> {
+    this.ensureAlive();
+    const inner = this.scopedTransactionInnerFromControl(kind, variables);
+    if (inner == null) return { ok: false, error: { kind: "NotSupported", message: `no batch mapping for ${kind}` } };
     try {
       const rows = await this.runScopedTransactionBatch([inner]);
       for (const row of rows) {
@@ -2064,104 +2094,62 @@ export class KitStore {
     }
   }
 
-  /**
-   * @emoji 🧭 Former shell `result` JSON; now the **first** [`kitStore.batch`] `results` entry (VCS, backbone, inverse, …).
-   */
-  private async submitShellJson(commandKind: string, shellVariables: Record<string, unknown>): Promise<unknown> {
-    this.ensureAlive();
-    if (commandKind === "changeKitWithInverse") {
-      const rows = await this.runScopedTransactionBatch([
-        { changeKitWithInverse: { commands: (shellVariables.commands as readonly unknown[]) ?? [] } } as Record<string, unknown>,
-      ]);
-      const hit = [...rows].reverse().find((r) => __normKitStoreBatchKind(r.kind) === "CHANGE_KIT_WITH_INVERSE") as
-        | { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: unknown }
-        | undefined;
-      if (hit != null && hit.changeKind != null) {
-        const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommandWire[]) : [];
-        return {
-          data: {
-            changeKitWithInverse: {
-              kind: kitChangeSemanticKindToWire(hit.changeKind, hit.changeKindOther ?? null),
-              inverse: inv,
-            },
-          },
-        };
-      }
-      throw new Error("changeKitWithInverse: missing batch row");
-    }
-    const back = this.backboneBatchCommandsFromJson(commandKind, shellVariables);
-    if (back) {
-      const b = await this.runKitStoreBatch(back);
-      const r0 = b.results[0] as
-        | { kind?: string; ok?: boolean | null; conflicts?: readonly unknown[] | null; backbone?: unknown }
-        | undefined;
-      if (commandKind === "listConflicts")
-        return ((r0?.conflicts as readonly unknown[] | undefined) ?? []) as readonly KitConflict[];
-      if (commandKind === "backboneStatus") {
-        const br = (r0?.backbone as Partial<BackboneStatusDto> | null | undefined) ?? {};
-        return {
-          attached: br.attached ?? false,
-          kind: br.kind,
-          backboneTip: br.backboneTip,
-          pendingWipCheckpoints: br.pendingWipCheckpoints ?? 0,
-        } satisfies BackboneStatusDto;
-      }
-      if (commandKind === "attachBackbone" || commandKind === "detachBackbone" || commandKind === "resolveConflict" || commandKind === "syncNow") {
-        if (r0?.ok === false) return { ok: false, error: { kind: "Internal" as const, message: `${commandKind} rejected` } };
-        return { ok: true } as const;
-      }
-      return r0;
-    }
-    throw new Error(`submitShellJson: unhandled kind ${commandKind}`);
-  }
-
   async changeKitWithInverse(commands: unknown): Promise<{ kind: KitChangeKindWire; inverse: readonly ChangeKitCommandWire[] }> {
-    const raw = (await this.submitShellJson("changeKitWithInverse", { commands: commands as never })) as {
-      data?: { changeKitWithInverse?: { kind: KitChangeKindWire; inverse: readonly ChangeKitCommandWire[] } };
-    };
-    const inner = raw?.data?.changeKitWithInverse;
-    if (!inner || inner.kind == null) throw new Error("changeKitWithInverse: missing payload in batch result");
-    return inner;
+    this.ensureAlive();
+    const rows = await this.runScopedTransactionBatch([
+      { changeKitWithInverse: { commands: (commands as readonly unknown[]) ?? [] } } as Record<string, unknown>,
+    ]);
+    const hit = [...rows].reverse().find((r) => __normKitStoreBatchKind(r.kind) === "CHANGE_KIT_WITH_INVERSE") as
+      | { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: unknown }
+      | undefined;
+    if (hit != null && hit.changeKind != null) {
+      const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommandWire[]) : [];
+      return { kind: kitChangeSemanticKindToWire(hit.changeKind, hit.changeKindOther ?? null), inverse: inv };
+    }
+    throw new Error("changeKitWithInverse: missing batch row");
   }
 
   async clusterPieces(designId: string, pieceIds: readonly string[], clusterName: string): Promise<SetResult> {
-    return this.submitShell("clusterPieces", { variables: { designId, pieceIds: [...pieceIds], clusterName } });
+    return this.runScopedCanvasControl("clusterPieces", { designId, pieceIds: [...pieceIds], clusterName });
   }
 
   async dragPieces(designId: string, pieceIds: readonly string[], du: number, dv: number): Promise<SetResult> {
-    return this.submitShell("dragPieces", { variables: { designId, pieceIds: [...pieceIds], du, dv } });
+    return this.runScopedCanvasControl("dragPieces", { designId, pieceIds: [...pieceIds], du, dv });
   }
 
   async movePieces(designId: string, pieceIds: readonly string[], gap: number, shift: number, rise: number): Promise<SetResult> {
-    return this.submitShell("movePieces", { variables: { designId, pieceIds: [...pieceIds], gap, shift, rise } });
+    return this.runScopedCanvasControl("movePieces", { designId, pieceIds: [...pieceIds], gap, shift, rise });
   }
 
   async fixPieces(designId: string, pieceIds: readonly string[]): Promise<SetResult> {
-    return this.submitShell("fixPieces", { variables: { designId, pieceIds: [...pieceIds] } });
+    return this.runScopedCanvasControl("fixPieces", { designId, pieceIds: [...pieceIds] });
   }
 
   async flattenDesign(designId: string): Promise<SetResult> {
-    return this.submitShell("flattenDesign", { variables: { designId } });
+    return this.runScopedCanvasControl("flattenDesign", { designId });
   }
 
   async expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
-    return this.submitShell("expandDesign", { variables: { parentDesignId, nestedDesignId } });
+    return this.runScopedCanvasControl("expandDesign", { parentDesignId, nestedDesignId });
   }
 
   async deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
-    return this.submitShell("deleteConnection", { variables: { designId, connectionId } });
+    return this.runScopedCanvasControl("deleteConnection", { designId, connectionId });
   }
 
   async changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
-    return this.submitShell("changePieceType", { variables: { designId, pieceId, newTypeId } });
+    return this.runScopedCanvasControl("changePieceType", { designId, pieceId, newTypeId });
   }
 
-  async pasteDesignSelection(designId: string, selection: SemioKitWireTreeDto, plane: PlanePlain | null): Promise<SetResult> {
-    return this.submitShell("pasteDesignSelection", { variables: { designId, selection, plane } });
+  async pasteDesignSelection(_designId: string, _selection: SemioKitWireTreeDto, _plane: PlanePlain | null): Promise<SetResult> {
+    return {
+      ok: false,
+      error: { kind: "NotSupported", message: "pasteDesignSelection: not yet implemented in Rust store" },
+    };
   }
 
   async createHangingPieces(designId: string, typeIds: readonly string[], plane: PlanePlain): Promise<SetResult> {
-    return this.submitShell("createHangingPieces", { variables: { designId, typeIds: [...typeIds], plane } });
+    return this.runScopedCanvasControl("createHangingPieces", { designId, typeIds: [...typeIds], plane });
   }
 
   async createConnectedPiece(
@@ -2171,45 +2159,45 @@ export class KitStore {
     childType: string,
     childPort: string,
   ): Promise<SetResult> {
-    return this.submitShell("createConnectedPiece", { variables: { designId, parentPiece, parentPort, childType, childPort } });
+    return this.runScopedCanvasControl("createConnectedPiece", { designId, parentPiece, parentPort, childType, childPort });
   }
 
   async createFixedPiece(designId: string, typeId: string, plane: PlanePlain): Promise<SetResult> {
-    return this.submitShell("createFixedPiece", { variables: { designId, typeId, plane } });
+    return this.runScopedCanvasControl("createFixedPiece", { designId, typeId, plane });
   }
 
   async undo(): Promise<SetResult> {
-    return this.submitShell("undo", { variables: {} });
+    return this.runVcsUndoRedo("undo");
   }
 
   async redo(): Promise<SetResult> {
-    return this.submitShell("redo", { variables: {} });
+    return this.runVcsUndoRedo("redo");
   }
 
   async attachBackbone(cfg: BackboneConfig): Promise<SetResult> {
-    return (await this.submitShellJson("attachBackbone", { config: cfg })) as SetResult;
+    return this.runBackboneBatchSetResult("attachBackbone", { config: cfg });
   }
 
   async detachBackbone(): Promise<SetResult> {
-    return (await this.submitShellJson("detachBackbone", {})) as SetResult;
+    return this.runBackboneBatchSetResult("detachBackbone", {});
   }
 
   async backboneStatus(): Promise<BackboneStatusDto> {
-    return (await this.submitShellJson("backboneStatus", {})) as BackboneStatusDto;
+    return this.runBackboneBatchTypedRead<BackboneStatusDto>("backboneStatus");
   }
 
   async listConflicts(): Promise<KitConflict[]> {
-    const raw = await this.submitShellJson("listConflicts", {});
+    const raw = await this.runBackboneBatchTypedRead<readonly unknown[]>("listConflicts");
     if (Array.isArray(raw)) return raw as KitConflict[];
     return [];
   }
 
   async resolveConflict(id: string, strategy: ConflictResolution): Promise<SetResult> {
-    return (await this.submitShellJson("resolveConflict", { id, strategy })) as SetResult;
+    return this.runBackboneBatchSetResult("resolveConflict", { id, strategy });
   }
 
   async syncNow(): Promise<SetResult> {
-    return (await this.submitShellJson("syncNow", {})) as SetResult;
+    return this.runBackboneBatchSetResult("syncNow", {});
   }
 
   /**
@@ -2275,76 +2263,62 @@ export class KitStore {
       return { readKitFullCommand: { full: semioCoerceKitFullDtoFromWire(d as SemioKitWireTreeDto) } };
     }
     if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
-      const t = await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { typesShallow } }` });
-      const tdata = kitGraphqlData(t) as { kit?: { typesShallow?: unknown } };
-      const d = await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { designsShallow } }` });
-      const ddata = kitGraphqlData(d) as { kit?: { designsShallow?: unknown } };
+      const row = await this.gqlKitReadOnlyScope(scope, "typesShallow designsShallow");
       return {
         readKitShallowCommand: {
-          types: semioParseTypeShallowArrayWire(gqlDataKitRoot(tdata)?.typesShallow as SemioKitWireTreeDto | string),
-          designs: semioParseDesignShallowArrayWire(gqlDataKitRoot(ddata)?.designsShallow as SemioKitWireTreeDto | string),
+          types: semioParseTypeShallowArrayWire(row.typesShallow as SemioKitWireTreeDto | string),
+          designs: semioParseDesignShallowArrayWire(row.designsShallow as SemioKitWireTreeDto | string),
         },
       };
     }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { typeIds } }` }),
-      ) as { kit?: { typeIds?: unknown } };
-      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdWireArrayWire(gqlDataKitRoot(d)?.typeIds as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "typeIds");
+      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdWireArrayWire(row.typeIds as SemioKitWireTreeDto | string) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { designIds } }` }),
-      ) as { kit?: { designIds?: unknown } };
-      return { readKitDesignIdsCommand: { designIds: semioParseKitIdWireArrayWire(gqlDataKitRoot(d)?.designIds as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "designIds");
+      return { readKitDesignIdsCommand: { designIds: semioParseKitIdWireArrayWire(row.designIds as SemioKitWireTreeDto | string) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { typesMetadata { id name description icon image stock typeVirtual unit location { id } created updated } } }`,
-        }),
-      ) as { kit?: { typesMetadata?: unknown } };
-      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayWire(gqlDataKitRoot(d)?.typesMetadata as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(
+        scope,
+        "typesMetadata { id name description icon image stock typeVirtual unit location { id } created updated }",
+      );
+      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayWire(row.typesMetadata as SemioKitWireTreeDto | string) } };
     }
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { designsMetadata { id name description icon image location { id } unit created updated kit { id } } } }`,
-        }),
-      ) as { kit?: { designsMetadata?: unknown } };
-      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayWire(gqlDataKitRoot(d)?.designsMetadata as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(
+        scope,
+        "designsMetadata { id name description icon image location { id } unit created updated kit { id } }",
+      );
+      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayWire(row.designsMetadata as SemioKitWireTreeDto | string) } };
     }
     if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { typesShallow } }` }),
-      ) as { kit?: { typesShallow?: unknown } };
-      return { readKitTypesShallowCommand: { types: semioParseTypeShallowArrayWire(gqlDataKitRoot(d)?.typesShallow as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "typesShallow");
+      return { readKitTypesShallowCommand: { types: semioParseTypeShallowArrayWire(row.typesShallow as SemioKitWireTreeDto | string) } };
     }
     if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { designsShallow } }` }),
-      ) as { kit?: { designsShallow?: unknown } };
-      return { readKitDesignsShallowCommand: { designs: semioParseDesignShallowArrayWire(gqlDataKitRoot(d)?.designsShallow as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "designsShallow");
+      return { readKitDesignsShallowCommand: { designs: semioParseDesignShallowArrayWire(row.designsShallow as SemioKitWireTreeDto | string) } };
     }
     if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { authorsShallow } }` }),
-      ) as { kit?: { authorsShallow?: unknown } };
-      return { readKitAuthorsShallowCommand: { authors: semioParseAuthorMetadataArrayWire(gqlDataKitRoot(d)?.authorsShallow as SemioKitWireTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "authorsShallow");
+      return { readKitAuthorsShallowCommand: { authors: semioParseAuthorMetadataArrayWire(row.authorsShallow as SemioKitWireTreeDto | string) } };
     }
     if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { kitMetadata { id name description icon image preview remote homepage license uri created updated version } } }` }),
-      ) as { kit?: { kitMetadata?: unknown } };
-      return { readKitMetadataCommand: { metadata: semioParseKitCatalogMetadataWire(gqlDataKitRoot(d)?.kitMetadata as SemioKitWireTreeDto) } };
+      const row = await this.gqlKitReadOnlyScope(
+        scope,
+        "kitMetadata { id name description icon image preview remote homepage license uri created updated version }",
+      );
+      return { readKitMetadataCommand: { metadata: semioParseKitCatalogMetadataWire(row.kitMetadata as SemioKitWireTreeDto) } };
     }
     if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { coloredConnectors { typeId { id } connectorId { id } color } } }`,
-        }),
-      ) as { kit?: { coloredConnectors?: unknown } };
-      return { readKitColoredConnectorsCommand: { rows: semioParseColoredConnectorRowsWire(gqlDataKitRoot(d)?.coloredConnectors as SemioKitWireTreeDto | readonly SemioKitWireTreeDto[]) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "coloredConnectors { typeId { id } connectorId { id } color }");
+      return {
+        readKitColoredConnectorsCommand: {
+          rows: semioParseColoredConnectorRowsWire(row.coloredConnectors as SemioKitWireTreeDto | readonly SemioKitWireTreeDto[]),
+        },
+      };
     }
     if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
       const { id, commands } = c.readKitDesignCommands;
@@ -2899,10 +2873,10 @@ export type KitCommandContext = Record<string, unknown>;
 export type KitCommandResult = Record<string, unknown>;
 
 /** @emoji 🧾 Typed kit mutation envelope for React facades (`kitStore.batch` transaction `changeKitCommands`). */
-type KitTypedShellCommand = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
+type KitTypedChangeKitCommandsBatch = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
 
-/** @emoji 🧾 Typed `changeKitCommands` batch facade for React shells (opaque to string command routers). */
-export type SemioKitCommandFacade = { runMutation(cmd: KitTypedShellCommand): Promise<SetResult> };
+/** @emoji 🧾 Typed `changeKitCommands` batch facade for React (opaque to string command routers). */
+export type SemioKitCommandFacade = { runMutation(cmd: KitTypedChangeKitCommandsBatch): Promise<SetResult> };
 
 export type KitStoreReadSnap = { readonly version: number; readonly data: unknown; readonly pending: number };
 
@@ -3964,7 +3938,7 @@ export function acquireSemioKitCommandFacade(client: KitStoreClient): SemioKitCo
   let f = facades.get(client);
   if (!f) {
     f = {
-      runMutation: async (cmd: KitTypedShellCommand): Promise<SetResult> => {
+      runMutation: async (cmd: KitTypedChangeKitCommandsBatch): Promise<SetResult> => {
         if (cmd.kind !== "changeKitCommands") return { ok: false, error: { kind: "NotSupported", message: "command" } };
         return client.submitChangeKitCommands(cmd.commands);
       },
@@ -6778,6 +6752,33 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
               : true;
       const _assert: MustNotLeakRx = true;
       expect(_assert).toBe(true);
+    });
+  });
+
+  describe("semio-js GraphQL wire contract", () => {
+    it("KIT_STORE_BATCH_MUTATION and KIT_EVENT_STREAM_SUBSCRIPTION align with schema.graphql", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { resolve, dirname } = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      let sdl = "";
+      const here = dirname(fileURLToPath(import.meta.url));
+      for (const p of [resolve(here, "../graphql/schema.graphql"), resolve(process.cwd(), "semio/graphql/schema.graphql")]) {
+        try {
+          sdl = readFileSync(p, "utf8");
+          if (sdl.length > 100) break;
+        } catch {
+          /* try next */
+        }
+      }
+      expect(sdl.length).toBeGreaterThan(100);
+      expect(sdl).toContain("type KitStoreMutation");
+      expect(sdl).toContain("batch(input: KitStoreBatchInput!");
+      expect(sdl).toContain("type KitStoreBatchResult");
+      expect(sdl).toMatch(/eventStream\s*[:(]/);
+      expect(KIT_STORE_BATCH_MUTATION).toContain("mutation($input: KitStoreBatchInput!)");
+      expect(KIT_STORE_BATCH_MUTATION).toContain("kitStore { batch(input: $input)");
+      expect(KIT_STORE_BATCH_MUTATION).toContain("results { kind");
+      expect(KIT_EVENT_STREAM_SUBSCRIPTION).toBe("subscription { eventStream }");
     });
   });
 

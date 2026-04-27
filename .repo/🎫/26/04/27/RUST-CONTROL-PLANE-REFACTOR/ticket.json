@@ -1,11 +1,17 @@
 {
-  "title": "Rust Change Tree for Kit Type Design Piece",
+  "title": "Rust Control Plane Refactor",
   "emoji": "🌳",
-  "status": "closed",
+  "status": "open",
   "description": "Implement typed change tree in semio/rs: KitChange owns kit-scoped commands plus nested TypeChange, DesignChange, PieceChange children. Preserve ChangeKitCommand apply semantics; semantic ops like ClusterPieces stay kit-level.",
   "summary": "Typed KitChange tree: children Change (Type / KitDesign / Piece), lift_flat from flat commands, DFS apply_forward/backward, flatten_* for finalize + kit_event_from_kit_change. Scoped design struct named KitDesignChange (avoids diff::DesignChange). Wired lift before apply in transactions, finalize merge, set_field/add_child/remove_child RPC, GraphQL actor; KitEvent Scalar rustdoc matches schema.graphql. Extended tests::change_command_rt. cargo fmt + cargo test (136+1 ignored) pass.",
   "goal": "🎯refactorkitapitoobjectorientedwithcentralizedchangemanagement",
+  "plan": {
+    "client": "cursor",
+    "id": "e1a81d8a",
+    "source": "c:\\git\\semio\\.cursor\\plans\\rust-control-plane-refactor_e1a81d8a.plan.md"
+  },
   "sessions": [
-    "⚪0513d4c5040e45ac91497b7e3c63da27"
+    "⚪0513d4c5040e45ac91497b7e3c63da27",
+    "⚪eab9ecffce3a4559bc8f21be8c07279d"
   ]
 }
