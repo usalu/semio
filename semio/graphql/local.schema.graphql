@@ -15,7 +15,7 @@ input AlternativeInput {
 	commands: [AlternativeCommandInput!]!
 }
 
-type AttributeFullDto {
+type AttributeOutput {
 	id: Id!
 	key: String!
 	value: String!
@@ -29,7 +29,7 @@ type AttributeShallowDto {
 	definition: String
 }
 
-type AuthorFullDto {
+type AuthorOutput {
 	id: Id!
 	name: String!
 	email: String!
@@ -79,7 +79,7 @@ type BackboneStatus {
 	tip: String
 }
 
-type BenchmarkFullDto {
+type BenchmarkOutput {
 	id: Id!
 	name: String!
 	min: Float
@@ -134,7 +134,7 @@ input ClusterPiecesInput {
 	clusterName: String!
 }
 
-type ConceptFullDto {
+type ConceptOutput {
 	id: Id!
 	name: String!
 	description: String
@@ -169,7 +169,7 @@ type Connection {
 	container: DesignStore!
 	metadata: ConnectionMetadataDto!
 	shallow: ConnectionShallowDto!
-	full: ConnectionFullDto!
+	full: ConnectionOutput!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -181,7 +181,7 @@ type Connection {
 	description: String
 }
 
-type ConnectionFullDto {
+type ConnectionOutput {
 	id: Id!
 	connected: SideMetadataDto!
 	connecting: SideMetadataDto!
@@ -194,7 +194,7 @@ type ConnectionFullDto {
 	x: Float
 	y: Float
 	description: String
-	attributes: [AttributeFullDto!]!
+	attributes: [AttributeOutput!]!
 }
 
 type ConnectionMetadataDto {
@@ -235,16 +235,16 @@ type Connector {
 	container: TypeStore!
 	metadata: ConnectorMetadataDto!
 	shallow: ConnectorShallowDto!
-	full: ConnectorFullDto!
+	full: ConnectorOutput!
 }
 
-type ConnectorFullDto {
+type ConnectorOutput {
 	id: Id!
 	code: String!
 	description: String
 	port: PortIdDto
-	qualities: [QualityFullDto!]!
-	attributes: [AttributeFullDto!]!
+	qualities: [QualityOutput!]!
+	attributes: [AttributeOutput!]!
 }
 
 type ConnectorIdDto {
@@ -327,7 +327,7 @@ type DesignFlattenMapEntryDto {
 	center: Coordinate!
 }
 
-type DesignFullDto {
+type DesignOutput {
 	id: Id!
 	name: String!
 	description: String
@@ -339,17 +339,17 @@ type DesignFullDto {
 	updated: String
 	kit: KitIdDto
 	families: [FamilyIdDto!]!
-	pieces: [PieceFullDto!]!
-	connections: [ConnectionFullDto!]!
-	layers: [LayerFullDto!]!
-	groups: [GroupFullDto!]!
-	authors: [AuthorFullDto!]!
-	concepts: [ConceptFullDto!]!
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
-	stats: [StatFullDto!]!
+	pieces: [PieceOutput!]!
+	connections: [ConnectionOutput!]!
+	layers: [LayerOutput!]!
+	groups: [GroupOutput!]!
+	authors: [AuthorOutput!]!
+	concepts: [ConceptOutput!]!
+	tags: [TagOutput!]!
+	qualities: [QualityOutput!]!
+	props: [PropOutput!]!
+	attributes: [AttributeOutput!]!
+	stats: [StatOutput!]!
 }
 
 type DesignIdDto {
@@ -406,12 +406,12 @@ type DesignStore {
 	container: KitStore!
 	metadata: DesignMetadataDto!
 	shallow: DesignShallowDto!
-	full: DesignFullDto!
+	full: DesignOutput!
 	pieces: [PieceStore!]!
 	pieceByDtoId(id: String!): PieceStore
 	connections: [Connection!]!
-	piecesFull: [PieceFullDto!]!
-	connectionsFull: [ConnectionFullDto!]!
+	piecesFull: [PieceOutput!]!
+	connectionsFull: [ConnectionOutput!]!
 	flattenMap: [DesignFlattenMapEntryDto!]!
 	clusterableGroups(selection: [String!]!): [[String!]!]!
 	qualitySum(qualityId: String!): Float!
@@ -484,7 +484,7 @@ type FolderShallowDto {
 	description: String
 }
 
-type GroupFullDto {
+type GroupOutput {
 	id: Id!
 	name: String!
 	description: String
@@ -515,7 +515,7 @@ type IncludedDesignInfoDto {
 	connectionKind: IncludedDesignConnectionKind!
 	center: Coordinate
 	plane: Plane
-	externalConnections: [ConnectionFullDto!]!
+	externalConnections: [ConnectionOutput!]!
 }
 
 enum KitChangeSemanticKind {
@@ -690,7 +690,7 @@ enum KitStoreResultKind {
 	SYNC_NOW
 }
 
-type LayerFullDto {
+type LayerOutput {
 	id: Id!
 	name: String!
 	description: String
@@ -729,7 +729,7 @@ input MovePiecesInput {
 	rise: Float!
 }
 
-type PieceFullDto {
+type PieceOutput {
 	id: Id!
 	name: String
 	description: String
@@ -742,8 +742,8 @@ type PieceFullDto {
 	color: String
 	kind: TypeIdDto
 	design: DesignIdDto
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
+	props: [PropOutput!]!
+	attributes: [AttributeOutput!]!
 }
 
 type PieceIdDto {
@@ -793,10 +793,10 @@ type PieceStore {
 	container: DesignStore!
 	metadata: PieceMetadataDto!
 	shallow: PieceShallowDto!
-	full: PieceFullDto!
+	full: PieceOutput!
 	flatPlane: Plane!
 	flatCenter: Coordinate!
-	flatPose: PoseFullDto!
+	flatPose: PoseOutput!
 	scale: Float
 	refType: TypeStore
 	parentConnection: Connection
@@ -833,12 +833,12 @@ type PortIdDto {
 	id: Id!
 }
 
-type PoseFullDto {
+type PoseOutput {
 	plane: Plane!
 	center: Coordinate!
 }
 
-type PropFullDto {
+type PropOutput {
 	id: Id!
 	key: String!
 	value: String!
@@ -853,14 +853,14 @@ type PropShallowDto {
 	unit: String
 }
 
-type QualityFullDto {
+type QualityOutput {
 	id: Id!
 	key: String!
 	value: String
 	unit: String
 	definition: String
 	description: String
-	benchmarks: [BenchmarkFullDto!]!
+	benchmarks: [BenchmarkOutput!]!
 }
 
 type QualityIdDto {
@@ -894,17 +894,17 @@ type Representation {
 	container: TypeStore!
 	metadata: RepresentationMetadataDto!
 	shallow: RepresentationShallowDto!
-	full: RepresentationFullDto!
+	full: RepresentationOutput!
 }
 
-type RepresentationFullDto {
+type RepresentationOutput {
 	id: Id!
 	url: String!
 	description: String
 	file: FileIdDto
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	attributes: [AttributeFullDto!]!
+	tags: [TagOutput!]!
+	qualities: [QualityOutput!]!
+	attributes: [AttributeOutput!]!
 }
 
 type RepresentationMetadataDto {
@@ -959,7 +959,7 @@ type SideMetadataDto {
 	connector: ConnectorIdDto
 }
 
-type StatFullDto {
+type StatOutput {
 	id: Id!
 	key: String!
 	value: String!
@@ -988,7 +988,7 @@ type Subscription {
 	eventStream: KitEvent!
 }
 
-type TagFullDto {
+type TagOutput {
 	id: Id!
 	name: String!
 	order: Int
@@ -1015,7 +1015,7 @@ input TransactionInput {
 	commands: [TransactionCommandInput!]!
 }
 
-type TypeFullDto {
+type TypeOutput {
 	id: Id!
 	name: String!
 	description: String
@@ -1028,81 +1028,21 @@ type TypeFullDto {
 	created: String
 	updated: String
 	families: [FamilyIdDto!]!
-	connectors: [ConnectorFullDto!]!
-	representations: [RepresentationFullDto!]!
-	authors: [AuthorFullDto!]!
-	concepts: [ConceptFullDto!]!
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
+	connectors: [ConnectorOutput!]!
+	representations: [RepresentationOutput!]!
+	authors: [AuthorOutput!]!
+	concepts: [ConceptOutput!]!
+	tags: [TagOutput!]!
+	qualities: [QualityOutput!]!
+	props: [PropOutput!]!
+	attributes: [AttributeOutput!]!
 }
 
-type TypeIdDto {
-	id: Id!
-}
 
-type TypeMetadataDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationIdDto
-	created: String
-	updated: String
-}
 
-type TypeShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationIdDto
-	created: String
-	updated: String
-	families: [FamilyIdDto!]!
-	connectors: [ConnectorShallowDto!]!
-	representations: [RepresentationShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-}
 
-type TypeStore {
-	id: String!
-	name: String!
-	description: String
-	container: KitStore!
-	metadata: TypeMetadataDto!
-	shallow: TypeShallowDto!
-	full: TypeFullDto!
-	connectors: [Connector!]!
-	representations: [Representation!]!
-	bestRepresentation(tagIds: [String!]!): Representation
-}
 
-type Vector {
-	x: Float!
-	y: Float!
-	z: Float!
-}
 
-input VectorInput {
-	x: Float!
-	y: Float!
-	z: Float!
-}
 
 """
 Directs the executor to include this field or fragment only when the `if` argument is true.
@@ -1112,28 +1052,58 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 directive @oneOf on INPUT_OBJECT
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
+scalar ID
+scalar TypeId
+scalar DesignId
+scalar KitId
+
+input VectorInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Vector {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type TypeStore {
+	id: String!
+	name: String!
+	description: String
+	container: KitStore!
+	connectors: [Connector!]!
+	representations: [Representation!]!
+	bestRepresentation(tagIds: [String!]!): Representation
+}
+
+
+type KitChange {
+	forwards: [KitOperation!]!
+	backwards: [KitOperation!]!
+}
+
 type KitStore{
+	id: ID!
 	container: KitGraph
 	checkpoint: Checkpoint!
 	draft: KitDraft
 	transaction: KitTransaction
-	full: KitFullDto!
-	metadata: KitMetadataDto!
-	shallow: KitShallowDto!
-	id: ID
 	name: String!
 	description: String
 	...
-	design(id:DesignIdDto): DesignStore
+	design(id:DesignId): DesignStore
 	designs: [DesignStore!]!
-	type(id: TypeIdDto!): TypeStore
+	type(id: TypeId!): TypeStore
 	types: [TypeStore!]!
 	...
 }
 
 type KitAlternative {
-	container: KitGraph
 	id: ID!
+	container: KitGraph
 	name: String!
 	start: Checkpoint!
 	checkpoints: [Checkpoint!]!
@@ -1143,8 +1113,8 @@ type KitAlternative {
 }
 
 type KitGraph  {
-	container: KitSession
 	id:ID!
+	container: KitSession
 	theKit: KitStore
 	alternative(id: KitAlternativeIdDto!): KitAlternative
 	alternatives: [KitAlternative!]!
@@ -1163,18 +1133,65 @@ type Query {
 	session(): KitSession!
 }
 
-
-input KitChangeScopeInputDto @oneOf {
-
+input RenameKitCommandRequest {
+	name: String
 }
 
-input KitGraphCommandRequest {
-	change(changeScope)
-	vc()
+input ChangeKitDescriptionCommandRequest {
+	description: String
+}
+
+input ChangeKitCommandRequest @oneOf {
+	rename: RenameKitCommandRequest
+	changeDescription: ChangeKitDescriptionCommandRequest
+}
+
+input TransactionKitCommandRequest {
+	draftId: KitDraftId
+	transactionId: KitTransactionId
+	command:ChangeKitCommandRequest
+}
+
+
+input KitGraphCommandRequest @oneOf {
+	change: TransactionKitCommandRequest
+	vc: VersionControlCommandRequest
 }
 
 type Mutation {
-	execute(requests: [KitGraphCommandRequest!]!): KitGraphCommandResponse!
+	execute(request: KitGraphCommandRequest!): ID!
+}
+
+interface KitEvent {
+  id: ID!
+  timestamp: Timestamp!
+}
+
+interface KitGraphCommandResponse implements KitEvent {
+	id: ID!
+	timestamp: Timestamp!
+	requestId: ID!
+}
+
+interface KitChangeEvent implements KitEvent {
+  	change: KitChange
+}
+
+# The leaf/child nodes
+type UserCreatedEvent implements KitGraphCommandResponse {
+  eventId: ID!
+  timestamp: String!
+  eventType: String!
+  userId: ID!
+  email: String!
+}
+
+type UserDeletedEvent implements UserEvent & BaseEvent {
+  eventId: ID!
+  timestamp: String!
+  eventType: String!
+  userId: ID!
+  reason: String
 }
 
 

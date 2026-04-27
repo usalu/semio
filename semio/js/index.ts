@@ -174,7 +174,7 @@ type KitGraphqlResponseEnvelope<TData> = Readonly<{
 }>;
 
 /**
- * @emoji 🧾 Tags accepted on `KitStore` control-plane batch mappers (`kitStore.batch` and {@link WasmKitStoreClient} routing).
+ * @emoji 🧾 Tags accepted on `KitStore` control-plane nested `Mutation.session` mappers and {@link WasmKitStoreClient} routing.
  * @public
  */
 export const SEMIO_KIT_STORE_CONTROL_COMMAND_KINDS = {
@@ -258,28 +258,19 @@ export type ReadKitCommand =
   | { readonly readKitTypesShallowCommand: null }
   | { readonly readKitDesignsShallowCommand: null }
   | { readonly readKitAuthorsShallowCommand: null }
-  | { readonly readKitColoredConnectorsCommand: null }
   | { readonly readKitDesignCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadDesignCommand> } }
   | { readonly readKitTypeCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } };
 
 /**
- * @emoji 🧭 Which materialized kit view read commands run against (matches `semio/rs` `KitReadScope` / GraphQL oneof `KitReadScopeInput`).
- * Use `theKitReadScope` for the main live line.
+ * @emoji 🧭 Which materialized `KitStore` view read commands run against (`Query.session.wip` + nested store path).
+ * Use `theKitReadScope` for the main live line (`wip.theKit`).
  */
 export type KitReadScope =
   | { readonly theKit: null }
   | { readonly checkpoint: { readonly checkpointId: string } }
   | { readonly alternative: { readonly alternativeId: string } }
-  | { readonly draft: { readonly sessionId: string; readonly draftId: string } }
-  | { readonly transaction: { readonly sessionId: string; readonly draftId: string; readonly transactionId: string } };
-
-/** @emoji 🧾 GraphQL `KitReadScopeInput` (variables payload for `Query.kit(scope: …)`). */
-export type KitReadScopeInputGraphQL =
-  | { readonly theKit: { readonly confirm: true } }
-  | { readonly checkpoint: { readonly checkpointId: string } }
-  | { readonly alternative: { readonly alternativeId: string } }
-  | { readonly draft: { readonly sessionId: string; readonly draftId: string } }
-  | { readonly transaction: { readonly sessionId: string; readonly draftId: string; readonly transactionId: string } };
+  | { readonly draft: { readonly alternativeId: string; readonly draftId: string } }
+  | { readonly transaction: { readonly alternativeId: string; readonly draftId: string; readonly transactionId: string } };
 
 /** @emoji 🧭 Main committed kit line (default read scope). */
 export const theKitReadScope: KitReadScope = { theKit: null };
@@ -289,24 +280,9 @@ export function getKitClientReadScope(client: { readonly kitReadScope?: KitReadS
   return client.kitReadScope ?? theKitReadScope;
 }
 
-/** @emoji 🧪 Stable string for cache keys (sorted JSON of the GraphQL oneof payload). */
+/** @emoji 🧪 Stable string for cache keys (JSON of the scope branch). */
 export function kitReadScopeKey(scope: KitReadScope): string {
-  return JSON.stringify(kitReadScopeToGraphQLInput(scope));
-}
-
-/** @emoji 🧾 `KitReadScopeInput` object for async-graphql (camelCase, `theKit` uses `ConfirmOnlyInput`). */
-export function kitReadScopeToGraphQLInput(scope: KitReadScope): KitReadScopeInputGraphQL {
-  if ("theKit" in scope) return { theKit: { confirm: true } };
-  if ("checkpoint" in scope) return { checkpoint: { checkpointId: scope.checkpoint.checkpointId } };
-  if ("alternative" in scope) return { alternative: { alternativeId: scope.alternative.alternativeId } };
-  if ("draft" in scope) return { draft: { sessionId: scope.draft.sessionId, draftId: scope.draft.draftId } };
-  return {
-    transaction: {
-      sessionId: scope.transaction.sessionId,
-      draftId: scope.transaction.draftId,
-      transactionId: scope.transaction.transactionId,
-    },
-  };
+  return JSON.stringify(scope);
 }
 
 function isTheKitReadScope(s: KitReadScope): boolean {
@@ -314,8 +290,8 @@ function isTheKitReadScope(s: KitReadScope): boolean {
 }
 
 // #region 🔖KitWriteScope
-/** @emoji 🧭 Active VCS session/draft/open-transaction anchor for kit control-plane `kitStore.batch` writes. */
-export type KitWriteScope = { readonly sessionId: string; readonly draftId: string; readonly transactionId: string };
+/** @emoji 🧭 Active VCS alternative/draft/open-transaction anchor for nested `Mutation.session` writes. */
+export type KitWriteScope = { readonly alternativeId: string; readonly draftId: string; readonly transactionId: string };
 
 function __normKitStoreBatchKind(k: JsonValue | undefined): string {
   const s = k === null || k === undefined ? "" : typeof k === "string" ? k : typeof k === "number" || typeof k === "boolean" || typeof k === "bigint" ? String(k) : "UNKNOWN";
@@ -374,13 +350,6 @@ export type PiecePlacementRowDto = Readonly<{
   readonly parentPieceId: string | null;
   readonly depth: number;
   readonly path: readonly string[];
-}>;
-
-/** @emoji 🧾 One `kit.coloredConnectors` row (`KitColoredConnectorObject`). */
-export type KitColoredConnectorRowDto = Readonly<{
-  readonly typeId: TypeIdDto;
-  readonly connectorId: ConnectorIdDto;
-  readonly color: string;
 }>;
 
 /** @emoji 🧾 One `design.includedDesigns` entry (`IncludedDesignObject`). */
@@ -448,7 +417,6 @@ export type ReadKitCommandOutput =
   | { readonly readKitDesignsShallowCommand: { readonly designs: readonly DesignShallow[] } }
   | { readonly readKitAuthorsShallowCommand: { readonly authors: readonly AuthorMetadataDto[] } }
   | { readonly readKitMetadataCommand: { readonly metadata: KitMetadataDto | null } }
-  | { readonly readKitColoredConnectorsCommand: { readonly rows: readonly KitColoredConnectorRowDto[] } }
   | { readonly readKitDesignCommands: { readonly results: readonly ReadDesignCommandOutput[] } }
   | { readonly readKitTypeCommands: { readonly results: readonly ReadTypeCommandOutput[] } };
 
@@ -1157,10 +1125,79 @@ function kitGraphqlData<TData>(response: KitGraphqlResponseEnvelope<TData>): TDa
   throw new Error("kitGraphql: no data in response");
 }
 
-/** @internal Root field for scoped kit reads (`Query.kit`). */
-function gqlDataKitRoot<T>(d: { kit?: T } | null | undefined): T | undefined {
-  if (d == null) return undefined;
-  return d.kit;
+/** @emoji 🧾 GraphQL selection prefix: `session { wip { … } } }` ending at a {@link KitStore} field block `innerOnKitStore`. */
+function kitSessionWipStoreSelect(scope: KitReadScope, innerOnKitStore: string): { query: string; variables: GraphQlVariables } {
+  if ("theKit" in scope) {
+    return { query: `query { session { wip { theKit { ${innerOnKitStore} } } } }`, variables: {} };
+  }
+  if ("checkpoint" in scope) {
+    return {
+      query: `query($cid: KitCheckpointIdIn!) { session { wip { checkpoint(id: $cid) { store { ${innerOnKitStore} } } } } }`,
+      variables: { cid: { id: scope.checkpoint.checkpointId } },
+    };
+  }
+  if ("alternative" in scope) {
+    return {
+      query: `query($aid: KitAlternativeIdIn!) { session { wip { alternative(id: $aid) { store { ${innerOnKitStore} } } } } }`,
+      variables: { aid: { id: scope.alternative.alternativeId } },
+    };
+  }
+  if ("draft" in scope) {
+    return {
+      query: `query($aid: KitAlternativeIdIn!) { session { wip { alternative(id: $aid) { draft { id store { ${innerOnKitStore} } } } } } }`,
+      variables: { aid: { id: scope.draft.alternativeId } },
+    };
+  }
+  return {
+    query: `query($aid: KitAlternativeIdIn!) { session { wip { alternative(id: $aid) { draft { id openTransaction { id store { ${innerOnKitStore} } } } } } } }`,
+    variables: { aid: { id: scope.transaction.alternativeId } },
+  };
+}
+
+/** @emoji 🧾 Extract `KitStore` JSON from `Query.session.wip` for a {@link KitReadScope} materialization. */
+function gqlDataSessionWipKitStore(d: JsonValue | null | undefined, scope: KitReadScope): JsonObject | null {
+  if (d == null || typeof d !== "object" || Array.isArray(d)) return null;
+  const session = (d as { session?: JsonObject | null }).session;
+  if (!session || typeof session !== "object") return null;
+  const wip = session["wip"];
+  if (!wip || typeof wip !== "object" || Array.isArray(wip)) return null;
+  const w = wip as JsonObject;
+  if ("theKit" in scope) {
+    const tk = w["theKit"];
+    return tk != null && typeof tk === "object" && !Array.isArray(tk) ? (tk as JsonObject) : null;
+  }
+  if ("checkpoint" in scope) {
+    const cp = w["checkpoint"];
+    if (!cp || typeof cp !== "object" || Array.isArray(cp)) return null;
+    const st = (cp as JsonObject)["store"];
+    return st != null && typeof st === "object" && !Array.isArray(st) ? (st as JsonObject) : null;
+  }
+  if ("alternative" in scope) {
+    const alt = w["alternative"];
+    if (!alt || typeof alt !== "object" || Array.isArray(alt)) return null;
+    const st = (alt as JsonObject)["store"];
+    return st != null && typeof st === "object" && !Array.isArray(st) ? (st as JsonObject) : null;
+  }
+  if ("draft" in scope) {
+    const alt = w["alternative"];
+    if (!alt || typeof alt !== "object" || Array.isArray(alt)) return null;
+    const dr = (alt as JsonObject)["draft"];
+    if (!dr || typeof dr !== "object" || Array.isArray(dr)) return null;
+    if (String((dr as JsonObject)["id"]) !== scope.draft.draftId) return null;
+    const st = (dr as JsonObject)["store"];
+    return st != null && typeof st === "object" && !Array.isArray(st) ? (st as JsonObject) : null;
+  }
+  const tx = scope.transaction;
+  const alt = w["alternative"];
+  if (!alt || typeof alt !== "object" || Array.isArray(alt)) return null;
+  const dr = (alt as JsonObject)["draft"];
+  if (!dr || typeof dr !== "object" || Array.isArray(dr)) return null;
+  if (String((dr as JsonObject)["id"]) !== tx.draftId) return null;
+  const ot = (dr as JsonObject)["openTransaction"];
+  if (!ot || typeof ot !== "object" || Array.isArray(ot)) return null;
+  if (String((ot as JsonObject)["id"]) !== tx.transactionId) return null;
+  const st = (ot as JsonObject)["store"];
+  return st != null && typeof st === "object" && !Array.isArray(st) ? (st as JsonObject) : null;
 }
 
 function kitGraphqlJsonToReadonlyArray(v: JsonValue | KitJsonTreeDto | null | undefined): readonly KitJsonTreeDto[] {
@@ -1483,20 +1520,20 @@ async function __readSemioWasmBytesFromMonorepoCandidates(): Promise<Uint8Array 
   return undefined;
 }
 
-/** @emoji 🔗 `Mutation.kitStore.batch` selection; must stay aligned with `semio/graphql/schema.graphql`. */
-export const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { clientMutationId results { kind ok count changeKind changeKindOther inverse sessionId draftId transactionId checkpointId alternativeId backbone { attached kind tip } conflicts { id backboneTip reason createdAt } } } } } }`;
+/** @emoji 🔗 `Query.session` smoke selection; must stay aligned with `semio/graphql/schema.graphql`. */
+export const KIT_SESSION_QUERY_ENTRY = `query { session { id wip { id theKit { id } } } }` as const;
 
 /** @emoji 🔗 Root subscription document for `Subscription.eventStream` (kit scalar stream). */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { eventStream }`;
 
 /**
- * @emoji 🔗 Scoped full kit DTO via `Query.kit` — must stay aligned with `semio/graphql/schema.graphql` (`KitStore.fullDto`).
+ * @emoji 🔗 Main-line full kit DTO via `Query.session.wip.theKit.full` — must stay aligned with `semio/graphql/schema.graphql`.
  */
-export const KIT_SCOPED_FULL_DTO_QUERY = `query KitScopedFullDto($scope: KitReadScopeInput!) { kit(scope: $scope) { fullDto } }` as const;
+export const KIT_SCOPED_FULL_DTO_QUERY = `query { session { wip { theKit { full } } } }` as const;
 
-/** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} (after {@link kitGraphqlData}). */
+/** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} on {@link theKitReadScope} (after {@link kitGraphqlData}). */
 export type KitGraphqlDataKitScopedFullDto = Readonly<{
-  readonly kit: Readonly<{ readonly fullDto: KitJsonTreeDto }> | null;
+  readonly session: Readonly<{ readonly wip: Readonly<{ readonly theKit: Readonly<{ readonly full: KitJsonTreeDto }> | null }> }> | null;
 }>;
 
 /**
@@ -1508,8 +1545,8 @@ export class KitStore {
   private readonly fanout = new Subject<KitEvent>();
   private gqlLoopRunning = false;
   private disposed = false;
-  /** @emoji 🧭 VCS anchors for {@link KitStore.runScopedTransactionBatch}; auto-filled from batch results. */
-  private kitWriteSessionId: string | null = null;
+  /** @emoji 🧭 VCS anchors for nested `Mutation.session` writes; auto-filled after mutations. */
+  private kitWriteAlternativeId: string | null = null;
   private kitWriteDraftId: string | null = null;
   private kitWriteTransactionId: string | null = null;
 
@@ -1569,28 +1606,22 @@ export class KitStore {
     if (this.disposed) throw new Error("KitStore disposed");
   }
 
-  private readScopeVars(scope: KitReadScope, extra: GraphQlVariables = {} as GraphQlVariables): GraphQlVariables {
-    return { scope: kitReadScopeToGraphQLInput(scope) as JsonValue, ...extra } as GraphQlVariables;
-  }
-
   private async gqlRun(body: { query: string; variables?: GraphQlVariables; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     this.ensureAlive();
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
   }
 
-  private async gqlRunWithReadScope(scope: KitReadScope, body: { query: string; variables?: GraphQlVariables | undefined; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
-    return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? ({} as GraphQlVariables)) });
+  /** @emoji 🧾 `Query.session.wip` materialized {@link KitStore} selection for read helpers. */
+  private async gqlKitReadOnlyScope(scope: KitReadScope, innerOnKitStore: string): Promise<JsonObject> {
+    const { query, variables } = kitSessionWipStoreSelect(scope, innerOnKitStore);
+    const data = kitGraphqlData(await this.gqlRun({ query, variables })) as JsonValue;
+    return gqlDataSessionWipKitStore(data, scope) ?? ({} as JsonObject);
   }
 
-  /** @emoji 🧾 Single `Query.kit(scope: …) { … }` selection using only `$scope` (dedupes scoped read strings). */
-  private async gqlKitReadOnlyScope(scope: KitReadScope, innerSelection: string): Promise<JsonObject> {
-    const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(scope, {
-        query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { ${innerSelection} } }`,
-      }),
-    ) as { kit?: JsonObject | null };
-    const k = gqlDataKitRoot(data);
-    return k != null && typeof k === "object" && !Array.isArray(k) ? (k as JsonObject) : ({} as JsonObject);
+  /** @emoji 🧾 Runs a session/wip/store query merging `extra` variables (e.g. `id` for `design(id: $id)`). */
+  private async gqlRunSessionWipStore(scope: KitReadScope, innerOnKitStore: string, extra: GraphQlVariables = {} as GraphQlVariables): Promise<JsonValue> {
+    const { query, variables } = kitSessionWipStoreSelect(scope, innerOnKitStore);
+    return kitGraphqlData(await this.gqlRun({ query, variables: { ...variables, ...extra } })) as JsonValue;
   }
 
   /** @emoji 📣 Subscribe to kit GraphQL subscription events (RxJS-free public surface). */
@@ -1654,83 +1685,66 @@ export class KitStore {
     this.transport.dispose();
   }
 
-  /** @internal One `Query.kit { fullDto }` read to verify GraphQL after WASM init (no local kit cache). */
+  /** @internal One `Query.session.wip.theKit { full }` read to verify GraphQL after WASM init (no local kit cache). */
   private async warmGraphqlRead(): Promise<void> {
     await this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
-  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via scoped `Query.kit` (`fullDto`); sole full-kit read path (no WASM `snapshot` fallback). */
+  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via `Query.session.wip.*.store` (`full`); sole full-kit read path (no WASM `snapshot` fallback). */
   async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<KitFullDto> {
     this.ensureAlive();
+    const { query, variables } = kitSessionWipStoreSelect(scope, "full");
     const data = kitGraphqlData(
-      await kitGraphqlRunTyped<KitGraphqlDataKitScopedFullDto>(
-        this.graphqlHandle(),
-        {
-          query: KIT_SCOPED_FULL_DTO_QUERY,
-          variables: this.readScopeVars(scope),
-        },
-        this.timeoutMs,
-      ),
-    );
-    const j = data.kit?.fullDto;
+      await kitGraphqlRunTyped<JsonValue>(this.graphqlHandle(), { query, variables }, this.timeoutMs),
+    ) as JsonValue;
+    const j = gqlDataSessionWipKitStore(data, scope)?.["full"];
     if (j == null || typeof j !== "object" || Array.isArray(j)) {
-      throw new Error("kitGraphql: fullDto missing or not an object for the given read scope");
+      throw new Error("kitGraphql: full missing or not an object for the given read scope");
     }
     return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
   }
 
-  /** @emoji 🧾 Main-line live kit DTO from `Query.kit` / `fullDto`. */
+  /** @emoji 🧾 Main-line live kit DTO from `Query.session.wip.theKit.full`. */
   async theKit(): Promise<KitFullDto> {
     return this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
   async materializeAt(checkpointId: string): Promise<KitFullDto> {
-    const idArg = checkpointId.trim() === "" ? null : checkpointId;
-    const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(theKitReadScope, {
-        query: `query($scope: KitReadScopeInput!, $id: String) { kit(scope: $scope) { materializeAt(checkpointId: $id) } }`,
-        variables: { id: idArg },
-      }),
-    );
-    const j = (data as { kit?: { materializeAt?: JsonValue } }).kit?.materializeAt;
-    return j as KitFullDto;
+    const idArg = checkpointId.trim();
+    if (idArg === "") return this.materializedLiveJsonForReadScope(theKitReadScope);
+    return this.materializedLiveJsonForReadScope({ checkpoint: { checkpointId: idArg } });
   }
 
   async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(theKitReadScope, {
-        query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { vcsState { theKitHead theKitLine root { id name } checkpoints { id parent message time authors hash isRelease changeCount } alternatives { id name root checkpoints } sessions { id drafts { id parentCheckpoint targetAlternative finalizedTransactionCount redoTransactionCount openTransactionId canUndo canRedo } } } } }`,
+      await this.gqlRun({
+        query: `query { session { wip { theKit { id } checkpoints { id parent { id } message time authors hash isRelease changeCount } alternatives { id name draft { id canUndo canRedo openTransaction { id } } } } } } }`,
       }),
-    );
-    return ((data as { kit?: { vcsState?: JsonObject } }).kit?.vcsState ?? {}) as JsonObject;
+    ) as JsonValue;
+    const wip = (data as { session?: { wip?: JsonObject } }).session?.wip ?? {};
+    return { wip } as JsonObject;
   }
 
-  /** @emoji 🧾 True when any session draft reports `canUndo` (VCS draft/transaction stack). */
+  /** @emoji 🧾 True when any alternative draft reports `canUndo` (VCS draft/transaction stack). */
   async canUndo(): Promise<boolean> {
     const v = await this.vcsState();
-    const sessions = v["sessions"];
-    if (!Array.isArray(sessions)) return false;
-    for (const s of sessions) {
-      const drafts = (s as { drafts?: JsonValue }).drafts;
-      if (!Array.isArray(drafts)) continue;
-      for (const d of drafts) {
-        if ((d as { canUndo?: boolean }).canUndo) return true;
-      }
+    const wip = v["wip"] as { alternatives?: readonly { draft?: { canUndo?: boolean } | null }[] } | undefined;
+    const alts = wip?.alternatives;
+    if (!Array.isArray(alts)) return false;
+    for (const a of alts) {
+      if (a?.draft?.canUndo) return true;
     }
     return false;
   }
 
-  /** @emoji 🧾 True when any session draft reports `canRedo`. */
+  /** @emoji 🧾 True when any alternative draft reports `canRedo`. */
   async canRedo(): Promise<boolean> {
     const v = await this.vcsState();
-    const sessions = v["sessions"];
-    if (!Array.isArray(sessions)) return false;
-    for (const s of sessions) {
-      const drafts = (s as { drafts?: JsonValue }).drafts;
-      if (!Array.isArray(drafts)) continue;
-      for (const d of drafts) {
-        if ((d as { canRedo?: boolean }).canRedo) return true;
-      }
+    const wip = v["wip"] as { alternatives?: readonly { draft?: { canRedo?: boolean } | null }[] } | undefined;
+    const alts = wip?.alternatives;
+    if (!Array.isArray(alts)) return false;
+    for (const a of alts) {
+      if (a?.draft?.canRedo) return true;
     }
     return false;
   }
@@ -2195,13 +2209,8 @@ export class KitStore {
    * @emoji 🧭 Read-only flatten map rows for one design (`semio/rs` `flatten_map`), for algorithm / MCP tooling.
    */
   async readDesignFlattenMap(scope: KitReadScope, designId: string): Promise<readonly DesignFlattenMapEntryDto[]> {
-    const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(scope, {
-        query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { flattenMap } } }`,
-        variables: { id: designId },
-      }),
-    ) as { kit?: { designByDtoId?: { flattenMap?: JsonValue } | null } | null };
-    const raw = gqlDataKitRoot(data)?.designByDtoId?.flattenMap;
+    const data = await this.gqlRunSessionWipStore(scope, `design(id: $id) { flattenMap }`, { id: designId });
+    const raw = (gqlDataSessionWipKitStore(data, scope)?.["design"] as JsonObject | undefined)?.["flattenMap"];
     const FlatRow = z.object({ pieceId: z.string(), plane: PlaneSchema, center: PointSchema });
     if (Array.isArray(raw)) {
       const out: DesignFlattenMapEntryDto[] = [];
@@ -2310,14 +2319,6 @@ export class KitStore {
       const row = await this.gqlKitReadOnlyScope(scope, "metadata { id name description icon image preview remote homepage license uri created updated version }");
       return { readKitMetadataCommand: { metadata: semioParseKitMetadataJson(row.metadata as KitJsonTreeDto) } };
     }
-    if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "coloredConnectors { typeId { id } connectorId { id } color }");
-      return {
-        readKitColoredConnectorsCommand: {
-          rows: semioParseColoredConnectorRowsJson(row.coloredConnectors as KitJsonTreeDto | readonly KitJsonTreeDto[]),
-        },
-      };
-    }
     if ("readKitDesignCommands" in c && c.readKitDesignCommands) {
       const { id, commands } = c.readKitDesignCommands;
       const results: ReadDesignCommandOutput[] = [];
@@ -2335,24 +2336,14 @@ export class KitStore {
 
   private async mapDesignRead(scope: KitReadScope, designId: string, cmd: ReadDesignCommand): Promise<ReadDesignCommandOutput> {
     if ("readDesignPiecesFullCommand" in cmd && cmd.readDesignPiecesFullCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { piecesFull } } }`,
-          variables: { id: designId },
-        }),
-      ) as { kit?: { designByDtoId?: { piecesFull?: JsonValue } | null } | null };
-      return { readDesignPiecesFullCommand: { pieces: semioParsePieceDtoArrayJson(gqlDataKitRoot(d)?.designByDtoId?.piecesFull as KitJsonTreeDto | string) } };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { piecesFull }`, { id: designId });
+      return { readDesignPiecesFullCommand: { pieces: semioParsePieceDtoArrayJson((gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["piecesFull"] as KitJsonTreeDto | string) } };
     }
     if ("readDesignConnectionsFullCommand" in cmd && cmd.readDesignConnectionsFullCommand === null) {
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { connectionsFull } } }`,
-          variables: { id: designId },
-        }),
-      ) as { kit?: { designByDtoId?: { connectionsFull?: JsonValue } | null } | null };
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { connectionsFull }`, { id: designId });
       return {
         readDesignConnectionsFullCommand: {
-          connections: semioParseConnectionDtoArrayJson(gqlDataKitRoot(d)?.designByDtoId?.connectionsFull as KitJsonTreeDto | string),
+          connections: semioParseConnectionDtoArrayJson((gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["connectionsFull"] as KitJsonTreeDto | string),
         },
       };
     }
@@ -2364,13 +2355,8 @@ export class KitStore {
     }
     if ("readDesignClusterableGroupsCommand" in cmd && cmd.readDesignClusterableGroupsCommand) {
       const sel = cmd.readDesignClusterableGroupsCommand.selection.map((s) => s.id);
-      const d = kitGraphqlData(
-        await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kit(scope: $scope) { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`,
-          variables: { id: designId, sel },
-        }),
-      ) as { kit?: { designByDtoId?: { clusterableGroups?: JsonValue } | null } | null };
-      const raw = gqlDataKitRoot(d)?.designByDtoId?.clusterableGroups;
+      const d = await this.gqlRunSessionWipStore(scope, `design(id: $id) { clusterableGroups(selection: $sel) }`, { id: designId, sel });
+      const raw = (gqlDataSessionWipKitStore(d, scope)?.["design"] as JsonObject | undefined)?.["clusterableGroups"];
       const groups: readonly (readonly KitIdDto[])[] = Array.isArray(raw) ? raw.map((row: unknown) => (Array.isArray(row) ? row.map((pid: unknown): KitIdDto => ({ id: String(pid) })) : [])) : [];
       return { readDesignClusterableGroupsCommand: { groups } };
     }
@@ -2383,7 +2369,7 @@ export class KitStore {
       ) as { kit?: { designByDtoId?: { includedDesigns?: JsonValue } | null } | null };
       return {
         readDesignIncludedDesignsCommand: {
-          designs: semioParseDesignIncludedDesignArrayJson(gqlDataKitRoot(d)?.designByDtoId?.includedDesigns as KitJsonTreeDto | readonly KitJsonTreeDto[]),
+          designs: semioParseDesignIncludedDesignArrayJson((gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["includedDesigns"] as KitJsonTreeDto | readonly KitJsonTreeDto[]),
         },
       };
     }
@@ -2395,7 +2381,7 @@ export class KitStore {
           variables: { id: designId, qid },
         }),
       ) as { kit?: { designByDtoId?: { qualitySum?: number } | null } | null };
-      return { readDesignQualitySumCommand: { sum: gqlDataKitRoot(d)?.designByDtoId?.qualitySum ?? 0 } };
+      return { readDesignQualitySumCommand: { sum: (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["qualitySum"] ?? 0 } };
     }
     if ("readDesignReplaceableCatalogCommand" in cmd && cmd.readDesignReplaceableCatalogCommand) {
       const sel = cmd.readDesignReplaceableCatalogCommand.selection.map((s) => s.id);
@@ -2405,7 +2391,7 @@ export class KitStore {
           variables: { id: designId, sel },
         }),
       ) as { kit?: { designByDtoId?: { replaceableCatalog?: { types?: readonly JsonObject[]; designs?: readonly JsonObject[] } } | null } | null };
-      const rc = gqlDataKitRoot(d)?.designByDtoId?.replaceableCatalog;
+      const rc = (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["replaceableCatalog"];
       const typeRows = Array.isArray(rc?.types) ? rc!.types : [];
       const designRows = Array.isArray(rc?.designs) ? rc!.designs : [];
       return {
@@ -2422,7 +2408,7 @@ export class KitStore {
           variables: { id: designId },
         }),
       ) as { kit?: { designByDtoId?: { includedDesignIds?: string[] } | null } | null };
-      return { readDesignIncludedDesignIdsCommand: { designIds: gqlDataKitRoot(d)?.designByDtoId?.includedDesignIds ?? [] } };
+      return { readDesignIncludedDesignIdsCommand: { designIds: (gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["includedDesignIds"] ?? [] } };
     }
     throw new Error(`readDesign: ${Object.keys(cmd).join(",")}`);
   }
@@ -2436,7 +2422,7 @@ export class KitStore {
         }),
       ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: JsonValue } | null } | null } | null };
       return {
-        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane as KitJsonTreeDto) },
+        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson((gqlDataSessionWipKitStore(d as JsonValue, scope)?.["design"] as JsonObject | undefined)?.["pieceByDtoId"] as JsonObject | undefined)?.["flatPlane"] as KitJsonTreeDto) },
       };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {

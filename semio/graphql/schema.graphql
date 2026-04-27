@@ -1,20 +1,3 @@
-input AlternativeCommandInput @oneOf {
-	createAlternative: CreateAlternativeInput
-	unifyAlternative: MessageOnlyInput
-}
-
-type AlternativeDto {
-	id: String!
-	name: String!
-	root: String!
-	checkpoints: [String!]!
-}
-
-input AlternativeInput {
-	alternativeId: String
-	commands: [AlternativeCommandInput!]!
-}
-
 type AttributeFullDto {
 	id: Id!
 	key: String!
@@ -45,24 +28,11 @@ type AuthorShallowDto {
 	rank: Int
 }
 
-input BackboneCommandInput @oneOf {
-	attachBackbone: BackboneConfigInput
-	detachBackbone: ConfirmOnlyInput
-	listConflicts: ConfirmOnlyInput
-	resolveConflict: ResolveConflictInput
-	backboneStatus: ConfirmOnlyInput
-	syncNow: ConfirmOnlyInput
-}
-
 input BackboneConfigInput @oneOf {
 	memory: ConfirmOnlyInput
 	dev: DevBackboneInput
 	local: LocalBackboneInput
 	remote: RemoteBackboneInput
-}
-
-input BackboneInput {
-	commands: [BackboneCommandInput!]!
 }
 
 enum BackboneKind {
@@ -99,39 +69,21 @@ type BenchmarkMetadataDto {
 
 scalar ChangeKitCommand
 
-input ChangeKitCommandsInput {
-	commands: [ChangeKitCommand!]!
-}
-
 input ChangePieceTypeInput {
 	pieceId: String!
 	newTypeId: String!
 }
 
-input CheckpointCommandInput @oneOf {
-	markRelease: ConfirmOnlyInput
-	setActive: ConfirmOnlyInput
-}
-
-type CheckpointDto {
-	id: String!
-	parent: String
-	message: String
-	time: String
-	authors: [String!]!
-	hash: String!
-	isRelease: Boolean!
-	changeCount: Int!
-}
-
-input CheckpointInput {
-	checkpointId: String
-	commands: [CheckpointCommandInput!]!
-}
-
 input ClusterPiecesInput {
 	pieceIds: [String!]!
 	clusterName: String!
+}
+
+type ColorDto {
+	"""
+	🎨 CSS color string for connector visuals (cached; keyed by port compatibility group).
+	"""
+	css: String!
 }
 
 type ConceptFullDto {
@@ -150,13 +102,6 @@ type ConceptShallowDto {
 
 input ConfirmOnlyInput {
 	confirm: Boolean
-}
-
-type ConflictRecord {
-	id: String!
-	backboneTip: String
-	reason: String!
-	createdAt: String!
 }
 
 enum ConflictResolutionInput {
@@ -235,6 +180,7 @@ type ConnectorFullDto {
 	port: PortIdDto
 	qualities: [QualityFullDto!]!
 	attributes: [AttributeFullDto!]!
+	color: ColorDto!
 }
 
 type ConnectorIdDto {
@@ -246,6 +192,7 @@ type ConnectorMetadataDto {
 	code: String!
 	description: String
 	port: PortIdDto
+	color: ColorDto!
 }
 
 type ConnectorShallowDto {
@@ -255,6 +202,7 @@ type ConnectorShallowDto {
 	port: PortIdDto
 	qualities: [QualityShallowDto!]!
 	attributes: [AttributeShallowDto!]!
+	color: ColorDto!
 }
 
 type ConnectorStore {
@@ -262,6 +210,7 @@ type ConnectorStore {
 	code: String!
 	description: String
 	container: TypeStore!
+	color: ColorDto!
 	metadata: ConnectorMetadataDto!
 	shallow: ConnectorShallowDto!
 	full: ConnectorFullDto!
@@ -272,25 +221,11 @@ type Coordinate {
 	v: Float!
 }
 
-input CountInput {
-	count: Int
-}
-
-input CreateAlternativeInput {
-	name: String!
-	fromCheckpointId: String
-}
-
 input CreateConnectedPieceInput {
 	parentPiece: String!
 	parentPort: String!
 	childType: String!
 	childPort: String!
-}
-
-input CreateDraftInput {
-	parentCheckpointId: String
-	targetAlternativeId: String
 }
 
 input CreateFixedPieceInput {
@@ -301,6 +236,11 @@ input CreateFixedPieceInput {
 input CreateHangingPiecesInput {
 	typeIds: [String!]!
 	plane: PlaneInput!
+}
+
+input CreateKitAlternativeInput {
+	name: String!
+	fromCheckpointId: String
 }
 
 input DeleteConnectionInput {
@@ -356,11 +296,6 @@ type DesignIdDto {
 	id: Id!
 }
 
-input DesignInput {
-	designId: String!
-	commands: [DesignCommandInput!]!
-}
-
 type DesignMetadataDto {
 	id: Id!
 	name: String!
@@ -372,6 +307,10 @@ type DesignMetadataDto {
 	created: String
 	updated: String
 	kit: KitIdDto
+}
+
+type DesignMutation {
+	applyCommands(commands: [DesignCommandInput!]!): Int!
 }
 
 type DesignShallowDto {
@@ -424,31 +363,6 @@ input DevBackboneInput {
 	path: String!
 }
 
-input DraftCommandInput @oneOf {
-	finalizeDraft: MessageOnlyInput
-	abortDraft: ConfirmOnlyInput
-	undoDraft: CountInput
-	redoDraft: CountInput
-	startTransaction: ConfirmOnlyInput
-	transaction: TransactionInput
-}
-
-type DraftDto {
-	id: String!
-	parentCheckpoint: String
-	targetAlternative: String
-	finalizedTransactionCount: Int!
-	redoTransactionCount: Int!
-	openTransactionId: String
-	canUndo: Boolean!
-	canRedo: Boolean!
-}
-
-input DraftInput {
-	draftId: String
-	commands: [DraftCommandInput!]!
-}
-
 input DragPiecesInput {
 	pieceIds: [String!]!
 	du: Float!
@@ -459,8 +373,28 @@ input ExpandDesignInput {
 	nestedDesignId: String!
 }
 
+type FamilyFullDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	ports: [PortFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
 type FamilyIdDto {
 	id: Id!
+}
+
+type FileFullDto {
+	id: Id!
+	url: String!
+	mime: String
+	size: Int
+	hash: String
+	description: String
+	created: String
+	updated: String
 }
 
 type FileIdDto {
@@ -476,6 +410,12 @@ type FileShallowDto {
 	description: String
 	created: String
 	updated: String
+}
+
+type FolderFullDto {
+	id: Id!
+	path: String!
+	description: String
 }
 
 type FolderShallowDto {
@@ -518,33 +458,130 @@ type IncludedDesignInfoDto {
 	externalConnections: [ConnectionFullDto!]!
 }
 
-enum KitChangeSemanticKind {
-	INFERRED
-	SET_KIT_METADATA
-	ADD_TYPE
-	REMOVE_TYPE
-	MODIFY_TYPE
-	ADD_DESIGN
-	REMOVE_DESIGN
-	MODIFY_DESIGN
-	ADD_PIECE
-	REMOVE_PIECE
-	CONNECT
-	DISCONNECT
-	UNIFY_CHECKPOINTS
-	MARK_RELEASE
-	OTHER
+type KitAlternative {
+	id: String!
+	name: String!
+	container: KitGraph!
+	start: KitCheckpoint!
+	checkpoints: [KitCheckpoint!]!
+	store: KitStore!
+	draft: KitDraft
+	transaction: KitTransaction
 }
 
-type KitColoredConnectorDto {
-	typeId: TypeIdDto!
-	connectorId: ConnectorIdDto!
-	color: String!
+input KitAlternativeIdIn {
+	id: String!
+}
+
+type KitAlternativeMutation {
+	createDraft(parentCheckpointId: String): KitDraft!
+	draft: KitDraftMutation
+	unify(message: String!): KitCheckpoint!
+}
+
+type KitBackboneMutation {
+	attach(config: BackboneConfigInput!): BackboneStatus!
+	detach: Boolean!
+	status: BackboneStatus!
+	syncNow: Boolean!
+	resolveConflict(id: String!, strategy: ConflictResolutionInput!): Boolean!
+}
+
+type KitChangeWithInverseDto {
+	changeKind: String!
+	inverse: [ChangeKitCommand!]!
+}
+
+type KitCheckpoint {
+	id: String!
+	container: KitGraph!
+	store: KitStore!
+	parent: KitCheckpoint
+	message: String
+	time: String
+	authors: [String!]!
+	hash: String!
+	isRelease: Boolean!
+	changeCount: Int!
+}
+
+input KitCheckpointIdIn {
+	id: String!
+}
+
+type KitCheckpointMutation {
+	markRelease: Boolean!
+	setActive: Boolean!
+}
+
+type KitConflict {
+	id: String!
+	reason: String!
+	createdAt: String!
+	wipCheckpoint: KitCheckpoint!
+	backboneTip: KitCheckpoint
+}
+
+type KitDraft {
+	id: String!
+	store: KitStore!
+	transactions: [KitTransaction!]!
+	openTransaction: KitTransaction
+	alternative: KitAlternative!
+	parent: KitCheckpoint
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
+type KitDraftMutation {
+	finalize(message: String!): KitCheckpoint!
+	abort: Boolean!
+	undo(count: Int): Boolean!
+	redo(count: Int): Boolean!
+	startTransaction: KitTransaction!
+	transaction: KitTransactionMutation
 }
 
 scalar KitEvent
 
-scalar KitFullSnapshot
+type KitFullDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+	types: [TypeFullDto!]!
+	designs: [DesignFullDto!]!
+	files: [FileFullDto!]!
+	folders: [FolderFullDto!]!
+	authors: [AuthorFullDto!]!
+	concepts: [ConceptFullDto!]!
+	tags: [TagFullDto!]!
+	qualities: [QualityFullDto!]!
+	props: [PropFullDto!]!
+	attributes: [AttributeFullDto!]!
+	ports: [PortFullDto!]!
+	families: [FamilyFullDto!]!
+	locations: [LocationFullDto!]!
+}
+
+type KitGraph {
+	id: String!
+	container: KitSession
+	theKit: KitStore
+	alternatives: [KitAlternative!]!
+	alternative(id: KitAlternativeIdIn!): KitAlternative
+	checkpoints: [KitCheckpoint!]!
+	checkpoint(id: KitCheckpointIdIn!): KitCheckpoint
+}
 
 type KitIdDto {
 	id: Id!
@@ -566,31 +603,18 @@ type KitMetadataDto {
 	version: String
 }
 
-input KitReadScopeAlternativeInput {
-	alternativeId: String!
+type KitSession {
+	id: String!
+	wip: KitGraph!
+	authorative: KitGraph
+	conflicts: [KitConflict!]!
 }
 
-input KitReadScopeCheckpointInput {
-	checkpointId: String!
-}
-
-input KitReadScopeDraftInput {
-	sessionId: String!
-	draftId: String!
-}
-
-input KitReadScopeInput @oneOf {
-	theKit: ConfirmOnlyInput
-	checkpoint: KitReadScopeCheckpointInput
-	alternative: KitReadScopeAlternativeInput
-	draft: KitReadScopeDraftInput
-	transaction: KitReadScopeTransactionInput
-}
-
-input KitReadScopeTransactionInput {
-	sessionId: String!
-	draftId: String!
-	transactionId: String!
+type KitSessionMutation {
+	createAlternative(input: CreateKitAlternativeInput!): KitAlternative!
+	alternative(id: KitAlternativeIdIn!): KitAlternativeMutation!
+	checkpoint(id: KitCheckpointIdIn!): KitCheckpointMutation!
+	backbone: KitBackboneMutation!
 }
 
 type KitShallowDto {
@@ -620,94 +644,51 @@ type KitShallowDto {
 }
 
 type KitStore {
-	name: String!
-	designByDtoId(id: String!): DesignStore
-	typeByDtoId(id: String!): TypeStore
-	description: String
-	types: [TypeStore!]!
-	designs: [DesignStore!]!
-	coloredConnectors: [KitColoredConnectorDto!]!
-	fullDto: KitFullSnapshot!
-	theKitDto: KitFullSnapshot!
-	materializeAt(checkpointId: String): KitFullSnapshot!
+	container: KitGraph!
+	checkpoint: KitCheckpoint!
+	draft: KitDraft
+	transaction: KitTransaction
+	full: KitFullDto!
 	metadata: KitMetadataDto!
 	shallow: KitShallowDto!
-	state: StateDto!
+	id: String
+	name: String!
+	description: String
+	design(id: String!): DesignStore
+	designs: [DesignStore!]!
+	type(id: String!): TypeStore
+	types: [TypeStore!]!
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
 }
 
-input KitStoreCommandInput @oneOf {
-	session: SessionInput
-	checkpoint: CheckpointInput
-	alternative: AlternativeInput
-	backbone: BackboneInput
+type KitTransaction {
+	id: String!
+	store: KitStore!
+	draft: KitDraft!
+	state: TransactionState!
+	changeCount: Int!
+	redoChangeCount: Int!
+	canUndo: Boolean!
+	canRedo: Boolean!
 }
 
-input KitStoreInput {
-	clientMutationId: String
-	commands: [KitStoreCommandInput!]!
-}
-
-type KitStoreMutation {
-	batch(input: KitStoreInput!): KitStorePayload!
-}
-
-type KitStorePayload {
-	clientMutationId: String
-	results: [KitStoreResult!]!
-}
-
-type KitStoreResult {
-	kind: KitStoreResultKind!
-	ok: Boolean
-	count: Int
-	sessionId: String
-	draftId: String
-	transactionId: String
-	checkpointId: String
-	alternativeId: String
-	backbone: BackboneStatus
-	conflicts: [ConflictRecord!]
-	changeKind: KitChangeSemanticKind
-	changeKindOther: String
-	inverse: [ChangeKitCommand!]
-}
-
-enum KitStoreResultKind {
-	CHANGE_KIT_COMMANDS
-	CHANGE_KIT_WITH_INVERSE
-	CLUSTER_PIECES
-	DRAG_PIECES
-	MOVE_PIECES
-	FIX_PIECES
-	FLATTEN_DESIGN
-	EXPAND_DESIGN
-	DELETE_CONNECTION
-	CHANGE_PIECE_TYPE
-	CREATE_HANGING_PIECES
-	CREATE_CONNECTED_PIECE
-	CREATE_FIXED_PIECE
-	NEW_SESSION
-	END_SESSION
-	NEW_DRAFT
-	START_TRANSACTION
-	FINALIZE_DRAFT
-	ABORT_DRAFT
-	UNDO_DRAFT
-	REDO_DRAFT
-	FINALIZE_TRANSACTION
-	ABORT_TRANSACTION
-	UNDO_TRANSACTION
-	REDO_TRANSACTION
-	MARK_RELEASE
-	SET_ACTIVE_CHECKPOINT
-	NEW_ALTERNATIVE
-	UNIFY_ALTERNATIVE
-	ATTACH_BACKBONE
-	DETACH_BACKBONE
-	LIST_CONFLICTS
-	RESOLVE_CONFLICT
-	BACKBONE_STATUS
-	SYNC_NOW
+type KitTransactionMutation {
+	changeKit(commands: [ChangeKitCommand!]!): Int!
+	changeKitWithInverse(commands: [ChangeKitCommand!]!): KitChangeWithInverseDto!
+	design(id: String!): DesignMutation!
+	finalize: KitCheckpoint!
+	abort: Boolean!
+	undo(count: Int): Boolean!
+	redo(count: Int): Boolean!
 }
 
 type LayerFullDto {
@@ -734,12 +715,16 @@ input LocalBackboneInput {
 	folder: String!
 }
 
-type LocationIdDto {
+type LocationFullDto {
 	id: Id!
+	longitude: Float!
+	latitude: Float!
+	altitude: Float
+	attributes: [AttributeFullDto!]!
 }
 
-input MessageOnlyInput {
-	message: String!
+type LocationIdDto {
+	id: Id!
 }
 
 input MovePiecesInput {
@@ -750,7 +735,7 @@ input MovePiecesInput {
 }
 
 type Mutation {
-	kitStore: KitStoreMutation!
+	session: KitSessionMutation!
 }
 
 type PieceFullDto {
@@ -853,6 +838,21 @@ input PointInput {
 	z: Float!
 }
 
+type PortFullDto {
+	id: Id!
+	name: String!
+	description: String
+	icon: String
+	compatibleFamilies: [FamilyIdDto!]!
+	mandatory: Boolean
+	t: Float
+	point: Point
+	direction: Vector
+	compatiblePorts: [PortIdDto!]!
+	qualities: [QualityFullDto!]!
+	attributes: [AttributeFullDto!]!
+}
+
 type PortIdDto {
 	id: Id!
 }
@@ -902,7 +902,7 @@ type QualityShallowDto {
 }
 
 type Query {
-	kit(scope: KitReadScopeInput!): KitStore!
+	session: KitSession!
 }
 
 input RemoteBackboneInput {
@@ -952,33 +952,6 @@ type RepresentationStore {
 	full: RepresentationFullDto!
 }
 
-input ResolveConflictInput {
-	conflictId: String!
-	strategy: ConflictResolutionInput!
-}
-
-type RootDto {
-	id: String!
-	name: String!
-}
-
-input SessionCommandInput @oneOf {
-	createSession: ConfirmOnlyInput
-	endSession: ConfirmOnlyInput
-	createDraft: CreateDraftInput
-	draft: DraftInput
-}
-
-type SessionDto {
-	id: String!
-	drafts: [DraftDto!]!
-}
-
-input SessionInput {
-	sessionId: String
-	commands: [SessionCommandInput!]!
-}
-
 type SideMetadataDto {
 	id: Id!
 	piece: PieceIdDto!
@@ -1003,15 +976,6 @@ type StatShallowDto {
 	description: String
 }
 
-type StateDto {
-	theKitHead: String
-	root: RootDto!
-	checkpoints: [CheckpointDto!]!
-	alternatives: [AlternativeDto!]!
-	sessions: [SessionDto!]!
-	theKitLine: [String!]!
-}
-
 type Subscription {
 	eventStream: KitEvent!
 }
@@ -1028,19 +992,9 @@ type TagShallowDto {
 	order: Int
 }
 
-input TransactionCommandInput @oneOf {
-	changeKitCommands: ChangeKitCommandsInput
-	changeKitWithInverse: ChangeKitCommandsInput
-	design: DesignInput
-	finalizeTransaction: ConfirmOnlyInput
-	abortTransaction: ConfirmOnlyInput
-	undoTransaction: CountInput
-	redoTransaction: CountInput
-}
-
-input TransactionInput {
-	transactionId: String
-	commands: [TransactionCommandInput!]!
+enum TransactionState {
+	open
+	finalized
 }
 
 type TypeFullDto {
