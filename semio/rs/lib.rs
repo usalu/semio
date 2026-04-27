@@ -6643,7 +6643,11 @@ pub mod kit_read_scope {
     pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
         let g0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
         let view = match scope {
-            KitReadScope::TheKit => g0.materialize_graph_at(g0.the_kit_head.as_ref()),
+            // 🧾 `TheKit` reads use the **live** coordinator graph (sessions, drafts, WIP) — same authority as the former `Query.kitStore`; checkpoint/materialized scopes stay throwaway graphs.
+            KitReadScope::TheKit => {
+                drop(g0);
+                return Ok(kit.clone());
+            }
             KitReadScope::Checkpoint { checkpoint_id } => g0.materialize_graph_at(Some(checkpoint_id)),
             KitReadScope::Alternative { alternative_id } => {
                 let tip = g0.alternative_tip(alternative_id);

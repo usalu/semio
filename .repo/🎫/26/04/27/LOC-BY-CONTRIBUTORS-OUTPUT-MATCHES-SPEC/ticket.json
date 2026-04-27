@@ -1,0 +1,10 @@
+{
+  "title": "Loc By-Contributors Output Matches Spec",
+  "emoji": "📊",
+  "status": "open",
+  "description": "Align `loc --by-contributors` text/markdown with spec: (1) contributor and history tables with zero tree LOC omit useless loc and tree-% columns, show wip% + churn sorted by edited; (2) history with --by-contributors carries only the commit author's cumulative row per step; (3) omit redundant inner contributor label when it matches the commit author alone.",
+  "goal": "🎯repoclient",
+  "sessions": [
+    "⚪c8fbcf817b0e4d2280c40787a41f55ca"
+  ]
+}

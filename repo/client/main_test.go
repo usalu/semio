@@ -22809,6 +22809,41 @@ func TestLocCommand(t *testing.T) {
 			t.Fatalf("markdown: %q", s)
 		}
 	})
+	t.Run("delta-only table omits loc and tree percent columns", func(t *testing.T) {
+		rows := map[string]LocLangStats{
+			"TypeScript": {Loc: 0, Edited: 5, Added: 1, Removed: 1, Percent: 0, WipPercent: 10},
+			"Go":         {Loc: 0, Edited: 20, Added: 2, Removed: 2, Percent: 0, WipPercent: 40},
+			locAggTotal:  {Loc: 0, Edited: 25, Added: 3, Removed: 3, Percent: 0, WipPercent: 50},
+		}
+		if locUseFullTreeTable(rows) {
+			t.Fatal("expected delta-only rows (total loc 0)")
+		}
+		md := locMarkdownTable("", rows, false)
+		if strings.Contains(md, "| loc |") || strings.Contains(md, "| Category | % |") {
+			t.Fatalf("unexpected full-tree columns: %q", md)
+		}
+		if !strings.Contains(md, "| Category | wip% | edited | added | removed |") {
+			t.Fatalf("want churn header: %q", md)
+		}
+		// churn sort: Go before TypeScript (edited 20 > 5), Total last
+		goIdx := strings.Index(md, "| Go |")
+		tsIdx := strings.Index(md, "| TypeScript |")
+		totIdx := strings.Index(md, "| Total |")
+		if goIdx <= 0 || tsIdx <= 0 || totIdx <= 0 || !(goIdx < tsIdx && tsIdx < totIdx) {
+			t.Fatalf("row order: %q", md)
+		}
+	})
+	t.Run("locSortedRowKeysChurn total last", func(t *testing.T) {
+		rows := map[string]LocLangStats{
+			"Rust":       {Edited: 1},
+			"Go":         {Edited: 99},
+			locAggTotal:  {Edited: 100},
+		}
+		ks := locSortedRowKeysChurn(rows)
+		if len(ks) != 3 || ks[0] != "Go" || ks[1] != "Rust" || ks[2] != locAggTotal {
+			t.Fatalf("got %v", ks)
+		}
+	})
 	t.Run("text no ansi for pipe", func(t *testing.T) {
 		scan := map[string]int{"Go": 1, "TypeScript": 0, "C#": 0, "Python": 0, "Rust": 0, "Markup": 0, "Data": 0}
 		r := &LocReport{Snapshot: locComposeLocReportSnapshot(map[string]locCumulativePair{}, scan, []string{"Go", "TypeScript", "C#", "Python", "Rust"}, 0)}

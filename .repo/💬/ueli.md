@@ -953,6 +953,12 @@ semio/js:
 
 ---
 
+Refactor everything to be 100% typesafe.
+All methods MUST NOT use any generic, unknown, Record, Json or anything.
+Just \*Dtos (input, id, full, metadata, etc).
+
+---
+
 Every store MUST be 100% typesafe.
 The store MUST NOT leak commands and only export clean stores with methods and subscriptions for events.
 There MUST be a subscription method for every single event that exists with proper types.
@@ -1010,6 +1016,18 @@ export interface KitStoreClient {
 ```
 
 ### 🦀rs
+
+semio/rs:
+
+---
+
+Check semio/grapql and you will see that it is not clean.
+Refactor it.
+There MUST be no disitinction between Live, normal Stores, Gql, etc
+Every read MUST happen within a scope.
+Undo/Redo is only defined on draft level and transaction level.
+
+---
 
 semio/rs and semio/js:
 

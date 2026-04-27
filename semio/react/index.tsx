@@ -1423,6 +1423,26 @@ type RegistryRow = {
 
 const KitRegistryContext = React.createContext<KitRegistryValue | null>(null);
 
+/** @internal Listeners when open kits set changes (Canvas windows may sit outside React context). */
+const _kitRegistryListListeners = new Set<() => void>();
+function emitKitRegistryListChanged(): void {
+  for (const l of _kitRegistryListListeners) {
+    try {
+      l();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
+/** @emoji 🧾 Subscribe to registry open/close (new or removed kit ids), for {@link useOpenKitShallows}. */
+export function subscribeKitRegistryListChanged(onChange: () => void): () => void {
+  _kitRegistryListListeners.add(onChange);
+  return () => {
+    _kitRegistryListListeners.delete(onChange);
+  };
+}
+
 /** @internal For {@link SketchpadStore} and other non-hook callers. Cleared on {@link KitRegistryProvider} unmount. */
 let _semioKitRegistryBridge: KitRegistryValue | null = null;
 export function getKitRegistryBridge(): KitRegistryValue | null {
@@ -1489,6 +1509,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
           void applyKitClientSnapshotToLocalStore(kitClient, store);
         });
         rowsRef.current.set(kitId, { store, kitClient, refs: 1, unsub, persistence });
+        emitKitRegistryListChanged();
       } catch (e) {
         const err = e instanceof Error ? e : new Error(String(e));
         errRef.current.set(kitId, err);
@@ -1517,6 +1538,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
         row.kitClient.dispose();
         rowsRef.current.delete(kitId);
         setActiveKitId((cur) => (cur === kitId ? undefined : cur));
+        emitKitRegistryListChanged();
       }
       bump();
     },
@@ -1573,6 +1595,7 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
   React.useLayoutEffect(() => {
     return () => {
       _semioKitRegistryBridge = null;
+      _kitRegistryListListeners.clear();
     };
   }, []);
 
@@ -5299,11 +5322,26 @@ export function useKitPersistenceSource(): HookTriad<KitPersistenceInfo | undefi
   return [v, noopAsyncSet, { kind: "readonly" as const, pending: 0 }];
 }
 
-/** @emoji 📌Listed kit ids in the registry (empty if no provider). */
+/** @internal Stable snapshot for {@link useOpenKitGuids} (avoids useSyncExternalStore thrash). */
+const _OPEN_KIT_GUIDS_EMPTY = Object.freeze([] as readonly string[]);
+let _openKitGuidsSnapKey = "";
+let _openKitGuidsSnapArr: readonly string[] = _OPEN_KIT_GUIDS_EMPTY;
+
+function getOpenKitGuidsSnapshot(): readonly string[] {
+  const r = getKitRegistryBridge();
+  const sorted = (r?.list() ?? []).slice().sort();
+  const key = sorted.join("|");
+  if (key !== _openKitGuidsSnapKey) {
+    _openKitGuidsSnapKey = key;
+    _openKitGuidsSnapArr = sorted.length === 0 ? _OPEN_KIT_GUIDS_EMPTY : (Object.freeze(sorted) as readonly string[]);
+  }
+  return _openKitGuidsSnapArr;
+}
+
+/** @emoji 📌Listed kit ids in the registry (empty if no provider); uses bridge so LayoutCanvas windows see ids without React context. */
 export function useOpenKitGuids(): string[] {
-  const r = useKitRegistrySafe();
-  if (!r) return [];
-  return r.list();
+  const snap = React.useSyncExternalStore(subscribeKitRegistryListChanged, getOpenKitGuidsSnapshot, getOpenKitGuidsSnapshot);
+  return snap.length === 0 ? [] : [...snap];
 }
 
 /** @emoji 📌Active kit: registry selection first, else current {@link KitScope} id. */
@@ -5329,28 +5367,40 @@ export function useKitCommandEngineExplicitOrigin(kitStore: KitHostStore | null)
   return React.useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
 }
 
-/** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes. */
+/** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes via bridge (canvas portals lack {@link KitRegistryContext}). */
 export function useOpenKitShallows(): Kit[] {
-  const reg = useKitRegistrySafe();
-  const idsKey = (reg?.list() ?? []).slice().sort().join("|");
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
-    if (!reg) return;
-    const unsubs: (() => void)[] = [];
-    for (const kid of reg.list()) {
-      const ent = reg.get(kid);
-      if (ent) unsubs.push(ent.store.subscribe(() => setTick((t) => t + 1)));
-    }
-    return () => unsubs.forEach((u) => u());
-  }, [reg, idsKey]);
+    const bump = () => setTick((t) => t + 1);
+    const wireStores = (): (() => void)[] => {
+      const reg = getKitRegistryBridge();
+      if (!reg) return [];
+      return reg
+        .list()
+        .map((kid) => reg.get(kid))
+        .filter((e): e is KitRegistryEntry => e != null)
+        .map((e) => e.store.subscribe(bump));
+    };
+    let storeUnsubs = wireStores();
+    const offList = subscribeKitRegistryListChanged(() => {
+      storeUnsubs.forEach((u) => u());
+      storeUnsubs = wireStores();
+      bump();
+    });
+    return () => {
+      offList();
+      storeUnsubs.forEach((u) => u());
+    };
+  }, []);
   return React.useMemo(() => {
+    const reg = getKitRegistryBridge();
     if (!reg) return [];
     return reg
       .list()
       .map((kid) => reg.get(kid))
       .filter((e): e is KitRegistryEntry => e != null)
       .map((e) => e.store.getSnapshot().kit);
-  }, [reg, idsKey, tick]);
+  }, [tick]);
 }
 
 /** @emoji 📌 True when {@link KitRegistryValue} holds the kit id (updates when kits open/close). */
@@ -5359,11 +5409,29 @@ export function useRegistryHasKit(kitId: string): boolean {
   return ids.includes(kitId);
 }
 
-/** @emoji 📌 Persistence kind for a registry kit (undefined if not open). */
+/** @emoji 📌 Persistence kind for a registry kit (undefined if not open); uses bridge for canvas portals without registry context. */
 export function useRegistryKitPersistenceKind(kitId: string): KitPersistenceInfo["kind"] | undefined {
-  const reg = useKitRegistrySafe();
-  const idsKey = (reg?.list() ?? []).slice().sort().join("|");
-  return React.useMemo(() => reg?.get(kitId)?.persistence.kind, [reg, kitId, idsKey]);
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const bump = () => setTick((t) => t + 1);
+    const wireStores = (): (() => void)[] => {
+      const reg = getKitRegistryBridge();
+      const ent = reg?.get(kitId);
+      if (!ent) return [];
+      return [ent.store.subscribe(bump)];
+    };
+    let storeUnsubs = wireStores();
+    const offList = subscribeKitRegistryListChanged(() => {
+      storeUnsubs.forEach((u) => u());
+      storeUnsubs = wireStores();
+      bump();
+    });
+    return () => {
+      offList();
+      storeUnsubs.forEach((u) => u());
+    };
+  }, [kitId]);
+  return React.useMemo(() => getKitRegistryBridge()?.get(kitId)?.persistence.kind, [kitId, tick]);
 }
 
 /** @emoji 📌Alias hooks for explicit "by id" call sites. */
@@ -16627,7 +16695,7 @@ const shouldRunReactEmbeddedTests =
 
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
-  const { act, render, waitFor } = await import("@testing-library/react");
+  const { act, cleanup, render, waitFor } = await import("@testing-library/react");
   const { InMemoryKitStore, asKitInstance, kitReadScopeKey } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
@@ -16905,6 +16973,7 @@ if (shouldRunReactEmbeddedTests) {
 
   describe("useOpenKitShallows + useRegistryHasKit + useRegistryKitPersistenceKind", () => {
     it("returns empty shallows when no KitRegistryProvider (Home table shell)", () => {
+      cleanup();
       let shallows: Kit[] = [];
       function Probe() {
         shallows = useOpenKitShallows();
