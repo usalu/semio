@@ -24906,6 +24906,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
+        #[graphql(name = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -24930,6 +24931,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
+        #[graphql(name = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -24972,6 +24974,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
+        #[graphql(name = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
@@ -27318,7 +27321,7 @@ pub mod kit_graphql {
     use crate::connector::ConnectorStoreRef;
     use crate::design::DesignStoreRef;
     use crate::events::KitEvent;
-    use crate::geom::Plane;
+    use crate::geom::{Coordinate, Plane};
     use crate::id::Id;
     use crate::kit_alternative::KitAlternativeCommand;
     use crate::kit_checkpoint::KitCheckpointCommand;
@@ -27387,7 +27390,7 @@ pub mod kit_graphql {
 
     /// 🌐 Optional native [`crate::kit_store::KitStore`]: when present (e.g. semio-store), `run_vcs_command` uses [`crate::kit_store::KitStore::execute`] (coordinator + backbone). Otherwise the graph actor uses [`KitStoreCommand::execute`] on the WIP graph only.
     #[derive(Clone, Default)]
-    pub struct GraphQlVcsOverride {
+    pub struct GraphQlOverride {
         #[cfg(not(target_arch = "wasm32"))]
         pub native: Option<Arc<crate::kit_store::KitStore>>,
     }
@@ -27403,7 +27406,7 @@ pub mod kit_graphql {
             reply: oneshot::Sender<std::result::Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), String>>,
         },
         /// Internal VCS graph command (not exposed as JSON in GraphQL).
-        Vcs {
+         {
             command: KitStoreCommand,
             reply: oneshot::Sender<std::result::Result<KitStoreCommandResult, String>>,
         },
@@ -27432,7 +27435,7 @@ pub mod kit_graphql {
                         let r = KitGraph::control_plane_batch_apply_with_undo(&graph, &commands);
                         let _ = reply.send(r.map(|pre| (pre.kind, pre.inverse_flat)).map_err(|e| format!("{e:?}")));
                     }
-                    GraphWork::Vcs { command, reply } => {
+                    GraphWork:: { command, reply } => {
                         let r = KitGraph::execute_vcs(&graph, command).map_err(|e| e.to_string());
                         let _ = reply.send(r);
                     }
@@ -27483,8 +27486,8 @@ pub mod kit_graphql {
         Ok(req)
     }
 
-    /// 🌐 GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlVcsOverride`] (semio-store).
-    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlVcsOverride) -> Result<async_graphql::Response, Error> {
+    /// 🌐 GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlOverride`] (semio-store).
+    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlOverride) -> Result<async_graphql::Response, Error> {
         let mut req = request_from_json(request_json)?;
         req = req.data(graph).data(work_tx).data(vcs);
         Ok(async_graphql::Response::from(schema().execute(req).await))
@@ -27966,7 +27969,7 @@ pub mod kit_graphql {
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
             let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
-            let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
+            let vcs: GraphQlOverride = ctx.data_opt::<GraphQlOverride>().cloned().unwrap_or_default();
             let shell = KitShellCtx { graph, tx, vcs };
             execute_batch(&shell, input).await
         }
@@ -27977,7 +27980,7 @@ pub mod kit_graphql {
     struct KitShellCtx {
         graph: KitGraphRef,
         tx: async_channel::Sender<GraphWork>,
-        vcs: GraphQlVcsOverride,
+        vcs: GraphQlOverride,
     }
 
     impl KitShellCtx {
@@ -27989,7 +27992,7 @@ pub mod kit_graphql {
                 }
             }
             let (reply_tx, reply_rx) = oneshot::channel();
-            self.tx.send(GraphWork::Vcs { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
+            self.tx.send(GraphWork:: { command, reply: reply_tx }).await.map_err(|e| Error::new(format!("execute queue: {e}")))?;
             reply_rx.await.map_err(|_| Error::new("kit actor dropped"))?.map_err(|e| Error::new(format!("{e:?}")))
         }
     }
@@ -28459,23 +28462,19 @@ pub mod kit_graphql {
         schema().sdl()
     }
 
-    /// 🌐 Row for `Design.replaceableCatalog`.
+    /// Row for `Design.replaceableCatalog` (resolved kit kinds and designs).
     pub struct ReplaceableCatalogNode {
-        /// 🌐
-        pub type_ids: Vec<String>,
-        /// 🌐
-        pub design_ids: Vec<String>,
+        pub types: Vec<crate::typ::TypeStoreRef>,
+        pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
     #[Object(name = "ReplaceableCatalog")]
     impl ReplaceableCatalogNode {
-        /// 🌐
-        async fn type_ids(&self) -> Result<Vec<String>> {
-            Ok(self.type_ids.clone())
+        async fn types(&self) -> Result<Vec<TypeNode>> {
+            Ok(self.types.iter().cloned().map(TypeNode).collect())
         }
-        /// 🌐
-        async fn design_ids(&self) -> Result<Vec<String>> {
-            Ok(self.design_ids.clone())
+        async fn designs(&self) -> Result<Vec<DesignNode>> {
+            Ok(self.designs.iter().cloned().map(DesignNode).collect())
         }
     }
 
@@ -28507,10 +28506,10 @@ pub mod kit_graphql {
     #[derive(Clone)]
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
-    // #subregion KitGraphqlVcsStores
+    // #subregion KitGraphqlStores
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsCheckpointStore")]
-    struct VcsCheckpointStore {
+    #[graphql(name = "CheckpointDto")]
+    struct CheckpointDto {
         id: String,
         parent: Option<String>,
         message: Option<String>,
@@ -28521,16 +28520,16 @@ pub mod kit_graphql {
         change_count: usize,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsAlternativeStore")]
-    struct VcsAlternativeStore {
+    #[graphql(name = "AlternativeDto")]
+    struct AlternativeDto {
         id: String,
         name: String,
         root: String,
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsDraftStore")]
-    struct VcsDraftStore {
+    #[graphql(name = "DraftDto")]
+    struct DraftDto {
         id: String,
         parent_checkpoint: Option<String>,
         target_alternative: Option<String>,
@@ -28541,42 +28540,40 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsSessionStore")]
-    struct VcsSessionStore {
+    #[graphql(name = "SessionDto")]
+    struct SessionDto {
         id: String,
-        drafts: Vec<VcsDraftStore>,
+        drafts: Vec<DraftDto>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsRootStore")]
-    struct VcsRootStore {
+    #[graphql(name = "RootDto")]
+    struct RootDto {
         id: String,
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsStateStore")]
-    struct VcsStateStore {
+    #[graphql(name = "StateDto")]
+    struct StateDto {
         the_kit_head: Option<String>,
-        root: VcsRootStore,
-        checkpoints: Vec<VcsCheckpointStore>,
-        alternatives: Vec<VcsAlternativeStore>,
-        sessions: Vec<VcsSessionStore>,
+        root: RootDto,
+        checkpoints: Vec<CheckpointDto>,
+        alternatives: Vec<AlternativeDto>,
+        sessions: Vec<SessionDto>,
         the_kit_line: Vec<String>,
     }
     // #endregion
 
-    #[Object(name = "KitStore")]
+    #[Object(name = "Kit")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
         }
 
-        /// 🌐 Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
         async fn design_by_dto_id(&self, id: String) -> Result<Option<DesignNode>> {
             let g = lock_graph(&self.0)?;
             Ok(g.design(id.as_str()).map(DesignNode))
         }
 
-        /// 🌐 Resolves a kit [`crate::typ::TypeStore`] by persisted DTO id.
         async fn type_by_dto_id(&self, id: String) -> Result<Option<TypeNode>> {
             let g = lock_graph(&self.0)?;
             let target = Id::from(id.as_str());
@@ -28587,18 +28584,6 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.0)?.description.clone())
         }
 
-        /// 🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
-        async fn type_ids(&self) -> Result<Vec<String>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect())
-        }
-
-        /// 🌐 Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
-        async fn design_ids(&self) -> Result<Vec<String>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.id.to_string())).collect())
-        }
-
         async fn types(&self) -> Result<Vec<TypeNode>> {
             Ok(lock_graph(&self.0)?.types.iter().cloned().map(TypeNode).collect())
         }
@@ -28607,28 +28592,15 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.0)?.designs.iter().cloned().map(DesignNode).collect())
         }
 
-        /// 🌐 Per-type metadata rows.
-        async fn types_metadata(&self) -> Result<Vec<crate::typ::TypeMetadataDto>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_metadata_dto())).collect())
-        }
-        /// 🌐 Per-design metadata rows.
-        async fn designs_metadata(&self) -> Result<Vec<crate::design::DesignMetadataDto>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_metadata_dto())).collect())
-        }
-        /// 🌐 Colored connector index rows.
         async fn colored_connectors(&self) -> Result<Vec<crate::read::KitColoredConnectorRowDto>> {
             let g = lock_graph(&self.0)?;
             Ok(crate::read::kit_colored_connector_rows(&*g))
         }
 
-        /// 🌐 Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
         async fn full_dto(&self) -> Result<GqlKitFullSnapshot> {
             Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.to_full_dto()))
         }
 
-        /// `the_kit` line DTO (committed main line).
         async fn the_kit_dto(&self) -> Result<GqlKitFullSnapshot> {
             Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.the_kit_dto()))
         }
@@ -28638,36 +28610,20 @@ pub mod kit_graphql {
             Ok(GqlKitFullSnapshot(lock_graph(&self.0)?.materialize_at(opt.as_ref())))
         }
 
-        /// 🌐 Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
-        async fn kit_metadata(&self) -> Result<crate::kit_graph::KitMetadataDto> {
+        async fn metadata(&self) -> Result<crate::kit_graph::KitMetadataDto> {
             Ok(lock_graph(&self.0)?.to_metadata_dto())
         }
 
-        /// 🌐 Shallow design rows (same as [`KitGraph::get_designs_json`]; explicit list of [`crate::design::DesignShallowDto`]).
-        async fn designs_shallow(&self) -> Result<Vec<crate::design::DesignShallowDto>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect())
+        async fn shallow(&self) -> Result<crate::kit_graph::KitShallowDto> {
+            Ok(lock_graph(&self.0)?.to_shallow_dto())
         }
 
-        /// 🌐 Shallow type rows (same as [`KitGraph::get_types_json`]).
-        async fn types_shallow(&self) -> Result<Vec<crate::typ::TypeShallowDto>> {
+        async fn vcs_state(&self) -> Result<StateDto> {
             let g = lock_graph(&self.0)?;
-            Ok(g.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect())
-        }
-
-        /// 🌐 Shallow author rows (same as [`KitGraph::get_authors_json`]).
-        async fn authors_shallow(&self) -> Result<Vec<crate::author::AuthorShallowDto>> {
-            let g = lock_graph(&self.0)?;
-            Ok(g.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect())
-        }
-
-        /// Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
-        async fn vcs_state(&self) -> Result<VcsStateStore> {
-            let g = lock_graph(&self.0)?;
-            let mut checkpoints: Vec<VcsCheckpointStore> = g
+            let mut checkpoints: Vec<CheckpointDto> = g
                 .checkpoints
                 .values()
-                .map(|c| VcsCheckpointStore {
+                .map(|c| CheckpointDto {
                     id: c.id.to_string(),
                     parent: c.parent.as_ref().map(|p| p.to_string()),
                     message: c.message.clone(),
@@ -28679,20 +28635,20 @@ pub mod kit_graphql {
                 })
                 .collect();
             checkpoints.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut alternatives: Vec<VcsAlternativeStore> = g
+            let mut alternatives: Vec<AlternativeDto> = g
                 .alternatives
                 .values()
-                .map(|a| VcsAlternativeStore { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
+                .map(|a| AlternativeDto { id: a.id.to_string(), name: a.name.clone(), root: a.root.as_ref().map(|r| r.to_string()).unwrap_or_default(), checkpoints: a.checkpoints.iter().map(|c| c.to_string()).collect() })
                 .collect();
             alternatives.sort_by(|a, b| a.id.cmp(&b.id));
-            let mut sessions: Vec<VcsSessionStore> = g
+            let mut sessions: Vec<SessionDto> = g
                 .sessions
                 .values()
                 .map(|s| {
-                    let mut drafts: Vec<VcsDraftStore> = s
+                    let mut drafts: Vec<DraftDto> = s
                         .drafts
                         .values()
-                        .map(|d| VcsDraftStore {
+                        .map(|d| DraftDto {
                             id: d.id.to_string(),
                             parent_checkpoint: d.parent_checkpoint.as_ref().map(|p| p.to_string()),
                             target_alternative: d.target_alternative.as_ref().map(|t| t.to_string()),
@@ -28704,16 +28660,16 @@ pub mod kit_graphql {
                         })
                         .collect();
                     drafts.sort_by(|a, b| a.id.cmp(&b.id));
-                    VcsSessionStore { id: s.id.to_string(), drafts }
+                    SessionDto { id: s.id.to_string(), drafts }
                 })
                 .collect();
             sessions.sort_by(|a, b| a.id.cmp(&b.id));
             let the_kit_line: Vec<String> = g.the_kit_head.as_ref().map(|head| crate::kit_checkpoint::KitCheckpoint::chain_root_to_leaf_from(head, &g.checkpoints).into_iter().map(|i| i.to_string()).collect()).unwrap_or_default();
-            Ok(VcsStateStore { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: VcsRootStore { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
+            Ok(StateDto { the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()), root: RootDto { id: g.initial.id.to_string(), name: g.initial.name.clone() }, checkpoints, alternatives, sessions, the_kit_line })
         }
     }
 
-    #[Object(name = "DesignStore")]
+    #[Object(name = "Design")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
@@ -28725,6 +28681,24 @@ pub mod kit_graphql {
 
         async fn description(&self) -> Result<Option<String>> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.description.clone())
+        }
+
+        async fn container(&self, ctx: &Context<'_>) -> Result<KitStoreNode> {
+            let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let _ = lock_graph(&g)?;
+            Ok(KitStoreNode(g))
+        }
+
+        async fn metadata(&self) -> Result<crate::design::DesignMetadataDto> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_metadata_dto())
+        }
+
+        async fn shallow(&self) -> Result<crate::design::DesignShallowDto> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_shallow_dto())
+        }
+
+        async fn full(&self) -> Result<crate::design::DesignFullDto> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_full_dto())
         }
 
         async fn pieces(&self) -> Result<Vec<PieceNode>> {
@@ -28778,7 +28752,7 @@ pub mod kit_graphql {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let alts = d.replaceable_catalog_candidates(&ids);
-            Ok(ReplaceableCatalogNode { type_ids: alts.types.iter().filter_map(|t| t.read().ok().map(|r| r.id.to_string())).collect(), design_ids: alts.designs.iter().filter_map(|x| x.read().ok().map(|r| r.id.to_string())).collect() })
+            Ok(ReplaceableCatalogNode { types: alts.types, designs: alts.designs })
         }
         async fn included_designs(&self) -> Result<Vec<crate::read::IncludedDesignInfoDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -28796,7 +28770,7 @@ pub mod kit_graphql {
             let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
             let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
             let mut rows: Vec<crate::kit_graph::PiecePlacementMetadataDto> = m.into_values().collect();
-            rows.sort_by(|a, b| a.fixed_piece_id.cmp(&b.fixed_piece_id));
+            rows.sort_by(|a, b| a.piece_id.cmp(&b.piece_id));
             Ok(rows)
         }
     }
@@ -28881,7 +28855,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Connector")]
+    #[Object(name = "ConnectorStore")]
     impl ConnectorNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
@@ -28892,7 +28866,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Representation")]
+    #[Object(name = "RepresentationStore")]
     impl RepresentationNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
@@ -28907,7 +28881,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "Connection")]
+    #[Object(name = "ConnectionStore")]
     impl ConnectionNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
@@ -29082,7 +29056,7 @@ pub mod wasm {
             let work_tx = self.work_tx.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 let json = serde_json::to_string(&resp).map_err(|e| JsValue::from_str(&e.to_string()))?;
@@ -29101,7 +29075,7 @@ pub mod wasm {
             let cb = on_event.clone();
             future_to_promise(async move {
                 let mut req = crate::kit_graphql::request_from_json(&req_json).map_err(|e| JsValue::from_str(&format!("{e:?}")))?;
-                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(graph).data(work_tx).data(crate::kit_graphql::GraphQlOverride::default());
                 let schema = crate::kit_graphql::schema();
                 let mut stream = schema.execute_stream(req);
                 while let Some(resp) = stream.next().await {
@@ -29171,7 +29145,7 @@ mod tests {
             let out = futures_lite::future::block_on(async move {
                 let body = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
-                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 let schema = kit_graphql::schema();
                 let resp = async_graphql::Response::from(schema.execute(req).await);
                 serde_json::to_value(resp).expect("to json")
@@ -29188,7 +29162,7 @@ mod tests {
             let out = futures_lite::future::block_on(async move {
                 let body = r#"{"query":"query { kitStore { name } }"}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
-                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             assert!(out.get("data").and_then(|d| d.get("kitStore")).is_none(), "unscoped kitStore must not exist: {out:?}");
@@ -29206,7 +29180,7 @@ mod tests {
                     "variables": { "input": { "commands": [{ "live": { "commands": [{ "undo": { "confirm": true } }] } }] } }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             assert!(out.get("errors").is_some() || out.pointer("/data/kitStore/batch").is_none(), "live batch must be rejected: {out:?}");
@@ -29240,7 +29214,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             let rows = out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).expect("batch results");
@@ -29252,7 +29226,7 @@ mod tests {
             let draft_name = futures_lite::future::block_on(async {
                 let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"draft":{{"sessionId":"{}","draftId":"{}"}}}}}}}}"#, sid, did);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
-                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 v["data"]["kit"]["name"].as_str().unwrap().to_string()
             });
@@ -29261,7 +29235,7 @@ mod tests {
             let tx_name = futures_lite::future::block_on(async {
                 let body = format!(r#"{{"query":"query($scope: KitReadScopeInput!) {{ kit(scope: $scope) {{ name }} }}","variables":{{"scope":{{"transaction":{{"sessionId":"{}","draftId":"{}","transactionId":"{}"}}}}}}}}"#, sid, did, tid);
                 let mut req = kit_graphql::request_from_json(&body).expect("json");
-                req = req.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 v["data"]["kit"]["name"].as_str().unwrap().to_string()
             });
@@ -29296,7 +29270,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
                 let v = serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("json");
                 let rows = v.pointer("/data/kitStore/batch/results").and_then(|x| x.as_array()).expect("results");
                 let sid = rows.iter().find_map(|r| r.get("sessionId").and_then(|x| x.as_str())).expect("sid");
@@ -29330,7 +29304,7 @@ mod tests {
                     }
                 });
                 let mut req2 = kit_graphql::request_from_json(&serde_json::to_string(&body2).expect("body")).expect("json");
-                req2 = req2.data(kit).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req2 = req2.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req2).await)).expect("to json")
             });
             let kinds: Vec<String> =
@@ -29442,7 +29416,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit.clone()).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx).data(kit_graphql::GraphQlOverride::default());
                 let schema = kit_graphql::schema();
                 serde_json::to_value(async_graphql::Response::from(schema.execute(req).await)).expect("to json")
             });
@@ -29482,7 +29456,7 @@ mod tests {
                     }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
-                req = req.data(kit.clone()).data(tx).data(kit_graphql::GraphQlVcsOverride::default());
+                req = req.data(kit.clone()).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
             let rows = out.pointer("/data/kitStore/batch/results").and_then(|v| v.as_array()).expect("rows");
