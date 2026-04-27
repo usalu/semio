@@ -5331,10 +5331,11 @@ export function useKitCommandEngineExplicitOrigin(kitStore: KitHostStore | null)
 
 /** @emoji 📌 Shallow kit rows for every open registry kit; subscribes per {@link KitHostStore} + registry list changes. */
 export function useOpenKitShallows(): Kit[] {
-  const reg = useKitRegistry();
-  const idsKey = reg.list().slice().sort().join("|");
+  const reg = useKitRegistrySafe();
+  const idsKey = (reg?.list() ?? []).slice().sort().join("|");
   const [tick, setTick] = React.useState(0);
   React.useEffect(() => {
+    if (!reg) return;
     const unsubs: (() => void)[] = [];
     for (const kid of reg.list()) {
       const ent = reg.get(kid);
@@ -5342,15 +5343,14 @@ export function useOpenKitShallows(): Kit[] {
     }
     return () => unsubs.forEach((u) => u());
   }, [reg, idsKey]);
-  return React.useMemo(
-    () =>
-      reg
-        .list()
-        .map((kid) => reg.get(kid))
-        .filter((e): e is KitRegistryEntry => e != null)
-        .map((e) => e.store.getSnapshot().kit),
-    [reg, idsKey, tick],
-  );
+  return React.useMemo(() => {
+    if (!reg) return [];
+    return reg
+      .list()
+      .map((kid) => reg.get(kid))
+      .filter((e): e is KitRegistryEntry => e != null)
+      .map((e) => e.store.getSnapshot().kit);
+  }, [reg, idsKey, tick]);
 }
 
 /** @emoji 📌 True when {@link KitRegistryValue} holds the kit id (updates when kits open/close). */
@@ -16904,6 +16904,16 @@ if (shouldRunReactEmbeddedTests) {
   });
 
   describe("useOpenKitShallows + useRegistryHasKit + useRegistryKitPersistenceKind", () => {
+    it("returns empty shallows when no KitRegistryProvider (Home table shell)", () => {
+      let shallows: Kit[] = [];
+      function Probe() {
+        shallows = useOpenKitShallows();
+        return null;
+      }
+      render(React.createElement(Probe));
+      expect(shallows).toEqual([]);
+    });
+
     it("reflects registry kit snapshots and persistence kind", async () => {
       const kit = asKitInstance({
         id: "k-shallow",
