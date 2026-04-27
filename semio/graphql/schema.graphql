@@ -1,11 +1,11 @@
-input AlternativeBatchCommandInput @oneOf {
-	createAlternative: CreateAlternativeBatchInput
+input AlternativeCommandInput @oneOf {
+	createAlternative: CreateAlternativeInput
 	unifyAlternative: MessageOnlyInput
 }
 
-input AlternativeBatchInput {
+input AlternativeInput {
 	alternativeId: String
-	commands: [AlternativeBatchCommandInput!]!
+	commands: [AlternativeCommandInput!]!
 }
 
 type AttributeFullDto {
@@ -38,38 +38,38 @@ type AuthorShallowDto {
 	rank: Int
 }
 
-input BackboneBatchCommandInput @oneOf {
-	attachBackbone: BackboneConfigBatchInput
+input BackboneCommandInput @oneOf {
+	attachBackbone: BackboneConfigInput
 	detachBackbone: ConfirmOnlyInput
 	listConflicts: ConfirmOnlyInput
-	resolveConflict: ResolveConflictBatchInput
+	resolveConflict: ResolveConflictInput
 	backboneStatus: ConfirmOnlyInput
 	syncNow: ConfirmOnlyInput
 }
 
-input BackboneBatchInput {
-	commands: [BackboneBatchCommandInput!]!
-}
-
-type BackboneBatchStatus {
-	attached: Boolean!
-	kind: BackboneKindBatch
-	kindOther: String
-	tip: String
-}
-
-input BackboneConfigBatchInput @oneOf {
+input BackboneConfigInput @oneOf {
 	memory: ConfirmOnlyInput
-	dev: DevBackboneBatchInput
-	local: LocalBackboneBatchInput
-	remote: RemoteBackboneBatchInput
+	dev: DevBackboneInput
+	local: LocalBackboneInput
+	remote: RemoteBackboneInput
 }
 
-enum BackboneKindBatch {
+input BackboneInput {
+	commands: [BackboneCommandInput!]!
+}
+
+enum BackboneKind {
 	MEMORY
 	DEV
 	LOCAL
 	REMOTE
+}
+
+type BackboneStatus {
+	attached: Boolean!
+	kind: BackboneKind
+	kindOther: String
+	tip: String
 }
 
 type BenchmarkFullDto {
@@ -92,26 +92,26 @@ type BenchmarkMetadataDto {
 
 scalar ChangeKitCommand
 
-input ChangeKitCommandsBatchInput {
+input ChangeKitCommandsInput {
 	commands: [ChangeKitCommand!]!
 }
 
-input ChangePieceTypeBatchInput {
+input ChangePieceTypeInput {
 	pieceId: String!
 	newTypeId: String!
 }
 
-input CheckpointBatchCommandInput @oneOf {
+input CheckpointCommandInput @oneOf {
 	markRelease: ConfirmOnlyInput
 	setActive: ConfirmOnlyInput
 }
 
-input CheckpointBatchInput {
+input CheckpointInput {
 	checkpointId: String
-	commands: [CheckpointBatchCommandInput!]!
+	commands: [CheckpointCommandInput!]!
 }
 
-input ClusterPiecesBatchInput {
+input ClusterPiecesInput {
 	pieceIds: [String!]!
 	clusterName: String!
 }
@@ -134,33 +134,16 @@ input ConfirmOnlyInput {
 	confirm: Boolean
 }
 
-type ConflictBatchRecord {
+type ConflictRecord {
 	id: String!
 	backboneTip: String
 	reason: String!
 	createdAt: String!
 }
 
-enum ConflictResolutionBatchInput {
+enum ConflictResolutionInput {
 	DROP_WIP
 	FORCE_OVERWRITE_BACKBONE
-}
-
-type Connection {
-	id: String!
-	container: DesignStore!
-	metadata: ConnectionMetadataDto!
-	shallow: ConnectionShallowDto!
-	full: ConnectionFullDto!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	u: Float
-	v: Float
-	description: String
 }
 
 type ConnectionFullDto {
@@ -210,14 +193,21 @@ type ConnectionShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type Connector {
+type ConnectionStore {
 	id: String!
-	code: String!
+	container: DesignStore!
+	metadata: ConnectionMetadataDto!
+	shallow: ConnectionShallowDto!
+	full: ConnectionFullDto!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
 	description: String
-	container: Type!
-	metadata: ConnectorMetadataDto!
-	shallow: ConnectorShallowDto!
-	full: ConnectorFullDto!
 }
 
 type ConnectorFullDto {
@@ -249,6 +239,16 @@ type ConnectorShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
+type ConnectorStore {
+	id: String!
+	code: String!
+	description: String
+	container: TypeStore!
+	metadata: ConnectorMetadataDto!
+	shallow: ConnectorShallowDto!
+	full: ConnectorFullDto!
+}
+
 type Coordinate {
 	u: Float!
 	v: Float!
@@ -258,54 +258,49 @@ input CountInput {
 	count: Int
 }
 
-input CreateAlternativeBatchInput {
+input CreateAlternativeInput {
 	name: String!
 	fromCheckpointId: String
 }
 
-input CreateConnectedPieceBatchInput {
+input CreateConnectedPieceInput {
 	parentPiece: String!
 	parentPort: String!
 	childType: String!
 	childPort: String!
 }
 
-input CreateDraftBatchInput {
+input CreateDraftInput {
 	parentCheckpointId: String
 	targetAlternativeId: String
 }
 
-input CreateFixedPieceBatchInput {
+input CreateFixedPieceInput {
 	typeId: String!
-	plane: PlaneInputBatch!
+	plane: PlaneInput!
 }
 
-input CreateHangingPiecesBatchInput {
+input CreateHangingPiecesInput {
 	typeIds: [String!]!
-	plane: PlaneInputBatch!
+	plane: PlaneInput!
 }
 
-input DeleteConnectionBatchInput {
+input DeleteConnectionInput {
 	connectionId: String!
 }
 
-input DesignBatchCommandInput @oneOf {
-	clusterPieces: ClusterPiecesBatchInput
-	dragPieces: DragPiecesBatchInput
-	movePieces: MovePiecesBatchInput
-	fixPieces: PieceIdsBatchInput
+input DesignCommandInput @oneOf {
+	clusterPieces: ClusterPiecesInput
+	dragPieces: DragPiecesInput
+	movePieces: MovePiecesInput
+	fixPieces: PieceIdsInput
 	flattenDesign: ConfirmOnlyInput
-	expandDesign: ExpandDesignBatchInput
-	deleteConnection: DeleteConnectionBatchInput
-	changePieceType: ChangePieceTypeBatchInput
-	createHangingPieces: CreateHangingPiecesBatchInput
-	createConnectedPiece: CreateConnectedPieceBatchInput
-	createFixedPiece: CreateFixedPieceBatchInput
-}
-
-input DesignBatchInput {
-	designId: String!
-	commands: [DesignBatchCommandInput!]!
+	expandDesign: ExpandDesignInput
+	deleteConnection: DeleteConnectionInput
+	changePieceType: ChangePieceTypeInput
+	createHangingPieces: CreateHangingPiecesInput
+	createConnectedPiece: CreateConnectedPieceInput
+	createFixedPiece: CreateFixedPieceInput
 }
 
 type DesignFlattenMapEntryDto {
@@ -341,6 +336,11 @@ type DesignFullDto {
 
 type DesignIdDto {
 	id: Id!
+}
+
+input DesignInput {
+	designId: String!
+	commands: [DesignCommandInput!]!
 }
 
 type DesignMetadataDto {
@@ -389,9 +389,9 @@ type DesignStore {
 	metadata: DesignMetadataDto!
 	shallow: DesignShallowDto!
 	full: DesignFullDto!
-	pieces: [Piece!]!
-	pieceByDtoId(id: String!): Piece
-	connections: [Connection!]!
+	pieces: [PieceStore!]!
+	pieceByDtoId(id: String!): PieceStore
+	connections: [ConnectionStore!]!
 	piecesFull: [PieceFullDto!]!
 	connectionsFull: [ConnectionFullDto!]!
 	flattenMap: [DesignFlattenMapEntryDto!]!
@@ -403,31 +403,31 @@ type DesignStore {
 	piecePlacement: [PiecePlacementMetadataDto!]!
 }
 
-input DevBackboneBatchInput {
+input DevBackboneInput {
 	path: String!
 }
 
-input DraftBatchCommandInput @oneOf {
+input DraftCommandInput @oneOf {
 	finalizeDraft: MessageOnlyInput
 	abortDraft: ConfirmOnlyInput
 	undoDraft: CountInput
 	redoDraft: CountInput
 	startTransaction: ConfirmOnlyInput
-	transaction: TransactionBatchInput
+	transaction: TransactionInput
 }
 
-input DraftBatchInput {
+input DraftInput {
 	draftId: String
-	commands: [DraftBatchCommandInput!]!
+	commands: [DraftCommandInput!]!
 }
 
-input DragPiecesBatchInput {
+input DragPiecesInput {
 	pieceIds: [String!]!
 	du: Float!
 	dv: Float!
 }
 
-input ExpandDesignBatchInput {
+input ExpandDesignInput {
 	nestedDesignId: String!
 }
 
@@ -594,9 +594,9 @@ type KitShallowDto {
 type KitStore {
 	name: String!
 	designByDtoId(id: String!): DesignStore
-	typeByDtoId(id: String!): Type
+	typeByDtoId(id: String!): TypeStore
 	description: String
-	types: [Type!]!
+	types: [TypeStore!]!
 	designs: [DesignStore!]!
 	coloredConnectors: [KitColoredConnectorDto!]!
 	fullDto: KitFullSnapshot!
@@ -604,28 +604,32 @@ type KitStore {
 	materializeAt(checkpointId: String): KitFullSnapshot!
 	metadata: KitMetadataDto!
 	shallow: KitShallowDto!
-	vcsState: VcsStateDto!
+	vcsState: VcsStateStore!
 }
 
-input KitStoreBatchCommandInput @oneOf {
-	session: SessionBatchInput
-	checkpoint: CheckpointBatchInput
-	alternative: AlternativeBatchInput
-	backbone: BackboneBatchInput
+input KitStoreCommandInput @oneOf {
+	session: SessionInput
+	checkpoint: CheckpointInput
+	alternative: AlternativeInput
+	backbone: BackboneInput
 }
 
-input KitStoreBatchInput {
+input KitStoreInput {
 	clientMutationId: String
-	commands: [KitStoreBatchCommandInput!]!
+	commands: [KitStoreCommandInput!]!
 }
 
-type KitStoreBatchPayload {
+type KitStoreMutation {
+	batch(input: KitStoreInput!): KitStorePayload!
+}
+
+type KitStorePayload {
 	clientMutationId: String
-	results: [KitStoreBatchResult!]!
+	results: [KitStoreResult!]!
 }
 
-type KitStoreBatchResult {
-	kind: KitStoreBatchResultKind!
+type KitStoreResult {
+	kind: KitStoreResultKind!
 	ok: Boolean
 	count: Int
 	sessionId: String
@@ -633,14 +637,14 @@ type KitStoreBatchResult {
 	transactionId: String
 	checkpointId: String
 	alternativeId: String
-	backbone: BackboneBatchStatus
-	conflicts: [ConflictBatchRecord!]
+	backbone: BackboneStatus
+	conflicts: [ConflictRecord!]
 	changeKind: KitChangeSemanticKind
 	changeKindOther: String
 	inverse: [ChangeKitCommand!]
 }
 
-enum KitStoreBatchResultKind {
+enum KitStoreResultKind {
 	CHANGE_KIT_COMMANDS
 	CHANGE_KIT_WITH_INVERSE
 	CLUSTER_PIECES
@@ -678,10 +682,6 @@ enum KitStoreBatchResultKind {
 	SYNC_NOW
 }
 
-type KitStoreMutation {
-	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
-}
-
 type LayerFullDto {
 	id: Id!
 	name: String!
@@ -702,7 +702,7 @@ type LayerShallowDto {
 	locked: Boolean
 }
 
-input LocalBackboneBatchInput {
+input LocalBackboneInput {
 	folder: String!
 }
 
@@ -714,7 +714,7 @@ input MessageOnlyInput {
 	message: String!
 }
 
-input MovePiecesBatchInput {
+input MovePiecesInput {
 	pieceIds: [String!]!
 	gap: Float!
 	shift: Float!
@@ -723,22 +723,6 @@ input MovePiecesBatchInput {
 
 type Mutation {
 	kitStore: KitStoreMutation!
-}
-
-type Piece {
-	id: String!
-	name: String
-	description: String
-	container: DesignStore!
-	metadata: PieceMetadataDto!
-	shallow: PieceShallowDto!
-	full: PieceFullDto!
-	flatPlane: Plane!
-	flatCenter: Coordinate!
-	flatPose: PoseFullDto!
-	scale: Float
-	refType: Type
-	parentConnection: Connection
 }
 
 type PieceFullDto {
@@ -762,7 +746,7 @@ type PieceIdDto {
 	id: Id!
 }
 
-input PieceIdsBatchInput {
+input PieceIdsInput {
 	pieceIds: [String!]!
 }
 
@@ -808,16 +792,32 @@ type PieceShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
+type PieceStore {
+	id: String!
+	name: String
+	description: String
+	container: DesignStore!
+	metadata: PieceMetadataDto!
+	shallow: PieceShallowDto!
+	full: PieceFullDto!
+	flatPlane: Plane!
+	flatCenter: Coordinate!
+	flatPose: PoseFullDto!
+	scale: Float
+	refType: TypeStore
+	parentConnection: ConnectionStore
+}
+
 type Plane {
 	origin: Point!
 	xAxis: Vector!
 	yAxis: Vector!
 }
 
-input PlaneInputBatch {
-	origin: PointInputBatch!
-	xAxis: VectorInputBatch!
-	yAxis: VectorInputBatch!
+input PlaneInput {
+	origin: PointInput!
+	xAxis: VectorInput!
+	yAxis: VectorInput!
 }
 
 type Point {
@@ -826,7 +826,7 @@ type Point {
 	z: Float!
 }
 
-input PointInputBatch {
+input PointInput {
 	x: Float!
 	y: Float!
 	z: Float!
@@ -884,24 +884,14 @@ type Query {
 	kit(scope: KitReadScopeInput!): KitStore!
 }
 
-input RemoteBackboneBatchInput {
+input RemoteBackboneInput {
 	url: String!
 	sessionId: String!
 }
 
 type ReplaceableCatalogStore {
-	types: [Type!]!
+	types: [TypeStore!]!
 	designs: [DesignStore!]!
-}
-
-type Representation {
-	id: String!
-	url: String!
-	description: String
-	container: Type!
-	metadata: RepresentationMetadataDto!
-	shallow: RepresentationShallowDto!
-	full: RepresentationFullDto!
 }
 
 type RepresentationFullDto {
@@ -931,21 +921,31 @@ type RepresentationShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-input ResolveConflictBatchInput {
-	conflictId: String!
-	strategy: ConflictResolutionBatchInput!
+type RepresentationStore {
+	id: String!
+	url: String!
+	description: String
+	container: TypeStore!
+	metadata: RepresentationMetadataDto!
+	shallow: RepresentationShallowDto!
+	full: RepresentationFullDto!
 }
 
-input SessionBatchCommandInput @oneOf {
+input ResolveConflictInput {
+	conflictId: String!
+	strategy: ConflictResolutionInput!
+}
+
+input SessionCommandInput @oneOf {
 	createSession: ConfirmOnlyInput
 	endSession: ConfirmOnlyInput
-	createDraft: CreateDraftBatchInput
-	draft: DraftBatchInput
+	createDraft: CreateDraftInput
+	draft: DraftInput
 }
 
-input SessionBatchInput {
+input SessionInput {
 	sessionId: String
-	commands: [SessionBatchCommandInput!]!
+	commands: [SessionCommandInput!]!
 }
 
 type SideMetadataDto {
@@ -988,32 +988,19 @@ type TagShallowDto {
 	order: Int
 }
 
-input TransactionBatchCommandInput @oneOf {
-	changeKitCommands: ChangeKitCommandsBatchInput
-	changeKitWithInverse: ChangeKitCommandsBatchInput
-	design: DesignBatchInput
+input TransactionCommandInput @oneOf {
+	changeKitCommands: ChangeKitCommandsInput
+	changeKitWithInverse: ChangeKitCommandsInput
+	design: DesignInput
 	finalizeTransaction: ConfirmOnlyInput
 	abortTransaction: ConfirmOnlyInput
 	undoTransaction: CountInput
 	redoTransaction: CountInput
 }
 
-input TransactionBatchInput {
+input TransactionInput {
 	transactionId: String
-	commands: [TransactionBatchCommandInput!]!
-}
-
-type Type {
-	id: String!
-	name: String!
-	description: String
-	container: KitStore!
-	metadata: TypeMetadataDto!
-	shallow: TypeShallowDto!
-	full: TypeFullDto!
-	connectors: [Connector!]!
-	representations: [Representation!]!
-	bestRepresentation(tagIds: [String!]!): Representation
+	commands: [TransactionCommandInput!]!
 }
 
 type TypeFullDto {
@@ -1080,14 +1067,27 @@ type TypeShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type VcsAlternativeDto {
+type TypeStore {
+	id: String!
+	name: String!
+	description: String
+	container: KitStore!
+	metadata: TypeMetadataDto!
+	shallow: TypeShallowDto!
+	full: TypeFullDto!
+	connectors: [ConnectorStore!]!
+	representations: [RepresentationStore!]!
+	bestRepresentation(tagIds: [String!]!): RepresentationStore
+}
+
+type VcsAlternativeStore {
 	id: String!
 	name: String!
 	root: String!
 	checkpoints: [String!]!
 }
 
-type VcsCheckpointDto {
+type VcsCheckpointStore {
 	id: String!
 	parent: String
 	message: String
@@ -1098,7 +1098,7 @@ type VcsCheckpointDto {
 	changeCount: Int!
 }
 
-type VcsDraftDto {
+type VcsDraftStore {
 	id: String!
 	parentCheckpoint: String
 	targetAlternative: String
@@ -1109,22 +1109,22 @@ type VcsDraftDto {
 	canRedo: Boolean!
 }
 
-type VcsRootDto {
+type VcsRootStore {
 	id: String!
 	name: String!
 }
 
-type VcsSessionDto {
+type VcsSessionStore {
 	id: String!
-	drafts: [VcsDraftDto!]!
+	drafts: [VcsDraftStore!]!
 }
 
-type VcsStateDto {
+type VcsStateStore {
 	theKitHead: String
-	root: VcsRootDto!
-	checkpoints: [VcsCheckpointDto!]!
-	alternatives: [VcsAlternativeDto!]!
-	sessions: [VcsSessionDto!]!
+	root: VcsRootStore!
+	checkpoints: [VcsCheckpointStore!]!
+	alternatives: [VcsAlternativeStore!]!
+	sessions: [VcsSessionStore!]!
 	theKitLine: [String!]!
 }
 
@@ -1134,7 +1134,7 @@ type Vector {
 	z: Float!
 }
 
-input VectorInputBatch {
+input VectorInput {
 	x: Float!
 	y: Float!
 	z: Float!

@@ -18482,18 +18482,6 @@ pub mod kit_graph {
         }
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
-    #[serde(rename_all = "camelCase")]
-    pub struct PiecePlacementMetadataDto {
-        pub piece_id: Id,
-        pub plane: Plane,
-        pub center: Coordinate,
-        pub fixed_piece_id: String,
-        pub parent_piece_id: Option<String>,
-        pub depth: i32,
-        pub path: Vec<String>,
-    }
-
     impl KitGraph {
         pub fn new(name: impl Into<String>) -> Self {
             let mut s = Self {
@@ -21255,77 +21243,6 @@ pub mod kit_graph {
 
         pub fn create_fixed_piece(_kit: &KitGraphRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
-        }
-
-        pub fn piece_placement_metadata(&self, design_id: &str) -> std::result::Result<HashMap<String, PiecePlacementMetadataDto>, SetError> {
-            let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
-            let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-            let flat = dr.flatten_map();
-
-            let mut parent_of: HashMap<Id, Id> = HashMap::new();
-            let mut is_child: HashSet<Id> = HashSet::new();
-            for c in &dr.connections {
-                let Ok(conn) = c.read() else { continue };
-                let Ok(s0) = conn.connected.read() else {
-                    continue;
-                };
-                let Ok(s1) = conn.connecting.read() else {
-                    continue;
-                };
-                let Some(pg0) = s0.piece.upgrade().and_then(|p| p.read().ok().map(|r| r.id.clone())) else {
-                    continue;
-                };
-                let Some(pg1) = s1.piece.upgrade().and_then(|p| p.read().ok().map(|r| r.id.clone())) else {
-                    continue;
-                };
-                parent_of.insert(pg1.clone(), pg0);
-                is_child.insert(pg1);
-            }
-
-            let mut depth: HashMap<Id, i32> = HashMap::new();
-            let mut roots: Vec<Id> = Vec::new();
-            for p in &dr.pieces {
-                if let Ok(pr) = p.read() {
-                    if !is_child.contains(&pr.id) {
-                        roots.push(pr.id.clone());
-                    }
-                }
-            }
-            let mut q: VecDeque<(Id, i32)> = VecDeque::new();
-            let mut seen_d: HashSet<Id> = HashSet::new();
-            for r in roots {
-                q.push_back((r, 0));
-            }
-            while let Some((gid, dpt)) = q.pop_front() {
-                if !seen_d.insert(gid.clone()) {
-                    continue;
-                }
-                depth.insert(gid.clone(), dpt);
-                for p in &dr.pieces {
-                    if let Ok(pr) = p.read() {
-                        if parent_of.get(&pr.id) == Some(&gid) {
-                            q.push_back((pr.id.clone(), dpt + 1));
-                        }
-                    }
-                }
-            }
-
-            let mut out: HashMap<String, PiecePlacementMetadataDto> = HashMap::new();
-            for p in &dr.pieces {
-                if let Ok(pr) = p.read() {
-                    let id_s = pr.id.to_string();
-                    let (plane, center) = flat.get(&pr.id).cloned().unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
-                    let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
-                    let dpt = *depth.get(&pr.id).unwrap_or(&0);
-                    out.insert(id_s.clone(), PiecePlacementMetadataDto { piece_id: pr.id.clone(), plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
-                }
-            }
-            Ok(out)
-        }
-
-        pub fn get_pieces_metadata_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
-            let out = self.piece_placement_metadata(design_id)?;
-            serde_json::to_value(&out).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_kit_json(&self) -> std::result::Result<serde_json::Value, SetError> {
@@ -27993,7 +27910,7 @@ pub mod kit_graphql {
         pub designs: Vec<crate::design::DesignStoreRef>,
     }
 
-    #[Object(name = "ReplaceableCatalogStore")]
+    #[Object(name = "ReplaceableCatalog")]
     impl ReplaceableCatalogNode {
         async fn types(&self) -> Result<Vec<TypeNode>> {
             Ok(self.types.iter().cloned().map(TypeNode).collect())
@@ -28025,7 +27942,7 @@ pub mod kit_graphql {
     pub struct RepresentationNode(pub RepresentationStoreRef);
 
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsCheckpointStore")]
+    #[graphql(name = "VcsCheckpointDto")]
     struct CheckpointDto {
         id: String,
         parent: Option<String>,
@@ -28037,7 +27954,7 @@ pub mod kit_graphql {
         change_count: usize,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsAlternativeStore")]
+    #[graphql(name = "VcsAlternativeDto")]
     struct AlternativeDto {
         id: String,
         name: String,
@@ -28045,7 +27962,7 @@ pub mod kit_graphql {
         checkpoints: Vec<String>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsDraftStore")]
+    #[graphql(name = "VcsDraftDto")]
     struct DraftDto {
         id: String,
         parent_checkpoint: Option<String>,
@@ -28057,19 +27974,19 @@ pub mod kit_graphql {
         can_redo: bool,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsSessionStore")]
+    #[graphql(name = "VcsSessionDto")]
     struct SessionDto {
         id: String,
         drafts: Vec<DraftDto>,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsRootStore")]
+    #[graphql(name = "VcsRootDto")]
     struct RootDto {
         id: String,
         name: String,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    #[graphql(name = "VcsStateStore")]
+    #[graphql(name = "VcsStateDto")]
     struct StateDto {
         the_kit_head: Option<String>,
         root: RootDto,
@@ -28079,7 +27996,7 @@ pub mod kit_graphql {
         the_kit_line: Vec<String>,
     }
 
-    #[Object(name = "KitStore")]
+    #[Object(name = "Kit")]
     impl KitStoreNode {
         async fn name(&self) -> Result<String> {
             Ok(lock_graph(&self.0)?.name.clone())
@@ -28185,7 +28102,7 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "DesignStore")]
+    #[Object(name = "Design")]
     impl DesignNode {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())

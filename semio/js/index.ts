@@ -2420,54 +2420,67 @@ export class KitStore {
       return { readKitFullCommand: { full: d } };
     }
     if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "typesShallow designsShallow");
+      const row = await this.gqlKitReadOnlyScope(
+        scope,
+        `shallow { types { shallow { ${KIT_GQL_TYPE_SHALLOW_FIELDS} } } designs { shallow { ${KIT_GQL_DESIGN_SHALLOW_FIELDS} } } }`,
+      );
+      const shallowRoot = kitGraphqlKitShallowRoot(row);
       return {
         readKitShallowCommand: {
-          types: semioParseTypeShallowArrayJson(row.typesShallow as KitJsonTreeDto | string),
-          designs: semioParseDesignShallowArrayJson(row.designsShallow as KitJsonTreeDto | string),
+          types: semioParseTypeShallowArrayJson(kitGraphqlShallowPacketsFromArray(shallowRoot.types) as unknown as KitJsonTreeDto[]),
+          designs: semioParseDesignShallowArrayJson(kitGraphqlShallowPacketsFromArray(shallowRoot.designs) as unknown as KitJsonTreeDto[]),
         },
       };
     }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "typeIds");
-      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdDtoArray(row.typeIds as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "types { id }");
+      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdDtoArray(row.types as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "designIds");
-      return { readKitDesignIdsCommand: { designIds: semioParseKitIdDtoArray(row.designIds as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "designs { id }");
+      return { readKitDesignIdsCommand: { designIds: semioParseKitIdDtoArray(row.designs as KitJsonTreeDto | string) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(
-        scope,
-        "typesMetadata { id name description icon image stock typeVirtual unit location { id } created updated }",
-      );
-      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayJson(row.typesMetadata as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, `types { metadata { ${KIT_GQL_TYPE_METADATA_FIELDS} } } }`);
+      const metas = kitGraphqlExtractNestedMetadata(row.types as JsonValue);
+      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayJson(metas as unknown as KitJsonTreeDto[]) } };
     }
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(
-        scope,
-        "designsMetadata { id name description icon image location { id } unit created updated kit { id } }",
-      );
-      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayJson(row.designsMetadata as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, `designs { metadata { ${KIT_GQL_DESIGN_METADATA_FIELDS} } } }`);
+      const metas = kitGraphqlExtractNestedMetadata(row.designs as JsonValue);
+      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayJson(metas as unknown as KitJsonTreeDto[]) } };
     }
     if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "typesShallow");
-      return { readKitTypesShallowCommand: { types: semioParseTypeShallowArrayJson(row.typesShallow as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, `types { shallow { ${KIT_GQL_TYPE_SHALLOW_FIELDS} } }`);
+      return {
+        readKitTypesShallowCommand: {
+          types: semioParseTypeShallowArrayJson(kitGraphqlShallowPacketsFromArray(row.types as JsonValue) as unknown as KitJsonTreeDto[]),
+        },
+      };
     }
     if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "designsShallow");
-      return { readKitDesignsShallowCommand: { designs: semioParseDesignShallowArrayJson(row.designsShallow as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, `designs { shallow { ${KIT_GQL_DESIGN_SHALLOW_FIELDS} } }`);
+      return {
+        readKitDesignsShallowCommand: {
+          designs: semioParseDesignShallowArrayJson(kitGraphqlShallowPacketsFromArray(row.designs as JsonValue) as unknown as KitJsonTreeDto[]),
+        },
+      };
     }
     if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
-      const row = await this.gqlKitReadOnlyScope(scope, "authorsShallow");
-      return { readKitAuthorsShallowCommand: { authors: semioParseAuthorMetadataArrayJson(row.authorsShallow as KitJsonTreeDto | string) } };
+      const row = await this.gqlKitReadOnlyScope(scope, "shallow { authors { id name email role rank } }");
+      const shallowRoot = kitGraphqlKitShallowRoot(row);
+      return {
+        readKitAuthorsShallowCommand: {
+          authors: semioParseAuthorMetadataArrayJson((shallowRoot.authors as KitJsonTreeDto) ?? []),
+        },
+      };
     }
     if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(
         scope,
-        "kitMetadata { id name description icon image preview remote homepage license uri created updated version }",
+        "metadata { id name description icon image preview remote homepage license uri created updated version }",
       );
-      return { readKitMetadataCommand: { metadata: semioParseKitMetadataJson(row.kitMetadata as KitJsonTreeDto) } };
+      return { readKitMetadataCommand: { metadata: semioParseKitMetadataJson(row.metadata as KitJsonTreeDto) } };
     }
     if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "coloredConnectors { typeId { id } connectorId { id } color }");
@@ -2562,15 +2575,17 @@ export class KitStore {
       const sel = cmd.readDesignReplaceableCatalogCommand.selection.map((s) => s.id);
       const d = kitGraphqlData(
         await this.gqlRunWithReadScope(scope, {
-          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kit(scope: $scope) { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { typeIds designIds } } } }`,
+          query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kit(scope: $scope) { designByDtoId(id: $id) { replaceableCatalog(selection: $sel) { types { id } designs { id } } } } }`,
           variables: { id: designId, sel },
         }),
-      ) as { kit?: { designByDtoId?: { replaceableCatalog?: { typeIds?: string[]; designIds?: string[] } } | null } | null };
+      ) as { kit?: { designByDtoId?: { replaceableCatalog?: { types?: readonly JsonObject[]; designs?: readonly JsonObject[] } } | null } | null };
       const rc = gqlDataKitRoot(d)?.designByDtoId?.replaceableCatalog;
+      const typeRows = Array.isArray(rc?.types) ? rc!.types : [];
+      const designRows = Array.isArray(rc?.designs) ? rc!.designs : [];
       return {
         readDesignReplaceableCatalogCommand: {
-          types: (rc?.typeIds ?? []).map((id: string) => ({ id: String(id) })),
-          designs: (rc?.designIds ?? []).map((id: string) => ({ id: String(id) })),
+          types: typeRows.map((r) => ({ id: typeof r.id === "string" ? r.id : String((r as { id?: unknown }).id ?? "") })),
+          designs: designRows.map((r) => ({ id: typeof r.id === "string" ? r.id : String((r as { id?: unknown }).id ?? "") })),
         },
       };
     }
@@ -2648,7 +2663,7 @@ export class KitStore {
   async getPiecesMetadata(scope: KitReadScope, designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     const d = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, {
-        query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { piecePlacement { pieceId fixedPieceId parentPieceId depth path plane { origin { x y z } xAxis { x y z } yAxis { x y z } } center { x y z } } } } } }`,
+        query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { piecePlacement { pieceId fixedPieceId parentPieceId depth path plane { origin { x y z } xAxis { x y z } yAxis { x y z } } center { u v } } } } } }`,
         variables: { id: designId },
       }),
     ) as { kit?: { designByDtoId?: { piecePlacement?: readonly JsonValue[] } | null } | null };
@@ -5255,7 +5270,7 @@ const includedDesignInfoJsonZod = z.object({
 const piecePlacementRowJsonZod = z.object({
   pieceId: z.string(),
   plane: PlaneSchema,
-  center: PointSchema,
+  center: CoordinateSchema,
   fixedPieceId: z.string(),
   parentPieceId: z.string().nullable(),
   depth: z.number(),

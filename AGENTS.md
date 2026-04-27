@@ -25,7 +25,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.repo/🎫/YY/MM/DD/TICKETSLUG`.
   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
   - You MUST NOT create any additional folders or files outside the ticket folder.
-  - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript). Every emoji MUST fit the name and be unique among the siblings. Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
+  - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript, or `pub mod` in Rust). Every emoji MUST fit the name and be unique among the siblings. Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
     - You MUST NOT create additional test files for new tests but you MUST extend the existing test files to cover everything.
     - You MUST NOT create additional example files and you MUST implement it directly in the dependent parts.
   - You MUST close the ticket once you are done with the mcp tool `ticket_close` to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat most likely it is related to the old task and you MAY reopen the same ticket with mcp tool `ticket_reopen`.
@@ -42,7 +42,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST NOT mix technologies (elements, coda, semio) if NOT explicitly asked.
 
-- You MUST summarize definitions (start with unique emoji inside the section, not longer than 256 characters) in language-native docstrings.
+- You MUST summarize definitions (start with a fitting unique emoji and not longer than 256 characters) in language-native docstrings.
 
 - You MUST NOT assume and you MUST validate your assumptions.
   - You MUST NOT say that a test is passing when you didn't run it.
