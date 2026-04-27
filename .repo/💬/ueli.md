@@ -953,6 +953,20 @@ semio/js:
 
 ---
 
+There MUST NOT be any kit state or caching in semio/js.
+The only state tracked in semio/js are request ids to match the events (some of them are responses to the requests).
+Every read MUST be directly forwarded to semio/rs.
+The complete communication between semio/js and semio/rs MUST be with completly typed graphql.
+
+---
+
+Get rid all \*Wire duplicates and rename all data types to Dto same as semio/rs.
+e.g. KitIdWire and KitId are both the same KitIdDto
+Make all Dtos read-only.
+Same for all others.
+
+---
+
 Refactor everything to have 100% acurate types.
 Record<> MUST NOT remain.
 unknown MUST NOT remain.
@@ -1043,6 +1057,27 @@ export interface KitStoreClient {
 ### 🦀rs
 
 semio/rs:
+
+---
+
+The code (including the exposed graphql api) is not clean.
+Start consolidating, aligning and refactoring everything.
+
+E.g. in graphql:
+
+- Rename all type entities to \*Store (e.g. type Piece is PieceStore)
+- Remove all \*Row types. There are just FullDto, ShallowDto, MetadataDto, IdDto
+- Introduce proper enums for everything (e.g. backbone kind,)
+- Remove all scalars such as \*List (e.g. PieceFullList)
+- Remove all _Gql_ naming (e.g. GqlPlaneObject is just PlaneStore)
+- Remove all docstrings from graphql schema
+- Everything that is referenced in types MUST be other types when possible (e.g. ReplaceableCatalog has `designIds: [String!]!` but it should be `types: [Design!]!`
+- Add all parent container types to the entities and name them `container` (they have weak references in rust). e.g. type Representation is part of Type hence it MUST have: `container:Type!`. Design has `container:Kit!`, etc
+- Remove all \* Object suffixes (e.g. type TypeMetadataObject is just type TypeMetadataDto
+- Add all filters (such as ShallowDto, MetdataDto) to the main type (e.g. `type Design { metadata:DesignMetdataDto!, shallow:DesignShallowDto, ...}`
+
+You MUST NOT introduce new structs for in-memory and graphql objects.
+The only additional structs are \*Dtos which have serde functionality.
 
 ---
 

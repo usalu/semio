@@ -17,7 +17,9 @@ import {
   createJsonFileKitStore,
   createKitStoreClient,
   createSessionKitStore,
+  getKitClientReadScope,
   kitReadScopeKey,
+  kitStoreFromKitStoreClient,
   normalizeKitFullDtoFolderPaths,
   kitReadScopeToGraphQLInput,
   theKitReadScope,
@@ -27,10 +29,6 @@ import {
   FamilySchema,
   FileSchema,
   FolderSchema,
-  getSemioKitDesignReadStore,
-  getSemioKitLiveReadStore,
-  getSemioKitShallowListReadStore,
-  getSemioKitViewStore,
   isKitCommandLifecycleEvent,
   kitEventAffectsCanUndoRedo,
   kitEventAffectsDesignQualitySumRead,
@@ -39,7 +37,6 @@ import {
   kitEventAffectsReplaceableCatalogRead,
   kitEventAffectsTypeScopedRead,
   kitEventTouchesDesign,
-  kitStoreFromKitStoreClient,
   resolveDesignIdForPieceOrConnection,
   submitKitChangeCommands,
   kitStoreClientAddChildByKind,
@@ -49,8 +46,12 @@ import {
   kitStoreClientRemovePiece,
   kitStoreClientUpdateConnection,
   kitStoreClientUpdatePiece,
+  type JsonValue,
+  type KitDesignReadKind,
   type KitFullDto,
+  type KitShallowListKind,
   type KitStoreReadSnap,
+  type KitViewCatalogKey,
   type WriteStatus,
   writeKitStoreClientSchemaField,
 } from "@semio/js";
@@ -111,13 +112,13 @@ import {
 import type {
   BackboneConfig,
   BackboneStatusDto,
-  ChangeKitCommandWire,
+  ChangeKitCommand,
   ConflictResolution,
   ConnectionDiff,
-  ConnectionId,
+  ConnectionIdDto,
   ConnectionPlain,
   DesignDiff,
-  DesignId,
+  DesignIdDto,
   DesignMetadataDto,
   DesignPlain,
   DesignShallow,
@@ -135,15 +136,15 @@ import type {
   KitStoreClient,
   KitWriteScope,
   PieceDiff,
-  PieceId,
+  PieceIdDto,
   PiecePlain,
-  PiecePlacementRowWireDto,
+  PiecePlacementRowDto,
   PlanePlain,
-  SemioKitWireTreeDto,
+  KitJsonTreeDto,
   SetError,
   SetResult,
   TypeDiff,
-  TypeId,
+  TypeIdDto,
   TypeMetadataDto,
   TypePlain,
   TypeShallow,
@@ -152,6 +153,246 @@ import type { ReactNode, SetStateAction } from "react";
 import * as React from "react";
 
 // #endregion ⚛️Imports
+
+// #region 🪜SemioKitLiveReadStores
+
+/** 🧾 Default {@link SemioKitLiveReadStore#getSnapshot} when a key has not polled yet (stable ref for React). */
+const SEMIO_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
+
+/** @emoji 🧾 External-store hub: async GraphQL-backed reads with UI-layer snapshot caching (not `semio/js`). */
+export class SemioKitLiveReadStore {
+  private readonly snap = new Map<string, KitStoreReadSnap>();
+  private readonly regs: Array<{
+    key: string;
+    fetch: () => Promise<unknown>;
+    affects: (ev: unknown) => boolean;
+    onChange: () => void;
+  }> = [];
+  private off: (() => void) | undefined;
+
+  constructor(private readonly client: KitStoreClient) {
+    this.off = client.subscribe((ev) => {
+      for (const r of this.regs) {
+        if (r.affects(ev)) void this.poll(r);
+      }
+    });
+  }
+
+  subscribe(key: string, fetch: () => Promise<unknown>, affects: (ev: unknown) => boolean, onChange: () => void): () => void {
+    const r = { key, fetch, affects, onChange };
+    this.regs.push(r);
+    void this.poll(r);
+    return () => {
+      const i = this.regs.indexOf(r);
+      if (i >= 0) this.regs.splice(i, 1);
+    };
+  }
+
+  getSnapshot(key: string): KitStoreReadSnap {
+    return this.snap.get(key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+  }
+
+  private async poll(r: { key: string; fetch: () => Promise<unknown>; onChange: () => void }): Promise<void> {
+    const cur = this.snap.get(r.key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+    this.snap.set(r.key, { version: cur.version, data: cur.data, pending: cur.pending + 1 });
+    r.onChange();
+    try {
+      const data = await r.fetch();
+      this.snap.set(r.key, { version: cur.version + 1, data, pending: 0 });
+      r.onChange();
+    } catch {
+      this.snap.set(r.key, { version: cur.version, data: cur.data, pending: 0 });
+      r.onChange();
+    }
+  }
+
+  dispose(): void {
+    this.off?.();
+    this.off = undefined;
+    this.regs.length = 0;
+    this.snap.clear();
+  }
+}
+
+const liveReadHubs = new WeakMap<KitStoreClient, SemioKitLiveReadStore>();
+
+export function getSemioKitLiveReadStore(c: KitStoreClient): SemioKitLiveReadStore {
+  let h = liveReadHubs.get(c);
+  if (!h) {
+    h = new SemioKitLiveReadStore(c);
+    liveReadHubs.set(c, h);
+  }
+  return h;
+}
+
+function viewStoreKey(k: KitViewCatalogKey): string {
+  return `view:${k}`;
+}
+
+async function fetchViewCatalogSnapshot(client: KitStoreClient, key: KitViewCatalogKey): Promise<unknown> {
+  const ks = kitStoreFromKitStoreClient(client);
+  const scope = getKitClientReadScope(client);
+  if (!ks) {
+    if (key === "typeIds" || key === "designIds") return [];
+    return [];
+  }
+  if (key === "typeIds") return ks.kindRowIds(scope);
+  if (key === "designIds") return ks.designRowIds(scope);
+  if (key === "typesMetadata") {
+    const rows = await ks.kindMetadataRows(scope);
+    return (rows as readonly { id?: string; name?: string }[]).map((t) => ({ id: String(t.id ?? ""), name: String(t.name ?? "") }));
+  }
+  const rows = await ks.designMetadataRows(scope);
+  return (rows as readonly { id?: string; name?: string }[]).map((d) => ({ id: String(d.id ?? ""), name: String(d.name ?? "") }));
+}
+
+/** @emoji 🧾 View-catalog reads via async {@link KitStore} (React-owned snapshot map). */
+export class SemioKitViewStore {
+  private readonly hub: SemioKitLiveReadStore;
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(_key: KitViewCatalogKey, onChange: () => void): () => void {
+    const keys: KitViewCatalogKey[] = ["typeIds", "designIds", "typesMetadata", "designsMetadata"];
+    const unsubs = keys.map((k) =>
+      this.hub.subscribe(
+        viewStoreKey(k),
+        () => fetchViewCatalogSnapshot(this.client, k),
+        () => true,
+        onChange,
+      ),
+    );
+    return () => {
+      for (const u of unsubs) u();
+    };
+  }
+
+  getSnapshot(key: KitViewCatalogKey): unknown {
+    return this.hub.getSnapshot(viewStoreKey(key)).data;
+  }
+}
+
+const viewStores = new WeakMap<KitStoreClient, SemioKitViewStore>();
+
+export function getSemioKitViewStore(c: KitStoreClient): SemioKitViewStore {
+  let v = viewStores.get(c);
+  if (!v) {
+    v = new SemioKitViewStore(c);
+    viewStores.set(c, v);
+  }
+  return v;
+}
+
+const SEMIO_KIT_DESIGN_READ_EMPTY_LIST: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
+const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze({}) as unknown,
+  pending: 0,
+}) as KitStoreReadSnap;
+
+function designReadKey(designId: string, field: KitDesignReadKind): string {
+  return `design:${designId}:${field}`;
+}
+
+/** @emoji 🧾 Per-design list/metadata reads (async kit store; React snapshot map). */
+export class SemioKitDesignReadStore {
+  private readonly hub: SemioKitLiveReadStore;
+
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(designId: string, field: KitDesignReadKind, onChange: () => void): () => void {
+    return this.hub.subscribe(
+      designReadKey(designId, field),
+      async () => {
+        const list = await this.client.getPieces(designId);
+        const conns = await this.client.getConnections(designId);
+        if (field === "metadata") {
+          const meta: { [k: string]: JsonValue } = {};
+          for (const p of list) {
+            if (p && typeof p === "object" && p !== null && "id" in p) meta[String((p as { id: string }).id)] = p as unknown as JsonValue;
+          }
+          return meta;
+        }
+        if (field === "pieces") return [...list];
+        return [...conns];
+      },
+      (ev) => (typeof ev === "object" && ev !== null && kitEventTouchesDesign(ev as KitEvent, designId) ? true : false),
+      onChange,
+    );
+  }
+
+  getSnapshot(designId: string, field: KitDesignReadKind): KitStoreReadSnap {
+    const s = this.hub.getSnapshot(designReadKey(designId, field));
+    if (field === "metadata" && s.version === 0 && s.pending === 0 && Array.isArray(s.data) && s.data.length === 0) {
+      return SEMIO_KIT_DESIGN_READ_EMPTY_META;
+    }
+    return s;
+  }
+}
+
+const designStores = new WeakMap<KitStoreClient, SemioKitDesignReadStore>();
+
+export function getSemioKitDesignReadStore(c: KitStoreClient): SemioKitDesignReadStore {
+  let d = designStores.get(c);
+  if (!d) {
+    d = new SemioKitDesignReadStore(c);
+    designStores.set(c, d);
+  }
+  return d;
+}
+
+function shallowListKey(kind: KitShallowListKind): string {
+  return `shallow:${kind}`;
+}
+
+/** @emoji 🧾 Shallow entity lists (async; React snapshot map). */
+export class SemioKitShallowListReadStore {
+  private readonly hub: SemioKitLiveReadStore;
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(kind: KitShallowListKind, onChange: () => void): () => void {
+    return this.hub.subscribe(
+      shallowListKey(kind),
+      async () => {
+        if (kind === "designs") return [...(await this.client.getDesigns())];
+        if (kind === "types") return [...(await this.client.getTypes())];
+        return [...(await this.client.getAuthors())];
+      },
+      () => true,
+      onChange,
+    );
+  }
+
+  getSnapshot(kind: KitShallowListKind): KitStoreReadSnap {
+    return this.hub.getSnapshot(shallowListKey(kind));
+  }
+}
+
+const shallowStores = new WeakMap<KitStoreClient, SemioKitShallowListReadStore>();
+
+export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShallowListReadStore {
+  let s = shallowStores.get(c);
+  if (!s) {
+    s = new SemioKitShallowListReadStore(c);
+    shallowStores.set(c, s);
+  }
+  return s;
+}
+
+// #endregion 🪜SemioKitLiveReadStores
 
 // #region 🔖KitHostCommandDispatch
 /** @emoji 🪪 Authoritative kit DTO from a host store (plain `kit` snapshots may omit class `toJSON`). */
@@ -225,33 +466,33 @@ function __kitHostBridge(store: KitHostStore): KitStoreClient | undefined {
  * Sketchpad MUST use this shape instead of `{ command: string; args: unknown[] }`.
  */
 export type KitHostGraphOp =
-  | { op: "deleteKitSelection"; typeIds: readonly TypeId[]; designIds: readonly DesignId[] }
+  | { op: "deleteKitSelection"; typeIds: readonly TypeIdDto[]; designIds: readonly DesignIdDto[] }
   | { op: "addKitChildType"; body: TypePlain }
   | { op: "addKitChildTypes"; bodies: readonly TypePlain[] }
-  | { op: "removeKitType"; id: TypeId }
-  | { op: "removeKitTypes"; ids: readonly TypeId[] }
+  | { op: "removeKitType"; id: TypeIdDto }
+  | { op: "removeKitTypes"; ids: readonly TypeIdDto[] }
   | { op: "addKitChildDesign"; body: DesignPlain }
   | { op: "addKitChildDesigns"; bodies: readonly DesignPlain[] }
-  | { op: "removeKitDesign"; id: DesignId }
-  | { op: "removeKitDesigns"; ids: readonly DesignId[] }
-  | { op: "setEntityPatch"; entity: "Type"; id: TypeId; patch: TypeDiff } | { op: "setEntityPatch"; entity: "Design"; id: DesignId; patch: DesignDiff }
-  | { op: "patchTypes"; updates: readonly { type: TypeId; diff: TypeDiff }[] }
-  | { op: "patchDesigns"; updates: readonly { design: DesignId; diff: DesignDiff }[] }
-  | { op: "addDesignPiece"; designId: DesignId; piece: PiecePlain }
-  | { op: "addDesignPieces"; designId: DesignId; pieces: readonly PiecePlain[] }
-  | { op: "removeDesignPiece"; designId: DesignId; pieceId: PieceId }
-  | { op: "removeDesignPieces"; designId: DesignId; pieceIds: readonly PieceId[] }
-  | { op: "addDesignConnection"; designId: DesignId; connection: ConnectionPlain }
-  | { op: "addDesignConnections"; designId: DesignId; connections: readonly ConnectionPlain[] }
-  | { op: "deleteConnection"; designId: DesignId; connectionId: ConnectionId }
-  | { op: "deleteConnections"; designId: DesignId; connectionIds: readonly ConnectionId[] }
-  | { op: "patchPiece"; designId: DesignId; pieceId: PieceId; diff: PieceDiff }
-  | { op: "patchPieces"; designId: DesignId; updates: readonly { piece: PieceId; diff: PieceDiff }[] }
-  | { op: "patchConnection"; designId: DesignId; connectionId: ConnectionId; diff: ConnectionDiff }
-  | { op: "patchConnectionMany"; designId: DesignId; rows: readonly { id: string; diff: ConnectionDiff }[] }
-  | { op: "clusterPieces"; designId: DesignId; pieceIds: readonly PieceId[]; clusterName: string }
-  | { op: "expandDesign"; parentDesignId: DesignId; nestedDesignId: DesignId }
-  | { op: "removeDesignPiecesAndConnections"; designId: DesignId; pieceIds: readonly PieceId[]; connectionIds: readonly ConnectionId[] };
+  | { op: "removeKitDesign"; id: DesignIdDto }
+  | { op: "removeKitDesigns"; ids: readonly DesignIdDto[] }
+  | { op: "setEntityPatch"; entity: "Type"; id: TypeIdDto; patch: TypeDiff } | { op: "setEntityPatch"; entity: "Design"; id: DesignIdDto; patch: DesignDiff }
+  | { op: "patchTypes"; updates: readonly { type: TypeIdDto; diff: TypeDiff }[] }
+  | { op: "patchDesigns"; updates: readonly { design: DesignIdDto; diff: DesignDiff }[] }
+  | { op: "addDesignPiece"; designId: DesignIdDto; piece: PiecePlain }
+  | { op: "addDesignPieces"; designId: DesignIdDto; pieces: readonly PiecePlain[] }
+  | { op: "removeDesignPiece"; designId: DesignIdDto; pieceId: PieceIdDto }
+  | { op: "removeDesignPieces"; designId: DesignIdDto; pieceIds: readonly PieceIdDto[] }
+  | { op: "addDesignConnection"; designId: DesignIdDto; connection: ConnectionPlain }
+  | { op: "addDesignConnections"; designId: DesignIdDto; connections: readonly ConnectionPlain[] }
+  | { op: "deleteConnection"; designId: DesignIdDto; connectionId: ConnectionIdDto }
+  | { op: "deleteConnections"; designId: DesignIdDto; connectionIds: readonly ConnectionIdDto[] }
+  | { op: "patchPiece"; designId: DesignIdDto; pieceId: PieceIdDto; diff: PieceDiff }
+  | { op: "patchPieces"; designId: DesignIdDto; updates: readonly { piece: PieceIdDto; diff: PieceDiff }[] }
+  | { op: "patchConnection"; designId: DesignIdDto; connectionId: ConnectionIdDto; diff: ConnectionDiff }
+  | { op: "patchConnectionMany"; designId: DesignIdDto; rows: readonly { id: string; diff: ConnectionDiff }[] }
+  | { op: "clusterPieces"; designId: DesignIdDto; pieceIds: readonly PieceIdDto[]; clusterName: string }
+  | { op: "expandDesign"; parentDesignId: DesignIdDto; nestedDesignId: DesignIdDto }
+  | { op: "removeDesignPiecesAndConnections"; designId: DesignIdDto; pieceIds: readonly PieceIdDto[]; connectionIds: readonly ConnectionIdDto[] };
 
 /** @emoji 🧾 Applies {@link KitHostGraphOp} through the live {@link KitStoreClient} bridge. */
 export async function applyKitHostGraphOp(host: KitHostStore, op: KitHostGraphOp): Promise<SetResult> {
@@ -620,7 +861,7 @@ export function createKitCommandEngine(store: KitHostStore): ReturnType<typeof c
 // #endregion 🔖KitHostCommandDispatch
 
 export type { BackboneConfig, BackboneStatusDto, ConflictResolution, KitConflict, KitReadScope, KitWriteScope, SetError, SetResult } from "@semio/js";
-export { kitReadScopeKey, kitReadScopeToGraphQLInput, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
+export { getKitClientReadScope, kitReadScopeKey, kitReadScopeToGraphQLInput, kitStoreFromKitStoreClient, theKitReadScope } from "@semio/js";
 export type { KitBinaryStore, KitFileState } from "@semio/js";
 export type { KitHostStore, KitHostStoreSnapshot } from "@semio/js";
 export type {
@@ -635,16 +876,8 @@ export { DesignStore, TypeStore, PieceStore, ConnectionStore, FamilyStore, FileS
 
 // #region ⚛️Types
 
-export {
-  getSemioKitDesignReadStore,
-  getSemioKitLiveReadStore,
-  getSemioKitShallowListReadStore,
-  getSemioKitViewStore,
-  SemioKitDesignReadStore,
-  SemioKitLiveReadStore,
-  SemioKitShallowListReadStore,
-  SemioKitViewStore,
-} from "@semio/js";
+// getSemioKit* stores are exported with their `export class` / `export function` declarations in 🪜SemioKitLiveReadStores.
+
 export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
 /** Read-only async-backed value + {@link WriteStatus} (no setter). */
 export type HookRead<T> = readonly [T | undefined, WriteStatus];
@@ -4027,13 +4260,13 @@ export function useDeselectAll(): { run: () => Promise<SetResult>; status: Write
 }
 
 export function usePasteDesignSelection(): {
-  run: (designId: string, selection: SemioKitWireTreeDto, plane?: PlanePlain | null) => Promise<SetResult>;
+  run: (designId: string, selection: KitJsonTreeDto, plane?: PlanePlain | null) => Promise<SetResult>;
   status: WriteStatus;
 } {
   const runtime = useKitRuntime();
   const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
   const run = React.useCallback(
-    async (designId: string, selection: SemioKitWireTreeDto, plane?: PlanePlain | null) => {
+    async (designId: string, selection: KitJsonTreeDto, plane?: PlanePlain | null) => {
       if (!runtime.kitClient || !runtime.canWrite) {
         const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
         setStatus({ kind: "error", pending: 0, lastError: e });
@@ -4381,16 +4614,16 @@ export function useUpdateConnections(): {
 }
 
 /** @emoji 🧾 Normalizes live-read snapshot data into a placement metadata map (Map or plain record from older hubs). */
-function __semioPiecesPlacementWireMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowWireDto> {
-  if (data instanceof Map) return data as ReadonlyMap<string, PiecePlacementRowWireDto>;
+function __semioPiecesPlacementWireMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowDto> {
+  if (data instanceof Map) return data as ReadonlyMap<string, PiecePlacementRowDto>;
   if (data && typeof data === "object" && !Array.isArray(data)) {
-    return new Map(Object.entries(data as Record<string, PiecePlacementRowWireDto>));
+    return new Map(Object.entries(data as Record<string, PiecePlacementRowDto>));
   }
   return new Map();
 }
 
 /** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
-export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<string, PiecePlacementRowWireDto>> {
+export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<string, PiecePlacementRowDto>> {
   const runtime = useKitRuntime();
   const readScope = useKitDataScope();
   const key = `pmd:${designId ?? ""}:${kitReadScopeKey(readScope)}`;
@@ -4406,7 +4639,7 @@ export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<st
         key,
         async () => {
           const ks = kitStoreFromKitStoreClient(c);
-          if (!ks) return new Map<string, PiecePlacementRowWireDto>();
+          if (!ks) return new Map<string, PiecePlacementRowDto>();
           return ks.design(d, readScope).readPiecesPlacementMetadataMap();
         },
         (ev) => kitEventTouchesDesign(ev as KitEvent, d),
@@ -4775,7 +5008,7 @@ export function useAuthors(): HookRead<any[]> {
   return useKitAuthorsShallow();
 }
 
-export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<PiecePlacementRowWireDto | undefined> {
+export function usePieceMetadata(designId?: string, pieceId?: string): HookRead<PiecePlacementRowDto | undefined> {
   const [map, status] = usePiecesMetadataMap(designId);
   const value = React.useMemo(() => (pieceId ? map?.get(pieceId) : undefined), [map, pieceId]);
   return [value, status] as const;
@@ -5807,11 +6040,11 @@ export {
   Vector,
 } from "@semio/js";
 export { KitStore } from "@semio/js";
-export type { ReadWireBatch, ReadWireBatchResult, ReadWireItem } from "@semio/js";
+export type { ReadBatch, ReadBatchResult, ReadBatchItem } from "@semio/js";
 export type {
-  AuthorId,
+  AuthorIdDto,
   ConnectionDiff,
-  ConnectionId,
+  ConnectionIdDto,
   Connector,
   CoordinatePlain,
   DesignDiff,
@@ -5828,7 +6061,7 @@ export type {
   MoveVector,
   OperationResult,
   PieceDiff,
-  PieceId,
+  PieceIdDto,
   Port,
   QualityDiff,
   TypeDiff,
@@ -16929,7 +17162,7 @@ const shouldRunReactEmbeddedTests =
 if (shouldRunReactEmbeddedTests) {
   const { describe, expect, it } = await import("vitest");
   const { act, cleanup, render, waitFor } = await import("@testing-library/react");
-  const { InMemoryKitStore, asKitInstance, kitReadScopeKey } = await import("@semio/js");
+  const { InMemoryKitStore, asKitInstance, kitReadScopeKey, theKitReadScope } = await import("@semio/js");
 
   const kitJsonFromStore = (store: KitHostStore) => {
     const host = store as KitHostStore & { _kit?: { toJSON: () => unknown } };
@@ -16939,9 +17172,9 @@ if (shouldRunReactEmbeddedTests) {
 
   const createTestKitClient = (store: KitHostStore): KitStoreClient =>
     ({
-      getDto: () => kitJsonFromStore(store),
-      getSnapshot: async () => kitJsonFromStore(store),
-      submitChangeKitCommands: async (commands: readonly ChangeKitCommandWire[]) => {
+      fetchFullKit: async () => kitJsonFromStore(store) as KitFullDto,
+      kitReadScope: theKitReadScope,
+      submitChangeKitCommands: async (commands: readonly ChangeKitCommand[]) => {
         const kit = kitJsonFromStore(store) as KitFullDto;
         for (const cmd of commands) {
           const c = cmd as Record<string, unknown>;
@@ -17317,8 +17550,8 @@ if (shouldRunReactEmbeddedTests) {
       });
       const store = new InMemoryKitStore(kit);
       const stub: KitStoreClient = {
-        getDto: () => store.getSnapshot().kit.toJSON(),
-        getSnapshot: async () => store.getSnapshot().kit.toJSON(),
+        fetchFullKit: async () => store.getSnapshot().kit.toJSON() as KitFullDto,
+        kitReadScope: theKitReadScope,
         getKitWriteScope: () => null,
         setKitWriteScope: () => {},
         finalizeKitWriteTransaction: async () => ({ ok: true }) as const,

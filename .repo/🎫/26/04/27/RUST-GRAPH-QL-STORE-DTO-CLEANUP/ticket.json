@@ -1,0 +1,10 @@
+{
+  "title": "Rust GraphQL Store Dto Cleanup",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement Rust GraphQL cleanup: rename entity types to *Store, remove *Row and *List scalars, rename Gql* to Store/DTO names, add enums for finite strings, regenerate semio/graphql/schema.graphql. Plan id d0ffcac5.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪7354ebbcdcb84cd0be03000ee129e726"
+  ]
+}

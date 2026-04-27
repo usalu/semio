@@ -8,7 +8,7 @@
 /// <reference types="vite/client" />
 
 // #region 📥Imports
-import { KitStore, theKitReadScope, type DesignFlattenMapEntryWireDto, type KitFullDto as WasmKitFullDto } from "@semio/js";
+import { KitStore, theKitReadScope, type DesignFlattenMapEntryDto, type KitFullDto as WasmKitFullDto } from "@semio/js";
 import type {
   CoordinatePlain as Coordinate,
   Design,

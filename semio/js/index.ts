@@ -36,12 +36,6 @@ self.onmessage = async (ev) => {
       post({ op: "error", reqId: "op" in msg && msg.op !== "init" ? msg.reqId : undefined, message: "worker not initialized" });
       return;
     }
-    if (msg.op === "snapshot") {
-      const snap = handle.snapshot();
-      post({ op: "snapshotResult", reqId: msg.reqId, json: JSON.stringify(snap) });
-      post({ op: "done", reqId: msg.reqId });
-      return;
-    }
     if (msg.op === "execute") {
       const json = await handle.execute(msg.body);
       post({ op: "result", reqId: msg.reqId, json: String(json) });
@@ -105,7 +99,7 @@ export type KitCommandLifecyclePhase = "accepted" | "succeeded" | "failed";
 /**
  * @emoji 🧾 `KitChangeKind` on the wire (camelCase from `semio/rs`), plus any `other` label inside `other`.
  */
-export type KitChangeKindWire =
+export type KitChangeKind =
   | "inferred"
   | "setKitMetadata"
   | "addType"
@@ -123,7 +117,7 @@ export type KitChangeKindWire =
   | { readonly other: string }
   | (string & { readonly _semioExt?: 1 });
 
-/** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKindWire} via {@linkcode kitChangeSemanticKindToWire}. */
+/** @emoji 🧾 GraphQL `KitChangeSemanticKind` enum (SCREAMING_SNAKE); pair with {@linkcode KitChangeKind} via {@linkcode kitChangeSemanticKindToWire}. */
 export type KitChangeSemanticKindGql =
   | "INFERRED"
   | "SET_KIT_METADATA"
@@ -141,16 +135,16 @@ export type KitChangeSemanticKindGql =
   | "MARK_RELEASE"
   | "OTHER";
 
-/** @emoji 🧾 Maps batch `changeKind` + `changeKindOther` into {@linkcode KitChangeKindWire} (camelCase unit or `{ other }` for extension labels). */
+/** @emoji 🧾 Maps batch `changeKind` + `changeKindOther` into {@linkcode KitChangeKind} (camelCase unit or `{ other }` for extension labels). */
 export function kitChangeSemanticKindToWire(
   gql: KitChangeSemanticKindGql | null | undefined,
   other: string | null | undefined,
-): KitChangeKindWire {
+): KitChangeKind {
   if (gql === "OTHER" || gql == null) {
     if (other != null && other.length > 0) return { other } as const;
     return "inferred";
   }
-  const m: { readonly [K in Exclude<KitChangeSemanticKindGql, "OTHER">]: KitChangeKindWire } = {
+  const m: { readonly [K in Exclude<KitChangeSemanticKindGql, "OTHER">]: KitChangeKind } = {
     INFERRED: "inferred",
     SET_KIT_METADATA: "setKitMetadata",
     ADD_TYPE: "addType",
@@ -169,33 +163,30 @@ export function kitChangeSemanticKindToWire(
   return m[gql as Exclude<KitChangeSemanticKindGql, "OTHER">] ?? "inferred";
 }
 
-/** @emoji 🪢 Object branch for GraphQL / serde wire trees (explicit string slots, no `Record` alias). */
-export type SemioKitWireStructDto = { readonly [slot: string]: SemioKitWireTreeDto };
-/** @emoji 🪢 Recursive wire tree from GraphQL / serde kit scalars. */
-export type SemioKitWireTreeDto =
+/** @emoji 🪢 Object branch for GraphQL / serde JSON trees (explicit string slots, no `Record` alias). */
+export type KitJsonObjectDto = { readonly [slot: string]: KitJsonTreeDto };
+/** @emoji 🪢 Recursive JSON tree from GraphQL / serde kit scalars. */
+export type KitJsonTreeDto =
   | string
   | number
   | boolean
   | null
-  | readonly SemioKitWireTreeDto[]
-  | SemioKitWireStructDto;
+  | readonly KitJsonTreeDto[]
+  | KitJsonObjectDto;
 
-/** @emoji 🧱 Parsed JSON tree (strict surface; no `Record<>` / `unknown`). */
+/** @emoji 🧱 Parsed JSON tree (strict surface; no open index-signature object typing or untyped values). */
 export type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
 /** @emoji 🧱 JSON object node (string-keyed). */
 export type JsonObject = { readonly [key: string]: JsonValue };
 
-/** @emoji 🧾 GraphQL `variables` map (string-keyed JSON). */
-export type GraphQlVariables = JsonObject;
+/** @emoji 🧱 Mutable JSON object for local construction. */
+type JsonObjectMutable = { [key: string]: JsonValue };
+/** @emoji 🧱 Mutable `variables` map for GraphQL / kit batch (alias of the JSON builder surface). */
+type GraphQlObjectMutable = JsonObjectMutable;
 
 /** @emoji 🧾 `JSON.parse` with a {@link JsonValue} root (GraphQL transport, config knobs). */
 function parseJsonValue(text: string): JsonValue {
   return JSON.parse(text) as JsonValue;
-}
-
-/** @emoji 🧾 True for JSON object nodes (excludes arrays / null). */
-function isJsonObjectNode(v: JsonValue | SemioKitWireTreeDto | null | undefined): v is JsonObject | SemioKitWireStructDto {
-  return v != null && typeof v === "object" && !Array.isArray(v);
 }
 
 /** @emoji 🧾 GraphQL HTTP/FFI response envelope before unwrapping `data`. */
@@ -239,19 +230,17 @@ export type KitCommandLifecycleEvent = {
     requestId: KitCommandRequestId;
     commandKind: SemioKitStoreControlCommandName | (string & { readonly _semioStoreControlLabel?: 1 });
     phase: KitCommandLifecyclePhase;
-    result?: SemioKitWireTreeDto;
+    result?: KitJsonTreeDto;
     error?: SetError;
   };
 };
 
-export type KitBackboneConfigWire =
+/** @emoji 🧭 Backbone / conflict wire shapes (serde-tagged, matches `kit_backbone_wire` in `semio/rs`). */
+export type BackboneConfig =
   | { readonly Memory: null }
   | { readonly Dev: { readonly path: string } }
   | { readonly Local: { readonly folder: string } }
   | { readonly Remote: { readonly url: string; readonly sessionId: string } };
-
-/** @emoji 🧭 Backbone / conflict wire shapes (serde-tagged, matches `kit_backbone_wire` in `semio/rs`). */
-export type BackboneConfig = KitBackboneConfigWire;
 export type BackboneStatusDto = {
   readonly attached: boolean;
   readonly kind?: string | null;
@@ -260,17 +249,14 @@ export type BackboneStatusDto = {
 };
 /** @emoji 🧾 GraphQL `ConflictResolutionBatchInput` (matches `semio/graphql/schema.graphql`). */
 export type ConflictResolution = "DROP_WIP" | "FORCE_OVERWRITE_BACKBONE";
-export type KitCheckpointWire = SemioKitWireStructDto;
+export type KitCheckpointDto = KitJsonObjectDto;
 export type KitConflict = {
   id: string;
-  wipCheckpoint: KitCheckpointWire;
+  wipCheckpoint: KitCheckpointDto;
   backboneTip?: string | null;
   reason: string;
   createdAt: string;
 };
-
-/** @emoji 🪪 Id DTO on GraphQL read/write wires (`{ "id": "…" }`, camelCase from rs). */
-export type KitIdWire = { readonly id: string };
 
 /** @emoji 🧾 One read command in a `KitStore.read` batch (matches `semio/rs` read kit wire, serde camelCase). */
 export type ReadPieceCommand =
@@ -281,11 +267,11 @@ export type ReadPieceCommand =
 export type ReadDesignCommand =
   | { readonly readDesignPiecesFullCommand: null }
   | { readonly readDesignConnectionsFullCommand: null }
-  | { readonly readDesignPieceCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadPieceCommand> } }
-  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<KitIdWire> } }
+  | { readonly readDesignPieceCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadPieceCommand> } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly selection: ReadonlyArray<KitIdDto> } }
   | { readonly readDesignIncludedDesignsCommand: null }
-  | { readonly readDesignQualitySumCommand: { readonly qualityId: KitIdWire } }
-  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<KitIdWire> } }
+  | { readonly readDesignQualitySumCommand: { readonly qualityId: KitIdDto } }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly selection: ReadonlyArray<KitIdDto> } }
   | { readonly readDesignIncludedDesignIdsCommand: null };
 
 export type ReadTypeCommand = { readonly readTypeBestRepresentationCommand: { readonly tagIds: ReadonlyArray<string> } };
@@ -302,8 +288,8 @@ export type ReadKitCommand =
   | { readonly readKitDesignsShallowCommand: null }
   | { readonly readKitAuthorsShallowCommand: null }
   | { readonly readKitColoredConnectorsCommand: null }
-  | { readonly readKitDesignCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadDesignCommand> } }
-  | { readonly readKitTypeCommands: { readonly id: KitIdWire; readonly commands: ReadonlyArray<ReadTypeCommand> } };
+  | { readonly readKitDesignCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadDesignCommand> } }
+  | { readonly readKitTypeCommands: { readonly id: KitIdDto; readonly commands: ReadonlyArray<ReadTypeCommand> } };
 
 /**
  * @emoji 🧭 Which materialized kit view read commands run against (matches `semio/rs` `KitReadScope` / GraphQL oneof `KitReadScopeInput`).
@@ -326,6 +312,11 @@ export type KitReadScopeInputGraphQL =
 
 /** @emoji 🧭 Main committed kit line (default read scope). */
 export const theKitReadScope: KitReadScope = { theKit: null };
+
+/** @emoji 🧭 Read scope used for materialized GraphQL reads on a {@link KitStoreClient}. */
+export function getKitClientReadScope(client: { readonly kitReadScope?: KitReadScope }): KitReadScope {
+  return client.kitReadScope ?? theKitReadScope;
+}
 
 /** @emoji 🧪 Stable string for cache keys (sorted JSON of the GraphQL oneof payload). */
 export function kitReadScopeKey(scope: KitReadScope): string {
@@ -355,21 +346,29 @@ function isTheKitReadScope(s: KitReadScope): boolean {
 /** @emoji 🧭 Active VCS session/draft/open-transaction anchor for kit control-plane `kitStore.batch` writes. */
 export type KitWriteScope = { readonly sessionId: string; readonly draftId: string; readonly transactionId: string };
 
-function __normKitStoreBatchKind(k: string | number | boolean | null | undefined): string {
-  return String(k ?? "")
+function __normKitStoreBatchKind(k: JsonValue | undefined): string {
+  const s =
+    k === null || k === undefined
+      ? ""
+      : typeof k === "string"
+        ? k
+        : typeof k === "number" || typeof k === "boolean" || typeof k === "bigint"
+          ? String(k)
+          : "UNKNOWN";
+  return s
     .replace(/([a-z])([A-Z])/g, "$1_$2")
     .replace(/[\s-]+/g, "_")
     .toUpperCase();
 }
 
-function __coerceAxisComponent(v: SemioKitWireTreeDto | undefined): number {
+function __coerceAxisComponent(v: KitJsonTreeDto | undefined): number {
   if (v === undefined) return Number.NaN;
   if (typeof v === "number" && !Number.isNaN(v)) return v;
   if (typeof v === "string") return Number(v);
   return Number.NaN;
 }
 
-function __vec3(obj: SemioKitWireTreeDto | null | undefined): { x: number; y: number; z: number } | null {
+function __vec3(obj: KitJsonTreeDto | null | undefined): { x: number; y: number; z: number } | null {
   if (!isJsonObjectNode(obj)) return null;
   const x = __coerceAxisComponent(obj["x"]);
   const y = __coerceAxisComponent(obj["y"]);
@@ -379,9 +378,9 @@ function __vec3(obj: SemioKitWireTreeDto | null | undefined): { x: number; y: nu
 }
 
 /** @emoji 🧾 Maps a loose plane DTO into GraphQL `PlaneInputBatch` (camelCase axes). */
-function __kitPlaneToBatchInput(plane: SemioKitWireTreeDto | null | undefined): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } | null {
+function __kitPlaneToBatchInput(plane: KitJsonTreeDto | null | undefined): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } | null {
   if (!isJsonObjectNode(plane)) return null;
-  const p = plane;
+  const p = plane as KitJsonObjectDto;
   const origin = p["origin"] ?? p["Origin"];
   const xa = p["xAxis"] ?? p["x_axis"] ?? p["XAxis"];
   const ya = p["yAxis"] ?? p["y_axis"] ?? p["YAxis"];
@@ -396,14 +395,14 @@ function __kitPlaneToBatchInput(plane: SemioKitWireTreeDto | null | undefined): 
 
 // #region 🔖KitReadWireDto
 /** @emoji 🧾 One `design.flattenMap` row (`DesignFlattenMapEntryObject`). */
-export type DesignFlattenMapEntryWireDto = Readonly<{
+export type DesignFlattenMapEntryDto = Readonly<{
   readonly pieceId: string;
   readonly plane: PlanePlain;
   readonly center: PointPlain;
 }>;
 
 /** @emoji 🧾 One `design.piecePlacement` row (`PiecePlacementRowObject`). */
-export type PiecePlacementRowWireDto = Readonly<{
+export type PiecePlacementRowDto = Readonly<{
   readonly pieceId: string;
   readonly plane: PlanePlain;
   readonly center: PointPlain;
@@ -414,14 +413,14 @@ export type PiecePlacementRowWireDto = Readonly<{
 }>;
 
 /** @emoji 🧾 One `kit.coloredConnectors` row (`KitColoredConnectorObject`). */
-export type KitColoredConnectorRowWireDto = Readonly<{
-  readonly typeId: KitIdWire;
-  readonly connectorId: KitIdWire;
+export type KitColoredConnectorRowDto = Readonly<{
+  readonly typeId: TypeIdDto;
+  readonly connectorId: ConnectorIdDto;
   readonly color: string;
 }>;
 
 /** @emoji 🧾 One `design.includedDesigns` entry (`IncludedDesignObject`). */
-export type DesignIncludedDesignWireDto = Readonly<{
+export type IncludedDesignInfoDto = Readonly<{
   readonly id: string;
   readonly designId: string;
   readonly connectionKind: string;
@@ -431,7 +430,7 @@ export type DesignIncludedDesignWireDto = Readonly<{
 }>;
 
 /** @emoji 🧾 `KitMetadataObject` root fields from GraphQL. */
-export type KitCatalogKitMetadataWireDto = Readonly<{
+export type KitMetadataDto = Readonly<{
   readonly id: string;
   readonly name: string;
   readonly description?: string | null;
@@ -449,10 +448,10 @@ export type KitCatalogKitMetadataWireDto = Readonly<{
 // #endregion 🔖KitReadWireDto
 
 /** @emoji 🧾 Batch input for {@link KitStore.read} (per-command, same for all entries in a batch). */
-export type ReadWireBatch = readonly ReadKitCommand[];
+export type ReadBatch = readonly ReadKitCommand[];
 
-/** @emoji 🧾 One entry in a {@link ReadWireBatch} (alias for consumers that say “read wire item”). */
-export type ReadWireItem = ReadKitCommand;
+/** @emoji 🧾 One entry in a {@link ReadBatch} (alias for consumers that say “read wire item”). */
+export type ReadBatchItem = ReadKitCommand;
 
 export type ReadPieceCommandOutput =
   | { readonly readPieceFlatPlaneCommand: { readonly flatPlane: PlanePlain | null } }
@@ -467,41 +466,41 @@ export type ReadDesignCommandOutput =
   | { readonly readDesignPiecesFullCommand: { readonly pieces: readonly PiecePlain[] } }
   | { readonly readDesignConnectionsFullCommand: { readonly connections: readonly ConnectionPlain[] } }
   | { readonly readDesignPieceCommands: { readonly results: readonly ReadPieceCommandOutput[] } }
-  | { readonly readDesignClusterableGroupsCommand: { readonly groups: readonly (readonly KitIdWire[])[] } }
-  | { readonly readDesignIncludedDesignsCommand: { readonly designs: readonly DesignIncludedDesignWireDto[] } }
+  | { readonly readDesignClusterableGroupsCommand: { readonly groups: readonly (readonly KitIdDto[])[] } }
+  | { readonly readDesignIncludedDesignsCommand: { readonly designs: readonly IncludedDesignInfoDto[] } }
   | { readonly readDesignQualitySumCommand: { readonly sum: number } }
-  | { readonly readDesignReplaceableCatalogCommand: { readonly types: readonly KitIdWire[]; readonly designs: readonly KitIdWire[] } }
+  | { readonly readDesignReplaceableCatalogCommand: { readonly types: readonly KitIdDto[]; readonly designs: readonly KitIdDto[] } }
   | { readonly readDesignIncludedDesignIdsCommand: { readonly designIds: readonly string[] } };
 
 /** @emoji 🧾 One command’s read output object (per-command payload shape from `semio/rs` GraphQL). */
 export type ReadKitCommandOutput =
   | { readonly readKitFullCommand: { readonly full: KitFullDto } }
   | { readonly readKitShallowCommand: { readonly types: readonly TypeShallow[]; readonly designs: readonly DesignShallow[] } }
-  | { readonly readKitTypeIdsCommand: { readonly typeIds: readonly KitIdWire[] } }
-  | { readonly readKitDesignIdsCommand: { readonly designIds: readonly KitIdWire[] } }
+  | { readonly readKitTypeIdsCommand: { readonly typeIds: readonly KitIdDto[] } }
+  | { readonly readKitDesignIdsCommand: { readonly designIds: readonly KitIdDto[] } }
   | { readonly readKitTypesMetadataCommand: { readonly types: readonly TypeMetadataDto[] } }
   | { readonly readKitDesignsMetadataCommand: { readonly designs: readonly DesignMetadataDto[] } }
   | { readonly readKitTypesShallowCommand: { readonly types: readonly TypeShallow[] } }
   | { readonly readKitDesignsShallowCommand: { readonly designs: readonly DesignShallow[] } }
   | { readonly readKitAuthorsShallowCommand: { readonly authors: readonly AuthorMetadataDto[] } }
-  | { readonly readKitMetadataCommand: { readonly metadata: KitCatalogKitMetadataWireDto | null } }
-  | { readonly readKitColoredConnectorsCommand: { readonly rows: readonly KitColoredConnectorRowWireDto[] } }
+  | { readonly readKitMetadataCommand: { readonly metadata: KitMetadataDto | null } }
+  | { readonly readKitColoredConnectorsCommand: { readonly rows: readonly KitColoredConnectorRowDto[] } }
   | { readonly readKitDesignCommands: { readonly results: readonly ReadDesignCommandOutput[] } }
   | { readonly readKitTypeCommands: { readonly results: readonly ReadTypeCommandOutput[] } };
 
 /** @emoji 🧾 Batch output from {@link KitStore.read}. */
-export type ReadWireBatchResult = readonly ReadKitCommandOutput[];
+export type ReadBatchResult = readonly ReadKitCommandOutput[];
 
 /**
  * @emoji 📣 GraphQL `KitEvent` scalar + synthetic invalidation rows used by {@link WasmKitStoreClient};
- * field-level rows remain {@link SemioKitWireStructDto}; classified kit mutations are top-level keys (`renamedDesign`, `changedKit`, …).
+ * field-level rows remain {@link KitJsonObjectDto}; classified kit mutations are top-level keys (`renamedDesign`, `changedKit`, …).
  */
 export type KitEvent = Readonly<
   | { readonly Changed: null }
   | { readonly ValidationInvalidated: null }
   | KitCommandLifecycleEvent
   | KitClassifiedMutationEvent
-  | SemioKitWireStructDto
+  | KitJsonObjectDto
 >;
 
 /** @emoji 🧾 Optional filter for {@link KitStore.subscribeFiltered}. */
@@ -519,26 +518,26 @@ export type KitStoreOpenOptions = {
   workerFactory?: () => Worker;
 };
 
-// #region 🔖ChangeKitCommandWire
+// #region 🔖ChangeKitCommand
 /** @emoji 🧾 `ChangePieceCommand` JSON (externally tagged, camelCase variant keys) for `kitStore.batch` live `changeKitCommands` (or `ChangeKitCommand` GraphQL scalars). */
-export type ChangePieceCommandWire =
+export type ChangePieceCommand =
   | { readonly name: { readonly name?: string | null } }
   | { readonly description: { readonly description?: string | null } }
-  | { readonly plane: { readonly plane?: SemioKitWireTreeDto | null } }
-  | { readonly center: { readonly center?: SemioKitWireTreeDto | null } }
+  | { readonly plane: { readonly plane?: KitJsonTreeDto | null } }
+  | { readonly center: { readonly center?: KitJsonTreeDto | null } }
   | { readonly scale: { readonly scale?: number | null } }
-  | { readonly mirrorPlane: { readonly mirrorPlane?: SemioKitWireTreeDto | null } }
+  | { readonly mirrorPlane: { readonly mirrorPlane?: KitJsonTreeDto | null } }
   | { readonly hidden: { readonly hidden?: boolean | null } }
   | { readonly locked: { readonly locked?: boolean | null } }
   | { readonly color: { readonly color?: string | null } }
-  | { readonly type: { readonly typeId?: KitIdWire | null } }
+  | { readonly type: { readonly typeId?: KitIdDto | null } }
   | { readonly addProp: { readonly prop: PropPlain } }
-  | { readonly removeProp: { readonly propId: KitIdWire } }
+  | { readonly removeProp: { readonly propId: KitIdDto } }
   | { readonly addAttribute: { readonly attribute: AttributePlain } }
-  | { readonly removeAttribute: { readonly id: KitIdWire } };
+  | { readonly removeAttribute: { readonly id: KitIdDto } };
 
 /** @emoji 🧾 `ChangeConnectionCommand` JSON for nested design commands. */
-export type ChangeConnectionCommandWire =
+export type ChangeConnectionCommand =
   | { readonly gap: { readonly value?: number | null } }
   | { readonly shift: { readonly value?: number | null } }
   | { readonly rise: { readonly value?: number | null } }
@@ -549,24 +548,24 @@ export type ChangeConnectionCommandWire =
   | { readonly y: { readonly value?: number | null } }
   | { readonly description: { readonly value?: string | null } }
   | { readonly addConnectionAttribute: { readonly attribute: AttributePlain } }
-  | { readonly removeConnectionAttribute: { readonly id: KitIdWire } };
+  | { readonly removeConnectionAttribute: { readonly id: KitIdDto } };
 
 /** @emoji 🧾 Nested `ChangeDesignCommand` entries. */
-export type ChangeDesignCommandWire =
+export type ChangeDesignCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } }
   | { readonly image: { readonly image?: string | null } }
   | { readonly unit: { readonly unit?: string | null } }
   | { readonly addPiece: { readonly piece: PiecePlain } }
-  | { readonly removePiece: { readonly pieceId: KitIdWire } }
+  | { readonly removePiece: { readonly pieceId: KitIdDto } }
   | { readonly addConnection: { readonly connection: ConnectionPlain } }
-  | { readonly removeConnection: { readonly connectionId: KitIdWire } }
-  | { readonly changePieceCommands: { readonly pieceId: KitIdWire; readonly commands: readonly ChangePieceCommandWire[] } }
-  | { readonly changeConnectionCommands: { readonly connectionId: KitIdWire; readonly commands: readonly ChangeConnectionCommandWire[] } };
+  | { readonly removeConnection: { readonly connectionId: KitIdDto } }
+  | { readonly changePieceCommands: { readonly pieceId: KitIdDto; readonly commands: readonly ChangePieceCommand[] } }
+  | { readonly changeConnectionCommands: { readonly connectionId: KitIdDto; readonly commands: readonly ChangeConnectionCommand[] } };
 
 /** @emoji 🧾 Nested `ChangeTypeCommand` entries used by stores / React. */
-export type ChangeTypeCommandWire =
+export type ChangeTypeCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } }
@@ -575,19 +574,19 @@ export type ChangeTypeCommandWire =
   | { readonly typeVirtual: { readonly value?: boolean | null } }
   | { readonly unit: { readonly unit?: string | null } }
   | { readonly addRepresentation: { readonly representation: RepresentationPlain } }
-  | { readonly removeRepresentation: { readonly id: KitIdWire } }
+  | { readonly removeRepresentation: { readonly id: KitIdDto } }
   | { readonly addConnector: { readonly connector: ConnectorPlain } }
-  | { readonly removeConnector: { readonly connectorId: KitIdWire } }
+  | { readonly removeConnector: { readonly connectorId: KitIdDto } }
   | { readonly addTypeProp: { readonly prop: PropPlain } }
-  | { readonly removeTypeProp: { readonly propId: KitIdWire } };
+  | { readonly removeTypeProp: { readonly propId: KitIdDto } };
 
 /** @emoji 🧾 `ChangeFamilyCommand` JSON. */
-export type ChangeFamilyCommandWire =
+export type ChangeFamilyCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } };
 
-export type ChangeFileCommandWire =
+export type ChangeFileCommand =
   | { readonly url: { readonly url: string } }
   | { readonly mime: { readonly mime?: string | null } }
   | { readonly size: { readonly size?: number | null } }
@@ -596,39 +595,39 @@ export type ChangeFileCommandWire =
   | { readonly created: { readonly created?: string | null } }
   | { readonly updated: { readonly updated?: string | null } };
 
-export type ChangeFolderCommandWire =
+export type ChangeFolderCommand =
   | { readonly path: { readonly path: string } }
   | { readonly description: { readonly description?: string | null } };
 
-export type ChangeAuthorCommandWire =
+export type ChangeAuthorCommand =
   | { readonly name: { readonly name: string } }
   | { readonly email: { readonly email: string } }
   | { readonly role: { readonly role?: string | null } }
   | { readonly rank: { readonly rank?: number | null } };
 
-export type ChangeConceptCommandWire =
+export type ChangeConceptCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly order: { readonly order?: number | null } };
 
-export type ChangeTagCommandWire =
+export type ChangeTagCommand =
   | { readonly name: { readonly name: string } }
   | { readonly order: { readonly order?: number | null } };
 
-export type ChangeKitQualityCommandWire =
+export type ChangeKitQualityCommand =
   | { readonly key: { readonly key: string } }
   | { readonly value: { readonly value?: string | null } }
   | { readonly unit: { readonly unit?: string | null } }
   | { readonly definition: { readonly definition?: string | null } }
   | { readonly description: { readonly description?: string | null } };
 
-export type ChangePortCommandWire =
+export type ChangePortCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } };
 
 /** @emoji 🧾 Top-level `ChangeKitCommand` JSON for `changeKitCommands` batch variables. */
-export type ChangeKitCommandWire =
+export type ChangeKitCommand =
   | { readonly name: { readonly name: string } }
   | { readonly description: { readonly description?: string | null } }
   | { readonly icon: { readonly icon?: string | null } }
@@ -642,49 +641,61 @@ export type ChangeKitCommandWire =
   | { readonly updated: { readonly updated?: string | null } }
   | { readonly version: { readonly version?: string | null } }
   | { readonly addType: { readonly type: TypePlain } }
-  | { readonly removeType: { readonly typeId: KitIdWire } }
+  | { readonly removeType: { readonly typeId: KitIdDto } }
   | { readonly addDesign: { readonly design: DesignPlain } }
-  | { readonly removeDesign: { readonly designId: KitIdWire } }
-  | { readonly changeDesignCommands: { readonly designId: KitIdWire; readonly commands: readonly ChangeDesignCommandWire[] } }
-  | { readonly changeTypeCommands: { readonly typeId: KitIdWire; readonly commands: readonly ChangeTypeCommandWire[] } }
-  | { readonly changeFamilyCommands: { readonly familyId: KitIdWire; readonly commands: readonly ChangeFamilyCommandWire[] } }
-  | { readonly changeFileCommands: { readonly fileId: KitIdWire; readonly commands: readonly ChangeFileCommandWire[] } }
-  | { readonly changeFolderCommands: { readonly folderId: KitIdWire; readonly commands: readonly ChangeFolderCommandWire[] } }
-  | { readonly changeAuthorCommands: { readonly authorId: KitIdWire; readonly commands: readonly ChangeAuthorCommandWire[] } }
-  | { readonly changeConceptCommands: { readonly conceptId: KitIdWire; readonly commands: readonly ChangeConceptCommandWire[] } }
-  | { readonly changeTagCommands: { readonly tagId: KitIdWire; readonly commands: readonly ChangeTagCommandWire[] } }
-  | { readonly changeKitQualityCommands: { readonly qualityId: KitIdWire; readonly commands: readonly ChangeKitQualityCommandWire[] } }
-  | { readonly changeKitPortCommands: { readonly portId: KitIdWire; readonly commands: readonly ChangePortCommandWire[] } }
+  | { readonly removeDesign: { readonly designId: KitIdDto } }
+  | { readonly changeDesignCommands: { readonly designId: KitIdDto; readonly commands: readonly ChangeDesignCommand[] } }
+  | { readonly changeTypeCommands: { readonly typeId: KitIdDto; readonly commands: readonly ChangeTypeCommand[] } }
+  | { readonly changeFamilyCommands: { readonly familyId: KitIdDto; readonly commands: readonly ChangeFamilyCommand[] } }
+  | { readonly changeFileCommands: { readonly fileId: KitIdDto; readonly commands: readonly ChangeFileCommand[] } }
+  | { readonly changeFolderCommands: { readonly folderId: KitIdDto; readonly commands: readonly ChangeFolderCommand[] } }
+  | { readonly changeAuthorCommands: { readonly authorId: KitIdDto; readonly commands: readonly ChangeAuthorCommand[] } }
+  | { readonly changeConceptCommands: { readonly conceptId: KitIdDto; readonly commands: readonly ChangeConceptCommand[] } }
+  | { readonly changeTagCommands: { readonly tagId: KitIdDto; readonly commands: readonly ChangeTagCommand[] } }
+  | { readonly changeKitQualityCommands: { readonly qualityId: KitIdDto; readonly commands: readonly ChangeKitQualityCommand[] } }
+  | { readonly changeKitPortCommands: { readonly portId: KitIdDto; readonly commands: readonly ChangePortCommand[] } }
   | { readonly addFamily: { readonly family: FamilyPlain } }
-  | { readonly removeFamily: { readonly familyId: KitIdWire } }
+  | { readonly removeFamily: { readonly familyId: KitIdDto } }
   | { readonly addFolder: { readonly folder: FolderPlain } }
-  | { readonly removeFolder: { readonly folderId: KitIdWire } }
+  | { readonly removeFolder: { readonly folderId: KitIdDto } }
   | { readonly addAuthor: { readonly author: AuthorPlain } }
-  | { readonly removeAuthor: { readonly authorId: KitIdWire } }
+  | { readonly removeAuthor: { readonly authorId: KitIdDto } }
   | { readonly addConcept: { readonly concept: ConceptPlain } }
-  | { readonly removeConcept: { readonly conceptId: KitIdWire } }
+  | { readonly removeConcept: { readonly conceptId: KitIdDto } }
   | { readonly addTag: { readonly tag: TagPlain } }
-  | { readonly removeTag: { readonly tagId: KitIdWire } }
+  | { readonly removeTag: { readonly tagId: KitIdDto } }
   | { readonly addQuality: { readonly quality: QualityPlain } }
-  | { readonly removeQuality: { readonly qualityId: KitIdWire } }
+  | { readonly removeQuality: { readonly qualityId: KitIdDto } }
   | { readonly addKitProp: { readonly prop: PropPlain } }
-  | { readonly removeKitProp: { readonly propId: KitIdWire } }
+  | { readonly removeKitProp: { readonly propId: KitIdDto } }
   | { readonly addKitAttribute: { readonly attribute: AttributePlain } }
-  | { readonly removeKitAttribute: { readonly id: KitIdWire } }
+  | { readonly removeKitAttribute: { readonly id: KitIdDto } }
   | { readonly addFile: { readonly file: FilePlain } }
-  | { readonly removeFile: { readonly fileId: KitIdWire } }
+  | { readonly removeFile: { readonly fileId: KitIdDto } }
   | { readonly replaceKitFromFullDto: { readonly dto: KitFullDto } }
-  | { readonly clusterPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly clusterName: string } }
-  | { readonly dragPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly du: number; readonly dv: number } }
-  | { readonly movePieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[]; readonly gap: number; readonly shift: number; readonly rise: number } }
-  | { readonly fixPieces: { readonly designId: KitIdWire; readonly pieceIds: readonly string[] } }
-  | { readonly flattenDesign: { readonly designId: KitIdWire } }
-  | { readonly expandNestedDesign: { readonly parentDesignId: KitIdWire; readonly nestedDesignId: KitIdWire } }
-  | { readonly deleteConnection: { readonly designId: KitIdWire; readonly connectionId: KitIdWire } }
-  | { readonly changePieceKind: { readonly designId: KitIdWire; readonly pieceId: KitIdWire; readonly newTypeId: KitIdWire } };
+  | { readonly clusterPieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly clusterName: string } }
+  | { readonly dragPieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly du: number; readonly dv: number } }
+  | { readonly movePieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly gap: number; readonly shift: number; readonly rise: number } }
+  | { readonly fixPieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[] } }
+  | { readonly flattenDesign: { readonly designId: KitIdDto } }
+  | { readonly expandNestedDesign: { readonly parentDesignId: KitIdDto; readonly nestedDesignId: KitIdDto } }
+  | { readonly deleteConnection: { readonly designId: KitIdDto; readonly connectionId: KitIdDto } }
+  | { readonly changePieceKind: { readonly designId: KitIdDto; readonly pieceId: KitIdDto; readonly newTypeId: KitIdDto } };
+
+/**
+ * @public GraphQL `variables` map for `kitStore.batch` (kit JSON object trees, camelCase; matches {@link GraphQlObjectMutable} construction in this module).
+ */
+export type GraphQlVariables = KitJsonObjectDto;
+
+/** @emoji 🧾 True for object-shaped JSON / kit tree nodes (excludes arrays and `null`). */
+function isJsonObjectNode(
+  v: JsonValue | KitJsonTreeDto | null | undefined,
+): v is GraphQlVariables | JsonObject | KitJsonObjectDto {
+  return v != null && typeof v === "object" && !Array.isArray(v);
+}
 
 /** @emoji 🧾 GraphQL `ConflictBatchRecord` row (matches `semio/graphql/schema.graphql`). */
-export type ConflictBatchRecordWire = Readonly<{
+export type ConflictBatchRecord = Readonly<{
   id: string;
   backboneTip?: string | null;
   reason: string;
@@ -700,90 +711,90 @@ export type KitStoreBatchResultRow = Readonly<{
   transactionId?: string | null;
   changeKind?: KitChangeSemanticKindGql | null;
   changeKindOther?: string | null;
-  inverse?: readonly ChangeKitCommandWire[] | null;
-  conflicts?: readonly ConflictBatchRecordWire[] | null;
+  inverse?: readonly ChangeKitCommand[] | null;
+  conflicts?: readonly ConflictBatchRecord[] | null;
   backbone?: { attached: boolean; kind?: string | null; tip?: string | null } | null;
 }>;
 
 /** @emoji 🧾 Forward + inverse command atoms on the subscription bus (`KitChange` from `semio/rs`). */
-export type KitChangeWire = Readonly<{
-  readonly forward: readonly ChangeKitCommandWire[];
-  readonly inverse: readonly ChangeKitCommandWire[];
-  readonly kind?: KitChangeKindWire;
+export type KitChange = Readonly<{
+  readonly forward: readonly ChangeKitCommand[];
+  readonly inverse: readonly ChangeKitCommand[];
+  readonly kind?: KitChangeKind;
   readonly author?: string | null;
   readonly time?: string | null;
 }>;
 
 /** @emoji 🧾 Payload for {@link KitEvent} `renamedDesign` (camelCase from `semio/rs`). */
-export type RenamedDesignKitEventWire = Readonly<{ readonly designId: string; readonly change: KitChangeWire }>;
+export type RenamedDesignKitEvent = Readonly<{ readonly designId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `renamedType`. */
-export type RenamedTypeKitEventWire = Readonly<{ readonly typeId: string; readonly change: KitChangeWire }>;
+export type RenamedTypeKitEvent = Readonly<{ readonly typeId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `draggedFlatCenterPiece`. */
-export type DraggedFlatCenterPieceKitEventWire = Readonly<{
+export type DraggedFlatCenterPieceKitEvent = Readonly<{
   readonly designId: string;
   readonly pieceIds: readonly string[];
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `movedPiecesFlatCenter`. */
-export type MovedPiecesFlatCenterKitEventWire = Readonly<{
+export type MovedPiecesFlatCenterKitEvent = Readonly<{
   readonly designId: string;
   readonly pieceIds: readonly string[];
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `clusteredPieces`. */
-export type ClusteredPiecesKitEventWire = Readonly<{
+export type ClusteredPiecesKitEvent = Readonly<{
   readonly designId: string;
   readonly pieceIds: readonly string[];
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `fixedPiecesFlatCenter`. */
-export type FixedPiecesFlatCenterKitEventWire = Readonly<{
+export type FixedPiecesFlatCenterKitEvent = Readonly<{
   readonly designId: string;
   readonly pieceIds: readonly string[];
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `flattenedDesign`. */
-export type FlattenedDesignKitEventWire = Readonly<{ readonly designId: string; readonly change: KitChangeWire }>;
+export type FlattenedDesignKitEvent = Readonly<{ readonly designId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `expandedNestedDesign`. */
-export type ExpandedNestedDesignKitEventWire = Readonly<{
+export type ExpandedNestedDesignKitEvent = Readonly<{
   readonly parentDesignId: string;
   readonly nestedDesignId: string;
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `deletedConnection`. */
-export type DeletedConnectionKitEventWire = Readonly<{
+export type DeletedConnectionKitEvent = Readonly<{
   readonly designId: string;
   readonly connectionId: string;
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `changedPieceKind`. */
-export type ChangedPieceKindKitEventWire = Readonly<{
+export type ChangedPieceKindKitEvent = Readonly<{
   readonly designId: string;
   readonly pieceId: string;
-  readonly change: KitChangeWire;
+  readonly change: KitChange;
 }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `changedDesignCommands`. */
-export type ChangedDesignCommandsKitEventWire = Readonly<{ readonly designId: string; readonly change: KitChangeWire }>;
+export type ChangedDesignCommandsKitEvent = Readonly<{ readonly designId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `changedTypeCommands`. */
-export type ChangedTypeCommandsKitEventWire = Readonly<{ readonly typeId: string; readonly change: KitChangeWire }>;
+export type ChangedTypeCommandsKitEvent = Readonly<{ readonly typeId: string; readonly change: KitChange }>;
 /** @emoji 🧾 Payload for {@link KitEvent} `changedKit` (fallback classified change). */
-export type ChangedKitEventWire = Readonly<{ readonly change: KitChangeWire }>;
+export type ChangedKitEvent = Readonly<{ readonly change: KitChange }>;
 
 /** @emoji 🧾 Classified kit mutation row: exactly one variant key plus payload (same wire as `semio/rs` `KitEvent`). */
 export type KitClassifiedMutationEvent = Readonly<
-  | { readonly renamedDesign: RenamedDesignKitEventWire }
-  | { readonly renamedType: RenamedTypeKitEventWire }
-  | { readonly draggedFlatCenterPiece: DraggedFlatCenterPieceKitEventWire }
-  | { readonly movedPiecesFlatCenter: MovedPiecesFlatCenterKitEventWire }
-  | { readonly clusteredPieces: ClusteredPiecesKitEventWire }
-  | { readonly fixedPiecesFlatCenter: FixedPiecesFlatCenterKitEventWire }
-  | { readonly flattenedDesign: FlattenedDesignKitEventWire }
-  | { readonly expandedNestedDesign: ExpandedNestedDesignKitEventWire }
-  | { readonly deletedConnection: DeletedConnectionKitEventWire }
-  | { readonly changedPieceKind: ChangedPieceKindKitEventWire }
-  | { readonly changedDesignCommands: ChangedDesignCommandsKitEventWire }
-  | { readonly changedTypeCommands: ChangedTypeCommandsKitEventWire }
-  | { readonly changedKit: ChangedKitEventWire }
+  | { readonly renamedDesign: RenamedDesignKitEvent }
+  | { readonly renamedType: RenamedTypeKitEvent }
+  | { readonly draggedFlatCenterPiece: DraggedFlatCenterPieceKitEvent }
+  | { readonly movedPiecesFlatCenter: MovedPiecesFlatCenterKitEvent }
+  | { readonly clusteredPieces: ClusteredPiecesKitEvent }
+  | { readonly fixedPiecesFlatCenter: FixedPiecesFlatCenterKitEvent }
+  | { readonly flattenedDesign: FlattenedDesignKitEvent }
+  | { readonly expandedNestedDesign: ExpandedNestedDesignKitEvent }
+  | { readonly deletedConnection: DeletedConnectionKitEvent }
+  | { readonly changedPieceKind: ChangedPieceKindKitEvent }
+  | { readonly changedDesignCommands: ChangedDesignCommandsKitEvent }
+  | { readonly changedTypeCommands: ChangedTypeCommandsKitEvent }
+  | { readonly changedKit: ChangedKitEvent }
 >;
 
 const __KIT_CLASSIFIED_MUTATION_KEYS = [
@@ -812,11 +823,11 @@ export function isKitClassifiedMutationEvent(ev: KitEvent): ev is KitClassifiedM
 }
 
 /** @emoji 🧾 Wrap nested piece commands under one design id. */
-export function kitWireChangeDesignPiece(
+export function kitChangeDesignPiece(
   designId: string,
   pieceId: string,
-  commands: readonly ChangePieceCommandWire[],
-): ChangeKitCommandWire {
+  commands: readonly ChangePieceCommand[],
+): ChangeKitCommand {
   return {
     changeDesignCommands: {
       designId: { id: designId },
@@ -826,11 +837,11 @@ export function kitWireChangeDesignPiece(
 }
 
 /** @emoji 🧾 Wrap nested connection commands under one design id. */
-export function kitWireChangeDesignConnection(
+export function kitChangeDesignConnection(
   designId: string,
   connectionId: string,
-  commands: readonly ChangeConnectionCommandWire[],
-): ChangeKitCommandWire {
+  commands: readonly ChangeConnectionCommand[],
+): ChangeKitCommand {
   return {
     changeDesignCommands: {
       designId: { id: designId },
@@ -842,26 +853,26 @@ export function kitWireChangeDesignConnection(
 const __kid = (x: string): { readonly id: string } => ({ id: x });
 
 /** @emoji 🧾 Maps schema/UI data keys onto connection wire keys (`u`→`x`, `v`→`y`). */
-export function connectionDiffWireKeyForDataKey(dataKey: string): string {
+export function connectionDiffKeyForDataKey(dataKey: string): string {
   if (dataKey === "u") return "x";
   if (dataKey === "v") return "y";
   return dataKey;
 }
 
-/** @emoji 🧾 UI/schema partial for piece field writes (maps to {@link ChangePieceCommandWire}). */
+/** @emoji 🧾 UI/schema partial for piece field writes (maps to {@link ChangePieceCommand}). */
 export type PieceFieldPatchInput = Readonly<{
   name?: string | null;
   description?: string | null;
-  plane?: SemioKitWireTreeDto;
-  center?: SemioKitWireTreeDto;
+  plane?: KitJsonTreeDto;
+  center?: KitJsonTreeDto;
   scale?: number | string | null;
-  mirrorPlane?: SemioKitWireTreeDto;
+  mirrorPlane?: KitJsonTreeDto;
   hidden?: boolean;
   isHidden?: boolean;
   locked?: boolean;
   isLocked?: boolean;
   color?: string | null;
-  type?: string | SemioKitWireStructDto | null;
+  type?: string | KitJsonObjectDto | null;
 }>;
 
 /** @emoji 🧾 UI/schema partial for connection field writes. */
@@ -880,11 +891,11 @@ export type ConnectionFieldPatchInput = Readonly<{
 }>;
 
 /** @emoji 🧾 Value bucket for `buildSchemaEntityChangeCommands` (schema hooks). */
-export type SchemaEntityFieldWireValue = SemioKitWireTreeDto | string | number | boolean | null;
+export type SchemaEntityFieldValue = KitJsonTreeDto | string | number | boolean | null;
 
 /** @emoji 🧾 Converts a piece field patch into nested `changePieceCommands` wire entries. */
-export function piecePatchToWireCommands(patch: PieceFieldPatchInput): ChangePieceCommandWire[] {
-  const out: ChangePieceCommandWire[] = [];
+export function piecePatchToChangeCommands(patch: PieceFieldPatchInput): ChangePieceCommand[] {
+  const out: ChangePieceCommand[] = [];
   if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
   if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
   if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
@@ -905,8 +916,8 @@ export function piecePatchToWireCommands(patch: PieceFieldPatchInput): ChangePie
 }
 
 /** @emoji 🧾 Converts a connection field patch into nested `changeConnectionCommands` wire entries. */
-export function connectionPatchToWireCommands(patch: ConnectionFieldPatchInput): ChangeConnectionCommandWire[] {
-  const out: ChangeConnectionCommandWire[] = [];
+export function connectionPatchToChangeCommands(patch: ConnectionFieldPatchInput): ChangeConnectionCommand[] {
+  const out: ChangeConnectionCommand[] = [];
   const num = (v: string | number | null | undefined) => (typeof v === "number" && !Number.isNaN(v) ? v : Number(v));
   const opt = (v: string | number | null | undefined): number | null => (v == null ? null : num(v));
   if ("gap" in patch) out.push({ gap: { value: opt(patch.gap) } });
@@ -931,9 +942,9 @@ export function buildSchemaEntityChangeCommands(
   kind: string,
   id: string,
   field: string,
-  value: SchemaEntityFieldWireValue,
+  value: SchemaEntityFieldValue,
   designId: string | null,
-): readonly ChangeKitCommandWire[] {
+): readonly ChangeKitCommand[] {
   switch (kind) {
     case "Kit": {
       if (field === "name") return [{ name: { name: String(value ?? "") } } as const];
@@ -1002,37 +1013,37 @@ export function buildSchemaEntityChangeCommands(
     }
     case "Piece": {
       if (!designId) return [];
-      if (field === "name") return [kitWireChangeDesignPiece(designId, id, [{ name: { name: String(value) } }])];
+      if (field === "name") return [kitChangeDesignPiece(designId, id, [{ name: { name: String(value) } }])];
       if (field === "description")
-        return [kitWireChangeDesignPiece(designId, id, [{ description: { description: value == null ? null : String(value) } }])];
-      if (field === "plane") return [kitWireChangeDesignPiece(designId, id, [{ plane: { plane: value as SemioKitWireTreeDto } }])];
-      if (field === "center") return [kitWireChangeDesignPiece(designId, id, [{ center: { center: value as SemioKitWireTreeDto } }])];
-      if (field === "scale") return [kitWireChangeDesignPiece(designId, id, [{ scale: { scale: Number(value) } }])];
+        return [kitChangeDesignPiece(designId, id, [{ description: { description: value == null ? null : String(value) } }])];
+      if (field === "plane") return [kitChangeDesignPiece(designId, id, [{ plane: { plane: value as KitJsonTreeDto } }])];
+      if (field === "center") return [kitChangeDesignPiece(designId, id, [{ center: { center: value as KitJsonTreeDto } }])];
+      if (field === "scale") return [kitChangeDesignPiece(designId, id, [{ scale: { scale: Number(value) } }])];
       if (field === "mirrorPlane")
-        return [kitWireChangeDesignPiece(designId, id, [{ mirrorPlane: { mirrorPlane: value as SemioKitWireTreeDto } }])];
-      if (field === "isHidden" || field === "hidden") return [kitWireChangeDesignPiece(designId, id, [{ hidden: { hidden: Boolean(value) } }])];
-      if (field === "isLocked" || field === "locked") return [kitWireChangeDesignPiece(designId, id, [{ locked: { locked: Boolean(value) } }])];
-      if (field === "color") return [kitWireChangeDesignPiece(designId, id, [{ color: { color: value == null ? null : String(value) } }])];
+        return [kitChangeDesignPiece(designId, id, [{ mirrorPlane: { mirrorPlane: value as KitJsonTreeDto } }])];
+      if (field === "isHidden" || field === "hidden") return [kitChangeDesignPiece(designId, id, [{ hidden: { hidden: Boolean(value) } }])];
+      if (field === "isLocked" || field === "locked") return [kitChangeDesignPiece(designId, id, [{ locked: { locked: Boolean(value) } }])];
+      if (field === "color") return [kitChangeDesignPiece(designId, id, [{ color: { color: value == null ? null : String(value) } }])];
       if (field === "type" || field === "typeId") {
         const t = value;
         const tid = t && typeof t === "object" && t !== null && "id" in t ? String((t as { id: string }).id) : String(t);
-        return [kitWireChangeDesignPiece(designId, id, [{ type: { typeId: { id: tid } } }])];
+        return [kitChangeDesignPiece(designId, id, [{ type: { typeId: { id: tid } } }])];
       }
       return [];
     }
     case "Connection": {
       if (!designId) return [];
-      const dk = connectionDiffWireKeyForDataKey(field);
-      if (dk === "gap") return [kitWireChangeDesignConnection(designId, id, [{ gap: { value: Number(value) } }])];
-      if (dk === "shift") return [kitWireChangeDesignConnection(designId, id, [{ shift: { value: Number(value) } }])];
-      if (dk === "rise") return [kitWireChangeDesignConnection(designId, id, [{ rise: { value: Number(value) } }])];
-      if (dk === "rotation") return [kitWireChangeDesignConnection(designId, id, [{ rotation: { value: Number(value) } }])];
-      if (dk === "turn") return [kitWireChangeDesignConnection(designId, id, [{ turn: { value: Number(value) } }])];
-      if (dk === "tilt") return [kitWireChangeDesignConnection(designId, id, [{ tilt: { value: Number(value) } }])];
-      if (dk === "x") return [kitWireChangeDesignConnection(designId, id, [{ x: { value: Number(value) } }])];
-      if (dk === "y") return [kitWireChangeDesignConnection(designId, id, [{ y: { value: Number(value) } }])];
+      const dk = connectionDiffKeyForDataKey(field);
+      if (dk === "gap") return [kitChangeDesignConnection(designId, id, [{ gap: { value: Number(value) } }])];
+      if (dk === "shift") return [kitChangeDesignConnection(designId, id, [{ shift: { value: Number(value) } }])];
+      if (dk === "rise") return [kitChangeDesignConnection(designId, id, [{ rise: { value: Number(value) } }])];
+      if (dk === "rotation") return [kitChangeDesignConnection(designId, id, [{ rotation: { value: Number(value) } }])];
+      if (dk === "turn") return [kitChangeDesignConnection(designId, id, [{ turn: { value: Number(value) } }])];
+      if (dk === "tilt") return [kitChangeDesignConnection(designId, id, [{ tilt: { value: Number(value) } }])];
+      if (dk === "x") return [kitChangeDesignConnection(designId, id, [{ x: { value: Number(value) } }])];
+      if (dk === "y") return [kitChangeDesignConnection(designId, id, [{ y: { value: Number(value) } }])];
       if (field === "description")
-        return [kitWireChangeDesignConnection(designId, id, [{ description: { value: value == null ? null : String(value) } }])];
+        return [kitChangeDesignConnection(designId, id, [{ description: { value: value == null ? null : String(value) } }])];
       return [];
     }
     default:
@@ -1040,7 +1051,7 @@ export function buildSchemaEntityChangeCommands(
   }
 }
 
-function oneChangeTypeCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeTypeCommandWire | null {
+function oneChangeTypeCommandForField(field: string, value: SchemaEntityFieldValue): ChangeTypeCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -1051,7 +1062,7 @@ function oneChangeTypeCommandForField(field: string, value: SchemaEntityFieldWir
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeDesignCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeDesignCommandWire | null {
+function oneChangeDesignCommandForField(field: string, value: SchemaEntityFieldValue): ChangeDesignCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -1059,19 +1070,19 @@ function oneChangeDesignCommandForField(field: string, value: SchemaEntityFieldW
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeAuthorCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeAuthorCommandWire | null {
+function oneChangeAuthorCommandForField(field: string, value: SchemaEntityFieldValue): ChangeAuthorCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "email") return { email: { email: String(value ?? "") } } as const;
   if (field === "role") return { role: { role: (value as string) ?? null } } as const;
   if (field === "rank") return { rank: { rank: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeTagCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeTagCommandWire | null {
+function oneChangeTagCommandForField(field: string, value: SchemaEntityFieldValue): ChangeTagCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "order" || field === "orderIndex") return { order: { order: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeFileCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFileCommandWire | null {
+function oneChangeFileCommandForField(field: string, value: SchemaEntityFieldValue): ChangeFileCommand | null {
   if (field === "url") return { url: { url: String(value ?? "") } } as const;
   if (field === "mime") return { mime: { mime: (value as string) ?? null } } as const;
   if (field === "size") return { size: { size: (value as number) ?? null } } as const;
@@ -1081,12 +1092,12 @@ function oneChangeFileCommandForField(field: string, value: SchemaEntityFieldWir
   if (field === "updated" || field === "updatedAt") return { updated: { updated: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeFolderCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFolderCommandWire | null {
+function oneChangeFolderCommandForField(field: string, value: SchemaEntityFieldValue): ChangeFolderCommand | null {
   if (field === "path") return { path: { path: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeQualityCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeKitQualityCommandWire | null {
+function oneChangeQualityCommandForField(field: string, value: SchemaEntityFieldValue): ChangeKitQualityCommand | null {
   if (field === "key") return { key: { key: String(value ?? "") } } as const;
   if (field === "value") return { value: { value: (value as string) ?? null } } as const;
   if (field === "unit") return { unit: { unit: (value as string) ?? null } } as const;
@@ -1094,19 +1105,19 @@ function oneChangeQualityCommandForField(field: string, value: SchemaEntityField
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangePortCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangePortCommandWire | null {
+function oneChangePortCommandForField(field: string, value: SchemaEntityFieldValue): ChangePortCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
   return null;
 }
-function oneChangeConceptCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeConceptCommandWire | null {
+function oneChangeConceptCommandForField(field: string, value: SchemaEntityFieldValue): ChangeConceptCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "order" || field === "orderIndex") return { order: { order: (value as number) ?? null } } as const;
   return null;
 }
-function oneChangeFamilyCommandForField(field: string, value: SchemaEntityFieldWireValue): ChangeFamilyCommandWire | null {
+function oneChangeFamilyCommandForField(field: string, value: SchemaEntityFieldValue): ChangeFamilyCommand | null {
   if (field === "name") return { name: { name: String(value ?? "") } } as const;
   if (field === "description") return { description: { description: (value as string) ?? null } } as const;
   if (field === "icon") return { icon: { icon: (value as string) ?? null } } as const;
@@ -1116,7 +1127,7 @@ function oneChangeFamilyCommandForField(field: string, value: SchemaEntityFieldW
 /** @emoji 🧾 Shorthand for `client.submitChangeKitCommands` (React / tests). */
 export async function submitKitChangeCommands(
   client: KitStoreClient,
-  commands: readonly ChangeKitCommandWire[],
+  commands: readonly ChangeKitCommand[],
 ): Promise<SetResult> {
   return client.submitChangeKitCommands(commands);
 }
@@ -1127,7 +1138,7 @@ export async function resolveDesignIdForPieceOrConnection(
   entityKind: string,
   entityId: string,
 ): Promise<string | null> {
-  const snap = await client.getSnapshot();
+  const snap = await client.fetchFullKit();
   if (entityKind === "Piece") return __findDesignIdForPieceInKitDto(snap, entityId);
   if (entityKind === "Connection") return __findDesignIdForConnectionInKitDto(snap, entityId);
   return null;
@@ -1140,9 +1151,9 @@ export async function kitStoreClientUpdatePiece(
   pieceId: string,
   patch: PieceFieldPatchInput,
 ): Promise<SetResult> {
-  const pcmds = piecePatchToWireCommands(patch);
+  const pcmds = piecePatchToChangeCommands(patch);
   if (!pcmds.length) return { ok: true };
-  return client.submitChangeKitCommands([kitWireChangeDesignPiece(designId, pieceId, pcmds)]);
+  return client.submitChangeKitCommands([kitChangeDesignPiece(designId, pieceId, pcmds)]);
 }
 
 /** @emoji 🧾 Applies a connection field patch under one design (wire construction stays in JS). */
@@ -1152,9 +1163,9 @@ export async function kitStoreClientUpdateConnection(
   connectionId: string,
   patch: ConnectionFieldPatchInput,
 ): Promise<SetResult> {
-  const ccmds = connectionPatchToWireCommands(patch);
+  const ccmds = connectionPatchToChangeCommands(patch);
   if (!ccmds.length) return { ok: true };
-  return client.submitChangeKitCommands([kitWireChangeDesignConnection(designId, connectionId, ccmds)]);
+  return client.submitChangeKitCommands([kitChangeDesignConnection(designId, connectionId, ccmds)]);
 }
 
 function __findDesignIdForPieceInKitDto(kit: KitFullDto, pieceId: string): string | null {
@@ -1178,11 +1189,10 @@ export async function writeKitStoreClientSchemaField(
   client: KitStoreClient,
   typeName: string,
   key: string,
-  value: SchemaEntityFieldWireValue,
+  value: SchemaEntityFieldValue,
   entityId: string,
 ): Promise<SetResult> {
-  const bridge = client as { getDto?: () => KitFullDto };
-  const root = typeof bridge.getDto === "function" ? bridge.getDto() : ({} as KitFullDto);
+  const root = await client.fetchFullKit();
   let designId: string | null = null;
   if (typeName === "Piece") designId = __findDesignIdForPieceInKitDto(root, entityId);
   if (typeName === "Connection") designId = __findDesignIdForConnectionInKitDto(root, entityId);
@@ -1197,7 +1207,7 @@ export async function writeKitStoreClientSchemaField(
   return client.submitChangeKitCommands(cmds);
 }
 
-// #endregion 🔖ChangeKitCommandWire
+// #endregion 🔖ChangeKitCommand
 
 // #endregion 🔌WireTypes
 
@@ -1207,10 +1217,10 @@ export async function writeKitStoreClientSchemaField(
 
 // #region 🧰GraphqlUtil
 
-function normalizeRustSetError(raw: JsonValue | SemioKitWireTreeDto): SetError {
+function normalizeRustSetError(raw: JsonValue): SetError {
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return { kind: "Internal", message: "invalid error payload" };
   if (!isJsonObjectNode(raw)) return { kind: "Internal", message: "invalid error payload" };
-  const o = raw;
+  const o = raw as JsonObject;
   const kind = typeof o["kind"] === "string" ? (o["kind"] as SetErrorKind) : "Internal";
   const message = typeof o["message"] === "string" ? o["message"] : JSON.stringify(raw);
   return { kind, message };
@@ -1256,13 +1266,15 @@ function gqlDataKitRoot<T>(d: { kit?: T } | null | undefined): T | undefined {
   return d.kit;
 }
 
-function kitGraphqlJsonToReadonlyArray(v: SemioKitWireTreeDto | string | null | undefined): readonly SemioKitWireTreeDto[] {
-  if (Array.isArray(v)) return v;
+function kitGraphqlJsonToReadonlyArray(
+  v: JsonValue | KitJsonTreeDto | null | undefined,
+): readonly KitJsonTreeDto[] {
+  if (Array.isArray(v)) return v as readonly KitJsonTreeDto[];
   if (v == null) return [];
   if (typeof v === "string") {
     try {
       const p: JsonValue = parseJsonValue(v);
-      return Array.isArray(p) ? p : [];
+      return Array.isArray(p) ? (p as readonly KitJsonTreeDto[]) : [];
     } catch {
       return [];
     }
@@ -1270,7 +1282,7 @@ function kitGraphqlJsonToReadonlyArray(v: SemioKitWireTreeDto | string | null | 
   return [];
 }
 
-function __mutableJsonObjectCopy(row: JsonObject | SemioKitWireStructDto): { [k: string]: JsonValue } {
+function __mutableJsonObjectCopy(row: JsonObject | KitJsonObjectDto): { [k: string]: JsonValue } {
   const o: { [k: string]: JsonValue } = {};
   for (const [k, v] of Object.entries(row)) {
     o[k] = v as JsonValue;
@@ -1279,7 +1291,7 @@ function __mutableJsonObjectCopy(row: JsonObject | SemioKitWireStructDto): { [k:
 }
 
 /** @emoji 🧾 Maps GraphQL `TypeMetadataObject` / `DesignMetadataObject` field names to {@link TypeSchema} / {@link DesignSchema} wire keys (`createdAt`, `virtual`, …). */
-function __normalizeTypeOrDesignMetadataWireRow(row: JsonObject | SemioKitWireStructDto): JsonObject {
+function __normalizeTypeOrDesignMetadataRow(row: JsonObject | KitJsonObjectDto): JsonObject {
   const out = __mutableJsonObjectCopy(row);
   if (out["createdAt"] === undefined && typeof out["created"] === "string") out["createdAt"] = out["created"] as string;
   delete out["created"];
@@ -1291,7 +1303,7 @@ function __normalizeTypeOrDesignMetadataWireRow(row: JsonObject | SemioKitWireSt
 }
 
 /** @emoji 🧾 GraphQL JSON uses `null` for absent scalars; Zod `.optional()` expects omission — drop top-level `null` entries before parse. */
-function __stripTopLevelJsonNulls(row: JsonObject | SemioKitWireStructDto): JsonObject {
+function __stripTopLevelJsonNulls(row: JsonObject | KitJsonObjectDto): JsonObject {
   const out = __mutableJsonObjectCopy(row);
   for (const k of Object.keys(out)) {
     if (out[k] === null) delete out[k];
@@ -1299,36 +1311,42 @@ function __stripTopLevelJsonNulls(row: JsonObject | SemioKitWireStructDto): Json
   return out;
 }
 
+/** @emoji 🧾 Wire JSON, `KitJsonTreeDto`, or typed bus {@link KitEvent} in subscription and lifecycle helpers. */
+type KitEventWirePayload = JsonValue | KitJsonTreeDto | KitEvent;
+
 /** @emoji 🧾 Narrows subscription payloads to semio kit command lifecycle rows. */
-export function isKitCommandLifecycleEvent(event: JsonValue | SemioKitWireTreeDto | null | undefined): event is KitCommandLifecycleEvent {
-  const c = (isJsonObjectNode(event) ? event : null)?.["semioKitCommand"];
+export function isKitCommandLifecycleEvent(
+  event: KitEventWirePayload | null | undefined,
+): event is KitCommandLifecycleEvent {
+  if (event == null || typeof event !== "object" || Array.isArray(event)) return false;
+  const c = (event as KitJsonObjectDto)["semioKitCommand"];
   if (c == null || typeof c !== "object" || Array.isArray(c)) return false;
   const v = c as JsonObject;
   return typeof v["requestId"] === "string" && typeof v["commandKind"] === "string" && typeof v["phase"] === "string";
 }
 
-function __normalizeTopLevelKitEventWire(raw: JsonValue | SemioKitWireTreeDto | null | undefined): SemioKitWireTreeDto | null {
-  if (raw === "Changed") return { Changed: null } as KitEvent as SemioKitWireTreeDto;
-  if (raw === "ValidationInvalidated") return { ValidationInvalidated: null } as KitEvent as SemioKitWireTreeDto;
+function __normalizeTopLevelKitEventJson(raw: KitEventWirePayload | null | undefined): KitJsonTreeDto | null {
+  if (raw === "Changed") return { Changed: null } as KitJsonTreeDto;
+  if (raw === "ValidationInvalidated") return { ValidationInvalidated: null } as KitJsonTreeDto;
   if (raw == null) return null;
-  return raw as SemioKitWireTreeDto;
+  return raw as KitJsonTreeDto;
 }
 
-export function normalizeKitEventFromSubscription(raw: JsonValue | SemioKitWireTreeDto | null | undefined): KitEvent | undefined {
-  const raw0 = __normalizeTopLevelKitEventWire(raw);
+export function normalizeKitEventFromSubscription(raw: KitEventWirePayload | null | undefined): KitEvent | undefined {
+  const raw0 = __normalizeTopLevelKitEventJson(raw);
   if (raw0 == null) return undefined;
   if (typeof raw0 === "string") return undefined;
   if (typeof raw0 !== "object" || Array.isArray(raw0)) return undefined;
-  const top = raw0 as SemioKitWireStructDto;
-  const lifecycleWrapper: SemioKitWireTreeDto =
+  const top = raw0 as JsonObject;
+  const lifecycleWrapper: KitJsonTreeDto =
     top["semioKitCommand"] !== undefined
       ? raw0
       : top["SemioKitCommand"] !== undefined
-        ? { semioKitCommand: top["SemioKitCommand"] as SemioKitWireTreeDto }
+        ? { semioKitCommand: top["SemioKitCommand"] as KitJsonTreeDto }
         : raw0;
   const w = isJsonObjectNode(lifecycleWrapper) ? lifecycleWrapper : null;
   const command = w?.["semioKitCommand"];
-  if (isKitCommandLifecycleEvent({ semioKitCommand: command })) {
+  if (isKitCommandLifecycleEvent({ semioKitCommand: command } as KitEvent)) {
     if (command == null || typeof command !== "object" || Array.isArray(command)) return undefined;
     const value = command as JsonObject;
     const requestIdRaw = value["requestId"];
@@ -1341,7 +1359,7 @@ export function normalizeKitEventFromSubscription(raw: JsonValue | SemioKitWireT
         requestId: requestIdRaw,
         commandKind: value["commandKind"] as string,
         phase: value["phase"] as KitCommandLifecyclePhase,
-        result: (value["result"] as SemioKitWireTreeDto | undefined) ?? undefined,
+        result: (value["result"] as KitJsonTreeDto | undefined) ?? undefined,
         error,
       },
     };
@@ -1360,6 +1378,18 @@ async function kitGraphqlRun(
   return parseJsonValue(json) as KitGraphqlResponseEnvelope<JsonValue>;
 }
 
+/**
+ * @emoji 🌐 Typed GraphQL execute: same transport as {@link kitGraphqlRun} with a parametric `data` root for call sites.
+ * @typeParam TData GraphQL `data` object shape (e.g. {@link KitGraphqlDataKitScopedFullDto} for {@link KIT_SCOPED_FULL_DTO_QUERY}).
+ */
+export async function kitGraphqlRunTyped<TData extends JsonValue>(
+  handle: { execute(requestJson: string): Promise<string> },
+  body: { query: string; variables?: GraphQlVariables; operationName?: string },
+  timeoutMs?: number,
+): Promise<KitGraphqlResponseEnvelope<TData>> {
+  return (await kitGraphqlRun(handle, body, timeoutMs)) as KitGraphqlResponseEnvelope<TData>;
+}
+
 // #endregion 🧰GraphqlUtil
 
 // #region 🪜Transport
@@ -1373,7 +1403,6 @@ class InlineWasmTransport {
     private readonly handle: {
       execute: WasmExecuteFn;
       subscribe: WasmSubscribeFn;
-      snapshot: () => unknown;
       free?: () => void;
     },
   ) {}
@@ -1384,9 +1413,6 @@ class InlineWasmTransport {
   /** Streams subscription events as **complete JSON** documents (one full GraphQL response per event). */
   async subscribe(requestJson: string, onEvent: (eventJson: string) => void): Promise<void> {
     await this.handle.subscribe(requestJson, onEvent);
-  }
-  snapshotJson(): string {
-    return JSON.stringify(this.handle.snapshot());
   }
   dispose(): void {
     if (typeof this.handle.free === "function") {
@@ -1485,31 +1511,6 @@ class WorkerStringTransport {
     });
   }
 
-  async snapshotJson(): Promise<string> {
-    const reqId = `s-${++this.nextSerial}-${Date.now().toString(36)}`;
-    return await new Promise<string>((resolve, reject) => {
-      const w = (ev: MessageEvent<string>) => {
-        let m: { op: string; reqId?: string; json?: string; message?: string };
-        try {
-          m = JSON.parse(ev.data) as typeof m;
-        } catch {
-          return;
-        }
-        if (m.reqId !== reqId) return;
-        if (m.op === "snapshotResult" && typeof m.json === "string") {
-          this.worker.removeEventListener("message", w);
-          resolve(m.json);
-        }
-        if (m.op === "error") {
-          this.worker.removeEventListener("message", w);
-          reject(new Error(m.message ?? "snapshot error"));
-        }
-      };
-      this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ op: "snapshot", reqId }));
-    });
-  }
-
   dispose(): void {
     this.worker.terminate();
   }
@@ -1566,6 +1567,16 @@ export const KIT_STORE_BATCH_MUTATION = `mutation($input: KitStoreBatchInput!) {
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { eventStream }`;
 
 /**
+ * @emoji 🔗 Scoped full kit DTO via `Query.kit` — must stay aligned with `semio/graphql/schema.graphql` (`KitStore.fullDto`).
+ */
+export const KIT_SCOPED_FULL_DTO_QUERY = `query KitScopedFullDto($scope: KitReadScopeInput!) { kit(scope: $scope) { fullDto } }` as const;
+
+/** @emoji 🧾 Typed `data` shape for {@link KIT_SCOPED_FULL_DTO_QUERY} (after {@link kitGraphqlData}). */
+export type KitGraphqlDataKitScopedFullDto = Readonly<{
+  readonly kit: Readonly<{ readonly fullDto: KitJsonTreeDto }> | null;
+}>;
+
+/**
  * @emoji 🌐 Single kit control plane: GraphQL strings over one dedicated `Worker` running `semio/rs` WASM (`KitStoreHandle`).
  */
 export class KitStore {
@@ -1590,7 +1601,7 @@ export class KitStore {
     /** Vitest may expose `Worker` (e.g. jsdom); blob worker still `fetch`es `.wasm` — prefer inline init when Vitest is active. */
     const preferInlineWasmInVitest = (() => {
       try {
-        const env = (import.meta as unknown as { env?: Record<string, unknown> }).env;
+        const env = (import.meta as { env?: JsonObject }).env;
         if (env && Boolean(env["VITEST"])) return true;
       } catch {
         /* ignore */
@@ -1606,9 +1617,9 @@ export class KitStore {
       const worker = opts?.workerFactory?.() ?? createKitStoreWorker();
       const wt = new WorkerStringTransport(worker);
       await wt.init(dto);
-      await withTimeout(wt.snapshotJson(), timeoutMs, "snapshot");
       const ks = new KitStore(timeoutMs);
       ks.transport = wt;
+      await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
       void ks.startSubscriptionLoop();
       return ks;
     }
@@ -1621,9 +1632,9 @@ export class KitStore {
     if (typeof mod.boot === "function") mod.boot();
     const handle = mod.KitStoreHandle.create(dto as object);
     const t = new InlineWasmTransport(handle);
-    await withTimeout(Promise.resolve(t.snapshotJson()), timeoutMs, "snapshot");
     const ks = new KitStore(timeoutMs);
     ks.transport = t;
+    await withTimeout(ks.warmGraphqlRead(), timeoutMs, "graphql");
     void ks.startSubscriptionLoop();
     return ks;
   }
@@ -1636,31 +1647,31 @@ export class KitStore {
     if (this.disposed) throw new Error("KitStore disposed");
   }
 
-  private readScopeVars(scope: KitReadScope, extra: Record<string, unknown> = {}): Record<string, unknown> {
-    return { scope: kitReadScopeToGraphQLInput(scope), ...extra };
+  private readScopeVars(scope: KitReadScope, extra: GraphQlVariables = {} as GraphQlVariables): GraphQlVariables {
+    return { scope: kitReadScopeToGraphQLInput(scope) as JsonValue, ...extra } as GraphQlVariables;
   }
 
-  private async gqlRun(body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown> {
+  private async gqlRun(body: { query: string; variables?: GraphQlVariables; operationName?: string }): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
     this.ensureAlive();
     return kitGraphqlRun(this.graphqlHandle(), body, this.timeoutMs);
   }
 
   private async gqlRunWithReadScope(
     scope: KitReadScope,
-    body: { query: string; variables?: Record<string, unknown> | undefined; operationName?: string },
-  ): Promise<unknown> {
-    return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? {}) });
+    body: { query: string; variables?: GraphQlVariables | undefined; operationName?: string },
+  ): Promise<KitGraphqlResponseEnvelope<JsonValue>> {
+    return this.gqlRun({ ...body, variables: this.readScopeVars(scope, body.variables ?? ({} as GraphQlVariables)) });
   }
 
   /** @emoji 🧾 Single `Query.kit(scope: …) { … }` selection using only `$scope` (dedupes scoped read strings). */
-  private async gqlKitReadOnlyScope(scope: KitReadScope, innerSelection: string): Promise<Record<string, unknown>> {
+  private async gqlKitReadOnlyScope(scope: KitReadScope, innerSelection: string): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, {
         query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { ${innerSelection} } }`,
       }),
-    ) as { kit?: Record<string, unknown> | null };
+    ) as { kit?: JsonObject | null };
     const k = gqlDataKitRoot(data);
-    return (k != null && typeof k === "object" && !Array.isArray(k) ? k : {}) as Record<string, unknown>;
+    return k != null && typeof k === "object" && !Array.isArray(k) ? (k as JsonObject) : ({} as JsonObject);
   }
 
   /** @emoji 📣 Subscribe to kit GraphQL subscription events (RxJS-free public surface). */
@@ -1682,7 +1693,7 @@ export class KitStore {
   /** @emoji 📣 Fires only after coalescing wire `Changed` / synthetic `{ Changed: null }` rows. */
   subscribeRootInvalidation(handler: () => void): Unsubscribe {
     return this.subscribeFiltered(
-      (ev) => typeof ev === "object" && ev !== null && "Changed" in ev && (ev as { Changed?: unknown }).Changed === null,
+      (ev) => typeof ev === "object" && ev !== null && "Changed" in ev && (ev as { Changed?: null }).Changed === null,
       () => handler(),
     );
   }
@@ -1701,9 +1712,9 @@ export class KitStore {
     void this.transport
       .subscribe(JSON.stringify({ query: KIT_EVENT_STREAM_SUBSCRIPTION }), (eventJson: string) => {
         try {
-          const msg = JSON.parse(eventJson) as { data?: { eventStream?: unknown } | null; errors?: unknown[] };
+          const msg = parseJsonValue(eventJson) as KitGraphqlResponseEnvelope<{ eventStream?: JsonValue | null }>;
           if (msg.errors && Array.isArray(msg.errors) && msg.errors.length) return;
-          const ev = msg.data?.eventStream;
+          const ev: JsonValue | null | undefined = msg.data?.eventStream;
           if (ev === undefined) return;
           const n = normalizeKitEventFromSubscription(ev);
           if (n) this.fanout.next(n);
@@ -1724,31 +1735,32 @@ export class KitStore {
     this.transport.dispose();
   }
 
-  async snapshot(): Promise<KitFullDto> {
-    this.ensureAlive();
-    const json =
-      this.transport instanceof InlineWasmTransport
-        ? this.transport.snapshotJson()
-        : await withTimeout((this.transport as WorkerStringTransport).snapshotJson(), this.timeoutMs, "snapshot");
-    return JSON.parse(json) as KitFullDto;
+  /** @internal One `Query.kit { fullDto }` read to verify GraphQL after WASM init (no local kit cache). */
+  private async warmGraphqlRead(): Promise<void> {
+    await this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
-  /** @emoji 🧾 Main-line live kit (same DTO as {@link KitStore.read} `readKitFullCommand` on {@link theKitReadScope}). */
-  async theKit(): Promise<KitFullDto> {
-    const r = await this.read(theKitReadScope, [{ readKitFullCommand: null }]);
-    const first = r[0];
-    if (first && "readKitFullCommand" in first) return first.readKitFullCommand.full;
-    return this.snapshot();
-  }
-
-  /** @emoji 🧾 Full DTO JSON for a {@link KitReadScope} via scoped `Query.kit` (`fullDto`). */
+  /** @emoji 🧾 Full DTO for a {@link KitReadScope} via scoped `Query.kit` (`fullDto`); sole full-kit read path (no WASM `snapshot` fallback). */
   async materializedLiveJsonForReadScope(scope: KitReadScope): Promise<KitFullDto> {
+    this.ensureAlive();
     const data = kitGraphqlData(
-      await this.gqlRunWithReadScope(scope, { query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { fullDto } }` }),
-    ) as { kit?: { fullDto?: unknown } | null };
-    const j = gqlDataKitRoot(data)?.fullDto;
-    if (j && typeof j === "object" && !Array.isArray(j)) return semioCoerceKitFullDtoFromWire(j as SemioKitWireTreeDto);
-    return await this.snapshot();
+      await kitGraphqlRunTyped<KitGraphqlDataKitScopedFullDto>(this.graphqlHandle(), {
+        query: KIT_SCOPED_FULL_DTO_QUERY,
+        variables: this.readScopeVars(scope),
+      },
+      this.timeoutMs,
+      ),
+    );
+    const j = data.kit?.fullDto;
+    if (j == null || typeof j !== "object" || Array.isArray(j)) {
+      throw new Error("kitGraphql: fullDto missing or not an object for the given read scope");
+    }
+    return semioCoerceKitFullDtoFromJson(j as KitJsonTreeDto);
+  }
+
+  /** @emoji 🧾 Main-line live kit DTO from `Query.kit` / `fullDto`. */
+  async theKit(): Promise<KitFullDto> {
+    return this.materializedLiveJsonForReadScope(theKitReadScope);
   }
 
   async materializeAt(checkpointId: string): Promise<KitFullDto> {
@@ -1759,17 +1771,17 @@ export class KitStore {
         variables: { id: idArg },
       }),
     );
-    const j = (data as { kit?: { materializeAt?: unknown } }).kit?.materializeAt;
+    const j = (data as { kit?: { materializeAt?: JsonValue } }).kit?.materializeAt;
     return j as KitFullDto;
   }
 
-  async vcsState(): Promise<Record<string, unknown>> {
+  async vcsState(): Promise<JsonObject> {
     const data = kitGraphqlData(
       await this.gqlRunWithReadScope(theKitReadScope, {
         query: `query($scope: KitReadScopeInput!) { kit(scope: $scope) { vcsState { theKitHead theKitLine root { id name } checkpoints { id parent message time authors hash isRelease changeCount } alternatives { id name root checkpoints } sessions { id drafts { id parentCheckpoint targetAlternative finalizedTransactionCount redoTransactionCount openTransactionId canUndo canRedo } } } } }`,
       }),
     );
-    return ((data as { kit?: { vcsState?: Record<string, unknown> } }).kit?.vcsState ?? {}) as Record<string, unknown>;
+    return ((data as { kit?: { vcsState?: JsonObject } }).kit?.vcsState ?? {}) as JsonObject;
   }
 
   /** @emoji 🧾 True when any session draft reports `canUndo` (VCS draft/transaction stack). */
@@ -1778,7 +1790,7 @@ export class KitStore {
     const sessions = v["sessions"];
     if (!Array.isArray(sessions)) return false;
     for (const s of sessions) {
-      const drafts = (s as { drafts?: unknown }).drafts;
+      const drafts = (s as { drafts?: JsonValue }).drafts;
       if (!Array.isArray(drafts)) continue;
       for (const d of drafts) {
         if ((d as { canUndo?: boolean }).canUndo) return true;
@@ -1793,7 +1805,7 @@ export class KitStore {
     const sessions = v["sessions"];
     if (!Array.isArray(sessions)) return false;
     for (const s of sessions) {
-      const drafts = (s as { drafts?: unknown }).drafts;
+      const drafts = (s as { drafts?: JsonValue }).drafts;
       if (!Array.isArray(drafts)) continue;
       for (const d of drafts) {
         if ((d as { canRedo?: boolean }).canRedo) return true;
@@ -1804,49 +1816,49 @@ export class KitStore {
 
 
   /** @emoji 🧾 Maps control-plane canvas `commandKind` + `variables` to one `TransactionBatchCommandInput` entry (draft/transaction scoped). */
-  private scopedTransactionInnerFromControl(commandKind: string, variables: Record<string, unknown>): Record<string, unknown> | null {
+  private scopedTransactionInnerFromControl(commandKind: string, variables: JsonObject): JsonObject | null {
     const v = variables;
-    const designCommand = (sub: Record<string, unknown>, designId: string) => ({
+    const designCommand = (sub: JsonObject, designId: string) => ({
       design: { designId, commands: [sub] },
     });
     switch (commandKind) {
       case "changeKitCommands":
-        return { changeKitCommands: { commands: (v.commands as readonly unknown[] | undefined) ?? [] } };
+        return { changeKitCommands: { commands: (v["commands"] as readonly ChangeKitCommand[] | undefined) ?? [] } } as GraphQlVariables;
       case "clusterPieces":
         return designCommand(
           { clusterPieces: { pieceIds: v.pieceIds, clusterName: v.clusterName } },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "dragPieces":
         return designCommand(
           { dragPieces: { pieceIds: v.pieceIds, du: v.du, dv: v.dv } },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "movePieces":
         return designCommand(
           { movePieces: { pieceIds: v.pieceIds, gap: v.gap, shift: v.shift, rise: v.rise } },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "fixPieces":
-        return designCommand({ fixPieces: { pieceIds: v.pieceIds } }, String(v.designId)) as Record<string, unknown>;
+        return designCommand({ fixPieces: { pieceIds: v.pieceIds } }, String(v.designId)) as JsonObject;
       case "flattenDesign":
-        return designCommand({ flattenDesign: { confirm: true } }, String(v.designId)) as Record<string, unknown>;
+        return designCommand({ flattenDesign: { confirm: true } }, String(v.designId)) as JsonObject;
       case "expandDesign":
-        return designCommand({ expandDesign: { nestedDesignId: String(v.nestedDesignId) } }, String(v.parentDesignId)) as Record<string, unknown>;
+        return designCommand({ expandDesign: { nestedDesignId: String(v.nestedDesignId) } }, String(v.parentDesignId)) as JsonObject;
       case "deleteConnection":
         return designCommand(
           { deleteConnection: { connectionId: String(v.connectionId) } },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "changePieceType":
         return designCommand(
           { changePieceType: { pieceId: String(v.pieceId), newTypeId: String(v.newTypeId) } },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "createHangingPieces": {
         const pl = __kitPlaneToBatchInput(v.plane);
         if (!pl) return null;
-        return designCommand({ createHangingPieces: { typeIds: v.typeIds, plane: pl } }, String(v.designId)) as Record<string, unknown>;
+        return designCommand({ createHangingPieces: { typeIds: v.typeIds, plane: pl } }, String(v.designId)) as JsonObject;
       }
       case "createConnectedPiece":
         return designCommand(
@@ -1859,11 +1871,11 @@ export class KitStore {
             },
           },
           String(v.designId),
-        ) as Record<string, unknown>;
+        ) as JsonObject;
       case "createFixedPiece": {
         const pl = __kitPlaneToBatchInput(v.plane);
         if (!pl) return null;
-        return designCommand({ createFixedPiece: { typeId: String(v.typeId), plane: pl } }, String(v.designId)) as Record<string, unknown>;
+        return designCommand({ createFixedPiece: { typeId: String(v.typeId), plane: pl } }, String(v.designId)) as JsonObject;
       }
       default:
         return null;
@@ -1871,7 +1883,7 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Updates {@link KitStore.kitWriteSessionId} / draft / transaction ids from `kitStore.batch` rows. */
-  private absorbWriteAnchorsFromBatchResults(results: readonly Record<string, unknown>[]): void {
+  private absorbWriteAnchorsFromBatchResults(results: readonly JsonObject[]): void {
     for (const raw of results) {
       const k = __normKitStoreBatchKind(raw.kind);
       if (k === "NEW_SESSION" && typeof raw.sessionId === "string") this.kitWriteSessionId = raw.sessionId;
@@ -1891,37 +1903,37 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Wraps transaction commands in `session → draft → transaction` batch shape (auto-starts missing levels). */
-  private buildSessionScopedTopLevelCommand(innerTxCommands: readonly Record<string, unknown>[]): Record<string, unknown> {
+  private buildSessionScopedTopLevelCommand(innerTxCommands: readonly JsonObject[]): JsonObject {
     const sid = this.kitWriteSessionId;
     const did = this.kitWriteDraftId;
     const tid = this.kitWriteTransactionId;
 
-    const transactionPayload: Record<string, unknown> = { commands: [...innerTxCommands] };
-    if (tid) transactionPayload.transactionId = tid;
+    const transactionPayload: JsonObjectMutable = { commands: [...innerTxCommands] as unknown as JsonValue[] };
+    if (tid) transactionPayload.transactionId = tid as JsonValue;
 
     const draftCommands: unknown[] = [];
     if (!tid) draftCommands.push({ startTransaction: { confirm: true } });
     draftCommands.push({ transaction: transactionPayload });
 
-    const draftPayload: Record<string, unknown> = { commands: draftCommands };
-    if (did) draftPayload.draftId = did;
+    const draftPayload: JsonObjectMutable = { commands: draftCommands as JsonValue[] };
+    if (did) draftPayload.draftId = did as JsonValue;
 
     const sessionCommands: unknown[] = [];
     if (!sid) sessionCommands.push({ createSession: { confirm: true } });
     if (!did) sessionCommands.push({ createDraft: {} });
     sessionCommands.push({ draft: draftPayload });
 
-    const sessionPayload: Record<string, unknown> = { commands: sessionCommands };
-    if (sid) sessionPayload.sessionId = sid;
-    return { session: sessionPayload };
+    const sessionPayload: JsonObjectMutable = { commands: sessionCommands as JsonValue[] };
+    if (sid) sessionPayload.sessionId = sid as JsonValue;
+    return { session: sessionPayload } as JsonObject;
   }
 
   /** @emoji 🧾 Runs `kitStore.batch` with one session subtree that applies `innerTxCommands` inside an open transaction. */
-  private async runScopedTransactionBatch(innerTxCommands: readonly Record<string, unknown>[]): Promise<readonly Record<string, unknown>[]> {
+  private async runScopedTransactionBatch(innerTxCommands: readonly JsonObject[]): Promise<readonly JsonObject[]> {
     const top = this.buildSessionScopedTopLevelCommand(innerTxCommands);
-    const batch = await this.runKitStoreBatch([top as Record<string, unknown>]);
-    this.absorbWriteAnchorsFromBatchResults(batch.results as Record<string, unknown>[]);
-    return batch.results as Record<string, unknown>[];
+    const batch = await this.runKitStoreBatch([top as JsonObject]);
+    this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
+    return batch.results as JsonObject[];
   }
 
   /** @emoji 🧭 Exposes the last session/draft/transaction anchors inferred from batch results (or {@link KitStore.setKitWriteScope}). */
@@ -1968,7 +1980,7 @@ export class KitStore {
           },
         },
       ]);
-      this.absorbWriteAnchorsFromBatchResults(batch.results as Record<string, unknown>[]);
+      this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
@@ -1997,17 +2009,17 @@ export class KitStore {
           },
         },
       ]);
-      this.absorbWriteAnchorsFromBatchResults(batch.results as Record<string, unknown>[]);
+      this.absorbWriteAnchorsFromBatchResults(batch.results as JsonObject[]);
       return { ok: true };
     } catch (e) {
       return { ok: false, error: { kind: "Internal", message: String(e) } };
     }
   }
 
-  private backboneBatchCommandsFromJson(kind: string, batchVariables: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>>[] | null {
+  private backboneBatchCommandsFromJson(kind: string, batchVariables: Readonly<JsonObject>): Readonly<JsonObject>[] | null {
     if (kind === "attachBackbone") {
       const c = (batchVariables.config as BackboneConfig | null | undefined) ?? { Memory: null };
-      const bcmd: Readonly<Record<string, unknown>> =
+      const bcmd: Readonly<JsonObject> =
         "Memory" in c
           ? { memory: { confirm: true } }
           : "Dev" in c
@@ -2040,7 +2052,7 @@ export class KitStore {
   }
 
   /** @emoji 🧾 `kitStore.batch` control-plane entry (session, checkpoint, alternative, backbone). */
-  private async runKitStoreBatch(commands: readonly Record<string, unknown>[], clientMutationId?: string): Promise<{
+  private async runKitStoreBatch(commands: readonly JsonObject[], clientMutationId?: string): Promise<{
     clientMutationId?: string | null;
     results: readonly {
       kind?: string;
@@ -2048,9 +2060,9 @@ export class KitStore {
       count?: number | null;
       changeKind?: KitChangeSemanticKindGql | null;
       changeKindOther?: string | null;
-      inverse?: unknown;
-      conflicts?: readonly Record<string, unknown>[];
-      backbone?: Record<string, unknown> | null;
+      inverse?: readonly ChangeKitCommand[] | null;
+      conflicts?: readonly JsonObject[];
+      backbone?: JsonObject | null;
     }[];
   }> {
     this.ensureAlive();
@@ -2059,7 +2071,7 @@ export class KitStore {
         query: KIT_STORE_BATCH_MUTATION,
         variables: { input: { clientMutationId: clientMutationId ?? null, commands: [...commands] } },
       }),
-    ) as { kitStore: { batch: { clientMutationId?: string | null; results: readonly Record<string, unknown>[] } } };
+    ) as { kitStore: { batch: { clientMutationId?: string | null; results: readonly JsonObject[] } } };
     return data.kitStore.batch as {
       clientMutationId?: string | null;
       results: readonly {
@@ -2068,15 +2080,15 @@ export class KitStore {
         count?: number | null;
         changeKind?: KitChangeSemanticKindGql | null;
         changeKindOther?: string | null;
-        inverse?: unknown;
-        conflicts?: readonly Record<string, unknown>[];
-        backbone?: Record<string, unknown> | null;
+        inverse?: readonly ChangeKitCommand[] | null;
+        conflicts?: readonly JsonObject[];
+        backbone?: JsonObject | null;
       }[];
     };
   }
 
   /** @emoji 🧾 Top-level `backbone` batch that returns {@link SetResult} (attach, detach, resolve, sync). */
-  private async runBackboneBatchSetResult(kind: string, variables: Readonly<Record<string, unknown>>): Promise<SetResult> {
+  private async runBackboneBatchSetResult(kind: string, variables: Readonly<JsonObject>): Promise<SetResult> {
     this.ensureAlive();
     const back = this.backboneBatchCommandsFromJson(kind, variables);
     if (!back) return { ok: false, error: { kind: "Internal", message: `backbone batch: unsupported ${kind}` } };
@@ -2096,8 +2108,10 @@ export class KitStore {
     const back = this.backboneBatchCommandsFromJson(kind, {});
     if (!back) throw new Error(`backbone batch read: unsupported ${kind}`);
     const b = await this.runKitStoreBatch(back);
-    const r0 = b.results[0] as { conflicts?: readonly unknown[] | null; backbone?: unknown } | undefined;
-    if (kind === "listConflicts") return ((r0?.conflicts as readonly unknown[] | undefined) ?? []) as T;
+    const r0 = b.results[0] as
+      | { conflicts?: readonly ConflictBatchRecord[] | null; backbone?: JsonValue }
+      | undefined;
+    if (kind === "listConflicts") return ((r0?.conflicts as readonly ConflictBatchRecord[] | undefined) ?? []) as T;
     const br = (r0?.backbone as Partial<BackboneStatusDto> | null | undefined) ?? {};
     return {
       attached: br.attached ?? false,
@@ -2129,7 +2143,7 @@ export class KitStore {
                 },
               ],
             },
-          },
+          } as unknown as JsonObject,
         ]);
         const r0 = b.results[0] as { ok?: boolean } | undefined;
         if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
@@ -2137,7 +2151,23 @@ export class KitStore {
       }
       if (s && d) {
         const inner = kind === "undo" ? ({ undoDraft: { count: 1 } } as const) : ({ redoDraft: { count: 1 } } as const);
-        const b = await this.runKitStoreBatch([{ session: { sessionId: s, commands: [{ draft: { draftId: d, commands: [inner] } }] } }]);
+        const b = await this.runKitStoreBatch(
+          [
+            {
+              session: {
+                sessionId: s,
+                commands: [
+                  {
+                    draft: {
+                      draftId: d,
+                      commands: [inner],
+                    },
+                  },
+                ],
+              },
+            } as unknown as JsonObject,
+          ],
+        );
         const r0 = b.results[0] as { ok?: boolean } | undefined;
         if (r0?.ok === false) return { ok: false, error: { kind: "Internal", message: "kit store batch: undo/redo rejected" } };
         return { ok: true };
@@ -2152,7 +2182,7 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Design/canvas ops mapped into scoped `session → draft → transaction` batch. */
-  private async runScopedCanvasControl(kind: string, variables: Record<string, unknown>): Promise<SetResult> {
+  private async runScopedCanvasControl(kind: string, variables: JsonObject): Promise<SetResult> {
     this.ensureAlive();
     const inner = this.scopedTransactionInnerFromControl(kind, variables);
     if (inner == null) return { ok: false, error: { kind: "NotSupported", message: `no batch mapping for ${kind}` } };
@@ -2167,16 +2197,16 @@ export class KitStore {
     }
   }
 
-  async changeKitWithInverse(commands: unknown): Promise<{ kind: KitChangeKindWire; inverse: readonly ChangeKitCommandWire[] }> {
+  async changeKitWithInverse(commands: unknown): Promise<{ kind: KitChangeKind; inverse: readonly ChangeKitCommand[] }> {
     this.ensureAlive();
     const rows = await this.runScopedTransactionBatch([
-      { changeKitWithInverse: { commands: (commands as readonly unknown[]) ?? [] } } as Record<string, unknown>,
+      { changeKitWithInverse: { commands: (commands as readonly unknown[]) ?? [] } } as JsonObject,
     ]);
     const hit = [...rows].reverse().find((r) => __normKitStoreBatchKind(r.kind) === "CHANGE_KIT_WITH_INVERSE") as
-      | { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: unknown }
+      | { changeKind?: KitChangeSemanticKindGql; changeKindOther?: string | null; inverse?: readonly ChangeKitCommand[] }
       | undefined;
     if (hit != null && hit.changeKind != null) {
-      const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommandWire[]) : [];
+      const inv = Array.isArray(hit.inverse) ? (hit.inverse as readonly ChangeKitCommand[]) : [];
       return { kind: kitChangeSemanticKindToWire(hit.changeKind, hit.changeKindOther ?? null), inverse: inv };
     }
     throw new Error("changeKitWithInverse: missing batch row");
@@ -2214,7 +2244,7 @@ export class KitStore {
     return this.runScopedCanvasControl("changePieceType", { designId, pieceId, newTypeId });
   }
 
-  async pasteDesignSelection(_designId: string, _selection: SemioKitWireTreeDto, _plane: PlanePlain | null): Promise<SetResult> {
+  async pasteDesignSelection(_designId: string, _selection: KitJsonTreeDto, _plane: PlanePlain | null): Promise<SetResult> {
     return {
       ok: false,
       error: { kind: "NotSupported", message: "pasteDesignSelection: not yet implemented in Rust store" },
@@ -2260,7 +2290,7 @@ export class KitStore {
   }
 
   async listConflicts(): Promise<KitConflict[]> {
-    const raw = await this.runBackboneBatchTypedRead<readonly unknown[]>("listConflicts");
+    const raw = await this.runBackboneBatchTypedRead<readonly ConflictBatchRecord[]>("listConflicts");
     if (Array.isArray(raw)) return raw as KitConflict[];
     return [];
   }
@@ -2276,17 +2306,17 @@ export class KitStore {
   /**
    * @emoji 🧭 Read-only flatten map rows for one design (`semio/rs` `flatten_map`), for algorithm / MCP tooling.
    */
-  async readDesignFlattenMap(scope: KitReadScope, designId: string): Promise<readonly DesignFlattenMapEntryWireDto[]> {
+  async readDesignFlattenMap(scope: KitReadScope, designId: string): Promise<readonly DesignFlattenMapEntryDto[]> {
     const data = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, {
         query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { flattenMap } } }`,
         variables: { id: designId },
       }),
-    ) as { kit?: { designByDtoId?: { flattenMap?: unknown } | null } | null };
+    ) as { kit?: { designByDtoId?: { flattenMap?: JsonValue } | null } | null };
     const raw = gqlDataKitRoot(data)?.designByDtoId?.flattenMap;
     const FlatRow = z.object({ pieceId: z.string(), plane: PlaneSchema, center: PointSchema });
     if (Array.isArray(raw)) {
-      const out: DesignFlattenMapEntryWireDto[] = [];
+      const out: DesignFlattenMapEntryDto[] = [];
       for (const row of raw) {
         const pr = FlatRow.safeParse(row);
         if (pr.success) out.push(pr.data);
@@ -2295,9 +2325,9 @@ export class KitStore {
     }
     if (typeof raw === "string") {
       try {
-        const p = JSON.parse(raw) as unknown;
+        const p = parseJsonValue(raw) as JsonValue;
         if (!Array.isArray(p)) return [];
-        const out: DesignFlattenMapEntryWireDto[] = [];
+        const out: DesignFlattenMapEntryDto[] = [];
         for (const row of p) {
           const pr = FlatRow.safeParse(row);
           if (pr.success) out.push(pr.data);
@@ -2310,7 +2340,7 @@ export class KitStore {
     return [];
   }
 
-  async read(scope: KitReadScope, batch: ReadWireBatch): Promise<ReadWireBatchResult> {
+  async read(scope: KitReadScope, batch: ReadBatch): Promise<ReadBatchResult> {
     this.ensureAlive();
     const out: ReadKitCommandOutput[] = [];
     for (const c of batch) out.push(await this.mapReadCommand(scope, c));
@@ -2318,9 +2348,9 @@ export class KitStore {
   }
 
   /** @emoji 🧾 Apply typed `ChangeKitCommand` batch inside the active session draft transaction (`kitStore.batch`). */
-  async submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+  async submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult> {
     try {
-      const rows = await this.runScopedTransactionBatch([{ changeKitCommands: { commands: [...commands] } } as Record<string, unknown>]);
+      const rows = await this.runScopedTransactionBatch([{ changeKitCommands: { commands: [...commands] } } as JsonObject]);
       for (const row of rows) {
         if (row.ok === false) return { ok: false, error: { kind: "Internal", message: `batch ${String(row.kind)}` } };
       }
@@ -2332,64 +2362,64 @@ export class KitStore {
 
   private async mapReadCommand(scope: KitReadScope, c: ReadKitCommand): Promise<ReadKitCommandOutput> {
     if ("readKitFullCommand" in c && c.readKitFullCommand === null) {
-      const d = await (isTheKitReadScope(scope) ? this.snapshot() : this.materializedLiveJsonForReadScope(scope));
-      return { readKitFullCommand: { full: semioCoerceKitFullDtoFromWire(d as SemioKitWireTreeDto) } };
+      const d = await this.materializedLiveJsonForReadScope(scope);
+      return { readKitFullCommand: { full: d } };
     }
     if ("readKitShallowCommand" in c && c.readKitShallowCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "typesShallow designsShallow");
       return {
         readKitShallowCommand: {
-          types: semioParseTypeShallowArrayWire(row.typesShallow as SemioKitWireTreeDto | string),
-          designs: semioParseDesignShallowArrayWire(row.designsShallow as SemioKitWireTreeDto | string),
+          types: semioParseTypeShallowArrayJson(row.typesShallow as KitJsonTreeDto | string),
+          designs: semioParseDesignShallowArrayJson(row.designsShallow as KitJsonTreeDto | string),
         },
       };
     }
     if ("readKitTypeIdsCommand" in c && c.readKitTypeIdsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "typeIds");
-      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdWireArrayWire(row.typeIds as SemioKitWireTreeDto | string) } };
+      return { readKitTypeIdsCommand: { typeIds: semioParseKitIdDtoArray(row.typeIds as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignIdsCommand" in c && c.readKitDesignIdsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "designIds");
-      return { readKitDesignIdsCommand: { designIds: semioParseKitIdWireArrayWire(row.designIds as SemioKitWireTreeDto | string) } };
+      return { readKitDesignIdsCommand: { designIds: semioParseKitIdDtoArray(row.designIds as KitJsonTreeDto | string) } };
     }
     if ("readKitTypesMetadataCommand" in c && c.readKitTypesMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(
         scope,
         "typesMetadata { id name description icon image stock typeVirtual unit location { id } created updated }",
       );
-      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayWire(row.typesMetadata as SemioKitWireTreeDto | string) } };
+      return { readKitTypesMetadataCommand: { types: semioParseTypeMetadataArrayJson(row.typesMetadata as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignsMetadataCommand" in c && c.readKitDesignsMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(
         scope,
         "designsMetadata { id name description icon image location { id } unit created updated kit { id } }",
       );
-      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayWire(row.designsMetadata as SemioKitWireTreeDto | string) } };
+      return { readKitDesignsMetadataCommand: { designs: semioParseDesignMetadataArrayJson(row.designsMetadata as KitJsonTreeDto | string) } };
     }
     if ("readKitTypesShallowCommand" in c && c.readKitTypesShallowCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "typesShallow");
-      return { readKitTypesShallowCommand: { types: semioParseTypeShallowArrayWire(row.typesShallow as SemioKitWireTreeDto | string) } };
+      return { readKitTypesShallowCommand: { types: semioParseTypeShallowArrayJson(row.typesShallow as KitJsonTreeDto | string) } };
     }
     if ("readKitDesignsShallowCommand" in c && c.readKitDesignsShallowCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "designsShallow");
-      return { readKitDesignsShallowCommand: { designs: semioParseDesignShallowArrayWire(row.designsShallow as SemioKitWireTreeDto | string) } };
+      return { readKitDesignsShallowCommand: { designs: semioParseDesignShallowArrayJson(row.designsShallow as KitJsonTreeDto | string) } };
     }
     if ("readKitAuthorsShallowCommand" in c && c.readKitAuthorsShallowCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "authorsShallow");
-      return { readKitAuthorsShallowCommand: { authors: semioParseAuthorMetadataArrayWire(row.authorsShallow as SemioKitWireTreeDto | string) } };
+      return { readKitAuthorsShallowCommand: { authors: semioParseAuthorMetadataArrayJson(row.authorsShallow as KitJsonTreeDto | string) } };
     }
     if ("readKitMetadataCommand" in c && c.readKitMetadataCommand === null) {
       const row = await this.gqlKitReadOnlyScope(
         scope,
         "kitMetadata { id name description icon image preview remote homepage license uri created updated version }",
       );
-      return { readKitMetadataCommand: { metadata: semioParseKitCatalogMetadataWire(row.kitMetadata as SemioKitWireTreeDto) } };
+      return { readKitMetadataCommand: { metadata: semioParseKitMetadataJson(row.kitMetadata as KitJsonTreeDto) } };
     }
     if ("readKitColoredConnectorsCommand" in c && c.readKitColoredConnectorsCommand === null) {
       const row = await this.gqlKitReadOnlyScope(scope, "coloredConnectors { typeId { id } connectorId { id } color }");
       return {
         readKitColoredConnectorsCommand: {
-          rows: semioParseColoredConnectorRowsWire(row.coloredConnectors as SemioKitWireTreeDto | readonly SemioKitWireTreeDto[]),
+          rows: semioParseColoredConnectorRowsJson(row.coloredConnectors as KitJsonTreeDto | readonly KitJsonTreeDto[]),
         },
       };
     }
@@ -2415,8 +2445,8 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { piecesFull } } }`,
           variables: { id: designId },
         }),
-      ) as { kit?: { designByDtoId?: { piecesFull?: unknown } | null } | null };
-      return { readDesignPiecesFullCommand: { pieces: semioParsePiecePlainArrayWire(gqlDataKitRoot(d)?.designByDtoId?.piecesFull as SemioKitWireTreeDto | string) } };
+      ) as { kit?: { designByDtoId?: { piecesFull?: JsonValue } | null } | null };
+      return { readDesignPiecesFullCommand: { pieces: semioParsePiecePlainArrayJson(gqlDataKitRoot(d)?.designByDtoId?.piecesFull as KitJsonTreeDto | string) } };
     }
     if ("readDesignConnectionsFullCommand" in cmd && cmd.readDesignConnectionsFullCommand === null) {
       const d = kitGraphqlData(
@@ -2424,10 +2454,10 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { connectionsFull } } }`,
           variables: { id: designId },
         }),
-      ) as { kit?: { designByDtoId?: { connectionsFull?: unknown } | null } | null };
+      ) as { kit?: { designByDtoId?: { connectionsFull?: JsonValue } | null } | null };
       return {
         readDesignConnectionsFullCommand: {
-          connections: semioParseConnectionPlainArrayWire(gqlDataKitRoot(d)?.designByDtoId?.connectionsFull as SemioKitWireTreeDto | string),
+          connections: semioParseConnectionPlainArrayJson(gqlDataKitRoot(d)?.designByDtoId?.connectionsFull as KitJsonTreeDto | string),
         },
       };
     }
@@ -2444,10 +2474,10 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $id: String!, $sel: [String!]!) { kit(scope: $scope) { designByDtoId(id: $id) { clusterableGroups(selection: $sel) } } }`,
           variables: { id: designId, sel },
         }),
-      ) as { kit?: { designByDtoId?: { clusterableGroups?: unknown } | null } | null };
+      ) as { kit?: { designByDtoId?: { clusterableGroups?: JsonValue } | null } | null };
       const raw = gqlDataKitRoot(d)?.designByDtoId?.clusterableGroups;
-      const groups: readonly (readonly KitIdWire[])[] = Array.isArray(raw)
-        ? raw.map((row: unknown) => (Array.isArray(row) ? row.map((pid: unknown): KitIdWire => ({ id: String(pid) })) : []))
+      const groups: readonly (readonly KitIdDto[])[] = Array.isArray(raw)
+        ? raw.map((row: unknown) => (Array.isArray(row) ? row.map((pid: unknown): KitIdDto => ({ id: String(pid) })) : []))
         : [];
       return { readDesignClusterableGroupsCommand: { groups } };
     }
@@ -2457,10 +2487,10 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { includedDesigns } } }`,
           variables: { id: designId },
         }),
-      ) as { kit?: { designByDtoId?: { includedDesigns?: unknown } | null } | null };
+      ) as { kit?: { designByDtoId?: { includedDesigns?: JsonValue } | null } | null };
       return {
         readDesignIncludedDesignsCommand: {
-          designs: semioParseDesignIncludedDesignArrayWire(gqlDataKitRoot(d)?.designByDtoId?.includedDesigns as SemioKitWireTreeDto | readonly SemioKitWireTreeDto[]),
+          designs: semioParseDesignIncludedDesignArrayJson(gqlDataKitRoot(d)?.designByDtoId?.includedDesigns as KitJsonTreeDto | readonly KitJsonTreeDto[]),
         },
       };
     }
@@ -2509,9 +2539,9 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatPlane } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: unknown } | null } | null } | null };
+      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatPlane?: JsonValue } | null } | null } | null };
       return {
-        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableWire(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane as SemioKitWireTreeDto) },
+        readPieceFlatPlaneCommand: { flatPlane: semioParsePlaneNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatPlane as KitJsonTreeDto) },
       };
     }
     if ("readPieceFlatCenterCommand" in cmd && cmd.readPieceFlatCenterCommand === null) {
@@ -2520,10 +2550,10 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { flatCenter } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: unknown } | null } | null } | null };
+      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { flatCenter?: JsonValue } | null } | null } | null };
       return {
         readPieceFlatCenterCommand: {
-          flatCenter: semioParseCoordinateNullableWire(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter as SemioKitWireTreeDto),
+          flatCenter: semioParseCoordinateNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.flatCenter as KitJsonTreeDto),
         },
       };
     }
@@ -2533,10 +2563,10 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $d: String!, $p: String!) { kit(scope: $scope) { designByDtoId(id: $d) { pieceByDtoId(id: $p) { parentConnection { id gap shift rise rotation turn tilt u v description } } } } }`,
           variables: { d: designId, p: pieceId },
         }),
-      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { parentConnection?: unknown } | null } | null } | null };
+      ) as { kit?: { designByDtoId?: { pieceByDtoId?: { parentConnection?: JsonValue } | null } | null } | null };
       return {
         readPieceParentConnectionFullCommand: {
-          connection: semioParseConnectionNullableWire(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnection as SemioKitWireTreeDto),
+          connection: semioParseConnectionNullableJson(gqlDataKitRoot(d)?.designByDtoId?.pieceByDtoId?.parentConnection as KitJsonTreeDto),
         },
       };
     }
@@ -2551,25 +2581,25 @@ export class KitStore {
           query: `query($scope: KitReadScopeInput!, $id: String!, $tags: [String!]!) { kit(scope: $scope) { typeByDtoId(id: $id) { bestRepresentation(tagIds: $tags) } } }`,
           variables: { id: typeId, tags: [...tags] },
         }),
-      ) as { kit?: { typeByDtoId?: { bestRepresentation?: unknown } | null } | null };
+      ) as { kit?: { typeByDtoId?: { bestRepresentation?: JsonValue } | null } | null };
       return {
         readTypeBestRepresentationCommand: {
-          representation: semioParseRepresentationNullableWire(gqlDataKitRoot(d)?.typeByDtoId?.bestRepresentation as SemioKitWireTreeDto),
+          representation: semioParseRepresentationNullableWire(gqlDataKitRoot(d)?.typeByDtoId?.bestRepresentation as KitJsonTreeDto),
         },
       };
     }
     throw new Error(`readType: ${Object.keys(cmd).join(",")}`);
   }
 
-  async getPiecesMetadata(scope: KitReadScope, designId: string): Promise<ReadonlyMap<string, PiecePlacementRowWireDto>> {
+  async getPiecesMetadata(scope: KitReadScope, designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     const d = kitGraphqlData(
       await this.gqlRunWithReadScope(scope, {
         query: `query($scope: KitReadScopeInput!, $id: String!) { kit(scope: $scope) { designByDtoId(id: $id) { piecePlacement { pieceId fixedPieceId parentPieceId depth path plane { origin { x y z } xAxis { x y z } yAxis { x y z } } center { x y z } } } } } }`,
         variables: { id: designId },
       }),
-    ) as { kit?: { designByDtoId?: { piecePlacement?: readonly unknown[] } | null } | null };
+    ) as { kit?: { designByDtoId?: { piecePlacement?: readonly JsonValue[] } | null } | null };
     const rows = gqlDataKitRoot(d)?.designByDtoId?.piecePlacement;
-    return semioParsePiecePlacementMapWire(rows);
+    return semioParsePiecePlacementMapJson(rows);
   }
 
   async getPieces(scope: KitReadScope, designId: string): Promise<readonly PiecePlain[]> {
@@ -2613,7 +2643,7 @@ export class KitStore {
     return [];
   }
 
-  async getKitMetadata(scope: KitReadScope): Promise<KitCatalogKitMetadataWireDto | null> {
+  async getKitMetadata(scope: KitReadScope): Promise<KitMetadataDto | null> {
     const out = await this.read(scope, [{ readKitMetadataCommand: null }]);
     const row = out[0];
     if (row && "readKitMetadataCommand" in row) return row.readKitMetadataCommand.metadata;
@@ -2651,7 +2681,7 @@ export class KitStore {
   async designs(scope: KitReadScope = theKitReadScope): Promise<readonly DesignStore[]> {
     const out = await this.read(scope, [{ readKitDesignIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
+      (out[0] as { readKitDesignIdsCommand?: { designIds?: JsonValue } }).readKitDesignIdsCommand?.designIds,
     );
     const toId = (row: unknown): string => {
       if (typeof row === "string") return row;
@@ -2665,7 +2695,7 @@ export class KitStore {
   async types(scope: KitReadScope = theKitReadScope): Promise<readonly TypeStore[]> {
     const out = await this.read(scope, [{ readKitTypeIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
+      (out[0] as { readKitTypeIdsCommand?: { typeIds?: JsonValue } }).readKitTypeIdsCommand?.typeIds,
     );
     const toId = (row: unknown): string => {
       if (typeof row === "string") return row;
@@ -2679,7 +2709,7 @@ export class KitStore {
   async designRowIds(scope: KitReadScope = theKitReadScope): Promise<readonly string[]> {
     const out = await this.read(scope, [{ readKitDesignIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitDesignIdsCommand?: { designIds?: unknown } }).readKitDesignIdsCommand?.designIds,
+      (out[0] as { readKitDesignIdsCommand?: { designIds?: JsonValue } }).readKitDesignIdsCommand?.designIds,
     );
     const toId = (row: unknown): string => {
       if (typeof row === "string") return row;
@@ -2693,7 +2723,7 @@ export class KitStore {
   async kindRowIds(scope: KitReadScope = theKitReadScope): Promise<readonly string[]> {
     const out = await this.read(scope, [{ readKitTypeIdsCommand: null }]);
     const ids = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitTypeIdsCommand?: { typeIds?: unknown } }).readKitTypeIdsCommand?.typeIds,
+      (out[0] as { readKitTypeIdsCommand?: { typeIds?: JsonValue } }).readKitTypeIdsCommand?.typeIds,
     );
     const toId = (row: unknown): string => {
       if (typeof row === "string") return row;
@@ -2707,7 +2737,7 @@ export class KitStore {
   async kindMetadataRows(scope: KitReadScope = theKitReadScope): Promise<readonly unknown[]> {
     const out = await this.read(scope, [{ readKitTypesMetadataCommand: null }]);
     return kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitTypesMetadataCommand?: { types?: unknown } }).readKitTypesMetadataCommand?.types,
+      (out[0] as { readKitTypesMetadataCommand?: { types?: JsonValue } }).readKitTypesMetadataCommand?.types,
     );
   }
 
@@ -2715,7 +2745,7 @@ export class KitStore {
   async designMetadataRows(scope: KitReadScope = theKitReadScope): Promise<readonly unknown[]> {
     const out = await this.read(scope, [{ readKitDesignsMetadataCommand: null }]);
     return kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitDesignsMetadataCommand?: { designs?: unknown } }).readKitDesignsMetadataCommand?.designs,
+      (out[0] as { readKitDesignsMetadataCommand?: { designs?: JsonValue } }).readKitDesignsMetadataCommand?.designs,
     );
   }
   // #endregion KitStoreEntityFactories
@@ -2735,8 +2765,8 @@ export async function openKit(initialKit: KitFullDto, opts?: KitStoreOpenOptions
 // #endregion 🧰OpenKit
 
 // #region KitEventEntityFilter
-/** @emoji 🧾 Whether a {@link KitChangeWire} references a design id in forward or inverse commands. */
-function kitChangeWireTouchesDesignId(change: KitChangeWire, designId: string): boolean {
+/** @emoji 🧾 Whether a {@link KitChange} references a design id in forward or inverse commands. */
+function kitChangeTouchesDesignId(change: KitChange, designId: string): boolean {
   for (const cmd of [...change.forward, ...change.inverse]) {
     if (jsonSubtreeHasIdKey(cmd, "designId", designId)) return true;
     if (jsonSubtreeHasIdKey(cmd, "design_id", designId)) return true;
@@ -2762,7 +2792,7 @@ function kitClassifiedMutationTouchesDesign(ev: KitClassifiedMutationEvent, desi
   if ("deletedConnection" in ev && ev.deletedConnection.designId === designId) return true;
   if ("changedPieceKind" in ev && ev.changedPieceKind.designId === designId) return true;
   if ("changedDesignCommands" in ev && ev.changedDesignCommands.designId === designId) return true;
-  if ("changedKit" in ev && kitChangeWireTouchesDesignId(ev.changedKit.change, designId)) return true;
+  if ("changedKit" in ev && kitChangeTouchesDesignId(ev.changedKit.change, designId)) return true;
   return false;
 }
 
@@ -2770,7 +2800,7 @@ function kitClassifiedMutationTouchesDesign(ev: KitClassifiedMutationEvent, desi
 function kitClassifiedMutationTouchesType(ev: KitClassifiedMutationEvent, typeId: string): boolean {
   if ("renamedType" in ev && ev.renamedType.typeId === typeId) return true;
   if ("changedTypeCommands" in ev && ev.changedTypeCommands.typeId === typeId) return true;
-  if ("changedPieceKind" in ev && jsonSubtreeHasIdKey(ev.changedPieceKind.change as unknown, "newTypeId", typeId)) return true;
+  if ("changedPieceKind" in ev && jsonSubtreeHasIdKey(ev.changedPieceKind.change, "newTypeId", typeId)) return true;
   if ("changedKit" in ev) {
     const ch = ev.changedKit.change;
     for (const cmd of [...ch.forward, ...ch.inverse]) {
@@ -2792,10 +2822,10 @@ function kitClassifiedMutationTouchesPiece(ev: KitClassifiedMutationEvent, desig
   if ("fixedPiecesFlatCenter" in ev && ev.fixedPiecesFlatCenter.designId === designId && ev.fixedPiecesFlatCenter.pieceIds.includes(pieceId))
     return true;
   if ("changedDesignCommands" in ev && ev.changedDesignCommands.designId === designId) {
-    return jsonSubtreeHasIdKey(ev.changedDesignCommands.change as unknown, "pieceId", pieceId);
+    return jsonSubtreeHasIdKey(ev.changedDesignCommands.change, "pieceId", pieceId);
   }
-  if ("changedKit" in ev && kitChangeWireTouchesDesignId(ev.changedKit.change, designId)) {
-    return jsonSubtreeHasIdKey(ev.changedKit.change as unknown, "pieceId", pieceId);
+  if ("changedKit" in ev && kitChangeTouchesDesignId(ev.changedKit.change, designId)) {
+    return jsonSubtreeHasIdKey(ev.changedKit.change, "pieceId", pieceId);
   }
   return false;
 }
@@ -2804,7 +2834,7 @@ function kitClassifiedMutationTouchesPiece(ev: KitClassifiedMutationEvent, desig
 function kitClassifiedMutationTouchesConnection(ev: KitClassifiedMutationEvent, designId: string, connectionId: string): boolean {
   if ("deletedConnection" in ev && ev.deletedConnection.designId === designId && ev.deletedConnection.connectionId === connectionId) return true;
   if (kitClassifiedMutationTouchesDesign(ev, designId) && "changedKit" in ev) {
-    return jsonSubtreeHasIdKey(ev.changedKit.change as unknown, "connectionId", connectionId);
+    return jsonSubtreeHasIdKey(ev.changedKit.change, "connectionId", connectionId);
   }
   return false;
 }
@@ -2819,7 +2849,7 @@ function jsonSubtreeHasIdKey(raw: unknown, key: string, id: string): boolean {
     return false;
   }
   if (typeof raw === "object") {
-    const o = raw as Record<string, unknown>;
+    const o = raw as { readonly [k: string]: unknown };
     const v = o[key];
     if (typeof v === "string" && v === id) return true;
     for (const k of Object.keys(o)) if (jsonSubtreeHasIdKey(o[k], key, id)) return true;
@@ -2844,8 +2874,8 @@ export function kitEventTouchesDesignStrict(ev: KitEvent, designId: string): boo
 /** @emoji 🧭 Whether a subscription {@link KitEvent} likely concerns the given design (includes kit-wide invalidations). */
 export function kitEventTouchesDesign(ev: KitEvent, designId: string): boolean {
   if (designId === "") return false;
-  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
-  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
+  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: null }).ValidationInvalidated === null) return true;
   const fi = (ev as { FlattenInvalidated?: { design?: string; pieces?: unknown } }).FlattenInvalidated;
   if (fi && typeof fi.design === "string" && fi.design === designId) return true;
   return kitEventTouchesDesignStrict(ev, designId);
@@ -2868,8 +2898,8 @@ export function kitEventTouchesTypeStrict(ev: KitEvent, typeId: string): boolean
 /** @emoji 🧭 Whether a subscription {@link KitEvent} likely concerns the given kind id. */
 export function kitEventTouchesType(ev: KitEvent, typeId: string): boolean {
   if (typeId === "") return false;
-  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
-  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
+  if ("ValidationInvalidated" in ev && (ev as { ValidationInvalidated?: null }).ValidationInvalidated === null) return true;
   return kitEventTouchesTypeStrict(ev, typeId);
 }
 
@@ -2904,7 +2934,7 @@ export function kitEventTouchesConnection(ev: KitEvent, designId: string, connec
 /** @emoji 🧭 Family / file / folder entity filters (ChildAdded paths + id fields). */
 export function kitEventTouchesFamily(ev: KitEvent, familyId: string): boolean {
   if (familyId === "") return false;
-  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
   const f = (ev as { Family?: { family_id?: string } }).Family;
   if (f && typeof f.family_id === "string" && f.family_id === familyId) return true;
   if (jsonSubtreeHasIdKey(ev, "family_id", familyId)) return true;
@@ -2913,7 +2943,7 @@ export function kitEventTouchesFamily(ev: KitEvent, familyId: string): boolean {
 
 export function kitEventTouchesFile(ev: KitEvent, fileId: string): boolean {
   if (fileId === "") return false;
-  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
   const f = (ev as { File?: { file_id?: string } }).File;
   if (f && typeof f.file_id === "string" && f.file_id === fileId) return true;
   if (jsonSubtreeHasIdKey(ev, "file_id", fileId)) return true;
@@ -2922,7 +2952,7 @@ export function kitEventTouchesFile(ev: KitEvent, fileId: string): boolean {
 
 export function kitEventTouchesFolder(ev: KitEvent, folderId: string): boolean {
   if (folderId === "") return false;
-  if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) return true;
+  if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) return true;
   const f = (ev as { Folder?: { folder_id?: string } }).Folder;
   if (f && typeof f.folder_id === "string" && f.folder_id === folderId) return true;
   if (jsonSubtreeHasIdKey(ev, "folder_id", folderId)) return true;
@@ -2942,11 +2972,11 @@ export type WriteStatus =
   | { kind: "error"; pending: 0; lastError?: SetError };
 
 /** @emoji 🧾 Sketchpad string-command context/result (opaque JSON). */
-export type KitCommandContext = Record<string, unknown>;
-export type KitCommandResult = Record<string, unknown>;
+export type KitCommandContext = JsonObject;
+export type KitCommandResult = JsonObject;
 
 /** @emoji 🧾 Typed kit mutation envelope for React facades (`kitStore.batch` transaction `changeKitCommands`). */
-type KitTypedChangeKitCommandsBatch = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommandWire[] };
+type KitTypedChangeKitCommandsBatch = { readonly kind: "changeKitCommands"; readonly commands: readonly ChangeKitCommand[] };
 
 /** @emoji 🧾 Typed `changeKitCommands` batch facade for React (opaque to string command routers). */
 export type SemioKitCommandFacade = { runMutation(cmd: KitTypedChangeKitCommandsBatch): Promise<SetResult> };
@@ -2956,6 +2986,9 @@ export type KitStoreReadSnap = { readonly version: number; readonly data: unknow
 export type KitDesignReadKind = "metadata" | "pieces" | "connections";
 export type KitShallowListKind = "designs" | "types" | "authors";
 export type KitViewCatalogKey = "typeIds" | "typesMetadata" | "designIds" | "designsMetadata";
+
+/** @emoji 🧾 Minimal async bridge for pulling authoritative kit JSON into a {@link KitHostStore}. */
+export type SemioKitBridge = { fetchFullKit(): Promise<KitFullDto> };
 
 /** @emoji 🧾 Browser / test kit RPC surface used by React hooks (wraps {@link KitStore}). */
 export type KitStoreClient = SemioKitBridge & {
@@ -2971,7 +3004,7 @@ export type KitStoreClient = SemioKitBridge & {
   expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
   deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
   changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
-  pasteDesignSelection(designId: string, selection: SemioKitWireTreeDto, plane: PlanePlain | null): Promise<SetResult>;
+  pasteDesignSelection(designId: string, selection: KitJsonTreeDto, plane: PlanePlain | null): Promise<SetResult>;
   createHangingPieces(designId: string, typeIds: readonly string[], plane: PlanePlain): Promise<SetResult>;
   createConnectedPiece(
     designId: string,
@@ -2981,18 +3014,18 @@ export type KitStoreClient = SemioKitBridge & {
     childPort: string,
   ): Promise<SetResult>;
   createFixedPiece(designId: string, typeId: string, plane: PlanePlain): Promise<SetResult>;
-  submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult>;
+  submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult>;
   undo(): Promise<SetResult>;
   redo(): Promise<SetResult>;
   canUndo(): Promise<boolean>;
   canRedo(): Promise<boolean>;
-  getPiecesMetadata(designId: string): Promise<ReadonlyMap<string, PiecePlacementRowWireDto>>;
+  getPiecesMetadata(designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>>;
   getPieces(designId: string): Promise<readonly PiecePlain[]>;
   getConnections(designId: string): Promise<readonly ConnectionPlain[]>;
   getDesigns(): Promise<readonly DesignShallow[]>;
   getTypes(): Promise<readonly TypeShallow[]>;
   getAuthors(): Promise<readonly AuthorMetadataDto[]>;
-  getKitMetadata(): Promise<KitCatalogKitMetadataWireDto | null>;
+  getKitMetadata(): Promise<KitMetadataDto | null>;
   backboneStatus(): Promise<BackboneStatusDto>;
   attachBackbone(cfg: BackboneConfig): Promise<SetResult>;
   detachBackbone(): Promise<SetResult>;
@@ -3004,11 +3037,11 @@ export type KitStoreClient = SemioKitBridge & {
   readPieceFlatPlane(designId: string, pieceId: string): Promise<PlanePlain | null>;
   readPieceFlatCenter(designId: string, pieceId: string): Promise<CoordinatePlain | null>;
   readPieceParentConnectionFull(designId: string, pieceId: string): Promise<ConnectionPlain | null>;
-  readDesignIncludedDesigns(designId: string): Promise<readonly DesignIncludedDesignWireDto[]>;
-  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<readonly (readonly KitIdWire[])[]>;
+  readDesignIncludedDesigns(designId: string): Promise<readonly IncludedDesignInfoDto[]>;
+  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]>;
   readDesignQualitySum(designId: string, qualityId: string): Promise<number>;
   readTypeBestRepresentation(typeId: string, tagIds: readonly string[]): Promise<RepresentationPlain | null>;
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowWireDto[]>;
+  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]>;
   readDesignReplaceableCatalogTypes(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignReplaceableCatalogDesigns(designId: string, selection: readonly string[]): Promise<readonly string[]>;
   readDesignIncludedDesignIds(designId: string): Promise<readonly string[]>;
@@ -3023,18 +3056,18 @@ export type KitStoreClient = SemioKitBridge & {
 
 function firstDesignPieceResult(out: readonly unknown[], cmdKey: string): unknown {
   const row = out[0] as { readKitDesignCommands?: { results?: readonly unknown[] } };
-  const r0 = row.readKitDesignCommands?.results?.[0] as Record<string, unknown> | undefined;
+  const r0 = row.readKitDesignCommands?.results?.[0] as JsonObject | undefined;
   if (!r0) return undefined;
   const inner = r0.readDesignPieceCommands as { results?: readonly unknown[] } | undefined;
-  const p0 = inner?.results?.[0] as Record<string, unknown> | undefined;
+  const p0 = inner?.results?.[0] as JsonObject | undefined;
   if (!p0) return undefined;
-  const block = p0[cmdKey] as Record<string, unknown> | undefined;
+  const block = p0[cmdKey] as JsonObject | undefined;
   return block;
 }
 
 function firstDesignResult(out: readonly unknown[], cmdKey: string): unknown {
   const row = out[0] as { readKitDesignCommands?: { results?: readonly unknown[] } };
-  const r0 = row.readKitDesignCommands?.results?.[0] as Record<string, unknown> | undefined;
+  const r0 = row.readKitDesignCommands?.results?.[0] as JsonObject | undefined;
   if (!r0) return undefined;
   return r0[cmdKey];
 }
@@ -3062,7 +3095,7 @@ export class LiveKitRoot {
     return new LiveType(this.ks, this.readScope, typeId);
   }
 
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowWireDto[]> {
+  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
     return this.ks.read(this.readScope, [{ readKitColoredConnectorsCommand: null }]).then((out) => {
       const row = out[0];
       if (row && "readKitColoredConnectorsCommand" in row) return row.readKitColoredConnectorsCommand.rows;
@@ -3079,8 +3112,8 @@ class LivePiece {
     private readonly pieceId: string,
   ) {}
 
-  private run(cmd: ReadPieceCommand): Promise<ReadWireBatchResult> {
-    const batch: ReadWireBatch = [
+  private run(cmd: ReadPieceCommand): Promise<ReadBatchResult> {
+    const batch: ReadBatch = [
       {
         readKitDesignCommands: {
           id: { id: this.designId },
@@ -3120,23 +3153,23 @@ class LiveDesign {
     private readonly designId: string,
   ) {}
 
-  private run(cmd: ReadDesignCommand): Promise<ReadWireBatchResult> {
+  private run(cmd: ReadDesignCommand): Promise<ReadBatchResult> {
     return this.ks.read(this.readScope, [{ readKitDesignCommands: { id: { id: this.designId }, commands: [cmd] } }]);
   }
 
-  readIncludedDesigns(): Promise<readonly DesignIncludedDesignWireDto[]> {
+  readIncludedDesigns(): Promise<readonly IncludedDesignInfoDto[]> {
     return this.run({ readDesignIncludedDesignsCommand: null }).then((out) => {
-      const blk = firstDesignResult(out, "readDesignIncludedDesignsCommand") as { designs?: readonly DesignIncludedDesignWireDto[] } | undefined;
+      const blk = firstDesignResult(out, "readDesignIncludedDesignsCommand") as { designs?: readonly IncludedDesignInfoDto[] } | undefined;
       return blk?.designs ?? [];
     });
   }
 
-  readClusterableGroups(selection: readonly string[]): Promise<readonly (readonly KitIdWire[])[]> {
+  readClusterableGroups(selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]> {
     const cmd: ReadDesignCommand = {
       readDesignClusterableGroupsCommand: { selection: selection.map((id) => ({ id })) },
     };
     return this.run(cmd).then((out) => {
-      const blk = firstDesignResult(out, "readDesignClusterableGroupsCommand") as { groups?: readonly (readonly KitIdWire[])[] } | undefined;
+      const blk = firstDesignResult(out, "readDesignClusterableGroupsCommand") as { groups?: readonly (readonly KitIdDto[])[] } | undefined;
       return blk?.groups ?? [];
     });
   }
@@ -3202,241 +3235,26 @@ class LiveType {
 // #endregion 📦LiveKitRoot
 
 // #region 🪜LiveReadHub
-
-/** 🧾 Default {@link SemioKitLiveReadStore#getSnapshot} when a key has not polled yet (stable ref for React). */
-const SEMIO_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
-  version: 0,
-  data: Object.freeze([]) as readonly unknown[],
-  pending: 0,
-}) as KitStoreReadSnap;
-
-export class SemioKitLiveReadStore {
-  private readonly snap = new Map<string, KitStoreReadSnap>();
-  private readonly regs: Array<{
-    key: string;
-    fetch: () => Promise<unknown>;
-    affects: (ev: unknown) => boolean;
-    onChange: () => void;
-  }> = [];
-  private off: (() => void) | undefined;
-
-  constructor(private readonly client: KitStoreClient) {
-    this.off = client.subscribe((ev) => {
-      for (const r of this.regs) {
-        if (r.affects(ev)) void this.poll(r);
-      }
-    });
-  }
-
-  subscribe(key: string, fetch: () => Promise<unknown>, affects: (ev: unknown) => boolean, onChange: () => void): () => void {
-    const r = { key, fetch, affects, onChange };
-    this.regs.push(r);
-    void this.poll(r);
-    return () => {
-      this.regs.splice(this.regs.indexOf(r), 1);
-    };
-  }
-
-  getSnapshot(key: string): KitStoreReadSnap {
-    return this.snap.get(key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
-  }
-
-  private async poll(r: { key: string; fetch: () => Promise<unknown>; onChange: () => void }): Promise<void> {
-    const cur = this.snap.get(r.key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
-    this.snap.set(r.key, { version: cur.version, data: cur.data, pending: cur.pending + 1 });
-    r.onChange();
-    try {
-      const data = await r.fetch();
-      this.snap.set(r.key, { version: cur.version + 1, data, pending: 0 });
-      r.onChange();
-    } catch {
-      this.snap.set(r.key, { version: cur.version, data: cur.data, pending: 0 });
-      r.onChange();
-    }
-  }
-
-  dispose(): void {
-    this.off?.();
-    this.off = undefined;
-    this.regs.length = 0;
-    this.snap.clear();
-  }
-}
-
-const liveReadHubs = new WeakMap<KitStoreClient, SemioKitLiveReadStore>();
-
-export function getSemioKitLiveReadStore(c: KitStoreClient): SemioKitLiveReadStore {
-  let h = liveReadHubs.get(c);
-  if (!h) {
-    h = new SemioKitLiveReadStore(c);
-    liveReadHubs.set(c, h);
-  }
-  return h;
-}
-
+/** @emoji 🧾 Live-read external stores (`useSyncExternalStore`) are implemented in `@semio/react` so `semio/js` holds no derived read caches. */
 // #endregion 🪜LiveReadHub
-
-// #region 🪜KitViewStores
-
-export class SemioKitViewStore {
-  constructor(private readonly client: KitStoreClient) {}
-
-  subscribe(_key: KitViewCatalogKey, onChange: () => void): () => void {
-    return this.client.subscribe(() => onChange());
-  }
-
-  getSnapshot(key: KitViewCatalogKey): unknown {
-    const dto = this.client.getDto();
-    if (key === "typeIds") return (dto.types ?? []).map((t) => String(t.id ?? ""));
-    if (key === "designIds") return (dto.designs ?? []).map((d) => String(d.id ?? ""));
-    if (key === "typesMetadata") return (dto.types ?? []).map((t) => ({ id: t.id, name: t.name }));
-    if (key === "designsMetadata") return (dto.designs ?? []).map((d) => ({ id: d.id, name: d.name }));
-    return [];
-  }
-}
-
-const viewStores = new WeakMap<KitStoreClient, SemioKitViewStore>();
-
-export function getSemioKitViewStore(c: KitStoreClient): SemioKitViewStore {
-  let v = viewStores.get(c);
-  if (!v) {
-    v = new SemioKitViewStore(c);
-    viewStores.set(c, v);
-  }
-  return v;
-}
-
-/** 🧾 Stable empty design-read snapshots for {@link SemioKitDesignReadStore}. */
-const SEMIO_KIT_DESIGN_READ_EMPTY_LIST: KitStoreReadSnap = Object.freeze({
-  version: 0,
-  data: Object.freeze([]) as readonly unknown[],
-  pending: 0,
-}) as KitStoreReadSnap;
-const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
-  version: 0,
-  data: Object.freeze({}) as unknown,
-  pending: 0,
-}) as KitStoreReadSnap;
-
-export class SemioKitDesignReadStore {
-  private snapCache: { k: string; snap: KitStoreReadSnap } | null = null;
-
-  constructor(private readonly client: KitStoreClient) {}
-
-  subscribe(_designId: string, _field: KitDesignReadKind, onChange: () => void): () => void {
-    return this.client.subscribe(() => {
-      this.snapCache = null;
-      onChange();
-    });
-  }
-
-  getSnapshot(designId: string, field: KitDesignReadKind): KitStoreReadSnap {
-    const dto = (this.client as WasmKitStoreClient).getDto() as {
-      designs?: readonly { id?: string; pieces?: readonly unknown[]; connections?: readonly unknown[] }[];
-    };
-    const d = (dto.designs ?? []).find((x) => String(x.id) === String(designId));
-    if (!d) return field === "metadata" ? SEMIO_KIT_DESIGN_READ_EMPTY_META : SEMIO_KIT_DESIGN_READ_EMPTY_LIST;
-    let body: unknown;
-    if (field === "pieces") {
-      body = [...(d.pieces ?? [])];
-    } else if (field === "connections") {
-      body = [...(d.connections ?? [])];
-    } else {
-      const meta: Record<string, unknown> = {};
-      for (const p of d.pieces ?? []) {
-        if (p && typeof p === "object" && "id" in (p as object)) meta[String((p as { id: string }).id)] = p;
-      }
-      body = meta;
-    }
-    let j: string;
-    try {
-      j = `${designId}\0${field}\0${JSON.stringify(body)}`;
-    } catch {
-      this.snapCache = null;
-      return { version: 0, data: body, pending: 0 };
-    }
-    if (this.snapCache?.k === j) return this.snapCache.snap;
-    const snap: KitStoreReadSnap = { version: 0, data: body, pending: 0 };
-    this.snapCache = { k: j, snap };
-    return snap;
-  }
-}
-
-const designStores = new WeakMap<KitStoreClient, SemioKitDesignReadStore>();
-
-export function getSemioKitDesignReadStore(c: KitStoreClient): SemioKitDesignReadStore {
-  let d = designStores.get(c);
-  if (!d) {
-    d = new SemioKitDesignReadStore(c);
-    designStores.set(c, d);
-  }
-  return d;
-}
-
-export class SemioKitShallowListReadStore {
-  private snapCache: { k: string; snap: KitStoreReadSnap } | null = null;
-
-  constructor(private readonly client: KitStoreClient) {}
-
-  subscribe(_kind: KitShallowListKind, onChange: () => void): () => void {
-    return this.client.subscribe(() => {
-      this.snapCache = null;
-      onChange();
-    });
-  }
-
-  getSnapshot(kind: KitShallowListKind): KitStoreReadSnap {
-    const dto = (this.client as WasmKitStoreClient).getDto() as {
-      designs?: readonly unknown[];
-      types?: readonly unknown[];
-      authors?: readonly unknown[];
-    };
-    const body =
-      kind === "designs" ? [...(dto.designs ?? [])] : kind === "types" ? [...(dto.types ?? [])] : [...(dto.authors ?? [])];
-    let j: string;
-    try {
-      j = `${kind}\0${JSON.stringify(body)}`;
-    } catch {
-      this.snapCache = null;
-      return { version: 0, data: body, pending: 0 };
-    }
-    if (this.snapCache?.k === j) return this.snapCache.snap;
-    const snap: KitStoreReadSnap = { version: 0, data: body, pending: 0 };
-    this.snapCache = { k: j, snap };
-    return snap;
-  }
-}
-
-const shallowStores = new WeakMap<KitStoreClient, SemioKitShallowListReadStore>();
-
-export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShallowListReadStore {
-  let s = shallowStores.get(c);
-  if (!s) {
-    s = new SemioKitShallowListReadStore(c);
-    shallowStores.set(c, s);
-  }
-  return s;
-}
-
-// #endregion 🪜KitViewStores
 
 // #region 🧰EventFilters
 
 /** @emoji 🧭 Any kit graph mutation may flip undo/redo eligibility. */
-export function kitEventAffectsCanUndoRedo(ev: unknown): boolean {
+export function kitEventAffectsCanUndoRedo(ev: KitEvent): boolean {
   void ev;
   return true;
 }
 
 /** @emoji 🧭 Live piece reads invalidate when the piece or its design changes. */
-export function kitEventAffectsPieceLiveRead(ev: unknown, designId?: string, pieceId?: string): boolean {
+export function kitEventAffectsPieceLiveRead(ev: KitEvent, designId?: string, pieceId?: string): boolean {
   if (!designId || !pieceId) return true;
   if (ev == null || typeof ev !== "object") return true;
   return kitEventTouchesPiece(ev as KitEvent, designId, pieceId);
 }
 
 /** @emoji 🧭 Replaceable catalog reads are design-scoped. */
-export function kitEventAffectsReplaceableCatalogRead(ev: unknown, designId?: string, _selection?: ReadonlySet<string>): boolean {
+export function kitEventAffectsReplaceableCatalogRead(ev: KitEvent, designId?: string, _selection?: ReadonlySet<string>): boolean {
   void _selection;
   if (!designId) return true;
   if (ev == null || typeof ev !== "object") return true;
@@ -3444,7 +3262,7 @@ export function kitEventAffectsReplaceableCatalogRead(ev: unknown, designId?: st
 }
 
 /** @emoji 🧭 Design quality sum reads follow design-scoped invalidation. */
-export function kitEventAffectsDesignQualitySumRead(ev: unknown, designId?: string, _qualityId?: string): boolean {
+export function kitEventAffectsDesignQualitySumRead(ev: KitEvent, designId?: string, _qualityId?: string): boolean {
   void _qualityId;
   if (!designId) return true;
   if (ev == null || typeof ev !== "object") return true;
@@ -3452,18 +3270,18 @@ export function kitEventAffectsDesignQualitySumRead(ev: unknown, designId?: stri
 }
 
 /** @emoji 🧭 Type-scoped reads follow kind-scoped invalidation. */
-export function kitEventAffectsTypeScopedRead(ev: unknown, typeId?: string): boolean {
+export function kitEventAffectsTypeScopedRead(ev: KitEvent, typeId?: string): boolean {
   if (!typeId) return true;
   if (ev == null || typeof ev !== "object") return true;
   return kitEventTouchesType(ev as KitEvent, typeId);
 }
 
 /** @emoji 🧭 Colored connector rows are kit-wide; invalidate on broad graph changes. */
-export function kitEventAffectsKitColoredConnectorsRead(ev: unknown): boolean {
+export function kitEventAffectsKitColoredConnectorsRead(ev: KitEvent): boolean {
   if (ev == null || typeof ev !== "object") return true;
   const e = ev as KitEvent;
-  if ("Changed" in e && (e as { Changed?: unknown }).Changed === null) return true;
-  if ("ValidationInvalidated" in e && (e as { ValidationInvalidated?: unknown }).ValidationInvalidated === null) return true;
+  if ("Changed" in e && (e as { Changed?: null }).Changed === null) return true;
+  if ("ValidationInvalidated" in e && (e as { ValidationInvalidated?: null }).ValidationInvalidated === null) return true;
   return true;
 }
 
@@ -3474,8 +3292,7 @@ export function kitEventAffectsKitColoredConnectorsRead(ev: unknown): boolean {
 export class WasmKitStoreClient implements KitStoreClient {
   private readonly listeners = new Set<(ev: KitEvent) => void>();
   private readonly offKit: () => void;
-  private lastDto = { id: "", name: "" } as KitFullDto;
-  /** @emoji 🧭 Active read scope for {@link getPieces} / view-store DTO materialization. */
+  /** @emoji 🧭 Active read scope for {@link getPieces} and {@link fetchFullKit}. */
   kitReadScope: KitReadScope = theKitReadScope;
 
   constructor(
@@ -3484,26 +3301,14 @@ export class WasmKitStoreClient implements KitStoreClient {
   ) {
     this.kitReadScope = readScope;
     this.offKit = this.ks.subscribe((ev: KitEvent) => {
-      void this.refreshDtoFromStore();
       for (const l of this.listeners) l(ev);
     });
-    void this.refreshDtoFromStore();
   }
 
   setKitReadScope(scope: KitReadScope): void {
     this.kitReadScope = scope;
-    void this.refreshDtoFromStore().then(() => {
-      const ev = { Changed: null } as KitEvent;
-      for (const l of this.listeners) l(ev);
-    });
-  }
-
-  private async refreshDtoFromStore(): Promise<void> {
-    try {
-      this.lastDto = await this.ks.materializedLiveJsonForReadScope(this.kitReadScope);
-    } catch {
-      /* ignore */
-    }
+    const ev = { Changed: null } as KitEvent;
+    for (const l of this.listeners) l(ev);
   }
 
   /** @internal For read-store adapters. */
@@ -3511,14 +3316,9 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks;
   }
 
-  getDto(): KitFullDto {
-    return this.lastDto;
-  }
-
-  async getSnapshot(): Promise<KitFullDto> {
-    const s = await this.ks.materializedLiveJsonForReadScope(this.kitReadScope);
-    this.lastDto = s;
-    return s;
+  /** @emoji 🧾 Authoritative full kit from `semio/rs` via GraphQL (no local DTO cache). */
+  fetchFullKit(): Promise<KitFullDto> {
+    return this.ks.materializedLiveJsonForReadScope(this.kitReadScope);
   }
 
   subscribe(cb: (ev: KitEvent) => void): () => void {
@@ -3566,11 +3366,11 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.piece(designId, pieceId, this.kitReadScope).readParentConnectionFull();
   }
 
-  readDesignIncludedDesigns(designId: string): Promise<readonly DesignIncludedDesignWireDto[]> {
+  readDesignIncludedDesigns(designId: string): Promise<readonly IncludedDesignInfoDto[]> {
     return this.ks.design(designId, this.kitReadScope).readIncludedDesigns();
   }
 
-  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<readonly (readonly KitIdWire[])[]> {
+  readDesignClusterableGroups(designId: string, selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]> {
     return this.ks.design(designId, this.kitReadScope).readClusterableGroups(selection);
   }
 
@@ -3582,7 +3382,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.type(typeId, this.kitReadScope).readBestRepresentation(tagIds);
   }
 
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowWireDto[]> {
+  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
     return new LiveKitRoot(this.ks, this.kitReadScope).readColoredConnectors();
   }
 
@@ -3598,7 +3398,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.design(designId, this.kitReadScope).readIncludedDesignIds();
   }
 
-  submitChangeKitCommands(commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+  submitChangeKitCommands(commands: readonly ChangeKitCommand[]): Promise<SetResult> {
     return this.ks.submitChangeKitCommands(commands);
   }
 
@@ -3634,7 +3434,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.changePieceType(designId, pieceId, newTypeId);
   }
 
-  pasteDesignSelection(designId: string, selection: SemioKitWireTreeDto, plane: PlanePlain | null): Promise<SetResult> {
+  pasteDesignSelection(designId: string, selection: KitJsonTreeDto, plane: PlanePlain | null): Promise<SetResult> {
     return this.ks.pasteDesignSelection(designId, selection, plane);
   }
 
@@ -3672,7 +3472,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.canRedo();
   }
 
-  getPiecesMetadata(designId: string): Promise<ReadonlyMap<string, PiecePlacementRowWireDto>> {
+  getPiecesMetadata(designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     return this.ks.getPiecesMetadata(this.kitReadScope, designId);
   }
 
@@ -3696,7 +3496,7 @@ export class WasmKitStoreClient implements KitStoreClient {
     return this.ks.getAuthors(this.kitReadScope);
   }
 
-  getKitMetadata(): Promise<KitCatalogKitMetadataWireDto | null> {
+  getKitMetadata(): Promise<KitMetadataDto | null> {
     return this.ks.getKitMetadata(this.kitReadScope);
   }
 
@@ -3734,14 +3534,17 @@ export function kitStoreFromKitStoreClient(client: KitStoreClient): KitStore | n
 
 class FallbackKitClient implements KitStoreClient {
   private readonly listeners = new Set<(ev: KitEvent) => void>();
-  constructor(private readonly kit: KitFullDto) {}
-
-  getDto(): KitFullDto {
-    return this.kit;
+  /** @emoji 🧭 Read scope label for host hooks (offline client has no live {@link KitStore}). */
+  readonly kitReadScope: KitReadScope;
+  constructor(
+    private readonly kit: KitFullDto,
+    readScope: KitReadScope = theKitReadScope,
+  ) {
+    this.kitReadScope = readScope;
   }
 
-  async getSnapshot(): Promise<KitFullDto> {
-    return this.getDto();
+  fetchFullKit(): Promise<KitFullDto> {
+    return Promise.resolve(this.kit);
   }
 
   subscribe(cb: (ev: KitEvent) => void): () => void {
@@ -3779,11 +3582,11 @@ class FallbackKitClient implements KitStoreClient {
     void _pieceId;
     return Promise.resolve(null);
   }
-  readDesignIncludedDesigns(_designId: string): Promise<readonly DesignIncludedDesignWireDto[]> {
+  readDesignIncludedDesigns(_designId: string): Promise<readonly IncludedDesignInfoDto[]> {
     void _designId;
     return Promise.resolve([]);
   }
-  readDesignClusterableGroups(_designId: string, _selection: readonly string[]): Promise<readonly (readonly KitIdWire[])[]> {
+  readDesignClusterableGroups(_designId: string, _selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]> {
     void _designId;
     void _selection;
     return Promise.resolve([]);
@@ -3798,7 +3601,7 @@ class FallbackKitClient implements KitStoreClient {
     void _tagIds;
     return Promise.resolve(null);
   }
-  readColoredConnectors(): Promise<readonly KitColoredConnectorRowWireDto[]> {
+  readColoredConnectors(): Promise<readonly KitColoredConnectorRowDto[]> {
     return Promise.resolve([]);
   }
   readDesignReplaceableCatalogTypes(_designId: string, _selection: readonly string[]): Promise<readonly string[]> {
@@ -3816,7 +3619,7 @@ class FallbackKitClient implements KitStoreClient {
     return Promise.resolve([]);
   }
 
-  async submitChangeKitCommands(_commands: readonly ChangeKitCommandWire[]): Promise<SetResult> {
+  async submitChangeKitCommands(_commands: readonly ChangeKitCommand[]): Promise<SetResult> {
     void _commands;
     this.notify();
     return { ok: true };
@@ -3876,7 +3679,7 @@ class FallbackKitClient implements KitStoreClient {
     this.notify();
     return { ok: true };
   }
-  async pasteDesignSelection(_designId: string, _selection: SemioKitWireTreeDto, _plane: PlanePlain | null): Promise<SetResult> {
+  async pasteDesignSelection(_designId: string, _selection: KitJsonTreeDto, _plane: PlanePlain | null): Promise<SetResult> {
     void _designId;
     void _selection;
     void _plane;
@@ -3926,7 +3729,7 @@ class FallbackKitClient implements KitStoreClient {
   async canRedo(): Promise<boolean> {
     return false;
   }
-  async getPiecesMetadata(_designId: string): Promise<ReadonlyMap<string, PiecePlacementRowWireDto>> {
+  async getPiecesMetadata(_designId: string): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     void _designId;
     return new Map();
   }
@@ -3947,7 +3750,7 @@ class FallbackKitClient implements KitStoreClient {
   async getAuthors(): Promise<readonly AuthorMetadataDto[]> {
     return [];
   }
-  async getKitMetadata(): Promise<KitCatalogKitMetadataWireDto | null> {
+  async getKitMetadata(): Promise<KitMetadataDto | null> {
     return null;
   }
   async backboneStatus(): Promise<BackboneStatusDto> {
@@ -4001,7 +3804,7 @@ export async function createKitStoreClient(opts: { initialKit: KitFullDto; force
   if (opts.forceFallback) return new FallbackKitClient(opts.initialKit);
   const ks = await KitStore.open(opts.initialKit);
   const c = new WasmKitStoreClient(ks, opts.readScope);
-  await c.getSnapshot();
+  await c.fetchFullKit();
   return c;
 }
 
@@ -4069,28 +3872,28 @@ export type Id = string;
 // #region Entity IDs
 // Entity identifier types and comparison functions MUST be defined here.
 
-export type AttributeId = { id: Id };
-export type LocationId = { id: Id };
-export type AuthorId = { id: Id };
-export type FileId = { id: Id };
-export type FolderId = { id: Id };
-export type BenchmarkId = { id: Id };
-export type QualityId = { id: Id };
-export type PortId = { id: Id };
-export type PropId = { id: Id };
-export type RepresentationId = { id: Id };
-export type ConnectorId = { id: Id };
-export type TypeId = { id: Id };
-export type LayerId = { id: Id };
-export type PieceId = { id: Id };
-export type GroupId = { id: Id };
-export type ConnectionId = { id: Id };
-export type StatId = { id: Id };
-export type DesignId = { id: Id };
-export type KitId = { id: Id };
-export type TagId = { id: Id };
-export type ConceptId = { id: Id };
-export type FamilyId = { id: Id };
+export type AttributeIdDto = Readonly<{ readonly id: Id }>;
+export type LocationIdDto = Readonly<{ readonly id: Id }>;
+export type AuthorIdDto = Readonly<{ readonly id: Id }>;
+export type FileIdDto = Readonly<{ readonly id: Id }>;
+export type FolderIdDto = Readonly<{ readonly id: Id }>;
+export type BenchmarkIdDto = Readonly<{ readonly id: Id }>;
+export type QualityIdDto = Readonly<{ readonly id: Id }>;
+export type PortIdDto = Readonly<{ readonly id: Id }>;
+export type PropIdDto = Readonly<{ readonly id: Id }>;
+export type RepresentationIdDto = Readonly<{ readonly id: Id }>;
+export type ConnectorIdDto = Readonly<{ readonly id: Id }>;
+export type TypeIdDto = Readonly<{ readonly id: Id }>;
+export type LayerIdDto = Readonly<{ readonly id: Id }>;
+export type PieceIdDto = Readonly<{ readonly id: Id }>;
+export type GroupIdDto = Readonly<{ readonly id: Id }>;
+export type ConnectionIdDto = Readonly<{ readonly id: Id }>;
+export type StatIdDto = Readonly<{ readonly id: Id }>;
+export type DesignIdDto = Readonly<{ readonly id: Id }>;
+export type KitIdDto = Readonly<{ readonly id: Id }>;
+export type TagIdDto = Readonly<{ readonly id: Id }>;
+export type ConceptIdDto = Readonly<{ readonly id: Id }>;
+export type FamilyIdDto = Readonly<{ readonly id: Id }>;
 
 export const AttributeIdSchema = z.object({ id: z.string() });
 export const LocationIdSchema = z.object({ id: z.string() });
@@ -4131,7 +3934,7 @@ export class Coordinate implements CoordinatePlain {
     Object.assign(this, CoordinateSchema.parse(plain));
   }
   static from(plain: CoordinatePlain): Coordinate { return new Coordinate(plain); }
-  toPlain(): CoordinatePlain { return CoordinateSchema.parse(this as unknown as CoordinatePlain); }
+  toPlain(): CoordinatePlain { return CoordinateSchema.parse(this as CoordinatePlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Coordinate { return new Coordinate(CoordinateSchema.parse(JSON.parse(json))); }
 }
@@ -4148,7 +3951,7 @@ export class Vec implements VecPlain {
   constructor(plain: VecPlain) { Object.assign(this, VecSchema.parse(plain)); }
   static from(plain: VecPlain): Vec { return new Vec(plain); }
   static fromPlain(plain: VecPlain): Vec { return new Vec(plain); }
-  toPlain(): VecPlain { return VecSchema.parse(this as unknown as VecPlain); }
+  toPlain(): VecPlain { return VecSchema.parse(this as VecPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Vec { return new Vec(VecSchema.parse(JSON.parse(json))); }
 }
@@ -4166,7 +3969,7 @@ export class Point implements PointPlain {
   constructor(plain: PointPlain) { Object.assign(this, PointSchema.parse(plain)); }
   static from(plain: PointPlain): Point { return new Point(plain); }
   static fromPlain(plain: PointPlain): Point { return new Point(plain); }
-  toPlain(): PointPlain { return PointSchema.parse(this as unknown as PointPlain); }
+  toPlain(): PointPlain { return PointSchema.parse(this as PointPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Point { return new Point(PointSchema.parse(JSON.parse(json))); }
 }
@@ -4184,7 +3987,7 @@ export class Vector implements VectorPlain {
   constructor(plain: VectorPlain) { Object.assign(this, VectorSchema.parse(plain)); }
   static from(plain: VectorPlain): Vector { return new Vector(plain); }
   static fromPlain(plain: VectorPlain): Vector { return new Vector(plain); }
-  toPlain(): VectorPlain { return VectorSchema.parse(this as unknown as VectorPlain); }
+  toPlain(): VectorPlain { return VectorSchema.parse(this as VectorPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Vector { return new Vector(VectorSchema.parse(JSON.parse(json))); }
 }
@@ -4207,7 +4010,7 @@ export class Plane implements PlanePlain {
   }
   static from(plain: PlanePlain): Plane { return new Plane(plain); }
   static fromPlain(plain: PlanePlain): Plane { return new Plane(plain); }
-  toPlain(): PlanePlain { return PlaneSchema.parse(this as unknown as PlanePlain); }
+  toPlain(): PlanePlain { return PlaneSchema.parse(this as PlanePlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Plane { return new Plane(PlaneSchema.parse(JSON.parse(json))); }
   // Removed: averageWith, average, rounded — geometry computation moved to semio/rs (Requirement 1.14)
@@ -4232,7 +4035,7 @@ export class Camera implements CameraPlain {
   }
   static from(plain: CameraPlain): Camera { return new Camera(plain); }
   static fromPlain(plain: CameraPlain): Camera { return new Camera(plain); }
-  toPlain(): CameraPlain { return CameraSchema.parse(this as unknown as CameraPlain); }
+  toPlain(): CameraPlain { return CameraSchema.parse(this as CameraPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Camera { return new Camera(CameraSchema.parse(JSON.parse(json))); }
 }
@@ -4252,9 +4055,9 @@ export class Attribute implements AttributePlain {
   constructor(plain: AttributePlain) { Object.assign(this, AttributeSchema.parse(plain)); }
   static from(plain: AttributePlain): Attribute { return new Attribute(plain); }
   static fromPlain(plain: AttributePlain): Attribute { return new Attribute(plain); }
-  static createId(id: string): AttributeId { return { id }; }
-  static areSameId(a: AttributeId, b: AttributeId): boolean { return a.id === b.id; }
-  toPlain(): AttributePlain { return AttributeSchema.parse(this as unknown as AttributePlain); }
+  static createId(id: string): AttributeIdDto { return { id }; }
+  static areSameId(a: AttributeIdDto, b: AttributeIdDto): boolean { return a.id === b.id; }
+  toPlain(): AttributePlain { return AttributeSchema.parse(this as AttributePlain); }
   toJson(): string { return JSON.stringify(this.toPlain()); }
   static fromJson(json: string): Attribute { return new Attribute(AttributeSchema.parse(JSON.parse(json))); }
 }
@@ -4280,9 +4083,9 @@ export class Location implements LocationPlain {
   constructor(plain: LocationPlain) { const p = LocationSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: LocationPlain): Location { return new Location(plain); }
   static fromPlain(plain: LocationPlain): Location { return new Location(plain); }
-  static createId(id: string): LocationId { return { id }; }
-  static areSameId(a: LocationId, b: LocationId): boolean { return a.id === b.id; }
-  toPlain(): LocationPlain { return LocationSchema.parse(this as unknown as LocationPlain); }
+  static createId(id: string): LocationIdDto { return { id }; }
+  static areSameId(a: LocationIdDto, b: LocationIdDto): boolean { return a.id === b.id; }
+  toPlain(): LocationPlain { return LocationSchema.parse(this as LocationPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Location { return new Location(LocationSchema.parse(JSON.parse(json))); }
 }
@@ -4302,9 +4105,9 @@ export class Author implements AuthorPlain {
   constructor(plain: AuthorPlain) { Object.assign(this, AuthorSchema.parse(plain)); }
   static from(plain: AuthorPlain): Author { return new Author(plain); }
   static fromPlain(plain: AuthorPlain): Author { return new Author(plain); }
-  static createId(id: string): AuthorId { return { id }; }
-  static areSameId(a: AuthorId, b: AuthorId): boolean { return a.id === b.id; }
-  toPlain(): AuthorPlain { return AuthorSchema.parse(this as unknown as AuthorPlain); }
+  static createId(id: string): AuthorIdDto { return { id }; }
+  static areSameId(a: AuthorIdDto, b: AuthorIdDto): boolean { return a.id === b.id; }
+  toPlain(): AuthorPlain { return AuthorSchema.parse(this as AuthorPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Author { return new Author(AuthorSchema.parse(JSON.parse(json))); }
 }
@@ -4350,9 +4153,9 @@ export class File implements FilePlain {
   constructor(plain: FilePlain) { Object.assign(this, FileSchema.parse(plain)); }
   static from(plain: FilePlain): File { return new File(plain); }
   static fromPlain(plain: FilePlain): File { return new File(plain); }
-  static createId(id: string): FileId { return { id }; }
-  static areSameId(a: FileId, b: FileId): boolean { return a.id === b.id; }
-  toPlain(): FilePlain { return FileSchema.parse(this as unknown as FilePlain); }
+  static createId(id: string): FileIdDto { return { id }; }
+  static areSameId(a: FileIdDto, b: FileIdDto): boolean { return a.id === b.id; }
+  toPlain(): FilePlain { return FileSchema.parse(this as FilePlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): File { return new File(FileSchema.parse(JSON.parse(json))); }
 }
@@ -4384,9 +4187,9 @@ export class Folder implements FolderPlain {
   constructor(plain: FolderPlain) { Object.assign(this, FolderSchema.parse(plain)); }
   static from(plain: FolderPlain): Folder { return new Folder(plain); }
   static fromPlain(plain: FolderPlain): Folder { return new Folder(plain); }
-  static createId(id: string): FolderId { return { id }; }
-  static areSameId(a: FolderId, b: FolderId): boolean { return a.id === b.id; }
-  toPlain(): FolderPlain { return FolderSchema.parse(this as unknown as FolderPlain); }
+  static createId(id: string): FolderIdDto { return { id }; }
+  static areSameId(a: FolderIdDto, b: FolderIdDto): boolean { return a.id === b.id; }
+  toPlain(): FolderPlain { return FolderSchema.parse(this as FolderPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Folder { return new Folder(FolderSchema.parse(JSON.parse(json))); }
 }
@@ -4408,9 +4211,9 @@ export class Benchmark implements BenchmarkPlain {
   constructor(plain: BenchmarkPlain) { Object.assign(this, BenchmarkSchema.parse(plain)); }
   static from(plain: BenchmarkPlain): Benchmark { return new Benchmark(plain); }
   static fromPlain(plain: BenchmarkPlain): Benchmark { return new Benchmark(plain); }
-  static createId(id: string): BenchmarkId { return { id }; }
-  static areSameId(a: BenchmarkId, b: BenchmarkId): boolean { return a.id === b.id; }
-  toPlain(): BenchmarkPlain { return BenchmarkSchema.parse(this as unknown as BenchmarkPlain); }
+  static createId(id: string): BenchmarkIdDto { return { id }; }
+  static areSameId(a: BenchmarkIdDto, b: BenchmarkIdDto): boolean { return a.id === b.id; }
+  toPlain(): BenchmarkPlain { return BenchmarkSchema.parse(this as BenchmarkPlain); }
   toJson(): string { return JSON.stringify(this.toPlain()); }
   static fromJson(json: string): Benchmark { return new Benchmark(BenchmarkSchema.parse(JSON.parse(json))); }
 }
@@ -4450,9 +4253,9 @@ export class Quality implements QualityPlain {
   constructor(plain: QualityPlain) { const p = QualitySchema.parse(plain); Object.assign(this, p); this.benchmarks = p.benchmarks?.map((b) => new Benchmark(b)); }
   static from(plain: QualityPlain): Quality { return new Quality(plain); }
   static fromPlain(plain: QualityPlain): Quality { return new Quality(plain); }
-  static createId(id: string): QualityId { return { id }; }
-  static areSameId(a: QualityId, b: QualityId): boolean { return a.id === b.id; }
-  toPlain(): QualityPlain { return QualitySchema.parse(this as unknown as QualityPlain); }
+  static createId(id: string): QualityIdDto { return { id }; }
+  static areSameId(a: QualityIdDto, b: QualityIdDto): boolean { return a.id === b.id; }
+  toPlain(): QualityPlain { return QualitySchema.parse(this as QualityPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Quality { return new Quality(QualitySchema.parse(JSON.parse(json))); }
 }
@@ -4488,21 +4291,21 @@ export class Port implements PortPlain {
   name!: string;
   description?: string;
   icon?: string;
-  compatibleFamilies?: FamilyId[];
+  compatibleFamilies?: FamilyIdDto[];
   mandatory?: boolean;
   t?: number;
   point?: Point;
   direction?: Vector;
-  compatiblePorts?: PortId[];
+  compatiblePorts?: PortIdDto[];
   qualities?: Quality[];
   attributes?: Attribute[];
   maxChildren?: number;
   constructor(plain: PortPlain) { const p = PortSchema.parse(plain); Object.assign(this, p); this.point = p.point ? new Point(p.point) : undefined; this.direction = p.direction ? new Vector(p.direction) : undefined; this.qualities = p.qualities?.map((q) => new Quality(q)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: PortPlain): Port { return new Port(plain); }
   static fromPlain(plain: PortPlain): Port { return new Port(plain); }
-  static createId(id: string): PortId { return { id }; }
-  static areSameId(a: PortId, b: PortId): boolean { return a.id === b.id; }
-  toPlain(): PortPlain { return PortSchema.parse(this as unknown as PortPlain); }
+  static createId(id: string): PortIdDto { return { id }; }
+  static areSameId(a: PortIdDto, b: PortIdDto): boolean { return a.id === b.id; }
+  toPlain(): PortPlain { return PortSchema.parse(this as PortPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Port { return new Port(PortSchema.parse(JSON.parse(json))); }
 }
@@ -4524,9 +4327,9 @@ export class Family implements FamilyPlain {
   constructor(plain: FamilyPlain) { const p = FamilySchema.parse(plain); Object.assign(this, p); this.ports = p.ports?.map((x) => new Port(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: FamilyPlain): Family { return new Family(plain); }
   static fromPlain(plain: FamilyPlain): Family { return new Family(plain); }
-  static createId(id: string): FamilyId { return { id }; }
-  static areSameId(a: FamilyId, b: FamilyId): boolean { return a.id === b.id; }
-  toPlain(): FamilyPlain { return FamilySchema.parse(this as unknown as FamilyPlain); }
+  static createId(id: string): FamilyIdDto { return { id }; }
+  static areSameId(a: FamilyIdDto, b: FamilyIdDto): boolean { return a.id === b.id; }
+  toPlain(): FamilyPlain { return FamilySchema.parse(this as FamilyPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Family { return new Family(FamilySchema.parse(JSON.parse(json))); }
 }
@@ -4550,13 +4353,13 @@ export const PropSchema = z.object({
 });
 export type PropPlain = z.infer<typeof PropSchema>;
 export class Prop implements PropPlain {
-  id!: string; key!: string; value?: string; unit?: string; quality?: QualityId;
+  id!: string; key!: string; value?: string; unit?: string; quality?: QualityIdDto;
   constructor(plain: PropPlain) { Object.assign(this, PropSchema.parse(plain)); }
   static from(plain: PropPlain): Prop { return new Prop(plain); }
   static fromPlain(plain: PropPlain): Prop { return new Prop(plain); }
-  static createId(id: string): PropId { return { id }; }
-  static areSameId(a: PropId, b: PropId): boolean { return a.id === b.id; }
-  toPlain(): PropPlain { return PropSchema.parse(this as unknown as PropPlain); }
+  static createId(id: string): PropIdDto { return { id }; }
+  static areSameId(a: PropIdDto, b: PropIdDto): boolean { return a.id === b.id; }
+  toPlain(): PropPlain { return PropSchema.parse(this as PropPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Prop { return new Prop(PropSchema.parse(JSON.parse(json))); }
 }
@@ -4578,9 +4381,9 @@ export class Tag implements TagPlain {
   constructor(plain: TagPlain) { Object.assign(this, TagSchema.parse(plain)); }
   static from(plain: TagPlain): Tag { return new Tag(plain); }
   static fromPlain(plain: TagPlain): Tag { return new Tag(plain); }
-  static createId(id: string): TagId { return { id }; }
-  static areSameId(a: TagId, b: TagId): boolean { return a.id === b.id; }
-  toPlain(): TagPlain { return TagSchema.parse(this as unknown as TagPlain); }
+  static createId(id: string): TagIdDto { return { id }; }
+  static areSameId(a: TagIdDto, b: TagIdDto): boolean { return a.id === b.id; }
+  toPlain(): TagPlain { return TagSchema.parse(this as TagPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Tag { return new Tag(TagSchema.parse(JSON.parse(json))); }
 }
@@ -4602,9 +4405,9 @@ export class Concept implements ConceptPlain {
   constructor(plain: ConceptPlain) { Object.assign(this, ConceptSchema.parse(plain)); }
   static from(plain: ConceptPlain): Concept { return new Concept(plain); }
   static fromPlain(plain: ConceptPlain): Concept { return new Concept(plain); }
-  static createId(id: string): ConceptId { return { id }; }
-  static areSameId(a: ConceptId, b: ConceptId): boolean { return a.id === b.id; }
-  toPlain(): ConceptPlain { return ConceptSchema.parse(this as unknown as ConceptPlain); }
+  static createId(id: string): ConceptIdDto { return { id }; }
+  static areSameId(a: ConceptIdDto, b: ConceptIdDto): boolean { return a.id === b.id; }
+  toPlain(): ConceptPlain { return ConceptSchema.parse(this as ConceptPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Concept { return new Concept(ConceptSchema.parse(JSON.parse(json))); }
 }
@@ -4622,13 +4425,13 @@ export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
 export const RepresentationSchema = z.object({ id: z.string(), name: z.string().optional(), tags: z.array(TagIdSchema).optional(), file: FileIdSchema, description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
 export type RepresentationPlain = z.infer<typeof RepresentationSchema>;
 export class Representation implements RepresentationPlain {
-  id!: string; name?: string; tags?: TagId[]; file!: FileId; description?: string; attributes?: Attribute[];
+  id!: string; name?: string; tags?: TagIdDto[]; file!: FileIdDto; description?: string; attributes?: Attribute[];
   constructor(plain: RepresentationPlain) { const p = RepresentationSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: RepresentationPlain): Representation { return new Representation(plain); }
   static fromPlain(plain: RepresentationPlain): Representation { return new Representation(plain); }
-  static createId(id: string): RepresentationId { return { id }; }
-  static areSameId(a: RepresentationId, b: RepresentationId): boolean { return a.id === b.id; }
-  toPlain(): RepresentationPlain { return RepresentationSchema.parse(this as unknown as RepresentationPlain); }
+  static createId(id: string): RepresentationIdDto { return { id }; }
+  static areSameId(a: RepresentationIdDto, b: RepresentationIdDto): boolean { return a.id === b.id; }
+  toPlain(): RepresentationPlain { return RepresentationSchema.parse(this as RepresentationPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Representation { return new Representation(RepresentationSchema.parse(JSON.parse(json))); }
 }
@@ -4647,13 +4450,13 @@ export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
 export const ConnectorSchema = z.object({ id: z.string(), name: z.string().optional(), t: z.number(), point: PointSchema, direction: VectorSchema, description: z.string().optional(), port: PortIdSchema.optional(), mandatory: z.boolean().optional(), maxChildren: z.number().int().optional(), props: z.array(PropSchema).optional(), attributes: z.array(AttributeSchema).optional() });
 export type ConnectorPlain = z.infer<typeof ConnectorSchema>;
 export class Connector implements ConnectorPlain {
-  id!: string; name?: string; t!: number; point!: Point; direction!: Vector; description?: string; port?: PortId; mandatory?: boolean; maxChildren?: number; props?: Prop[]; attributes?: Attribute[];
+  id!: string; name?: string; t!: number; point!: Point; direction!: Vector; description?: string; port?: PortIdDto; mandatory?: boolean; maxChildren?: number; props?: Prop[]; attributes?: Attribute[];
   constructor(plain: ConnectorPlain) { const p = ConnectorSchema.parse(plain); Object.assign(this, p); this.point = new Point(p.point); this.direction = new Vector(p.direction); this.props = p.props?.map((x) => new Prop(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: ConnectorPlain): Connector { return new Connector(plain); }
   static fromPlain(plain: ConnectorPlain): Connector { return new Connector(plain); }
-  static createId(id: string): ConnectorId { return { id }; }
-  static areSameId(a: ConnectorId, b: ConnectorId): boolean { return a.id === b.id; }
-  toPlain(): ConnectorPlain { return ConnectorSchema.parse(this as unknown as ConnectorPlain); }
+  static createId(id: string): ConnectorIdDto { return { id }; }
+  static areSameId(a: ConnectorIdDto, b: ConnectorIdDto): boolean { return a.id === b.id; }
+  toPlain(): ConnectorPlain { return ConnectorSchema.parse(this as ConnectorPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Connector { return new Connector(ConnectorSchema.parse(JSON.parse(json))); }
 }
@@ -4703,7 +4506,7 @@ export class Type {
   id!: string;
   name!: string;
   parent?: { id: string };
-  families?: FamilyId[];
+  families?: FamilyIdDto[];
   isAbstract?: boolean;
   folder?: string;
   representations?: Representation[];
@@ -4714,9 +4517,9 @@ export class Type {
   unit?: string;
   createdAt?: string;
   updatedAt?: string;
-  location?: LocationId;
-  authors?: AuthorId[];
-  concepts?: ConceptId[];
+  location?: LocationIdDto;
+  authors?: AuthorIdDto[];
+  concepts?: ConceptIdDto[];
   icon?: string;
   image?: string;
   description?: string;
@@ -4730,9 +4533,9 @@ export class Type {
   static fromPlain(plain: TypePlain): Type { return new Type(plain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Type { return Type.fromPlain(TypeSchema.parse(JSON.parse(json))); }
-  toPlain(): TypePlain { return TypeSchema.parse({ ...(this as unknown as TypePlain) }); }
-  static createId(id: string): TypeId { return { id }; }
-  static areSameId(a: TypeId, b: TypeId): boolean { return a.id === b.id; }
+  toPlain(): TypePlain { return TypeSchema.parse({ ...(this as TypePlain) }); }
+  static createId(id: string): TypeIdDto { return { id }; }
+  static areSameId(a: TypeIdDto, b: TypeIdDto): boolean { return a.id === b.id; }
   /** @emoji 🖼️ Picks a representation for scene rendering (`@semio/ui`); first match until WASM metadata is wired. */
   static pickBestRepresentation(representations: readonly Representation[], _tagIds: readonly string[]): Representation | undefined {
     void _tagIds;
@@ -4757,9 +4560,9 @@ export class Layer implements LayerPlain {
   constructor(plain: LayerPlain) { const p = LayerSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: LayerPlain): Layer { return new Layer(plain); }
   static fromPlain(plain: LayerPlain): Layer { return new Layer(plain); }
-  static createId(id: string): LayerId { return { id }; }
-  static areSameId(a: LayerId, b: LayerId): boolean { return a.id === b.id; }
-  toPlain(): LayerPlain { return LayerSchema.parse(this as unknown as LayerPlain); }
+  static createId(id: string): LayerIdDto { return { id }; }
+  static areSameId(a: LayerIdDto, b: LayerIdDto): boolean { return a.id === b.id; }
+  toPlain(): LayerPlain { return LayerSchema.parse(this as LayerPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Layer { return new Layer(LayerSchema.parse(JSON.parse(json))); }
 }
@@ -4777,14 +4580,14 @@ export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 export const PieceSchema = z.object({ id: z.string(), name: z.string().optional(), type: TypeIdSchema.optional(), design: DesignIdSchema.optional(), plane: PlaneSchema.optional(), center: CoordinateSchema.optional(), scale: z.number().optional(), mirrorPlane: PlaneSchema.optional(), isHidden: z.boolean().optional(), isLocked: z.boolean().optional(), color: z.string().optional(), description: z.string().optional(), props: z.array(PropSchema).optional(), attributes: z.array(AttributeSchema).optional() });
 export type PiecePlain = z.infer<typeof PieceSchema>;
 export class Piece {
-  id!: string; name?: string; type?: TypeId; design?: DesignId; plane?: Plane; center?: Coordinate; scale?: number; mirrorPlane?: Plane; isHidden?: boolean; isLocked?: boolean; color?: string; description?: string; props?: Prop[]; attributes?: Attribute[];
+  id!: string; name?: string; type?: TypeIdDto; design?: DesignIdDto; plane?: Plane; center?: Coordinate; scale?: number; mirrorPlane?: Plane; isHidden?: boolean; isLocked?: boolean; color?: string; description?: string; props?: Prop[]; attributes?: Attribute[];
   constructor(plain: PiecePlain) { const p = PieceSchema.parse(plain); Object.assign(this, p); this.plane = p.plane ? new Plane(p.plane) : undefined; this.center = p.center ? new Coordinate(p.center) : undefined; this.mirrorPlane = p.mirrorPlane ? new Plane(p.mirrorPlane) : undefined; this.props = p.props?.map((x) => new Prop(x)); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static fromPlain(plain: PiecePlain): Piece { return new Piece(plain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Piece { return new Piece(PieceSchema.parse(JSON.parse(json))); }
-  toPlain(): PiecePlain { return PieceSchema.parse(this as unknown as PiecePlain); }
-  static createId(id: string): PieceId { return { id }; }
-  static areSameId(a: PieceId, b: PieceId): boolean { return a.id === b.id; }
+  toPlain(): PiecePlain { return PieceSchema.parse(this as PiecePlain); }
+  static createId(id: string): PieceIdDto { return { id }; }
+  static areSameId(a: PieceIdDto, b: PieceIdDto): boolean { return a.id === b.id; }
 
   /** @emoji 🧭 Whether this piece wires a nested design id (schema hooks). */
   wireDesignAsPieceId(): boolean {
@@ -4826,13 +4629,13 @@ export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 export const GroupSchema = z.object({ id: z.string(), pieces: z.array(PieceIdSchema), color: z.string().optional(), name: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional() });
 export type GroupPlain = z.infer<typeof GroupSchema>;
 export class Group implements GroupPlain {
-  id!: string; pieces!: PieceId[]; color?: string; name?: string; description?: string; attributes?: Attribute[];
+  id!: string; pieces!: PieceIdDto[]; color?: string; name?: string; description?: string; attributes?: Attribute[];
   constructor(plain: GroupPlain) { const p = GroupSchema.parse(plain); Object.assign(this, p); this.attributes = p.attributes?.map((a) => new Attribute(a)); }
   static from(plain: GroupPlain): Group { return new Group(plain); }
   static fromPlain(plain: GroupPlain): Group { return new Group(plain); }
-  static createId(id: string): GroupId { return { id }; }
-  static areSameId(a: GroupId, b: GroupId): boolean { return a.id === b.id; }
-  toPlain(): GroupPlain { return GroupSchema.parse(this as unknown as GroupPlain); }
+  static createId(id: string): GroupIdDto { return { id }; }
+  static areSameId(a: GroupIdDto, b: GroupIdDto): boolean { return a.id === b.id; }
+  toPlain(): GroupPlain { return GroupSchema.parse(this as GroupPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Group { return new Group(GroupSchema.parse(JSON.parse(json))); }
 }
@@ -4854,9 +4657,9 @@ export class Side {
   #designPieceId?: string;
   #connectorId?: string;
   constructor(plain: SidePlain) { const p = SideSchema.parse(plain); this.#pieceId = p.piece.id; this.#designPieceId = p.designPiece?.id; this.#connectorId = p.connector?.id; }
-  get piece(): PieceId { return { id: this.#pieceId }; }
-  get designPiece(): PieceId | undefined { if (!this.#designPieceId) return undefined; return { id: this.#designPieceId }; }
-  get connector(): ConnectorId | undefined { return this.#connectorId !== undefined ? { id: this.#connectorId } : undefined; }
+  get piece(): PieceIdDto { return { id: this.#pieceId }; }
+  get designPiece(): PieceIdDto | undefined { if (!this.#designPieceId) return undefined; return { id: this.#designPieceId }; }
+  get connector(): ConnectorIdDto | undefined { return this.#connectorId !== undefined ? { id: this.#connectorId } : undefined; }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Side { return new Side(SideSchema.parse(JSON.parse(json))); }
   static from(plain: SidePlain): Side { return new Side(plain); }
@@ -4868,10 +4671,10 @@ export type SideDiff = z.infer<typeof SideDiffSchema>;
 export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
 export type SideIdPlain = z.infer<typeof SideIdSchema>;
 export class SideId implements SideIdPlain {
-  piece!: PieceId; designPiece?: PieceId; connector?: ConnectorId;
+  piece!: PieceIdDto; designPiece?: PieceIdDto; connector?: ConnectorIdDto;
   constructor(plain: SideIdPlain) { Object.assign(this, SideIdSchema.parse(plain)); }
   static from(plain: SideIdPlain): SideId { return new SideId(plain); }
-  toPlain(): SideIdPlain { return SideIdSchema.parse(this as unknown as SideIdPlain); }
+  toPlain(): SideIdPlain { return SideIdSchema.parse(this as SideIdPlain); }
 }
 export const SidesDiffSchema = z.object({ removed: z.array(SideIdSchema).optional(), updated: z.array(z.object({ side: SideIdSchema, diff: SideDiffSchema })).optional(), added: z.array(z.any()).optional() });
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
@@ -4887,9 +4690,9 @@ export class Connection implements ConnectionPlain {
   static deserialize(json: string): Connection { return new Connection(ConnectionSchema.parse(JSON.parse(json))); }
   static from(plain: ConnectionPlain): Connection { return new Connection(plain); }
   static fromPlain(plain: ConnectionPlain): Connection { return new Connection(plain); }
-  static createId(id: string): ConnectionId { return { id }; }
-  static areSameId(a: ConnectionId, b: ConnectionId): boolean { return a.id === b.id; }
-  toPlain(): ConnectionPlain { return ConnectionSchema.parse({ id: this.id, connected: this.connected.toPlain(), connecting: this.connecting.toPlain(), gap: this.gap, shift: this.shift, rise: this.rise, rotation: this.rotation, turn: this.turn, tilt: this.tilt, u: this.u, v: this.v, description: this.description, attributes: this.attributes?.map((a) => a.toPlain()) } as unknown as ConnectionPlain); }
+  static createId(id: string): ConnectionIdDto { return { id }; }
+  static areSameId(a: ConnectionIdDto, b: ConnectionIdDto): boolean { return a.id === b.id; }
+  toPlain(): ConnectionPlain { return ConnectionSchema.parse({ id: this.id, connected: this.connected.toPlain(), connecting: this.connecting.toPlain(), gap: this.gap, shift: this.shift, rise: this.rise, rotation: this.rotation, turn: this.turn, tilt: this.tilt, u: this.u, v: this.v, description: this.description, attributes: this.attributes?.map((a) => a.toPlain()) } as ConnectionPlain); }
 }
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ id: true, connected: true, connecting: true, attributes: true }).extend({ connected: SideDiffSchema.optional(), connecting: SideDiffSchema.optional(), attributes: AttributesDiffSchema.optional() });
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
@@ -4905,13 +4708,13 @@ export type ConnectionShallow = z.infer<typeof ConnectionShallowSchema>;
 export const StatSchema = z.object({ id: z.string(), quality: QualityIdSchema, unit: z.string().optional(), min: z.number().optional(), minExcluded: z.boolean().optional(), max: z.number().optional(), maxExcluded: z.boolean().optional() });
 export type StatPlain = z.infer<typeof StatSchema>;
 export class Stat implements StatPlain {
-  id!: string; quality!: QualityId; unit?: string; min?: number; minExcluded?: boolean; max?: number; maxExcluded?: boolean;
+  id!: string; quality!: QualityIdDto; unit?: string; min?: number; minExcluded?: boolean; max?: number; maxExcluded?: boolean;
   constructor(plain: StatPlain) { Object.assign(this, StatSchema.parse(plain)); }
   static from(plain: StatPlain): Stat { return new Stat(plain); }
   static fromPlain(plain: StatPlain): Stat { return new Stat(plain); }
-  static createId(id: string): StatId { return { id }; }
-  static areSameId(a: StatId, b: StatId): boolean { return a.id === b.id; }
-  toPlain(): StatPlain { return StatSchema.parse(this as unknown as StatPlain); }
+  static createId(id: string): StatIdDto { return { id }; }
+  static areSameId(a: StatIdDto, b: StatIdDto): boolean { return a.id === b.id; }
+  toPlain(): StatPlain { return StatSchema.parse(this as StatPlain); }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Stat { return new Stat(StatSchema.parse(JSON.parse(json))); }
 }
@@ -4979,13 +4782,13 @@ export type PasteDesignAnchoringKind =
   | "topRight";
 
 /** @emoji 🧠 Optional per-piece flatten cache row (TS algorithm path; opaque to callers). */
-export type FlatMerkleCacheEntry = Readonly<Record<string, unknown>>;
+export type FlatMerkleCacheEntry = Readonly<JsonObject>;
 
 export class Design {
   id!: string;
   name!: string;
   parent?: { id: string };
-  families?: FamilyId[];
+  families?: FamilyIdDto[];
   isAbstract?: boolean;
   folder?: string;
   pieces?: Piece[];
@@ -4993,14 +4796,14 @@ export class Design {
   stats?: Stat[];
   props?: Prop[];
   layers?: Layer[];
-  activeLayer?: LayerId;
+  activeLayer?: LayerIdDto;
   groups?: Group[];
   canScale?: boolean;
   canMirror?: boolean;
   unit?: string;
-  location?: LocationId;
-  authors?: AuthorId[];
-  concepts?: ConceptId[];
+  location?: LocationIdDto;
+  authors?: AuthorIdDto[];
+  concepts?: ConceptIdDto[];
   icon?: string;
   image?: string;
   description?: string;
@@ -5026,7 +4829,7 @@ export class Design {
   static fromPlain(plain: DesignPlain): Design { return new Design(plain); }
   toPlain(): DesignPlain {
     return DesignSchema.parse({
-      ...(this as unknown as DesignPlain),
+      ...(this as DesignPlain),
       pieces: this.pieces?.map((x) => x.toPlain()),
       connections: this._connections?.map((x) => x.toPlain()),
       stats: this.stats?.map((x) => x.toPlain()),
@@ -5038,8 +4841,8 @@ export class Design {
   }
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Design { return new Design(DesignSchema.parse(JSON.parse(json))); }
-  static createId(id: string): DesignId { return { id }; }
-  static areSameId(a: DesignId, b: DesignId): boolean { return a.id === b.id; }
+  static createId(id: string): DesignIdDto { return { id }; }
+  static areSameId(a: DesignIdDto, b: DesignIdDto): boolean { return a.id === b.id; }
 
   /** @emoji 🧭 Included / sibling designs for nested-design UI (DTO navigation). */
   getDesignFamily(): Design[] {
@@ -5053,7 +4856,7 @@ export class Design {
 
   /** @emoji 🧾 Non-mutating diff overlay for MCP / diagram previews. */
   static previewWithDiff(design: Design, diff: DesignDiff): Design {
-    const plain = design instanceof Design ? design.toPlain() : DesignSchema.parse(design as unknown as DesignPlain);
+    const plain = design instanceof Design ? design.toPlain() : DesignSchema.parse(design as DesignPlain);
     const n = new Design(plain);
     n.applyDiff(diff);
     return n;
@@ -5174,7 +4977,7 @@ export type KitChildEntityKind =
 
 /** @emoji 🧾 Parses `dto` with the matching zod schema and runs `add*` kit wires. */
 export async function kitStoreClientAddChildByKind(client: KitStoreClient, childKind: string, dto: unknown): Promise<SetResult> {
-  let cmds: readonly ChangeKitCommandWire[];
+  let cmds: readonly ChangeKitCommand[];
   try {
     switch (childKind) {
       case "Family":
@@ -5218,7 +5021,7 @@ export async function kitStoreClientAddChildByKind(client: KitStoreClient, child
 /** @emoji 🧾 Emits matching `remove*` kit wire for a kit-root child id. */
 export async function kitStoreClientRemoveChildByKind(client: KitStoreClient, childKind: string, childId: string): Promise<SetResult> {
   const idw = { id: childId };
-  let cmds: readonly ChangeKitCommandWire[];
+  let cmds: readonly ChangeKitCommand[];
   switch (childKind) {
     case "Family":
       cmds = [{ removeFamily: { familyId: idw } }];
@@ -5291,74 +5094,74 @@ export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
 export const KitFullDtoSchema = z.object({ id: z.string(), name: z.string(), version: z.string().optional(), types: z.array(TypeSchema).optional(), designs: z.array(DesignSchema).optional(), tags: z.array(TagSchema).optional(), concepts: z.array(ConceptSchema).optional(), families: z.array(FamilySchema).optional(), qualities: z.array(QualitySchema).optional(), files: z.array(FileSchema).optional(), folders: z.array(FolderSchema).optional(), authors: z.array(AuthorSchema).optional(), remote: z.string().optional(), homepage: z.string().optional(), license: z.string().optional(), preview: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), description: z.string().optional(), attributes: z.array(AttributeSchema).optional(), createdAt: DateProperty(), updatedAt: DateProperty() });
 export type KitFullDto = z.infer<typeof KitFullDtoSchema>;
 
-function semioCoerceKitFullDtoFromWire(v: SemioKitWireTreeDto | KitFullDto): KitFullDto {
+function semioCoerceKitFullDtoFromJson(v: KitJsonTreeDto | KitFullDto): KitFullDto {
   return KitFullDtoSchema.parse(v);
 }
 
-function semioParseTypeShallowArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly TypeShallow[] {
+function semioParseTypeShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeShallow[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) =>
     row && typeof row === "object" && !Array.isArray(row)
-      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataWireRow(row as Record<string, unknown>))
+      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject))
       : row,
   );
   const r = z.array(TypeShallowSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseDesignShallowArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly DesignShallow[] {
+function semioParseDesignShallowArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignShallow[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) =>
     row && typeof row === "object" && !Array.isArray(row)
-      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataWireRow(row as Record<string, unknown>))
+      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject))
       : row,
   );
   const r = z.array(DesignShallowSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseKitIdWireArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly KitIdWire[] {
+function semioParseKitIdDtoArray(v: KitJsonTreeDto | string | undefined | null): readonly KitIdDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v);
-  const out: KitIdWire[] = [];
+  const out: KitIdDto[] = [];
   for (const x of xs) {
-    if (x != null && typeof x === "object" && !Array.isArray(x) && "id" in x && typeof (x as { id: SemioKitWireTreeDto }).id === "string")
+    if (x != null && typeof x === "object" && !Array.isArray(x) && "id" in x && typeof (x as { id: KitJsonTreeDto }).id === "string")
       out.push({ id: (x as { id: string }).id });
     else if (typeof x === "string") out.push({ id: x });
   }
   return out;
 }
 
-function semioParseTypeMetadataArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly TypeMetadataDto[] {
+function semioParseTypeMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly TypeMetadataDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) =>
     row && typeof row === "object" && !Array.isArray(row)
-      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataWireRow(row as Record<string, unknown>))
+      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject))
       : row,
   );
   const r = z.array(TypeMetadataDtoSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseDesignMetadataArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly DesignMetadataDto[] {
+function semioParseDesignMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly DesignMetadataDto[] {
   const xs = kitGraphqlJsonToReadonlyArray(v).map((row) =>
     row && typeof row === "object" && !Array.isArray(row)
-      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataWireRow(row as Record<string, unknown>))
+      ? __stripTopLevelJsonNulls(__normalizeTypeOrDesignMetadataRow(row as JsonObject))
       : row,
   );
   const r = z.array(DesignMetadataDtoSchema).safeParse(xs);
   return r.success ? r.data : [];
 }
 
-function semioParseAuthorMetadataArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly AuthorMetadataDto[] {
+function semioParseAuthorMetadataArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly AuthorMetadataDto[] {
   const r = z.array(AuthorMetadataDtoSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
 
-function semioParseKitCatalogMetadataWire(v: SemioKitWireTreeDto | undefined | null): KitCatalogKitMetadataWireDto | null {
+function semioParseKitMetadataJson(v: KitJsonTreeDto | undefined | null): KitMetadataDto | null {
   if (v == null || typeof v !== "object" || Array.isArray(v)) return null;
-  return v as KitCatalogKitMetadataWireDto;
+  return v as KitMetadataDto;
 }
 
-function semioParseColoredConnectorRowsWire(v: SemioKitWireTreeDto | readonly SemioKitWireTreeDto[] | undefined | null): readonly KitColoredConnectorRowWireDto[] {
+function semioParseColoredConnectorRowsJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly KitColoredConnectorRowDto[] {
   if (Array.isArray(v)) {
-    const out: KitColoredConnectorRowWireDto[] = [];
+    const out: KitColoredConnectorRowDto[] = [];
     for (const row of v) {
       if (row && typeof row === "object" && !Array.isArray(row) && "color" in row) {
         const r = row as { typeId?: { id?: string }; connectorId?: { id?: string }; color?: string };
@@ -5374,12 +5177,12 @@ function semioParseColoredConnectorRowsWire(v: SemioKitWireTreeDto | readonly Se
   return [];
 }
 
-function semioParsePiecePlainArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly PiecePlain[] {
+function semioParsePiecePlainArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly PiecePlain[] {
   const r = z.array(PieceSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
 
-function semioParseConnectionPlainArrayWire(v: SemioKitWireTreeDto | string | undefined | null): readonly ConnectionPlain[] {
+function semioParseConnectionPlainArrayJson(v: KitJsonTreeDto | string | undefined | null): readonly ConnectionPlain[] {
   const r = z.array(ConnectionSchema).safeParse(kitGraphqlJsonToReadonlyArray(v));
   return r.success ? r.data : [];
 }
@@ -5403,13 +5206,13 @@ const PiecePlacementRowWireSchema = z.object({
   path: z.array(z.string()),
 });
 
-function semioParseDesignIncludedDesignArrayWire(v: SemioKitWireTreeDto | readonly SemioKitWireTreeDto[] | undefined | null): readonly DesignIncludedDesignWireDto[] {
+function semioParseDesignIncludedDesignArrayJson(v: KitJsonTreeDto | readonly KitJsonTreeDto[] | undefined | null): readonly IncludedDesignInfoDto[] {
   const r = z.array(DesignIncludedDesignWireSchema).safeParse(Array.isArray(v) ? v : kitGraphqlJsonToReadonlyArray(v));
-  return r.success ? (r.data as readonly DesignIncludedDesignWireDto[]) : [];
+  return r.success ? (r.data as readonly IncludedDesignInfoDto[]) : [];
 }
 
-function semioParsePiecePlacementMapWire(rows: readonly unknown[] | undefined | null): ReadonlyMap<string, PiecePlacementRowWireDto> {
-  const m = new Map<string, PiecePlacementRowWireDto>();
+function semioParsePiecePlacementMapJson(rows: readonly unknown[] | undefined | null): ReadonlyMap<string, PiecePlacementRowDto> {
+  const m = new Map<string, PiecePlacementRowDto>();
   if (!Array.isArray(rows)) return m;
   for (const r of rows) {
     const row = PiecePlacementRowWireSchema.safeParse(r);
@@ -5418,22 +5221,22 @@ function semioParsePiecePlacementMapWire(rows: readonly unknown[] | undefined | 
   return m;
 }
 
-function semioParsePlaneNullableWire(v: SemioKitWireTreeDto | undefined | null): PlanePlain | null {
+function semioParsePlaneNullableJson(v: KitJsonTreeDto | undefined | null): PlanePlain | null {
   const p = PlaneSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseCoordinateNullableWire(v: SemioKitWireTreeDto | undefined | null): CoordinatePlain | null {
+function semioParseCoordinateNullableJson(v: KitJsonTreeDto | undefined | null): CoordinatePlain | null {
   const p = CoordinateSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseConnectionNullableWire(v: SemioKitWireTreeDto | undefined | null): ConnectionPlain | null {
+function semioParseConnectionNullableJson(v: KitJsonTreeDto | undefined | null): ConnectionPlain | null {
   const p = ConnectionSchema.safeParse(v);
   return p.success ? p.data : null;
 }
 
-function semioParseRepresentationNullableWire(v: SemioKitWireTreeDto | undefined | null): RepresentationPlain | null {
+function semioParseRepresentationNullableWire(v: KitJsonTreeDto | undefined | null): RepresentationPlain | null {
   const p = RepresentationSchema.safeParse(v);
   return p.success ? p.data : null;
 }
@@ -5442,12 +5245,12 @@ function semioParseRepresentationNullableWire(v: SemioKitWireTreeDto | undefined
 export function normalizeKitFullDtoFolderPaths(dto: KitFullDto): KitFullDto {
   const foldersUnknown = (dto as { folders?: unknown }).folders;
   if (!Array.isArray(foldersUnknown) || foldersUnknown.length === 0) return dto;
-  const list = foldersUnknown as Array<Record<string, unknown>>;
-  const byId = new Map<string, Record<string, unknown>>();
+  const list = foldersUnknown as Array<JsonObject>;
+  const byId = new Map<string, JsonObject>();
   for (const row of list) {
     if (row && typeof row.id === "string") byId.set(row.id, row);
   }
-  const resolvePath = (f: Record<string, unknown>, visiting: Set<string>): string => {
+  const resolvePath = (f: JsonObject, visiting: Set<string>): string => {
     const fid = typeof f.id === "string" ? f.id : "";
     const existing = f.path;
     if (typeof existing === "string" && existing.length > 0) return existing;
@@ -5520,7 +5323,7 @@ export class Kit {
   static fromPlain(data: KitFullDto): Kit { return new Kit(data); }
   toPlain(): KitFullDto {
     return KitFullDtoSchema.parse({
-      ...(this as unknown as KitFullDto),
+      ...(this as KitFullDto),
       types: this.types?.map((t) => t.toPlain()),
       designs: this.designs?.map((d) => d.toPlain()),
       tags: this.tags?.map((t) => t.toPlain()),
@@ -5536,8 +5339,8 @@ export class Kit {
   serialize(): string { return JSON.stringify(this.toPlain()); }
   static deserialize(json: string): Kit { return Kit.fromPlain(KitFullDtoSchema.parse(JSON.parse(json))); }
   toJSON(): KitFullDto { return this.toPlain(); }
-  static createId(id: string): KitId { return { id }; }
-  static areSameId(a: KitId, b: KitId): boolean { return a.id === b.id; }
+  static createId(id: string): KitIdDto { return { id }; }
+  static areSameId(a: KitIdDto, b: KitIdDto): boolean { return a.id === b.id; }
 
   /** @emoji 🧭 Resolve a design by id (DTO graph navigation for React schema hooks). */
   findDesign(id: string): Design | undefined {
@@ -5647,22 +5450,16 @@ export function asKitInstance(input: KitLike): Kit {
  * @emoji 🧾 Pulls the authoritative DTO from `kitClient` into a host {@link KitHostStore} (no React; call after GQL events).
  */
 /** @emoji 🧾 Minimal bridge surface used when applying WASM snapshots onto a host store. */
-export type SemioKitBridge = { getDto(): KitFullDto; getSnapshot(): Promise<KitFullDto> };
-
 export async function applyKitClientSnapshotToLocalStore(kitClient: SemioKitBridge, store: KitHostStore): Promise<void> {
   try {
-    await kitClient.getSnapshot();
-  } catch {
-    /* keep last cached DTO from the client */
-  }
-  try {
-    const incoming = kitClient.getDto();
+    const incoming = await kitClient.fetchFullKit();
     const curJson = store.getSnapshot().kit.toJSON();
     if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
     store.replace(asKitInstance(incoming));
   } catch {
     try {
-      store.replace(asKitInstance(kitClient.getDto()));
+      const incoming = await kitClient.fetchFullKit();
+      store.replace(asKitInstance(incoming));
     } catch {
       /* ignore */
     }
@@ -5678,39 +5475,17 @@ export type KitHostStore = { getSnapshot(): KitHostStoreSnapshot; subscribe(onCh
 export class InMemoryKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  /** 🧾 Cache so {@link getSnapshot} returns the same {@link Kit} instance while bridge DTO is unchanged (React useSyncExternalStore). */
-  private _bridgeDtoJson: string | undefined;
-  private _bridgeKitSnap: Kit | undefined;
   /** @internal Used by `inferPersistenceFromInit` in @semio/react. */
   readonly name = "InMemoryKitStore";
   constructor(seed: KitLike) {
     this._kit = seed instanceof Kit ? seed : Kit.fromPlain(seed as KitFullDto);
   }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as InMemoryKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    if (!c) {
-      this._bridgeDtoJson = undefined;
-      this._bridgeKitSnap = undefined;
-      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
-    }
-    const dto = c.getDto();
-    let j: string;
-    try {
-      j = JSON.stringify(dto);
-    } catch {
-      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
-    }
-    if (this._bridgeDtoJson !== j) {
-      this._bridgeDtoJson = j;
-      this._bridgeKitSnap = asKitInstance(dto);
-    }
-    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
+    return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) {
     this._kit = kit;
-    this._bridgeDtoJson = undefined;
-    this._bridgeKitSnap = undefined;
     for (const l of this.listeners) {
       try {
         l();
@@ -5738,8 +5513,6 @@ export type KitFolderAdapter = {
 export class JsonFileKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  private _bridgeDtoJson: string | undefined;
-  private _bridgeKitSnap: Kit | undefined;
   /** @internal */
   readonly name = "JsonFileKitStore";
   private constructor(private readonly adapter: KitJsonFileAdapter, seed: Kit) { this._kit = seed; }
@@ -5749,30 +5522,11 @@ export class JsonFileKitStore implements KitHostStore {
     return new JsonFileKitStore(adapter, seed);
   }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as JsonFileKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    if (!c) {
-      this._bridgeDtoJson = undefined;
-      this._bridgeKitSnap = undefined;
-      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
-    }
-    const dto = c.getDto();
-    let j: string;
-    try {
-      j = JSON.stringify(dto);
-    } catch {
-      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
-    }
-    if (this._bridgeDtoJson !== j) {
-      this._bridgeDtoJson = j;
-      this._bridgeKitSnap = asKitInstance(dto);
-    }
-    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
+    return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) {
     this._kit = kit;
-    this._bridgeDtoJson = undefined;
-    this._bridgeKitSnap = undefined;
     for (const l of this.listeners) l();
     void this.adapter.write(JSON.stringify(kit.toJSON()));
   }
@@ -5781,8 +5535,6 @@ export class JsonFileKitStore implements KitHostStore {
 export class FolderKitStore implements KitHostStore {
   private listeners = new Set<() => void>();
   private _kit: Kit;
-  private _bridgeDtoJson: string | undefined;
-  private _bridgeKitSnap: Kit | undefined;
   /** @internal */
   readonly name = "FolderKitStore";
   private constructor(private readonly adapter: KitFolderAdapter, seed: Kit) { this._kit = seed; }
@@ -5799,30 +5551,11 @@ export class FolderKitStore implements KitHostStore {
     return new FolderKitStore(adapter, asKitInstance(initial ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
   }
   getSnapshot(): KitHostStoreSnapshot {
-    const c = (this as FolderKitStore & { __semioKitBridge?: SemioKitBridge }).__semioKitBridge;
-    if (!c) {
-      this._bridgeDtoJson = undefined;
-      this._bridgeKitSnap = undefined;
-      return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
-    }
-    const dto = c.getDto();
-    let j: string;
-    try {
-      j = JSON.stringify(dto);
-    } catch {
-      return { kit: asKitInstance(dto), sync: DEFAULT_KIT_SYNC };
-    }
-    if (this._bridgeDtoJson !== j) {
-      this._bridgeDtoJson = j;
-      this._bridgeKitSnap = asKitInstance(dto);
-    }
-    return { kit: this._bridgeKitSnap!, sync: DEFAULT_KIT_SYNC };
+    return { kit: this._kit, sync: DEFAULT_KIT_SYNC };
   }
   subscribe(onChange: () => void) { this.listeners.add(onChange); return () => { this.listeners.delete(onChange); }; }
   replace(kit: Kit) {
     this._kit = kit;
-    this._bridgeDtoJson = undefined;
-    this._bridgeKitSnap = undefined;
     for (const l of this.listeners) l();
     void (async () => {
       try {
@@ -6030,7 +5763,7 @@ export class KitEntityStore {
     return this._version;
   }
 
-  async patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
+  async patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
     void field;
     void value;
     return Promise.resolve({
@@ -6041,7 +5774,7 @@ export class KitEntityStore {
 
   subscribe(handler: (e: KitEvent) => void): Unsubscribe {
     return this.root.subscribe((ev) => {
-      if ("Changed" in ev && (ev as { Changed?: unknown }).Changed === null) {
+      if ("Changed" in ev && (ev as { Changed?: null }).Changed === null) {
         this._version += 1;
         handler(ev);
         return;
@@ -6084,7 +5817,7 @@ export class DesignStore {
   async metadata(): Promise<DesignMetadataDto> {
     const out = await this.root.read(this.readScope, [{ readKitDesignsMetadataCommand: null }]);
     const designs = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitDesignsMetadataCommand?: { designs?: unknown } }).readKitDesignsMetadataCommand?.designs,
+      (out[0] as { readKitDesignsMetadataCommand?: { designs?: JsonValue } }).readKitDesignsMetadataCommand?.designs,
     );
     const row = designs.find((d: unknown) => d && typeof d === "object" && String((d as { id?: string }).id) === this.id);
     if (!row) throw new Error(`design metadata not found: ${this.id}`);
@@ -6094,7 +5827,7 @@ export class DesignStore {
   async shallow(): Promise<DesignShallow> {
     const out = await this.root.read(this.readScope, [{ readKitDesignsShallowCommand: null }]);
     const designs = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitDesignsShallowCommand?: { designs?: unknown } }).readKitDesignsShallowCommand?.designs,
+      (out[0] as { readKitDesignsShallowCommand?: { designs?: JsonValue } }).readKitDesignsShallowCommand?.designs,
     );
     const row = designs.find((d: unknown) => d && typeof d === "object" && String((d as { id?: string }).id) === this.id);
     if (!row) throw new Error(`design shallow not found: ${this.id}`);
@@ -6132,11 +5865,11 @@ export class DesignStore {
     return new LiveDesign(this.root, this.readScope, this.id);
   }
 
-  readIncludedDesigns(): Promise<readonly DesignIncludedDesignWireDto[]> {
+  readIncludedDesigns(): Promise<readonly IncludedDesignInfoDto[]> {
     return this.liveDesign().readIncludedDesigns();
   }
 
-  readClusterableGroups(selection: readonly string[]): Promise<readonly (readonly KitIdWire[])[]> {
+  readClusterableGroups(selection: readonly string[]): Promise<readonly (readonly KitIdDto[])[]> {
     return this.liveDesign().readClusterableGroups(selection);
   }
 
@@ -6157,7 +5890,7 @@ export class DesignStore {
   }
 
   /** @emoji 🧾 Per-piece placement metadata rows (`getPiecesMetadata`). */
-  readPiecesPlacementMetadataMap(): Promise<ReadonlyMap<string, PiecePlacementRowWireDto>> {
+  readPiecesPlacementMetadataMap(): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     return this.root.getPiecesMetadata(this.readScope, this.id);
   }
 
@@ -6201,7 +5934,7 @@ export class DesignStore {
     return this.root.expandDesign(this.id, nestedDesignId);
   }
 
-  paste(selection: SemioKitWireTreeDto, plane?: PlanePlain | null): Promise<SetResult> {
+  paste(selection: KitJsonTreeDto, plane?: PlanePlain | null): Promise<SetResult> {
     return this.root.pasteDesignSelection(this.id, selection, plane ?? null);
   }
 
@@ -6232,7 +5965,7 @@ export class DesignStore {
 }
 
 /** @emoji 🧾 GraphQL `TypeMetadataObject` uses JSON `null` for absent fields; strip those before Zod DTO parse. */
-function __coerceTypeMetadataGqlRow(row: Record<string, unknown>): Record<string, unknown> {
+function __coerceTypeMetadataGqlRow(row: JsonObject): JsonObject {
   const out = { ...row };
   for (const k of Object.keys(out)) {
     if (out[k] === null) delete out[k];
@@ -6264,17 +5997,17 @@ export class TypeStore {
   async metadata(): Promise<TypeMetadataDto> {
     const out = await this.root.read(this.readScope, [{ readKitTypesMetadataCommand: null }]);
     const types = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitTypesMetadataCommand?: { types?: unknown } }).readKitTypesMetadataCommand?.types,
+      (out[0] as { readKitTypesMetadataCommand?: { types?: JsonValue } }).readKitTypesMetadataCommand?.types,
     );
     const row = types.find((t: unknown) => t && typeof t === "object" && String((t as { id?: string }).id) === this.id);
     if (!row) throw new Error(`kind metadata not found: ${this.id}`);
-    return TypeMetadataDtoSchema.parse(__coerceTypeMetadataGqlRow(row as Record<string, unknown>));
+    return TypeMetadataDtoSchema.parse(__coerceTypeMetadataGqlRow(row as JsonObject));
   }
 
   async shallow(): Promise<TypeShallow> {
     const out = await this.root.read(this.readScope, [{ readKitTypesShallowCommand: null }]);
     const types = kitGraphqlJsonToReadonlyArray(
-      (out[0] as { readKitTypesShallowCommand?: { types?: unknown } }).readKitTypesShallowCommand?.types,
+      (out[0] as { readKitTypesShallowCommand?: { types?: JsonValue } }).readKitTypesShallowCommand?.types,
     );
     const row = types.find((t: unknown) => t && typeof t === "object" && String((t as { id?: string }).id) === this.id);
     if (!row) throw new Error(`kind shallow not found: ${this.id}`);
@@ -6386,44 +6119,44 @@ export class PieceStore {
 
   setPlane(plane: PlanePlain): Promise<SetResult> {
     return this.root.submitChangeKitCommands([
-      kitWireChangeDesignPiece(this.designId, this.id, [{ plane: { plane: plane as SemioKitWireTreeDto } }]),
+      kitChangeDesignPiece(this.designId, this.id, [{ plane: { plane: plane as KitJsonTreeDto } }]),
     ]);
   }
 
   setCenter(center: CoordinatePlain): Promise<SetResult> {
     return this.root.submitChangeKitCommands([
-      kitWireChangeDesignPiece(this.designId, this.id, [{ center: { center: center as SemioKitWireTreeDto } }]),
+      kitChangeDesignPiece(this.designId, this.id, [{ center: { center: center as KitJsonTreeDto } }]),
     ]);
   }
 
   setScale(scale: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ scale: { scale } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ scale: { scale } }])]);
   }
 
   setColor(color: string): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ color: { color } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ color: { color } }])]);
   }
 
   hide(isHidden: boolean): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ hidden: { hidden: isHidden } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ hidden: { hidden: isHidden } }])]);
   }
 
   lock(isLocked: boolean): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ locked: { locked: isLocked } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ locked: { locked: isLocked } }])]);
   }
 
   addProp(dto: unknown): Promise<SetResult> {
     const prop = PropSchema.parse(dto);
-    return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ addProp: { prop } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ addProp: { prop } }])]);
   }
 
-  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
-    if (field === "name") return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ name: { name: String(value) } }])]);
+  patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
+    if (field === "name") return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ name: { name: String(value) } }])]);
     if (field === "description")
-      return this.root.submitChangeKitCommands([kitWireChangeDesignPiece(this.designId, this.id, [{ description: { description: value as string | null } }])]);
+      return this.root.submitChangeKitCommands([kitChangeDesignPiece(this.designId, this.id, [{ description: { description: value as string | null } }])]);
     if (field === "type" || field === "typeId")
       return this.root.submitChangeKitCommands([
-        kitWireChangeDesignPiece(this.designId, this.id, [{ type: { typeId: value && typeof value === "object" && "id" in (value as object) ? (value as { id: string }) : { id: String(value) } } }]),
+        kitChangeDesignPiece(this.designId, this.id, [{ type: { typeId: value && typeof value === "object" && "id" in (value as object) ? (value as { id: string }) : { id: String(value) } } }]),
       ]);
     return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `piece field: ${field}` } });
   }
@@ -6459,35 +6192,35 @@ export class ConnectionStore {
   }
 
   setGap(gap: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ gap: { value: gap } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ gap: { value: gap } }])]);
   }
 
   setShift(shift: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ shift: { value: shift } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ shift: { value: shift } }])]);
   }
 
   setRotation(rotation: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ rotation: { value: rotation } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ rotation: { value: rotation } }])]);
   }
 
   setTilt(tilt: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ tilt: { value: tilt } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ tilt: { value: tilt } }])]);
   }
 
   setTurn(turn: number): Promise<SetResult> {
-    return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ turn: { value: turn } }])]);
+    return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ turn: { value: turn } }])]);
   }
 
   delete(): Promise<SetResult> {
     return this.root.deleteConnection(this.designId, this.id);
   }
 
-  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
-    if (field === "rise") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ rise: { value: Number(value) } }])]);
+  patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
+    if (field === "rise") return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ rise: { value: Number(value) } }])]);
     if (field === "description")
-      return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ description: { value: value as string | null } }])]);
-    if (field === "u" || field === "x") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ x: { value: Number(value) } }])]);
-    if (field === "v" || field === "y") return this.root.submitChangeKitCommands([kitWireChangeDesignConnection(this.designId, this.id, [{ y: { value: Number(value) } }])]);
+      return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ description: { value: value as string | null } }])]);
+    if (field === "u" || field === "x") return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ x: { value: Number(value) } }])]);
+    if (field === "v" || field === "y") return this.root.submitChangeKitCommands([kitChangeDesignConnection(this.designId, this.id, [{ y: { value: Number(value) } }])]);
     return Promise.resolve({ ok: false, error: { kind: "NotSupported", message: `connection field: ${field}` } });
   }
 }
@@ -6526,7 +6259,7 @@ export class FamilyStore {
     ]);
   }
 
-  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
     if (field === "description")
       return this.root.submitChangeKitCommands([
         { changeFamilyCommands: { familyId: { id: this.id }, commands: [{ description: { description: value as string | null } }] } },
@@ -6567,7 +6300,7 @@ export class FileStore {
     return FileSchema.parse(raw);
   }
 
-  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
     const fid = { id: this.id };
     if (field === "url") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ url: { url: String(value) } }] } }]);
     if (field === "mime") return this.root.submitChangeKitCommands([{ changeFileCommands: { fileId: fid, commands: [{ mime: { mime: value as string | null } }] } }]);
@@ -6611,7 +6344,7 @@ export class FolderStore {
     return FolderSchema.parse(raw);
   }
 
-  patchField(field: string, value: SchemaEntityFieldWireValue): Promise<SetResult> {
+  patchField(field: string, value: SchemaEntityFieldValue): Promise<SetResult> {
     const folderId = { id: this.id };
     if (field === "path") return this.root.submitChangeKitCommands([{ changeFolderCommands: { folderId, commands: [{ path: { path: String(value) } }] } }]);
     if (field === "description")
@@ -6629,7 +6362,18 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
 
   describe("semio-js KitStore", () => {
-    it("opens dedicated worker wasm and returns typed snapshot", async () => {
+    it("KIT_SCOPED_FULL_DTO_QUERY wires Query.kit(scope) { fullDto }", () => {
+      expect(KIT_SCOPED_FULL_DTO_QUERY).toContain("kit(scope:");
+      expect(KIT_SCOPED_FULL_DTO_QUERY).toMatch(/fullDto/);
+    });
+
+    it("KitStore has no JS snapshot() full-read method (use theKit / materialized GraphQL only)", () => {
+      type Snap = { snapshot?: () => unknown };
+      const snap: Snap = KitStore.prototype as unknown as Snap;
+      expect(snap.snapshot).toBeUndefined();
+    });
+
+    it("opens dedicated worker wasm and returns typed full kit DTO from GraphQL", async () => {
       const minimalKit: KitFullDto = {
         id: "test-kit",
         name: "TestKit",
@@ -6639,7 +6383,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         designs: [{ id: "design-1", name: "Floor1", pieces: [], connections: [] }],
       };
       const ks = await KitStore.open(minimalKit);
-      const snap = await ks.snapshot();
+      const snap = await ks.theKit();
       expect(snap.id).toBe("test-kit");
       expect(snap.name).toBe("TestKit");
       const typeStores = await ks.types();
@@ -6697,7 +6441,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         designs: [],
       };
       const ks = await KitStore.open(minimalKit);
-      const batch: ReadWireBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
+      const batch: ReadBatch = [{ readKitTypesShallowCommand: null }, { readKitTypeIdsCommand: null }];
       const res = await ks.read(theKitReadScope, batch);
       expect(res.length).toBe(2);
       await ks.dispose();
@@ -6753,7 +6497,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       await ks.dispose();
     });
 
-    it("rejects snapshot after dispose", async () => {
+    it("rejects theKit() after dispose", async () => {
       const minimalKit: KitFullDto = {
         id: "dispose-kit",
         name: "D",
@@ -6764,7 +6508,7 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       };
       const ks = await KitStore.open(minimalKit);
       await ks.dispose();
-      await expect(ks.snapshot()).rejects.toThrow(/disposed/i);
+      await expect(ks.theKit()).rejects.toThrow(/disposed/i);
     });
 
     it("subscribe returns Unsubscribe and does not expose events$", async () => {
@@ -6801,9 +6545,9 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
         designs: [],
       };
       const ks = await KitStore.open(minimalKit);
-      const snap = await ks.snapshot();
-      const tk = await ks.theKit();
-      expect(tk.id).toBe(snap.id);
+      const snap = await ks.theKit();
+      const snap2 = await ks.theKit();
+      expect(snap2.id).toBe(snap.id);
       const vcs = await ks.vcsState();
       expect(vcs != null && typeof vcs === "object").toBe(true);
       const mat = await ks.materializeAt("");
@@ -6857,29 +6601,29 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
 
   describe("semio-js kit event entity filters", () => {
     it("kitEventTouchesDesignStrict matches nested Design payload", () => {
-      const ev = { Design: { design_id: "d1", event: { Piece: { piece_id: "p1", event: "Changed" } } } } as unknown as KitEvent;
+      const ev = { Design: { design_id: "d1", event: { Piece: { piece_id: "p1", event: "Changed" } } } } as KitEvent;
       expect(kitEventTouchesDesignStrict(ev, "d1")).toBe(true);
       expect(kitEventTouchesDesignStrict(ev, "d2")).toBe(false);
     });
 
     it("kitEventTouchesPiece ignores bare Changed", () => {
-      expect(kitEventTouchesPiece({ Changed: null } as unknown as KitEvent, "d1", "p1")).toBe(false);
+      expect(kitEventTouchesPiece({ Changed: null } as KitEvent, "d1", "p1")).toBe(false);
     });
 
     it("kitEventTouchesPiece matches FlattenInvalidated piece list", () => {
-      const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as unknown as KitEvent;
+      const ev = { FlattenInvalidated: { design: "d1", pieces: ["p1"] } } as KitEvent;
       expect(kitEventTouchesPiece(ev, "d1", "p1")).toBe(true);
       expect(kitEventTouchesPiece(ev, "d1", "p2")).toBe(false);
     });
 
     it("kitEventTouchesDesign matches rs-shaped design name field change", () => {
-      const ev = { Design: { design_id: "design-a", event: { FieldChanged: "Name" } } } as unknown as KitEvent;
+      const ev = { Design: { design_id: "design-a", event: { FieldChanged: "Name" } } } as KitEvent;
       expect(kitEventTouchesDesign(ev, "design-a")).toBe(true);
       expect(kitEventTouchesDesign(ev, "other")).toBe(false);
     });
 
     it("kitEventTouchesTypeStrict matches Type payload", () => {
-      const ev = { Type: { type_id: "t1", event: "Changed" } } as unknown as KitEvent;
+      const ev = { Type: { type_id: "t1", event: "Changed" } } as KitEvent;
       expect(kitEventTouchesTypeStrict(ev, "t1")).toBe(true);
       expect(kitEventTouchesTypeStrict(ev, "t2")).toBe(false);
     });
@@ -6907,16 +6651,16 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
   });
 
   describe("semio-js kit store wire helpers", () => {
-    it("piecePatchToWireCommands maps plane and type ref", () => {
-      const cmds = piecePatchToWireCommands({ plane: { x: 1 }, type: { id: "t1" } });
+    it("piecePatchToChangeCommands maps plane and type ref", () => {
+      const cmds = piecePatchToChangeCommands({ plane: { x: 1 }, type: { id: "t1" } });
       expect(cmds.length).toBe(2);
       expect(cmds.some((c) => "plane" in c)).toBe(true);
       expect(cmds.some((c) => "type" in c && (c as { type: { typeId: { id: string } } }).type.typeId.id === "t1")).toBe(true);
     });
 
-    it("connectionDiffWireKeyForDataKey maps u to x", () => {
-      expect(connectionDiffWireKeyForDataKey("u")).toBe("x");
-      expect(connectionDiffWireKeyForDataKey("gap")).toBe("gap");
+    it("connectionDiffKeyForDataKey maps u to x", () => {
+      expect(connectionDiffKeyForDataKey("u")).toBe("x");
+      expect(connectionDiffKeyForDataKey("gap")).toBe("gap");
     });
 
     it("buildSchemaEntityChangeCommands returns nested piece wire with design id", () => {
@@ -6928,13 +6672,13 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
     });
 
     it("kitStoreClientUpdatePiece forwards to submitChangeKitCommands", async () => {
-      let last: readonly ChangeKitCommandWire[] | undefined;
+      let last: readonly ChangeKitCommand[] | undefined;
       const client = {
         getKitWriteScope: () => null,
         setKitWriteScope: () => {},
         finalizeKitWriteTransaction: async () => ({ ok: true as const }),
         abortKitWriteTransaction: async () => ({ ok: true as const }),
-        submitChangeKitCommands: async (cs: readonly ChangeKitCommandWire[]) => {
+        submitChangeKitCommands: async (cs: readonly ChangeKitCommand[]) => {
           last = cs;
           return { ok: true as const };
         },

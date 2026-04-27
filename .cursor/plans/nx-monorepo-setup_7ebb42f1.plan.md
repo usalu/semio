@@ -16,10 +16,10 @@ todos:
    status: completed
  - id: validate-graph
    content: Run Nx discovery and representative targets, then fix any graph or target errors.
-   status: in_progress
+   status: completed
  - id: close-ticket
    content: Close the repo ticket with files changed and validation summary.
-   status: pending
+   status: completed
 isProject: false
 ---
 

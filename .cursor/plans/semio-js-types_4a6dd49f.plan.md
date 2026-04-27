@@ -7,13 +7,13 @@ todos:
    status: completed
  - id: rust-graphql
    content: Replace opaque Rust GraphQL scalar boundaries with concrete GraphQL object/input/union types where needed, then regenerate `semio/graphql/schema.graphql`.
-   status: in_progress
+   status: completed
  - id: js-wire
    content: Refactor `semio/js/index.ts` GraphQL, event, patch, and store APIs to exact types with no forbidden tokens.
-   status: pending
+   status: completed
  - id: tests
    content: Extend existing Rust and JS tests to cover typed command/event/read behavior and run relevant checks.
-   status: pending
+   status: completed
 isProject: false
 ---
 
