@@ -1,7 +1,7 @@
 {
   "title": "Semio Rs New Architecture",
   "emoji": "🦀",
-  "status": "closed",
+  "status": "open",
   "description": "Rebuild semio/rs/lib.rs as a clean greenfield skeleton matching semio/graphql/target.schema.graphql: one struct per GraphQL type with a main impl + an #[Object] impl, all pub fn async, a single global emit_event, and a parent/child web-worker topology where the parent routes Query.wip and Query.authoritative to two child workers. Wire one end-to-end operation (CreatedFixedPiece) through the full path as the reference flow.",
   "summary": "Greenfield rewrite of semio/rs/lib.rs as a clean architecture matching semio/graphql/target.schema.graphql.\n\nWhat shipped:\n- Hierarchical region tree: id, timestamp, error, geom, meta, hash, kit (type/design/piece/connection), vcs (change/transaction/draft/checkpoint/alternative/graph/session/conflict), op, event, worker, gql, wasm_bridge.\n- One struct per GraphQL type, named exactly as the schema type, with a main impl (all pub fn async) plus an #[Object]/#[Subscription] impl. No struct named *Store.\n- Single emit point: event::EventBus::emit_event(\u0026self, ev: KitEvent) is the only emit_event in the crate; guard test asserts uniqueness.\n- Worker topology (parent router): worker::ParentRuntime spawns two ChildRuntimes (wip + authoritative) that each own an Arc\u003cRwLock\u003cGraph\u003e\u003e, with async-channel inbound work queues and an async-broadcast outbound bus. Native: in-process std::thread + futures-lite. wasm32: spawn_local with a wasm_bridge entry point (parent_boot, schema_sdl).\n- End-to-end op: createFixedPiece is fully wired: Mutation -\u003e ParentRuntime::dispatch_wip -\u003e Command::CreateFixedPiece -\u003e ChildRuntime::apply -\u003e Graph::apply_create_fixed_piece -\u003e Piece insert -\u003e EventBus::emit_event(KitEvent::CreatedFixedPiece) -\u003e Subscription createdFixedPiece. Other operations (fixPiece, renameKit, changeDescription) are stubs that emit only commandSucceeded.\n- Tests (in-file): parses_target_schema, single_emit_event_in_codebase (text-scan guard), create_fixed_piece_end_to_end, wip_and_authoritative_are_isolated. All 4 pass on x86_64-pc-windows-msvc; cargo check passes on wasm32-unknown-unknown.\n\nOut of scope (deferred to follow-up tickets): porting change-commands, diff merge, flatten algorithm, kit hash, full VCS persistence, backbone (dev/local/remote) and conflict resolution from lib.old.rs onto this new skeleton; full wasm postMessage routing for the parent router.",
   "goal": "🎯runningsketchpad",
@@ -11,6 +11,7 @@
     "local": "semio_rs_new_arch_d7b81250.plan.md"
   },
   "sessions": [
-    "⚪aee278dc4aef4b3fac63cda46ffa6450"
+    "⚪aee278dc4aef4b3fac63cda46ffa6450",
+    "⚪15ce10426dd64013809fe82d914ff618"
   ]
 }
