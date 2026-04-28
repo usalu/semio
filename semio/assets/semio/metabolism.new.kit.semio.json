@@ -445,6 +445,7 @@
               "id": "…",
               "hash": "…",
               "description": "…",
+              "origin": "…",
               "forwards": {
                 "hash": "…",
                 "values": [
@@ -540,21 +541,6 @@
             }
           ]
         }
-      },
-      {
-        "id": "…",
-        "hash": "…",
-        "timestamp": "…",
-        "message": "…",
-        "authors": {
-          "hash": "…",
-          "values": [
-            {
-              "id": "…",
-              "hash": "…"
-            }
-          ]
-        }
       }
     ]
   },
@@ -576,6 +562,46 @@
             {
               "id": "…",
               "hash": "…"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "drafts": {
+    "hash": "…",
+    "values:": [
+      {
+        "id": "…",
+        "hash": "…",
+        "checkpoint": {
+          "id": "…",
+          "hash": "…"
+        },
+        "transactions": {
+          "hash": "…",
+          "values": [
+            {
+              "id": "…",
+              "hash": "…",
+              "forwards": {
+                "hash": "…",
+                "values": [
+                  {
+                    "id": "…",
+                    "hash": "…"
+                  }
+                ]
+              },
+              "backwards": {
+                "hash": "…",
+                "values": [
+                  {
+                    "id": "…",
+                    "hash": "…"
+                  }
+                ]
+              }
             }
           ]
         }

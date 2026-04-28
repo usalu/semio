@@ -70,12 +70,26 @@ type Position {
   plane: Plane!
 }
 
+input LocationInput {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+}
+
+type Location {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+}
+
 #endregion Weak
 
 #region Strong
 
-type Location {
+type Place {
   id: ID!
+  name: String
+  place: Place
 }
 
 type File {
@@ -101,6 +115,9 @@ type Author {
   email: String!
   role: String
   rank: Int
+  drafts: [Draft!]!
+  transactions: [Transaction!]!
+  checkpoints: [Checkpoints!]!
 }
 
 type Attribute {
@@ -377,7 +394,7 @@ type Design implements Entity {
   description: String
   icon: String
   image: String
-  location: Location
+  place: Place
   unit: String
   created: Timestamp
   updated: Timestamp
@@ -477,6 +494,8 @@ type Change implements Entity {
   id: ID!
   hash: String!
   owner: ChangeOwner!
+  description: String
+  origin: String
   forwards: [Operation!]!
   backwards: [Operation!]!
 }
@@ -491,7 +510,7 @@ type Transaction implements Entity {
 type Draft implements Entity {
   id: ID!
   hash: String!
-  owner: Alternative
+  owner: Author!
   parentCheckpoint: Checkpoint
   targetAlternative: Alternative
   openTransaction: Transaction
