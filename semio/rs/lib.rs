@@ -7,30 +7,30 @@ pub mod read {
     use serde::{Deserialize, Serialize};
 
     use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow};
-    use crate::benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow};
-    use crate::concept::{ConceptFull, ConceptRef, ConceptMetadata, ConceptShallow};
-    use crate::connection::{ConnectionFull, ConnectionRef, ConnectionMetadata, ConnectionShallow};
-    use crate::connector::{ConnectorFull, ConnectorRef, ConnectorMetadata, ConnectorShallow, ConnectorStoreRef};
-    use crate::design::{DesignFull, DesignRef, DesignMetadata, DesignShallow, DesignStore, DesignStoreRef};
-    use crate::family::{FamilyFull, FamilyRef, FamilyMetadata, FamilyShallow, FamilyStoreRef};
-    use crate::file::{FileFull, FileRef, FileMetadata, FileShallow};
-    use crate::folder::{FolderFull, FolderRef, FolderMetadata, FolderShallow};
+    use crate::author::{ AuthorRef,  };
+    use crate::benchmark::{ BenchmarkRef,  };
+    use crate::concept::{ ConceptRef,  };
+    use crate::connection::{ ConnectionRef,  };
+    use crate::connector::{ ConnectorRef,   ConnectorStoreRef};
+    use crate::design::{ DesignRef,   DesignStore, DesignStoreRef};
+    use crate::family::{ FamilyRef,   FamilyStoreRef};
+    use crate::file::{ FileRef,  };
+    use crate::folder::{ FolderRef,  };
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{GroupFull, GroupRef, GroupMetadata, GroupShallow};
+    use crate::group::{ GroupRef,  };
     use crate::id::Id;
-    use crate::kit_graph::{KitFull, KitGraph, KitRef, KitMetadata, KitShallow};
-    use crate::layer::{LayerFull, LayerRef, LayerMetadata, LayerShallow};
-    use crate::location::{LocationFull, LocationRef, LocationMetadata, LocationShallow};
-    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto, PieceFull, PieceRef, PieceMetadata, PieceShallow, PieceStoreRef, PoseFull};
-    use crate::port::{PortFull, PortRef, PortMetadata, PortShallow, PortStoreRef};
-    use crate::prop::{PropFull, PropRef, PropShallow};
-    use crate::quality::{QualityFull, QualityRef, QualityMetadata, QualityShallow};
-    use crate::representation::{RepresentationFull, RepresentationRef, RepresentationMetadata, RepresentationShallow, RepresentationStoreRef};
-    use crate::side::{SideFull, SideRef, SideMetadata, SideShallow, SideStoreRef};
-    use crate::stat::{StatFull, StatRef, StatMetadata, StatShallow};
-    use crate::tag::{TagFull, TagRef, TagMetadata, TagShallow};
-    use crate::typ::{TypeFull, TypeRef, TypeMetadata, TypeShallow, TypeStoreRef};
+    use crate::kit_graph::{ KitGraph, KitRef,  };
+    use crate::layer::{ LayerRef,  };
+    use crate::location::{ LocationRef,  };
+    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto,  PieceRef,   PieceStoreRef, PoseFull};
+    use crate::port::{ PortRef,   PortStoreRef};
+    use crate::prop::{ PropRef, };
+    use crate::quality::{ QualityRef,  };
+    use crate::representation::{ RepresentationRef,   RepresentationStoreRef};
+    use crate::side::{ SideRef,   SideStoreRef};
+    use crate::stat::{ StatRef,  };
+    use crate::tag::{ TagRef,  };
+    use crate::typ::{ TypeRef,   TypeStoreRef};
 
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, async_graphql::Enum)]
     #[serde(rename_all = "lowercase")]
@@ -169,7 +169,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommandOutput {
         ReadKitFullCommand { kit: KitFull },
-        ReadKitShallowCommand { kit: KitShallow },
+        ReadKitShallowCommand { kit:  },
         ReadKitMetadataCommand { metadata: KitMetadata },
         ReadKitIdCommand { id: KitRef },
         ReadKitNameCommand { name: String },
@@ -184,32 +184,32 @@ pub mod read {
         ReadKitCreatedCommand { created: Option<String> },
         ReadKitUpdatedCommand { updated: Option<String> },
         ReadKitTypesFullCommand { types: Vec<TypeFull> },
-        ReadKitTypesShallowCommand { types: Vec<TypeShallow> },
+        ReadKitTypesShallowCommand { types: Vec<> },
         ReadKitTypeIdsCommand { r#type_ids: Vec<TypeRef> },
         ReadKitTypesMetadataCommand { types: Vec<TypeMetadata> },
         ReadKitDesignsFullCommand { designs: Vec<DesignFull> },
-        ReadKitDesignsShallowCommand { designs: Vec<DesignShallow> },
+        ReadKitDesignsShallowCommand { designs: Vec<> },
         ReadKitDesignIdsCommand { design_ids: Vec<DesignRef> },
         ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadata> },
         ReadKitFilesFullCommand { files: Vec<FileFull> },
-        ReadKitFilesShallowCommand { files: Vec<FileShallow> },
+        ReadKitFilesShallowCommand { files: Vec<> },
         ReadKitFoldersFullCommand { folders: Vec<FolderFull> },
-        ReadKitFoldersShallowCommand { folders: Vec<FolderShallow> },
+        ReadKitFoldersShallowCommand { folders: Vec<> },
         ReadKitLocationsFullCommand { locations: Vec<LocationFull> },
-        ReadKitLocationsShallowCommand { locations: Vec<LocationShallow> },
+        ReadKitLocationsShallowCommand { locations: Vec<> },
         ReadKitFamiliesFullCommand { families: Vec<FamilyFull> },
-        ReadKitFamiliesShallowCommand { families: Vec<FamilyShallow> },
+        ReadKitFamiliesShallowCommand { families: Vec<> },
         ReadKitPortsFullCommand { ports: Vec<PortFull> },
         ReadKitAuthorsFullCommand { authors: Vec<AuthorFull> },
-        ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallow> },
+        ReadKitAuthorsShallowCommand { authors: Vec<> },
         ReadKitConceptsFullCommand { concepts: Vec<ConceptFull> },
-        ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallow> },
+        ReadKitConceptsShallowCommand { concepts: Vec<> },
         ReadKitTagsFullCommand { tags: Vec<TagFull> },
-        ReadKitTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadKitTagsShallowCommand { tags: Vec<> },
         ReadKitQualitiesFullCommand { qualities: Vec<QualityFull> },
-        ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadKitQualitiesShallowCommand { qualities: Vec<> },
         ReadKitPropsFullCommand { props: Vec<PropFull> },
-        ReadKitPropsShallowCommand { props: Vec<PropShallow> },
+        ReadKitPropsShallowCommand { props: Vec<> },
         ReadKitAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadKitAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
@@ -315,7 +315,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadTypeCommandOutput {
         ReadTypeFullCommand { dto: TypeFull },
-        ReadTypeShallowCommand { dto: TypeShallow },
+        ReadTypeShallowCommand { dto:  },
         ReadTypeMetadataCommand { metadata: TypeMetadata },
         ReadTypeIdCommand { id: TypeRef },
         ReadTypeNameCommand { name: String },
@@ -330,19 +330,19 @@ pub mod read {
         ReadTypeUpdatedCommand { updated: Option<String> },
         ReadTypeFamiliesCommand { families: Vec<FamilyRef> },
         ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFull> },
-        ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallow> },
+        ReadTypeConnectorsShallowCommand { connectors: Vec<> },
         ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFull> },
-        ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallow> },
+        ReadTypeRepresentationsShallowCommand { representations: Vec<> },
         ReadTypeAuthorsFullCommand { authors: Vec<AuthorFull> },
-        ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallow> },
+        ReadTypeAuthorsShallowCommand { authors: Vec<> },
         ReadTypeConceptsFullCommand { concepts: Vec<ConceptFull> },
-        ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallow> },
+        ReadTypeConceptsShallowCommand { concepts: Vec<> },
         ReadTypeTagsFullCommand { tags: Vec<TagFull> },
-        ReadTypeTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadTypeTagsShallowCommand { tags: Vec<> },
         ReadTypeQualitiesFullCommand { qualities: Vec<QualityFull> },
-        ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadTypeQualitiesShallowCommand { qualities: Vec<> },
         ReadTypePropsFullCommand { props: Vec<PropFull> },
-        ReadTypePropsShallowCommand { props: Vec<PropShallow> },
+        ReadTypePropsShallowCommand { props: Vec<> },
         ReadTypeAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadTypeAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadTypePortsFullCommand { ports: Vec<PortFull> },
@@ -466,13 +466,13 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadDesignCommandOutput {
         ReadDesignFullCommand {
-            dto: DesignFull,
+            dto: 
         },
         ReadDesignShallowCommand {
-            dto: DesignShallow,
+            dto: 
         },
         ReadDesignMetadataCommand {
-            metadata: DesignMetadata,
+            metadata: 
         },
         ReadDesignIdCommand {
             id: DesignRef,
@@ -511,55 +511,55 @@ pub mod read {
             pieces: Vec<PieceFull>,
         },
         ReadDesignPiecesShallowCommand {
-            pieces: Vec<PieceShallow>,
+            pieces: Vec<>,
         },
         ReadDesignConnectionsFullCommand {
             connections: Vec<ConnectionFull>,
         },
         ReadDesignConnectionsShallowCommand {
-            connections: Vec<ConnectionShallow>,
+            connections: Vec<>,
         },
         ReadDesignLayersFullCommand {
             layers: Vec<LayerFull>,
         },
         ReadDesignLayersShallowCommand {
-            layers: Vec<LayerShallow>,
+            layers: Vec<>,
         },
         ReadDesignGroupsFullCommand {
             groups: Vec<GroupFull>,
         },
         ReadDesignGroupsShallowCommand {
-            groups: Vec<GroupShallow>,
+            groups: Vec<>,
         },
         ReadDesignAuthorsFullCommand {
             authors: Vec<AuthorFull>,
         },
         ReadDesignAuthorsShallowCommand {
-            authors: Vec<AuthorShallow>,
+            authors: Vec<>,
         },
         ReadDesignConceptsFullCommand {
             concepts: Vec<ConceptFull>,
         },
         ReadDesignConceptsShallowCommand {
-            concepts: Vec<ConceptShallow>,
+            concepts: Vec<>,
         },
         ReadDesignTagsFullCommand {
             tags: Vec<TagFull>,
         },
         ReadDesignTagsShallowCommand {
-            tags: Vec<TagShallow>,
+            tags: Vec<>,
         },
         ReadDesignQualitiesFullCommand {
             qualities: Vec<QualityFull>,
         },
         ReadDesignQualitiesShallowCommand {
-            qualities: Vec<QualityShallow>,
+            qualities: Vec<>,
         },
         ReadDesignPropsFullCommand {
             props: Vec<PropFull>,
         },
         ReadDesignPropsShallowCommand {
-            props: Vec<PropShallow>,
+            props: Vec<>,
         },
         ReadDesignAttributesFullCommand {
             attributes: Vec<AttributeStore>,
@@ -571,7 +571,7 @@ pub mod read {
             stats: Vec<StatFull>,
         },
         ReadDesignStatsShallowCommand {
-            stats: Vec<StatShallow>,
+            stats: Vec<>,
         },
         ReadDesignFlattenMapCommand {
             entries: Vec<DesignFlattenMapEntryDto>,
@@ -675,7 +675,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadPieceCommandOutput {
         ReadPieceFullCommand { dto: PieceFull },
-        ReadPieceShallowCommand { dto: PieceShallow },
+        ReadPieceShallowCommand { dto:  },
         ReadPieceMetadataCommand { metadata: PieceMetadata },
         ReadPieceIdCommand { id: PieceRef },
         ReadPieceNameCommand { name: Option<String> },
@@ -690,7 +690,7 @@ pub mod read {
         ReadPieceTypeCommand { r#type: Option<TypeRef> },
         ReadPieceDesignCommand { design: Option<DesignRef> },
         ReadPiecePropsFullCommand { props: Vec<PropFull> },
-        ReadPiecePropsShallowCommand { props: Vec<PropShallow> },
+        ReadPiecePropsShallowCommand { props: Vec<> },
         ReadPieceAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadPieceAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadPieceFlatPlaneCommand { flat_plane: Plane },
@@ -744,7 +744,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectionCommandOutput {
         ReadConnectionFullCommand { dto: ConnectionFull },
-        ReadConnectionShallowCommand { dto: ConnectionShallow },
+        ReadConnectionShallowCommand { dto:  },
         ReadConnectionMetadataCommand { metadata: ConnectionMetadata },
         ReadConnectionIdCommand { id: ConnectionRef },
         ReadConnectionConnectedSideMetadataCommand { side: SideMetadata },
@@ -763,7 +763,7 @@ pub mod read {
         ReadConnectionAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
-        ReadConnectionFlatSidesForChildCommand { connected: SideFull, connecting: SideFull },
+        ReadConnectionFlatSidesForChildCommand { connected:  connecting: SideFull },
         ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
         ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
         ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
@@ -786,7 +786,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadSideCommandOutput {
         ReadSideFullCommand { side: SideFull },
-        ReadSideShallowCommand { side: SideShallow },
+        ReadSideShallowCommand { side:  },
         ReadSideMetadataCommand { side: SideMetadata },
         ReadSideIdCommand { id: SideRef },
         ReadSidePieceIdCommand { piece: PieceRef },
@@ -823,7 +823,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadPortCommandOutput {
         ReadPortFullCommand { port: PortFull },
-        ReadPortShallowCommand { port: PortShallow },
+        ReadPortShallowCommand { port:  },
         ReadPortMetadataCommand { metadata: PortMetadata },
         ReadPortIdCommand { id: PortRef },
         ReadPortNameCommand { name: String },
@@ -836,7 +836,7 @@ pub mod read {
         ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
         ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortRef> },
         ReadPortQualitiesFullCommand { qualities: Vec<QualityFull> },
-        ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadPortQualitiesShallowCommand { qualities: Vec<> },
         ReadPortAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadPortAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
@@ -866,14 +866,14 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectorCommandOutput {
         ReadConnectorFullCommand { connector: ConnectorFull },
-        ReadConnectorShallowCommand { connector: ConnectorShallow },
+        ReadConnectorShallowCommand { connector:  },
         ReadConnectorMetadataCommand { metadata: ConnectorMetadata },
         ReadConnectorIdCommand { id: ConnectorRef },
         ReadConnectorCodeCommand { code: String },
         ReadConnectorDescriptionCommand { description: Option<String> },
         ReadConnectorPortIdCommand { port: Option<PortRef> },
         ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFull> },
-        ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadConnectorQualitiesShallowCommand { qualities: Vec<> },
         ReadConnectorAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
@@ -906,16 +906,16 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadRepresentationCommandOutput {
         ReadRepresentationFullCommand { representation: RepresentationFull },
-        ReadRepresentationShallowCommand { representation: RepresentationShallow },
+        ReadRepresentationShallowCommand { representation:  },
         ReadRepresentationMetadataCommand { metadata: RepresentationMetadata },
         ReadRepresentationIdCommand { id: RepresentationRef },
         ReadRepresentationUrlCommand { url: String },
         ReadRepresentationDescriptionCommand { description: Option<String> },
         ReadRepresentationFileIdCommand { file: Option<crate::file::FileRef> },
         ReadRepresentationTagsFullCommand { tags: Vec<TagFull> },
-        ReadRepresentationTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadRepresentationTagsShallowCommand { tags: Vec<> },
         ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFull> },
-        ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadRepresentationQualitiesShallowCommand { qualities: Vec<> },
         ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
@@ -946,14 +946,14 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadFamilyCommandOutput {
         ReadFamilyFullCommand { family: FamilyFull },
-        ReadFamilyShallowCommand { family: FamilyShallow },
+        ReadFamilyShallowCommand { family:  },
         ReadFamilyMetadataCommand { metadata: FamilyMetadata },
         ReadFamilyIdCommand { id: FamilyRef },
         ReadFamilyNameCommand { name: String },
         ReadFamilyDescriptionCommand { description: Option<String> },
         ReadFamilyIconCommand { icon: Option<String> },
         ReadFamilyPortsFullCommand { ports: Vec<PortFull> },
-        ReadFamilyPortsShallowCommand { ports: Vec<PortShallow> },
+        ReadFamilyPortsShallowCommand { ports: Vec<> },
         ReadFamilyAttributesFullCommand { attributes: Vec<AttributeStore> },
         ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
@@ -981,7 +981,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadFileCommandOutput {
         ReadFileFullCommand { file: FileFull },
-        ReadFileShallowCommand { file: FileShallow },
+        ReadFileShallowCommand { file:  },
         ReadFileMetadataCommand { metadata: FileMetadata },
         ReadFileIdCommand { id: FileRef },
         ReadFileUrlCommand { url: String },
@@ -1009,7 +1009,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadFolderCommandOutput {
         ReadFolderFullCommand { folder: FolderFull },
-        ReadFolderShallowCommand { folder: FolderShallow },
+        ReadFolderShallowCommand { folder:  },
         ReadFolderMetadataCommand { metadata: FolderMetadata },
         ReadFolderIdCommand { id: FolderRef },
         ReadFolderPathCommand { path: String },
@@ -1036,7 +1036,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadLocationCommandOutput {
         ReadLocationFullCommand { location: LocationFull },
-        ReadLocationShallowCommand { location: LocationShallow },
+        ReadLocationShallowCommand { location:  },
         ReadLocationMetadataCommand { metadata: LocationMetadata },
         ReadLocationIdCommand { id: LocationRef },
         ReadLocationLongitudeCommand { longitude: f64 },
@@ -1067,7 +1067,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadLayerCommandOutput {
         ReadLayerFullCommand { layer: LayerFull },
-        ReadLayerShallowCommand { layer: LayerShallow },
+        ReadLayerShallowCommand { layer:  },
         ReadLayerMetadataCommand { metadata: LayerMetadata },
         ReadLayerIdCommand { id: LayerRef },
         ReadLayerNameCommand { name: String },
@@ -1097,7 +1097,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadGroupCommandOutput {
         ReadGroupFullCommand { group: GroupFull },
-        ReadGroupShallowCommand { group: GroupShallow },
+        ReadGroupShallowCommand { group:  },
         ReadGroupMetadataCommand { metadata: GroupMetadata },
         ReadGroupIdCommand { id: GroupRef },
         ReadGroupNameCommand { name: String },
@@ -1125,7 +1125,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadAuthorCommandOutput {
         ReadAuthorFullCommand { author: AuthorFull },
-        ReadAuthorShallowCommand { author: AuthorShallow },
+        ReadAuthorShallowCommand { author:  },
         ReadAuthorMetadataCommand { metadata: AuthorMetadata },
         ReadAuthorIdCommand { id: AuthorRef },
         ReadAuthorNameCommand { name: String },
@@ -1151,7 +1151,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadConceptCommandOutput {
         ReadConceptFullCommand { concept: ConceptFull },
-        ReadConceptShallowCommand { concept: ConceptShallow },
+        ReadConceptShallowCommand { concept:  },
         ReadConceptMetadataCommand { metadata: ConceptMetadata },
         ReadConceptIdCommand { id: ConceptRef },
         ReadConceptNameCommand { name: String },
@@ -1175,7 +1175,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadTagCommandOutput {
         ReadTagFullCommand { tag: TagFull },
-        ReadTagShallowCommand { tag: TagShallow },
+        ReadTagShallowCommand { tag:  },
         ReadTagMetadataCommand { metadata: TagMetadata },
         ReadTagIdCommand { id: TagRef },
         ReadTagNameCommand { name: String },
@@ -1204,7 +1204,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadQualityCommandOutput {
         ReadQualityFullCommand { quality: QualityFull },
-        ReadQualityShallowCommand { quality: QualityShallow },
+        ReadQualityShallowCommand { quality:  },
         ReadQualityMetadataCommand { metadata: QualityMetadata },
         ReadQualityIdCommand { id: QualityRef },
         ReadQualityKeyCommand { key: String },
@@ -1213,7 +1213,7 @@ pub mod read {
         ReadQualityDefinitionCommand { definition: Option<String> },
         ReadQualityDescriptionCommand { description: Option<String> },
         ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFull> },
-        ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallow> },
+        ReadQualityBenchmarksShallowCommand { benchmarks: Vec<> },
         ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
     }
 
@@ -1236,7 +1236,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadBenchmarkCommandOutput {
         ReadBenchmarkFullCommand { benchmark: BenchmarkFull },
-        ReadBenchmarkShallowCommand { benchmark: BenchmarkShallow },
+        ReadBenchmarkShallowCommand { benchmark:  },
         ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadata },
         ReadBenchmarkIdCommand { id: BenchmarkRef },
         ReadBenchmarkNameCommand { name: String },
@@ -1263,7 +1263,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadPropCommandOutput {
         ReadPropFullCommand { prop: PropFull },
-        ReadPropShallowCommand { prop: PropShallow },
+        ReadPropShallowCommand { prop:  },
         ReadPropIdCommand { id: PropRef },
         ReadPropKeyCommand { key: String },
         ReadPropValueCommand { value: String },
@@ -1314,7 +1314,7 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadStatCommandOutput {
         ReadStatFullCommand { stat: StatFull },
-        ReadStatShallowCommand { stat: StatShallow },
+        ReadStatShallowCommand { stat:  },
         ReadStatMetadataCommand { metadata: StatMetadata },
         ReadStatIdCommand { id: StatRef },
         ReadStatKeyCommand { key: String },
@@ -2575,7 +2575,7 @@ pub mod change_command {
     use crate::author::AuthorRef;
     use crate::author::AuthorStore;
     use crate::author::AuthorStoreRef;
-    use crate::benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkStore, BenchmarkStoreRef};
+    use crate::benchmark::{ BenchmarkRef,  BenchmarkStore, BenchmarkStoreRef};
     use crate::concept::ConceptFull;
     use crate::concept::ConceptRef;
     use crate::concept::ConceptStore;
@@ -2590,7 +2590,7 @@ pub mod change_command {
     use crate::design::DesignRef;
     use crate::design::DesignStore;
     use crate::event_wire;
-    use crate::family::{FamilyFull, FamilyRef, FamilyStoreRef};
+    use crate::family::{ FamilyRef, FamilyStoreRef};
     use crate::file::FileFull;
     use crate::file::FileRef;
     use crate::file::FileStoreRef;
@@ -2736,58 +2736,58 @@ pub mod change_command {
             version: Option<String>,
         },
         ReplaceKitFromFull {
-            dto: KitFull,
+            dto: 
         },
         AddType {
-            r#type: TypeFull,
+            r#type: 
         },
         RemoveType {
             type_id: TypeRef,
         },
         AddDesign {
-            design: DesignFull,
+            design: 
         },
         RemoveDesign {
             design_id: DesignRef,
         },
         AddFile {
-            file: FileFull,
+            file: 
         },
         RemoveFile {
             file_id: FileRef,
         },
         AddFolder {
-            folder: FolderFull,
+            folder: 
         },
         RemoveFolder {
             folder_id: FolderRef,
         },
         AddAuthor {
-            author: AuthorFull,
+            author: 
         },
         RemoveAuthor {
             author_id: AuthorRef,
         },
         AddConcept {
-            concept: ConceptFull,
+            concept: 
         },
         RemoveConcept {
             concept_id: ConceptRef,
         },
         AddTag {
-            tag: TagFull,
+            tag: 
         },
         RemoveTag {
             tag_id: TagRef,
         },
         AddQuality {
-            quality: QualityFull,
+            quality: 
         },
         RemoveQuality {
             quality_id: QualityRef,
         },
         AddKitProp {
-            prop: PropFull,
+            prop: 
         },
         RemoveKitProp {
             prop_id: PropRef,
@@ -2835,7 +2835,7 @@ pub mod change_command {
             commands: Vec<ChangePortCommand>,
         },
         AddFamily {
-            family: FamilyFull,
+            family: 
         },
         RemoveFamily {
             family_id: FamilyRef,
@@ -3008,7 +3008,7 @@ pub mod change_command {
             commands: Vec<ChangePortCommand>,
         },
         AddConnector {
-            connector: ConnectorFull,
+            connector: 
         },
         RemoveConnector {
             connector_id: ConnectorRef,
@@ -3018,7 +3018,7 @@ pub mod change_command {
             commands: Vec<ChangeConnectorCommand>,
         },
         AddRepresentation {
-            representation: RepresentationFull,
+            representation: 
         },
         RemoveRepresentation {
             id: RepresentationRef,
@@ -3028,31 +3028,31 @@ pub mod change_command {
             commands: Vec<ChangeRepresentationCommand>,
         },
         AddTypeAuthor {
-            author: AuthorFull,
+            author: 
         },
         RemoveTypeAuthor {
             author_id: AuthorRef,
         },
         AddTypeConcept {
-            concept: ConceptFull,
+            concept: 
         },
         RemoveTypeConcept {
             concept_id: ConceptRef,
         },
         AddTypeTag {
-            tag: TagFull,
+            tag: 
         },
         RemoveTypeTag {
             tag_id: TagRef,
         },
         AddTypeQuality {
-            quality: QualityFull,
+            quality: 
         },
         RemoveTypeQuality {
             quality_id: QualityRef,
         },
         AddTypeProp {
-            prop: PropFull,
+            prop: 
         },
         RemoveTypeProp {
             prop_id: PropRef,
@@ -3639,7 +3639,7 @@ pub mod change_command {
                 | ChangeKitCommand::ChangeAuthorCommands { .. }
                 | ChangeKitCommand::ChangeConceptCommands { .. }
                 | ChangeKitCommand::ChangeTagCommands { .. }
-                | ChangeKitCommand::ChangeKitQualityCommands { .. } => KitChangeKind::SetKitMetadata,
+                | ChangeKitCommand::ChangeKitQualityCommands { .. } => KitChangeKind::
                 ChangeKitCommand::AddType { .. } => KitChangeKind::AddType,
                 ChangeKitCommand::RemoveType { .. } => KitChangeKind::RemoveType,
                 ChangeKitCommand::AddDesign { .. } => KitChangeKind::AddDesign,
@@ -6103,11 +6103,11 @@ pub mod kit_checkpoint {
 
     use crate::id::Id;
     use crate::kit_change::KitChange;
-    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+    use crate::kit_graph::{ KitGraph, KitGraphRef};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct MaterializedKit {
-        pub initial: KitFull,
+        pub initial: 
         pub change_list: Vec<KitChange>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub computed: Option<KitFull>,
@@ -6199,7 +6199,7 @@ pub mod kit_checkpoint {
             children
         }
 
-        pub fn materialize(initial: &KitFull, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFull {
+        pub fn materialize(initial: & map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFull {
             let Some(at_id) = at else {
                 return initial.clone();
             };
@@ -6216,7 +6216,7 @@ pub mod kit_checkpoint {
             out
         }
 
-        pub fn materialize_graph(initial: &KitFull, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
+        pub fn materialize_graph(initial: & map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
             let Some(at_id) = at else {
                 return KitGraph::from_full(initial.clone());
             };
@@ -6232,7 +6232,7 @@ pub mod kit_checkpoint {
             k
         }
 
-        pub fn mark_as_release(&mut self, initial: KitFull, all_checkpoints: &HashMap<Id, KitCheckpoint>) {
+        pub fn mark_as_release(&mut self, initial:  all_checkpoints: &HashMap<Id, KitCheckpoint>) {
             let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
             let mut change_list: Vec<KitChange> = Vec::new();
             for id in &path {
@@ -6419,7 +6419,7 @@ pub mod kit_draft {
         pub id: Id,
         pub parent_checkpoint: Option<Id>,
         pub target_alternative: Option<Id>,
-        pub before: KitFull,
+        pub before: 
         pub transactions: Vec<Transaction>,
         pub redo_transactions: Vec<Transaction>,
         pub open_transaction: Option<Transaction>,
@@ -6745,11 +6745,11 @@ pub mod backbone {
     use crate::id::Id;
     use crate::kit_alternative::KitAlternative;
     use crate::kit_checkpoint::KitCheckpoint;
-    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+    use crate::kit_graph::{ KitGraph, KitGraphRef};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct BackboneSnapshot {
-        pub initial: KitFull,
+        pub initial: 
         pub checkpoints: HashMap<Id, KitCheckpoint>,
         pub the_kit_head: Option<Id>,
         pub alternatives: HashMap<Id, KitAlternative>,
@@ -7225,7 +7225,7 @@ pub mod kit_store {
     use crate::backbone::BackboneConfig;
     use crate::error::{Result, SemioError};
     use crate::kit_conflict_registry::{ConflictRegistry, ConflictResolution, KitConflict};
-    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+    use crate::kit_graph::{ KitGraph, KitGraphRef};
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
@@ -8305,7 +8305,7 @@ pub mod author {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8450,9 +8450,9 @@ pub mod author {
             AuthorMetadata { id: self.id.clone(), name: self.name.clone(), email: self.email.clone(), role: self.role.clone(), rank: self.rank }
         }
 
-        pub fn to_shallow(&self) -> AuthorShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            AuthorShallow { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
+             { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
         pub fn to_full(&self) -> AuthorFull {
@@ -8460,7 +8460,7 @@ pub mod author {
             AuthorFull { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
-        pub fn clone_wire(&self) -> AuthorShallow {
+        pub fn clone_wire(&self) ->  {
             self.to_shallow()
         }
 
@@ -8530,7 +8530,7 @@ pub mod benchmark {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8651,9 +8651,9 @@ pub mod benchmark {
             BenchmarkMetadata { id: self.id.clone(), name: self.name.clone(), min: self.min, max: self.max, min_excluded: self.min_excluded, max_excluded: self.max_excluded }
         }
 
-        pub fn to_shallow(&self) -> BenchmarkShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            BenchmarkShallow { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
+             { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
         }
 
         pub fn to_full(&self) -> BenchmarkFull {
@@ -8722,7 +8722,7 @@ pub mod concept {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8843,9 +8843,9 @@ pub mod concept {
             ConceptMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), order: self.order }
         }
 
-        pub fn to_shallow(&self) -> ConceptShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            ConceptShallow { id: m.id, name: m.name, description: m.description, order: m.order }
+             { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
         pub fn to_full(&self) -> ConceptFull {
@@ -8885,7 +8885,7 @@ pub mod connection {
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::side::{SideMetadata, SideStore, SideStoreRef};
+    use crate::side::{ SideStore, SideStoreRef};
 
     pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
     pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
@@ -8919,8 +8919,8 @@ pub mod connection {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionMetadata {
         pub id: Id,
-        pub connected: SideMetadata,
-        pub connecting: SideMetadata,
+        pub connected: 
+        pub connecting: 
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8942,10 +8942,10 @@ pub mod connection {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionShallow {
+    pub struct  {
         pub id: Id,
-        pub connected: SideMetadata,
-        pub connecting: SideMetadata,
+        pub connected: 
+        pub connecting: 
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8971,8 +8971,8 @@ pub mod connection {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
     pub struct ConnectionFull {
         pub id: Id,
-        pub connected: SideMetadata,
-        pub connecting: SideMetadata,
+        pub connected: 
+        pub connecting: 
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9199,9 +9199,9 @@ pub mod connection {
             }
         }
 
-        pub fn to_shallow(&self) -> ConnectionShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            ConnectionShallow {
+             {
                 id: m.id,
                 connected: m.connected,
                 connecting: m.connecting,
@@ -9237,7 +9237,7 @@ pub mod connection {
             }
         }
 
-        pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side::SideFull, crate::side::SideFull)> {
+        pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side:: crate::side::SideFull)> {
             let (a, b) = self.flatten_parent_and_child_sides(child_id)?;
             let sa = a.read().ok()?.to_full();
             let sb = b.read().ok()?.to_full();
@@ -9305,7 +9305,7 @@ pub mod connector {
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
     use crate::port::{PortRef, PortStoreWeak};
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::quality::{  QualityStore, QualityStoreRef};
 
     pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
     pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
@@ -9348,7 +9348,7 @@ pub mod connector {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
-    pub struct ConnectorShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub code: String,
@@ -9357,7 +9357,7 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
         #[serde(default)]
@@ -9388,12 +9388,12 @@ pub mod connector {
     }
     impl Eq for ConnectorMetadata {}
 
-    impl PartialEq for ConnectorShallow {
+    impl PartialEq for  {
         fn eq(&self, other: &Self) -> bool {
             self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port && self.qualities == other.qualities && self.attributes == other.attributes
         }
     }
-    impl Eq for ConnectorShallow {}
+    impl Eq for  {}
 
     impl PartialEq for ConnectorFull {
         fn eq(&self, other: &Self) -> bool {
@@ -9424,7 +9424,7 @@ pub mod connector {
             Self { id: d.id, code: d.code, description: d.description, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
-        pub fn from_shallow(d: ConnectorShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
             s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
@@ -9448,9 +9448,9 @@ pub mod connector {
             ConnectorMetadata { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port, color: ColorDto { css } }
         }
 
-        pub fn to_shallow(&self) -> ConnectorShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            ConnectorShallow {
+             {
                 id: m.id,
                 code: m.code,
                 description: m.description,
@@ -9590,28 +9590,28 @@ pub mod design {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
+    use crate::author::{  AuthorStore, AuthorStoreRef};
     use crate::benchmark::BenchmarkFull;
-    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
-    use crate::connection::{ConnectionFull, ConnectionMetadata, ConnectionShallow, ConnectionStore, ConnectionStoreRef};
+    use crate::concept::{  ConceptStore, ConceptStoreRef};
+    use crate::connection::{   ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
     use crate::error::SemioError;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::family::{FamilyRef, FamilyStoreRef, FamilyStoreWeak};
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{GroupFull, GroupShallow, GroupStore, GroupStoreRef};
+    use crate::group::{  GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::layer::{LayerFull, LayerShallow, LayerStore, LayerStoreRef};
+    use crate::layer::{  LayerStore, LayerStoreRef};
     use crate::location::LocationRef;
-    use crate::piece::{PieceAlternatives, PieceFull, PieceShallow, PieceStore, PieceStoreRef};
+    use crate::piece::{PieceAlternatives,   PieceStore, PieceStoreRef};
     use crate::port::PortStoreRef;
-    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::prop::{  PropStore, PropStoreRef};
+    use crate::quality::{  QualityStore, QualityStoreRef};
     use crate::side::{SideStore, SideStoreRef};
-    use crate::stat::{StatFull, StatShallow, StatStore, StatStoreRef};
-    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
+    use crate::stat::{  StatStore, StatStoreRef};
+    use crate::tag::{  TagStore, TagStoreRef};
     use crate::typ::TypeStoreRef;
 
     pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
@@ -9674,7 +9674,7 @@ pub mod design {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct DesignShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9696,27 +9696,27 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceShallow>,
+        pub pieces: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connections: Vec<ConnectionShallow>,
+        pub connections: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub layers: Vec<LayerShallow>,
+        pub layers: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub groups: Vec<GroupShallow>,
+        pub groups: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallow>,
+        pub authors: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallow>,
+        pub concepts: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallow>,
+        pub tags: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallow>,
+        pub props: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub stats: Vec<StatShallow>,
+        pub stats: Vec<>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -9776,7 +9776,7 @@ pub mod design {
         typ.connectors.first().cloned()
     }
 
-    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadata, pref: &PieceStoreRef) -> Option<crate::port::PortRef> {
+    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side:: pref: &PieceStoreRef) -> Option<crate::port::PortRef> {
         if let Some(p) = &meta.port {
             return Some(p.clone());
         }
@@ -9801,7 +9801,7 @@ pub mod design {
         None
     }
 
-    fn connection_from_full(cdto: ConnectionFull, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
+    fn connection_from_full(cdto:  piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
         let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
         let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
         wire_side_from_dto(&cdto.connected, &s1, piece_index);
@@ -9835,7 +9835,7 @@ pub mod design {
         conn
     }
 
-    fn wire_side_from_dto(meta: &crate::side::SideMetadata, side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
+    fn wire_side_from_dto(meta: &crate::side:: side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -10677,7 +10677,7 @@ pub mod design {
             before - self.pieces.len()
         }
 
-        fn merge_piece_sparse_into_full(dto: &mut PieceFull, d: &crate::diff::PieceDiff) {
+        fn merge_piece_sparse_into_full(dto: &mut  d: &crate::diff::PieceDiff) {
             if let Some(v) = &d.name {
                 dto.name = v.clone();
             }
@@ -10760,7 +10760,7 @@ pub mod design {
             }
         }
 
-        fn merge_connection_sparse_into_full(dto: &mut ConnectionFull, d: &crate::diff::ConnectionDiff) {
+        fn merge_connection_sparse_into_full(dto: &mut  d: &crate::diff::ConnectionDiff) {
             if let Some(v) = &d.connected {
                 dto.connected = v.clone();
             }
@@ -10799,7 +10799,7 @@ pub mod design {
             }
         }
 
-        fn merge_layer_sparse_into_full(fd: &mut LayerFull, d: &crate::diff::LayerDiff) {
+        fn merge_layer_sparse_into_full(fd: &mut  d: &crate::diff::LayerDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10820,7 +10820,7 @@ pub mod design {
             }
         }
 
-        fn merge_group_sparse_into_full(fd: &mut GroupFull, d: &crate::diff::GroupDiff) {
+        fn merge_group_sparse_into_full(fd: &mut  d: &crate::diff::GroupDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10838,7 +10838,7 @@ pub mod design {
             }
         }
 
-        fn merge_author_sparse_into_full(fd: &mut AuthorFull, d: &crate::diff::AuthorDiff) {
+        fn merge_author_sparse_into_full(fd: &mut  d: &crate::diff::AuthorDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10853,7 +10853,7 @@ pub mod design {
             }
         }
 
-        fn merge_concept_sparse_into_full(fd: &mut ConceptFull, d: &crate::diff::ConceptDiff) {
+        fn merge_concept_sparse_into_full(fd: &mut  d: &crate::diff::ConceptDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10865,7 +10865,7 @@ pub mod design {
             }
         }
 
-        fn merge_tag_sparse_into_full(fd: &mut TagFull, d: &crate::diff::TagDiff) {
+        fn merge_tag_sparse_into_full(fd: &mut  d: &crate::diff::TagDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10902,7 +10902,7 @@ pub mod design {
             }
         }
 
-        fn merge_quality_sparse_into_full(fd: &mut QualityFull, d: &crate::diff::QualityDiff) {
+        fn merge_quality_sparse_into_full(fd: &mut  d: &crate::diff::QualityDiff) {
             if let Some(k) = &d.key {
                 fd.key = k.clone();
             }
@@ -10923,7 +10923,7 @@ pub mod design {
             }
         }
 
-        fn merge_stat_sparse_into_full(fd: &mut StatFull, d: &crate::diff::StatDiff) {
+        fn merge_stat_sparse_into_full(fd: &mut  d: &crate::diff::StatDiff) {
             if let Some(k) = &d.key {
                 fd.key = k.clone();
             }
@@ -11349,7 +11349,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFull, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
             {
@@ -11374,7 +11374,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFull, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_connection(&mut self, cdto:  design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
@@ -11452,9 +11452,9 @@ pub mod design {
             }
         }
 
-        pub fn to_shallow(&self) -> DesignShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            DesignShallow {
+             {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -11470,7 +11470,7 @@ pub mod design {
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect(),
                 groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
@@ -11498,7 +11498,7 @@ pub mod design {
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect(),
                 groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
@@ -11508,7 +11508,7 @@ pub mod design {
             }
         }
 
-        pub(crate) fn hydrate_from_full(d: DesignFull, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
+        pub(crate) fn hydrate_from_full(d:  type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
             let DesignFull {
                 id,
                 name,
@@ -11678,30 +11678,30 @@ pub mod diff {
     use std::collections::{HashMap, HashSet};
 
     use crate::attribute::AttributeStore;
-    use crate::author::{AuthorFull, AuthorRef};
-    use crate::benchmark::{BenchmarkFull, BenchmarkRef};
-    use crate::concept::{ConceptFull, ConceptRef};
-    use crate::connection::{ConnectionFull, ConnectionRef};
-    use crate::connector::{ConnectorFull, ConnectorRef};
+    use crate::author::{ AuthorRef};
+    use crate::benchmark::{ BenchmarkRef};
+    use crate::concept::{ ConceptRef};
+    use crate::connection::{ ConnectionRef};
+    use crate::connector::{ ConnectorRef};
     use crate::design::DesignFull;
-    use crate::family::{FamilyFull, FamilyRef};
-    use crate::file::{FileFull, FileRef};
-    use crate::folder::{FolderFull, FolderRef};
+    use crate::family::{ FamilyRef};
+    use crate::file::{ FileRef};
+    use crate::folder::{ FolderRef};
     use crate::geom::{Coordinate, Plane, Point, Vector};
-    use crate::group::{GroupFull, GroupRef};
+    use crate::group::{ GroupRef};
     use crate::id::Id;
     use crate::kit_graph::KitRef;
-    use crate::layer::{LayerFull, LayerRef};
+    use crate::layer::{ LayerRef};
     use crate::location::LocationRef;
-    use crate::piece::{PieceFull, PieceRef};
-    use crate::port::{PortFull, PortRef};
-    use crate::prop::{PropFull, PropRef};
-    use crate::quality::{QualityFull, QualityRef};
-    use crate::representation::{RepresentationFull, RepresentationRef};
+    use crate::piece::{ PieceRef};
+    use crate::port::{ PortRef};
+    use crate::prop::{ PropRef};
+    use crate::quality::{ QualityRef};
+    use crate::representation::{ RepresentationRef};
     use crate::side::SideMetadata;
-    use crate::stat::{StatFull, StatRef};
-    use crate::tag::{TagFull, TagRef};
-    use crate::typ::{TypeFull, TypeRef};
+    use crate::stat::{ StatRef};
+    use crate::tag::{ TagRef};
+    use crate::typ::{ TypeRef};
 
     #[inline]
     pub fn merge_opt<T: Clone>(a: &Option<T>, b: &Option<T>) -> Option<T> {
@@ -13156,11 +13156,11 @@ pub mod diff {
             }
         }
 
-        pub fn between(before: &DesignFull, after: &DesignFull) -> Self {
+        pub fn between(before: & after: &DesignFull) -> Self {
             Self::between_dto(before, after)
         }
 
-        pub fn between_dto(before: &DesignFull, after: &DesignFull) -> Self {
+        pub fn between_dto(before: & after: &DesignFull) -> Self {
             let mut d = DesignDiff::default();
             if before.name != after.name {
                 d.name = Some(after.name.clone());
@@ -13346,7 +13346,7 @@ pub mod diff {
             }
         }
 
-        fn merge_piece_sparse_dto(dto: &mut PieceFull, d: &PieceDiff) {
+        fn merge_piece_sparse_dto(dto: &mut  d: &PieceDiff) {
             if let Some(v) = &d.name {
                 dto.name = v.clone();
             }
@@ -13385,7 +13385,7 @@ pub mod diff {
             }
         }
 
-        fn merge_connection_sparse_dto(dto: &mut ConnectionFull, d: &ConnectionDiff) {
+        fn merge_connection_sparse_dto(dto: &mut  d: &ConnectionDiff) {
             if let Some(v) = &d.connected {
                 dto.connected = v.clone();
             }
@@ -13424,7 +13424,7 @@ pub mod diff {
             }
         }
 
-        fn merge_layer_sparse_dto(fd: &mut LayerFull, d: &LayerDiff) {
+        fn merge_layer_sparse_dto(fd: &mut  d: &LayerDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -13445,7 +13445,7 @@ pub mod diff {
             }
         }
 
-        fn merge_group_sparse_dto(fd: &mut GroupFull, d: &GroupDiff) {
+        fn merge_group_sparse_dto(fd: &mut  d: &GroupDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -13464,7 +13464,7 @@ pub mod diff {
         }
     }
 
-    fn piece_full_delta(b: &PieceFull, a: &PieceFull) -> PieceDiff {
+    fn piece_full_delta(b: & a: &PieceFull) -> PieceDiff {
         let mut d = PieceDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13507,7 +13507,7 @@ pub mod diff {
         d
     }
 
-    fn connection_full_delta(b: &ConnectionFull, a: &ConnectionFull) -> ConnectionDiff {
+    fn connection_full_delta(b: & a: &ConnectionFull) -> ConnectionDiff {
         let mut d = ConnectionDiff::default();
         if b.connected != a.connected {
             d.connected = Some(a.connected.clone());
@@ -13945,7 +13945,7 @@ pub mod diff {
         d
     }
 
-    pub fn prop_full_delta(b: &PropFull, a: &PropFull) -> PropDiff {
+    pub fn prop_full_delta(b: & a: &PropFull) -> PropDiff {
         let mut d = PropDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -13959,7 +13959,7 @@ pub mod diff {
         d
     }
 
-    pub fn author_full_delta(b: &AuthorFull, a: &AuthorFull) -> AuthorDiff {
+    pub fn author_full_delta(b: & a: &AuthorFull) -> AuthorDiff {
         let mut d = AuthorDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13976,7 +13976,7 @@ pub mod diff {
         d
     }
 
-    pub fn concept_full_delta(b: &ConceptFull, a: &ConceptFull) -> ConceptDiff {
+    pub fn concept_full_delta(b: & a: &ConceptFull) -> ConceptDiff {
         let mut d = ConceptDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13990,7 +13990,7 @@ pub mod diff {
         d
     }
 
-    pub fn tag_full_delta(b: &TagFull, a: &TagFull) -> TagDiff {
+    pub fn tag_full_delta(b: & a: &TagFull) -> TagDiff {
         let mut d = TagDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14001,7 +14001,7 @@ pub mod diff {
         d
     }
 
-    pub fn quality_full_delta(b: &QualityFull, a: &QualityFull) -> QualityDiff {
+    pub fn quality_full_delta(b: & a: &QualityFull) -> QualityDiff {
         let mut d = QualityDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -14025,7 +14025,7 @@ pub mod diff {
         d
     }
 
-    pub fn file_full_delta(b: &FileFull, a: &FileFull) -> FileDiff {
+    pub fn file_full_delta(b: & a: &FileFull) -> FileDiff {
         let mut d = FileDiff::default();
         if b.url != a.url {
             d.url = Some(a.url.clone());
@@ -14051,7 +14051,7 @@ pub mod diff {
         d
     }
 
-    pub fn family_full_delta(b: &FamilyFull, a: &FamilyFull) -> FamilyDiff {
+    pub fn family_full_delta(b: & a: &FamilyFull) -> FamilyDiff {
         let mut d = FamilyDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14073,7 +14073,7 @@ pub mod diff {
         d
     }
 
-    pub fn folder_full_delta(b: &FolderFull, a: &FolderFull) -> FolderDiff {
+    pub fn folder_full_delta(b: & a: &FolderFull) -> FolderDiff {
         let mut d = FolderDiff::default();
         if b.path != a.path {
             d.path = Some(a.path.clone());
@@ -14084,7 +14084,7 @@ pub mod diff {
         d
     }
 
-    pub fn type_full_delta(b: &TypeFull, a: &TypeFull) -> TypeDiff {
+    pub fn type_full_delta(b: & a: &TypeFull) -> TypeDiff {
         let mut d = TypeDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14194,7 +14194,7 @@ pub mod diff {
         d
     }
 
-    fn port_full_delta(b: &PortFull, a: &PortFull) -> PortDiff {
+    fn port_full_delta(b: & a: &PortFull) -> PortDiff {
         let mut d = PortDiff::default();
         if b.id != a.id {
             d.id = Some(a.id.clone());
@@ -14243,7 +14243,7 @@ pub mod diff {
         d
     }
 
-    fn connector_full_delta(b: &ConnectorFull, a: &ConnectorFull) -> ConnectorDiff {
+    fn connector_full_delta(b: & a: &ConnectorFull) -> ConnectorDiff {
         let mut d = ConnectorDiff::default();
         if b.code != a.code {
             d.code = Some(a.code.clone());
@@ -14287,7 +14287,7 @@ pub mod diff {
         d
     }
 
-    fn representation_full_delta(b: &RepresentationFull, a: &RepresentationFull) -> RepresentationDiff {
+    fn representation_full_delta(b: & a: &RepresentationFull) -> RepresentationDiff {
         let mut d = RepresentationDiff::default();
         if b.url != a.url {
             d.url = Some(a.url.clone());
@@ -14314,7 +14314,7 @@ pub mod diff {
     }
 
 
-    pub fn merge_file_diff_into_full(fd: &mut FileFull, d: &FileDiff) {
+    pub fn merge_file_diff_into_full(fd: &mut  d: &FileDiff) {
         if let Some(v) = &d.url {
             fd.url = v.clone();
         }
@@ -14338,7 +14338,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_family_diff_into_full(fd: &mut FamilyFull, d: &FamilyDiff) {
+    pub fn merge_family_diff_into_full(fd: &mut  d: &FamilyDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14356,7 +14356,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_folder_diff_into_full(fd: &mut FolderFull, d: &FolderDiff) {
+    pub fn merge_folder_diff_into_full(fd: &mut  d: &FolderDiff) {
         if let Some(v) = &d.path {
             fd.path = v.clone();
         }
@@ -14377,7 +14377,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_prop_diff_into_full(fd: &mut PropFull, d: &PropDiff) {
+    pub fn merge_prop_diff_into_full(fd: &mut  d: &PropDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14389,7 +14389,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_author_diff_into_full(fd: &mut AuthorFull, d: &AuthorDiff) {
+    pub fn merge_author_diff_into_full(fd: &mut  d: &AuthorDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14404,7 +14404,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_concept_diff_into_full(fd: &mut ConceptFull, d: &ConceptDiff) {
+    pub fn merge_concept_diff_into_full(fd: &mut  d: &ConceptDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14416,7 +14416,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_tag_diff_into_full(fd: &mut TagFull, d: &TagDiff) {
+    pub fn merge_tag_diff_into_full(fd: &mut  d: &TagDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14425,7 +14425,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_benchmark_diff_into_full(fd: &mut BenchmarkFull, d: &BenchmarkDiff) {
+    pub fn merge_benchmark_diff_into_full(fd: &mut  d: &BenchmarkDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14455,7 +14455,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_quality_diff_into_full(fd: &mut QualityFull, d: &QualityDiff) {
+    pub fn merge_quality_diff_into_full(fd: &mut  d: &QualityDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14548,7 +14548,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_stat_diff_into_full(fd: &mut StatFull, d: &StatDiff) {
+    pub fn merge_stat_diff_into_full(fd: &mut  d: &StatDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14575,7 +14575,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_port_diff_into_full(fd: &mut PortFull, d: &PortDiff) {
+    pub fn merge_port_diff_into_full(fd: &mut  d: &PortDiff) {
         if let Some(v) = &d.id {
             fd.id = v.clone();
         }
@@ -14618,7 +14618,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_connector_diff_into_full(fd: &mut ConnectorFull, d: &ConnectorDiff) {
+    pub fn merge_connector_diff_into_full(fd: &mut  d: &ConnectorDiff) {
         if let Some(v) = &d.code {
             fd.code = v.clone();
         }
@@ -14648,7 +14648,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_representation_diff_into_full(fd: &mut RepresentationFull, d: &RepresentationDiff) {
+    pub fn merge_representation_diff_into_full(fd: &mut  d: &RepresentationDiff) {
         if let Some(v) = &d.url {
             fd.url = v.clone();
         }
@@ -14681,7 +14681,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_type_diff_into_full(fd: &mut TypeFull, d: &TypeDiff) {
+    pub fn merge_type_diff_into_full(fd: &mut  d: &TypeDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14747,9 +14747,9 @@ pub mod kit_diff {
     use std::collections::{HashMap, HashSet};
 
     use crate::id::Id;
-    use crate::author::{AuthorFull, AuthorRef};
+    use crate::author::{ AuthorRef};
     use crate::concept::ConceptRef;
-    use crate::design::{DesignFull, DesignRef};
+    use crate::design::{ DesignRef};
     use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FamiliesDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
     use crate::family::FamilyRef;
     use crate::file::FileRef;
@@ -14839,7 +14839,7 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        pub fn between(before: &KitFull, after: &KitFull) -> Self {
+        pub fn between(before: & after: &KitFull) -> Self {
             Self::between_dto(before, after)
         }
 
@@ -15037,7 +15037,7 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        pub fn between_dto(before: &KitFull, after: &KitFull) -> Self {
+        pub fn between_dto(before: & after: &KitFull) -> Self {
             let mut d = Self::default();
             if before.name != after.name {
                 d.name = Some(after.name.clone());
@@ -15343,7 +15343,7 @@ pub mod kit_change {
     pub enum KitChangeKind {
         #[default]
         Inferred,
-        SetKitMetadata,
+        
         AddType,
         RemoveType,
         ModifyType,
@@ -16828,7 +16828,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFull, after: &crate::kit_graph::KitFull) {
+    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph:: after: &crate::kit_graph::KitFull) {
         use std::collections::HashMap;
 
         use crate::events::{DesignEvent, DesignField, KitEvent, TypeEvent, TypeField};
@@ -17104,50 +17104,8 @@ pub mod file {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileMetadata {
-        pub id: Id,
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mime: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub size: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub hash: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub updated: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileShallow {
-        pub id: Id,
-        #[serde(default, alias = "blob", alias = "name")]
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mime: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub size: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub hash: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
-        pub updated: Option<String>,
-    }
-
     #[derive(Deserialize)]
-    struct FileFullWire {
+    struct FileInput {
         id: Id,
         url: Option<String>,
         name: Option<String>,
@@ -17174,30 +17132,6 @@ pub mod file {
         }
     }
 
-    #[derive(Clone, Debug, Serialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileFull {
-        pub id: Id,
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub mime: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub size: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub hash: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub updated: Option<String>,
-    }
-
-    impl<'de> Deserialize<'de> for FileFull {
-        fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-            let w = FileFullWire::deserialize(deserializer)?;
-            Ok(FileFull::from(w))
-        }
-    }
 
     impl FileStore {
         pub fn new(url: impl Into<String>) -> Self {
@@ -17207,44 +17141,6 @@ pub mod file {
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::File, self.id.clone())
-        }
-
-        pub fn from_id_dto(d: FileRef) -> Self {
-            Self { id: d.id, url: String::new(), mime: None, size: None, hash: None, description: None, created: None, updated: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_metadata(d: FileMetadata) -> Self {
-            Self { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_shallow(d: FileShallow) -> Self {
-            Self::from_metadata(FileMetadata { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
-        }
-
-        pub fn from_full(d: FileFull) -> Self {
-            Self::from_metadata(FileMetadata { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
-        }
-
-        pub fn to_ref(&self) -> FileRef {
-            FileRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> FileMetadata {
-            FileMetadata { id: self.id.clone(), url: self.url.clone(), mime: self.mime.clone(), size: self.size, hash: self.hash.clone(), description: self.description.clone(), created: self.created.clone(), updated: self.updated.clone() }
-        }
-
-        pub fn to_shallow(&self) -> FileShallow {
-            let m = self.to_metadata();
-            FileShallow { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
-        }
-
-        pub fn to_full(&self) -> FileFull {
-            let m = self.to_metadata();
-            FileFull { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
         }
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
@@ -17417,7 +17313,7 @@ pub mod folder {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub path: String,
@@ -17456,7 +17352,7 @@ pub mod folder {
             Self { id: d.id, path: d.path, description: d.description, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow(d: FolderShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             Self::from_metadata(FolderMetadata { id: d.id, path: d.path, description: d.description })
         }
 
@@ -17472,9 +17368,9 @@ pub mod folder {
             FolderMetadata { id: self.id.clone(), path: self.path.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow(&self) -> FolderShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            FolderShallow { id: m.id, path: m.path, description: m.description }
+             { id: m.id, path: m.path, description: m.description }
         }
 
         pub fn to_full(&self) -> FolderFull {
@@ -17792,7 +17688,7 @@ pub mod location {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationShallow {
+    pub struct  {
         pub id: Id,
         pub longitude: f64,
         pub latitude: f64,
@@ -17843,9 +17739,9 @@ pub mod location {
             LocationMetadata { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude }
         }
 
-        pub fn to_shallow(&self) -> LocationShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            LocationShallow { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
+             { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
         }
 
         pub fn to_full(&self) -> LocationFull {
@@ -17899,7 +17795,7 @@ pub mod group {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17939,7 +17835,7 @@ pub mod group {
             Self { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow(d: GroupShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             Self::from_metadata(GroupMetadata { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
         }
 
@@ -17962,9 +17858,9 @@ pub mod group {
             }
         }
 
-        pub fn to_shallow(&self) -> GroupShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            GroupShallow { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
+             { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
         pub fn to_full(&self) -> GroupFull {
@@ -18372,28 +18268,28 @@ pub mod kit_graph {
     use async_broadcast::Receiver;
 
     use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
+    use crate::author::{  AuthorStore, AuthorStoreRef};
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
-    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
-    use crate::connection::{ConnectionFull, ConnectionRef};
-    use crate::design::{DesignFull, DesignRef, DesignStore, DesignStoreRef};
+    use crate::concept::{  ConceptStore, ConceptStoreRef};
+    use crate::connection::{ ConnectionRef};
+    use crate::design::{ DesignRef, DesignStore, DesignStoreRef};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyFull, FamilyStore, FamilyStoreRef};
-    use crate::file::{FileFull, FileStore, FileStoreRef};
-    use crate::folder::{FolderFull, FolderStore, FolderStoreRef};
+    use crate::family::{ FamilyStore, FamilyStoreRef};
+    use crate::file::{ FileStore, FileStoreRef};
+    use crate::folder::{ FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::{LocationFull, LocationStore, LocationStoreRef};
-    use crate::piece::{PieceFull, PieceRef, PieceStoreRef};
-    use crate::port::{PortFull, PortStore, PortStoreRef};
-    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::location::{ LocationStore, LocationStoreRef};
+    use crate::piece::{ PieceRef, PieceStoreRef};
+    use crate::port::{ PortStore, PortStoreRef};
+    use crate::prop::{  PropStore, PropStoreRef};
+    use crate::quality::{  QualityStore, QualityStoreRef};
     use crate::report::{SemioReport, ValidationResult};
-    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
-    use crate::typ::{TypeFull, TypeRef, TypeStore, TypeStoreRef};
+    use crate::tag::{  TagStore, TagStoreRef};
+    use crate::typ::{ TypeRef, TypeStore, TypeStoreRef};
 
     pub type KitGraphRef = Arc<RwLock<KitGraph>>;
     pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
@@ -18438,7 +18334,7 @@ pub mod kit_graph {
         undo_past: Vec<UndoStep>,
         undo_future: Vec<UndoStep>,
         undo_inhibit: u32,
-        pub initial: KitFull,
+        pub initial: 
         pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
         pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
         pub the_kit_head: Option<Id>,
@@ -18486,7 +18382,7 @@ pub mod kit_graph {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -18512,23 +18408,23 @@ pub mod kit_graph {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub types: Vec<crate::typ::TypeShallow>,
+        pub types: Vec<crate::typ::>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub designs: Vec<crate::design::DesignShallow>,
+        pub designs: Vec<crate::design::>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub files: Vec<crate::file::FileShallow>,
+        pub files: Vec<crate::file::>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub folders: Vec<crate::folder::FolderShallow>,
+        pub folders: Vec<crate::folder::>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallow>,
+        pub authors: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallow>,
+        pub concepts: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallow>,
+        pub tags: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallow>,
+        pub props: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
     }
@@ -20414,9 +20310,9 @@ pub mod kit_graph {
             }
         }
 
-        pub fn to_shallow(&self) -> KitShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            KitShallow {
+             {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -20434,7 +20330,7 @@ pub mod kit_graph {
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
                 folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
@@ -20463,7 +20359,7 @@ pub mod kit_graph {
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
                 folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
@@ -21194,7 +21090,7 @@ pub mod kit_graph {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFull, DesignStoreRef) = {
+            let (dto, design_ref): ( DesignStoreRef) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -21244,7 +21140,7 @@ pub mod kit_graph {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFull, DesignStoreRef) = {
+            let (dto, design_ref): ( DesignStoreRef) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -21349,7 +21245,7 @@ pub mod kit_graph {
             format!("{}|{}|{}|{}", c.id, c.connected.piece.id, c.connecting.piece.id, c.connected.port.as_ref().map(|p| p.id.to_string()).unwrap_or_default())
         }
 
-        fn strip_design_piece_id(c: &ConnectionFull, nested: &str) -> ConnectionFull {
+        fn strip_design_piece_id(c: & nested: &str) -> ConnectionFull {
             let mut o = c.clone();
             if o.connected.design_piece.as_ref().is_some_and(|d| d.id.as_str() == nested) {
                 o.connected.design_piece = None;
@@ -21360,7 +21256,7 @@ pub mod kit_graph {
             o
         }
 
-        fn expand_nested_design_pieces_in_dto(kit: &KitGraph, mut design: DesignFull) -> std::result::Result<DesignFull, SetError> {
+        fn expand_nested_design_pieces_in_dto(kit: &KitGraph, mut design: DesignFull) -> std::result::Result< SetError> {
             let nested_ids: Vec<String> = {
                 let mut s: HashSet<String> = HashSet::new();
                 for c in &design.connections {
@@ -21553,7 +21449,7 @@ pub mod layer {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default, alias = "path")]
         pub name: String,
@@ -21599,7 +21495,7 @@ pub mod layer {
             Self { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow(d: LayerShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             Self::from_metadata(LayerMetadata { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
         }
 
@@ -21615,9 +21511,9 @@ pub mod layer {
             LayerMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), color: self.color.clone(), order: self.order, visible: self.visible, locked: self.locked }
         }
 
-        pub fn to_shallow(&self) -> LayerShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            LayerShallow { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
+             { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
         }
 
         pub fn to_full(&self) -> LayerFull {
@@ -21737,7 +21633,7 @@ pub mod piece {
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
+    use crate::prop::{  PropStore, PropStoreRef};
     use crate::typ::{TypeRef, TypeStoreRef, TypeStoreWeak};
 
     pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
@@ -21818,7 +21714,7 @@ pub mod piece {
     #[serde(rename_all = "camelCase")]
     pub struct FixedPieceOutputDto {
         pub piece: PieceRef,
-        pub pose: PoseFull,
+        pub pose: 
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -21827,7 +21723,7 @@ pub mod piece {
         pub piece: PieceRef,
         pub parent_piece: PieceRef,
         pub parent_connection: crate::connection::ConnectionRef,
-        pub flat_pose: PoseFull,
+        pub flat_pose: 
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -21864,7 +21760,7 @@ pub mod piece {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -21888,7 +21784,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub design: Option<crate::design::DesignRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallow>,
+        pub props: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
     }
@@ -22014,7 +21910,7 @@ pub mod piece {
             self.flat_pose.invalidate();
         }
 
-        pub(crate) fn apply_full_dto(&mut self, d: PieceFull, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
+        pub(crate) fn apply_full_dto(&mut self, d:  design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
             self.apply_metadata_fields(PieceMetadata {
                 id: d.id,
                 name: d.name,
@@ -22652,9 +22548,9 @@ pub mod piece {
             }
         }
 
-        pub fn to_shallow(&self) -> PieceShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            PieceShallow {
+             {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22708,7 +22604,7 @@ pub mod port {
     use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::quality::{  QualityStore, QualityStoreRef};
 
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
@@ -22748,7 +22644,7 @@ pub mod port {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PortShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22768,7 +22664,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
         pub compatible_ports: Vec<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
     }
@@ -22845,7 +22741,7 @@ pub mod port {
             s
         }
 
-        pub fn from_shallow(d: PortShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             let mut s = Self::from_metadata(PortMetadata { id: d.id, name: d.name, description: d.description, icon: d.icon });
             s.compatible_families = d.compatible_families;
             s.mandatory = d.mandatory;
@@ -22877,10 +22773,10 @@ pub mod port {
             PortMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow(&self) -> PortShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
             let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
-            PortShallow {
+             {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -23078,7 +22974,7 @@ pub mod family {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23124,9 +23020,9 @@ pub mod family {
             FamilyMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow(&self) -> FamilyShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            FamilyShallow { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_wire()).collect() }
+             { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_wire()).collect() }
         }
 
         pub fn to_full(&self) -> FamilyFull {
@@ -23231,7 +23127,7 @@ pub mod prop {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropShallow {
+    pub struct  {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -23359,9 +23255,9 @@ pub mod prop {
             PropMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
         }
 
-        pub fn to_shallow(&self) -> PropShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            PropShallow { id: m.id, key: m.key, value: m.value, unit: m.unit }
+             { id: m.id, key: m.key, value: m.value, unit: m.unit }
         }
 
         pub fn to_full(&self) -> PropFull {
@@ -23391,7 +23287,7 @@ pub mod quality {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::benchmark::{BenchmarkFull, BenchmarkMetadata, BenchmarkStore, BenchmarkStoreRef};
+    use crate::benchmark::{  BenchmarkStore, BenchmarkStoreRef};
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
@@ -23444,7 +23340,7 @@ pub mod quality {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityShallow {
+    pub struct  {
         pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23569,7 +23465,7 @@ pub mod quality {
             self.invalidate_hash();
         }
 
-        pub(crate) fn from_shallow(d: QualityShallow) -> Self {
+        pub(crate) fn from_shallow(d: ) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
             s.apply_metadata_fields(QualityMetadata { id: d.id, key: d.key, value: d.value, unit: d.unit, definition: d.definition, description: d.description });
             s.benchmarks = d
@@ -23607,9 +23503,9 @@ pub mod quality {
             QualityMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), definition: self.definition.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow(&self) -> QualityShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            QualityShallow { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata())).collect() }
+             { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata())).collect() }
         }
 
         pub fn to_full(&self) -> QualityFull {
@@ -23775,8 +23671,8 @@ pub mod representation {
     use crate::file::{FileRef, FileStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
-    use crate::tag::{TagFull, TagShallow, TagStore};
+    use crate::quality::{  QualityStore, QualityStoreRef};
+    use crate::tag::{  TagStore};
 
     pub type RepresentationStoreRef = Arc<RwLock<RepresentationStore>>;
     pub type RepresentationStoreWeak = Weak<RwLock<RepresentationStore>>;
@@ -23811,7 +23707,7 @@ pub mod representation {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
@@ -23820,9 +23716,9 @@ pub mod representation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub file: Option<FileRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallow>,
+        pub tags: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
     }
@@ -23866,7 +23762,7 @@ pub mod representation {
             Self { id: d.id, url: d.url, description: d.description, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow(d: RepresentationShallow) -> Self {
+        pub fn from_shallow(d: ) -> Self {
             let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_shallow).collect();
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
@@ -23891,9 +23787,9 @@ pub mod representation {
             RepresentationMetadata { id: self.id.clone(), url: self.url.clone(), description: self.description.clone(), file }
         }
 
-        pub fn to_shallow(&self) -> RepresentationShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            RepresentationShallow {
+             {
                 id: m.id,
                 url: m.url,
                 description: m.description,
@@ -24046,7 +23942,7 @@ pub mod side {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideShallow {
+    pub struct  {
         pub id: Id,
         pub piece: crate::piece::PieceRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24128,9 +24024,9 @@ pub mod side {
             SideMetadata { id: self.id.clone(), piece: crate::piece::PieceRef { id: piece_id }, port, design_piece, connector: None }
         }
 
-        pub fn to_shallow(&self) -> SideShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            SideShallow { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
+             { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
         pub fn to_full(&self) -> SideFull {
@@ -24220,7 +24116,7 @@ pub mod stat {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatShallow {
+    pub struct  {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -24345,9 +24241,9 @@ pub mod stat {
             StatMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow(&self) -> StatShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            StatShallow { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
+             { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
         }
 
         pub fn to_full(&self) -> StatFull {
@@ -24413,7 +24309,7 @@ pub mod tag {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagShallow {
+    pub struct  {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -24451,7 +24347,7 @@ pub mod tag {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_shallow(d: TagShallow) -> Self {
+        pub(crate) fn from_shallow(d: ) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
             s.name = d.name;
             s.order = d.order;
@@ -24527,9 +24423,9 @@ pub mod tag {
             TagMetadata { id: self.id.clone(), name: self.name.clone(), order: self.order }
         }
 
-        pub fn to_shallow(&self) -> TagShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            TagShallow { id: m.id, name: m.name, order: m.order }
+             { id: m.id, name: m.name, order: m.order }
         }
 
         pub fn to_full(&self) -> TagFull {
@@ -24565,19 +24461,19 @@ pub mod typ {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
-    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
-    use crate::connector::{ConnectorFull, ConnectorShallow, ConnectorStore, ConnectorStoreRef};
+    use crate::author::{  AuthorStore, AuthorStoreRef};
+    use crate::concept::{  ConceptStore, ConceptStoreRef};
+    use crate::connector::{  ConnectorStore, ConnectorStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::family::{FamilyRef, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::location::LocationRef;
     use crate::port::PortStoreRef;
-    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
-    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
-    use crate::representation::{RepresentationFull, RepresentationShallow, RepresentationStore, RepresentationStoreRef};
-    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
+    use crate::prop::{  PropStore, PropStoreRef};
+    use crate::quality::{  QualityStore, QualityStoreRef};
+    use crate::representation::{  RepresentationStore, RepresentationStoreRef};
+    use crate::tag::{  TagStore, TagStoreRef};
 
     pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
     pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
@@ -24640,7 +24536,7 @@ pub mod typ {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeShallow {
+    pub struct  {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24665,19 +24561,19 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connectors: Vec<ConnectorShallow>,
+        pub connectors: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub representations: Vec<RepresentationShallow>,
+        pub representations: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallow>,
+        pub authors: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallow>,
+        pub concepts: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallow>,
+        pub tags: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallow>,
+        pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallow>,
+        pub props: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeStore>,
     }
@@ -25085,7 +24981,7 @@ pub mod typ {
             }
         }
 
-        pub(crate) fn hydrate_from_full(d: TypeFull, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
+        pub(crate) fn hydrate_from_full(d:  kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
             let TypeFull { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
@@ -25201,9 +25097,9 @@ pub mod typ {
             }
         }
 
-        pub fn to_shallow(&self) -> TypeShallow {
+        pub fn to_shallow(&self) ->  {
             let m = self.to_metadata();
-            TypeShallow {
+             {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -25218,7 +25114,7 @@ pub mod typ {
                 families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
@@ -25244,7 +25140,7 @@ pub mod typ {
                 families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
@@ -25404,7 +25300,7 @@ pub mod io {
         use std::path::Path;
 
         use crate::error::Result;
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
 
         impl KitGraph {
             pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
@@ -25455,7 +25351,7 @@ pub mod io {
         use crate::connector::ConnectorFull;
         use crate::design::DesignFull;
         use crate::error::{Result, SemioError};
-        use crate::file::{FileFull, FileRef};
+        use crate::file::{ FileRef};
         use crate::folder::FolderFull;
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::group::GroupFull;
@@ -25463,11 +25359,11 @@ pub mod io {
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
         use crate::layer::LayerFull;
         use crate::location::LocationRef;
         use crate::piece::PieceFull;
-        use crate::port::{PortFull, PortRef};
+        use crate::port::{ PortRef};
         use crate::prop::PropFull;
         use crate::quality::QualityFull;
         use crate::representation::RepresentationFull;
@@ -25789,7 +25685,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_author(tx: &Transaction<'_>, author: &AuthorFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_author(tx: &Transaction<'_>, author: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -25798,7 +25694,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_concept(tx: &Transaction<'_>, concept: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -25807,7 +25703,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_tag(tx: &Transaction<'_>, tag: &TagFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_tag(tx: &Transaction<'_>, tag: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -25827,7 +25723,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_quality(tx: &Transaction<'_>, quality: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
                     id, ordinal, key, value, unit, definition, description,
@@ -25852,7 +25748,7 @@ pub mod io {
             insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
-        fn insert_prop(tx: &Transaction<'_>, prop: &PropFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_prop(tx: &Transaction<'_>, prop: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -25888,7 +25784,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFull, ordinal: usize) -> Result<()> {
+        fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: & ordinal: usize) -> Result<()> {
             let port_id = connector.port.as_ref().ok_or_else(|| SemioError::InvalidOperation("connector.port is required for SQLite persistence".into()))?;
             tx.execute(
                 "INSERT INTO connector (id, ordinal, name, description, port_id, type_id)
@@ -25904,7 +25800,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_representation(tx: &Transaction<'_>, type_id: &Id, representation: &RepresentationFull, ordinal: usize) -> Result<()> {
+        fn insert_representation(tx: &Transaction<'_>, type_id: &Id, representation: & ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO representation (id, ordinal, url, description, file_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
@@ -25922,7 +25818,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(tx: &Transaction<'_>, kit_id: &Id, parent_family_id: Option<&Id>, port: &PortFull, ordinal: usize) -> Result<()> {
+        fn insert_port(tx: &Transaction<'_>, kit_id: &Id, parent_family_id: Option<&Id>, port: & ordinal: usize) -> Result<()> {
             let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
             let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
             tx.execute(
@@ -25948,7 +25844,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFull, ordinal: usize) -> Result<()> {
+        fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family:: ordinal: usize) -> Result<()> {
             tx.execute("INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()])?;
             for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
                 insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
@@ -25959,7 +25855,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFull, ordinal: usize) -> Result<()> {
+        fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: & ordinal: usize) -> Result<()> {
             let location_id = typ.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO \"type\" (
@@ -25998,7 +25894,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_layer(tx: &Transaction<'_>, design_id: &Id, layer: &LayerFull, ordinal: usize) -> Result<()> {
+        fn insert_layer(tx: &Transaction<'_>, design_id: &Id, layer: & ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO layer (id, ordinal, name, description, color, order_index, visible, locked, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -26007,7 +25903,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: &PieceFull, ordinal: usize) -> Result<()> {
+        fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: & ordinal: usize) -> Result<()> {
             let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) = plane_parts(piece.pose.as_ref().and_then(|p| p.plane.as_ref()));
             let (center_x, center_y, center_z) = piece_center_parts(piece.pose.as_ref().and_then(|p| p.center.as_ref()));
             let (mirror_ox, mirror_oy, mirror_oz, mirror_xx, mirror_xy, mirror_xz, mirror_yx, mirror_yy, mirror_yz) = plane_parts(piece.mirror_plane.as_ref());
@@ -26077,7 +25973,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_group(tx: &Transaction<'_>, design_id: &Id, group: &GroupFull, ordinal: usize) -> Result<()> {
+        fn insert_group(tx: &Transaction<'_>, design_id: &Id, group: & ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO \"group\" (id, ordinal, name, description, color, icon, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -26089,7 +25985,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_connection(tx: &Transaction<'_>, design_id: &Id, connection: &ConnectionFull, ordinal: usize) -> Result<()> {
+        fn insert_connection(tx: &Transaction<'_>, design_id: &Id, connection: & ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO connection (
                     id, ordinal,
@@ -26131,7 +26027,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: &DesignFull, ordinal: usize) -> Result<()> {
+        fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: & ordinal: usize) -> Result<()> {
             let location_id = design.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO design (
@@ -26620,7 +26516,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFull, KitFull)> {
+        fn load_kit_dto(conn: &SqlConnection) -> Result<( KitFull)> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
                  FROM kit LIMIT 1",
@@ -26757,7 +26653,7 @@ pub mod io {
 
         use crate::error::{Result, SemioError};
         use crate::file::FileFull;
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
 
         const LOCAL_DIR: &str = ".semio";
         const LOCAL_DB: &str = "kit.db";
@@ -26852,7 +26748,7 @@ pub mod io {
             PathBuf::from("files").join(format!("{}.{}", file.id, ext))
         }
 
-        fn externalize_files(dto: &mut KitFull, folder_path: &Path) -> Result<()> {
+        fn externalize_files(dto: &mut  folder_path: &Path) -> Result<()> {
             for file in &mut dto.files {
                 let Some((_mime_from_url, bytes)) = parse_data_url(&file.url)? else {
                     continue;
@@ -26868,7 +26764,7 @@ pub mod io {
             Ok(())
         }
 
-        fn hydrate_files(dto: &mut KitFull, folder_path: &Path) -> Result<()> {
+        fn hydrate_files(dto: &mut  folder_path: &Path) -> Result<()> {
             for file in &mut dto.files {
                 if is_data_url(&file.url) {
                     continue;
@@ -26918,7 +26814,7 @@ pub mod io {
         use serde::de::DeserializeOwned;
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
 
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         pub struct RemoteKitSession {
@@ -28642,7 +28538,7 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.view)?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::kit_graph::KitShallow> {
+        async fn shallow(&self) -> Result<crate::kit_graph::> {
             Ok(lock_graph(&self.view)?.to_shallow())
         }
 
@@ -28748,7 +28644,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::design::DesignShallow> {
+        async fn shallow(&self) -> Result<crate::design::> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_shallow())
         }
 
@@ -28842,7 +28738,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::piece::PieceShallow> {
+        async fn shallow(&self) -> Result<crate::piece::> {
             Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_shallow())
         }
 
@@ -28930,7 +28826,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::typ::TypeShallow> {
+        async fn shallow(&self) -> Result<crate::typ::> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_shallow())
         }
 
@@ -28987,7 +28883,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::connector::ConnectorShallow> {
+        async fn shallow(&self) -> Result<crate::connector::> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_shallow())
         }
 
@@ -29022,7 +28918,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::representation::RepresentationShallow> {
+        async fn shallow(&self) -> Result<crate::representation::> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_shallow())
         }
 
@@ -29049,7 +28945,7 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::connection::ConnectionShallow> {
+        async fn shallow(&self) -> Result<crate::connection::> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_shallow())
         }
 
@@ -29346,7 +29242,7 @@ mod tests {
             assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"), "replaceable catalog resolver");
             assert!(s.contains("types: [TypeStore!]!") && s.contains("designs: [DesignStore!]!"), "ReplaceableCatalog exposes store refs");
             assert!(s.contains("container: KitStore!") && s.contains("container: DesignStore!"), "container back-refs use *Store SDL names");
-            assert!(s.contains("metadata: DesignMetadata!") && s.contains("shallow: DesignShallow!"), "Design store exposes metadata + shallow projections");
+            assert!(s.contains("metadata: DesignMetadata!") && s.contains("shallow: !"), "Design store exposes metadata + shallow projections");
             for banned in ["FullDto", "MetadataDto", "ShallowDto", "IdDto"] {
                 assert!(!s.contains(banned), "SDL must not expose removed *{banned} tier suffixes");
             }
@@ -29684,7 +29580,7 @@ mod tests {
         use crate::backbone::BackboneSnapshot;
         use crate::id::Id;
         use crate::kit_backbone_wire::BackboneConfig;
-        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::kit_graph::{ KitGraph};
         use crate::kit_store::KitStore;
 
         #[test]
@@ -29724,7 +29620,7 @@ mod tests {
         use crate::design::DesignRef;
         use crate::id::Id;
         use crate::kit_change::{Change, KitChange, KitChangeKind};
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
         use crate::piece::PieceFull;
         use crate::piece::PieceRef;
         use crate::typ::TypeFull;
@@ -30062,14 +29958,14 @@ mod tests {
     mod flatten {
         use crate::connection::ConnectionFull;
         use crate::connector::ConnectorFull;
-        use crate::design::{DesignFull, DesignStore};
+        use crate::design::{ DesignStore};
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
-        use crate::kit_graph::{KitFull, KitGraph};
-        use crate::piece::{PieceFull, PieceRef, PoseDto};
-        use crate::port::{PortFull, PortRef};
+        use crate::kit_graph::{ KitGraph};
+        use crate::piece::{ PieceRef, PoseDto};
+        use crate::port::{ PortRef};
         use crate::side::SideMetadata;
-        use crate::typ::{TypeFull, TypeRef};
+        use crate::typ::{ TypeRef};
 
         fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphRef, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
@@ -30342,11 +30238,11 @@ mod tests {
         use crate::connector::ConnectorFull;
         use crate::design::DesignFull;
         use crate::id::Id;
-        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
-        use crate::piece::{PieceFull, PieceRef};
-        use crate::port::{PortFull, PortRef};
+        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::piece::{ PieceRef};
+        use crate::port::{ PortRef};
         use crate::side::SideMetadata;
-        use crate::typ::{TypeFull, TypeRef};
+        use crate::typ::{ TypeRef};
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -30662,7 +30558,7 @@ mod tests {
     mod metabolism_kit {
         use std::path::Path;
 
-        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::kit_graph::{ KitGraph};
 
         #[test]
         fn metabolism_asset_loads_families_and_nested_ports() {
@@ -30691,7 +30587,7 @@ mod tests {
         use crate::id::Id;
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::kit_checkpoint::KitCheckpoint;
-        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::kit_graph::{ KitGraph};
         use crate::piece::PieceFull;
         use crate::typ::TypeFull;
 
@@ -30753,7 +30649,7 @@ mod tests {
         use crate::file::FileFull;
         use crate::folder::FolderFull;
         use crate::id::Id;
-        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::kit_graph::{ KitGraph};
 
         #[test]
         fn local_folder_roundtrip_externalizes_and_rehydrates_assets() {
@@ -30953,12 +30849,12 @@ mod tests {
             use crate::file::FileFull;
             use crate::group::GroupFull;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+            use crate::kit_graph::{ KitGraph, KitGraphRef};
             use crate::layer::LayerFull;
-            use crate::piece::{PieceFull, PieceRef};
-            use crate::port::{PortFull, PortRef};
+            use crate::piece::{ PieceRef};
+            use crate::port::{ PortRef};
             use crate::side::SideMetadata;
-            use crate::typ::{TypeFull, TypeRef};
+            use crate::typ::{ TypeRef};
 
             pub fn drain(rx: &mut async_broadcast::Receiver<KitEvent>) -> Vec<KitEvent> {
                 let mut out = Vec::new();
@@ -31236,7 +31132,7 @@ mod tests {
             use crate::attribute::AttributeStore;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
 
             #[test]
             fn attribute_set_value_emits() {
@@ -31257,7 +31153,7 @@ mod tests {
             use crate::author::AuthorFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
 
             #[test]
             fn author_set_email_emits() {
@@ -31322,7 +31218,7 @@ mod tests {
             use crate::benchmark::BenchmarkFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::port::PortFull;
             use crate::quality::QualityFull;
             use crate::typ::TypeFull;
@@ -31363,7 +31259,7 @@ mod tests {
             use crate::concept::ConceptFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
 
             #[test]
             fn concept_set_name_emits() {
@@ -31583,12 +31479,12 @@ mod tests {
             #[test]
             fn design_add_family_ref_emits() {
                 use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-                use crate::design::{DesignFull, DesignRef};
+                use crate::design::{ DesignRef};
                 use crate::events::KitEvent;
-                use crate::family::{FamilyFull, FamilyRef};
-                use crate::kit_graph::{KitFull, KitGraph};
+                use crate::family::{ FamilyRef};
+                use crate::kit_graph::{ KitGraph};
                 use crate::piece::PieceFull;
-                use crate::typ::{TypeFull, TypeRef};
+                use crate::typ::{ TypeRef};
 
                 let family_id = Id::new_v7();
                 let type_id = Id::new_v7();
@@ -31633,7 +31529,7 @@ mod tests {
             use crate::events::KitEvent;
             use crate::folder::FolderFull;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
 
             #[test]
             fn folder_set_description_emits() {
@@ -31912,7 +31808,7 @@ mod tests {
         mod prop {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::prop::PropFull;
 
             #[test]
@@ -31933,7 +31829,7 @@ mod tests {
         mod quality {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::quality::QualityFull;
 
             #[test]
@@ -31953,9 +31849,9 @@ mod tests {
 
         mod representation {
             use crate::events::KitEvent;
-            use crate::file::{FileFull, FileRef};
+            use crate::file::{ FileRef};
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::representation::RepresentationFull;
             use crate::typ::TypeFull;
 
@@ -32021,10 +31917,10 @@ mod tests {
             use crate::design::DesignFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::piece::PieceFull;
             use crate::stat::StatFull;
-            use crate::typ::{TypeFull, TypeRef};
+            use crate::typ::{ TypeRef};
 
             #[test]
             fn stat_set_description_emits() {
@@ -32061,7 +31957,7 @@ mod tests {
         mod tag {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::kit_graph::{ KitGraph};
             use crate::tag::TagFull;
 
             #[test]
@@ -32117,8 +32013,8 @@ mod tests {
             #[test]
             fn type_add_family_ref_roundtrip() {
                 use crate::diff::{FamilyIdsDiff, TypeDiff};
-                use crate::family::{FamilyFull, FamilyRef};
-                use crate::kit_graph::{KitFull, KitGraph};
+                use crate::family::{ FamilyRef};
+                use crate::kit_graph::{ KitGraph};
                 use crate::typ::TypeFull;
 
                 let family_id = Id::new_v7();
@@ -32973,26 +32869,26 @@ mod wasm_handle_tests {
 }
 
 pub use attribute::{AttributeStore, AttributeStoreRef, AttributeStoreWeak};
-pub use author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
-pub use benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
+pub use author::{ AuthorRef,   AuthorStore, AuthorStoreRef, AuthorStoreWeak};
+pub use benchmark::{ BenchmarkRef,   BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
 pub use change_command::{
     ChangeAttributeCommand, ChangeConnectionCommand, ChangeConnectorCommand, ChangeDesignCommand, ChangeGroupCommand, ChangeKitCommand, ChangeLayerCommand, ChangePieceCommand, ChangePortCommand, ChangePropCommand, ChangeRepresentationCommand,
     ChangeStatCommand, ChangeTypeCommand,
 };
-pub use concept::{ConceptFull, ConceptRef, ConceptMetadata, ConceptShallow, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
-pub use connection::{ConnectionFull, ConnectionRef, ConnectionMetadata, ConnectionShallow, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ColorDto, ConnectorFull, ConnectorRef, ConnectorMetadata, ConnectorShallow, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
-pub use design::{DesignFull, DesignRef, DesignMetadata, DesignShallow, DesignStore, DesignStoreRef, DesignStoreWeak};
+pub use concept::{ ConceptRef,   ConceptStore, ConceptStoreRef, ConceptStoreWeak};
+pub use connection::{ ConnectionRef,   ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
+pub use connector::{ColorDto,  ConnectorRef,   ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
+pub use design::{ DesignRef,   DesignStore, DesignStoreRef, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
-pub use file::{FileFull, FileRef, FileMetadata, FileShallow, FileStore, FileStoreRef, FileStoreWeak};
-pub use folder::{FolderFull, FolderRef, FolderMetadata, FolderShallow, FolderStore, FolderStoreRef, FolderStoreWeak};
+pub use file::{ FileRef,   FileStore, FileStoreRef, FileStoreWeak};
+pub use folder::{ FolderRef,   FolderStore, FolderStoreRef, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use group::{GroupFull, GroupRef, GroupMetadata, GroupShallow, GroupStore, GroupStoreRef, GroupStoreWeak};
+pub use group::{ GroupRef,   GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{KitFull, KitGraphRef, KitGraphWeak, KitRef, KitMetadata, KitShallow, KitStore};
+pub use kit::{ KitGraphRef, KitGraphWeak, KitRef,   KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{Change, KitChange, KitChangeKind, KitDesignAtomicsBlock, KitDesignChange, KitDesignChangeBlock, PieceChange, TypeChange};
@@ -33004,12 +32900,12 @@ pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_graph::KitGraph;
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-pub use layer::{LayerFull, LayerRef, LayerMetadata, LayerShallow, LayerStore, LayerStoreRef, LayerStoreWeak};
-pub use location::{LocationFull, LocationRef, LocationMetadata, LocationShallow, LocationStore, LocationStoreRef, LocationStoreWeak};
-pub use piece::{PieceFull, PieceRef, PieceMetadata, PieceShallow, PieceStore, PieceStoreRef, PieceStoreWeak};
-pub use port::{PortFull, PortRef, PortMetadata, PortShallow, PortStore, PortStoreRef, PortStoreWeak};
-pub use prop::{PropFull, PropRef, PropMetadata, PropShallow, PropStore, PropStoreRef, PropStoreWeak};
-pub use quality::{QualityFull, QualityRef, QualityMetadata, QualityShallow, QualityStore, QualityStoreRef, QualityStoreWeak};
+pub use layer::{ LayerRef,   LayerStore, LayerStoreRef, LayerStoreWeak};
+pub use location::{ LocationRef,   LocationStore, LocationStoreRef, LocationStoreWeak};
+pub use piece::{ PieceRef,   PieceStore, PieceStoreRef, PieceStoreWeak};
+pub use port::{ PortRef,   PortStore, PortStoreRef, PortStoreWeak};
+pub use prop::{ PropRef,   PropStore, PropStoreRef, PropStoreWeak};
+pub use quality::{ QualityRef,   QualityStore, QualityStoreRef, QualityStoreWeak};
 pub use read::{
     DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand, ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand,
     ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput, ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand,
@@ -33018,8 +32914,8 @@ pub use read::{
     ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{RepresentationFull, RepresentationRef, RepresentationMetadata, RepresentationShallow, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
-pub use side::{SideFull, SideRef, SideMetadata, SideShallow, SideStore, SideStoreRef, SideStoreWeak};
-pub use stat::{StatFull, StatRef, StatMetadata, StatShallow, StatStore, StatStoreRef, StatStoreWeak};
-pub use tag::{TagFull, TagRef, TagMetadata, TagShallow, TagStore, TagStoreRef, TagStoreWeak};
-pub use typ::{TypeFull, TypeRef, TypeMetadata, TypeShallow, TypeStore, TypeStoreRef, TypeStoreWeak};
+pub use representation::{ RepresentationRef,   RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
+pub use side::{ SideRef,   SideStore, SideStoreRef, SideStoreWeak};
+pub use stat::{ StatRef,   StatStore, StatStoreRef, StatStoreWeak};
+pub use tag::{ TagRef,   TagStore, TagStoreRef, TagStoreWeak};
+pub use typ::{ TypeRef,   TypeStore, TypeStoreRef, TypeStoreWeak};
