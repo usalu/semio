@@ -1,0 +1,13 @@
+{
+  "title": "Store Parameterless New Constructor",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Ensure every Store in semio/rs has parameterless new() that allocates a fresh id and leaves an empty shell for the ongoing refactor.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1392"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5d218d4865134bee8a9f9be2d795de2a"
+  ]
+}

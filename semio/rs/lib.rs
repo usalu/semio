@@ -6,31 +6,31 @@ pub mod read {
 
     use serde::{Deserialize, Serialize};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{ AuthorRef,  };
-    use crate::benchmark::{ BenchmarkRef,  };
-    use crate::concept::{ ConceptRef,  };
-    use crate::connection::{ ConnectionRef,  };
-    use crate::connector::{ ConnectorRef,   ConnectorStoreRef};
-    use crate::design::{ DesignRef,   DesignStore, DesignStoreRef};
-    use crate::family::{ FamilyRef,   FamilyStoreRef};
-    use crate::file::{ FileRef,  };
-    use crate::folder::{ FolderRef,  };
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::author::{ AuthorReference,  };
+    use crate::benchmark::{ BenchmarkReference,  };
+    use crate::concept::{ ConceptReference,  };
+    use crate::connection::{ ConnectionReference,  };
+    use crate::connector::{ ConnectorReference,   ConnectorReference};
+    use crate::design::{ DesignReference,   Design, DesignReference};
+    use crate::family::{ FamilyReference,   FamilyReference};
+    use crate::file::{ FileReference,  };
+    use crate::folder::{ FolderReference,  };
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{ GroupRef,  };
+    use crate::group::{ GroupReference,  };
     use crate::id::Id;
-    use crate::kit_graph::{ KitGraph, KitRef,  };
-    use crate::layer::{ LayerRef,  };
-    use crate::location::{ LocationRef,  };
-    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto,  PieceRef,   PieceStoreRef, PoseInput};
-    use crate::port::{ PortRef,   PortStoreRef};
-    use crate::prop::{ PropRef, };
-    use crate::quality::{ QualityRef,  };
-    use crate::representation::{ RepresentationRef,   RepresentationStoreRef};
-    use crate::side::{ SideRef,   SideStoreRef};
-    use crate::stat::{ StatRef,  };
-    use crate::tag::{ TagRef,  };
-    use crate::typ::{ TypeRef,   TypeStoreRef};
+    use crate::kit_graph::{ KitGraph, KitReference,  };
+    use crate::layer::{ LayerReference,  };
+    use crate::location::{ LocationReference,  };
+    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto,  PieceReference,   PieceReference, PoseInput};
+    use crate::port::{ PortReference,   PortReference};
+    use crate::prop::{ PropReference, };
+    use crate::quality::{ QualityReference,  };
+    use crate::representation::{ RepresentationReference,   RepresentationReference};
+    use crate::side::{ SideReference,   SideReference};
+    use crate::stat::{ StatReference,  };
+    use crate::tag::{ TagReference,  };
+    use crate::typ::{ TypeReference,   TypeReference};
 
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, async_graphql::Enum)]
     #[serde(rename_all = "lowercase")]
@@ -112,51 +112,51 @@ pub mod read {
         ReadKitAttributesInputCommand,
         ReadKitAttributesShallowCommand,
         ReadKitTypeCommands {
-            id: TypeRef,
+            id: TypeReference,
             commands: Vec<ReadTypeCommand>,
         },
         ReadKitDesignCommands {
-            id: DesignRef,
+            id: DesignReference,
             commands: Vec<ReadDesignCommand>,
         },
         ReadKitFileCommands {
-            id: FileRef,
+            id: FileReference,
             commands: Vec<ReadFileCommand>,
         },
         ReadKitFolderCommands {
-            id: FolderRef,
+            id: FolderReference,
             commands: Vec<ReadFolderCommand>,
         },
         ReadKitLocationCommands {
-            id: LocationRef,
+            id: LocationReference,
             commands: Vec<ReadLocationCommand>,
         },
         ReadKitFamilyCommands {
-            id: FamilyRef,
+            id: FamilyReference,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadKitPortCommands {
-            id: PortRef,
+            id: PortReference,
             commands: Vec<ReadPortCommand>,
         },
         ReadKitAuthorCommands {
-            id: AuthorRef,
+            id: AuthorReference,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadKitConceptCommands {
-            id: ConceptRef,
+            id: ConceptReference,
             commands: Vec<ReadConceptCommand>,
         },
         ReadKitTagCommands {
-            id: TagRef,
+            id: TagReference,
             commands: Vec<ReadTagCommand>,
         },
         ReadKitQualityCommands {
-            id: QualityRef,
+            id: QualityReference,
             commands: Vec<ReadQualityCommand>,
         },
         ReadKitPropCommands {
-            id: PropRef,
+            id: PropReference,
             commands: Vec<ReadPropCommand>,
         },
         ReadKitAttributeCommands {
@@ -169,9 +169,9 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommandOutput {
         ReadKitInputCommand { kit: KitInput },
-        ReadKitShallowCommand { kit:  },
+        ReadKitShallowCommand { kit: KitInput },
         ReadKitMetadataCommand { metadata: KitMetadata },
-        ReadKitIdCommand { id: KitRef },
+        ReadKitIdCommand { id: KitReference },
         ReadKitNameCommand { name: String },
         ReadKitDescriptionCommand { description: Option<String> },
         ReadKitIconCommand { icon: Option<String> },
@@ -184,12 +184,12 @@ pub mod read {
         ReadKitCreatedCommand { created: Option<String> },
         ReadKitUpdatedCommand { updated: Option<String> },
         ReadKitTypesInputCommand { types: Vec<TypeInput> },
-        ReadKitTypesShallowCommand { types: Vec<> },
-        ReadKitTypeIdsCommand { r#type_ids: Vec<TypeRef> },
+        ReadKitTypesShallowCommand { types: Vec<TypeInput> },
+        ReadKitTypeIdsCommand { r#type_ids: Vec<TypeReference> },
         ReadKitTypesMetadataCommand { types: Vec<TypeMetadata> },
         ReadKitDesignsInputCommand { designs: Vec<DesignInput> },
         ReadKitDesignsShallowCommand { designs: Vec<> },
-        ReadKitDesignIdsCommand { design_ids: Vec<DesignRef> },
+        ReadKitDesignIdsCommand { design_ids: Vec<DesignReference> },
         ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadata> },
         ReadKitFilesInputCommand { files: Vec<FileInput> },
         ReadKitFilesShallowCommand { files: Vec<> },
@@ -210,8 +210,8 @@ pub mod read {
         ReadKitQualitiesShallowCommand { qualities: Vec<> },
         ReadKitPropsInputCommand { props: Vec<PropInput> },
         ReadKitPropsShallowCommand { props: Vec<> },
-        ReadKitAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadKitAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadKitAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadKitAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
         ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
         ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -264,45 +264,45 @@ pub mod read {
         ReadTypeAttributesShallowCommand,
         ReadTypePortsInputCommand,
         ReadTypeConnectorForPortIdCommand {
-            port_id: PortRef,
+            port_id: PortReference,
         },
         ReadTypeBestRepresentationCommand {
             tag_ids: Vec<Id>,
         },
         ReadTypeFamilyCommands {
-            id: FamilyRef,
+            id: FamilyReference,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadTypeConnectorCommands {
-            id: ConnectorRef,
+            id: ConnectorReference,
             commands: Vec<ReadConnectorCommand>,
         },
         ReadTypeRepresentationCommands {
-            id: RepresentationRef,
+            id: RepresentationReference,
             commands: Vec<ReadRepresentationCommand>,
         },
         ReadTypePortCommands {
-            id: PortRef,
+            id: PortReference,
             commands: Vec<ReadPortCommand>,
         },
         ReadTypeAuthorCommands {
-            id: AuthorRef,
+            id: AuthorReference,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadTypeConceptCommands {
-            id: ConceptRef,
+            id: ConceptReference,
             commands: Vec<ReadConceptCommand>,
         },
         ReadTypeTagCommands {
-            id: TagRef,
+            id: TagReference,
             commands: Vec<ReadTagCommand>,
         },
         ReadTypeQualityCommands {
-            id: QualityRef,
+            id: QualityReference,
             commands: Vec<ReadQualityCommand>,
         },
         ReadTypePropCommands {
-            id: PropRef,
+            id: PropReference,
             commands: Vec<ReadPropCommand>,
         },
         ReadTypeAttributeCommands {
@@ -317,7 +317,7 @@ pub mod read {
         ReadTypeInputCommand { dto: TypeInput },
         ReadTypeShallowCommand { dto:  },
         ReadTypeMetadataCommand { metadata: TypeMetadata },
-        ReadTypeIdCommand { id: TypeRef },
+        ReadTypeIdCommand { id: TypeReference },
         ReadTypeNameCommand { name: String },
         ReadTypeDescriptionCommand { description: Option<String> },
         ReadTypeIconCommand { icon: Option<String> },
@@ -325,10 +325,10 @@ pub mod read {
         ReadTypeStockCommand { stock: Option<i64> },
         ReadTypeVirtualCommand { r#virtual: Option<bool> },
         ReadTypeUnitCommand { unit: Option<String> },
-        ReadTypeLocationCommand { location: Option<crate::location::LocationRef> },
+        ReadTypeLocationCommand { location: Option<crate::location::LocationReference> },
         ReadTypeCreatedCommand { created: Option<String> },
         ReadTypeUpdatedCommand { updated: Option<String> },
-        ReadTypeFamiliesCommand { families: Vec<FamilyRef> },
+        ReadTypeFamiliesCommand { families: Vec<FamilyReference> },
         ReadTypeConnectorsInputCommand { connectors: Vec<ConnectorInput> },
         ReadTypeConnectorsShallowCommand { connectors: Vec<> },
         ReadTypeRepresentationsInputCommand { representations: Vec<RepresentationInput> },
@@ -343,8 +343,8 @@ pub mod read {
         ReadTypeQualitiesShallowCommand { qualities: Vec<> },
         ReadTypePropsInputCommand { props: Vec<PropInput> },
         ReadTypePropsShallowCommand { props: Vec<> },
-        ReadTypeAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadTypeAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadTypeAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadTypePortsInputCommand { ports: Vec<PortInput> },
         ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorInput> },
         ReadTypeBestRepresentationCommand { representation: Option<RepresentationInput> },
@@ -402,54 +402,54 @@ pub mod read {
         ReadDesignStatsShallowCommand,
         ReadDesignFlattenMapCommand,
         ReadDesignClusterableGroupsCommand {
-            selection: Vec<PieceRef>,
+            selection: Vec<PieceReference>,
         },
         ReadDesignIncludedDesignsCommand,
         ReadDesignQualitySumCommand {
-            quality_id: QualityRef,
+            quality_id: QualityReference,
         },
         ReadDesignReplaceableCatalogCommand {
-            selection: Vec<PieceRef>,
+            selection: Vec<PieceReference>,
         },
         ReadDesignIncludedDesignIdsCommand,
         ReadDesignFamilyCommands {
-            id: FamilyRef,
+            id: FamilyReference,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadDesignPieceCommands {
-            id: PieceRef,
+            id: PieceReference,
             commands: Vec<ReadPieceCommand>,
         },
         ReadDesignConnectionCommands {
-            id: ConnectionRef,
+            id: ConnectionReference,
             commands: Vec<ReadConnectionCommand>,
         },
         ReadDesignLayerCommands {
-            id: LayerRef,
+            id: LayerReference,
             commands: Vec<ReadLayerCommand>,
         },
         ReadDesignGroupCommands {
-            id: GroupRef,
+            id: GroupReference,
             commands: Vec<ReadGroupCommand>,
         },
         ReadDesignAuthorCommands {
-            id: AuthorRef,
+            id: AuthorReference,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadDesignConceptCommands {
-            id: ConceptRef,
+            id: ConceptReference,
             commands: Vec<ReadConceptCommand>,
         },
         ReadDesignTagCommands {
-            id: TagRef,
+            id: TagReference,
             commands: Vec<ReadTagCommand>,
         },
         ReadDesignQualityCommands {
-            id: QualityRef,
+            id: QualityReference,
             commands: Vec<ReadQualityCommand>,
         },
         ReadDesignPropCommands {
-            id: PropRef,
+            id: PropReference,
             commands: Vec<ReadPropCommand>,
         },
         ReadDesignAttributeCommands {
@@ -457,7 +457,7 @@ pub mod read {
             commands: Vec<ReadAttributeCommand>,
         },
         ReadDesignStatCommands {
-            id: StatRef,
+            id: StatReference,
             commands: Vec<ReadStatCommand>,
         },
     }
@@ -475,7 +475,7 @@ pub mod read {
             metadata: 
         },
         ReadDesignIdCommand {
-            id: DesignRef,
+            id: DesignReference,
         },
         ReadDesignNameCommand {
             name: String,
@@ -490,7 +490,7 @@ pub mod read {
             image: Option<String>,
         },
         ReadDesignLocationCommand {
-            location: Option<crate::location::LocationRef>,
+            location: Option<crate::location::LocationReference>,
         },
         ReadDesignUnitCommand {
             unit: Option<String>,
@@ -502,10 +502,10 @@ pub mod read {
             updated: Option<String>,
         },
         ReadDesignKitCommand {
-            kit: Option<crate::kit_graph::KitRef>,
+            kit: Option<crate::kit_graph::KitReference>,
         },
         ReadDesignFamiliesCommand {
-            families: Vec<FamilyRef>,
+            families: Vec<FamilyReference>,
         },
         ReadDesignPiecesInputCommand {
             pieces: Vec<PieceInput>,
@@ -562,10 +562,10 @@ pub mod read {
             props: Vec<>,
         },
         ReadDesignAttributesInputCommand {
-            attributes: Vec<AttributeStore>,
+            attributes: Vec<Attribute>,
         },
         ReadDesignAttributesShallowCommand {
-            attributes: Vec<AttributeStore>,
+            attributes: Vec<Attribute>,
         },
         ReadDesignStatsInputCommand {
             stats: Vec<StatInput>,
@@ -577,7 +577,7 @@ pub mod read {
             entries: Vec<DesignFlattenMapEntryDto>,
         },
         ReadDesignClusterableGroupsCommand {
-            groups: Vec<Vec<PieceRef>>,
+            groups: Vec<Vec<PieceReference>>,
         },
         ReadDesignIncludedDesignsCommand {
             designs: Vec<IncludedDesignInfoDto>,
@@ -586,12 +586,12 @@ pub mod read {
             sum: f64,
         },
         ReadDesignReplaceableCatalogCommand {
-            types: Vec<crate::typ::TypeRef>,
-            designs: Vec<crate::design::DesignRef>,
+            types: Vec<crate::typ::TypeReference>,
+            designs: Vec<crate::design::DesignReference>,
         },
         ReadDesignIncludedDesignIdsCommand {
             #[serde(rename = "designIds")]
-            design_ids: Vec<crate::design::DesignRef>,
+            design_ids: Vec<crate::design::DesignReference>,
         },
         ReadDesignFamilyCommands {
             results: Vec<ReadFamilyCommandOutput>,
@@ -667,7 +667,7 @@ pub mod read {
         ReadPieceAlternativesCommand,
         ReadPieceAlternativeTypesCommand,
         ReadPieceAlternativeDesignsCommand,
-        ReadPiecePropCommands { id: PropRef, commands: Vec<ReadPropCommand> },
+        ReadPiecePropCommands { id: PropReference, commands: Vec<ReadPropCommand> },
         ReadPieceAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
@@ -677,7 +677,7 @@ pub mod read {
         ReadPieceInputCommand { dto: PieceInput },
         ReadPieceShallowCommand { dto:  },
         ReadPieceMetadataCommand { metadata: PieceMetadata },
-        ReadPieceIdCommand { id: PieceRef },
+        ReadPieceIdCommand { id: PieceReference },
         ReadPieceNameCommand { name: Option<String> },
         ReadPieceDescriptionCommand { description: Option<String> },
         ReadPiecePlaneCommand { plane: Option<Plane> },
@@ -687,25 +687,25 @@ pub mod read {
         ReadPieceHiddenCommand { hidden: Option<bool> },
         ReadPieceLockedCommand { locked: Option<bool> },
         ReadPieceColorCommand { color: Option<String> },
-        ReadPieceTypeCommand { r#type: Option<TypeRef> },
-        ReadPieceDesignCommand { design: Option<DesignRef> },
+        ReadPieceTypeCommand { r#type: Option<TypeReference> },
+        ReadPieceDesignCommand { design: Option<DesignReference> },
         ReadPiecePropsInputCommand { props: Vec<PropInput> },
         ReadPiecePropsShallowCommand { props: Vec<> },
-        ReadPieceAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadPieceAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadPieceAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadPieceFlatPlaneCommand { flat_plane: Plane },
         ReadPieceFlatCenterCommand { flat_center: Coordinate },
         ReadPieceFlatPoseCommand { flat_pose: PoseInput },
-        ReadPiecePathCommand { path: Vec<PieceRef> },
-        ReadPieceParentPieceIdCommand { parent_piece: Option<PieceRef> },
-        ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionRef> },
+        ReadPiecePathCommand { path: Vec<PieceReference> },
+        ReadPieceParentPieceIdCommand { parent_piece: Option<PieceReference> },
+        ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionReference> },
         ReadPieceParentConnectionInputCommand { connection: Option<crate::connection::ConnectionInput> },
-        ReadPieceParentDesignIdCommand { parent_design: DesignRef },
+        ReadPieceParentDesignIdCommand { parent_design: DesignReference },
         ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
         ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
         ReadPieceAlternativesCommand { alternatives: PieceAlternativesDto },
-        ReadPieceAlternativeTypesCommand { types: Vec<TypeRef> },
-        ReadPieceAlternativeDesignsCommand { designs: Vec<DesignRef> },
+        ReadPieceAlternativeTypesCommand { types: Vec<TypeReference> },
+        ReadPieceAlternativeDesignsCommand { designs: Vec<DesignReference> },
         ReadPiecePropCommands { results: Vec<ReadPropCommandOutput> },
         ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -734,7 +734,7 @@ pub mod read {
         ReadConnectionAttributesInputCommand,
         ReadConnectionAttributesShallowCommand,
         ReadConnectionChildPlaneMatrixCommand,
-        ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceRef },
+        ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceReference },
         ReadConnectionAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
         ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
         ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
@@ -746,7 +746,7 @@ pub mod read {
         ReadConnectionInputCommand { dto: ConnectionInput },
         ReadConnectionShallowCommand { dto:  },
         ReadConnectionMetadataCommand { metadata: ConnectionMetadata },
-        ReadConnectionIdCommand { id: ConnectionRef },
+        ReadConnectionIdCommand { id: ConnectionReference },
         ReadConnectionConnectedSideMetadataCommand { side: SideMetadata },
         ReadConnectionConnectingSideMetadataCommand { side: SideMetadata },
         ReadConnectionConnectedSideInputCommand { side: SideInput },
@@ -760,8 +760,8 @@ pub mod read {
         ReadConnectionUCommand { u: Option<f64> },
         ReadConnectionVCommand { v: Option<f64> },
         ReadConnectionDescriptionCommand { description: Option<String> },
-        ReadConnectionAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadConnectionAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadConnectionAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
         ReadConnectionFlatSidesForChildCommand { connected:  connecting: SideInput },
         ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
@@ -788,10 +788,10 @@ pub mod read {
         ReadSideInputCommand { side: SideInput },
         ReadSideShallowCommand { side:  },
         ReadSideMetadataCommand { side: SideMetadata },
-        ReadSideIdCommand { id: SideRef },
-        ReadSidePieceIdCommand { piece: PieceRef },
-        ReadSidePortIdCommand { port: Option<PortRef> },
-        ReadSideDesignPieceIdCommand { design_piece: Option<PieceRef> },
+        ReadSideIdCommand { id: SideReference },
+        ReadSidePieceIdCommand { piece: PieceReference },
+        ReadSidePortIdCommand { port: Option<PortReference> },
+        ReadSideDesignPieceIdCommand { design_piece: Option<PieceReference> },
     }
 
 
@@ -815,7 +815,7 @@ pub mod read {
         ReadPortQualitiesShallowCommand,
         ReadPortAttributesInputCommand,
         ReadPortAttributesShallowCommand,
-        ReadPortQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadPortQualityCommands { id: QualityReference, commands: Vec<ReadQualityCommand> },
         ReadPortAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
@@ -825,20 +825,20 @@ pub mod read {
         ReadPortInputCommand { port: PortInput },
         ReadPortShallowCommand { port:  },
         ReadPortMetadataCommand { metadata: PortMetadata },
-        ReadPortIdCommand { id: PortRef },
+        ReadPortIdCommand { id: PortReference },
         ReadPortNameCommand { name: String },
         ReadPortDescriptionCommand { description: Option<String> },
         ReadPortIconCommand { icon: Option<String> },
-        ReadPortCompatibleFamiliesCommand { families: Vec<FamilyRef> },
+        ReadPortCompatibleFamiliesCommand { families: Vec<FamilyReference> },
         ReadPortMandatoryCommand { mandatory: Option<bool> },
         ReadPortTCommand { t: Option<f64> },
         ReadPortPointCommand { point: Option<crate::geom::Point> },
         ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
-        ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortRef> },
+        ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortReference> },
         ReadPortQualitiesInputCommand { qualities: Vec<QualityInput> },
         ReadPortQualitiesShallowCommand { qualities: Vec<> },
-        ReadPortAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadPortAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadPortAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadPortAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -858,7 +858,7 @@ pub mod read {
         ReadConnectorQualitiesShallowCommand,
         ReadConnectorAttributesInputCommand,
         ReadConnectorAttributesShallowCommand,
-        ReadConnectorQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadConnectorQualityCommands { id: QualityReference, commands: Vec<ReadQualityCommand> },
         ReadConnectorAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
@@ -868,14 +868,14 @@ pub mod read {
         ReadConnectorInputCommand { connector: ConnectorInput },
         ReadConnectorShallowCommand { connector:  },
         ReadConnectorMetadataCommand { metadata: ConnectorMetadata },
-        ReadConnectorIdCommand { id: ConnectorRef },
+        ReadConnectorIdCommand { id: ConnectorReference },
         ReadConnectorCodeCommand { code: String },
         ReadConnectorDescriptionCommand { description: Option<String> },
-        ReadConnectorPortIdCommand { port: Option<PortRef> },
+        ReadConnectorPortIdCommand { port: Option<PortReference> },
         ReadConnectorQualitiesInputCommand { qualities: Vec<QualityInput> },
         ReadConnectorQualitiesShallowCommand { qualities: Vec<> },
-        ReadConnectorAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadConnectorAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadConnectorAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -897,8 +897,8 @@ pub mod read {
         ReadRepresentationQualitiesShallowCommand,
         ReadRepresentationAttributesInputCommand,
         ReadRepresentationAttributesShallowCommand,
-        ReadRepresentationTagCommands { id: TagRef, commands: Vec<ReadTagCommand> },
-        ReadRepresentationQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadRepresentationTagCommands { id: TagReference, commands: Vec<ReadTagCommand> },
+        ReadRepresentationQualityCommands { id: QualityReference, commands: Vec<ReadQualityCommand> },
         ReadRepresentationAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
@@ -908,16 +908,16 @@ pub mod read {
         ReadRepresentationInputCommand { representation: RepresentationInput },
         ReadRepresentationShallowCommand { representation:  },
         ReadRepresentationMetadataCommand { metadata: RepresentationMetadata },
-        ReadRepresentationIdCommand { id: RepresentationRef },
+        ReadRepresentationIdCommand { id: RepresentationReference },
         ReadRepresentationUrlCommand { url: String },
         ReadRepresentationDescriptionCommand { description: Option<String> },
-        ReadRepresentationFileIdCommand { file: Option<crate::file::FileRef> },
+        ReadRepresentationFileIdCommand { file: Option<crate::file::FileReference> },
         ReadRepresentationTagsInputCommand { tags: Vec<TagInput> },
         ReadRepresentationTagsShallowCommand { tags: Vec<> },
         ReadRepresentationQualitiesInputCommand { qualities: Vec<QualityInput> },
         ReadRepresentationQualitiesShallowCommand { qualities: Vec<> },
-        ReadRepresentationAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadRepresentationAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadRepresentationAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
         ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
@@ -938,7 +938,7 @@ pub mod read {
         ReadFamilyPortsShallowCommand,
         ReadFamilyAttributesInputCommand,
         ReadFamilyAttributesShallowCommand,
-        ReadFamilyPortCommands { id: PortRef, commands: Vec<ReadPortCommand> },
+        ReadFamilyPortCommands { id: PortReference, commands: Vec<ReadPortCommand> },
         ReadFamilyAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
@@ -948,14 +948,14 @@ pub mod read {
         ReadFamilyInputCommand { family: FamilyInput },
         ReadFamilyShallowCommand { family:  },
         ReadFamilyMetadataCommand { metadata: FamilyMetadata },
-        ReadFamilyIdCommand { id: FamilyRef },
+        ReadFamilyIdCommand { id: FamilyReference },
         ReadFamilyNameCommand { name: String },
         ReadFamilyDescriptionCommand { description: Option<String> },
         ReadFamilyIconCommand { icon: Option<String> },
         ReadFamilyPortsInputCommand { ports: Vec<PortInput> },
         ReadFamilyPortsShallowCommand { ports: Vec<> },
-        ReadFamilyAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadFamilyAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadFamilyAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
         ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -983,7 +983,7 @@ pub mod read {
         ReadFileInputCommand { file: FileInput },
         ReadFileShallowCommand { file:  },
         ReadFileMetadataCommand { metadata: FileMetadata },
-        ReadFileIdCommand { id: FileRef },
+        ReadFileIdCommand { id: FileReference },
         ReadFileUrlCommand { url: String },
         ReadFileMimeCommand { mime: Option<String> },
         ReadFileSizeCommand { size: Option<i64> },
@@ -1011,7 +1011,7 @@ pub mod read {
         ReadFolderInputCommand { folder: FolderInput },
         ReadFolderShallowCommand { folder:  },
         ReadFolderMetadataCommand { metadata: FolderMetadata },
-        ReadFolderIdCommand { id: FolderRef },
+        ReadFolderIdCommand { id: FolderReference },
         ReadFolderPathCommand { path: String },
         ReadFolderDescriptionCommand { description: Option<String> },
     }
@@ -1038,12 +1038,12 @@ pub mod read {
         ReadLocationInputCommand { location: LocationInput },
         ReadLocationShallowCommand { location:  },
         ReadLocationMetadataCommand { metadata: LocationMetadata },
-        ReadLocationIdCommand { id: LocationRef },
+        ReadLocationIdCommand { id: LocationReference },
         ReadLocationLongitudeCommand { longitude: f64 },
         ReadLocationLatitudeCommand { latitude: f64 },
         ReadLocationAltitudeCommand { altitude: Option<f64> },
-        ReadLocationAttributesInputCommand { attributes: Vec<AttributeStore> },
-        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeStore> },
+        ReadLocationAttributesInputCommand { attributes: Vec<Attribute> },
+        ReadLocationAttributesShallowCommand { attributes: Vec<Attribute> },
         ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
@@ -1069,7 +1069,7 @@ pub mod read {
         ReadLayerInputCommand { layer: LayerInput },
         ReadLayerShallowCommand { layer:  },
         ReadLayerMetadataCommand { metadata: LayerMetadata },
-        ReadLayerIdCommand { id: LayerRef },
+        ReadLayerIdCommand { id: LayerReference },
         ReadLayerNameCommand { name: String },
         ReadLayerDescriptionCommand { description: Option<String> },
         ReadLayerColorCommand { color: Option<String> },
@@ -1099,12 +1099,12 @@ pub mod read {
         ReadGroupInputCommand { group: GroupInput },
         ReadGroupShallowCommand { group:  },
         ReadGroupMetadataCommand { metadata: GroupMetadata },
-        ReadGroupIdCommand { id: GroupRef },
+        ReadGroupIdCommand { id: GroupReference },
         ReadGroupNameCommand { name: String },
         ReadGroupDescriptionCommand { description: Option<String> },
         ReadGroupColorCommand { color: Option<String> },
         ReadGroupIconCommand { icon: Option<String> },
-        ReadGroupPiecesCommand { pieces: Vec<PieceRef> },
+        ReadGroupPiecesCommand { pieces: Vec<PieceReference> },
     }
 
 
@@ -1127,7 +1127,7 @@ pub mod read {
         ReadAuthorInputCommand { author: AuthorInput },
         ReadAuthorShallowCommand { author:  },
         ReadAuthorMetadataCommand { metadata: AuthorMetadata },
-        ReadAuthorIdCommand { id: AuthorRef },
+        ReadAuthorIdCommand { id: AuthorReference },
         ReadAuthorNameCommand { name: String },
         ReadAuthorEmailCommand { email: String },
         ReadAuthorRoleCommand { role: Option<String> },
@@ -1153,7 +1153,7 @@ pub mod read {
         ReadConceptInputCommand { concept: ConceptInput },
         ReadConceptShallowCommand { concept:  },
         ReadConceptMetadataCommand { metadata: ConceptMetadata },
-        ReadConceptIdCommand { id: ConceptRef },
+        ReadConceptIdCommand { id: ConceptReference },
         ReadConceptNameCommand { name: String },
         ReadConceptDescriptionCommand { description: Option<String> },
         ReadConceptOrderCommand { order: Option<i64> },
@@ -1177,7 +1177,7 @@ pub mod read {
         ReadTagInputCommand { tag: TagInput },
         ReadTagShallowCommand { tag:  },
         ReadTagMetadataCommand { metadata: TagMetadata },
-        ReadTagIdCommand { id: TagRef },
+        ReadTagIdCommand { id: TagReference },
         ReadTagNameCommand { name: String },
         ReadTagOrderCommand { order: Option<i64> },
     }
@@ -1197,7 +1197,7 @@ pub mod read {
         ReadQualityDescriptionCommand,
         ReadQualityBenchmarksInputCommand,
         ReadQualityBenchmarksShallowCommand,
-        ReadQualityBenchmarkCommands { id: BenchmarkRef, commands: Vec<ReadBenchmarkCommand> },
+        ReadQualityBenchmarkCommands { id: BenchmarkReference, commands: Vec<ReadBenchmarkCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1206,7 +1206,7 @@ pub mod read {
         ReadQualityInputCommand { quality: QualityInput },
         ReadQualityShallowCommand { quality:  },
         ReadQualityMetadataCommand { metadata: QualityMetadata },
-        ReadQualityIdCommand { id: QualityRef },
+        ReadQualityIdCommand { id: QualityReference },
         ReadQualityKeyCommand { key: String },
         ReadQualityValueCommand { value: Option<String> },
         ReadQualityUnitCommand { unit: Option<String> },
@@ -1238,7 +1238,7 @@ pub mod read {
         ReadBenchmarkInputCommand { benchmark: BenchmarkInput },
         ReadBenchmarkShallowCommand { benchmark:  },
         ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadata },
-        ReadBenchmarkIdCommand { id: BenchmarkRef },
+        ReadBenchmarkIdCommand { id: BenchmarkReference },
         ReadBenchmarkNameCommand { name: String },
         ReadBenchmarkMinCommand { min: Option<f64> },
         ReadBenchmarkMaxCommand { max: Option<f64> },
@@ -1264,11 +1264,11 @@ pub mod read {
     pub enum ReadPropCommandOutput {
         ReadPropInputCommand { prop: PropInput },
         ReadPropShallowCommand { prop:  },
-        ReadPropIdCommand { id: PropRef },
+        ReadPropIdCommand { id: PropReference },
         ReadPropKeyCommand { key: String },
         ReadPropValueCommand { value: String },
         ReadPropUnitCommand { unit: Option<String> },
-        ReadPropQualityIdCommand { quality: Option<QualityRef> },
+        ReadPropQualityIdCommand { quality: Option<QualityReference> },
     }
 
 
@@ -1287,9 +1287,9 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadAttributeCommandOutput {
-        ReadAttributeInputCommand { attribute: AttributeStore },
-        ReadAttributeShallowCommand { attribute: AttributeStore },
-        ReadAttributeMetadataCommand { metadata: AttributeStore },
+        ReadAttributeInputCommand { attribute: Attribute },
+        ReadAttributeShallowCommand { attribute: Attribute },
+        ReadAttributeMetadataCommand { metadata: Attribute },
         ReadAttributeIdCommand { id: Id },
         ReadAttributeKeyCommand { key: String },
         ReadAttributeValueCommand { value: String },
@@ -1316,16 +1316,16 @@ pub mod read {
         ReadStatInputCommand { stat: StatInput },
         ReadStatShallowCommand { stat:  },
         ReadStatMetadataCommand { metadata: StatMetadata },
-        ReadStatIdCommand { id: StatRef },
+        ReadStatIdCommand { id: StatReference },
         ReadStatKeyCommand { key: String },
         ReadStatValueCommand { value: String },
         ReadStatUnitCommand { unit: Option<String> },
         ReadStatDescriptionCommand { description: Option<String> },
     }
 
-    use crate::tag::TagStore;
-    use crate::tag::TagStoreRef;
-    use crate::typ::TypeStore;
+    use crate::tag::Tag;
+    use crate::tag::TagReference;
+    use crate::typ::Type;
     use crate::{error::Result, error::SemioError};
 
 
@@ -1337,40 +1337,40 @@ pub mod read {
         SemioError::NotFound { kind, id: id.clone() }
     }
 
-    fn kit_family(g: &KitGraph, id: &Id) -> Option<crate::family::FamilyStoreRef> {
+    fn kit_family(g: &KitGraph, id: &Id) -> Option<crate::family::FamilyReference> {
         g.families.iter().find(|f| f.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
 
-    fn kit_location(g: &KitGraph, id: &Id) -> Option<crate::location::LocationStoreRef> {
+    fn kit_location(g: &KitGraph, id: &Id) -> Option<crate::location::LocationReference> {
         g.locations.iter().find(|l| l.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
 
-    fn kit_find_author(g: &KitGraph, id: &Id) -> Option<crate::author::AuthorStoreRef> {
+    fn kit_find_author(g: &KitGraph, id: &Id) -> Option<crate::author::AuthorReference> {
         g.authors.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    fn kit_find_concept(g: &KitGraph, id: &Id) -> Option<crate::concept::ConceptStoreRef> {
+    fn kit_find_concept(g: &KitGraph, id: &Id) -> Option<crate::concept::ConceptReference> {
         g.concepts.iter().find(|c| c.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    fn kit_find_tag(g: &KitGraph, id: &Id) -> Option<crate::tag::TagStoreRef> {
+    fn kit_find_tag(g: &KitGraph, id: &Id) -> Option<crate::tag::TagReference> {
         g.tags.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    fn kit_find_quality(g: &KitGraph, id: &Id) -> Option<crate::quality::QualityStoreRef> {
+    fn kit_find_quality(g: &KitGraph, id: &Id) -> Option<crate::quality::QualityReference> {
         g.qualities.iter().find(|q| q.read().map(|q| q.id == *id).unwrap_or(false)).cloned()
     }
-    fn kit_find_prop(g: &KitGraph, id: &Id) -> Option<crate::prop::PropStoreRef> {
+    fn kit_find_prop(g: &KitGraph, id: &Id) -> Option<crate::prop::PropReference> {
         g.props.iter().find(|p| p.read().map(|p| p.id == *id).unwrap_or(false)).cloned()
     }
-    fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeStoreRef> {
+    fn kit_find_attr(g: &KitGraph, id: &Id) -> Option<AttributeReference> {
         g.attributes.iter().find(|a| a.read().map(|a| a.id == *id).unwrap_or(false)).cloned()
     }
 
-    pub(crate) fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeStoreRef> {
+    pub(crate) fn kit_type(g: &KitGraph, id: &Id) -> Option<TypeReference> {
         g.types.iter().find(|t| t.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
+    pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignReference> {
         g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    fn type_all_ports(t: &TypeStore) -> Vec<PortInput> {
+    fn type_all_ports(t: &Type) -> Vec<PortInput> {
         let mut out = Vec::new();
         for fw in &t.families {
             let Some(f) = fw.upgrade() else { continue };
@@ -1386,7 +1386,7 @@ pub mod read {
 
 
     impl ReadStatCommand {
-        pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
+        pub fn execute(&self, s: &crate::stat::StatReference) -> Result<ReadStatCommandOutput> {
             let s = s.read().map_err(|_| lp("stat"))?;
             Ok(match self {
                 ReadStatCommand::ReadStatInputCommand => ReadStatCommandOutput::ReadStatInputCommand { stat: s.to_input() },
@@ -1402,7 +1402,7 @@ pub mod read {
     }
 
     impl ReadBenchmarkCommand {
-        pub fn execute(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<ReadBenchmarkCommandOutput> {
+        pub fn execute(&self, b: &crate::benchmark::BenchmarkReference) -> Result<ReadBenchmarkCommandOutput> {
             let b = b.read().map_err(|_| lp("benchmark"))?;
             Ok(match self {
                 ReadBenchmarkCommand::ReadBenchmarkInputCommand => ReadBenchmarkCommandOutput::ReadBenchmarkInputCommand { benchmark: b.to_input() },
@@ -1419,7 +1419,7 @@ pub mod read {
     }
 
     impl ReadAttributeCommand {
-        pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
+        pub fn execute(&self, a: &Attribute) -> Result<ReadAttributeCommandOutput> {
             Ok(match self {
                 ReadAttributeCommand::ReadAttributeInputCommand => ReadAttributeCommandOutput::ReadAttributeInputCommand { attribute: a.clone_output() },
                 ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.clone_output() },
@@ -1430,14 +1430,14 @@ pub mod read {
                 ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
             })
         }
-        pub fn execute_ref(&self, a: &AttributeStoreRef) -> Result<ReadAttributeCommandOutput> {
+        pub fn execute_ref(&self, a: &AttributeReference) -> Result<ReadAttributeCommandOutput> {
             let a = a.read().map_err(|_| lp("attribute"))?;
             self.execute(&*a)
         }
     }
 
     impl ReadPropCommand {
-        pub fn execute(&self, p: &crate::prop::PropStoreRef) -> Result<ReadPropCommandOutput> {
+        pub fn execute(&self, p: &crate::prop::PropReference) -> Result<ReadPropCommandOutput> {
             let p = p.read().map_err(|_| lp("prop"))?;
             Ok(match self {
                 ReadPropCommand::ReadPropInputCommand => ReadPropCommandOutput::ReadPropInputCommand { prop: p.to_input() },
@@ -1452,7 +1452,7 @@ pub mod read {
     }
 
     impl ReadTagCommand {
-        pub fn execute(&self, t: &TagStore) -> Result<ReadTagCommandOutput> {
+        pub fn execute(&self, t: &Tag) -> Result<ReadTagCommandOutput> {
             Ok(match self {
                 ReadTagCommand::ReadTagInputCommand => ReadTagCommandOutput::ReadTagInputCommand { tag: t.to_input() },
                 ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow() },
@@ -1462,14 +1462,14 @@ pub mod read {
                 ReadTagCommand::ReadTagOrderCommand => ReadTagCommandOutput::ReadTagOrderCommand { order: t.order },
             })
         }
-        pub fn execute_ref(&self, t: &TagStoreRef) -> Result<ReadTagCommandOutput> {
+        pub fn execute_ref(&self, t: &TagReference) -> Result<ReadTagCommandOutput> {
             let t = t.read().map_err(|_| lp("tag"))?;
             self.execute(&*t)
         }
     }
 
     impl ReadQualityCommand {
-        pub fn execute(&self, q: &crate::quality::QualityStoreRef) -> Result<ReadQualityCommandOutput> {
+        pub fn execute(&self, q: &crate::quality::QualityReference) -> Result<ReadQualityCommandOutput> {
             let q = q.read().map_err(|_| lp("quality"))?;
             Ok(match self {
                 ReadQualityCommand::ReadQualityInputCommand => ReadQualityCommandOutput::ReadQualityInputCommand { quality: q.to_input() },
@@ -1496,7 +1496,7 @@ pub mod read {
     }
 
     impl ReadAuthorCommand {
-        pub fn execute(&self, a: &crate::author::AuthorStoreRef) -> Result<ReadAuthorCommandOutput> {
+        pub fn execute(&self, a: &crate::author::AuthorReference) -> Result<ReadAuthorCommandOutput> {
             let a = a.read().map_err(|_| lp("author"))?;
             Ok(match self {
                 ReadAuthorCommand::ReadAuthorInputCommand => ReadAuthorCommandOutput::ReadAuthorInputCommand { author: a.to_input() },
@@ -1512,7 +1512,7 @@ pub mod read {
     }
 
     impl ReadConceptCommand {
-        pub fn execute(&self, c: &crate::concept::ConceptStoreRef) -> Result<ReadConceptCommandOutput> {
+        pub fn execute(&self, c: &crate::concept::ConceptReference) -> Result<ReadConceptCommandOutput> {
             let c = c.read().map_err(|_| lp("concept"))?;
             Ok(match self {
                 ReadConceptCommand::ReadConceptInputCommand => ReadConceptCommandOutput::ReadConceptInputCommand { concept: c.to_input() },
@@ -1527,7 +1527,7 @@ pub mod read {
     }
 
     impl ReadFileCommand {
-        pub fn execute(&self, f: &crate::file::FileStoreRef) -> Result<ReadFileCommandOutput> {
+        pub fn execute(&self, f: &crate::file::FileReference) -> Result<ReadFileCommandOutput> {
             let f = f.read().map_err(|_| lp("file"))?;
             Ok(match self {
                 ReadFileCommand::ReadFileInputCommand => ReadFileCommandOutput::ReadFileInputCommand { file: f.to_input() },
@@ -1546,7 +1546,7 @@ pub mod read {
     }
 
     impl ReadFolderCommand {
-        pub fn execute(&self, f: &crate::folder::FolderStoreRef) -> Result<ReadFolderCommandOutput> {
+        pub fn execute(&self, f: &crate::folder::FolderReference) -> Result<ReadFolderCommandOutput> {
             let f = f.read().map_err(|_| lp("folder"))?;
             Ok(match self {
                 ReadFolderCommand::ReadFolderInputCommand => ReadFolderCommandOutput::ReadFolderInputCommand { folder: f.to_input() },
@@ -1560,7 +1560,7 @@ pub mod read {
     }
 
     impl ReadLocationCommand {
-        pub fn execute(&self, l: &crate::location::LocationStoreRef) -> Result<ReadLocationCommandOutput> {
+        pub fn execute(&self, l: &crate::location::LocationReference) -> Result<ReadLocationCommandOutput> {
             let l = l.read().map_err(|_| lp("location"))?;
             Ok(match self {
                 ReadLocationCommand::ReadLocationInputCommand => ReadLocationCommandOutput::ReadLocationInputCommand { location: l.to_input() },
@@ -1585,7 +1585,7 @@ pub mod read {
     }
 
     impl ReadLayerCommand {
-        pub fn execute(&self, l: &crate::layer::LayerStoreRef) -> Result<ReadLayerCommandOutput> {
+        pub fn execute(&self, l: &crate::layer::LayerReference) -> Result<ReadLayerCommandOutput> {
             let l = l.read().map_err(|_| lp("layer"))?;
             Ok(match self {
                 ReadLayerCommand::ReadLayerInputCommand => ReadLayerCommandOutput::ReadLayerInputCommand { layer: l.to_input() },
@@ -1603,7 +1603,7 @@ pub mod read {
     }
 
     impl ReadGroupCommand {
-        pub fn execute(&self, g: &crate::group::GroupStoreRef) -> Result<ReadGroupCommandOutput> {
+        pub fn execute(&self, g: &crate::group::GroupReference) -> Result<ReadGroupCommandOutput> {
             let g = g.read().map_err(|_| lp("group"))?;
             Ok(match self {
                 ReadGroupCommand::ReadGroupInputCommand => ReadGroupCommandOutput::ReadGroupInputCommand { group: g.to_input() },
@@ -1620,7 +1620,7 @@ pub mod read {
     }
 
     impl ReadFamilyCommand {
-        pub fn execute(&self, f: &FamilyStoreRef) -> Result<ReadFamilyCommandOutput> {
+        pub fn execute(&self, f: &FamilyReference) -> Result<ReadFamilyCommandOutput> {
             let f = f.read().map_err(|_| lp("family"))?;
             Ok(match self {
                 ReadFamilyCommand::ReadFamilyInputCommand => ReadFamilyCommandOutput::ReadFamilyInputCommand { family: f.to_input() },
@@ -1655,7 +1655,7 @@ pub mod read {
     }
 
     impl ReadSideCommand {
-        pub fn execute(&self, s: &SideStoreRef) -> Result<ReadSideCommandOutput> {
+        pub fn execute(&self, s: &SideReference) -> Result<ReadSideCommandOutput> {
             let s = s.read().map_err(|_| lp("side"))?;
             Ok(match self {
                 ReadSideCommand::ReadSideInputCommand => ReadSideCommandOutput::ReadSideInputCommand { side: s.to_input() },
@@ -1670,7 +1670,7 @@ pub mod read {
     }
 
     impl ReadConnectionCommand {
-        pub fn execute(&self, c: &crate::connection::ConnectionStoreRef) -> Result<ReadConnectionCommandOutput> {
+        pub fn execute(&self, c: &crate::connection::ConnectionReference) -> Result<ReadConnectionCommandOutput> {
             let c = c.read().map_err(|_| lp("connection"))?;
             Ok(match self {
                 ReadConnectionCommand::ReadConnectionInputCommand => ReadConnectionCommandOutput::ReadConnectionInputCommand { dto: c.to_input() },
@@ -1726,7 +1726,7 @@ pub mod read {
     }
 
     impl ReadPortCommand {
-        pub fn execute(&self, p: &PortStoreRef) -> Result<ReadPortCommandOutput> {
+        pub fn execute(&self, p: &PortReference) -> Result<ReadPortCommandOutput> {
             let p = p.read().map_err(|_| lp("port"))?;
             Ok(match self {
                 ReadPortCommand::ReadPortInputCommand => ReadPortCommandOutput::ReadPortInputCommand { port: p.to_input() },
@@ -1769,7 +1769,7 @@ pub mod read {
     }
 
     impl ReadConnectorCommand {
-        pub fn execute(&self, c: &ConnectorStoreRef) -> Result<ReadConnectorCommandOutput> {
+        pub fn execute(&self, c: &ConnectorReference) -> Result<ReadConnectorCommandOutput> {
             let c = c.read().map_err(|_| lp("connector"))?;
             Ok(match self {
                 ReadConnectorCommand::ReadConnectorInputCommand => ReadConnectorCommandOutput::ReadConnectorInputCommand { connector: c.to_input() },
@@ -1804,7 +1804,7 @@ pub mod read {
     }
 
     impl ReadRepresentationCommand {
-        pub fn execute(&self, r: &RepresentationStoreRef) -> Result<ReadRepresentationCommandOutput> {
+        pub fn execute(&self, r: &RepresentationReference) -> Result<ReadRepresentationCommandOutput> {
             let r = r.read().map_err(|_| lp("representation"))?;
             Ok(match self {
                 ReadRepresentationCommand::ReadRepresentationInputCommand => ReadRepresentationCommandOutput::ReadRepresentationInputCommand { representation: r.to_input() },
@@ -1853,7 +1853,7 @@ pub mod read {
     }
 
     impl ReadPieceCommand {
-        pub fn execute(&self, p: &PieceStoreRef, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
+        pub fn execute(&self, p: &PieceReference, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
             let o = p.read().map_err(|_| lp("piece"))?;
             Ok(match self {
                 ReadPieceCommand::ReadPieceInputCommand => ReadPieceCommandOutput::ReadPieceInputCommand { dto: o.to_input() },
@@ -1887,7 +1887,7 @@ pub mod read {
                     ReadPieceCommandOutput::ReadPieceParentConnectionInputCommand { connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_input())) }
                 }
                 ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
-                    parent_design: o.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| DesignRef { id: d.id.clone() })).ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
+                    parent_design: o.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| DesignReference { id: d.id.clone() })).ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
                 },
                 ReadPieceCommand::ReadPieceFixedCommand => {
                     if o.parent_piece.is_some() || o.parent_connection.is_some() {
@@ -1908,14 +1908,14 @@ pub mod read {
                     let alt = o.alternatives();
                     ReadPieceCommandOutput::ReadPieceAlternativesCommand {
                         alternatives: crate::piece::PieceAlternativesDto {
-                            types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() })).collect(),
-                            designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignRef { id: r.id.clone() })).collect(),
+                            types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeReference { id: r.id.clone() })).collect(),
+                            designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignReference { id: r.id.clone() })).collect(),
                         },
                     }
                 }
-                ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand { types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() })).collect() },
+                ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand { types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeReference { id: r.id.clone() })).collect() },
                 ReadPieceCommand::ReadPieceAlternativeDesignsCommand => {
-                    ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand { designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignRef { id: r.id.clone() })).collect() }
+                    ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand { designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignReference { id: r.id.clone() })).collect() }
                 }
                 ReadPieceCommand::ReadPiecePropCommands { id, commands } => {
                     let pr = o.props.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
@@ -1938,7 +1938,7 @@ pub mod read {
     }
 
     impl ReadTypeCommand {
-        pub fn execute(&self, t: &TypeStoreRef, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
+        pub fn execute(&self, t: &TypeReference, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
             let r = t.read().map_err(|_| lp("type"))?;
             Ok(match self {
                 ReadTypeCommand::ReadTypeInputCommand => ReadTypeCommandOutput::ReadTypeInputCommand { dto: r.to_input() },
@@ -2112,7 +2112,7 @@ pub mod read {
         VARI[i][j].to_string()
     }
 
-    pub(crate) fn design_clusterable_groups(d: &DesignStore, selected: &[Id]) -> Vec<Vec<Id>> {
+    pub(crate) fn design_clusterable_groups(d: &Design, selected: &[Id]) -> Vec<Vec<Id>> {
         use std::collections::{HashMap, HashSet};
         if selected.len() < 2 {
             return vec![];
@@ -2159,7 +2159,7 @@ pub mod read {
         vec![]
     }
 
-    pub(crate) fn design_included_infos(d: &DesignStore) -> Vec<IncludedDesignInfoDto> {
+    pub(crate) fn design_included_infos(d: &Design) -> Vec<IncludedDesignInfoDto> {
         use std::collections::HashSet;
         let mut design_ids: HashSet<Id> = HashSet::new();
         for conn in &d.connections {
@@ -2186,13 +2186,13 @@ pub mod read {
         out
     }
 
-    pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignRef> {
-        design_included_infos(d).into_iter().map(|i| crate::design::DesignRef { id: i.design_id }).collect()
+    pub(crate) fn design_included_design_ids(d: &Design) -> Vec<crate::design::DesignReference> {
+        design_included_infos(d).into_iter().map(|i| crate::design::DesignReference { id: i.design_id }).collect()
     }
 
-    pub(crate) fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
+    pub(crate) fn design_sum_quality(d: &Design, g: &KitGraph, quality_id: &Id) -> f64 {
         use std::collections::HashMap;
-        let types_by_id: HashMap<Id, crate::typ::TypeStoreRef> = g.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
+        let types_by_id: HashMap<Id, crate::typ::TypeReference> = g.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
         let mut sum: f64 = 0.0;
         for pref in &d.pieces {
             let Ok(pr) = pref.read() else { continue };
@@ -2235,7 +2235,7 @@ pub mod read {
     }
 
     impl ReadDesignCommand {
-        pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
+        pub fn execute(&self, d: &DesignReference, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
             let o = d.read().map_err(|_| lp("design"))?;
             Ok(match self {
                 ReadDesignCommand::ReadDesignInputCommand => ReadDesignCommandOutput::ReadDesignInputCommand { dto: o.to_input() },
@@ -2281,7 +2281,7 @@ pub mod read {
                 }
                 ReadDesignCommand::ReadDesignClusterableGroupsCommand { selection } => {
                     let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
-                    let groups: Vec<Vec<PieceRef>> = design_clusterable_groups(&*o, &ids).into_iter().map(|g| g.into_iter().map(|id| PieceRef { id }).collect()).collect();
+                    let groups: Vec<Vec<PieceReference>> = design_clusterable_groups(&*o, &ids).into_iter().map(|g| g.into_iter().map(|id| PieceReference { id }).collect()).collect();
                     ReadDesignCommandOutput::ReadDesignClusterableGroupsCommand { groups }
                 }
                 ReadDesignCommand::ReadDesignIncludedDesignsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignsCommand { designs: design_included_infos(&*o) },
@@ -2290,8 +2290,8 @@ pub mod read {
                     let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
                     let alts = o.replaceable_catalog_candidates(&ids);
                     ReadDesignCommandOutput::ReadDesignReplaceableCatalogCommand {
-                        types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeRef { id: r.id.clone() })).collect(),
-                        designs: alts.designs.iter().filter_map(|d| d.read().ok().map(|r| crate::design::DesignRef { id: r.id.clone() })).collect(),
+                        types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeReference { id: r.id.clone() })).collect(),
+                        designs: alts.designs.iter().filter_map(|d| d.read().ok().map(|r| crate::design::DesignReference { id: r.id.clone() })).collect(),
                     }
                 }
                 ReadDesignCommand::ReadDesignIncludedDesignIdsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignIdsCommand { design_ids: design_included_design_ids(&*o) },
@@ -2415,11 +2415,11 @@ pub mod read {
                 ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
                 ReadKitCommand::ReadKitTypesInputCommand => ReadKitCommandOutput::ReadKitTypesInputCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect() },
                 ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect() },
-                ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand { r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeRef { id: t.id.clone() })).collect() },
+                ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand { r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeReference { id: t.id.clone() })).collect() },
                 ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata())).collect() },
                 ReadKitCommand::ReadKitDesignsInputCommand => ReadKitCommandOutput::ReadKitDesignsInputCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_input())).collect() },
                 ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect() },
-                ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand { design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignRef { id: d.id.clone() })).collect() },
+                ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand { design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignReference { id: d.id.clone() })).collect() },
                 ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata())).collect() },
                 ReadKitCommand::ReadKitFilesInputCommand => ReadKitCommandOutput::ReadKitFilesInputCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_input())).collect() },
                 ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect() },
@@ -2569,78 +2569,78 @@ pub mod read {
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
+    use crate::attribute::{Attribute, AttributeReference};
     use crate::id::Id;
     use crate::author::AuthorInput;
-    use crate::author::AuthorRef;
-    use crate::author::AuthorStore;
-    use crate::author::AuthorStoreRef;
-    use crate::benchmark::{ BenchmarkRef,  BenchmarkStore, BenchmarkStoreRef};
+    use crate::author::AuthorReference;
+    use crate::author::Author;
+    use crate::author::AuthorReference;
+    use crate::benchmark::{ BenchmarkReference,  Benchmark, BenchmarkReference};
     use crate::concept::ConceptInput;
-    use crate::concept::ConceptRef;
-    use crate::concept::ConceptStore;
-    use crate::concept::ConceptStoreRef;
+    use crate::concept::ConceptReference;
+    use crate::concept::Concept;
+    use crate::concept::ConceptReference;
     use crate::connection::ConnectionInput;
-    use crate::connection::ConnectionRef;
+    use crate::connection::ConnectionReference;
     use crate::connector::ConnectorInput;
-    use crate::connector::ConnectorRef;
-    use crate::connector::ConnectorStore;
-    use crate::connector::ConnectorStoreRef;
+    use crate::connector::ConnectorReference;
+    use crate::connector::Connector;
+    use crate::connector::ConnectorReference;
     use crate::design::DesignInput;
-    use crate::design::DesignRef;
-    use crate::design::DesignStore;
+    use crate::design::DesignReference;
+    use crate::design::Design;
     use crate::event_output;
-    use crate::family::{ FamilyRef, FamilyStoreRef};
+    use crate::family::{ FamilyReference, FamilyReference};
     use crate::file::FileInput;
-    use crate::file::FileRef;
-    use crate::file::FileStoreRef;
+    use crate::file::FileReference;
+    use crate::file::FileReference;
     use crate::folder::FolderInput;
-    use crate::folder::FolderRef;
-    use crate::folder::FolderStoreRef;
+    use crate::folder::FolderReference;
+    use crate::folder::FolderReference;
     use crate::geom::Coordinate;
     use crate::geom::Plane;
     use crate::geom::Point;
     use crate::group::GroupInput;
-    use crate::group::GroupRef;
-    use crate::group::GroupStore;
+    use crate::group::GroupReference;
+    use crate::group::Group;
     use crate::kit_change::KitChangeKind;
     use crate::kit_diff::KitDiff;
     use crate::kit_graph::KitInput;
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::layer::LayerInput;
-    use crate::layer::LayerRef;
-    use crate::layer::LayerStore;
-    use crate::location::LocationRef;
+    use crate::layer::LayerReference;
+    use crate::layer::Layer;
+    use crate::location::LocationReference;
     use crate::piece::PieceInput;
-    use crate::piece::PieceRef;
-    use crate::piece::PieceStoreRef;
-    use crate::piece::PieceStoreWeak;
+    use crate::piece::PieceReference;
+    use crate::piece::PieceReference;
+    use crate::piece::PieceWeak;
     use crate::port::PortInput;
-    use crate::port::PortRef;
-    use crate::port::{PortStore, PortStoreRef};
+    use crate::port::PortReference;
+    use crate::port::{Port, PortReference};
     use crate::prop::PropInput;
-    use crate::prop::PropRef;
-    use crate::prop::PropStore;
-    use crate::prop::PropStoreRef;
+    use crate::prop::PropReference;
+    use crate::prop::Prop;
+    use crate::prop::PropReference;
     use crate::quality::QualityInput;
-    use crate::quality::QualityRef;
-    use crate::quality::QualityStore;
-    use crate::quality::QualityStoreRef;
+    use crate::quality::QualityReference;
+    use crate::quality::Quality;
+    use crate::quality::QualityReference;
     use crate::representation::RepresentationInput;
-    use crate::representation::RepresentationRef;
-    use crate::representation::RepresentationStore;
-    use crate::representation::RepresentationStoreRef;
+    use crate::representation::RepresentationReference;
+    use crate::representation::Representation;
+    use crate::representation::RepresentationReference;
     use crate::side::SideMetadata;
-    use crate::side::SideStoreRef;
+    use crate::side::SideReference;
     use crate::stat::StatInput;
-    use crate::stat::StatRef;
-    use crate::stat::StatStore;
+    use crate::stat::StatReference;
+    use crate::stat::Stat;
     use crate::tag::TagInput;
-    use crate::tag::TagRef;
-    use crate::tag::TagStore;
+    use crate::tag::TagReference;
+    use crate::tag::Tag;
     use crate::typ::TypeInput;
-    use crate::typ::TypeRef;
+    use crate::typ::TypeReference;
     use crate::{error::Result, error::SemioError};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -2651,11 +2651,11 @@ pub mod change_command {
         SemioError::InvalidOperation(e.to_string())
     }
 
-    fn build_piece_index(d: &DesignStore) -> HashMap<Id, PieceStoreRef> {
+    fn build_piece_index(d: &Design) -> HashMap<Id, PieceReference> {
         d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
     }
 
-    fn reoutput_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadata) -> Result<()> {
+    fn reoutput_side_from_metadata(d: &Design, side: &SideReference, meta: &SideMetadata) -> Result<()> {
         let index = build_piece_index(d);
         {
             let mut w = side.write().map_err(|_| SemioError::LockPoisoned("side"))?;
@@ -2669,7 +2669,7 @@ pub mod change_command {
                     if let Some(tw) = &pc.type_ref {
                         if let Some(t) = tw.upgrade() {
                             if let Ok(tr) = t.read() {
-                                if let Some(kw) = tr.parent_kit.upgrade() {
+                                if let Some(kw) = tr.owner.upgrade() {
                                     if let Ok(kit) = kw.read() {
                                         if let Some(pr) = kit.port_by_id(&port_id.id) {
                                             let _ = w.set_port_weak(Some(Arc::downgrade(&pr)));
@@ -2742,145 +2742,145 @@ pub mod change_command {
             r#type: 
         },
         RemoveType {
-            type_id: TypeRef,
+            type_id: TypeReference,
         },
         AddDesign {
             design: 
         },
         RemoveDesign {
-            design_id: DesignRef,
+            design_id: DesignReference,
         },
         AddFile {
             file: 
         },
         RemoveFile {
-            file_id: FileRef,
+            file_id: FileReference,
         },
         AddFolder {
             folder: 
         },
         RemoveFolder {
-            folder_id: FolderRef,
+            folder_id: FolderReference,
         },
         AddAuthor {
             author: 
         },
         RemoveAuthor {
-            author_id: AuthorRef,
+            author_id: AuthorReference,
         },
         AddConcept {
             concept: 
         },
         RemoveConcept {
-            concept_id: ConceptRef,
+            concept_id: ConceptReference,
         },
         AddTag {
             tag: 
         },
         RemoveTag {
-            tag_id: TagRef,
+            tag_id: TagReference,
         },
         AddQuality {
             quality: 
         },
         RemoveQuality {
-            quality_id: QualityRef,
+            quality_id: QualityReference,
         },
         AddKitProp {
             prop: 
         },
         RemoveKitProp {
-            prop_id: PropRef,
+            prop_id: PropReference,
         },
         AddKitAttribute {
-            attribute: AttributeStore,
+            attribute: Attribute,
         },
         RemoveKitAttribute {
             id: Id,
         },
         ChangeFileCommands {
-            file_id: FileRef,
+            file_id: FileReference,
             commands: Vec<ChangeFileCommand>,
         },
         ChangeFolderCommands {
-            folder_id: FolderRef,
+            folder_id: FolderReference,
             commands: Vec<ChangeFolderCommand>,
         },
         ChangeAuthorCommands {
-            author_id: AuthorRef,
+            author_id: AuthorReference,
             commands: Vec<ChangeAuthorCommand>,
         },
         ChangeConceptCommands {
-            concept_id: ConceptRef,
+            concept_id: ConceptReference,
             commands: Vec<ChangeConceptCommand>,
         },
         ChangeTagCommands {
-            tag_id: TagRef,
+            tag_id: TagReference,
             commands: Vec<ChangeTagCommand>,
         },
         ChangeKitQualityCommands {
-            quality_id: QualityRef,
+            quality_id: QualityReference,
             commands: Vec<ChangeKitQualityCommand>,
         },
         ChangeTypeCommands {
-            type_id: TypeRef,
+            type_id: TypeReference,
             commands: Vec<ChangeTypeCommand>,
         },
         ChangeDesignCommands {
-            design_id: DesignRef,
+            design_id: DesignReference,
             commands: Vec<ChangeDesignCommand>,
         },
         ChangeKitPortCommands {
-            port_id: PortRef,
+            port_id: PortReference,
             commands: Vec<ChangePortCommand>,
         },
         AddFamily {
             family: 
         },
         RemoveFamily {
-            family_id: FamilyRef,
+            family_id: FamilyReference,
         },
         ChangeFamilyCommands {
-            family_id: FamilyRef,
+            family_id: FamilyReference,
             commands: Vec<ChangeFamilyCommand>,
         },
         ClusterPieces {
-            design_id: DesignRef,
+            design_id: DesignReference,
             piece_ids: Vec<String>,
             cluster_name: String,
         },
         DragPieces {
-            design_id: DesignRef,
+            design_id: DesignReference,
             piece_ids: Vec<String>,
             du: f64,
             dv: f64,
         },
         MovePieces {
-            design_id: DesignRef,
+            design_id: DesignReference,
             piece_ids: Vec<String>,
             gap: f64,
             shift: f64,
             rise: f64,
         },
         FixPieces {
-            design_id: DesignRef,
+            design_id: DesignReference,
             piece_ids: Vec<String>,
         },
         FlattenDesign {
-            design_id: DesignRef,
+            design_id: DesignReference,
         },
         ExpandNestedDesign {
-            parent_design_id: DesignRef,
-            nested_design_id: DesignRef,
+            parent_design_id: DesignReference,
+            nested_design_id: DesignReference,
         },
         DeleteConnection {
-            design_id: DesignRef,
-            connection_id: ConnectionRef,
+            design_id: DesignReference,
+            connection_id: ConnectionReference,
         },
         ChangePieceKind {
-            design_id: DesignRef,
-            piece_id: PieceRef,
-            new_type_id: TypeRef,
+            design_id: DesignReference,
+            piece_id: PieceReference,
+            new_type_id: TypeReference,
         },
     }
 
@@ -2891,8 +2891,8 @@ pub mod change_command {
         Description { description: Option<String> },
         Icon { icon: Option<String> },
         AddPort { port: PortInput },
-        RemovePort { port_id: PortRef },
-        ChangePortCommands { port_id: PortRef, commands: Vec<ChangePortCommand> },
+        RemovePort { port_id: PortReference },
+        ChangePortCommands { port_id: PortReference, commands: Vec<ChangePortCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -2947,8 +2947,8 @@ pub mod change_command {
         Definition { definition: Option<String> },
         Description { description: Option<String> },
         AddBenchmark { benchmark: BenchmarkInput },
-        RemoveBenchmark { benchmark_id: BenchmarkRef },
-        ChangeBenchmarkCommands { benchmark_id: BenchmarkRef, commands: Vec<ChangeBenchmarkCommand> },
+        RemoveBenchmark { benchmark_id: BenchmarkReference },
+        ChangeBenchmarkCommands { benchmark_id: BenchmarkReference, commands: Vec<ChangeBenchmarkCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -2986,7 +2986,7 @@ pub mod change_command {
             unit: Option<String>,
         },
         Location {
-            location: Option<LocationRef>,
+            location: Option<LocationReference>,
         },
         Created {
             created: Option<String>,
@@ -2994,71 +2994,71 @@ pub mod change_command {
         Updated {
             updated: Option<String>,
         },
-        AddFamilyRef {
-            family_id: FamilyRef,
+        AddFamilyReference {
+            family_id: FamilyReference,
         },
-        RemoveFamilyRef {
-            family_id: FamilyRef,
+        RemoveFamilyReference {
+            family_id: FamilyReference,
         },
         SetFamilies {
-            families: Vec<FamilyRef>,
+            families: Vec<FamilyReference>,
         },
         ChangePortCommands {
-            port_id: PortRef,
+            port_id: PortReference,
             commands: Vec<ChangePortCommand>,
         },
         AddConnector {
             connector: 
         },
         RemoveConnector {
-            connector_id: ConnectorRef,
+            connector_id: ConnectorReference,
         },
         ChangeConnectorCommands {
-            connector_id: ConnectorRef,
+            connector_id: ConnectorReference,
             commands: Vec<ChangeConnectorCommand>,
         },
         AddRepresentation {
             representation: 
         },
         RemoveRepresentation {
-            id: RepresentationRef,
+            id: RepresentationReference,
         },
         ChangeRepresentationCommands {
-            id: RepresentationRef,
+            id: RepresentationReference,
             commands: Vec<ChangeRepresentationCommand>,
         },
         AddTypeAuthor {
             author: 
         },
         RemoveTypeAuthor {
-            author_id: AuthorRef,
+            author_id: AuthorReference,
         },
         AddTypeConcept {
             concept: 
         },
         RemoveTypeConcept {
-            concept_id: ConceptRef,
+            concept_id: ConceptReference,
         },
         AddTypeTag {
             tag: 
         },
         RemoveTypeTag {
-            tag_id: TagRef,
+            tag_id: TagReference,
         },
         AddTypeQuality {
             quality: 
         },
         RemoveTypeQuality {
-            quality_id: QualityRef,
+            quality_id: QualityReference,
         },
         AddTypeProp {
             prop: 
         },
         RemoveTypeProp {
-            prop_id: PropRef,
+            prop_id: PropReference,
         },
         AddTypeAttribute {
-            attribute: AttributeStore,
+            attribute: Attribute,
         },
         RemoveTypeAttribute {
             id: Id,
@@ -3072,9 +3072,9 @@ pub mod change_command {
         Name { name: String },
         Description { description: Option<String> },
         Icon { icon: Option<String> },
-        CompatiblePorts { ports: Vec<PortRef> },
-        CompatibleFamilies { families: Vec<crate::family::FamilyRef> },
-        AddPortAttribute { attribute: AttributeStore },
+        CompatiblePorts { ports: Vec<PortReference> },
+        CompatibleFamilies { families: Vec<crate::family::FamilyReference> },
+        AddPortAttribute { attribute: Attribute },
         RemovePortAttribute { id: Id },
     }
 
@@ -3083,10 +3083,10 @@ pub mod change_command {
     pub enum ChangeConnectorCommand {
         Code { code: String },
         Description { description: Option<String> },
-        Port { port: Option<PortRef> },
+        Port { port: Option<PortReference> },
         AddConnectorQuality { quality: QualityInput },
-        RemoveConnectorQuality { quality_id: QualityRef },
-        AddAttribute { attribute: AttributeStore },
+        RemoveConnectorQuality { quality_id: QualityReference },
+        AddAttribute { attribute: Attribute },
         RemoveAttribute { id: Id },
     }
 
@@ -3095,12 +3095,12 @@ pub mod change_command {
     pub enum ChangeRepresentationCommand {
         Url { url: String },
         Description { description: Option<String> },
-        File { file: Option<FileRef> },
+        File { file: Option<FileReference> },
         AddRepresentationTag { tag: TagInput },
-        RemoveRepresentationTag { tag_id: TagRef },
+        RemoveRepresentationTag { tag_id: TagReference },
         AddQuality { quality: QualityInput },
-        RemoveQuality { quality_id: QualityRef },
-        AddAttribute { attribute: AttributeStore },
+        RemoveQuality { quality_id: QualityReference },
+        AddAttribute { attribute: Attribute },
         RemoveAttribute { id: Id },
     }
 
@@ -3111,70 +3111,70 @@ pub mod change_command {
         Description { description: Option<String> },
         Icon { icon: Option<String> },
         Image { image: Option<String> },
-        Location { location: Option<LocationRef> },
+        Location { location: Option<LocationReference> },
         Unit { unit: Option<String> },
         Created { created: Option<String> },
         Updated { updated: Option<String> },
-        AddFamilyRef { family_id: FamilyRef },
-        RemoveFamilyRef { family_id: FamilyRef },
-        SetFamilies { families: Vec<FamilyRef> },
+        AddFamilyReference { family_id: FamilyReference },
+        RemoveFamilyReference { family_id: FamilyReference },
+        SetFamilies { families: Vec<FamilyReference> },
         AddPiece { piece: PieceInput },
-        RemovePiece { piece_id: PieceRef },
-        RenamePiece { piece_id: PieceRef, name: Option<String> },
-        SetPieceDescription { piece_id: PieceRef, description: Option<String> },
-        SetPiecePlane { piece_id: PieceRef, plane: Option<Plane> },
-        SetPieceCenter { piece_id: PieceRef, center: Option<Coordinate> },
-        SetPieceColor { piece_id: PieceRef, color: Option<String> },
-        SetPieceKind { piece_id: PieceRef, kind_id: Option<TypeRef> },
-        SetPieceScale { piece_id: PieceRef, scale: Option<f64> },
-        SetPieceMirrorPlane { piece_id: PieceRef, mirror_plane: Option<Plane> },
-        SetPieceHidden { piece_id: PieceRef, hidden: Option<bool> },
-        SetPieceLocked { piece_id: PieceRef, locked: Option<bool> },
-        SetPieceStableId { piece_id: PieceRef, stable_id: Id },
-        AddPieceProp { piece_id: PieceRef, prop: PropInput },
-        RemovePieceProp { piece_id: PieceRef, prop_id: PropRef },
-        ChangePiecePropCommands { piece_id: PieceRef, prop_id: PropRef, commands: Vec<ChangePropCommand> },
-        AddPieceAttribute { piece_id: PieceRef, attribute: AttributeStore },
-        RemovePieceAttribute { piece_id: PieceRef, id: Id },
-        ChangePieceAttributeCommands { piece_id: PieceRef, id: Id, commands: Vec<ChangeAttributeCommand> },
-        FixPiece { piece_id: PieceRef },
-        ChangePieceCommands { piece_id: PieceRef, commands: Vec<ChangePieceCommand> },
+        RemovePiece { piece_id: PieceReference },
+        RenamePiece { piece_id: PieceReference, name: Option<String> },
+        SetPieceDescription { piece_id: PieceReference, description: Option<String> },
+        SetPiecePlane { piece_id: PieceReference, plane: Option<Plane> },
+        SetPieceCenter { piece_id: PieceReference, center: Option<Coordinate> },
+        SetPieceColor { piece_id: PieceReference, color: Option<String> },
+        SetPieceKind { piece_id: PieceReference, kind_id: Option<TypeReference> },
+        SetPieceScale { piece_id: PieceReference, scale: Option<f64> },
+        SetPieceMirrorPlane { piece_id: PieceReference, mirror_plane: Option<Plane> },
+        SetPieceHidden { piece_id: PieceReference, hidden: Option<bool> },
+        SetPieceLocked { piece_id: PieceReference, locked: Option<bool> },
+        SetPieceStableId { piece_id: PieceReference, stable_id: Id },
+        AddPieceProp { piece_id: PieceReference, prop: PropInput },
+        RemovePieceProp { piece_id: PieceReference, prop_id: PropReference },
+        ChangePiecePropCommands { piece_id: PieceReference, prop_id: PropReference, commands: Vec<ChangePropCommand> },
+        AddPieceAttribute { piece_id: PieceReference, attribute: Attribute },
+        RemovePieceAttribute { piece_id: PieceReference, id: Id },
+        ChangePieceAttributeCommands { piece_id: PieceReference, id: Id, commands: Vec<ChangeAttributeCommand> },
+        FixPiece { piece_id: PieceReference },
+        ChangePieceCommands { piece_id: PieceReference, commands: Vec<ChangePieceCommand> },
         AddConnection { connection: ConnectionInput },
-        RemoveConnection { connection_id: ConnectionRef },
-        SetConnectionGap { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionShift { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionRise { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionRotation { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionTurn { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionTilt { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionAxisU { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionAxisV { connection_id: ConnectionRef, value: Option<f64> },
-        SetConnectionDescription { connection_id: ConnectionRef, description: Option<String> },
-        ReplaceConnectionAttachedSide { connection_id: ConnectionRef, side: SideMetadata },
-        ReplaceConnectionConnectingSide { connection_id: ConnectionRef, side: SideMetadata },
-        AddConnectionAttribute { connection_id: ConnectionRef, attribute: AttributeStore },
-        RemoveConnectionAttribute { connection_id: ConnectionRef, id: Id },
-        ChangeConnectionCommands { connection_id: ConnectionRef, commands: Vec<ChangeConnectionCommand> },
+        RemoveConnection { connection_id: ConnectionReference },
+        SetConnectionGap { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionShift { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionRise { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionRotation { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionTurn { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionTilt { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionAxisU { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionAxisV { connection_id: ConnectionReference, value: Option<f64> },
+        SetConnectionDescription { connection_id: ConnectionReference, description: Option<String> },
+        ReplaceConnectionAttachedSide { connection_id: ConnectionReference, side: SideMetadata },
+        ReplaceConnectionConnectingSide { connection_id: ConnectionReference, side: SideMetadata },
+        AddConnectionAttribute { connection_id: ConnectionReference, attribute: Attribute },
+        RemoveConnectionAttribute { connection_id: ConnectionReference, id: Id },
+        ChangeConnectionCommands { connection_id: ConnectionReference, commands: Vec<ChangeConnectionCommand> },
         AddLayer { layer: LayerInput },
-        RemoveLayer { layer_id: LayerRef },
-        ChangeLayerCommands { layer_id: LayerRef, commands: Vec<ChangeLayerCommand> },
+        RemoveLayer { layer_id: LayerReference },
+        ChangeLayerCommands { layer_id: LayerReference, commands: Vec<ChangeLayerCommand> },
         AddGroup { group: GroupInput },
-        RemoveGroup { group_id: GroupRef },
-        ChangeGroupCommands { group_id: GroupRef, commands: Vec<ChangeGroupCommand> },
+        RemoveGroup { group_id: GroupReference },
+        ChangeGroupCommands { group_id: GroupReference, commands: Vec<ChangeGroupCommand> },
         AddStat { stat: StatInput },
-        RemoveStat { stat_id: StatRef },
-        ChangeStatCommands { stat_id: StatRef, commands: Vec<ChangeStatCommand> },
+        RemoveStat { stat_id: StatReference },
+        ChangeStatCommands { stat_id: StatReference, commands: Vec<ChangeStatCommand> },
         AddDesignAuthor { author: AuthorInput },
-        RemoveDesignAuthor { author_id: AuthorRef },
+        RemoveDesignAuthor { author_id: AuthorReference },
         AddDesignConcept { concept: ConceptInput },
-        RemoveDesignConcept { concept_id: ConceptRef },
+        RemoveDesignConcept { concept_id: ConceptReference },
         AddDesignTag { tag: TagInput },
-        RemoveDesignTag { tag_id: TagRef },
+        RemoveDesignTag { tag_id: TagReference },
         AddDesignQuality { quality: QualityInput },
-        RemoveDesignQuality { quality_id: QualityRef },
+        RemoveDesignQuality { quality_id: QualityReference },
         AddDesignProp { prop: PropInput },
-        RemoveDesignProp { prop_id: PropRef },
-        AddDesignAttribute { attribute: AttributeStore },
+        RemoveDesignProp { prop_id: PropReference },
+        AddDesignAttribute { attribute: Attribute },
         RemoveDesignAttribute { id: Id },
     }
 
@@ -3196,7 +3196,7 @@ pub mod change_command {
         Description { description: Option<String> },
         Color { color: Option<String> },
         Icon { icon: Option<String> },
-        Pieces { pieces: Vec<PieceRef> },
+        Pieces { pieces: Vec<PieceReference> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3222,7 +3222,7 @@ pub mod change_command {
         Description { value: Option<String> },
         ReplaceConnected { side: SideMetadata },
         ReplaceConnecting { side: SideMetadata },
-        AddConnectionAttribute { attribute: AttributeStore },
+        AddConnectionAttribute { attribute: Attribute },
         RemoveConnectionAttribute { id: Id },
     }
 
@@ -3234,16 +3234,16 @@ pub mod change_command {
         Plane { plane: Option<Plane> },
         Center { center: Option<Coordinate> },
         Color { color: Option<String> },
-        Type { type_id: Option<TypeRef> },
+        Type { type_id: Option<TypeReference> },
         Scale { scale: Option<f64> },
         MirrorPlane { mirror_plane: Option<Plane> },
         Hidden { hidden: Option<bool> },
         Locked { locked: Option<bool> },
         Id { id: Id },
         AddProp { prop: PropInput },
-        RemoveProp { prop_id: PropRef },
-        ChangePropCommands { prop_id: PropRef, commands: Vec<ChangePropCommand> },
-        AddAttribute { attribute: AttributeStore },
+        RemoveProp { prop_id: PropReference },
+        ChangePropCommands { prop_id: PropReference, commands: Vec<ChangePropCommand> },
+        AddAttribute { attribute: Attribute },
         RemoveAttribute { id: Id },
         ChangeAttributeCommands { id: Id, commands: Vec<ChangeAttributeCommand> },
         Fix,
@@ -3266,7 +3266,7 @@ pub mod change_command {
     }
 
     impl ChangeFileCommand {
-        pub fn apply(&self, f: &FileStoreRef) -> Result<Vec<ChangeFileCommand>> {
+        pub fn apply(&self, f: &FileReference) -> Result<Vec<ChangeFileCommand>> {
             match self {
                 ChangeFileCommand::Url { url } => {
                     let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.url.clone();
@@ -3336,7 +3336,7 @@ pub mod change_command {
     }
 
     impl ChangeFolderCommand {
-        pub fn apply(&self, folder: &FolderStoreRef) -> Result<Vec<ChangeFolderCommand>> {
+        pub fn apply(&self, folder: &FolderReference) -> Result<Vec<ChangeFolderCommand>> {
             match self {
                 ChangeFolderCommand::Path { path } => {
                     let old = folder.read().map_err(|_| SemioError::LockPoisoned("folder"))?.path.clone();
@@ -3361,7 +3361,7 @@ pub mod change_command {
     }
 
     impl ChangeAuthorCommand {
-        pub fn apply(&self, a: &AuthorStoreRef) -> Result<Vec<ChangeAuthorCommand>> {
+        pub fn apply(&self, a: &AuthorReference) -> Result<Vec<ChangeAuthorCommand>> {
             match self {
                 ChangeAuthorCommand::Name { name } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.name.clone();
@@ -3404,7 +3404,7 @@ pub mod change_command {
     }
 
     impl ChangeConceptCommand {
-        pub fn apply(&self, c: &ConceptStoreRef) -> Result<Vec<ChangeConceptCommand>> {
+        pub fn apply(&self, c: &ConceptReference) -> Result<Vec<ChangeConceptCommand>> {
             match self {
                 ChangeConceptCommand::Name { name } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.name.clone();
@@ -3438,7 +3438,7 @@ pub mod change_command {
     }
 
     impl ChangeTagCommand {
-        pub fn apply(&self, t: &crate::tag::TagStoreRef) -> Result<Vec<ChangeTagCommand>> {
+        pub fn apply(&self, t: &crate::tag::TagReference) -> Result<Vec<ChangeTagCommand>> {
             match self {
                 ChangeTagCommand::Name { name } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.name.clone();
@@ -3463,7 +3463,7 @@ pub mod change_command {
     }
 
     impl ChangeBenchmarkCommand {
-        pub fn apply(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<Vec<ChangeBenchmarkCommand>> {
+        pub fn apply(&self, b: &crate::benchmark::BenchmarkReference) -> Result<Vec<ChangeBenchmarkCommand>> {
             match self {
                 ChangeBenchmarkCommand::Name { name } => {
                     let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.name.clone();
@@ -3515,7 +3515,7 @@ pub mod change_command {
     }
 
     impl ChangeKitQualityCommand {
-        pub fn apply(&self, kit: &KitGraphRef, q: &QualityStoreRef) -> Result<Vec<ChangeKitQualityCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, q: &QualityReference) -> Result<Vec<ChangeKitQualityCommand>> {
             match self {
                 ChangeKitQualityCommand::Key { key } => {
                     let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.key.clone();
@@ -3569,14 +3569,14 @@ pub mod change_command {
                         if qg.benchmarks.iter().any(|b| b.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate benchmark id on quality".into()));
                         }
-                        let mut b = BenchmarkStore::new(benchmark.id.clone());
+                        let mut b = Benchmark::new(benchmark.id.clone());
                         b.apply_metadata_dto(BenchmarkMetadata { id: benchmark.id.clone(), name: benchmark.name.clone(), min: benchmark.min, max: benchmark.max, min_excluded: benchmark.min_excluded, max_excluded: benchmark.max_excluded });
                         b.parent_quality = Some(Arc::downgrade(q));
                         qg.benchmarks.push(Arc::new(RwLock::new(b)));
                     }
                     q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.invalidate_hash();
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkRef { id } }])
+                    Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkReference { id } }])
                 }
                 ChangeKitQualityCommand::RemoveBenchmark { benchmark_id } => {
                     let pos = { q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.iter().position(|b| b.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)) };
@@ -3589,7 +3589,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitQualityCommand::AddBenchmark { benchmark: dto }])
                 }
                 ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id, commands } => {
-                    let b: BenchmarkStoreRef = {
+                    let b: BenchmarkReference = {
                         let qg = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?;
                         qg.benchmarks.iter().find(|x| x.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() })?
                     };
@@ -3674,11 +3674,11 @@ pub mod change_command {
         }
 
 
-        pub fn kit_diff(&self, kit: &KitGraphRef) -> Result<KitDiff> {
+        pub fn kit_diff(&self, kit: &KitGraphReference) -> Result<KitDiff> {
             Self::kit_diff_many(kit, std::slice::from_ref(self))
         }
 
-        pub fn kit_diff_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
+        pub fn kit_diff_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_input();
             if cmds.is_empty() {
                 return Ok(KitDiff::default());
@@ -3691,7 +3691,7 @@ pub mod change_command {
             Ok(KitDiff::between_dto(&before, &after))
         }
 
-        pub fn inverse_commands_for_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+        pub fn inverse_commands_for_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
@@ -3717,7 +3717,7 @@ pub mod change_command {
             Ok((d, inv))
         }
 
-        pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_input();
             let twin = KitGraph::from_input(b0.clone());
             let inv = self.apply_mutation(&twin)?;
@@ -3729,7 +3729,7 @@ pub mod change_command {
             Ok(inv)
         }
 
-        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+        pub fn apply_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
@@ -3752,7 +3752,7 @@ pub mod change_command {
             Ok(out)
         }
 
-        fn apply_mutation(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
+        fn apply_mutation(&self, kit: &KitGraphReference) -> Result<Vec<ChangeKitCommand>> {
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
@@ -3822,7 +3822,7 @@ pub mod change_command {
                 ChangeKitCommand::AddType { r#type } => {
                     let id = r#type.id.clone();
                     KitGraph::insert_type_dto(kit, r#type.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeReference { id } }])
                 }
                 ChangeKitCommand::RemoveType { type_id } => {
                     let snap = KitGraph::remove_type_dto(kit, type_id.id.as_str()).map_err(se)?;
@@ -3836,7 +3836,7 @@ pub mod change_command {
                 ChangeKitCommand::AddDesign { design } => {
                     let id = design.id.clone();
                     KitGraph::insert_design_ref(kit, design.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignReference { id } }])
                 }
                 ChangeKitCommand::RemoveDesign { design_id } => {
                     let snap = KitGraph::remove_design_dto(kit, design_id.id.as_str()).map_err(se)?;
@@ -3850,7 +3850,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFile { file } => {
                     let id = file.id.clone();
                     KitGraph::insert_file_dto(kit, file.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileReference { id } }])
                 }
                 ChangeKitCommand::RemoveFile { file_id } => {
                     let snap = KitGraph::remove_file_dto(kit, file_id.id.as_str()).map_err(se)?;
@@ -3863,7 +3863,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFolder { folder } => {
                     let id = folder.id.clone();
                     KitGraph::insert_folder_dto(kit, folder.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderReference { id } }])
                 }
                 ChangeKitCommand::RemoveFolder { folder_id } => {
                     let snap = KitGraph::remove_folder_dto(kit, folder_id.id.as_str()).map_err(se)?;
@@ -3876,7 +3876,7 @@ pub mod change_command {
                 ChangeKitCommand::AddAuthor { author } => {
                     let id = author.id.clone();
                     KitGraph::insert_author_dto(kit, author.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorReference { id } }])
                 }
                 ChangeKitCommand::RemoveAuthor { author_id } => {
                     let snap = KitGraph::remove_author_dto(kit, author_id.id.as_str()).map_err(se)?;
@@ -3889,7 +3889,7 @@ pub mod change_command {
                 ChangeKitCommand::AddConcept { concept } => {
                     let id = concept.id.clone();
                     KitGraph::insert_concept_dto(kit, concept.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptReference { id } }])
                 }
                 ChangeKitCommand::RemoveConcept { concept_id } => {
                     let snap = KitGraph::remove_concept_dto(kit, concept_id.id.as_str()).map_err(se)?;
@@ -3902,7 +3902,7 @@ pub mod change_command {
                 ChangeKitCommand::AddTag { tag } => {
                     let id = tag.id.clone();
                     KitGraph::insert_tag_dto(kit, tag.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagReference { id } }])
                 }
                 ChangeKitCommand::RemoveTag { tag_id } => {
                     let snap = KitGraph::remove_tag_dto(kit, tag_id.id.as_str()).map_err(se)?;
@@ -3915,7 +3915,7 @@ pub mod change_command {
                 ChangeKitCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
                     KitGraph::insert_quality_dto(kit, quality.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityReference { id } }])
                 }
                 ChangeKitCommand::RemoveQuality { quality_id } => {
                     let snap = KitGraph::remove_quality_dto(kit, quality_id.id.as_str()).map_err(se)?;
@@ -3932,14 +3932,14 @@ pub mod change_command {
                         if g.props.iter().any(|p| p.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate prop id on kit".into()));
                         }
-                        let mut p = PropStore::from_input(prop.clone());
-                        p.parent_kit = Some(Arc::downgrade(kit));
+                        let mut p = Prop::from_input(prop.clone());
+                        p.owner = Some(Arc::downgrade(kit));
                         g.props.push(Arc::new(RwLock::new(p)));
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropReference { id } }])
                 }
                 ChangeKitCommand::RemoveKitProp { prop_id } => {
                     let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false)) };
@@ -3963,8 +3963,8 @@ pub mod change_command {
                         if g.attributes.iter().any(|a| a.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate attribute id on kit".into()));
                         }
-                        let mut a = AttributeStore::from_output(attribute.clone());
-                        a.parent_kit = Some(Arc::downgrade(kit));
+                        let mut a = Attribute::from_output(attribute.clone());
+                        a.owner = Some(Arc::downgrade(kit));
                         g.attributes.push(Arc::new(RwLock::new(a)));
                         g.invalidate_hash();
                         g.invalidate_validation();
@@ -3988,7 +3988,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::AddKitAttribute { attribute: dto }])
                 }
                 ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
-                    let f: FileStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(file_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
+                    let f: FileReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(file_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -3998,7 +3998,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeFolderCommands { folder_id, commands } => {
-                    let f: FolderStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.folder(folder_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
+                    let f: FolderReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.folder(folder_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -4008,7 +4008,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFolderCommands { folder_id: folder_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeAuthorCommands { author_id, commands } => {
-                    let a: AuthorStoreRef = kit
+                    let a: AuthorReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .authors
@@ -4025,7 +4025,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeAuthorCommands { author_id: author_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeConceptCommands { concept_id, commands } => {
-                    let c: ConceptStoreRef = kit
+                    let c: ConceptReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .concepts
@@ -4042,7 +4042,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeTagCommands { tag_id, commands } => {
-                    let t: crate::tag::TagStoreRef =
+                    let t: crate::tag::TagReference =
                         kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.tags.iter().find(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
@@ -4053,7 +4053,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeKitQualityCommands { quality_id, commands } => {
-                    let q: QualityStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.quality(quality_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
+                    let q: QualityReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.quality(quality_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(kit, &q)?;
@@ -4081,7 +4081,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }])
                 }
                 ChangeKitCommand::ChangeKitPortCommands { port_id, commands } => {
-                    let pref: PortStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
+                    let pref: PortReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
                     {
                         let pr = pref.read().map_err(|_| SemioError::LockPoisoned("port"))?;
                         if pr.parent_family.upgrade().is_some() {
@@ -4099,7 +4099,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFamily { family } => {
                     let id = family.id.clone();
                     KitGraph::insert_family_dto(kit, family.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyReference { id } }])
                 }
                 ChangeKitCommand::RemoveFamily { family_id } => {
                     let snap = KitGraph::remove_family_dto(kit, family_id.id.as_str()).map_err(se)?;
@@ -4110,7 +4110,7 @@ pub mod change_command {
                     }
                 }
                 ChangeKitCommand::ChangeFamilyCommands { family_id, commands } => {
-                    let f: FamilyStoreRef = kit
+                    let f: FamilyReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .families
@@ -4235,7 +4235,7 @@ pub mod change_command {
     // the editor size limit. See the remaining impls appended below.
 
     impl ChangeTypeCommand {
-        pub fn apply(&self, kit: &KitGraphRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
             let t = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
             match self {
                 ChangeTypeCommand::Name { name } => {
@@ -4318,7 +4318,7 @@ pub mod change_command {
                     }
                     Ok(vec![ChangeTypeCommand::Updated { updated: old }])
                 }
-                ChangeTypeCommand::AddFamilyRef { family_id } => {
+                ChangeTypeCommand::AddFamilyReference { family_id } => {
                     let pref = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
@@ -4336,9 +4336,9 @@ pub mod change_command {
                     tw.invalidate_hash();
                     drop(tw);
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeTypeCommand::RemoveFamilyReference { family_id: family_id.clone() }])
                 }
-                ChangeTypeCommand::RemoveFamilyRef { family_id } => {
+                ChangeTypeCommand::RemoveFamilyReference { family_id } => {
                     let mut tw = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                     let before_len = tw.families.len();
                     tw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
@@ -4349,7 +4349,7 @@ pub mod change_command {
                     tw.invalidate_hash();
                     drop(tw);
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::AddFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeTypeCommand::AddFamilyReference { family_id: family_id.clone() }])
                 }
                 ChangeTypeCommand::SetFamilies { families } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_input().families;
@@ -4380,7 +4380,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddConnector { connector: cdto } => {
                     let id = cdto.id.clone();
                     {
-                        let mut c = ConnectorStore::from_input(cdto.clone());
+                        let mut c = Connector::from_input(cdto.clone());
                         c.parent_type = Arc::downgrade(&t);
                         if let Some(pidd) = &cdto.port {
                             if let Some(pr) = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pidd.id) {
@@ -4392,7 +4392,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorReference { id } }])
                 }
                 ChangeTypeCommand::RemoveConnector { connector_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.iter().position(|c| c.read().map(|r| r.id == connector_id.id).unwrap_or(false));
@@ -4417,8 +4417,8 @@ pub mod change_command {
                 ChangeTypeCommand::AddRepresentation { representation: rdto } => {
                     let id = rdto.id.clone();
                     {
-                        let files: Vec<FileStoreRef> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
-                        let mut r = RepresentationStore::from_input(rdto.clone());
+                        let files: Vec<FileReference> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
+                        let mut r = Representation::from_input(rdto.clone());
                         r.parent_type = Arc::downgrade(&t);
                         if let Some(fidd) = &rdto.file {
                             if let Some(fref) = files.iter().find(|f| f.read().map(|r| r.id == fidd.id).unwrap_or(false)) {
@@ -4430,7 +4430,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationReference { id } }])
                 }
                 ChangeTypeCommand::RemoveRepresentation { id: rid } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.representations.iter().position(|r| r.read().map(|r| r.id == rid.id).unwrap_or(false));
@@ -4455,14 +4455,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeAuthor { author } => {
                     let id = author.id.clone();
                     {
-                        let mut a = AuthorStore::from_input(author.clone());
+                        let mut a = Author::from_input(author.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.authors.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorReference { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeAuthor { author_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
@@ -4478,14 +4478,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeConcept { concept } => {
                     let id = concept.id.clone();
                     {
-                        let mut c = ConceptStore::from_input(concept.clone());
+                        let mut c = Concept::from_input(concept.clone());
                         c.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.concepts.push(Arc::new(RwLock::new(c)));
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptReference { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeConcept { concept_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
@@ -4501,14 +4501,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeTag { tag } => {
                     let id = tag.id.clone();
                     {
-                        let mut tg = TagStore::from_input(tag.clone());
+                        let mut tg = Tag::from_input(tag.clone());
                         tg.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.tags.push(Arc::new(RwLock::new(tg)));
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagReference { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeTag { tag_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.tags.iter().position(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false));
@@ -4524,7 +4524,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let qref = Arc::new(RwLock::new(QualityStore::from_input(quality.clone())));
+                        let qref = Arc::new(RwLock::new(Quality::from_input(quality.clone())));
                         {
                             let twq = Arc::downgrade(&qref);
                             if let Ok(mut qg) = qref.write() {
@@ -4541,7 +4541,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityReference { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeQuality { quality_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -4557,14 +4557,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_input(prop.clone());
+                        let mut p = Prop::from_input(prop.clone());
                         p.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.props.push(Arc::new(RwLock::new(p)));
                         m.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropReference { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeProp { prop_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -4580,7 +4580,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_output(attribute.clone());
+                        let mut a = Attribute::from_output(attribute.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.attributes.push(Arc::new(RwLock::new(a)));
@@ -4605,7 +4605,7 @@ pub mod change_command {
     }
 
     impl ChangeDesignCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             match self {
                 ChangeDesignCommand::Name { name } => {
@@ -4644,7 +4644,7 @@ pub mod change_command {
                         Ok(vec![ChangeDesignCommand::Image { image: old }])
                     }
                 }
-                ChangeDesignCommand::AddFamilyRef { family_id } => {
+                ChangeDesignCommand::AddFamilyReference { family_id } => {
                     let pref = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
@@ -4663,9 +4663,9 @@ pub mod change_command {
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeDesignCommand::RemoveFamilyReference { family_id: family_id.clone() }])
                 }
-                ChangeDesignCommand::RemoveFamilyRef { family_id } => {
+                ChangeDesignCommand::RemoveFamilyReference { family_id } => {
                     let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let before_len = dw.families.len();
                     dw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
@@ -4677,7 +4677,7 @@ pub mod change_command {
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::AddFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeDesignCommand::AddFamilyReference { family_id: family_id.clone() }])
                 }
                 ChangeDesignCommand::SetFamilies { families } => {
                     let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_input().families;
@@ -4741,7 +4741,7 @@ pub mod change_command {
                         g.add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceReference { id } }])
                 }
                 ChangeDesignCommand::RemovePiece { piece_id } => {
                     let did = design_id.to_string();
@@ -4854,7 +4854,7 @@ pub mod change_command {
                         g.add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionReference { id } }])
                 }
                 ChangeDesignCommand::RemoveConnection { connection_id } => {
                     let did = design_id.to_string();
@@ -4923,13 +4923,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddLayer { layer } => {
                     let id = layer.id.clone();
                     {
-                        let mut l = LayerStore::from_input(layer.clone());
+                        let mut l = Layer::from_input(layer.clone());
                         l.parent_design = Arc::downgrade(&d);
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.push(Arc::new(RwLock::new(l)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerReference { id } }])
                 }
                 ChangeDesignCommand::RemoveLayer { layer_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().position(|l| l.read().map(|r| r.id == layer_id.id).unwrap_or(false));
@@ -4955,7 +4955,7 @@ pub mod change_command {
                     let id = group.id.clone();
                     {
                         let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                        let mut g = GroupStore::from_input(group.clone());
+                        let mut g = Group::from_input(group.clone());
                         g.parent_design = Arc::downgrade(&d);
                         let mut weaks = Vec::with_capacity(group.pieces.len());
                         for pid in &group.pieces {
@@ -4968,7 +4968,7 @@ pub mod change_command {
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupReference { id } }])
                 }
                 ChangeDesignCommand::RemoveGroup { group_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().position(|g| g.read().map(|r| r.id == group_id.id).unwrap_or(false));
@@ -4993,13 +4993,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddStat { stat } => {
                     let id = stat.id.clone();
                     {
-                        let mut s = StatStore::from_input(stat.clone());
+                        let mut s = Stat::from_input(stat.clone());
                         s.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.push(Arc::new(RwLock::new(s)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatReference { id } }])
                 }
                 ChangeDesignCommand::RemoveStat { stat_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().position(|s| s.read().map(|r| r.id == stat_id.id).unwrap_or(false));
@@ -5024,13 +5024,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignAuthor { author } => {
                     let id = author.id.clone();
                     {
-                        let mut a = AuthorStore::from_input(author.clone());
+                        let mut a = Author::from_input(author.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorReference { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAuthor { author_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
@@ -5046,13 +5046,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignConcept { concept } => {
                     let id = concept.id.clone();
                     {
-                        let mut c = ConceptStore::from_input(concept.clone());
+                        let mut c = Concept::from_input(concept.clone());
                         c.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.push(Arc::new(RwLock::new(c)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptReference { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignConcept { concept_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
@@ -5068,13 +5068,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignTag { tag } => {
                     let id = tag.id.clone();
                     {
-                        let mut t = TagStore::from_input(tag.clone());
+                        let mut t = Tag::from_input(tag.clone());
                         t.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.push(Arc::new(RwLock::new(t)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagReference { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignTag { tag_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.tags.iter().position(|t| t.read().map(|r| r.id == tag_id.id).unwrap_or(false));
@@ -5090,7 +5090,7 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let qref = Arc::new(RwLock::new(QualityStore::from_input(quality.clone())));
+                        let qref = Arc::new(RwLock::new(Quality::from_input(quality.clone())));
                         {
                             let twq = Arc::downgrade(&qref);
                             if let Ok(mut qg) = qref.write() {
@@ -5106,7 +5106,7 @@ pub mod change_command {
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityReference { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignQuality { quality_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -5122,13 +5122,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_input(prop.clone());
+                        let mut p = Prop::from_input(prop.clone());
                         p.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.push(Arc::new(RwLock::new(p)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropReference { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignProp { prop_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -5144,7 +5144,7 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_output(attribute.clone());
+                        let mut a = Attribute::from_output(attribute.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
@@ -5168,7 +5168,7 @@ pub mod change_command {
     }
 
     impl ChangePieceCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
             let pref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -5224,7 +5224,7 @@ pub mod change_command {
                 ChangePieceCommand::Type { type_id: tid } => {
                     let old_weak = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.type_ref.clone();
                     let tref = tid.as_ref().and_then(|tip| kit.read().ok()?.semio_type(tip.id.as_str()).map(|t| Arc::downgrade(&t)));
-                    let old_tid = old_weak.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() }));
+                    let old_tid = old_weak.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| TypeReference { id: r.id.clone() }));
                     pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_type_weak(tref).map_err(se)?;
                     Ok(vec![ChangePieceCommand::Type { type_id: old_tid }])
                 }
@@ -5276,13 +5276,13 @@ pub mod change_command {
                 ChangePieceCommand::AddProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_input(prop.clone());
+                        let mut p = Prop::from_input(prop.clone());
                         p.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.push(Arc::new(RwLock::new(p)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropRef { id } }])
+                    Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropReference { id } }])
                 }
                 ChangePieceCommand::RemoveProp { prop_id } => {
                     let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -5309,7 +5309,7 @@ pub mod change_command {
                 ChangePieceCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_output(attribute.clone());
+                        let mut a = Attribute::from_output(attribute.clone());
                         a.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.push(Arc::new(RwLock::new(a)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
@@ -5354,7 +5354,7 @@ pub mod change_command {
     }
 
     impl ChangeConnectionCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
             let cref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -5449,7 +5449,7 @@ pub mod change_command {
                         g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?
                     };
                     let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                    let d_ref: &DesignStore = &*d_read;
+                    let d_ref: &Design = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connected.clone();
                     let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
                     reoutput_side_from_metadata(d_ref, &side, new_meta)?;
@@ -5463,7 +5463,7 @@ pub mod change_command {
                         g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?
                     };
                     let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                    let d_ref: &DesignStore = &*d_read;
+                    let d_ref: &Design = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connecting.clone();
                     let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
                     reoutput_side_from_metadata(d_ref, &side, new_meta)?;
@@ -5474,7 +5474,7 @@ pub mod change_command {
                 ChangeConnectionCommand::AddConnectionAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_output(attribute.clone());
+                        let mut a = Attribute::from_output(attribute.clone());
                         a.parent_connection = Some(Arc::downgrade(&cref));
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         c.attributes.push(Arc::new(RwLock::new(a)));
@@ -5503,7 +5503,7 @@ pub mod change_command {
     }
 
     impl ChangeLayerCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let l = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
             match self {
@@ -5565,7 +5565,7 @@ pub mod change_command {
         }
     }
     impl ChangeGroupCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let g = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
             match self {
@@ -5608,7 +5608,7 @@ pub mod change_command {
                 ChangeGroupCommand::Pieces { pieces } => {
                     let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_input().pieces;
-                    let weaks: Result<Vec<PieceStoreWeak>> = pieces.iter().map(|pid| dr.piece(pid.id.as_str()).map(|p| Arc::downgrade(&p)).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })).collect();
+                    let weaks: Result<Vec<PieceWeak>> = pieces.iter().map(|pid| dr.piece(pid.id.as_str()).map(|p| Arc::downgrade(&p)).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })).collect();
                     let weaks = weaks?;
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_pieces(weaks).map_err(se)?;
                     if old == *pieces {
@@ -5621,7 +5621,7 @@ pub mod change_command {
         }
     }
     impl ChangeStatCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let s = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
             match self {
@@ -5665,7 +5665,7 @@ pub mod change_command {
         }
     }
     impl ChangePropCommand {
-        pub fn apply(&self, p: &PropStoreRef) -> Result<Vec<ChangePropCommand>> {
+        pub fn apply(&self, p: &PropReference) -> Result<Vec<ChangePropCommand>> {
             match self {
                 ChangePropCommand::Key { key } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.key.clone();
@@ -5698,7 +5698,7 @@ pub mod change_command {
         }
     }
     impl ChangeAttributeCommand {
-        pub fn apply(&self, a: &AttributeStoreRef) -> Result<Vec<ChangeAttributeCommand>> {
+        pub fn apply(&self, a: &AttributeReference) -> Result<Vec<ChangeAttributeCommand>> {
             match self {
                 ChangeAttributeCommand::Key { key } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.key.clone();
@@ -5732,7 +5732,7 @@ pub mod change_command {
     }
 
     impl ChangeFamilyCommand {
-        pub fn apply(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, fam: &FamilyReference) -> Result<Vec<ChangeFamilyCommand>> {
             match self {
                 ChangeFamilyCommand::Name { name } => {
                     let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.name.clone();
@@ -5781,9 +5781,9 @@ pub mod change_command {
                     if kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid).is_some() {
                         return Err(SemioError::InvalidOperation(format!("duplicate port id {}", pid.as_str())));
                     }
-                    let pr: PortStoreRef = {
+                    let pr: PortReference = {
                         let fw = Arc::downgrade(fam);
-                        let mut pstore = PortStore::from_input(port.clone());
+                        let mut pstore = Port::from_input(port.clone());
                         pstore.parent_family = fw;
                         Arc::new(RwLock::new(pstore))
                     };
@@ -5797,7 +5797,7 @@ pub mod change_command {
                     }
                     pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     event_output::output_graph_bus(kit);
-                    Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortRef { id: pid } }])
+                    Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortReference { id: pid } }])
                 }
                 ChangeFamilyCommand::RemovePort { port_id } => {
                     KitGraph::ensure_port_unused_by_connectors(kit, &port_id.id)?;
@@ -5813,7 +5813,7 @@ pub mod change_command {
                     Ok(vec![ChangeFamilyCommand::AddPort { port: dto }])
                 }
                 ChangeFamilyCommand::ChangePortCommands { port_id, commands } => {
-                    let pref: PortStoreRef = {
+                    let pref: PortReference = {
                         let fr = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?;
                         fr.ports.iter().find(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?
                     };
@@ -5830,7 +5830,7 @@ pub mod change_command {
     }
 
     impl ChangePortCommand {
-        pub fn apply(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<Vec<ChangePortCommand>> {
+        pub fn apply(&self, p: &PortReference, kit: &KitGraphReference) -> Result<Vec<ChangePortCommand>> {
             match self {
                 ChangePortCommand::Id { id } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.id.clone();
@@ -5869,7 +5869,7 @@ pub mod change_command {
                     }
                 }
                 ChangePortCommand::CompatiblePorts { ports } => {
-                    let old_dto: Vec<PortRef> = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|r| r.read().ok().map(|x| PortRef { id: x.id.clone() }))).collect();
+                    let old_dto: Vec<PortReference> = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|r| r.read().ok().map(|x| PortReference { id: x.id.clone() }))).collect();
                     {
                         let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_ports_from_ids(ports, &*kr);
@@ -5893,7 +5893,7 @@ pub mod change_command {
                 ChangePortCommand::AddPortAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_output(attribute.clone());
+                        let mut a = Attribute::from_output(attribute.clone());
                         a.parent_port = Some(Arc::downgrade(p));
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.push(a);
                         p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
@@ -5914,7 +5914,7 @@ pub mod change_command {
         }
     }
     impl ChangeConnectorCommand {
-        pub fn apply(&self, c: &ConnectorStoreRef) -> Result<Vec<ChangeConnectorCommand>> {
+        pub fn apply(&self, c: &ConnectorReference) -> Result<Vec<ChangeConnectorCommand>> {
             match self {
                 ChangeConnectorCommand::Code { code } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.code.clone();
@@ -5936,7 +5936,7 @@ pub mod change_command {
                 }
                 ChangeConnectorCommand::Port { port: pid } => {
                     let t = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.parent_type.upgrade().ok_or_else(|| SemioError::InvalidOperation("connector has no parent type".into()))?;
-                    let kit = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.parent_kit.upgrade().ok_or_else(|| SemioError::InvalidOperation("type has no parent kit".into()))?;
+                    let kit = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.owner.upgrade().ok_or_else(|| SemioError::InvalidOperation("type has no parent kit".into()))?;
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.port.as_ref().and_then(|w| w.upgrade()).and_then(|pr| pr.read().ok().map(|r| r.to_ref()));
                     let new_port = if let Some(pid) = pid { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid.id).map(|x| Arc::downgrade(&x)) } else { None };
                     c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_port_weak(new_port).map_err(se)?;
@@ -5949,7 +5949,7 @@ pub mod change_command {
                 ChangeConnectorCommand::AddConnectorQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let q = Arc::new(RwLock::new(QualityStore::from_input(quality.clone())));
+                        let q = Arc::new(RwLock::new(Quality::from_input(quality.clone())));
                         {
                             let wq = Arc::downgrade(&q);
                             if let Ok(mut qg) = q.write() {
@@ -5964,7 +5964,7 @@ pub mod change_command {
                         c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.push(q);
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeConnectorCommand::RemoveConnectorQuality { quality_id: QualityRef { id } }])
+                    Ok(vec![ChangeConnectorCommand::RemoveConnectorQuality { quality_id: QualityReference { id } }])
                 }
                 ChangeConnectorCommand::RemoveConnectorQuality { quality_id } => {
                     let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -5979,7 +5979,7 @@ pub mod change_command {
                 ChangeConnectorCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_output(attribute.clone()));
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(Attribute::from_output(attribute.clone()));
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
                     Ok(vec![ChangeConnectorCommand::RemoveAttribute { id }])
@@ -5998,7 +5998,7 @@ pub mod change_command {
         }
     }
     impl ChangeRepresentationCommand {
-        pub fn apply(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, r: &RepresentationReference) -> Result<Vec<ChangeRepresentationCommand>> {
             match self {
                 ChangeRepresentationCommand::Url { url } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.url.clone();
@@ -6030,9 +6030,9 @@ pub mod change_command {
                 }
                 ChangeRepresentationCommand::AddRepresentationTag { tag } => {
                     let id = tag.id.clone();
-                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.push(TagStore::from_input(tag.clone()));
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.push(Tag::from_input(tag.clone()));
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
-                    Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagRef { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagReference { id } }])
                 }
                 ChangeRepresentationCommand::RemoveRepresentationTag { tag_id } => {
                     let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.iter().position(|t| t.id == tag_id.id);
@@ -6047,7 +6047,7 @@ pub mod change_command {
                 ChangeRepresentationCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let q = Arc::new(RwLock::new(QualityStore::from_input(quality.clone())));
+                        let q = Arc::new(RwLock::new(Quality::from_input(quality.clone())));
                         {
                             if let Ok(mut qg) = q.write() {
                                 qg.parent_representation = Some(Arc::downgrade(r));
@@ -6062,7 +6062,7 @@ pub mod change_command {
                         r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.push(q);
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeRepresentationCommand::RemoveQuality { quality_id: QualityRef { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveQuality { quality_id: QualityReference { id } }])
                 }
                 ChangeRepresentationCommand::RemoveQuality { quality_id } => {
                     let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -6077,7 +6077,7 @@ pub mod change_command {
                 ChangeRepresentationCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_output(attribute.clone()));
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(Attribute::from_output(attribute.clone()));
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
                     Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id }])
@@ -6103,7 +6103,7 @@ pub mod kit_checkpoint {
 
     use crate::id::Id;
     use crate::kit_change::KitChange;
-    use crate::kit_graph::{ KitGraph, KitGraphRef};
+    use crate::kit_graph::{ KitGraph, KitGraphReference};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct MaterializedKit {
@@ -6216,7 +6216,7 @@ pub mod kit_checkpoint {
             out
         }
 
-        pub fn materialize_graph(initial: & map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
+        pub fn materialize_graph(initial: & map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphReference {
             let Some(at_id) = at else {
                 return KitGraph::from_input(initial.clone());
             };
@@ -6410,7 +6410,7 @@ pub mod kit_draft {
     use crate::kit_change::KitChange;
     use crate::kit_graph::KitInput;
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
 
@@ -6490,7 +6490,7 @@ pub mod kit_draft {
             !self.redo_transactions.is_empty()
         }
 
-        pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphRef> {
+        pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphReference> {
             let k = KitGraph::from_input(self.before.clone());
             for tx in &self.transactions {
                 for ch in &tx.changes {
@@ -6574,7 +6574,7 @@ pub mod kit_draft {
 pub mod kit_read_scope {
     use crate::error::{Result, SemioError};
     use crate::id::Id;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -6608,7 +6608,7 @@ pub mod kit_read_scope {
 
     use crate::kit_draft::Draft as KitDraft;
 
-    fn materialize_draft_working_graph(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_draft_working_graph(kit: &KitGraphReference, alternative_id: Option<&Id>, draft_id: &Id) -> Result<KitGraphReference> {
         let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             g.clone_draft_for_owner(alternative_id, draft_id).ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?
@@ -6616,7 +6616,7 @@ pub mod kit_read_scope {
         d.materialize_working_graph()
     }
 
-    fn materialize_transaction_read_graph(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_transaction_read_graph(kit: &KitGraphReference, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphReference> {
         {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             let d = g.draft_ref_for_owner(alternative_id, draft_id).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
@@ -6625,7 +6625,7 @@ pub mod kit_read_scope {
         materialize_draft_working_graph(kit, alternative_id, draft_id)
     }
 
-    pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
+    pub fn resolve_read_graph(kit: &KitGraphReference, scope: &KitReadScope) -> Result<KitGraphReference> {
         let g0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
         let view = match scope {
             KitReadScope::TheKit => {
@@ -6745,7 +6745,7 @@ pub mod backbone {
     use crate::id::Id;
     use crate::kit_alternative::KitAlternative;
     use crate::kit_checkpoint::KitCheckpoint;
-    use crate::kit_graph::{ KitGraph, KitGraphRef};
+    use crate::kit_graph::{ KitGraph, KitGraphReference};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct BackboneSnapshot {
@@ -6790,7 +6790,7 @@ pub mod backbone {
         }
     }
 
-    pub fn apply_snap_to_graph(kit: &KitGraphRef, snap: &BackboneSnapshot) -> crate::error::SetResult {
+    pub fn apply_snap_to_graph(kit: &KitGraphReference, snap: &BackboneSnapshot) -> crate::error::SetResult {
         use crate::error::SetError;
         let dto = KitCheckpoint::materialize(&snap.initial, &snap.checkpoints, snap.the_kit_head.as_ref());
         KitGraph::replace_from_input(kit, dto)?;
@@ -7034,11 +7034,11 @@ pub mod wip_kit {
     use std::sync::mpsc::{Receiver, Sender};
 
     use crate::backbone::BackboneSnapshot;
-    use crate::kit_graph::KitGraphRef;
-    use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+    use crate::kit_graph::KitGraphReference;
+    use crate::kit_store_command::{KitCommand, KitCommandResult};
 
     pub enum WipMsg {
-        Exec { cmd: KitStoreCommand, reply: Sender<crate::error::Result<KitStoreCommandResult>> },
+        Exec { cmd: KitCommand, reply: Sender<crate::error::Result<KitCommandResult>> },
         ApplyAuth { snap: BackboneSnapshot, reply: Sender<crate::error::SetResult> },
     }
 
@@ -7049,12 +7049,12 @@ pub mod wip_kit {
         Detach { reply: Sender<()> },
         Status { reply: Sender<crate::backbone::BackboneStatusDto> },
         SetActiveCheckpoint { id: Option<crate::id::Id>, reply: Sender<crate::error::Result<()>> },
-        ResolveConflict { id: crate::id::Id, strategy: crate::kit_conflict_registry::ConflictResolution, wip: KitGraphRef, reply: Sender<crate::error::Result<()>> },
+        ResolveConflict { id: crate::id::Id, strategy: crate::kit_conflict_registry::ConflictResolution, wip: KitGraphReference, reply: Sender<crate::error::Result<()>> },
     }
 
-    fn scan_finalize(graph: &KitGraphRef, res: &KitStoreCommandResult, coord: &Sender<CoordMsg>) {
+    fn scan_finalize(graph: &KitGraphReference, res: &KitCommandResult, coord: &Sender<CoordMsg>) {
         use crate::kit_draft::KitDraftCommandResult;
-        if let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res {
+        if let KitCommandResult::ExecuteKitDraftCommands { results } = res {
             for dr in results {
                 if let KitDraftCommandResult::FinalizeToKitCheckpoint { .. } = dr {
                     let proposed = {
@@ -7067,7 +7067,7 @@ pub mod wip_kit {
         }
     }
 
-    pub fn run(graph: KitGraphRef, rx: Receiver<WipMsg>, coord: Sender<CoordMsg>) {
+    pub fn run(graph: KitGraphReference, rx: Receiver<WipMsg>, coord: Sender<CoordMsg>) {
         while let Ok(msg) = rx.recv() {
             match msg {
                 WipMsg::Exec { cmd, reply } => {
@@ -7098,10 +7098,10 @@ pub mod kit_coordinator {
     use crate::kit_change::KitChange;
     use crate::kit_checkpoint::KitCheckpoint;
     use crate::kit_conflict_registry::{ConflictRegistry, KitConflict};
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::wip_kit::{CoordMsg, WipMsg};
 
-    fn process_proposal(backbone: &BackboneKind, sync: &KitGraphRef, conflicts: &ConflictRegistry, proposed: &BackboneSnapshot, wip_tx: &std::sync::mpsc::Sender<WipMsg>) -> Result<()> {
+    fn process_proposal(backbone: &BackboneKind, sync: &KitGraphReference, conflicts: &ConflictRegistry, proposed: &BackboneSnapshot, wip_tx: &std::sync::mpsc::Sender<WipMsg>) -> Result<()> {
         let auth = backbone.pull()?;
         apply_snap_to_graph(sync, &auth).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
         let tip = proposed.the_kit_head.clone().ok_or_else(|| SemioError::InvalidOperation("wip has no the_kit_head".into()))?;
@@ -7133,7 +7133,7 @@ pub mod kit_coordinator {
         Ok(())
     }
 
-    pub fn run(backbone_slot: Arc<Mutex<Option<BackboneKind>>>, sync: KitGraphRef, pending: Arc<Mutex<usize>>, conflicts: Arc<ConflictRegistry>, wip_tx: std::sync::mpsc::Sender<WipMsg>, rx: Receiver<CoordMsg>) {
+    pub fn run(backbone_slot: Arc<Mutex<Option<BackboneKind>>>, sync: KitGraphReference, pending: Arc<Mutex<usize>>, conflicts: Arc<ConflictRegistry>, wip_tx: std::sync::mpsc::Sender<WipMsg>, rx: Receiver<CoordMsg>) {
         while let Ok(msg) = rx.recv() {
             match msg {
                 CoordMsg::WipProposal { proposed, reply } => {
@@ -7225,14 +7225,14 @@ pub mod kit_store {
     use crate::backbone::BackboneConfig;
     use crate::error::{Result, SemioError};
     use crate::kit_conflict_registry::{ConflictRegistry, ConflictResolution, KitConflict};
-    use crate::kit_graph::{ KitGraph, KitGraphRef};
-    use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+    use crate::kit_graph::{ KitGraph, KitGraphReference};
+    use crate::kit_store_command::{KitCommand, KitCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
-    pub struct KitStore {
-        graph: KitGraphRef,
+    pub struct Kit {
+        graph: KitGraphReference,
         /// Backbone-aligned mirror graph (same `Arc` the coordinator mutates); exposed as `KitSession.authorative`.
-        authorative: KitGraphRef,
+        authorative: KitGraphReference,
         wip_tx: mpsc::Sender<WipMsg>,
         coord_tx: mpsc::Sender<CoordMsg>,
         pub conflicts: Arc<ConflictRegistry>,
@@ -7242,12 +7242,12 @@ pub mod kit_store {
         _handles: Vec<JoinHandle<()>>,
     }
 
-    impl KitStore {
+    impl Kit {
         pub fn from_input(dto: KitInput) -> Self {
             Self::from_graph(KitGraph::from_input(dto))
         }
 
-        pub fn from_graph(graph: KitGraphRef) -> Self {
+        pub fn from_graph(graph: KitGraphReference) -> Self {
             let conflicts = Arc::new(ConflictRegistry::new());
             let backbone_slot = Arc::new(Mutex::new(None));
             let pending = Arc::new(Mutex::new(0));
@@ -7281,11 +7281,11 @@ pub mod kit_store {
             Self { graph, authorative: sync, wip_tx, coord_tx, conflicts, backbone_slot, pending, _executor: executor, _handles: vec![t_wip, t_coord, t_exec] }
         }
 
-        pub fn graph(&self) -> KitGraphRef {
+        pub fn graph(&self) -> KitGraphReference {
             self.graph.clone()
         }
 
-        pub fn authorative_graph(&self) -> KitGraphRef {
+        pub fn authorative_graph(&self) -> KitGraphReference {
             self.authorative.clone()
         }
 
@@ -7293,39 +7293,39 @@ pub mod kit_store {
             self.graph.read().expect("kit").subscribe()
         }
 
-        pub fn execute(&self, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
+        pub fn execute(&self, cmd: KitCommand) -> Result<KitCommandResult> {
             match cmd {
-                KitStoreCommand::Batch { commands } => {
+                KitCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
                     for c in commands {
                         out.push(self.execute(c)?);
                     }
-                    Ok(KitStoreCommandResult::Batch { results: out })
+                    Ok(KitCommandResult::Batch { results: out })
                 }
-                KitStoreCommand::AttachBackbone { config } => {
+                KitCommand::AttachBackbone { config } => {
                     self.attach_backbone(config)?;
-                    Ok(KitStoreCommandResult::AttachBackbone { ok: true })
+                    Ok(KitCommandResult::AttachBackbone { ok: true })
                 }
-                KitStoreCommand::DetachBackbone => {
+                KitCommand::DetachBackbone => {
                     self.detach_backbone();
-                    Ok(KitStoreCommandResult::DetachBackbone { ok: true })
+                    Ok(KitCommandResult::DetachBackbone { ok: true })
                 }
-                KitStoreCommand::SetActiveCheckpoint { id } => {
+                KitCommand::SetActiveCheckpoint { id } => {
                     self.set_active_checkpoint(id)?;
-                    Ok(KitStoreCommandResult::SetActiveCheckpoint { ok: true })
+                    Ok(KitCommandResult::SetActiveCheckpoint { ok: true })
                 }
-                KitStoreCommand::ListConflicts => Ok(KitStoreCommandResult::ListConflicts { items: self.list_conflicts() }),
-                KitStoreCommand::ResolveConflict { id, strategy } => {
+                KitCommand::ListConflicts => Ok(KitCommandResult::ListConflicts { items: self.list_conflicts() }),
+                KitCommand::ResolveConflict { id, strategy } => {
                     self.resolve_conflict(id, strategy)?;
-                    Ok(KitStoreCommandResult::ResolveConflict { ok: true })
+                    Ok(KitCommandResult::ResolveConflict { ok: true })
                 }
-                KitStoreCommand::BackboneStatus => {
+                KitCommand::BackboneStatus => {
                     let s = self.backbone_status()?;
-                    Ok(KitStoreCommandResult::BackboneStatus { attached: s.attached, kind: s.kind, tip: s.backbone_tip })
+                    Ok(KitCommandResult::BackboneStatus { attached: s.attached, kind: s.kind, tip: s.backbone_tip })
                 }
-                KitStoreCommand::SyncNow => {
+                KitCommand::SyncNow => {
                     self.sync_now()?;
-                    Ok(KitStoreCommandResult::SyncNow { ok: true })
+                    Ok(KitCommandResult::SyncNow { ok: true })
                 }
                 other => {
                     let (tx, rx) = mpsc::channel();
@@ -7379,8 +7379,8 @@ pub mod kit_store {
 
 pub mod kit_store_command {
     //! Top-level kit store command dispatch. Commands are methods on the command
-    //! types (`KitStoreCommand::execute`, `KitDraftCommand::execute`, ...); the
-    //! in-memory graph (`KitStore`) is the host object they act upon.
+    //! types (`KitCommand::execute`, `KitDraftCommand::execute`, ...); the
+    //! in-memory graph (`Kit`) is the host object they act upon.
     use serde::{Deserialize, Serialize};
 
     use crate::change_command::ChangeKitCommand;
@@ -7390,7 +7390,7 @@ pub mod kit_store_command {
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::kit_read_scope::{self, KitReadScope};
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
@@ -7407,7 +7407,7 @@ pub mod kit_store_command {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
         }
 
-        pub fn materialize_graph_at(&self, at: Option<&Id>) -> crate::kit_graph::KitGraphRef {
+        pub fn materialize_graph_at(&self, at: Option<&Id>) -> crate::kit_graph::KitGraphReference {
             KitCheckpoint::materialize_graph(&self.initial, &self.checkpoints, at)
         }
 
@@ -7424,14 +7424,14 @@ pub mod kit_store_command {
             }
         }
 
-        pub fn replace_live_graph(kit: &KitGraphRef, d: KitInput) -> Result<()> {
+        pub fn replace_live_graph(kit: &KitGraphReference, d: KitInput) -> Result<()> {
             KitGraph::replace_from_input(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub enum KitStoreCommand {
+    pub enum KitCommand {
         ReadKitCommands {
             scope: KitReadScope,
             commands: Vec<ReadKitCommand>,
@@ -7478,13 +7478,13 @@ pub mod kit_store_command {
         BackboneStatus,
         SyncNow,
         Batch {
-            commands: Vec<KitStoreCommand>,
+            commands: Vec<KitCommand>,
         },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub enum KitStoreCommandResult {
+    pub enum KitCommandResult {
         ReadKitCommands {
             results: Vec<ReadKitCommandOutput>,
         },
@@ -7530,36 +7530,36 @@ pub mod kit_store_command {
             ok: bool,
         },
         Batch {
-            results: Vec<KitStoreCommandResult>,
+            results: Vec<KitCommandResult>,
         },
         Nothing,
     }
 
-    impl KitStoreCommand {
+    impl KitCommand {
         ///
-        pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference) -> Result<KitCommandResult> {
             match self {
-                KitStoreCommand::AttachBackbone { config } => match config {
-                    crate::kit_backbone_output::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
-                    _ => Err(SemioError::InvalidOperation("backbone attach (dev/local/remote) must be run via kit_store::KitStore::execute (semio-store control plane)".into())),
+                KitCommand::AttachBackbone { config } => match config {
+                    crate::kit_backbone_output::BackboneConfig::Memory => Ok(KitCommandResult::AttachBackbone { ok: true }),
+                    _ => Err(SemioError::InvalidOperation("backbone attach (dev/local/remote) must be run via kit_store::Kit::execute (semio-store control plane)".into())),
                 },
-                KitStoreCommand::DetachBackbone | KitStoreCommand::SetActiveCheckpoint { .. } | KitStoreCommand::ListConflicts | KitStoreCommand::ResolveConflict { .. } | KitStoreCommand::BackboneStatus | KitStoreCommand::SyncNow => {
-                    Err(SemioError::InvalidOperation("backbone and conflict commands must be run via kit_store::KitStore::execute (semio-store control plane)".into()))
+                KitCommand::DetachBackbone | KitCommand::SetActiveCheckpoint { .. } | KitCommand::ListConflicts | KitCommand::ResolveConflict { .. } | KitCommand::BackboneStatus | KitCommand::SyncNow => {
+                    Err(SemioError::InvalidOperation("backbone and conflict commands must be run via kit_store::Kit::execute (semio-store control plane)".into()))
                 }
-                KitStoreCommand::Batch { commands } => {
+                KitCommand::Batch { commands } => {
                     let mut out = Vec::with_capacity(commands.len());
                     for c in commands {
                         out.push(c.execute(kit)?);
                     }
-                    Ok(KitStoreCommandResult::Batch { results: out })
+                    Ok(KitCommandResult::Batch { results: out })
                 }
-                KitStoreCommand::ReadKitCommands { scope, commands } => {
+                KitCommand::ReadKitCommands { scope, commands } => {
                     let view = kit_read_scope::resolve_read_graph(kit, &scope)?;
                     let gr = view.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let results = ReadKitCommand::execute_many(&*gr, &commands)?;
-                    Ok(KitStoreCommandResult::ReadKitCommands { results })
+                    Ok(KitCommandResult::ReadKitCommands { results })
                 }
-                KitStoreCommand::NewDraft { checkpoint_id, alternative_id } => {
+                KitCommand::NewDraft { checkpoint_id, alternative_id } => {
                     let base = {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
@@ -7592,17 +7592,17 @@ pub mod kit_store_command {
                             g.alternatives.get_mut(&aid).expect("checked").draft = Some(draft);
                         }
                     }
-                    Ok(KitStoreCommandResult::NewDraft { draft_id })
+                    Ok(KitCommandResult::NewDraft { draft_id })
                 }
-                KitStoreCommand::ExecuteKitDraftCommands { alternative_id, draft_id, commands } => {
+                KitCommand::ExecuteKitDraftCommands { alternative_id, draft_id, commands } => {
                     let mut results = Vec::new();
                     let alt_ref = alternative_id.as_ref();
                     for c in commands {
                         results.push(c.execute(kit, alt_ref, &draft_id)?);
                     }
-                    Ok(KitStoreCommandResult::ExecuteKitDraftCommands { results })
+                    Ok(KitCommandResult::ExecuteKitDraftCommands { results })
                 }
-                KitStoreCommand::NewAlternative { from_checkpoint, name } => {
+                KitCommand::NewAlternative { from_checkpoint, name } => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     if let Some(ref cp) = from_checkpoint {
                         if !g.checkpoints.contains_key(cp) {
@@ -7612,28 +7612,28 @@ pub mod kit_store_command {
                     let alt = KitAlternative::new(name, from_checkpoint);
                     let aid = alt.id.clone();
                     g.alternatives.insert(aid.clone(), alt);
-                    Ok(KitStoreCommandResult::NewAlternative { id: aid })
+                    Ok(KitCommandResult::NewAlternative { id: aid })
                 }
-                KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
+                KitCommand::ExecuteKitCheckpointCommands { id, commands } => {
                     let mut results = Vec::new();
                     for c in commands {
                         results.push(c.execute(kit, &id)?);
                     }
-                    Ok(KitStoreCommandResult::ExecuteKitCheckpointCommands { results })
+                    Ok(KitCommandResult::ExecuteKitCheckpointCommands { results })
                 }
-                KitStoreCommand::ExecuteKitAlternativeCommands { id, commands } => {
+                KitCommand::ExecuteKitAlternativeCommands { id, commands } => {
                     let mut results = Vec::new();
                     for c in commands {
                         results.push(c.execute(kit, &id)?);
                     }
-                    Ok(KitStoreCommandResult::ExecuteKitAlternativeCommands { results })
+                    Ok(KitCommandResult::ExecuteKitAlternativeCommands { results })
                 }
             }
         }
     }
 
     impl KitDraftCommand {
-        pub fn execute(self, kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id) -> Result<KitDraftCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
                     let sc = KitReadScope::Draft { alternative_id: alternative_id.cloned(), draft_id: did.clone() };
@@ -7689,7 +7689,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn draft_undo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_undo(kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -7711,7 +7711,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Undo { ok: true })
         }
 
-        fn draft_redo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_redo(kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -7733,7 +7733,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Redo { ok: true })
         }
 
-        fn finalize_draft(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, message: String) -> Result<KitDraftCommandResult> {
+        fn finalize_draft(kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, message: String) -> Result<KitDraftCommandResult> {
             let (parent, alt, kc) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.draft_ref_for_owner(alternative_id, did).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
@@ -7794,7 +7794,7 @@ pub mod kit_store_command {
     }
 
     impl TransactionCommand {
-        pub fn execute(self, kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
                     let sc = KitReadScope::Transaction { alternative_id: alternative_id.cloned(), draft_id: did.clone(), transaction_id: txid.clone() };
@@ -7853,7 +7853,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn tx_undo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_undo(kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -7879,7 +7879,7 @@ pub mod kit_store_command {
             Ok(TransactionCommandResult::UndoAll { ok: true })
         }
 
-        fn tx_redo(kit: &KitGraphRef, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_redo(kit: &KitGraphReference, alternative_id: Option<&Id>, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -7907,7 +7907,7 @@ pub mod kit_store_command {
     }
 
     impl KitCheckpointCommand {
-        pub fn execute(self, kit: &KitGraphRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, cpid: &Id) -> Result<KitCheckpointCommandResult> {
             match self {
                 KitCheckpointCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -7935,7 +7935,7 @@ pub mod kit_store_command {
     }
 
     impl KitAlternativeCommand {
-        pub fn execute(self, kit: &KitGraphRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, aid: &Id) -> Result<KitAlternativeCommandResult> {
             match self {
                 KitAlternativeCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -7986,53 +7986,53 @@ pub mod attribute {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::typ::TypeWeak;
 
-    use crate::connection::ConnectionStoreWeak;
-    use crate::connector::ConnectorStoreWeak;
-    use crate::piece::PieceStoreWeak;
-    use crate::port::PortStoreWeak;
-    use crate::representation::RepresentationStoreWeak;
+    use crate::connection::ConnectionWeak;
+    use crate::connector::ConnectorWeak;
+    use crate::piece::PieceWeak;
+    use crate::port::PortWeak;
+    use crate::representation::RepresentationWeak;
 
-    pub type AttributeStoreRef = std::sync::Arc<RwLock<AttributeStore>>;
-    pub type AttributeStoreWeak = Weak<RwLock<AttributeStore>>;
+    pub type AttributeReference = std::sync::Arc<RwLock<Attribute>>;
+    pub type AttributeWeak = Weak<RwLock<Attribute>>;
 
     /// 🧾 Live attribute row plus serde output shape (same struct; parents omitted on the output).
     #[derive(Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
-    pub struct AttributeStore {
+    pub struct Attribute {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub definition: Option<String>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_kit: Option<KitGraphWeak>,
+        pub owner: Option<KitGraphWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_design: Option<DesignStoreWeak>,
+        pub parent_design: Option<DesignWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_type: Option<TypeStoreWeak>,
+        pub parent_type: Option<TypeWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_piece: Option<PieceStoreWeak>,
+        pub parent_piece: Option<PieceWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_port: Option<PortStoreWeak>,
+        pub parent_port: Option<PortWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_connection: Option<ConnectionStoreWeak>,
+        pub parent_connection: Option<ConnectionWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_representation: Option<RepresentationStoreWeak>,
+        pub parent_representation: Option<RepresentationWeak>,
         #[graphql(skip)]
         #[serde(skip)]
-        pub parent_connector: Option<ConnectorStoreWeak>,
+        pub parent_connector: Option<ConnectorWeak>,
         #[graphql(skip)]
         #[serde(skip)]
         pub(crate) event_bus: Weak<EventBus>,
@@ -8041,34 +8041,34 @@ pub mod attribute {
         hash_cache: Cache<String>,
     }
 
-    impl PartialEq for AttributeStore {
+    impl PartialEq for Attribute {
         fn eq(&self, other: &Self) -> bool {
             self.id == other.id && self.key == other.key && self.value == other.value && self.definition == other.definition
         }
     }
 
-    impl Eq for AttributeStore {}
+    impl Eq for Attribute {}
 
-    impl Clone for AttributeStore {
+    impl Clone for Attribute {
         fn clone(&self) -> Self {
             Self::output(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
         }
     }
 
-    impl Default for AttributeStore {
+    impl Default for Attribute {
         fn default() -> Self {
             Self::new(Id::default())
         }
     }
 
-    impl AttributeStore {
+    impl Attribute {
         pub(crate) fn new() -> Self {
             Self {
                 id,
                 key: String::new(),
                 value: String::new(),
                 definition: None,
-                parent_kit: None,
+                owner: None,
                 parent_design: None,
                 parent_type: None,
                 parent_piece: None,
@@ -8086,11 +8086,11 @@ pub mod attribute {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Attribute, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Attribute, self.id.clone())
         }
 
-        pub(crate) fn apply_output_fields(&mut self, d: &AttributeStore) {
+        pub(crate) fn apply_output_fields(&mut self, d: &Attribute) {
             self.id = d.id.clone();
             self.key = d.key.clone();
             self.value = d.value.clone();
@@ -8098,7 +8098,7 @@ pub mod attribute {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_output(d: AttributeStore) -> Self {
+        pub(crate) fn from_output(d: Attribute) -> Self {
             let mut s = Self::new(d.id.clone());
             s.apply_output_fields(&d);
             s
@@ -8110,7 +8110,7 @@ pub mod attribute {
                 key,
                 value,
                 definition,
-                parent_kit: None,
+                owner: None,
                 parent_design: None,
                 parent_type: None,
                 parent_piece: None,
@@ -8164,7 +8164,7 @@ pub mod attribute {
         pub(crate) fn invalidate_local_and_bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -8179,7 +8179,7 @@ pub mod attribute {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -8252,32 +8252,32 @@ pub mod author {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::typ::TypeWeak;
 
-    pub type AuthorStoreRef = std::sync::Arc<RwLock<AuthorStore>>;
-    pub type AuthorStoreWeak = Weak<RwLock<AuthorStore>>;
+    pub type AuthorReference = std::sync::Arc<RwLock<Author>>;
+    pub type AuthorWeak = Weak<RwLock<Author>>;
 
     #[derive(Debug)]
-    pub struct AuthorStore {
+    pub struct Author {
         pub id: Id,
         pub name: String,
         pub email: String,
         pub role: Option<String>,
         pub rank: Option<i64>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
-        pub parent_type: Option<TypeStoreWeak>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
+        pub parent_type: Option<TypeWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorRef {
+    pub struct AuthorReference {
         pub id: Id,
     }
 
@@ -8318,9 +8318,9 @@ pub mod author {
         pub rank: Option<i64>,
     }
 
-    impl AuthorStore {
+    impl Author {
         pub(crate) fn new() -> Self {
-            Self { id, name: String::new(), email: String::new(), role: None, rank: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id, name: String::new(), email: String::new(), role: None, rank: None, owner: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -8328,8 +8328,8 @@ pub mod author {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Author, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Author, self.id.clone())
         }
 
         pub(crate) fn apply_input_fields(&mut self, d: AuthorInput) {
@@ -8399,7 +8399,7 @@ pub mod author {
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -8414,7 +8414,7 @@ pub mod author {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -8455,29 +8455,29 @@ pub mod benchmark {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::QualityStoreWeak;
+    use crate::quality::QualityWeak;
 
-    pub type BenchmarkStoreRef = std::sync::Arc<RwLock<BenchmarkStore>>;
-    pub type BenchmarkStoreWeak = Weak<RwLock<BenchmarkStore>>;
+    pub type BenchmarkReference = std::sync::Arc<RwLock<Benchmark>>;
+    pub type BenchmarkWeak = Weak<RwLock<Benchmark>>;
 
     #[derive(Debug)]
-    pub struct BenchmarkStore {
+    pub struct Benchmark {
         pub id: Id,
         pub name: String,
         pub min: Option<f64>,
         pub max: Option<f64>,
         pub min_excluded: Option<bool>,
         pub max_excluded: Option<bool>,
-        pub parent_quality: Option<QualityStoreWeak>,
+        pub parent_quality: Option<QualityWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkRef {
+    pub struct BenchmarkReference {
         pub id: Id,
     }
 
@@ -8523,7 +8523,7 @@ pub mod benchmark {
         pub max_excluded: Option<bool>,
     }
 
-    impl BenchmarkStore {
+    impl Benchmark {
         pub(crate) fn new() -> Self {
             Self { id, name: String::new(), min: None, max: None, min_excluded: None, max_excluded: None, parent_quality: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
@@ -8533,8 +8533,8 @@ pub mod benchmark {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Benchmark, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Benchmark, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadata) {
@@ -8631,31 +8631,31 @@ pub mod concept {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::typ::TypeWeak;
 
-    pub type ConceptStoreRef = std::sync::Arc<RwLock<ConceptStore>>;
-    pub type ConceptStoreWeak = Weak<RwLock<ConceptStore>>;
+    pub type ConceptReference = std::sync::Arc<RwLock<Concept>>;
+    pub type ConceptWeak = Weak<RwLock<Concept>>;
 
     #[derive(Debug)]
-    pub struct ConceptStore {
+    pub struct Concept {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub order: Option<i64>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
-        pub parent_type: Option<TypeStoreWeak>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
+        pub parent_type: Option<TypeWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptRef {
+    pub struct ConceptReference {
         pub id: Id,
     }
 
@@ -8691,9 +8691,9 @@ pub mod concept {
         pub order: Option<i64>,
     }
 
-    impl ConceptStore {
+    impl Concept {
         pub(crate) fn new() -> Self {
-            Self { id, name: String::new(), description: None, order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id, name: String::new(), description: None, order: None, owner: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -8701,8 +8701,8 @@ pub mod concept {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Concept, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Concept, self.id.clone())
         }
 
         pub(crate) fn apply_input_fields(&mut self, d: ConceptInput) {
@@ -8752,7 +8752,7 @@ pub mod concept {
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -8767,7 +8767,7 @@ pub mod concept {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -8808,23 +8808,23 @@ pub mod connection {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::connector::ConnectorStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::connector::Connector;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::side::{ SideStore, SideStoreRef};
+    use crate::side::{ Side, SideReference};
 
-    pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
-    pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
+    pub type ConnectionReference = Arc<RwLock<Connection>>;
+    pub type ConnectionWeak = Weak<RwLock<Connection>>;
 
     #[derive(Debug)]
-    pub struct ConnectionStore {
+    pub struct Connection {
         pub id: Id,
-        pub connected: SideStoreRef,
-        pub connecting: SideStoreRef,
+        pub connected: SideReference,
+        pub connecting: SideReference,
         pub gap: Option<f64>,
         pub shift: Option<f64>,
         pub rise: Option<f64>,
@@ -8834,15 +8834,15 @@ pub mod connection {
         pub x: Option<f64>,
         pub y: Option<f64>,
         pub description: Option<String>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+        pub attributes: Vec<AttributeReference>,
+        pub parent_design: Weak<RwLock<crate::design::Design>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         child_plane_matrix: Cache<nalgebra::Matrix4<f64>>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionRef {
+    pub struct ConnectionReference {
         pub id: Id,
     }
 
@@ -8895,7 +8895,7 @@ pub mod connection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -8922,15 +8922,15 @@ pub mod connection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
     }
 
-    pub fn connector_anchor_ports(_c: &ConnectorStore) -> (Point, Vector) {
+    pub fn connector_anchor_ports(_c: &Connector) -> (Point, Vector) {
         (Point::ZERO, Vector::Z)
     }
 
-    impl ConnectionStore {
-        pub(crate) fn empty_with_sides(id: Id, connected: SideStoreRef, connecting: SideStoreRef) -> Self {
+    impl Connection {
+        pub(crate) fn empty_with_sides(id: Id, connected: SideReference, connecting: SideReference) -> Self {
             Self {
                 id,
                 connected,
@@ -8957,8 +8957,8 @@ pub mod connection {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connection, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Connection, self.id.clone())
         }
 
         fn event(&self, event: crate::events::ConnectionEvent) -> KitEvent {
@@ -8983,7 +8983,7 @@ pub mod connection {
             }
         }
 
-        pub(crate) fn flatten_parent_and_child_sides(&self, child_id: &Id) -> Option<(SideStoreRef, SideStoreRef)> {
+        pub(crate) fn flatten_parent_and_child_sides(&self, child_id: &Id) -> Option<(SideReference, SideReference)> {
             let connected_id = self.connected.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
             let connecting_id = self.connecting.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
             match (connected_id, connecting_id) {
@@ -9094,13 +9094,13 @@ pub mod connection {
             self.notify_aggregate_change();
         }
 
-        pub fn compute_child_plane_for_flatten(&self, parent_plane: &Plane, parent_connector: &ConnectorStore, child_connector: &ConnectorStore) -> Plane {
+        pub fn compute_child_plane_for_flatten(&self, parent_plane: &Plane, parent_connector: &Connector, child_connector: &Connector) -> Plane {
             let (pp, pd) = connector_anchor_ports(parent_connector);
             let (cp, cd) = connector_anchor_ports(child_connector);
             flatten_math::compute_child_plane(parent_plane, pp, pd, cp, cd, self.gap.unwrap_or(0.0), self.shift.unwrap_or(0.0), self.rise.unwrap_or(0.0), self.rotation.unwrap_or(0.0), self.turn.unwrap_or(0.0), self.tilt.unwrap_or(0.0))
         }
 
-        pub fn compute_child_center_for_flatten(&self, parent_center: Coordinate, parent_connector: &ConnectorStore) -> Coordinate {
+        pub fn compute_child_center_for_flatten(&self, parent_center: Coordinate, parent_connector: &Connector) -> Coordinate {
             let (_, pd) = connector_anchor_ports(parent_connector);
             let connection_u = self.x.unwrap_or(0.0);
             let connection_v = self.y.unwrap_or(0.0);
@@ -9156,10 +9156,10 @@ pub mod connection {
         }
     }
 
-    impl Default for ConnectionStore {
+    impl Default for Connection {
         fn default() -> Self {
-            let s1 = Arc::new(RwLock::new(SideStore::default()));
-            let s2 = Arc::new(RwLock::new(SideStore::default()));
+            let s1 = Arc::new(RwLock::new(Side::default()));
+            let s2 = Arc::new(RwLock::new(Side::default()));
             Self::empty_with_sides(crate::id::Id::new_v7(), s1, s2)
         }
     }
@@ -9169,33 +9169,33 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::AttributeStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::Attribute;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::port::{PortRef, PortStoreWeak};
-    use crate::quality::{  QualityStore, QualityStoreRef};
+    use crate::port::{PortReference, PortWeak};
+    use crate::quality::{  Quality, QualityReference};
 
-    pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
-    pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
+    pub type ConnectorReference = Arc<RwLock<Connector>>;
+    pub type ConnectorWeak = Weak<RwLock<Connector>>;
 
     #[derive(Debug)]
-    pub struct ConnectorStore {
+    pub struct Connector {
         pub id: Id,
         pub code: String,
         pub description: Option<String>,
-        pub port: Option<PortStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub attributes: Vec<AttributeStore>,
-        pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
+        pub port: Option<PortWeak>,
+        pub qualities: Vec<QualityReference>,
+        pub attributes: Vec<Attribute>,
+        pub parent_type: Weak<RwLock<crate::typ::Type>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         color_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectorRef {
+    pub struct ConnectorReference {
         pub id: Id,
     }
 
@@ -9212,7 +9212,7 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortRef>,
+        pub port: Option<PortReference>,
         #[serde(default)]
         pub color: ColorDto,
     }
@@ -9225,11 +9225,11 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortRef>,
+        pub port: Option<PortReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
         #[serde(default)]
         pub color: ColorDto,
     }
@@ -9242,11 +9242,11 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortRef>,
+        pub port: Option<PortReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityInput>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
         #[serde(default)]
         pub color: ColorDto,
     }
@@ -9272,7 +9272,7 @@ pub mod connector {
     }
     impl Eq for ConnectorInput {}
 
-    impl ConnectorStore {
+    impl Connector {
         pub fn new(code: impl Into<String>) -> Self {
             Self { id: Id::new_v7(), code: code.into(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
@@ -9282,11 +9282,11 @@ pub mod connector {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connector, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Connector, self.id.clone())
         }
 
-        pub fn from_id_dto(d: ConnectorRef) -> Self {
+        pub fn from_id_dto(d: ConnectorReference) -> Self {
             Self { id: d.id, code: String::new(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
@@ -9296,15 +9296,15 @@ pub mod connector {
 
         pub fn from_shallow(d: ) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(Quality::from_shallow(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(Attribute::from_output).collect();
             s
         }
 
         pub fn from_input(d: ConnectorInput) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(Quality::from_input(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(Attribute::from_output).collect();
             s
         }
         pub fn invalidate_color_cache(&self) {
@@ -9322,7 +9322,7 @@ pub mod connector {
                     let Ok(tr) = tw.read() else {
                         return crate::read::color_string_for_id_text(&fallback_key);
                     };
-                    let Some(kw) = tr.parent_kit.upgrade() else {
+                    let Some(kw) = tr.owner.upgrade() else {
                         return crate::read::color_string_for_id_text(&fallback_key);
                     };
                     let Ok(kg) = kw.read() else {
@@ -9370,7 +9370,7 @@ pub mod connector {
             Ok(())
         }
 
-        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
+        pub fn set_port_weak(&mut self, port: Option<PortWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::Connector { connector_id: self.id.clone(), event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Port) });
             self.invalidate_hash();
@@ -9422,65 +9422,65 @@ pub mod design {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{  AuthorStore, AuthorStoreRef};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::author::{  Author, AuthorReference};
     use crate::benchmark::BenchmarkInput;
-    use crate::concept::{  ConceptStore, ConceptStoreRef};
-    use crate::connection::{   ConnectionStore, ConnectionStoreRef};
-    use crate::connector::ConnectorStoreRef;
+    use crate::concept::{  Concept, ConceptReference};
+    use crate::connection::{   Connection, ConnectionReference};
+    use crate::connector::ConnectorReference;
     use crate::error::SemioError;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyRef, FamilyStoreRef, FamilyStoreWeak};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyReference, FamilyReference, FamilyWeak};
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{  GroupStore, GroupStoreRef};
+    use crate::group::{  Group, GroupReference};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::layer::{  LayerStore, LayerStoreRef};
-    use crate::location::LocationRef;
-    use crate::piece::{PieceAlternatives,   PieceStore, PieceStoreRef};
-    use crate::port::PortStoreRef;
-    use crate::prop::{  PropStore, PropStoreRef};
-    use crate::quality::{  QualityStore, QualityStoreRef};
-    use crate::side::{SideStore, SideStoreRef};
-    use crate::stat::{  StatStore, StatStoreRef};
-    use crate::tag::{  TagStore, TagStoreRef};
-    use crate::typ::TypeStoreRef;
+    use crate::layer::{  Layer, LayerReference};
+    use crate::location::LocationReference;
+    use crate::piece::{PieceAlternatives,   Piece, PieceReference};
+    use crate::port::PortReference;
+    use crate::prop::{  Prop, PropReference};
+    use crate::quality::{  Quality, QualityReference};
+    use crate::side::{Side, SideReference};
+    use crate::stat::{  Stat, StatReference};
+    use crate::tag::{  Tag, TagReference};
+    use crate::typ::TypeReference;
 
-    pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
-    pub type DesignStoreWeak = Weak<RwLock<DesignStore>>;
+    pub type DesignReference = Arc<RwLock<Design>>;
+    pub type DesignWeak = Weak<RwLock<Design>>;
 
     #[derive(Debug)]
-    pub struct DesignStore {
+    pub struct Design {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
-        pub location: Option<LocationRef>,
+        pub location: Option<LocationReference>,
         pub unit: Option<String>,
-        pub families: Vec<FamilyStoreWeak>,
-        pub pieces: Vec<PieceStoreRef>,
-        pub connections: Vec<ConnectionStoreRef>,
-        pub layers: Vec<LayerStoreRef>,
-        pub groups: Vec<GroupStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub stats: Vec<StatStoreRef>,
+        pub families: Vec<FamilyWeak>,
+        pub pieces: Vec<PieceReference>,
+        pub connections: Vec<ConnectionReference>,
+        pub layers: Vec<LayerReference>,
+        pub groups: Vec<GroupReference>,
+        pub authors: Vec<AuthorReference>,
+        pub concepts: Vec<ConceptReference>,
+        pub tags: Vec<TagReference>,
+        pub qualities: Vec<QualityReference>,
+        pub props: Vec<PropReference>,
+        pub attributes: Vec<AttributeReference>,
+        pub stats: Vec<StatReference>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
+        pub owner: Weak<RwLock<crate::kit_graph::KitGraph>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         flatten_cache: Cache<HashMap<Id, (Plane, Coordinate)>>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct DesignRef {
+    pub struct DesignReference {
         pub id: Id,
     }
 
@@ -9495,7 +9495,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
+        pub location: Option<LocationReference>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9503,7 +9503,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitRef>,
+        pub kit: Option<crate::kit_graph::KitReference>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -9517,7 +9517,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
+        pub location: Option<LocationReference>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9525,9 +9525,9 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitRef>,
+        pub kit: Option<crate::kit_graph::KitReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyRef>,
+        pub families: Vec<FamilyReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub pieces: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -9547,7 +9547,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub stats: Vec<>,
     }
@@ -9563,7 +9563,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
+        pub location: Option<LocationReference>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9571,9 +9571,9 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitRef>,
+        pub kit: Option<crate::kit_graph::KitReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyRef>,
+        pub families: Vec<FamilyReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub pieces: Vec<PieceInput>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -9593,12 +9593,12 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropInput>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub stats: Vec<StatInput>,
     }
 
-    pub(crate) fn resolve_connector_for_side(side: &crate::side::SideStore, typ: &crate::typ::TypeStore) -> Option<ConnectorStoreRef> {
+    pub(crate) fn resolve_connector_for_side(side: &crate::side::Side, typ: &crate::typ::Type) -> Option<ConnectorReference> {
         if let Some(pw) = &side.port {
             if let Some(p) = pw.upgrade() {
                 if let Ok(pr) = p.read() {
@@ -9609,7 +9609,7 @@ pub mod design {
         typ.connectors.first().cloned()
     }
 
-    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side:: pref: &PieceStoreRef) -> Option<crate::port::PortRef> {
+    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side:: pref: &PieceReference) -> Option<crate::port::PortReference> {
         if let Some(p) = &meta.port {
             return Some(p.clone());
         }
@@ -9624,7 +9624,7 @@ pub mod design {
                 if let Some(pwk) = &cread.port {
                     if let Some(pu) = pwk.upgrade() {
                         if let Ok(pr) = pu.read() {
-                            return Some(crate::port::PortRef { id: pr.id.clone() });
+                            return Some(crate::port::PortReference { id: pr.id.clone() });
                         }
                     }
                 }
@@ -9634,12 +9634,12 @@ pub mod design {
         None
     }
 
-    fn connection_from_input(cdto:  piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
-        let s1 = Arc::new(RwLock::new(SideStore::new(cdto.connected.id.clone())));
-        let s2 = Arc::new(RwLock::new(SideStore::new(cdto.connecting.id.clone())));
+    fn connection_from_input(cdto:  piece_index: &HashMap<Id, PieceReference>, design_weak: DesignWeak) -> ConnectionReference {
+        let s1 = Arc::new(RwLock::new(Side::new(cdto.connected.id.clone())));
+        let s2 = Arc::new(RwLock::new(Side::new(cdto.connecting.id.clone())));
         output_side_from_dto(&cdto.connected, &s1, piece_index);
         output_side_from_dto(&cdto.connecting, &s2, piece_index);
-        let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
+        let conn = Arc::new(RwLock::new(Connection::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
         {
             let mut cw = conn.write().expect("connection write");
             cw.apply_metadata_fields(ConnectionMetadata {
@@ -9657,7 +9657,7 @@ pub mod design {
                 description: cdto.description.clone(),
             });
             cw.parent_design = design_weak.clone();
-            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect();
+            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(Attribute::from_output(a)))).collect();
         }
         if let Ok(mut s1w) = s1.write() {
             s1w.parent_connection = Some(Arc::downgrade(&conn));
@@ -9668,7 +9668,7 @@ pub mod design {
         conn
     }
 
-    fn output_side_from_dto(meta: &crate::side:: side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
+    fn output_side_from_dto(meta: &crate::side:: side_ref: &SideReference, piece_index: &HashMap<Id, PieceReference>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -9679,7 +9679,7 @@ pub mod design {
                         if let Some(tw) = &pc.type_ref {
                             if let Some(t) = tw.upgrade() {
                                 if let Ok(tr) = t.read() {
-                                    if let Some(kw) = tr.parent_kit.upgrade() {
+                                    if let Some(kw) = tr.owner.upgrade() {
                                         if let Ok(kit) = kw.read() {
                                             if let Some(pr) = kit.port_by_id(&port_id.id) {
                                                 let _ = w.set_port_weak(Some(Arc::downgrade(&pr)));
@@ -9700,8 +9700,8 @@ pub mod design {
         }
     }
 
-    impl DesignStore {
-        pub fn new(name: impl Into<String>) -> Self {
+    impl Design {
+        pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
                 name: name.into(),
@@ -9724,7 +9724,7 @@ pub mod design {
                 stats: Vec::new(),
                 created: None,
                 updated: None,
-                parent_kit: Weak::new(),
+                owner: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
                 flatten_cache: Cache::default(),
@@ -9754,7 +9754,7 @@ pub mod design {
                 stats: Vec::new(),
                 created: None,
                 updated: None,
-                parent_kit: Weak::new(),
+                owner: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
                 flatten_cache: Cache::default(),
@@ -9767,7 +9767,7 @@ pub mod design {
         }
 
         pub(crate) fn reoutput_piece_flatten_parents(&self) {
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceReference> = HashMap::new();
             for piece in &self.pieces {
                 if let Ok(pr) = piece.read() {
                     piece_index.insert(pr.id.clone(), piece.clone());
@@ -9784,7 +9784,7 @@ pub mod design {
                 return;
             }
 
-            let mut adjacency: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
+            let mut adjacency: HashMap<Id, Vec<(Id, ConnectionReference)>> = HashMap::new();
             for connection in &self.connections {
                 let Ok(connection_read) = connection.read() else {
                     continue;
@@ -9829,8 +9829,8 @@ pub mod design {
             }
         }
 
-        pub(crate) fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Design, self.id.clone())
+        pub(crate) fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Design, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadata) {
@@ -9849,7 +9849,7 @@ pub mod design {
 
         pub fn invalidate_hash(&self) {
             self.invalidate_hash_local();
-            if let Some(k) = self.parent_kit.upgrade() {
+            if let Some(k) = self.owner.upgrade() {
                 if let Ok(kr) = k.read() {
                     kr.invalidate_hash();
                 }
@@ -9893,7 +9893,7 @@ pub mod design {
         }
 
         pub fn invalidate_validation(&self) {
-            if let Some(k) = self.parent_kit.upgrade() {
+            if let Some(k) = self.owner.upgrade() {
                 if let Ok(k) = k.read() {
                     k.invalidate_validation();
                 }
@@ -9901,7 +9901,7 @@ pub mod design {
         }
 
         pub(crate) fn bubble_to_kit(&self) {
-            if let Some(k) = self.parent_kit.upgrade() {
+            if let Some(k) = self.owner.upgrade() {
                 if let Ok(k) = k.read() {
                     k.invalidate_hash();
                     k.invalidate_validation();
@@ -9971,7 +9971,7 @@ pub mod design {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<LocationRef>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationReference>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
@@ -10025,7 +10025,7 @@ pub mod design {
 
         pub fn flatten_map(&self) -> HashMap<Id, (Plane, Coordinate)> {
             self.flatten_cache.get_or_init(|| {
-                let Some(k) = self.parent_kit.upgrade() else {
+                let Some(k) = self.owner.upgrade() else {
                     return self.flatten_identity_only();
                 };
                 let Ok(kr) = k.read() else {
@@ -10048,13 +10048,13 @@ pub mod design {
         }
 
         fn compute_flatten_with_kit(&self, kit: &KitGraph) -> HashMap<Id, (Plane, Coordinate)> {
-            let mut types_by_id: HashMap<Id, TypeStoreRef> = HashMap::new();
+            let mut types_by_id: HashMap<Id, TypeReference> = HashMap::new();
             for t in &kit.types {
                 if let Ok(tr) = t.read() {
                     types_by_id.insert(tr.id.clone(), t.clone());
                 }
             }
-            let mut piece_map: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_map: HashMap<Id, PieceReference> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
                     piece_map.insert(pr.id.clone(), p.clone());
@@ -10063,7 +10063,7 @@ pub mod design {
             if piece_map.is_empty() {
                 return HashMap::new();
             }
-            let mut adj: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
+            let mut adj: HashMap<Id, Vec<(Id, ConnectionReference)>> = HashMap::new();
             for c in &self.connections {
                 let Ok(conn) = c.read() else { continue };
                 let Ok(s0) = conn.connected.read() else {
@@ -10255,35 +10255,35 @@ pub mod design {
             }
         }
 
-        pub fn piece(&self, id: &str) -> Option<PieceStoreRef> {
+        pub fn piece(&self, id: &str) -> Option<PieceReference> {
             self.pieces.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn connection(&self, id: &str) -> Option<ConnectionStoreRef> {
+        pub fn connection(&self, id: &str) -> Option<ConnectionReference> {
             self.connections.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn layer(&self, id: &str) -> Option<LayerStoreRef> {
+        pub fn layer(&self, id: &str) -> Option<LayerReference> {
             self.layers.iter().find(|l| l.read().map(|l| l.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn group(&self, id: &str) -> Option<GroupStoreRef> {
+        pub fn group(&self, id: &str) -> Option<GroupReference> {
             self.groups.iter().find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        fn side_piece_id(side: &SideStoreRef) -> Option<Id> {
+        fn side_piece_id(side: &SideReference) -> Option<Id> {
             side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())))
         }
 
-        fn side_port_ref(side: &SideStoreRef) -> Option<PortStoreRef> {
+        fn side_port_ref(side: &SideReference) -> Option<PortReference> {
             side.read().ok().and_then(|side| side.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn connector_port_ref(connector: &ConnectorStoreRef) -> Option<PortStoreRef> {
+        fn connector_port_ref(connector: &ConnectorReference) -> Option<PortReference> {
             connector.read().ok().and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn candidate_type_available_ports(candidate_type: &TypeStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_type_available_ports(candidate_type: &TypeReference) -> Option<Vec<PortReference>> {
             let candidate_type = candidate_type.read().ok()?;
             let mut available_ports = Vec::with_capacity(candidate_type.connectors.len());
             for connector in &candidate_type.connectors {
@@ -10292,7 +10292,7 @@ pub mod design {
             Some(available_ports)
         }
 
-        fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_design_available_ports(candidate_design: &DesignReference) -> Option<Vec<PortReference>> {
             let candidate_design = candidate_design.read().ok()?;
             let mut consumed_by_piece_port: HashMap<(Id, Id), usize> = HashMap::new();
             for connection in &candidate_design.connections {
@@ -10332,15 +10332,15 @@ pub mod design {
             Some(available_ports)
         }
 
-        fn port_lists_compatible_id(port: &crate::port::PortStore, other_id: &Id) -> bool {
+        fn port_lists_compatible_id(port: &crate::port::Port, other_id: &Id) -> bool {
             port.compatible_ports.iter().filter_map(|w| w.upgrade()).any(|p| p.read().map(|r| r.id == *other_id).unwrap_or(false))
         }
 
-        fn port_parent_family_id(port: &crate::port::PortStore) -> Option<Id> {
+        fn port_parent_family_id(port: &crate::port::Port) -> Option<Id> {
             port.parent_family.upgrade().and_then(|f| f.read().ok().map(|r| r.id.clone()))
         }
 
-        fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
+        fn ports_are_compatible(candidate_port: &PortReference, required_port: &PortReference) -> bool {
             let Ok(c) = candidate_port.read() else {
                 return false;
             };
@@ -10359,7 +10359,7 @@ pub mod design {
             }
         }
 
-        fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
+        fn can_satisfy_port_requirements(required_ports: &[Option<PortReference>], available_ports: &[PortReference]) -> bool {
             if required_ports.is_empty() {
                 return true;
             }
@@ -10402,7 +10402,7 @@ pub mod design {
             match_requirement(0, &requirement_options, &mut used_available_indexes)
         }
 
-        fn boundary_requirement_ports(&self, selected_piece_ids: &HashSet<Id>) -> Vec<Option<PortStoreRef>> {
+        fn boundary_requirement_ports(&self, selected_piece_ids: &HashSet<Id>) -> Vec<Option<PortReference>> {
             let mut required_ports = Vec::new();
             for connection in &self.connections {
                 let Ok(connection) = connection.read() else {
@@ -10420,7 +10420,7 @@ pub mod design {
             required_ports
         }
 
-        fn own_requirement_ports_for_piece(&self, piece_id: &Id) -> Vec<Option<PortStoreRef>> {
+        fn own_requirement_ports_for_piece(&self, piece_id: &Id) -> Vec<Option<PortReference>> {
             let Some(piece_ref) = self.piece(piece_id.as_str()) else {
                 return vec![None];
             };
@@ -10440,10 +10440,10 @@ pub mod design {
         }
 
         pub(crate) fn replaceable_catalog_candidates(&self, selection_piece_ids: &[Id]) -> PieceAlternatives {
-            let Some(parent_kit) = self.parent_kit.upgrade() else {
+            let Some(owner) = self.owner.upgrade() else {
                 return PieceAlternatives::default();
             };
-            let Ok(parent_kit) = parent_kit.read() else {
+            let Ok(owner) = owner.read() else {
                 return PieceAlternatives::default();
             };
 
@@ -10457,12 +10457,12 @@ pub mod design {
 
             let mut alternatives = PieceAlternatives::default();
             if selection_piece_ids.is_empty() {
-                alternatives.types = parent_kit.types.iter().filter_map(|candidate_type| Self::candidate_type_available_ports(candidate_type).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_type.clone())).collect();
-                alternatives.designs = parent_kit.designs.iter().filter_map(|candidate_design| Self::candidate_design_available_ports(candidate_design).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_design.clone())).collect();
+                alternatives.types = owner.types.iter().filter_map(|candidate_type| Self::candidate_type_available_ports(candidate_type).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_type.clone())).collect();
+                alternatives.designs = owner.designs.iter().filter_map(|candidate_design| Self::candidate_design_available_ports(candidate_design).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_design.clone())).collect();
                 return alternatives;
             }
 
-            alternatives.types = parent_kit
+            alternatives.types = owner
                 .types
                 .iter()
                 .filter_map(|candidate_type| {
@@ -10470,7 +10470,7 @@ pub mod design {
                     Self::can_satisfy_port_requirements(&required_ports, &available_ports).then_some(candidate_type.clone())
                 })
                 .collect();
-            alternatives.designs = parent_kit
+            alternatives.designs = owner
                 .designs
                 .iter()
                 .filter_map(|candidate_design| {
@@ -10489,13 +10489,13 @@ pub mod design {
         pub(crate) fn delete_pieces_inner(&mut self, piece_ids: &[Id], invalidate: bool) -> usize {
             let parent = self.entity_ref();
             for g in piece_ids {
-                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, g.clone()) });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, g.clone()) });
             }
             let before = self.pieces.len();
             self.pieces.retain(|p| p.read().map(|p| !piece_ids.iter().any(|g| *g == p.id)).unwrap_or(true));
             self.connections.retain(|c| {
                 if let Ok(c) = c.read() {
-                    let touches = |s: &SideStoreRef| -> bool { s.read().ok().and_then(|side| side.piece.upgrade().and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))).unwrap_or(false) };
+                    let touches = |s: &SideReference| -> bool { s.read().ok().and_then(|side| side.piece.upgrade().and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))).unwrap_or(false) };
                     !(touches(&c.connected) || touches(&c.connecting))
                 } else {
                     true
@@ -10571,7 +10571,7 @@ pub mod design {
             }
         }
 
-        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeStore>, ad: &crate::diff::AttributesDiff) {
+        fn apply_attrs_coll_dto(attrs: &mut Vec<Attribute>, ad: &crate::diff::AttributesDiff) {
             for id in &ad.removed {
                 attrs.retain(|a| a.id != *id);
             }
@@ -10771,7 +10771,7 @@ pub mod design {
             }
         }
 
-        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak, family_by_id: &HashMap<Id, FamilyStoreRef>) -> crate::error::Result<()> {
+        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeReference>, design_weak: DesignWeak, family_by_id: &HashMap<Id, FamilyReference>) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             if let Some(n) = &diff.name {
                 self.set_name(n.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -10823,7 +10823,7 @@ pub mod design {
 
             if let Some(pc) = &diff.pieces {
                 for id in &pc.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, id.id.clone()) });
                 }
                 let rids: Vec<Id> = pc.removed.iter().map(|p| p.id.clone()).collect();
                 if !rids.is_empty() {
@@ -10838,24 +10838,24 @@ pub mod design {
                     }
                 }
                 for p in &pc.added {
-                    let pref = Arc::new(RwLock::new(PieceStore::new(p.id.clone())));
+                    let pref = Arc::new(RwLock::new(Piece::new(p.id.clone())));
                     {
                         let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                         pw.apply_input_dto(p.clone(), design_weak.clone(), type_index);
                     }
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, p.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, p.id.clone()) });
                     self.pieces.push(pref);
                 }
             }
 
             if let Some(cc) = &diff.connections {
                 for id in &cc.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, id.id.clone()) });
                 }
                 for id in &cc.removed {
                     self.connections.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
                 }
-                let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+                let mut piece_index: HashMap<Id, PieceReference> = HashMap::new();
                 for p in &self.pieces {
                     if let Ok(pr) = p.read() {
                         piece_index.insert(pr.id.clone(), p.clone());
@@ -10866,21 +10866,21 @@ pub mod design {
                         let cref = self.connections.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)).cloned().expect("connection");
                         let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_input();
                         Self::merge_connection_sparse_into_input(&mut dto, &u.diff);
-                        self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                        self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, u.id.id.clone()) });
                         self.connections.retain(|x| x.read().map(|x| x.id != u.id.id).unwrap_or(true));
                         self.connections.push(connection_from_input(dto, &piece_index, design_weak.clone()));
-                        self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                        self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, u.id.id.clone()) });
                     }
                 }
                 for c in &cc.added {
                     self.connections.push(connection_from_input(c.clone(), &piece_index, design_weak.clone()));
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, c.id.clone()) });
                 }
             }
 
             if let Some(ld) = &diff.layers {
                 for id in &ld.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Layer, id.id.clone()) });
                 }
                 for id in &ld.removed {
                     self.layers.retain(|l| l.read().map(|l| l.id != id.id).unwrap_or(true));
@@ -10892,22 +10892,22 @@ pub mod design {
                         let mut lw = lr.write().map_err(|_| SemioError::LockPoisoned("layer"))?;
                         let pd = lw.parent_design.clone();
                         let eb = lw.event_bus.clone();
-                        *lw = LayerStore::from_input(fd);
+                        *lw = Layer::from_input(fd);
                         lw.parent_design = pd;
                         lw.event_bus = eb;
                     }
                 }
                 for ldto in &ld.added {
-                    let mut layer = LayerStore::from_input(ldto.clone());
+                    let mut layer = Layer::from_input(ldto.clone());
                     layer.parent_design = design_weak.clone();
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, ldto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Layer, ldto.id.clone()) });
                     self.layers.push(Arc::new(RwLock::new(layer)));
                 }
             }
 
             if let Some(gd) = &diff.groups {
                 for id in &gd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Group, id.id.clone()) });
                 }
                 for id in &gd.removed {
                     self.groups.retain(|g| g.read().map(|g| g.id != id.id).unwrap_or(true));
@@ -10919,7 +10919,7 @@ pub mod design {
                         let mut gw = gr.write().map_err(|_| SemioError::LockPoisoned("group"))?;
                         let pd = gw.parent_design.clone();
                         let eb = gw.event_bus.clone();
-                        *gw = GroupStore::from_input(fd.clone());
+                        *gw = Group::from_input(fd.clone());
                         gw.parent_design = pd;
                         gw.event_bus = eb;
                         let mut weaks = Vec::with_capacity(fd.pieces.len());
@@ -10932,7 +10932,7 @@ pub mod design {
                     }
                 }
                 for gdto in &gd.added {
-                    let mut g = GroupStore::from_input(gdto.clone());
+                    let mut g = Group::from_input(gdto.clone());
                     g.parent_design = design_weak.clone();
                     let mut weaks = Vec::with_capacity(gdto.pieces.len());
                     for pid in &gdto.pieces {
@@ -10941,14 +10941,14 @@ pub mod design {
                         }
                     }
                     g.pieces = weaks;
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, gdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Group, gdto.id.clone()) });
                     self.groups.push(Arc::new(RwLock::new(g)));
                 }
             }
 
             if let Some(ad) = &diff.authors {
                 for id in &ad.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Author, id.id.clone()) });
                 }
                 for id in &ad.removed {
                     self.authors.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
@@ -10958,28 +10958,28 @@ pub mod design {
                         let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_input();
                         Self::merge_author_sparse_into_input(&mut fd, &u.diff);
                         let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("author"))?;
-                        let pk = aw.parent_kit.clone();
+                        let pk = aw.owner.clone();
                         let pd = aw.parent_design.clone();
                         let pt = aw.parent_type.clone();
                         let eb = aw.event_bus.clone();
-                        *aw = AuthorStore::from_input(fd);
-                        aw.parent_kit = pk;
+                        *aw = Author::from_input(fd);
+                        aw.owner = pk;
                         aw.parent_design = pd;
                         aw.parent_type = pt;
                         aw.event_bus = eb;
                     }
                 }
                 for adto in &ad.added {
-                    let mut s = AuthorStore::from_input(adto.clone());
+                    let mut s = Author::from_input(adto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, adto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Author, adto.id.clone()) });
                     self.authors.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(cd) = &diff.concepts {
                 for id in &cd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Concept, id.id.clone()) });
                 }
                 for id in &cd.removed {
                     self.concepts.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
@@ -10989,28 +10989,28 @@ pub mod design {
                         let mut fd = cr.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_input();
                         Self::merge_concept_sparse_into_input(&mut fd, &u.diff);
                         let mut cw = cr.write().map_err(|_| SemioError::LockPoisoned("concept"))?;
-                        let pk = cw.parent_kit.clone();
+                        let pk = cw.owner.clone();
                         let pd = cw.parent_design.clone();
                         let pt = cw.parent_type.clone();
                         let eb = cw.event_bus.clone();
-                        *cw = ConceptStore::from_input(fd);
-                        cw.parent_kit = pk;
+                        *cw = Concept::from_input(fd);
+                        cw.owner = pk;
                         cw.parent_design = pd;
                         cw.parent_type = pt;
                         cw.event_bus = eb;
                     }
                 }
                 for cdto in &cd.added {
-                    let mut s = ConceptStore::from_input(cdto.clone());
+                    let mut s = Concept::from_input(cdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, cdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Concept, cdto.id.clone()) });
                     self.concepts.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(td) = &diff.tags {
                 for id in &td.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Tag, id.id.clone()) });
                 }
                 for id in &td.removed {
                     self.tags.retain(|t| t.read().map(|t| t.id != id.id).unwrap_or(true));
@@ -11020,28 +11020,28 @@ pub mod design {
                         let mut fd = tr.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_input();
                         Self::merge_tag_sparse_into_input(&mut fd, &u.diff);
                         let mut tw = tr.write().map_err(|_| SemioError::LockPoisoned("tag"))?;
-                        let pk = tw.parent_kit.clone();
+                        let pk = tw.owner.clone();
                         let pd = tw.parent_design.clone();
                         let pt = tw.parent_type.clone();
                         let eb = tw.event_bus.clone();
-                        *tw = TagStore::from_input(fd);
-                        tw.parent_kit = pk;
+                        *tw = Tag::from_input(fd);
+                        tw.owner = pk;
                         tw.parent_design = pd;
                         tw.parent_type = pt;
                         tw.event_bus = eb;
                     }
                 }
                 for tdto in &td.added {
-                    let mut s = TagStore::from_input(tdto.clone());
+                    let mut s = Tag::from_input(tdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, tdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Tag, tdto.id.clone()) });
                     self.tags.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(qd) = &diff.qualities {
                 for id in &qd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Quality, id.id.clone()) });
                 }
                 for id in &qd.removed {
                     self.qualities.retain(|q| q.read().map(|q| q.id != id.id).unwrap_or(true));
@@ -11051,15 +11051,15 @@ pub mod design {
                         let mut fd = qr.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_input();
                         Self::merge_quality_sparse_into_input(&mut fd, &u.diff);
                         let mut qw = qr.write().map_err(|_| SemioError::LockPoisoned("quality"))?;
-                        let pk = qw.parent_kit.clone();
+                        let pk = qw.owner.clone();
                         let pd = qw.parent_design.clone();
                         let pt = qw.parent_type.clone();
                         let pp = qw.parent_port.clone();
                         let pc = qw.parent_connector.clone();
                         let pr = qw.parent_representation.clone();
                         let eb = qw.event_bus.clone();
-                        *qw = QualityStore::from_input(fd);
-                        qw.parent_kit = pk;
+                        *qw = Quality::from_input(fd);
+                        qw.owner = pk;
                         qw.parent_design = pd;
                         qw.parent_type = pt;
                         qw.parent_port = pp;
@@ -11069,16 +11069,16 @@ pub mod design {
                     }
                 }
                 for qdto in &qd.added {
-                    let mut s = QualityStore::from_input(qdto.clone());
+                    let mut s = Quality::from_input(qdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, qdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Quality, qdto.id.clone()) });
                     self.qualities.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(pd) = &diff.props {
                 for id in &pd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Prop, id.id.clone()) });
                 }
                 for id in &pd.removed {
                     self.props.retain(|p| p.read().map(|p| p.id != id.id).unwrap_or(true));
@@ -11096,13 +11096,13 @@ pub mod design {
                             fd.unit = unit.clone();
                         }
                         let mut pw = pr.write().map_err(|_| SemioError::LockPoisoned("prop"))?;
-                        let pk = pw.parent_kit.clone();
+                        let pk = pw.owner.clone();
                         let pd = pw.parent_design.clone();
                         let pt = pw.parent_type.clone();
                         let pp = pw.parent_piece.clone();
                         let eb = pw.event_bus.clone();
-                        *pw = PropStore::from_input(fd);
-                        pw.parent_kit = pk;
+                        *pw = Prop::from_input(fd);
+                        pw.owner = pk;
                         pw.parent_design = pd;
                         pw.parent_type = pt;
                         pw.parent_piece = pp;
@@ -11110,16 +11110,16 @@ pub mod design {
                     }
                 }
                 for pdto in &pd.added {
-                    let mut p = PropStore::from_input(pdto.clone());
+                    let mut p = Prop::from_input(pdto.clone());
                     p.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, pdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Prop, pdto.id.clone()) });
                     self.props.push(Arc::new(RwLock::new(p)));
                 }
             }
 
             if let Some(ad) = &diff.attributes {
                 for id in &ad.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Attribute, id.clone()) });
                 }
                 for id in &ad.removed {
                     self.attributes.retain(|a| a.read().map(|a| a.id != *id).unwrap_or(true));
@@ -11140,16 +11140,16 @@ pub mod design {
                     }
                 }
                 for adto in &ad.added {
-                    let mut a = AttributeStore::from_output(adto.clone());
+                    let mut a = Attribute::from_output(adto.clone());
                     a.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Attribute, adto.id.clone()) });
                     self.attributes.push(Arc::new(RwLock::new(a)));
                 }
             }
 
             if let Some(sd) = &diff.stats {
                 for id in &sd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Stat, id.id.clone()) });
                 }
                 for id in &sd.removed {
                     self.stats.retain(|s| s.read().map(|s| s.id != id.id).unwrap_or(true));
@@ -11159,19 +11159,19 @@ pub mod design {
                         let mut fd = sr.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_input();
                         Self::merge_stat_sparse_into_input(&mut fd, &u.diff);
                         let mut sw = sr.write().map_err(|_| SemioError::LockPoisoned("stat"))?;
-                        let pk = sw.parent_kit.clone();
+                        let pk = sw.owner.clone();
                         let pd = sw.parent_design.clone();
                         let eb = sw.event_bus.clone();
-                        *sw = StatStore::from_input(fd);
-                        sw.parent_kit = pk;
+                        *sw = Stat::from_input(fd);
+                        sw.owner = pk;
                         sw.parent_design = pd;
                         sw.event_bus = eb;
                     }
                 }
                 for sdto in &sd.added {
-                    let mut s = StatStore::from_input(sdto.clone());
+                    let mut s = Stat::from_input(sdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, sdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Stat, sdto.id.clone()) });
                     self.stats.push(Arc::new(RwLock::new(s)));
                 }
             }
@@ -11182,14 +11182,14 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeReference>, design_weak: DesignWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            let pref = Arc::new(RwLock::new(PieceStore::new(piece.id.clone())));
+            let pref = Arc::new(RwLock::new(Piece::new(piece.id.clone())));
             {
                 let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                 pw.apply_input_dto(piece.clone(), design_weak, type_index);
             }
-            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, piece.id.clone()) });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, piece.id.clone()) });
             self.pieces.push(pref);
             self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -11199,7 +11199,7 @@ pub mod design {
 
         pub(crate) fn remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
+            self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, connection_id.clone()) });
             self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
             self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -11207,16 +11207,16 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn add_connection(&mut self, cdto:  design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn add_connection(&mut self, cdto:  design_weak: DesignWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceReference> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
                     piece_index.insert(pr.id.clone(), p.clone());
                 }
             }
             let cref = connection_from_input(cdto.clone(), &piece_index, design_weak);
-            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cdto.id.clone()) });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, cdto.id.clone()) });
             self.connections.push(cref);
             self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -11230,7 +11230,7 @@ pub mod design {
             use crate::report::SemioReport;
 
             let before = self.to_input();
-            let prefs: Vec<PieceStoreRef> = self.pieces.clone();
+            let prefs: Vec<PieceReference> = self.pieces.clone();
             let max_pass = prefs.len().saturating_add(8);
             for _ in 0..max_pass {
                 let mut any = false;
@@ -11265,11 +11265,11 @@ pub mod design {
             SemioReport::ok(DesignChange { forward, backward, author: None, time: None, before: Some(before), after: Some(after) })
         }
 
-        pub fn to_ref(&self) -> DesignRef {
-            DesignRef { id: self.id.clone() }
+        pub fn to_ref(&self) -> DesignReference {
+            DesignReference { id: self.id.clone() }
         }
 
-        pub(crate) fn hydrate_from_input(d:  type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
+        pub(crate) fn hydrate_from_input(d:  type_index: &HashMap<Id, TypeReference>, family_by_id: &HashMap<Id, FamilyReference>) -> DesignReference {
             let DesignInput {
                 id,
                 name,
@@ -11295,20 +11295,20 @@ pub mod design {
                 stats: stat_dtos,
             } = d;
 
-            let design = Arc::new(RwLock::new(DesignStore::new(id.clone(), name.clone())));
+            let design = Arc::new(RwLock::new(Design::new(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
                 dw.apply_metadata_fields(DesignMetadata { id, name, description, icon, image, location, unit, created, updated, kit });
-                let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
+                let family_weaks: Vec<FamilyWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
                 dw.families = family_weaks;
             }
 
             let dw = Arc::downgrade(&design);
 
             let piece_ids: Vec<Id> = piece_dtos.iter().map(|p| p.id.clone()).collect();
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceReference> = HashMap::new();
             for pd in &piece_dtos {
-                piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(PieceStore::new(pd.id.clone()))));
+                piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(Piece::new(pd.id.clone()))));
             }
             for pdto in piece_dtos {
                 if let Some(p) = piece_index.get(&pdto.id) {
@@ -11318,97 +11318,97 @@ pub mod design {
                 }
             }
 
-            let pieces_ordered: Vec<PieceStoreRef> = piece_ids.into_iter().filter_map(|g| piece_index.remove(&g)).collect();
+            let pieces_ordered: Vec<PieceReference> = piece_ids.into_iter().filter_map(|g| piece_index.remove(&g)).collect();
 
-            let layers: Vec<LayerStoreRef> = layer_dtos
+            let layers: Vec<LayerReference> = layer_dtos
                 .into_iter()
                 .map(|ldto| {
-                    let mut layer = LayerStore::from_input(ldto);
+                    let mut layer = Layer::from_input(ldto);
                     layer.parent_design = dw.clone();
                     Arc::new(RwLock::new(layer))
                 })
                 .collect();
 
-            let groups: Vec<GroupStoreRef> = group_dtos
+            let groups: Vec<GroupReference> = group_dtos
                 .into_iter()
                 .map(|gdto| {
-                    let mut g = GroupStore::from_input(gdto);
+                    let mut g = Group::from_input(gdto);
                     g.parent_design = dw.clone();
                     Arc::new(RwLock::new(g))
                 })
                 .collect();
 
-            let authors: Vec<AuthorStoreRef> = author_dtos
+            let authors: Vec<AuthorReference> = author_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AuthorStore::from_input(a);
+                    let mut s = Author::from_input(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let concepts: Vec<ConceptStoreRef> = concept_dtos
+            let concepts: Vec<ConceptReference> = concept_dtos
                 .into_iter()
                 .map(|c| {
-                    let mut s = ConceptStore::from_input(c);
+                    let mut s = Concept::from_input(c);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let tags: Vec<TagStoreRef> = tag_dtos
+            let tags: Vec<TagReference> = tag_dtos
                 .into_iter()
                 .map(|t| {
-                    let mut s = TagStore::from_input(t);
+                    let mut s = Tag::from_input(t);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let qualities: Vec<QualityStoreRef> = quality_dtos
+            let qualities: Vec<QualityReference> = quality_dtos
                 .into_iter()
                 .map(|q| {
-                    let mut s = QualityStore::from_input(q);
+                    let mut s = Quality::from_input(q);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let props: Vec<PropStoreRef> = prop_dtos
+            let props: Vec<PropReference> = prop_dtos
                 .into_iter()
                 .map(|p| {
-                    let mut s = PropStore::from_input(p);
+                    let mut s = Prop::from_input(p);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let attributes: Vec<AttributeStoreRef> = attribute_dtos
+            let attributes: Vec<AttributeReference> = attribute_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AttributeStore::from_output(a);
+                    let mut s = Attribute::from_output(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
                 .collect();
 
-            let stats: Vec<StatStoreRef> = stat_dtos
+            let stats: Vec<StatReference> = stat_dtos
                 .into_iter()
                 .map(|s| {
-                    let mut st = StatStore::from_input(s);
+                    let mut st = Stat::from_input(s);
                     st.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(st))
                 })
                 .collect();
 
-            let mut piece_index_ordered: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index_ordered: HashMap<Id, PieceReference> = HashMap::new();
             for p in &pieces_ordered {
                 if let Ok(pr) = p.read() {
                     piece_index_ordered.insert(pr.id.clone(), p.clone());
                 }
             }
 
-            let connections: Vec<ConnectionStoreRef> = connection_dtos.into_iter().map(|cdto| connection_from_input(cdto, &piece_index_ordered, dw.clone())).collect();
+            let connections: Vec<ConnectionReference> = connection_dtos.into_iter().map(|cdto| connection_from_input(cdto, &piece_index_ordered, dw.clone())).collect();
 
             {
                 let mut dw = design.write().expect("design write");
@@ -11438,31 +11438,31 @@ pub mod diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::AttributeStore;
-    use crate::author::{ AuthorRef};
-    use crate::benchmark::{ BenchmarkRef};
-    use crate::concept::{ ConceptRef};
-    use crate::connection::{ ConnectionRef};
-    use crate::connector::{ ConnectorRef};
+    use crate::attribute::Attribute;
+    use crate::author::{ AuthorReference};
+    use crate::benchmark::{ BenchmarkReference};
+    use crate::concept::{ ConceptReference};
+    use crate::connection::{ ConnectionReference};
+    use crate::connector::{ ConnectorReference};
     use crate::design::DesignInput;
-    use crate::family::{ FamilyRef};
-    use crate::file::{ FileRef};
-    use crate::folder::{ FolderRef};
+    use crate::family::{ FamilyReference};
+    use crate::file::{ FileReference};
+    use crate::folder::{ FolderReference};
     use crate::geom::{Coordinate, Plane, Point, Vector};
-    use crate::group::{ GroupRef};
+    use crate::group::{ GroupReference};
     use crate::id::Id;
-    use crate::kit_graph::KitRef;
-    use crate::layer::{ LayerRef};
-    use crate::location::LocationRef;
-    use crate::piece::{ PieceRef};
-    use crate::port::{ PortRef};
-    use crate::prop::{ PropRef};
-    use crate::quality::{ QualityRef};
-    use crate::representation::{ RepresentationRef};
+    use crate::kit_graph::KitReference;
+    use crate::layer::{ LayerReference};
+    use crate::location::LocationReference;
+    use crate::piece::{ PieceReference};
+    use crate::port::{ PortReference};
+    use crate::prop::{ PropReference};
+    use crate::quality::{ QualityReference};
+    use crate::representation::{ RepresentationReference};
     use crate::side::SideMetadata;
-    use crate::stat::{ StatRef};
-    use crate::tag::{ TagRef};
-    use crate::typ::{ TypeRef};
+    use crate::stat::{ StatReference};
+    use crate::tag::{ TagReference};
+    use crate::typ::{ TypeReference};
 
     #[inline]
     pub fn merge_opt<T: Clone>(a: &Option<T>, b: &Option<T>) -> Option<T> {
@@ -11529,7 +11529,7 @@ pub mod diff {
         #[serde(default)]
         pub updated: Vec<AttributeDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<AttributeStore>,
+        pub added: Vec<Attribute>,
     }
 
     impl AttributesDiff {
@@ -11575,7 +11575,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PropDiffUpdate {
-        pub id: PropRef,
+        pub id: PropReference,
         #[serde(flatten)]
         pub diff: PropDiff,
     }
@@ -11584,7 +11584,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PropsDiff {
         #[serde(default)]
-        pub removed: Vec<PropRef>,
+        pub removed: Vec<PropReference>,
         #[serde(default)]
         pub updated: Vec<PropDiffUpdate>,
         #[serde(default)]
@@ -11641,7 +11641,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarkDiffUpdate {
-        pub id: BenchmarkRef,
+        pub id: BenchmarkReference,
         #[serde(flatten)]
         pub diff: BenchmarkDiff,
     }
@@ -11650,7 +11650,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarksDiff {
         #[serde(default)]
-        pub removed: Vec<BenchmarkRef>,
+        pub removed: Vec<BenchmarkReference>,
         #[serde(default)]
         pub updated: Vec<BenchmarkDiffUpdate>,
         #[serde(default)]
@@ -11708,7 +11708,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct QualityDiffUpdate {
-        pub id: QualityRef,
+        pub id: QualityReference,
         #[serde(flatten)]
         pub diff: QualityDiff,
     }
@@ -11717,7 +11717,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct QualitiesDiff {
         #[serde(default)]
-        pub removed: Vec<QualityRef>,
+        pub removed: Vec<QualityReference>,
         #[serde(default)]
         pub updated: Vec<QualityDiffUpdate>,
         #[serde(default)]
@@ -11765,7 +11765,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AuthorDiffUpdate {
-        pub id: AuthorRef,
+        pub id: AuthorReference,
         #[serde(flatten)]
         pub diff: AuthorDiff,
     }
@@ -11774,7 +11774,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct AuthorsDiff {
         #[serde(default)]
-        pub removed: Vec<AuthorRef>,
+        pub removed: Vec<AuthorReference>,
         #[serde(default)]
         pub updated: Vec<AuthorDiffUpdate>,
         #[serde(default)]
@@ -11821,7 +11821,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConceptDiffUpdate {
-        pub id: ConceptRef,
+        pub id: ConceptReference,
         #[serde(flatten)]
         pub diff: ConceptDiff,
     }
@@ -11830,7 +11830,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConceptsDiff {
         #[serde(default)]
-        pub removed: Vec<ConceptRef>,
+        pub removed: Vec<ConceptReference>,
         #[serde(default)]
         pub updated: Vec<ConceptDiffUpdate>,
         #[serde(default)]
@@ -11876,7 +11876,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct TagDiffUpdate {
-        pub id: TagRef,
+        pub id: TagReference,
         #[serde(flatten)]
         pub diff: TagDiff,
     }
@@ -11885,7 +11885,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct TagsDiff {
         #[serde(default)]
-        pub removed: Vec<TagRef>,
+        pub removed: Vec<TagReference>,
         #[serde(default)]
         pub updated: Vec<TagDiffUpdate>,
         #[serde(default)]
@@ -11933,7 +11933,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StatDiffUpdate {
-        pub id: StatRef,
+        pub id: StatReference,
         #[serde(flatten)]
         pub diff: StatDiff,
     }
@@ -11942,7 +11942,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct StatsDiff {
         #[serde(default)]
-        pub removed: Vec<StatRef>,
+        pub removed: Vec<StatReference>,
         #[serde(default)]
         pub updated: Vec<StatDiffUpdate>,
         #[serde(default)]
@@ -11999,7 +11999,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct LayerDiffUpdate {
-        pub id: LayerRef,
+        pub id: LayerReference,
         #[serde(flatten)]
         pub diff: LayerDiff,
     }
@@ -12008,7 +12008,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct LayersDiff {
         #[serde(default)]
-        pub removed: Vec<LayerRef>,
+        pub removed: Vec<LayerReference>,
         #[serde(default)]
         pub updated: Vec<LayerDiffUpdate>,
         #[serde(default)]
@@ -12043,7 +12043,7 @@ pub mod diff {
         pub color: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         #[serde(default)]
-        pub pieces: Option<Vec<PieceRef>>,
+        pub pieces: Option<Vec<PieceReference>>,
     }
 
     impl GroupDiff {
@@ -12064,7 +12064,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct GroupDiffUpdate {
-        pub id: GroupRef,
+        pub id: GroupReference,
         #[serde(flatten)]
         pub diff: GroupDiff,
     }
@@ -12073,7 +12073,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct GroupsDiff {
         #[serde(default)]
-        pub removed: Vec<GroupRef>,
+        pub removed: Vec<GroupReference>,
         #[serde(default)]
         pub updated: Vec<GroupDiffUpdate>,
         #[serde(default)]
@@ -12113,8 +12113,8 @@ pub mod diff {
         pub locked: Option<Option<bool>>,
         pub color: Option<Option<String>>,
         #[serde(rename = "type", default)]
-        pub r#type: Option<Option<TypeRef>>,
-        pub design: Option<Option<crate::design::DesignRef>>,
+        pub r#type: Option<Option<TypeReference>>,
+        pub design: Option<Option<crate::design::DesignReference>>,
         #[serde(default)]
         pub props: Option<PropsDiff>,
         #[serde(default)]
@@ -12157,7 +12157,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceDiffUpdate {
-        pub id: PieceRef,
+        pub id: PieceReference,
         #[serde(flatten)]
         pub diff: PieceDiff,
     }
@@ -12166,7 +12166,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PiecesDiff {
         #[serde(default)]
-        pub removed: Vec<PieceRef>,
+        pub removed: Vec<PieceReference>,
         #[serde(default)]
         pub updated: Vec<PieceDiffUpdate>,
         #[serde(default)]
@@ -12247,7 +12247,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionDiffUpdate {
-        pub id: ConnectionRef,
+        pub id: ConnectionReference,
         #[serde(flatten)]
         pub diff: ConnectionDiff,
     }
@@ -12256,7 +12256,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionsDiff {
         #[serde(default)]
-        pub removed: Vec<ConnectionRef>,
+        pub removed: Vec<ConnectionReference>,
         #[serde(default)]
         pub updated: Vec<ConnectionDiffUpdate>,
         #[serde(default)]
@@ -12292,9 +12292,9 @@ pub mod diff {
         pub description: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         #[serde(rename = "compatiblePorts", default)]
-        pub compatible_ports: Option<Vec<PortRef>>,
+        pub compatible_ports: Option<Vec<PortReference>>,
         #[serde(rename = "compatibleFamilies", default)]
-        pub compatible_families: Option<Vec<crate::family::FamilyRef>>,
+        pub compatible_families: Option<Vec<crate::family::FamilyReference>>,
         #[serde(default)]
         pub attributes: Option<AttributesDiff>,
     }
@@ -12319,7 +12319,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PortDiffUpdate {
-        pub id: PortRef,
+        pub id: PortReference,
         #[serde(flatten)]
         pub diff: PortDiff,
     }
@@ -12328,7 +12328,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PortsDiff {
         #[serde(default)]
-        pub removed: Vec<PortRef>,
+        pub removed: Vec<PortReference>,
         #[serde(default)]
         pub updated: Vec<PortDiffUpdate>,
         #[serde(default)]
@@ -12360,7 +12360,7 @@ pub mod diff {
     pub struct ConnectorDiff {
         pub code: Option<String>,
         pub description: Option<Option<String>>,
-        pub port: Option<Option<PortRef>>,
+        pub port: Option<Option<PortReference>>,
         #[serde(default)]
         pub qualities: Option<QualitiesDiff>,
         #[serde(default)]
@@ -12385,7 +12385,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectorDiffUpdate {
-        pub id: ConnectorRef,
+        pub id: ConnectorReference,
         #[serde(flatten)]
         pub diff: ConnectorDiff,
     }
@@ -12394,7 +12394,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConnectorsDiff {
         #[serde(default)]
-        pub removed: Vec<ConnectorRef>,
+        pub removed: Vec<ConnectorReference>,
         #[serde(default)]
         pub updated: Vec<ConnectorDiffUpdate>,
         #[serde(default)]
@@ -12426,7 +12426,7 @@ pub mod diff {
     pub struct RepresentationDiff {
         pub url: Option<String>,
         pub description: Option<Option<String>>,
-        pub file: Option<Option<FileRef>>,
+        pub file: Option<Option<FileReference>>,
         #[serde(default)]
         pub tags: Option<TagsDiff>,
         #[serde(default)]
@@ -12459,7 +12459,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct RepresentationDiffUpdate {
-        pub id: RepresentationRef,
+        pub id: RepresentationReference,
         #[serde(flatten)]
         pub diff: RepresentationDiff,
     }
@@ -12468,7 +12468,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct RepresentationsDiff {
         #[serde(default)]
-        pub removed: Vec<RepresentationRef>,
+        pub removed: Vec<RepresentationReference>,
         #[serde(default)]
         pub updated: Vec<RepresentationDiffUpdate>,
         #[serde(default)]
@@ -12499,9 +12499,9 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FamilyIdsDiff {
         #[serde(default)]
-        pub removed: Vec<FamilyRef>,
+        pub removed: Vec<FamilyReference>,
         #[serde(default)]
-        pub added: Vec<FamilyRef>,
+        pub added: Vec<FamilyReference>,
     }
 
     impl FamilyIdsDiff {
@@ -12530,7 +12530,7 @@ pub mod diff {
         #[serde(rename = "typeVirtual", default)]
         pub type_virtual: Option<Option<bool>>,
         pub unit: Option<Option<String>>,
-        pub location: Option<Option<LocationRef>>,
+        pub location: Option<Option<LocationReference>>,
         pub created: Option<Option<String>>,
         pub updated: Option<Option<String>>,
         #[serde(default)]
@@ -12603,7 +12603,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeDiffUpdate {
-        pub id: TypeRef,
+        pub id: TypeReference,
         #[serde(flatten)]
         pub diff: TypeDiff,
     }
@@ -12612,7 +12612,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct TypesDiff {
         #[serde(default)]
-        pub removed: Vec<TypeRef>,
+        pub removed: Vec<TypeReference>,
         #[serde(default)]
         pub updated: Vec<TypeDiffUpdate>,
         #[serde(default)]
@@ -12671,7 +12671,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FileDiffUpdate {
-        pub id: FileRef,
+        pub id: FileReference,
         #[serde(flatten)]
         pub diff: FileDiff,
     }
@@ -12680,7 +12680,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FilesDiff {
         #[serde(default)]
-        pub removed: Vec<FileRef>,
+        pub removed: Vec<FileReference>,
         #[serde(default)]
         pub updated: Vec<FileDiffUpdate>,
         #[serde(default)]
@@ -12737,7 +12737,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FamilyDiffUpdate {
-        pub id: FamilyRef,
+        pub id: FamilyReference,
         #[serde(flatten)]
         pub diff: FamilyDiff,
     }
@@ -12746,7 +12746,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FamiliesDiff {
         #[serde(default)]
-        pub removed: Vec<FamilyRef>,
+        pub removed: Vec<FamilyReference>,
         #[serde(default)]
         pub updated: Vec<FamilyDiffUpdate>,
         #[serde(default)]
@@ -12792,7 +12792,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FolderDiffUpdate {
-        pub id: FolderRef,
+        pub id: FolderReference,
         #[serde(flatten)]
         pub diff: FolderDiff,
     }
@@ -12801,7 +12801,7 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FoldersDiff {
         #[serde(default)]
-        pub removed: Vec<FolderRef>,
+        pub removed: Vec<FolderReference>,
         #[serde(default)]
         pub updated: Vec<FolderDiffUpdate>,
         #[serde(default)]
@@ -12837,11 +12837,11 @@ pub mod diff {
         pub image: Option<Option<String>>,
         #[serde(default)]
         pub families: Option<FamilyIdsDiff>,
-        pub location: Option<Option<LocationRef>>,
+        pub location: Option<Option<LocationReference>>,
         pub unit: Option<Option<String>>,
         pub created: Option<Option<String>>,
         pub updated: Option<Option<String>>,
-        pub kit: Option<Option<KitRef>>,
+        pub kit: Option<Option<KitReference>>,
         #[serde(default)]
         pub pieces: Option<PiecesDiff>,
         #[serde(default)]
@@ -12959,14 +12959,14 @@ pub mod diff {
             let ka: std::collections::HashSet<Id> = ap.keys().cloned().collect();
             let mut pd = PiecesDiff::default();
             for g in kb.difference(&ka) {
-                pd.removed.push(PieceRef { id: g.clone() });
+                pd.removed.push(PieceReference { id: g.clone() });
             }
             for g in ka.difference(&kb) {
                 pd.added.push((*ap[g]).clone());
             }
             for g in ka.intersection(&kb) {
                 if bp[g] != ap[g] {
-                    pd.updated.push(PieceDiffUpdate { id: PieceRef { id: g.clone() }, diff: piece_input_delta(bp[g], ap[g]) });
+                    pd.updated.push(PieceDiffUpdate { id: PieceReference { id: g.clone() }, diff: piece_input_delta(bp[g], ap[g]) });
                 }
             }
             if !pd.is_empty() {
@@ -12978,14 +12978,14 @@ pub mod diff {
             let kac: std::collections::HashSet<Id> = ac.keys().cloned().collect();
             let mut cd = ConnectionsDiff::default();
             for g in kbc.difference(&kac) {
-                cd.removed.push(ConnectionRef { id: g.clone() });
+                cd.removed.push(ConnectionReference { id: g.clone() });
             }
             for g in kac.difference(&kbc) {
                 cd.added.push((*ac[g]).clone());
             }
             for g in kac.intersection(&kbc) {
                 if bc[g] != ac[g] {
-                    cd.updated.push(ConnectionDiffUpdate { id: ConnectionRef { id: g.clone() }, diff: connection_input_delta(bc[g], ac[g]) });
+                    cd.updated.push(ConnectionDiffUpdate { id: ConnectionReference { id: g.clone() }, diff: connection_input_delta(bc[g], ac[g]) });
                 }
             }
             if !cd.is_empty() {
@@ -13317,7 +13317,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(LayerRef { id: g.clone() });
+            d.removed.push(LayerReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13345,7 +13345,7 @@ pub mod diff {
                 if b.locked != a.locked {
                     df.locked = Some(a.locked);
                 }
-                d.updated.push(LayerDiffUpdate { id: LayerRef { id: g.clone() }, diff: df });
+                d.updated.push(LayerDiffUpdate { id: LayerReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13362,7 +13362,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(GroupRef { id: g.clone() });
+            d.removed.push(GroupReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13387,7 +13387,7 @@ pub mod diff {
                 if b.pieces != a.pieces {
                     df.pieces = Some(a.pieces.clone());
                 }
-                d.updated.push(GroupDiffUpdate { id: GroupRef { id: g.clone() }, diff: df });
+                d.updated.push(GroupDiffUpdate { id: GroupReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13404,7 +13404,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(AuthorRef { id: g.clone() });
+            d.removed.push(AuthorReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13426,7 +13426,7 @@ pub mod diff {
                 if b.rank != a.rank {
                     df.rank = Some(a.rank);
                 }
-                d.updated.push(AuthorDiffUpdate { id: AuthorRef { id: g.clone() }, diff: df });
+                d.updated.push(AuthorDiffUpdate { id: AuthorReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13443,7 +13443,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(ConceptRef { id: g.clone() });
+            d.removed.push(ConceptReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13462,7 +13462,7 @@ pub mod diff {
                 if b.order != a.order {
                     df.order = Some(a.order);
                 }
-                d.updated.push(ConceptDiffUpdate { id: ConceptRef { id: g.clone() }, diff: df });
+                d.updated.push(ConceptDiffUpdate { id: ConceptReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13479,7 +13479,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(TagRef { id: g.clone() });
+            d.removed.push(TagReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13495,7 +13495,7 @@ pub mod diff {
                 if b.order != a.order {
                     df.order = Some(a.order);
                 }
-                d.updated.push(TagDiffUpdate { id: TagRef { id: g.clone() }, diff: df });
+                d.updated.push(TagDiffUpdate { id: TagReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13512,7 +13512,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(QualityRef { id: g.clone() });
+            d.removed.push(QualityReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13541,7 +13541,7 @@ pub mod diff {
                 if !bm.is_empty() {
                     df.benchmarks = Some(bm);
                 }
-                d.updated.push(QualityDiffUpdate { id: QualityRef { id: g.clone() }, diff: df });
+                d.updated.push(QualityDiffUpdate { id: QualityReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13558,7 +13558,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(BenchmarkRef { id: g.clone() });
+            d.removed.push(BenchmarkReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13583,7 +13583,7 @@ pub mod diff {
                 if b.max_excluded != a.max_excluded {
                     df.max_excluded = Some(a.max_excluded);
                 }
-                d.updated.push(BenchmarkDiffUpdate { id: BenchmarkRef { id: g.clone() }, diff: df });
+                d.updated.push(BenchmarkDiffUpdate { id: BenchmarkReference { id: g.clone() }, diff: df });
             }
         }
         d
@@ -13596,7 +13596,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(PropRef { id: g.clone() });
+            d.removed.push(PropReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13615,16 +13615,16 @@ pub mod diff {
                 if b.unit != a.unit {
                     df.unit = Some(a.unit.clone());
                 }
-                d.updated.push(PropDiffUpdate { id: PropRef { id: g.clone() }, diff: df });
+                d.updated.push(PropDiffUpdate { id: PropReference { id: g.clone() }, diff: df });
             }
         }
         d
     }
 
-    fn attributes_between(before: &[AttributeStore], after: &[AttributeStore]) -> AttributesDiff {
+    fn attributes_between(before: &[Attribute], after: &[Attribute]) -> AttributesDiff {
         let mut d = AttributesDiff::default();
-        let bm: HashMap<Id, &AttributeStore> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &AttributeStore> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &Attribute> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &Attribute> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
@@ -13660,7 +13660,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(StatRef { id: g.clone() });
+            d.removed.push(StatReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13682,7 +13682,7 @@ pub mod diff {
                 if b.description != a.description {
                     df.description = Some(a.description.clone());
                 }
-                d.updated.push(StatDiffUpdate { id: StatRef { id: g.clone() }, diff: df });
+                d.updated.push(StatDiffUpdate { id: StatReference { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13692,7 +13692,7 @@ pub mod diff {
         }
     }
 
-    pub fn attribute_input_delta(b: &AttributeStore, a: &AttributeStore) -> AttributeDiff {
+    pub fn attribute_input_delta(b: &Attribute, a: &Attribute) -> AttributeDiff {
         let mut d = AttributeDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -13915,16 +13915,16 @@ pub mod diff {
         d
     }
 
-    fn family_ids_between(before: &[FamilyRef], after: &[FamilyRef]) -> Option<FamilyIdsDiff> {
+    fn family_ids_between(before: &[FamilyReference], after: &[FamilyReference]) -> Option<FamilyIdsDiff> {
         let kb: HashSet<Id> = before.iter().map(|x| x.id.clone()).collect();
         let ka: HashSet<Id> = after.iter().map(|x| x.id.clone()).collect();
         let mut removed = Vec::new();
         for id in kb.difference(&ka) {
-            removed.push(FamilyRef { id: id.clone() });
+            removed.push(FamilyReference { id: id.clone() });
         }
         let mut added = Vec::new();
         for id in ka.difference(&kb) {
-            added.push(FamilyRef { id: id.clone() });
+            added.push(FamilyReference { id: id.clone() });
         }
         if removed.is_empty() && added.is_empty() {
             None
@@ -13940,7 +13940,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(PortRef { id: g.clone() });
+            d.removed.push(PortReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13949,7 +13949,7 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(PortDiffUpdate { id: PortRef { id: g.clone() }, diff: port_input_delta(b, a) });
+                d.updated.push(PortDiffUpdate { id: PortReference { id: g.clone() }, diff: port_input_delta(b, a) });
             }
         }
         d
@@ -13989,7 +13989,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(ConnectorRef { id: g.clone() });
+            d.removed.push(ConnectorReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13998,7 +13998,7 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(ConnectorDiffUpdate { id: ConnectorRef { id: g.clone() }, diff: connector_input_delta(b, a) });
+                d.updated.push(ConnectorDiffUpdate { id: ConnectorReference { id: g.clone() }, diff: connector_input_delta(b, a) });
             }
         }
         d
@@ -14033,7 +14033,7 @@ pub mod diff {
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(RepresentationRef { id: g.clone() });
+            d.removed.push(RepresentationReference { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -14042,7 +14042,7 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(RepresentationDiffUpdate { id: RepresentationRef { id: g.clone() }, diff: representation_input_delta(b, a) });
+                d.updated.push(RepresentationDiffUpdate { id: RepresentationReference { id: g.clone() }, diff: representation_input_delta(b, a) });
             }
         }
         d
@@ -14126,7 +14126,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attribute_diff_into_input(fd: &mut AttributeStore, d: &AttributeDiff) {
+    pub fn merge_attribute_diff_into_input(fd: &mut Attribute, d: &AttributeDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14237,7 +14237,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeStore>, d: &AttributesDiff) {
+    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<Attribute>, d: &AttributesDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != *id);
         }
@@ -14360,7 +14360,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_family_ids_into_vec(vec: &mut Vec<FamilyRef>, d: &FamilyIdsDiff) {
+    pub fn merge_family_ids_into_vec(vec: &mut Vec<FamilyReference>, d: &FamilyIdsDiff) {
         for r in &d.removed {
             vec.retain(|x| x.id != r.id);
         }
@@ -14508,18 +14508,18 @@ pub mod kit_diff {
     use std::collections::{HashMap, HashSet};
 
     use crate::id::Id;
-    use crate::author::{ AuthorRef};
-    use crate::concept::ConceptRef;
-    use crate::design::{ DesignRef};
+    use crate::author::{ AuthorReference};
+    use crate::concept::ConceptReference;
+    use crate::design::{ DesignReference};
     use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FamiliesDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
-    use crate::family::FamilyRef;
-    use crate::file::FileRef;
-    use crate::folder::FolderRef;
+    use crate::family::FamilyReference;
+    use crate::file::FileReference;
+    use crate::folder::FolderReference;
     use crate::kit_graph::KitInput;
-    use crate::prop::PropRef;
-    use crate::quality::QualityRef;
-    use crate::tag::TagRef;
-    use crate::typ::TypeRef;
+    use crate::prop::PropReference;
+    use crate::quality::QualityReference;
+    use crate::tag::TagReference;
+    use crate::typ::TypeReference;
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
@@ -14534,7 +14534,7 @@ pub mod kit_diff {
     #[serde(rename_all = "camelCase")]
     pub struct DesignsDiff {
         #[serde(default)]
-        pub removed: Vec<DesignRef>,
+        pub removed: Vec<DesignReference>,
         #[serde(default)]
         pub updated: Vec<DesignDiffUpdate>,
         #[serde(default)]
@@ -14836,7 +14836,7 @@ pub mod kit_diff {
             let (a_t, r_t, m_t) = diff_id_vec(&before.types, &after.types, |t| &t.id);
             if !a_t.is_empty() || !r_t.is_empty() || !m_t.is_empty() {
                 d.types = Some(TypesDiff {
-                    removed: r_t.iter().map(|i| TypeRef { id: i.clone() }).collect(),
+                    removed: r_t.iter().map(|i| TypeReference { id: i.clone() }).collect(),
                     updated: m_t
                         .iter()
                         .filter_map(|input| {
@@ -14845,7 +14845,7 @@ pub mod kit_diff {
                             if diff.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::TypeDiffUpdate { id: TypeRef { id: input.id.clone() }, diff })
+                                Some(crate::diff::TypeDiffUpdate { id: TypeReference { id: input.id.clone() }, diff })
                             }
                         })
                         .collect(),
@@ -14858,7 +14858,7 @@ pub mod kit_diff {
             let (a_fam, r_fam, m_fam) = diff_id_vec(&before.families, &after.families, |t| &t.id);
             if !a_fam.is_empty() || !r_fam.is_empty() || !m_fam.is_empty() {
                 d.families = Some(FamiliesDiff {
-                    removed: r_fam.iter().map(|i| FamilyRef { id: i.clone() }).collect(),
+                    removed: r_fam.iter().map(|i| FamilyReference { id: i.clone() }).collect(),
                     updated: m_fam
                         .iter()
                         .filter_map(|input| {
@@ -14867,7 +14867,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FamilyDiffUpdate { id: FamilyRef { id: input.id.clone() }, diff: df })
+                                Some(crate::diff::FamilyDiffUpdate { id: FamilyReference { id: input.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -14883,7 +14883,7 @@ pub mod kit_diff {
             let ka: HashSet<Id> = am.keys().cloned().collect();
             let mut des = DesignsDiff::default();
             for id in kb.difference(&ka) {
-                des.removed.push(DesignRef { id: id.clone() });
+                des.removed.push(DesignReference { id: id.clone() });
             }
             for id in ka.difference(&kb) {
                 des.added.push((*am.get(id).expect("a")).clone());
@@ -14904,7 +14904,7 @@ pub mod kit_diff {
             let (a_f, r_f, m_f) = diff_id_vec(&before.files, &after.files, |t| &t.id);
             if !a_f.is_empty() || !r_f.is_empty() || !m_f.is_empty() {
                 d.files = Some(FilesDiff {
-                    removed: r_f.iter().map(|i| FileRef { id: i.clone() }).collect(),
+                    removed: r_f.iter().map(|i| FileReference { id: i.clone() }).collect(),
                     updated: m_f
                         .iter()
                         .filter_map(|input| {
@@ -14913,7 +14913,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FileDiffUpdate { id: FileRef { id: input.id.clone() }, diff: df })
+                                Some(crate::diff::FileDiffUpdate { id: FileReference { id: input.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -14926,7 +14926,7 @@ pub mod kit_diff {
             let (a_fo, r_fo, m_fo) = diff_id_vec(&before.folders, &after.folders, |t| &t.id);
             if !a_fo.is_empty() || !r_fo.is_empty() || !m_fo.is_empty() {
                 d.folders = Some(FoldersDiff {
-                    removed: r_fo.iter().map(|i| FolderRef { id: i.clone() }).collect(),
+                    removed: r_fo.iter().map(|i| FolderReference { id: i.clone() }).collect(),
                     updated: m_fo
                         .iter()
                         .filter_map(|input| {
@@ -14935,7 +14935,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FolderDiffUpdate { id: FolderRef { id: input.id.clone() }, diff: df })
+                                Some(crate::diff::FolderDiffUpdate { id: FolderReference { id: input.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -14951,7 +14951,7 @@ pub mod kit_diff {
                     return None;
                 }
                 Some(AuthorsDiff {
-                    removed: r.iter().map(|i| AuthorRef { id: i.clone() }).collect(),
+                    removed: r.iter().map(|i| AuthorReference { id: i.clone() }).collect(),
                     updated: m
                         .iter()
                         .filter_map(|input| {
@@ -14960,7 +14960,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::AuthorDiffUpdate { id: AuthorRef { id: input.id.clone() }, diff: df })
+                                Some(crate::diff::AuthorDiffUpdate { id: AuthorReference { id: input.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -14974,7 +14974,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(ConceptsDiff {
-                        removed: r.iter().map(|i| ConceptRef { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| ConceptReference { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|input| {
@@ -14983,7 +14983,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::ConceptDiffUpdate { id: ConceptRef { id: input.id.clone() }, diff: df })
+                                    Some(crate::diff::ConceptDiffUpdate { id: ConceptReference { id: input.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -14997,7 +14997,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(TagsDiff {
-                        removed: r.iter().map(|i| TagRef { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| TagReference { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|input| {
@@ -15006,7 +15006,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::TagDiffUpdate { id: TagRef { id: input.id.clone() }, diff: df })
+                                    Some(crate::diff::TagDiffUpdate { id: TagReference { id: input.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -15020,7 +15020,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(QualitiesDiff {
-                        removed: r.iter().map(|i| QualityRef { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| QualityReference { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|input| {
@@ -15029,7 +15029,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::QualityDiffUpdate { id: QualityRef { id: input.id.clone() }, diff: df })
+                                    Some(crate::diff::QualityDiffUpdate { id: QualityReference { id: input.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -15040,7 +15040,7 @@ pub mod kit_diff {
             let (a_p, r_p, m_p) = diff_id_vec(&before.props, &after.props, |t| &t.id);
             if !a_p.is_empty() || !r_p.is_empty() || !m_p.is_empty() {
                 let pd = PropsDiff {
-                    removed: r_p.iter().map(|i| PropRef { id: i.clone() }).collect(),
+                    removed: r_p.iter().map(|i| PropReference { id: i.clone() }).collect(),
                     updated: m_p
                         .iter()
                         .filter_map(|input| {
@@ -15049,7 +15049,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::PropDiffUpdate { id: PropRef { id: input.id.clone() }, diff: df })
+                                Some(crate::diff::PropDiffUpdate { id: PropReference { id: input.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15091,10 +15091,10 @@ pub mod kit_change {
     use serde::{Deserialize, Serialize};
 
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
-    use crate::design::DesignRef;
+    use crate::design::DesignReference;
     use crate::error::SemioError;
-    use crate::piece::PieceRef;
-    use crate::typ::TypeRef;
+    use crate::piece::PieceReference;
+    use crate::typ::TypeReference;
     //#endregion
 
     //#region ­ƒöûKitChangeKind
@@ -15126,8 +15126,8 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceChange {
-        pub design_id: DesignRef,
-        pub piece_id: PieceRef,
+        pub design_id: DesignReference,
+        pub piece_id: PieceReference,
         pub forward: Vec<ChangePieceCommand>,
         pub inverse: Vec<ChangePieceCommand>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
@@ -15139,7 +15139,7 @@ pub mod kit_change {
     }
 
     impl PieceChange {
-        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
                 &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.forward.clone() }] }],
@@ -15147,7 +15147,7 @@ pub mod kit_change {
             .map(|_| ())
         }
 
-        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(
                 kit,
                 &[ChangeKitCommand::ChangeDesignCommands { design_id: self.design_id.clone(), commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: self.piece_id.clone(), commands: self.inverse.clone() }] }],
@@ -15187,7 +15187,7 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct KitDesignChange {
-        pub design_id: DesignRef,
+        pub design_id: DesignReference,
         pub blocks: Vec<KitDesignChangeBlock>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
@@ -15198,7 +15198,7 @@ pub mod kit_change {
     }
 
     impl KitDesignChange {
-        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             for b in &self.blocks {
                 match b {
                     KitDesignChangeBlock::Atomics(a) => {
@@ -15212,7 +15212,7 @@ pub mod kit_change {
             Ok(())
         }
 
-        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             for b in self.blocks.iter().rev() {
                 match b {
                     KitDesignChangeBlock::Atomics(a) => {
@@ -15263,7 +15263,7 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeChange {
-        pub type_id: TypeRef,
+        pub type_id: TypeReference,
         pub forward: Vec<ChangeTypeCommand>,
         pub inverse: Vec<ChangeTypeCommand>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
@@ -15275,11 +15275,11 @@ pub mod kit_change {
     }
 
     impl TypeChange {
-        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_forward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.forward.clone() }]).map(|_| ())
         }
 
-        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        pub fn apply_backward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             ChangeKitCommand::apply_many(kit, &[ChangeKitCommand::ChangeTypeCommands { type_id: self.type_id.clone(), commands: self.inverse.clone() }]).map(|_| ())
         }
 
@@ -15303,7 +15303,7 @@ pub mod kit_change {
     }
 
     impl Change {
-        fn apply_forward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        fn apply_forward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             match self {
                 Change::Type(t) => t.apply_forward(kit),
                 Change::Design(d) => d.apply_forward(kit),
@@ -15311,7 +15311,7 @@ pub mod kit_change {
             }
         }
 
-        fn apply_backward(&self, kit: &crate::kit_graph::KitGraphRef) -> Result<(), SemioError> {
+        fn apply_backward(&self, kit: &crate::kit_graph::KitGraphReference) -> Result<(), SemioError> {
             match self {
                 Change::Type(t) => t.apply_backward(kit),
                 Change::Design(d) => d.apply_backward(kit),
@@ -15359,7 +15359,7 @@ pub mod kit_change {
     impl KitChange {
         //#region ­ƒöûApply
         /// Apply the forward step to a store (depth-first: kit [`Self::forward`], then [`Self::children`]).
-        pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
+        pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphReference) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
             for ch in &c.children {
                 ch.apply_forward(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change child forward: {e}")))?;
@@ -15367,7 +15367,7 @@ pub mod kit_change {
             Ok(())
         }
 
-        pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
+        pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphReference) -> crate::error::SetResult {
             for ch in c.children.iter().rev() {
                 ch.apply_backward(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change child backward: {e}")))?;
             }
@@ -15398,7 +15398,7 @@ pub mod kit_change {
 
         //#region ­ƒöûLift
         /// ­ƒº« Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
-        pub fn lift_flat(kit: &crate::kit_graph::KitGraphRef, forward: Vec<ChangeKitCommand>, kind: KitChangeKind, author: Option<String>, time: Option<String>) -> Result<Self, SemioError> {
+        pub fn lift_flat(kit: &crate::kit_graph::KitGraphReference, forward: Vec<ChangeKitCommand>, kind: KitChangeKind, author: Option<String>, time: Option<String>) -> Result<Self, SemioError> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_input();
             let twin = crate::kit_graph::KitGraph::from_input(before);
             let mut kit_forward: Vec<ChangeKitCommand> = Vec::new();
@@ -15437,25 +15437,25 @@ pub mod kit_change {
     }
 
     //#region ­ƒöûLiftHelpers
-    fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeRef) -> Result<Vec<ChangeTypeCommand>, SemioError> {
+    fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeReference) -> Result<Vec<ChangeTypeCommand>, SemioError> {
         match inv {
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] if type_id == expect_id => Ok(commands.clone()),
             _ => Err(SemioError::InvalidOperation("inverse for ChangeTypeCommands mismatch".into())),
         }
     }
 
-    fn unwrap_design_inverse(inv: &[ChangeKitCommand], expect_did: &DesignRef) -> Result<Vec<ChangeDesignCommand>, SemioError> {
+    fn unwrap_design_inverse(inv: &[ChangeKitCommand], expect_did: &DesignReference) -> Result<Vec<ChangeDesignCommand>, SemioError> {
         match inv {
             [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] if design_id == expect_did => Ok(commands.clone()),
             _ => Err(SemioError::InvalidOperation("inverse for ChangeDesignCommands mismatch".into())),
         }
     }
 
-    fn lift_design_change_from_commands(twin: &crate::kit_graph::KitGraphRef, design_id: DesignRef, commands: Vec<ChangeDesignCommand>) -> Result<KitDesignChange, SemioError> {
+    fn lift_design_change_from_commands(twin: &crate::kit_graph::KitGraphReference, design_id: DesignReference, commands: Vec<ChangeDesignCommand>) -> Result<KitDesignChange, SemioError> {
         let mut blocks: Vec<KitDesignChangeBlock> = Vec::new();
         let mut buf: Vec<ChangeDesignCommand> = Vec::new();
 
-        fn flush_atomics(twin: &crate::kit_graph::KitGraphRef, design_id: &DesignRef, buf: &mut Vec<ChangeDesignCommand>, blocks: &mut Vec<KitDesignChangeBlock>) -> Result<(), SemioError> {
+        fn flush_atomics(twin: &crate::kit_graph::KitGraphReference, design_id: &DesignReference, buf: &mut Vec<ChangeDesignCommand>, blocks: &mut Vec<KitDesignChangeBlock>) -> Result<(), SemioError> {
             if buf.is_empty() {
                 return Ok(());
             }
@@ -15488,7 +15488,7 @@ pub mod kit_change {
         Ok(KitDesignChange { design_id, blocks, kind: KitChangeKind::Inferred, author: None, time: None })
     }
 
-    fn unwrap_piece_inverse(inv: &[ChangeKitCommand], expect_did: &DesignRef, expect_pid: &PieceRef) -> Result<Vec<ChangePieceCommand>, SemioError> {
+    fn unwrap_piece_inverse(inv: &[ChangeKitCommand], expect_did: &DesignReference, expect_pid: &PieceReference) -> Result<Vec<ChangePieceCommand>, SemioError> {
         let cmds = unwrap_design_inverse(inv, expect_did)?;
         match cmds.as_slice() {
             [ChangeDesignCommand::ChangePieceCommands { piece_id, commands }] if piece_id == expect_pid => Ok(commands.clone()),
@@ -15520,7 +15520,7 @@ pub mod error {
         #[error("not found: {0}")]
         NotFound(String),
         #[error("cyclic reference: {0}")]
-        CyclicReference(String),
+        CyclicReferenceerence(String),
         #[error("port family mismatch: {0}")]
         PortFamilyMismatch(String),
         #[error("readonly: {0}")]
@@ -15724,12 +15724,12 @@ pub mod events {
     }
 
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
-    pub struct EntityRef {
+    pub struct EntityReference {
         pub kind: EntityKind,
         pub id: Id,
     }
 
-    impl EntityRef {
+    impl EntityReference {
         pub const fn new(kind: EntityKind, id: Id) -> Self {
             Self { kind, id }
         }
@@ -16053,15 +16053,15 @@ pub mod events {
             event: StatEvent,
         },
         ChildAdded {
-            parent: EntityRef,
-            child: EntityRef,
+            parent: EntityReference,
+            child: EntityReference,
         },
         ChildRemoved {
-            parent: EntityRef,
-            child: EntityRef,
+            parent: EntityReference,
+            child: EntityReference,
         },
         HashInvalidated {
-            entity: EntityRef,
+            entity: EntityReference,
         },
         FlattenInvalidated {
             design: Id,
@@ -16234,26 +16234,26 @@ pub(crate) mod event_output {
 
     use std::sync::{Arc, Weak};
 
-    use crate::benchmark::BenchmarkStoreRef;
-    use crate::connection::ConnectionStoreRef;
-    use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignStoreRef;
+    use crate::benchmark::BenchmarkReference;
+    use crate::connection::ConnectionReference;
+    use crate::connector::ConnectorReference;
+    use crate::design::DesignReference;
     use crate::events::EventBus;
-    use crate::family::FamilyStoreRef;
-    use crate::file::FileStoreRef;
-    use crate::folder::FolderStoreRef;
-    use crate::group::GroupStoreRef;
-    use crate::kit_graph::KitGraphRef;
-    use crate::layer::LayerStoreRef;
-    use crate::location::LocationStoreRef;
-    use crate::piece::PieceStoreRef;
-    use crate::port::PortStoreRef;
-    use crate::quality::QualityStoreRef;
-    use crate::representation::RepresentationStoreRef;
-    use crate::stat::StatStoreRef;
-    use crate::typ::TypeStoreRef;
+    use crate::family::FamilyReference;
+    use crate::file::FileReference;
+    use crate::folder::FolderReference;
+    use crate::group::GroupReference;
+    use crate::kit_graph::KitGraphReference;
+    use crate::layer::LayerReference;
+    use crate::location::LocationReference;
+    use crate::piece::PieceReference;
+    use crate::port::PortReference;
+    use crate::quality::QualityReference;
+    use crate::representation::RepresentationReference;
+    use crate::stat::StatReference;
+    use crate::typ::TypeReference;
 
-    pub(crate) fn output_graph_bus(kit: &KitGraphRef) {
+    pub(crate) fn output_graph_bus(kit: &KitGraphReference) {
         let w = {
             let kr = kit.read().expect("kit read");
             Arc::downgrade(&kr.event_bus)
@@ -16310,7 +16310,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_type(t: &TypeStoreRef, w: &Weak<EventBus>) {
+    fn output_type(t: &TypeReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = t.write() {
             g.event_bus = w.clone();
             for c in &g.connectors {
@@ -16350,7 +16350,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_port(p: &PortStoreRef, w: &Weak<EventBus>) {
+    fn output_port(p: &PortReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
@@ -16362,7 +16362,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_family(f: &FamilyStoreRef, w: &Weak<EventBus>) {
+    fn output_family(f: &FamilyReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
             for p in &g.ports {
@@ -16374,7 +16374,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_location(l: &LocationStoreRef, w: &Weak<EventBus>) {
+    fn output_location(l: &LocationReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
             for a in &g.attributes {
@@ -16385,7 +16385,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_connector(c: &ConnectorStoreRef, w: &Weak<EventBus>) {
+    fn output_connector(c: &ConnectorReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
@@ -16397,7 +16397,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_representation(r: &RepresentationStoreRef, w: &Weak<EventBus>) {
+    fn output_representation(r: &RepresentationReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = r.write() {
             g.event_bus = w.clone();
             for tg in g.tags.iter_mut() {
@@ -16412,7 +16412,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_design(d: &DesignStoreRef, w: &Weak<EventBus>) {
+    fn output_design(d: &DesignReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = d.write() {
             g.event_bus = w.clone();
             for p in &g.pieces {
@@ -16461,7 +16461,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_piece(p: &PieceStoreRef, w: &Weak<EventBus>) {
+    fn output_piece(p: &PieceReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for pr in &g.props {
@@ -16477,7 +16477,7 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_connection(c: &ConnectionStoreRef, w: &Weak<EventBus>) {
+    fn output_connection(c: &ConnectionReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             if let Ok(mut s) = g.connected.write() {
@@ -16494,31 +16494,31 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_layer(l: &LayerStoreRef, w: &Weak<EventBus>) {
+    fn output_layer(l: &LayerReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn output_group(gr: &GroupStoreRef, w: &Weak<EventBus>) {
+    fn output_group(gr: &GroupReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = gr.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn output_file(f: &FileStoreRef, w: &Weak<EventBus>) {
+    fn output_file(f: &FileReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn output_folder(f: &FolderStoreRef, w: &Weak<EventBus>) {
+    fn output_folder(f: &FolderReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn output_quality(q: &QualityStoreRef, w: &Weak<EventBus>) {
+    fn output_quality(q: &QualityReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = q.write() {
             g.event_bus = w.clone();
             for b in &g.benchmarks {
@@ -16527,69 +16527,69 @@ pub(crate) mod event_output {
         }
     }
 
-    fn output_stat(s: &StatStoreRef, w: &Weak<EventBus>) {
+    fn output_stat(s: &StatReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = s.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn output_benchmark(b: &BenchmarkStoreRef, w: &Weak<EventBus>) {
+    fn output_benchmark(b: &BenchmarkReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = b.write() {
             g.event_bus = w.clone();
         }
     }
 
-    pub(crate) fn reoutput_parent_kits(kit: &KitGraphRef) {
+    pub(crate) fn reoutput_owners(kit: &KitGraphReference) {
         let kw = Arc::downgrade(kit);
         let kg = kit.read().expect("kit read");
         for a in &kg.authors {
             if let Ok(mut aw) = a.write() {
-                aw.parent_kit = Some(kw.clone());
+                aw.owner = Some(kw.clone());
             }
         }
         for c in &kg.concepts {
             if let Ok(mut cw) = c.write() {
-                cw.parent_kit = Some(kw.clone());
+                cw.owner = Some(kw.clone());
             }
         }
         for t in &kg.tags {
             if let Ok(mut tw) = t.write() {
-                tw.parent_kit = Some(kw.clone());
+                tw.owner = Some(kw.clone());
             }
         }
         for q in &kg.qualities {
             if let Ok(mut qw) = q.write() {
-                qw.parent_kit = Some(kw.clone());
+                qw.owner = Some(kw.clone());
             }
         }
         for p in &kg.props {
             if let Ok(mut pw) = p.write() {
-                pw.parent_kit = Some(kw.clone());
+                pw.owner = Some(kw.clone());
             }
         }
         for a in &kg.attributes {
             if let Ok(mut aw) = a.write() {
-                aw.parent_kit = Some(kw.clone());
+                aw.owner = Some(kw.clone());
             }
         }
         for d in &kg.designs {
             if let Ok(mut dw) = d.write() {
-                dw.parent_kit = kw.clone();
+                dw.owner = kw.clone();
             }
         }
         for f in &kg.files {
             if let Ok(mut fw) = f.write() {
-                fw.parent_kit = Some(kw.clone());
+                fw.owner = Some(kw.clone());
             }
         }
         for f in &kg.folders {
             if let Ok(mut fw) = f.write() {
-                fw.parent_kit = Some(kw.clone());
+                fw.owner = Some(kw.clone());
             }
         }
     }
 
-    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph:: after: &crate::kit_graph::KitInput) {
+    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphReference, before: &crate::kit_graph:: after: &crate::kit_graph::KitInput) {
         use std::collections::HashMap;
 
         use crate::events::{DesignEvent, DesignField, KitEvent, TypeEvent, TypeField};
@@ -16842,15 +16842,15 @@ pub mod file {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    pub type FileStoreRef = Arc<RwLock<FileStore>>;
-    pub type FileStoreWeak = Weak<RwLock<FileStore>>;
+    pub type FileReference = Arc<RwLock<File>>;
+    pub type FileWeak = Weak<RwLock<File>>;
 
     #[derive(Debug)]
-    pub struct FileStore {
+    pub struct File {
         pub id: Id,
         pub url: String,
         pub mime: Option<String>,
@@ -16859,7 +16859,7 @@ pub mod file {
         pub description: Option<String>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Option<KitGraphWeak>,
+        pub owner: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
@@ -16886,9 +16886,9 @@ pub mod file {
     }
 
 
-    impl FileStore {
+    impl File {
         pub fn new(url: impl Into<String>) -> Self {
-            Self { id: Id::new_v7(), url: url.into(), mime: None, size: None, hash: None, description: None, created: None, updated: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id: Id::new_v7(), url: url.into(), mime: None, size: None, hash: None, description: None, created: None, updated: None, owner: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -17001,7 +17001,7 @@ pub mod file {
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(kr) = k.read() {
                         kr.invalidate_hash();
@@ -17034,27 +17034,27 @@ pub mod folder {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
-    pub type FolderStoreWeak = Weak<RwLock<FolderStore>>;
+    pub type FolderReference = Arc<RwLock<Folder>>;
+    pub type FolderWeak = Weak<RwLock<Folder>>;
 
     #[derive(Debug)]
-    pub struct FolderStore {
+    pub struct Folder {
         pub id: Id,
         pub path: String,
         pub description: Option<String>,
-        pub parent_kit: Option<KitGraphWeak>,
+        pub owner: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl FolderStore {
+    impl Folder {
         pub fn new(path: impl Into<String>) -> Self {
-            Self { id: Id::new_v7(), path: path.into(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id: Id::new_v7(), path: path.into(), description: None, owner: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -17098,7 +17098,7 @@ pub mod folder {
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(kr) = k.read() {
                         kr.invalidate_hash();
@@ -17314,30 +17314,30 @@ pub mod location {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type LocationStoreRef = std::sync::Arc<std::sync::RwLock<LocationStore>>;
-    pub type LocationStoreWeak = std::sync::Weak<std::sync::RwLock<LocationStore>>;
+    pub type LocationReference = std::sync::Arc<std::sync::RwLock<Location>>;
+    pub type LocationWeak = std::sync::Weak<std::sync::RwLock<Location>>;
 
     #[derive(Debug)]
-    pub struct LocationStore {
+    pub struct Location {
         pub id: Id,
         pub longitude: f64,
         pub latitude: f64,
         pub altitude: Option<f64>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub parent_kit: Option<KitGraphWeak>,
+        pub attributes: Vec<AttributeReference>,
+        pub owner: Option<KitGraphWeak>,
         pub(crate) event_bus: std::sync::Weak<EventBus>,
         hash_cache: crate::hash::Cache<String>,
     }
 
-    impl LocationStore {
+    impl Location {
         pub fn new(lon: f64, lat: f64) -> Self {
-            Self { id: Id::new_v7(), longitude: lon, latitude: lat, altitude: None, attributes: Vec::new(), parent_kit: None, event_bus: std::sync::Weak::new(), hash_cache: Cache::default() }
+            Self { id: Id::new_v7(), longitude: lon, latitude: lat, altitude: None, attributes: Vec::new(), owner: None, event_bus: std::sync::Weak::new(), hash_cache: Cache::default() }
         }
 
     }
@@ -17347,29 +17347,29 @@ pub mod group {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::piece::{PieceRef, PieceStoreWeak};
+    use crate::piece::{PieceReference, PieceWeak};
 
-    pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
-    pub type GroupStoreWeak = Weak<RwLock<GroupStore>>;
+    pub type GroupReference = Arc<RwLock<Group>>;
+    pub type GroupWeak = Weak<RwLock<Group>>;
 
     #[derive(Debug)]
-    pub struct GroupStore {
+    pub struct Group {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub color: Option<String>,
         pub icon: Option<String>,
-        pub pieces: Vec<PieceStoreWeak>,
-        pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+        pub pieces: Vec<PieceWeak>,
+        pub parent_design: Weak<RwLock<crate::design::Design>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl GroupStore {
-        pub fn new(name: impl Into<String>) -> Self {
+    impl Group {
+        pub fn new() -> Self {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -17378,8 +17378,8 @@ pub mod group {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Group, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Group, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -17422,7 +17422,7 @@ pub mod group {
             Ok(())
         }
 
-        pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) -> crate::error::SetResult {
+        pub fn set_pieces(&mut self, pieces: Vec<PieceWeak>) -> crate::error::SetResult {
             self.pieces = pieces;
             self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Pieces) });
             self.invalidate_hash();
@@ -17504,7 +17504,7 @@ pub mod id {
         }
     }
 
-    impl AsRef<str> for Id {
+    impl AsReference<str> for Id {
         fn as_ref(&self) -> &str {
             &self.0
         }
@@ -17559,7 +17559,7 @@ pub mod id {
     }
 }
 
-//#region IdGraphqlScalar
+//#region IdScalar
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
 
 #[Scalar(name = "Id")]
@@ -17772,31 +17772,31 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{  AuthorStore, AuthorStoreRef};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::author::{  Author, AuthorReference};
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
-    use crate::concept::{  ConceptStore, ConceptStoreRef};
-    use crate::connection::{ ConnectionRef};
-    use crate::design::{ DesignRef, DesignStore, DesignStoreRef};
+    use crate::concept::{  Concept, ConceptReference};
+    use crate::connection::{ ConnectionReference};
+    use crate::design::{ DesignReference, Design, DesignReference};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_output;
-    use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{ FamilyStore, FamilyStoreRef};
-    use crate::file::{ FileStore, FileStoreRef};
-    use crate::folder::{ FolderStore, FolderStoreRef};
+    use crate::events::{EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{ Family, FamilyReference};
+    use crate::file::{ File, FileReference};
+    use crate::folder::{ Folder, FolderReference};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::{ LocationStore, LocationStoreRef};
-    use crate::piece::{ PieceRef, PieceStoreRef};
-    use crate::port::{ PortStore, PortStoreRef};
-    use crate::prop::{  PropStore, PropStoreRef};
-    use crate::quality::{  QualityStore, QualityStoreRef};
+    use crate::location::{ Location, LocationReference};
+    use crate::piece::{ PieceReference, PieceReference};
+    use crate::port::{ Port, PortReference};
+    use crate::prop::{  Prop, PropReference};
+    use crate::quality::{  Quality, QualityReference};
     use crate::report::{SemioReport, ValidationResult};
-    use crate::tag::{  TagStore, TagStoreRef};
-    use crate::typ::{ TypeRef, TypeStore, TypeStoreRef};
+    use crate::tag::{  Tag, TagReference};
+    use crate::typ::{ TypeReference, Type, TypeReference};
 
-    pub type KitGraphRef = Arc<RwLock<KitGraph>>;
+    pub type KitGraphReference = Arc<RwLock<KitGraph>>;
     pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
 
     #[derive(Clone, Debug)]
@@ -17820,19 +17820,19 @@ pub mod kit_graph {
         pub created: Option<String>,
         pub updated: Option<String>,
         pub version: Option<String>,
-        pub types: Vec<TypeStoreRef>,
-        pub designs: Vec<DesignStoreRef>,
-        pub files: Vec<FileStoreRef>,
-        pub folders: Vec<FolderStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub ports: Vec<PortStoreRef>,
-        pub families: Vec<FamilyStoreRef>,
-        pub locations: Vec<LocationStoreRef>,
+        pub types: Vec<TypeReference>,
+        pub designs: Vec<DesignReference>,
+        pub files: Vec<FileReference>,
+        pub folders: Vec<FolderReference>,
+        pub authors: Vec<AuthorReference>,
+        pub concepts: Vec<ConceptReference>,
+        pub tags: Vec<TagReference>,
+        pub qualities: Vec<QualityReference>,
+        pub props: Vec<PropReference>,
+        pub attributes: Vec<AttributeReference>,
+        pub ports: Vec<PortReference>,
+        pub families: Vec<FamilyReference>,
+        pub locations: Vec<LocationReference>,
         pub(crate) event_bus: Arc<EventBus>,
         hash_cache: Cache<String>,
         validation_cache: Cache<ValidationResult>,
@@ -17854,7 +17854,7 @@ pub mod kit_graph {
     }
 
     impl KitGraph {
-        pub fn new(name: impl Into<String>) -> Self {
+        pub fn new() -> Self {
             let mut s = Self {
                 id: Id::new_v7(),
                 name: name.into(),
@@ -17931,8 +17931,8 @@ pub mod kit_graph {
             self.event_bus.emit(ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Kit, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Kit, self.id.clone())
         }
 
         pub fn subscribe(&self) -> Receiver<KitEvent> {
@@ -18181,11 +18181,11 @@ pub mod kit_graph {
             }
         }
 
-        pub fn semio_type(&self, id: &str) -> Option<TypeStoreRef> {
+        pub fn semio_type(&self, id: &str) -> Option<TypeReference> {
             self.types.iter().find(|t| t.read().map(|t| t.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn design(&self, id: &str) -> Option<DesignStoreRef> {
+        pub fn design(&self, id: &str) -> Option<DesignReference> {
             self.designs.iter().find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -18201,15 +18201,15 @@ pub mod kit_graph {
             None
         }
 
-        pub fn file(&self, id: &str) -> Option<FileStoreRef> {
+        pub fn file(&self, id: &str) -> Option<FileReference> {
             self.files.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn folder(&self, id: &str) -> Option<FolderStoreRef> {
+        pub fn folder(&self, id: &str) -> Option<FolderReference> {
             self.folders.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn quality(&self, id: &str) -> Option<QualityStoreRef> {
+        pub fn quality(&self, id: &str) -> Option<QualityReference> {
             self.qualities.iter().find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -18221,7 +18221,7 @@ pub mod kit_graph {
 
         pub fn add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceInput) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
-            let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
+            let type_index: HashMap<Id, TypeReference> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let design_weak = Arc::downgrade(&dref);
             dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.add_piece(piece, &type_index, design_weak)?;
             self.invalidate_hash();
@@ -18286,7 +18286,7 @@ pub mod kit_graph {
             }
         }
 
-        fn find_design_id_for_connection(kit: &KitGraphRef, connection_id: &str) -> std::result::Result<Id, SetError> {
+        fn find_design_id_for_connection(kit: &KitGraphReference, connection_id: &str) -> std::result::Result<Id, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             let cid = Id::from(connection_id);
             for d in &g.designs {
@@ -18382,25 +18382,25 @@ pub mod kit_graph {
             Ok(out)
         }
 
-        pub fn change_kit_commands_for_field_patch(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_field_patch(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
-            use crate::author::AuthorRef;
+            use crate::author::AuthorReference;
             use crate::change_command::{
                 ChangeAuthorCommand, ChangeConceptCommand, ChangeDesignCommand, ChangeFamilyCommand, ChangeFileCommand, ChangeFolderCommand, ChangeKitCommand, ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand,
                 ChangeTypeCommand,
             };
-            use crate::concept::ConceptRef;
-            use crate::connection::ConnectionRef;
-            use crate::design::DesignRef;
-            use crate::family::FamilyRef;
-            use crate::file::FileRef;
-            use crate::folder::FolderRef;
-            use crate::piece::PieceRef;
-            use crate::port::PortRef;
-            use crate::quality::QualityRef;
-            use crate::tag::TagRef;
-            use crate::typ::TypeRef;
+            use crate::concept::ConceptReference;
+            use crate::connection::ConnectionReference;
+            use crate::design::DesignReference;
+            use crate::family::FamilyReference;
+            use crate::file::FileReference;
+            use crate::folder::FolderReference;
+            use crate::piece::PieceReference;
+            use crate::port::PortReference;
+            use crate::quality::QualityReference;
+            use crate::tag::TagReference;
+            use crate::typ::TypeReference;
             Ok(match entity_kind {
                 EntityKind::Kit => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18489,7 +18489,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Type => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18528,7 +18528,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Piece => {
                     let design_id = {
@@ -18551,8 +18551,8 @@ pub mod kit_graph {
                         }
                         let pcmds = Self::piece_diff_to_change_commands(&pd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                            design_id: DesignRef { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: Id::from(id.as_str()) }, commands: pcmds }],
+                            design_id: DesignReference { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceReference { id: Id::from(id.as_str()) }, commands: pcmds }],
                         }]);
                     }
                     let piece_cmd = match field.as_str() {
@@ -18566,7 +18566,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: design_id }, commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: Id::from(id.as_str()) }, commands: vec![piece_cmd] }] }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignReference { id: design_id }, commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceReference { id: Id::from(id.as_str()) }, commands: vec![piece_cmd] }] }]
                 }
                 EntityKind::Connection => {
                     let design_id = Self::find_design_id_for_connection(kit, &id)?;
@@ -18577,8 +18577,8 @@ pub mod kit_graph {
                         }
                         let ccmds = Self::connection_diff_to_change_commands(&cd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                            design_id: DesignRef { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: ConnectionRef { id: Id::from(id.as_str()) }, commands: ccmds }],
+                            design_id: DesignReference { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: ConnectionReference { id: Id::from(id.as_str()) }, commands: ccmds }],
                         }]);
                     }
                     return Err(SetError::InvalidValue(format!("unknown connection field '{field}' (use __patch for batch)")));
@@ -18608,7 +18608,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown author field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeAuthorCommands { author_id: AuthorRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeAuthorCommands { author_id: AuthorReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Concept => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18631,7 +18631,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown concept field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeConceptCommands { concept_id: ConceptRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeConceptCommands { concept_id: ConceptReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Tag => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18650,7 +18650,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown tag field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTagCommands { tag_id: TagRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeTagCommands { tag_id: TagReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::File => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18689,7 +18689,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown file field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFileCommands { file_id: FileRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFileCommands { file_id: FileReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Folder => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18708,7 +18708,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown folder field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFolderCommands { folder_id: FolderRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFolderCommands { folder_id: FolderReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Quality => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18739,7 +18739,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown quality field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: QualityRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: QualityReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Family => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18762,7 +18762,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown family field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyReference { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Port => {
                     let pref = {
@@ -18790,21 +18790,21 @@ pub mod kit_graph {
                     };
                     let pid = Id::from(id.as_str());
                     if let Some(fid) = parent_fam_id {
-                        vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyRef { id: fid }, commands: vec![ChangeFamilyCommand::ChangePortCommands { port_id: PortRef { id: pid }, commands: vec![pcmd] }] }]
+                        vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyReference { id: fid }, commands: vec![ChangeFamilyCommand::ChangePortCommands { port_id: PortReference { id: pid }, commands: vec![pcmd] }] }]
                     } else {
-                        vec![ChangeKitCommand::ChangeKitPortCommands { port_id: PortRef { id: pid }, commands: vec![pcmd] }]
+                        vec![ChangeKitCommand::ChangeKitPortCommands { port_id: PortReference { id: pid }, commands: vec![pcmd] }]
                     }
                 }
                 _ => return Err(SetError::InvalidValue(format!("change_kit_commands_for_field_patch not implemented for {entity_kind:?}"))),
             })
         }
 
-        pub fn set_field(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
+        pub fn set_field(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
         }
 
-        pub fn get_field(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
+        pub fn get_field(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
                 EntityKind::Kit => {
@@ -18878,11 +18878,11 @@ pub mod kit_graph {
             }
         }
 
-        pub fn apply_kit_state(kit: &KitGraphRef, after: KitInput) -> SetResult {
+        pub fn apply_kit_state(kit: &KitGraphReference, after: KitInput) -> SetResult {
             Self::replace_from_input(kit, after)
         }
 
-        pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
+        pub fn apply_kit_diff(kit: &KitGraphReference, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
             if diff.is_empty() {
                 return Ok(crate::kit_diff::KitDiff::default());
             }
@@ -18896,7 +18896,7 @@ pub mod kit_graph {
             Ok(crate::kit_diff::KitDiff::between(&b0, &a))
         }
 
-        pub fn replace_from_input(kit: &KitGraphRef, d: KitInput) -> SetResult {
+        pub fn replace_from_input(kit: &KitGraphReference, d: KitInput) -> SetResult {
             let new_arc = Self::from_input(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
                 Ok(rw) => match rw.into_inner() {
@@ -18926,7 +18926,7 @@ pub mod kit_graph {
                 g.the_kit_draft = preserve.7;
                 g.children = preserve.8;
             }
-            event_output::reoutput_parent_kits(kit);
+            event_output::reoutput_owners(kit);
             event_output::output_graph_bus(kit);
             {
                 let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18937,17 +18937,17 @@ pub mod kit_graph {
         }
 
         ///
-        pub fn execute(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+        pub fn execute(kit: &KitGraphReference, cmd: crate::kit_store_command::KitCommand) -> crate::error::Result<crate::kit_store_command::KitCommandResult> {
             cmd.execute(kit)
         }
 
-        pub(crate) fn emit_kit_change_event_bus(kit: &KitGraphRef, change: &crate::kit_change::KitChange) {
+        pub(crate) fn emit_kit_change_event_bus(kit: &KitGraphReference, change: &crate::kit_change::KitChange) {
             if let Ok(g) = kit.read() {
                 g.event_bus.emit(crate::events::kit_event_from_kit_change(change));
             }
         }
 
-        pub(crate) fn control_plane_pre_batch(kit: &KitGraphRef, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePre, SetError> {
+        pub(crate) fn control_plane_pre_batch(kit: &KitGraphReference, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePre, SetError> {
             use crate::kit_change::KitChange;
             let kind = ChangeKitCommand::batch_kind(commands);
             if commands.is_empty() {
@@ -18958,7 +18958,7 @@ pub mod kit_graph {
             Ok(ControlPlanePre { kc: Some(kc), kind, inverse_flat })
         }
 
-        pub(crate) fn control_plane_batch_apply_with_undo(kit: &KitGraphRef, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePre, SetError> {
+        pub(crate) fn control_plane_batch_apply_with_undo(kit: &KitGraphReference, commands: &[ChangeKitCommand]) -> std::result::Result<ControlPlanePre, SetError> {
             let pre = Self::control_plane_pre_batch(kit, commands)?;
             Self::with_undo(kit, || {
                 if commands.is_empty() {
@@ -18973,7 +18973,7 @@ pub mod kit_graph {
             Ok(pre)
         }
 
-        pub(crate) fn open_transaction_apply_one_command(kit: &KitGraphRef, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id, c: &ChangeKitCommand) -> std::result::Result<bool, SemioError> {
+        pub(crate) fn open_transaction_apply_one_command(kit: &KitGraphReference, alternative_id: Option<&Id>, draft_id: &Id, transaction_id: &Id, c: &ChangeKitCommand) -> std::result::Result<bool, SemioError> {
             use crate::kit_change::KitChange;
             let before = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -19001,9 +19001,9 @@ pub mod kit_graph {
             Ok(recorded)
         }
 
-        pub fn change_kit_commands_for_add_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_add_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::family::FamilyInput;
             let pg = parent_id.to_string();
             match (parent_kind, child_kind) {
@@ -19017,17 +19017,17 @@ pub mod kit_graph {
                 }
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceInput = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::AddPiece { piece }] }])
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignReference { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::AddPiece { piece }] }])
                 }
                 _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_add_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
-        pub fn change_kit_commands_for_remove_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_remove_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-            use crate::design::DesignRef;
-            use crate::family::FamilyRef;
-            use crate::piece::PieceRef;
+            use crate::design::DesignReference;
+            use crate::family::FamilyReference;
+            use crate::piece::PieceReference;
             let pg = parent_id.to_string();
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
@@ -19036,21 +19036,21 @@ pub mod kit_graph {
                     if pg != kid {
                         return Err(SetError::NotFound(format!("kit {pg}")));
                     }
-                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyRef { id: Id::from(cg.as_str()) } }])
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyReference { id: Id::from(cg.as_str()) } }])
                 }
                 (EntityKind::Design, EntityKind::Piece) => {
-                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id: Id::from(cg.as_str()) } }] }])
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignReference { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::RemovePiece { piece_id: PieceReference { id: Id::from(cg.as_str()) } }] }])
                 }
                 _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_remove_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
-        pub fn add_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
+        pub fn add_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
         }
 
-        pub fn remove_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
+        pub fn remove_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::control_plane_batch_apply_with_undo(kit, &cmds).map(|_| ())
         }
@@ -19185,7 +19185,7 @@ pub mod kit_graph {
             self.hash() == other.hash()
         }
 
-        pub fn from_id_dto(d: KitRef) -> Self {
+        pub fn from_id_dto(d: KitReference) -> Self {
             Self {
                 id: d.id,
                 name: String::new(),
@@ -19308,7 +19308,7 @@ pub mod kit_graph {
             }
         }
 
-        pub fn from_input(mut d: KitInput) -> KitGraphRef {
+        pub fn from_input(mut d: KitInput) -> KitGraphReference {
             Self::output_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let root = d.clone();
             let KitInput {
@@ -19368,12 +19368,12 @@ pub mod kit_graph {
                 designs: Vec::new(),
                 files: Vec::new(),
                 folders: Vec::new(),
-                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_input(a)))).collect(),
-                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_input(c)))).collect(),
-                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_input(t)))).collect(),
-                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect(),
-                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect(),
+                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(Author::from_input(a)))).collect(),
+                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(Concept::from_input(c)))).collect(),
+                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(Tag::from_input(t)))).collect(),
+                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(Quality::from_input(q)))).collect(),
+                props: props.into_iter().map(|p| Arc::new(RwLock::new(Prop::from_input(p)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(Attribute::from_output(a)))).collect(),
                 ports: Vec::new(),
                 families: Vec::new(),
                 locations: Vec::new(),
@@ -19395,72 +19395,72 @@ pub mod kit_graph {
             if let Ok(k) = kit.write() {
                 for a in &k.authors {
                     if let Ok(mut aw) = a.write() {
-                        aw.parent_kit = Some(kw.clone());
+                        aw.owner = Some(kw.clone());
                     }
                 }
                 for c in &k.concepts {
                     if let Ok(mut cw) = c.write() {
-                        cw.parent_kit = Some(kw.clone());
+                        cw.owner = Some(kw.clone());
                     }
                 }
                 for t in &k.tags {
                     if let Ok(mut tw) = t.write() {
-                        tw.parent_kit = Some(kw.clone());
+                        tw.owner = Some(kw.clone());
                     }
                 }
                 for q in &k.qualities {
                     if let Ok(mut qw) = q.write() {
-                        qw.parent_kit = Some(kw.clone());
+                        qw.owner = Some(kw.clone());
                     }
                 }
                 for p in &k.props {
                     if let Ok(mut pw) = p.write() {
-                        pw.parent_kit = Some(kw.clone());
+                        pw.owner = Some(kw.clone());
                     }
                 }
                 for a in &k.attributes {
                     if let Ok(mut aw) = a.write() {
-                        aw.parent_kit = Some(kw.clone());
+                        aw.owner = Some(kw.clone());
                     }
                 }
             }
 
-            let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_input(f)))).collect();
-            let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_input(f)))).collect();
+            let file_refs: Vec<FileReference> = files.into_iter().map(|f| Arc::new(RwLock::new(File::from_input(f)))).collect();
+            let folder_refs: Vec<FolderReference> = folders.into_iter().map(|f| Arc::new(RwLock::new(Folder::from_input(f)))).collect();
 
-            let location_refs: Vec<LocationStoreRef> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_input(l)))).collect();
+            let location_refs: Vec<LocationReference> = locations.into_iter().map(|l| Arc::new(RwLock::new(Location::from_input(l)))).collect();
 
-            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
-            let mut kit_level_port_refs: Vec<PortStoreRef> = Vec::new();
+            let mut port_by_id: HashMap<Id, PortReference> = HashMap::new();
+            let mut kit_level_port_refs: Vec<PortReference> = Vec::new();
             for pd in kit_port_dtos {
                 let iid = pd.id.clone();
-                let mut p = PortStore::from_input(pd);
+                let mut p = Port::from_input(pd);
                 p.parent_family = Weak::new();
                 let pr = Arc::new(RwLock::new(p));
                 port_by_id.insert(iid, pr.clone());
                 kit_level_port_refs.push(pr);
             }
 
-            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
-            let mut family_refs: Vec<FamilyStoreRef> = Vec::new();
+            let mut family_by_id: HashMap<Id, FamilyReference> = HashMap::new();
+            let mut family_refs: Vec<FamilyReference> = Vec::new();
             for fd in families {
                 let fid = fd.id.clone();
-                let fam = Arc::new(RwLock::new(FamilyStore {
+                let fam = Arc::new(RwLock::new(Family {
                     id: fd.id,
                     name: fd.name,
                     description: fd.description,
                     icon: fd.icon,
                     ports: Vec::new(),
-                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_output(a)).collect(),
-                    parent_kit: None,
+                    attributes: fd.attributes.into_iter().map(|a| Attribute::from_output(a)).collect(),
+                    owner: None,
                     event_bus: Weak::new(),
                     hash_cache: Cache::default(),
                 }));
                 let fw = Arc::downgrade(&fam);
-                let mut port_refs: Vec<PortStoreRef> = Vec::new();
+                let mut port_refs: Vec<PortReference> = Vec::new();
                 for pd in fd.ports {
                     let iid = pd.id.clone();
-                    let mut p = PortStore::from_input(pd);
+                    let mut p = Port::from_input(pd);
                     p.parent_family = fw.clone();
                     let pr = Arc::new(RwLock::new(p));
                     port_by_id.insert(iid, pr.clone());
@@ -19477,23 +19477,23 @@ pub mod kit_graph {
                 let Some(dto) = port_dto_index.get(pid) else {
                     continue;
                 };
-                let weaks: Vec<crate::port::PortStoreWeak> = dto.compatible_ports.iter().filter_map(|c| port_by_id.get(&c.id).map(|p| Arc::downgrade(p))).collect();
+                let weaks: Vec<crate::port::PortWeak> = dto.compatible_ports.iter().filter_map(|c| port_by_id.get(&c.id).map(|p| Arc::downgrade(p))).collect();
                 if let Ok(mut pw) = pr.write() {
                     pw.compatible_ports = weaks;
                 }
             }
 
-            let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
-            let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
+            let mut type_refs: Vec<TypeReference> = Vec::with_capacity(types.len());
+            let mut type_index: HashMap<Id, TypeReference> = HashMap::new();
             for tdto in types {
-                let t = TypeStore::hydrate_from_input(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
+                let t = Type::hydrate_from_input(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
                 if let Ok(tr) = t.read() {
                     type_index.insert(tr.id.clone(), t.clone());
                 }
                 type_refs.push(t);
             }
 
-            // and family port lists must be present on [`KitStore`] before [`DesignStore::hydrate_from_input`].
+            // and family port lists must be present on [`Kit`] before [`Design::hydrate_from_input`].
             {
                 let kw = Arc::downgrade(&kit);
                 if let Ok(mut k) = kit.write() {
@@ -19501,18 +19501,18 @@ pub mod kit_graph {
                     k.families = family_refs;
                     for fam in &k.families {
                         if let Ok(mut fa) = fam.write() {
-                            fa.parent_kit = Some(kw.clone());
+                            fa.owner = Some(kw.clone());
                         }
                     }
                 }
             }
 
-            let design_refs: Vec<DesignStoreRef> = designs
+            let design_refs: Vec<DesignReference> = designs
                 .into_iter()
                 .map(|ddto| {
-                    let design = DesignStore::hydrate_from_input(ddto, &type_index, &family_by_id);
+                    let design = Design::hydrate_from_input(ddto, &type_index, &family_by_id);
                     if let Ok(mut dw) = design.write() {
-                        dw.parent_kit = Arc::downgrade(&kit);
+                        dw.owner = Arc::downgrade(&kit);
                     }
                     design
                 })
@@ -19522,12 +19522,12 @@ pub mod kit_graph {
                 let kw = Arc::downgrade(&kit);
                 for f in &file_refs {
                     if let Ok(mut fw) = f.write() {
-                        fw.parent_kit = Some(kw.clone());
+                        fw.owner = Some(kw.clone());
                     }
                 }
                 for f in &folder_refs {
                     if let Ok(mut fw) = f.write() {
-                        fw.parent_kit = Some(kw.clone());
+                        fw.owner = Some(kw.clone());
                     }
                 }
                 k.types = type_refs;
@@ -19537,7 +19537,7 @@ pub mod kit_graph {
                 k.locations = location_refs;
                 for loc in &k.locations {
                     if let Ok(mut lw) = loc.write() {
-                        lw.parent_kit = Some(kw.clone());
+                        lw.owner = Some(kw.clone());
                     }
                 }
             }
@@ -19545,7 +19545,7 @@ pub mod kit_graph {
             kit
         }
 
-        pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
+        pub fn port_by_id(&self, id: &Id) -> Option<PortReference> {
             for p in &self.ports {
                 if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
                     return Some(p.clone());
@@ -19563,14 +19563,14 @@ pub mod kit_graph {
             None
         }
 
-        fn build_family_port_index(g: &KitGraph) -> (HashMap<Id, FamilyStoreRef>, HashMap<Id, PortStoreRef>) {
-            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
+        fn build_family_port_index(g: &KitGraph) -> (HashMap<Id, FamilyReference>, HashMap<Id, PortReference>) {
+            let mut family_by_id: HashMap<Id, FamilyReference> = HashMap::new();
             for f in &g.families {
                 if let Ok(fr) = f.read() {
                     family_by_id.insert(fr.id.clone(), f.clone());
                 }
             }
-            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
+            let mut port_by_id: HashMap<Id, PortReference> = HashMap::new();
             for p in &g.ports {
                 if let Ok(pr) = p.read() {
                     port_by_id.insert(pr.id.clone(), p.clone());
@@ -19646,15 +19646,15 @@ pub mod kit_graph {
             Some(find(&mut parent, start))
         }
 
-        fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeStoreRef> {
+        fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeReference> {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
 
-        fn domain_family_index(kit: &KitGraph) -> HashMap<Id, FamilyStoreRef> {
+        fn domain_family_index(kit: &KitGraph) -> HashMap<Id, FamilyReference> {
             kit.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect()
         }
 
-        pub fn apply_type_diff_fragment(kit: &KitGraphRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
+        pub fn apply_type_diff_fragment(kit: &KitGraphReference, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
             if fragment.is_empty() {
                 return Ok(());
             }
@@ -19672,18 +19672,18 @@ pub mod kit_graph {
             KitGraph::insert_type_dto(kit, dto)
         }
 
-        pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignInput) -> SetResult {
+        pub fn insert_design_ref(kit: &KitGraphReference, dto: DesignInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
-            let family_by_id: HashMap<Id, FamilyStoreRef> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
-            let design = DesignStore::hydrate_from_input(dto, &idx, &family_by_id);
+            let family_by_id: HashMap<Id, FamilyReference> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
+            let design = Design::hydrate_from_input(dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
-                    dw.parent_kit = kw;
+                    dw.owner = kw;
                 }
             }
             g.designs.push(design);
@@ -19694,13 +19694,13 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeInput) -> SetResult {
+        pub fn insert_type_dto(kit: &KitGraphReference, dto: TypeInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("type {}", dto.id)));
             }
             let (family_by_id, port_by_id) = Self::build_family_port_index(&g);
-            let t = TypeStore::hydrate_from_input(dto, kit, &g.files, &family_by_id, &port_by_id);
+            let t = Type::hydrate_from_input(dto, kit, &g.files, &family_by_id, &port_by_id);
             g.types.push(t);
             g.invalidate_hash();
             g.invalidate_validation();
@@ -19709,7 +19709,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeInput>, SetError> {
+        pub fn remove_type_dto(kit: &KitGraphReference, type_id: &str) -> std::result::Result<Option<TypeInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.types.iter().position(|t| t.read().map(|r| r.id.as_str() == type_id).unwrap_or(false))
@@ -19776,7 +19776,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyInput) -> SetResult {
+        pub fn insert_family_dto(kit: &KitGraphReference, dto: FamilyInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("family {}", dto.id)));
@@ -19786,21 +19786,21 @@ pub mod kit_graph {
                     return Err(SetError::DuplicateId(format!("port {}", pd.id)));
                 }
             }
-            let fam = Arc::new(RwLock::new(FamilyStore {
+            let fam = Arc::new(RwLock::new(Family {
                 id: dto.id.clone(),
                 name: dto.name.clone(),
                 description: dto.description.clone(),
                 icon: dto.icon.clone(),
                 ports: Vec::new(),
-                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_output).collect(),
-                parent_kit: None,
+                attributes: dto.attributes.iter().cloned().map(Attribute::from_output).collect(),
+                owner: None,
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }));
             let fw = Arc::downgrade(&fam);
-            let mut port_refs: Vec<PortStoreRef> = Vec::new();
+            let mut port_refs: Vec<PortReference> = Vec::new();
             for pd in dto.ports.clone() {
-                let mut pstore = PortStore::from_input(pd);
+                let mut pstore = Port::from_input(pd);
                 pstore.parent_family = fw.clone();
                 port_refs.push(Arc::new(RwLock::new(pstore)));
             }
@@ -19811,7 +19811,7 @@ pub mod kit_graph {
             let kw = Arc::downgrade(kit);
             if let Some(ff) = g.families.last() {
                 if let Ok(mut fa) = ff.write() {
-                    fa.parent_kit = Some(kw);
+                    fa.owner = Some(kw);
                 }
             }
             g.invalidate_hash();
@@ -19830,7 +19830,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyInput>, SetError> {
+        pub fn remove_family_dto(kit: &KitGraphReference, family_id: &str) -> std::result::Result<Option<FamilyInput>, SetError> {
             let fid = Id::from(family_id);
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19855,12 +19855,12 @@ pub mod kit_graph {
             Ok(Some(dto))
         }
 
-        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitGraphRef, pid: &Id) -> std::result::Result<(), SemioError> {
+        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitGraphReference, pid: &Id) -> std::result::Result<(), SemioError> {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             Self::check_port_unused_by_connectors(&*g, pid).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
 
-        pub(crate) fn purge_dead_port_compatibility(kit: &KitGraphRef) {
+        pub(crate) fn purge_dead_port_compatibility(kit: &KitGraphReference) {
             let Ok(g) = kit.read() else {
                 return;
             };
@@ -19880,15 +19880,15 @@ pub mod kit_graph {
             }
         }
 
-        pub fn insert_file_dto(kit: &KitGraphRef, dto: FileInput) -> SetResult {
+        pub fn insert_file_dto(kit: &KitGraphReference, dto: FileInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.files.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("file {}", dto.id)));
             }
-            let f = Arc::new(RwLock::new(FileStore::from_input(dto)));
+            let f = Arc::new(RwLock::new(File::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
-                f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.parent_kit = Some(kw);
+                f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.owner = Some(kw);
             }
             g.files.push(f);
             g.invalidate_hash();
@@ -19898,7 +19898,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_file_dto(kit: &KitGraphRef, file_id: &str) -> std::result::Result<Option<FileInput>, SetError> {
+        pub fn remove_file_dto(kit: &KitGraphReference, file_id: &str) -> std::result::Result<Option<FileInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.files.iter().position(|f| f.read().map(|r| r.id.as_str() == file_id).unwrap_or(false))
@@ -19920,15 +19920,15 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_folder_dto(kit: &KitGraphRef, dto: FolderInput) -> SetResult {
+        pub fn insert_folder_dto(kit: &KitGraphReference, dto: FolderInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.folders.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("folder {}", dto.id)));
             }
-            let f = Arc::new(RwLock::new(FolderStore::from_input(dto)));
+            let f = Arc::new(RwLock::new(Folder::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
-                f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.parent_kit = Some(kw);
+                f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.owner = Some(kw);
             }
             g.folders.push(f);
             g.invalidate_hash();
@@ -19938,7 +19938,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_folder_dto(kit: &KitGraphRef, folder_id: &str) -> std::result::Result<Option<FolderInput>, SetError> {
+        pub fn remove_folder_dto(kit: &KitGraphReference, folder_id: &str) -> std::result::Result<Option<FolderInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.folders.iter().position(|f| f.read().map(|r| r.id.as_str() == folder_id).unwrap_or(false))
@@ -19960,15 +19960,15 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_author_dto(kit: &KitGraphRef, dto: AuthorInput) -> SetResult {
+        pub fn insert_author_dto(kit: &KitGraphReference, dto: AuthorInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.authors.iter().any(|a| a.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("author {}", dto.id)));
             }
-            let a = Arc::new(RwLock::new(AuthorStore::from_input(dto)));
+            let a = Arc::new(RwLock::new(Author::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
-                a.write().map_err(|_| SetError::LockPoisoned("author".into()))?.parent_kit = Some(kw);
+                a.write().map_err(|_| SetError::LockPoisoned("author".into()))?.owner = Some(kw);
             }
             g.authors.push(a);
             g.invalidate_hash();
@@ -19978,7 +19978,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_author_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<AuthorInput>, SetError> {
+        pub fn remove_author_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<AuthorInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.authors.iter().position(|a| a.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20000,15 +20000,15 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_concept_dto(kit: &KitGraphRef, dto: ConceptInput) -> SetResult {
+        pub fn insert_concept_dto(kit: &KitGraphReference, dto: ConceptInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.concepts.iter().any(|c| c.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("concept {}", dto.id)));
             }
-            let c = Arc::new(RwLock::new(ConceptStore::from_input(dto)));
+            let c = Arc::new(RwLock::new(Concept::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
-                c.write().map_err(|_| SetError::LockPoisoned("concept".into()))?.parent_kit = Some(kw);
+                c.write().map_err(|_| SetError::LockPoisoned("concept".into()))?.owner = Some(kw);
             }
             g.concepts.push(c);
             g.invalidate_hash();
@@ -20018,7 +20018,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_concept_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<ConceptInput>, SetError> {
+        pub fn remove_concept_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<ConceptInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.concepts.iter().position(|c| c.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20040,15 +20040,15 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_tag_dto(kit: &KitGraphRef, dto: TagInput) -> SetResult {
+        pub fn insert_tag_dto(kit: &KitGraphReference, dto: TagInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tags.iter().any(|t| t.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("tag {}", dto.id)));
             }
-            let t = Arc::new(RwLock::new(TagStore::from_input(dto)));
+            let t = Arc::new(RwLock::new(Tag::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
-                t.write().map_err(|_| SetError::LockPoisoned("tag".into()))?.parent_kit = Some(kw);
+                t.write().map_err(|_| SetError::LockPoisoned("tag".into()))?.owner = Some(kw);
             }
             g.tags.push(t);
             g.invalidate_hash();
@@ -20058,7 +20058,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_tag_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<TagInput>, SetError> {
+        pub fn remove_tag_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<TagInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.tags.iter().position(|t| t.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20080,16 +20080,16 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_quality_dto(kit: &KitGraphRef, dto: QualityInput) -> SetResult {
+        pub fn insert_quality_dto(kit: &KitGraphReference, dto: QualityInput) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.qualities.iter().any(|q| q.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("quality {}", dto.id)));
             }
-            let q = Arc::new(RwLock::new(QualityStore::from_input(dto)));
+            let q = Arc::new(RwLock::new(Quality::from_input(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut qw) = q.write() {
-                    qw.parent_kit = Some(kw);
+                    qw.owner = Some(kw);
                 }
             }
             g.qualities.push(q);
@@ -20100,7 +20100,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_quality_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<QualityInput>, SetError> {
+        pub fn remove_quality_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<QualityInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.qualities.iter().position(|q| q.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20122,7 +20122,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignInput>, SetError> {
+        pub fn remove_design_dto(kit: &KitGraphReference, design_id: &str) -> std::result::Result<Option<DesignInput>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == design_id).unwrap_or(false))
@@ -20144,8 +20144,8 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn replace_design_input(kit: &KitGraphRef, new_dto: DesignInput) -> SetResult {
-            use crate::design::DesignStore;
+        pub fn replace_design_input(kit: &KitGraphReference, new_dto: DesignInput) -> SetResult {
+            use crate::design::Design;
             let id_str = new_dto.id.as_str().to_string();
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20158,11 +20158,11 @@ pub mod kit_graph {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             let idx = Self::domain_type_index(&g);
             let family_by_id = Self::domain_family_index(&g);
-            let design = DesignStore::hydrate_from_input(new_dto, &idx, &family_by_id);
+            let design = Design::hydrate_from_input(new_dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
-                    dw.parent_kit = kw;
+                    dw.owner = kw;
                 }
             }
             g.designs.insert(pos, design);
@@ -20173,7 +20173,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn cluster_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        pub fn cluster_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
@@ -20220,9 +20220,9 @@ pub mod kit_graph {
                 let connected_in = cluster_set.contains(c.connected.piece.id.as_str());
                 let connecting_in = cluster_set.contains(c.connecting.piece.id.as_str());
                 if connected_in {
-                    c.connected.design_piece = Some(PieceRef { id: new_id.clone() });
+                    c.connected.design_piece = Some(PieceReference { id: new_id.clone() });
                 } else if connecting_in {
-                    c.connecting.design_piece = Some(PieceRef { id: new_id.clone() });
+                    c.connecting.design_piece = Some(PieceReference { id: new_id.clone() });
                 }
                 added_connections.push(c);
             }
@@ -20241,11 +20241,11 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        pub fn cluster_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::ClusterPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, cluster_name }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ClusterPieces { design_id: DesignReference { id: Id::from(design_id) }, piece_ids, cluster_name }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         fn domain_has_selected_ancestor_drag(piece: &str, selected: &HashSet<String>, parent_map: &HashMap<String, (String, String)>) -> bool {
@@ -20259,12 +20259,12 @@ pub mod kit_graph {
             false
         }
 
-        pub fn drag_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        pub fn drag_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): ( DesignStoreRef) = {
+            let (dto, design_ref): ( DesignReference) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -20302,19 +20302,19 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        pub fn drag_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::DragPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DragPieces { design_id: DesignReference { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn move_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+        pub fn move_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): ( DesignStoreRef) = {
+            let (dto, design_ref): ( DesignReference) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -20339,14 +20339,14 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn move_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+        pub fn move_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::MovePieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::MovePieces { design_id: DesignReference { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn fix_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -20356,7 +20356,7 @@ pub mod kit_graph {
                 g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
             };
 
-            let pieces: Vec<PieceStoreRef> = {
+            let pieces: Vec<PieceReference> = {
                 let design = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                 piece_ids.iter().filter_map(|piece_id| design.piece(piece_id.as_str())).collect()
             };
@@ -20366,29 +20366,29 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn fix_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::FixPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FixPieces { design_id: DesignReference { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn delete_connection_in_design_unchecked(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
+        pub fn delete_connection_in_design_unchecked(kit: &KitGraphReference, design_id: &str, connection_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let cid = Id::from(connection_id);
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             g.remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
         }
 
-        pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
+        pub fn delete_connection_in_design(kit: &KitGraphReference, design_id: &str, connection_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::connection::ConnectionRef;
-            use crate::design::DesignRef;
+            use crate::connection::ConnectionReference;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::DeleteConnection { design_id: DesignRef { id: Id::from(design_id) }, connection_id: ConnectionRef { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DeleteConnection { design_id: DesignReference { id: Id::from(design_id) }, connection_id: ConnectionReference { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn flatten_design_apply_unchecked(kit: &KitGraphRef, design_id: &str) -> SetResult {
+        pub fn flatten_design_apply_unchecked(kit: &KitGraphReference, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let after_input: DesignInput = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20404,11 +20404,11 @@ pub mod kit_graph {
             Self::replace_design_input(kit, after_input)
         }
 
-        pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
+        pub fn flatten_design_apply(kit: &KitGraphReference, design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::FlattenDesign { design_id: DesignRef { id: Id::from(design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FlattenDesign { design_id: DesignReference { id: Id::from(design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignInput> {
@@ -20461,7 +20461,7 @@ pub mod kit_graph {
             Ok(design)
         }
 
-        pub fn expand_nested_design_unchecked(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design_unchecked(kit: &KitGraphReference, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
             let before: DesignInput = {
@@ -20498,38 +20498,38 @@ pub mod kit_graph {
             Self::replace_design_input(kit, after)
         }
 
-        pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design(kit: &KitGraphReference, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignRef { id: Id::from(parent_design_id) }, nested_design_id: DesignRef { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignReference { id: Id::from(parent_design_id) }, nested_design_id: DesignReference { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
+        pub fn change_piece_type(kit: &KitGraphReference, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignRef;
+            use crate::design::DesignReference;
             use crate::id::Id;
-            use crate::piece::PieceRef;
-            use crate::typ::TypeRef;
-            ChangeKitCommand::ChangePieceKind { design_id: DesignRef { id: Id::from(design_id) }, piece_id: PieceRef { id: Id::from(piece_id) }, new_type_id: TypeRef { id: Id::from(new_type_id) } }
+            use crate::piece::PieceReference;
+            use crate::typ::TypeReference;
+            ChangeKitCommand::ChangePieceKind { design_id: DesignReference { id: Id::from(design_id) }, piece_id: PieceReference { id: Id::from(piece_id) }, new_type_id: TypeReference { id: Id::from(new_type_id) } }
                 .apply(kit)
                 .map(|_| ())
                 .map_err(KitGraph::map_semio_err)
         }
 
-        pub fn paste_design_selection(_kit: &KitGraphRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
+        pub fn paste_design_selection(_kit: &KitGraphReference, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
             Err(SetError::InvalidValue("pasteDesignSelection: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_hanging_pieces(_kit: &KitGraphRef, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
+        pub fn create_hanging_pieces(_kit: &KitGraphReference, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createHangingPieces: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_connected_piece(_kit: &KitGraphRef, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
+        pub fn create_connected_piece(_kit: &KitGraphReference, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
             Err(SetError::InvalidValue("createConnectedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_fixed_piece(_kit: &KitGraphRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
+        pub fn create_fixed_piece(_kit: &KitGraphReference, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
@@ -20570,24 +20570,24 @@ pub mod kit_graph {
 
 pub mod kit {
     pub use super::kit_graph::*;
-    pub type KitStore = KitGraph;
-    pub type KitStoreRef = KitGraphRef;
-    pub type KitStoreWeak = KitGraphWeak;
+    pub type Kit = KitGraph;
+    pub type KitReference = KitGraphReference;
+    pub type KitWeak = KitGraphWeak;
 }
 
 pub mod layer {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
 
-    pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
-    pub type LayerStoreWeak = Weak<RwLock<LayerStore>>;
+    pub type LayerReference = Arc<RwLock<Layer>>;
+    pub type LayerWeak = Weak<RwLock<Layer>>;
 
     #[derive(Debug)]
-    pub struct LayerStore {
+    pub struct Layer {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
@@ -20595,13 +20595,13 @@ pub mod layer {
         pub order: Option<i64>,
         pub visible: Option<bool>,
         pub locked: Option<bool>,
-        pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+        pub parent_design: Weak<RwLock<crate::design::Design>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerRef {
+    pub struct LayerReference {
         pub id: Id,
     }
 
@@ -20656,8 +20656,8 @@ pub mod layer {
         pub locked: Option<bool>,
     }
 
-    impl LayerStore {
-        pub fn new(name: impl Into<String>) -> Self {
+    impl Layer {
+        pub fn new() -> Self {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -20666,8 +20666,8 @@ pub mod layer {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Layer, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Layer, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -20760,41 +20760,47 @@ pub mod layer {
     }
 }
 
+pub mod pose {
+
+    
+}
+
 pub mod piece {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::connection::ConnectionStoreWeak;
-    use crate::design::{DesignStoreRef, DesignStoreWeak};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::connection::ConnectionWeak;
+    use crate::design::{DesignReference, DesignWeak};
     use crate::error::{SetError, SetResult};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::prop::{  PropStore, PropStoreRef};
-    use crate::typ::{TypeRef, TypeStoreRef, TypeStoreWeak};
+    use crate::prop::{  Prop, PropReference};
+    use crate::typ::{TypeReference, TypeReference, TypeWeak};
 
-    pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
-    pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
+    pub type PieceReference = Arc<RwLock<Piece>>;
+    pub type PieceWeak = Weak<RwLock<Piece>>;
 
     #[derive(Clone, Debug, Default)]
     pub struct PieceAlternatives {
-        pub types: Vec<TypeStoreRef>,
-        pub designs: Vec<DesignStoreRef>,
+        pub types: Vec<TypeReference>,
+        pub designs: Vec<DesignReference>,
     }
 
-    /// ­ƒôìOwned placement container for a piece's explicit plane and center.
-    #[derive(Debug, Default)]
-    pub struct PoseStore {
+        #[derive(Clone, Debug, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
+    pub struct Pose {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
+        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
         pub center: Option<Coordinate>,
     }
 
-    impl PoseStore {
-        fn entity_ref(&self, piece_id: &Id) -> EntityRef {
-            EntityRef::new(EntityKind::Pose, piece_id.clone())
+    impl Pose {
+        fn entity_ref(&self, piece_id: &Id) -> EntityReference {
+            EntityReference::new(EntityKind::Pose, piece_id.clone())
         }
 
         fn hash_into(&self, w: &mut HashWriter) {
@@ -20808,164 +20814,57 @@ pub mod piece {
     }
 
     #[derive(Debug)]
-    pub struct PieceStore {
+    pub struct Piece {
         pub id: Id,
         pub name: Option<String>,
         pub description: Option<String>,
-        pub pose: PoseStore,
+        pub pose: Pose,
         pub scale: Option<f64>,
         pub mirror_plane: Option<Plane>,
         pub hidden: Option<bool>,
         pub locked: Option<bool>,
         pub color: Option<String>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub type_ref: Option<TypeStoreWeak>,
-        pub parent_piece: Option<PieceStoreWeak>,
-        pub parent_connection: Option<ConnectionStoreWeak>,
-        pub parent_design: DesignStoreWeak,
+        pub props: Vec<PropReference>,
+        pub attributes: Vec<AttributeReference>,
+        pub type_ref: Option<TypeWeak>,
+        pub parent_piece: Option<PieceWeak>,
+        pub parent_connection: Option<ConnectionWeak>,
+        pub parent_design: DesignWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         flat_pose: Cache<PoseInput>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct PieceRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct PoseInput {
-        pub plane: Plane,
-        pub center: Coordinate,
-    }
-
-    /// ­ƒôÉOptional pose with independently-optional plane and center for piece storage.
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    #[serde(rename_all = "camelCase")]
-    pub struct PoseDto {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
-        pub center: Option<Coordinate>,
-    }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FixedPieceOutputDto {
-        pub piece: PieceRef,
+        pub piece: PieceReference,
         pub pose: 
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectedPieceOutputDto {
-        pub piece: PieceRef,
-        pub parent_piece: PieceRef,
-        pub parent_connection: crate::connection::ConnectionRef,
+        pub piece: PieceReference,
+        pub parent_piece: PieceReference,
+        pub parent_connection: crate::connection::ConnectionReference,
         pub flat_pose: 
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
-    #[serde(rename_all = "camelCase")]
-    pub struct PieceAlternativesDto {
-        pub types: Vec<crate::typ::TypeRef>,
-        pub designs: Vec<crate::design::DesignRef>,
+    #[derive(Debug)]
+    pub struct Blueprint {
+        pub types: Vec<TypeReference>,
+        pub designs: Vec<DesignReference>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceMetadata {
-        pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub name: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub scale: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
-        pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
-        pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
-        pub locked: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
-        #[graphql(name = "kind")]
-        pub r#type: Option<TypeRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignRef>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub name: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub scale: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
-        pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
-        pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
-        pub locked: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
-        #[graphql(name = "kind")]
-        pub r#type: Option<TypeRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceInput {
-        pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub name: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub scale: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
-        pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
-        pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
-        pub locked: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
-        #[graphql(name = "kind")]
-        pub r#type: Option<TypeRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    impl PieceStore {
+    impl Piece {
         pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
                 name: None,
                 description: None,
-                pose: PoseStore::default(),
+                pose: Pose::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -20988,7 +20887,7 @@ pub mod piece {
                 id,
                 name: None,
                 description: None,
-                pose: PoseStore::default(),
+                pose: Pose::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -21026,62 +20925,11 @@ pub mod piece {
         fn emit_current_piece_ev(&self, event: crate::events::PieceEvent) {
             self.emit_piece_ev(self.id.clone(), event);
         }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Piece, self.id.clone())
-        }
-
-        fn pose_entity_ref(&self) -> EntityRef {
-            self.pose.entity_ref(&self.id)
-        }
-
-        pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadata) {
-            self.id = d.id;
-            self.name = d.name;
-            self.description = d.description;
-            self.pose.plane = d.pose.as_ref().and_then(|p| p.plane);
-            self.pose.center = d.pose.as_ref().and_then(|p| p.center);
-            self.scale = d.scale;
-            self.mirror_plane = d.mirror_plane;
-            self.hidden = d.hidden;
-            self.locked = d.locked;
-            self.color = d.color;
-            self.hash_cache.invalidate();
-            self.flat_pose.invalidate();
-        }
-
-        pub(crate) fn apply_input_dto(&mut self, d:  design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
-            self.apply_metadata_fields(PieceMetadata {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                pose: d.pose.clone(),
-                scale: d.scale,
-                mirror_plane: d.mirror_plane,
-                hidden: d.hidden,
-                locked: d.locked,
-                color: d.color,
-                r#type: d.r#type.clone(),
-                design: d.design.clone(),
-            });
-            self.type_ref = None;
-            if let Some(tid) = d.r#type.as_ref().map(|t| t.id.clone()) {
-                if let Some(tr) = type_index.get(&tid) {
-                    self.type_ref = Some(Arc::downgrade(tr));
-                }
-            }
-            self.parent_piece = None;
-            self.parent_connection = None;
-            self.parent_design = design_weak;
-            self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect();
-            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect();
-        }
-
         pub fn invalidate_flat_pose(&self) {
             self.flat_pose.invalidate();
         }
 
-        pub(crate) fn set_flatten_parent_refs(&mut self, parent_piece: Option<PieceStoreWeak>, parent_connection: Option<ConnectionStoreWeak>) {
+        pub(crate) fn set_flatten_parent_refs(&mut self, parent_piece: Option<PieceWeak>, parent_connection: Option<ConnectionWeak>) {
             self.parent_piece = parent_piece;
             self.parent_connection = parent_connection;
             self.invalidate_flat_pose();
@@ -21179,7 +21027,7 @@ pub mod piece {
             Ok(())
         }
 
-        pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) -> crate::error::SetResult {
+        pub fn set_type_weak(&mut self, type_ref: Option<TypeWeak>) -> crate::error::SetResult {
             self.type_ref = type_ref;
             self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Kind));
             self.invalidate_hash();
@@ -21192,7 +21040,7 @@ pub mod piece {
                 return Ok(());
             }
             let previous_id = self.id.clone();
-            let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
+            let previous_entity = EntityReference::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
             self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Id));
             self.hash_cache.invalidate();
@@ -21315,7 +21163,7 @@ pub mod piece {
             self.flat_pose()
         }
 
-        pub fn path(&self) -> Vec<PieceRef> {
+        pub fn path(&self) -> Vec<PieceReference> {
             let mut path = self.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.path())).unwrap_or_default();
             path.push(self.to_ref());
             path
@@ -21337,11 +21185,11 @@ pub mod piece {
             design.replaceable_catalog_candidates(std::slice::from_ref(&self.id))
         }
 
-        pub fn alternative_types(&self) -> Vec<TypeStoreRef> {
+        pub fn alternative_types(&self) -> Vec<TypeReference> {
             self.alternatives().types
         }
 
-        pub fn alternative_designs(&self) -> Vec<DesignStoreRef> {
+        pub fn alternative_designs(&self) -> Vec<DesignReference> {
             self.alternatives().designs
         }
 
@@ -21366,15 +21214,15 @@ pub mod piece {
             y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
         }
 
-        fn piece_id_from_side(side: &crate::side::SideStoreRef) -> Option<Id> {
+        fn piece_id_from_side(side: &crate::side::SideReference) -> Option<Id> {
             side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.try_read().ok().map(|piece| piece.id.clone())))
         }
 
-        fn connection_child_piece(connection: &crate::connection::ConnectionStoreRef) -> Option<PieceStoreRef> {
+        fn connection_child_piece(connection: &crate::connection::ConnectionReference) -> Option<PieceReference> {
             connection.read().ok().and_then(|connection| connection.connecting.read().ok().and_then(|side| side.piece.upgrade()))
         }
 
-        fn connection_connected_matches_self(connection: &crate::connection::ConnectionStoreRef, self_id: &Id) -> bool {
+        fn connection_connected_matches_self(connection: &crate::connection::ConnectionReference, self_id: &Id) -> bool {
             let Some(connected) = connection.read().ok().map(|connection| connection.connected.clone()) else {
                 return false;
             };
@@ -21384,7 +21232,7 @@ pub mod piece {
             }
         }
 
-        fn immediate_child_flat_pose(&self, connection_ref: &crate::connection::ConnectionStoreRef, child: &PieceStore, parent_plane: Plane, parent_center: Coordinate) -> (Plane, Coordinate) {
+        fn immediate_child_flat_pose(&self, connection_ref: &crate::connection::ConnectionReference, child: &Piece, parent_plane: Plane, parent_center: Coordinate) -> (Plane, Coordinate) {
             let Some(parent_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
                 return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
@@ -21580,7 +21428,7 @@ pub mod piece {
             self.fix_on_design(&mut *design)
         }
 
-        pub(crate) fn fix_on_design(&mut self, design: &mut crate::design::DesignStore) -> SetResult {
+        pub(crate) fn fix_on_design(&mut self, design: &mut crate::design::Design) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
             let parent_connection_id = self.parent_connection.as_ref().and_then(|connection| connection.upgrade()).and_then(|connection| connection.read().ok().map(|connection| connection.id.clone()));
 
@@ -21619,7 +21467,7 @@ pub mod piece {
                 return Ok(());
             }
             for id in &removed_connection_ids {
-                design.emit_ev(KitEvent::ChildRemoved { parent: design_entity.clone(), child: EntityRef::new(EntityKind::Connection, id.clone()) });
+                design.emit_ev(KitEvent::ChildRemoved { parent: design_entity.clone(), child: EntityReference::new(EntityKind::Connection, id.clone()) });
             }
             design.connections.retain(|connection| connection.read().map(|connection| !removed_connection_ids.contains(&connection.id)).unwrap_or(true));
             design.invalidate_hash();
@@ -21662,7 +21510,75 @@ pub mod piece {
         }
     }
 
-    impl Default for PieceStore {
+    #[Object()]
+    impl Piece {
+        async fn id(&self) -> Result<String> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
+        }
+
+        async fn name(&self) -> Result<Option<String>> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.name.clone())
+        }
+
+        async fn description(&self) -> Result<Option<String>> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
+        }
+
+        async fn owner(&self) -> Result<Design> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            p.parent_design
+                .upgrade()
+                .map(Design)
+                .ok_or_else(|| Error::new("design owner missing for piece"))
+        }
+
+        async fn flat_pose(&self) -> Result<crate::piece::PoseInput> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.flat_pose_input_dto())
+        }
+
+        async fn scale(&self) -> Result<Option<f64>> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
+        }
+
+        async fn blueprint(&self) -> Result<Option<Type>> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(Type))
+        }
+
+        async fn parent_connection(&self) -> Result<Option<Connection>> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(Connection))
+        }
+
+        async fn parent_piece(&self) -> Result<Option<Piece>> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.parent_piece.as_ref().and_then(|w| w.upgrade()).map(Piece))
+        }
+
+        async fn depth(&self) -> Result<i32> {
+            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+            Ok(p.depth())
+        }
+
+        async fn path(&self) -> Result<Vec<Piece>> {
+            let (steps, design_weak) = {
+                let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
+                (p.path(), p.parent_design.clone())
+            };
+            let design = design_weak.upgrade().ok_or_else(|| Error::new("design owner missing for piece"))?;
+            let dr = design.read().map_err(|_| Error::new("design lock poisoned"))?;
+            let mut out: Vec<Piece> = Vec::new();
+            for step in steps {
+                if let Some(pr) = dr.piece(step.id.as_str()) {
+                    out.push(Piece(pr));
+                }
+            }
+            Ok(out)
+        }
+    }
+
+    impl Default for Piece {
         fn default() -> Self {
             Self::new()
         }
@@ -21673,38 +21589,38 @@ pub mod port {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::AttributeStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyRef, FamilyStoreWeak};
+    use crate::attribute::Attribute;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyReference, FamilyWeak};
     use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{  QualityStore, QualityStoreRef};
+    use crate::quality::{  Quality, QualityReference};
 
-    pub type PortStoreRef = Arc<RwLock<PortStore>>;
-    pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
+    pub type PortReference = Arc<RwLock<Port>>;
+    pub type PortWeak = std::sync::Weak<RwLock<Port>>;
 
     #[derive(Debug)]
-    pub struct PortStore {
+    pub struct Port {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
-        pub compatible_families: Vec<FamilyRef>,
+        pub compatible_families: Vec<FamilyReference>,
         pub mandatory: Option<bool>,
         pub t: Option<f64>,
         pub point: Option<Point>,
         pub direction: Option<Vector>,
-        pub compatible_ports: Vec<PortStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub attributes: Vec<AttributeStore>,
-        pub parent_family: FamilyStoreWeak,
+        pub compatible_ports: Vec<PortWeak>,
+        pub qualities: Vec<QualityReference>,
+        pub attributes: Vec<Attribute>,
+        pub parent_family: FamilyWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
-    pub struct PortRef {
+    pub struct PortReference {
         pub id: Id,
     }
 
@@ -21727,7 +21643,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<FamilyRef>,
+        pub compatible_families: Vec<FamilyReference>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -21737,11 +21653,11 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
-        pub compatible_ports: Vec<PortRef>,
+        pub compatible_ports: Vec<PortReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -21754,7 +21670,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<FamilyRef>,
+        pub compatible_families: Vec<FamilyReference>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -21764,14 +21680,14 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
-        pub compatible_ports: Vec<PortRef>,
+        pub compatible_ports: Vec<PortReference>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityInput>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
+        pub attributes: Vec<Attribute>,
     }
 
-    impl PortStore {
+    impl Port {
         pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
@@ -21837,7 +21753,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_compatible_families(&mut self, v: Vec<FamilyRef>) -> crate::error::SetResult {
+        pub fn set_compatible_families(&mut self, v: Vec<FamilyReference>) -> crate::error::SetResult {
             if self.compatible_families == v {
                 return Ok(());
             }
@@ -21847,7 +21763,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortRef], kit: &crate::kit_graph::KitGraph) {
+        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortReference], kit: &crate::kit_graph::KitGraph) {
             self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
         }
 
@@ -21910,7 +21826,7 @@ pub mod port {
         }
     }
 
-    impl Default for PortStore {
+    impl Default for Port {
         fn default() -> Self {
             Self::new()
         }
@@ -21921,33 +21837,33 @@ pub mod family {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::AttributeStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::Attribute;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::port::PortStoreRef;
+    use crate::port::PortReference;
 
-    pub type FamilyStoreRef = Arc<RwLock<FamilyStore>>;
-    pub type FamilyStoreWeak = Weak<RwLock<FamilyStore>>;
+    pub type FamilyReference = Arc<RwLock<Family>>;
+    pub type FamilyWeak = Weak<RwLock<Family>>;
 
     #[derive(Debug)]
-    pub struct FamilyStore {
+    pub struct Family {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
-        pub ports: Vec<PortStoreRef>,
-        pub attributes: Vec<AttributeStore>,
-        pub parent_kit: Option<KitGraphWeak>,
+        pub ports: Vec<PortReference>,
+        pub attributes: Vec<Attribute>,
+        pub owner: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         pub(crate) hash_cache: Cache<String>,
     }
 
 
-    impl FamilyStore {
-        pub fn new(name: impl Into<String>) -> Self {
-            Self { id: Id::new_v7(), name: name.into(), description: None, icon: None, ports: Vec::new(), attributes: Vec::new(), parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+    impl Family {
+        pub fn new() -> Self {
+            Self { id: Id::new_v7(), name: name.into(), description: None, icon: None, ports: Vec::new(), attributes: Vec::new(), owner: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         fn emit_ev(&self, ev: KitEvent) {
@@ -21957,7 +21873,7 @@ pub mod family {
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(k) = self.parent_kit.as_ref().and_then(|w| w.upgrade()) {
+            if let Some(k) = self.owner.as_ref().and_then(|w| w.upgrade()) {
                 if let Ok(kr) = k.read() {
                     kr.invalidate_hash();
                 }
@@ -21991,7 +21907,7 @@ pub mod family {
         }
     }
 
-    impl Default for FamilyStore {
+    impl Default for Family {
         fn default() -> Self {
             Self::new("")
         }
@@ -22002,29 +21918,29 @@ pub mod prop {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::piece::PieceStoreWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::piece::PieceWeak;
+    use crate::typ::TypeWeak;
 
-    pub type PropStoreRef = std::sync::Arc<RwLock<PropStore>>;
-    pub type PropStoreWeak = Weak<RwLock<PropStore>>;
+    pub type PropReference = std::sync::Arc<RwLock<Prop>>;
+    pub type PropWeak = Weak<RwLock<Prop>>;
 
     /// meaning in the domain, attributes are auxiliary metadata).
     #[derive(Debug)]
-    pub struct PropStore {
+    pub struct Prop {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
-        pub quality: Option<crate::quality::QualityRef>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
-        pub parent_type: Option<TypeStoreWeak>,
-        pub parent_piece: Option<PieceStoreWeak>,
+        pub quality: Option<crate::quality::QualityReference>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
+        pub parent_type: Option<TypeWeak>,
+        pub parent_piece: Option<PieceWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
@@ -22038,10 +21954,10 @@ pub mod prop {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub quality: Option<crate::quality::QualityRef>,
+        pub quality: Option<crate::quality::QualityReference>,
     }
 
-    impl PropStore {
+    impl Prop {
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
@@ -22081,7 +21997,7 @@ pub mod prop {
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -22096,7 +22012,7 @@ pub mod prop {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -22141,40 +22057,40 @@ pub mod quality {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::benchmark::{  BenchmarkStore, BenchmarkStoreRef};
-    use crate::connector::ConnectorStoreWeak;
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::benchmark::{  Benchmark, BenchmarkReference};
+    use crate::connector::ConnectorWeak;
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::port::PortStoreWeak;
-    use crate::representation::RepresentationStoreWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::port::PortWeak;
+    use crate::representation::RepresentationWeak;
+    use crate::typ::TypeWeak;
 
-    pub type QualityStoreRef = Arc<RwLock<QualityStore>>;
-    pub type QualityStoreWeak = Weak<RwLock<QualityStore>>;
+    pub type QualityReference = Arc<RwLock<Quality>>;
+    pub type QualityWeak = Weak<RwLock<Quality>>;
 
     #[derive(Debug)]
-    pub struct QualityStore {
+    pub struct Quality {
         pub id: Id,
         pub key: String,
         pub value: Option<String>,
         pub unit: Option<String>,
         pub definition: Option<String>,
         pub description: Option<String>,
-        pub benchmarks: Vec<BenchmarkStoreRef>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
-        pub parent_type: Option<TypeStoreWeak>,
-        pub parent_port: Option<PortStoreWeak>,
-        pub parent_connector: Option<ConnectorStoreWeak>,
-        pub parent_representation: Option<RepresentationStoreWeak>,
+        pub benchmarks: Vec<BenchmarkReference>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
+        pub parent_type: Option<TypeWeak>,
+        pub parent_port: Option<PortWeak>,
+        pub parent_connector: Option<ConnectorWeak>,
+        pub parent_representation: Option<RepresentationWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl QualityStore {
+    impl Quality {
         pub(crate) fn new() -> Self {
             Self {
                 id,
@@ -22184,7 +22100,7 @@ pub mod quality {
                 definition: None,
                 description: None,
                 benchmarks: Vec::new(),
-                parent_kit: None,
+                owner: None,
                 parent_design: None,
                 parent_type: None,
                 parent_port: None,
@@ -22200,8 +22116,8 @@ pub mod quality {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Quality, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Quality, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadata) {
@@ -22271,7 +22187,7 @@ pub mod quality {
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -22286,7 +22202,7 @@ pub mod quality {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -22421,32 +22337,32 @@ pub mod representation {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::AttributeStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::file::{FileRef, FileStoreWeak};
+    use crate::attribute::Attribute;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::file::{FileReference, FileWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{  QualityStore, QualityStoreRef};
-    use crate::tag::{  TagStore};
+    use crate::quality::{  Quality, QualityReference};
+    use crate::tag::{  Tag};
 
-    pub type RepresentationStoreRef = Arc<RwLock<RepresentationStore>>;
-    pub type RepresentationStoreWeak = Weak<RwLock<RepresentationStore>>;
+    pub type RepresentationReference = Arc<RwLock<Representation>>;
+    pub type RepresentationWeak = Weak<RwLock<Representation>>;
 
     #[derive(Debug)]
-    pub struct RepresentationStore {
+    pub struct Representation {
         pub id: Id,
         pub url: String,
         pub description: Option<String>,
-        pub tags: Vec<TagStore>,
-        pub file: Option<FileStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub attributes: Vec<AttributeStore>,
-        pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
+        pub tags: Vec<Tag>,
+        pub file: Option<FileWeak>,
+        pub qualities: Vec<QualityReference>,
+        pub attributes: Vec<Attribute>,
+        pub parent_type: Weak<RwLock<crate::typ::Type>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl RepresentationStore {
+    impl Representation {
         pub fn new() -> Self {
             Self { id: Id::new_v7(), url: url.into(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
@@ -22483,7 +22399,7 @@ pub mod representation {
             Ok(())
         }
 
-        pub fn set_file(&mut self, file: Option<crate::file::FileStoreWeak>) -> crate::error::SetResult {
+        pub fn set_file(&mut self, file: Option<crate::file::FileWeak>) -> crate::error::SetResult {
             self.file = file;
             self.invalidate_hash();
             Ok(())
@@ -22535,28 +22451,28 @@ pub mod side {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::connection::ConnectionStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::connection::ConnectionWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::piece::PieceStoreWeak;
-    use crate::port::PortStoreWeak;
+    use crate::piece::PieceWeak;
+    use crate::port::PortWeak;
 
-    pub type SideStoreRef = Arc<RwLock<SideStore>>;
-    pub type SideStoreWeak = Weak<RwLock<SideStore>>;
+    pub type SideReference = Arc<RwLock<Side>>;
+    pub type SideWeak = Weak<RwLock<Side>>;
 
     #[derive(Debug)]
-    pub struct SideStore {
+    pub struct Side {
         pub id: Id,
-        pub piece: PieceStoreWeak,
-        pub port: Option<PortStoreWeak>,
-        pub design_piece: Option<PieceStoreWeak>,
-        pub parent_connection: Option<ConnectionStoreWeak>,
+        pub piece: PieceWeak,
+        pub port: Option<PortWeak>,
+        pub design_piece: Option<PieceWeak>,
+        pub parent_connection: Option<ConnectionWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl SideStore {
+    impl Side {
         pub(crate) fn new() -> Self {
             Self { id, piece: Weak::new(), port: None, design_piece: None, parent_connection: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
@@ -22566,21 +22482,21 @@ pub mod side {
             emit_weak(&self.event_bus, ev);
         }
 
-        pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
+        pub fn set_piece_weak(&mut self, piece: PieceWeak) -> crate::error::SetResult {
             self.piece = piece;
             self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::Piece) });
             self.bubble();
             Ok(())
         }
 
-        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
+        pub fn set_port_weak(&mut self, port: Option<PortWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::Port) });
             self.bubble();
             Ok(())
         }
 
-        pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) -> crate::error::SetResult {
+        pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceWeak>) -> crate::error::SetResult {
             self.design_piece = design_piece;
             self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::DesignPiece) });
             self.bubble();
@@ -22631,7 +22547,7 @@ pub mod side {
         }
     }
 
-    impl Default for SideStore {
+    impl Default for Side {
         fn default() -> Self {
             Self { id: Id::new_v7(), piece: Weak::new(), port: None, design_piece: None, parent_connection: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
@@ -22642,31 +22558,31 @@ pub mod stat {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
-    pub type StatStoreWeak = Weak<RwLock<StatStore>>;
+    pub type StatReference = std::sync::Arc<RwLock<Stat>>;
+    pub type StatWeak = Weak<RwLock<Stat>>;
 
     #[derive(Debug)]
-    pub struct StatStore {
+    pub struct Stat {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
         pub description: Option<String>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    impl StatStore {
+    impl Stat {
         pub(crate) fn new() -> Self {
-            Self { id, key: String::new(), value: String::new(), unit: None, description: None, parent_kit: None, parent_design: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id, key: String::new(), value: String::new(), unit: None, description: None, owner: None, parent_design: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -22674,23 +22590,8 @@ pub mod stat {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Stat, self.id.clone())
-        }
-
-        pub(crate) fn apply_input_fields(&mut self, d: StatInput) {
-            self.id = d.id;
-            self.key = d.key;
-            self.value = d.value;
-            self.unit = d.unit;
-            self.description = d.description;
-            self.hash_cache.invalidate();
-        }
-
-        pub(crate) fn from_input(d: StatInput) -> Self {
-            let mut s = Self::new(d.id.clone());
-            s.apply_input_fields(d);
-            s
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Stat, self.id.clone())
         }
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
@@ -22736,7 +22637,7 @@ pub mod stat {
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -22751,7 +22652,7 @@ pub mod stat {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -22760,23 +22661,6 @@ pub mod stat {
             }
         }
 
-        pub fn to_ref(&self) -> StatRef {
-            StatRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> StatMetadata {
-            StatMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), description: self.description.clone() }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
-        }
-
-        pub fn to_input(&self) -> StatInput {
-            let m = self.to_metadata();
-            StatInput { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
-        }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
@@ -22800,92 +22684,36 @@ pub mod tag {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::design::DesignWeak;
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::typ::TypeStoreWeak;
+    use crate::typ::TypeWeak;
 
-    pub type TagStoreRef = std::sync::Arc<RwLock<TagStore>>;
-    pub type TagStoreWeak = Weak<RwLock<TagStore>>;
+    pub type TagReference = std::sync::Arc<RwLock<Tag>>;
+    pub type TagWeak = Weak<RwLock<Tag>>;
 
     #[derive(Debug)]
-    pub struct TagStore {
+    pub struct Tag {
         pub id: Id,
         pub name: String,
         pub order: Option<i64>,
-        pub parent_kit: Option<KitGraphWeak>,
-        pub parent_design: Option<DesignStoreWeak>,
-        pub parent_type: Option<TypeStoreWeak>,
+        pub owner: Option<KitGraphWeak>,
+        pub parent_design: Option<DesignWeak>,
+        pub parent_type: Option<TypeWeak>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagMetadata {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub order: Option<i64>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        #[serde(default)]
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub order: Option<i64>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagInput {
-        pub id: Id,
-        #[serde(default)]
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub order: Option<i64>,
-    }
-
-    impl TagStore {
+    impl Tag {
         pub(crate) fn new() -> Self {
-            Self { id, name: String::new(), order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
+            Self { id, name: String::new(), order: None, owner: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Tag, self.id.clone())
-        }
-
-        pub(crate) fn apply_input_fields(&mut self, d: TagInput) {
-            self.id = d.id;
-            self.name = d.name;
-            self.order = d.order;
-            self.hash_cache.invalidate();
-        }
-
-        pub(crate) fn from_shallow(d: ) -> Self {
-            let mut s = Self::new(d.id.clone());
-            s.name = d.name;
-            s.order = d.order;
-            s.hash_cache.invalidate();
-            s
-        }
-
-        pub(crate) fn from_input(d: TagInput) -> Self {
-            let mut s = Self::new(d.id.clone());
-            s.apply_input_fields(d);
-            s
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -22911,7 +22739,7 @@ pub mod tag {
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(w) = &self.parent_kit {
+            if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_hash();
@@ -22926,7 +22754,7 @@ pub mod tag {
                         d.invalidate_validation();
                     }
                 }
-            } else if let Some(w) = &self.parent_kit {
+            } else if let Some(w) = &self.owner {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
                         k.invalidate_validation();
@@ -22940,24 +22768,6 @@ pub mod tag {
                     }
                 }
             }
-        }
-
-        pub fn to_ref(&self) -> TagRef {
-            TagRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> TagMetadata {
-            TagMetadata { id: self.id.clone(), name: self.name.clone(), order: self.order }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, order: m.order }
-        }
-
-        pub fn to_input(&self) -> TagInput {
-            let m = self.to_metadata();
-            TagInput { id: m.id, name: m.name, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -22987,26 +22797,26 @@ pub mod typ {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeStore, AttributeStoreRef};
-    use crate::author::{  AuthorStore, AuthorStoreRef};
-    use crate::concept::{  ConceptStore, ConceptStoreRef};
-    use crate::connector::{  ConnectorStore, ConnectorStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyRef, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
+    use crate::attribute::{Attribute, AttributeReference};
+    use crate::author::{  Author, AuthorReference};
+    use crate::concept::{  Concept, ConceptReference};
+    use crate::connector::{  Connector, ConnectorReference};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyReference, Family, FamilyReference, FamilyWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::LocationRef;
-    use crate::port::PortStoreRef;
-    use crate::prop::{  PropStore, PropStoreRef};
-    use crate::quality::{  QualityStore, QualityStoreRef};
-    use crate::representation::{  RepresentationStore, RepresentationStoreRef};
-    use crate::tag::{  TagStore, TagStoreRef};
+    use crate::location::LocationReference;
+    use crate::port::PortReference;
+    use crate::prop::{  Prop, PropReference};
+    use crate::quality::{  Quality, QualityReference};
+    use crate::representation::{  Representation, RepresentationReference};
+    use crate::tag::{  Tag, TagReference};
 
-    pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
-    pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
+    pub type TypeReference = Arc<RwLock<Type>>;
+    pub type TypeWeak = Weak<RwLock<Type>>;
 
     #[derive(Debug)]
-    pub struct TypeStore {
+    pub struct Type {
         pub id: Id,
         pub name: String,
         pub description: Option<String>,
@@ -23015,141 +22825,25 @@ pub mod typ {
         pub stock: Option<i64>,
         pub virtual_: Option<bool>,
         pub unit: Option<String>,
-        pub location: Option<LocationRef>,
-        pub families: Vec<FamilyStoreWeak>,
-        pub connectors: Vec<ConnectorStoreRef>,
-        pub representations: Vec<RepresentationStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub location: Option<LocationReference>,
+        pub families: Vec<FamilyWeak>,
+        pub connectors: Vec<ConnectorReference>,
+        pub representations: Vec<RepresentationReference>,
+        pub authors: Vec<AuthorReference>,
+        pub concepts: Vec<ConceptReference>,
+        pub tags: Vec<TagReference>,
+        pub qualities: Vec<QualityReference>,
+        pub props: Vec<PropReference>,
+        pub attributes: Vec<AttributeReference>,
         pub created: Option<String>,
         pub updated: Option<String>,
-        pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
+        pub owner: Weak<RwLock<crate::kit_graph::KitGraph>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct TypeRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeMetadata {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
-        #[graphql(name = "isAbstract")]
-        pub virtual_: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
-        pub updated: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
-        #[graphql(name = "isAbstract")]
-        pub virtual_: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connectors: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub representations: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeInput {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
-        #[graphql(name = "isAbstract")]
-        pub virtual_: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connectors: Vec<ConnectorInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub representations: Vec<RepresentationInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    impl TypeStore {
-        pub fn new(name: impl Into<String>) -> Self {
+    impl Type {
+        pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
                 name: name.into(),
@@ -23171,7 +22865,7 @@ pub mod typ {
                 attributes: Vec::new(),
                 created: None,
                 updated: None,
-                parent_kit: Weak::new(),
+                owner: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }
@@ -23182,14 +22876,14 @@ pub mod typ {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Type, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Type, self.id.clone())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
-            if let Some(k) = self.parent_kit.upgrade() {
+            if let Some(k) = self.owner.upgrade() {
                 if let Ok(kr) = k.read() {
                     kr.invalidate_hash();
                 }
@@ -23197,7 +22891,7 @@ pub mod typ {
         }
 
         pub fn invalidate_validation(&self) {
-            if let Some(k) = self.parent_kit.upgrade() {
+            if let Some(k) = self.owner.upgrade() {
                 if let Ok(kr) = k.read() {
                     kr.invalidate_validation();
                 }
@@ -23291,7 +22985,7 @@ pub mod typ {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<LocationRef>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationReference>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
@@ -23385,13 +23079,13 @@ pub mod typ {
             }
         }
 
-        pub fn connector(&self, id: &str) -> Option<ConnectorStoreRef> {
+        pub fn connector(&self, id: &str) -> Option<ConnectorReference> {
             self.connectors.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn port(&self, id: &str) -> Option<PortStoreRef> {
+        pub fn port(&self, id: &str) -> Option<PortReference> {
             let id = Id::from(id);
-            if let Some(kit) = self.parent_kit.upgrade() {
+            if let Some(kit) = self.owner.upgrade() {
                 if let Ok(kr) = kit.read() {
                     return kr.port_by_id(&id);
                 }
@@ -23399,11 +23093,11 @@ pub mod typ {
             None
         }
 
-        pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
+        pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorReference> {
             self.connectors.iter().find(|c| c.read().ok().and_then(|cr| cr.port.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|pr| pr.id == *port_id))).unwrap_or(false)).cloned()
         }
 
-        pub fn representation(&self, id: &str) -> Option<RepresentationStoreRef> {
+        pub fn representation(&self, id: &str) -> Option<RepresentationReference> {
             self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -23451,230 +23145,6 @@ pub mod typ {
                 i as f64 / u as f64
             }
         }
-
-        pub fn from_id_dto(d: TypeRef) -> Self {
-            Self {
-                id: d.id,
-                name: String::new(),
-                description: None,
-                icon: None,
-                image: None,
-                stock: None,
-                virtual_: None,
-                unit: None,
-                location: None,
-                families: Vec::new(),
-                connectors: Vec::new(),
-                representations: Vec::new(),
-                authors: Vec::new(),
-                concepts: Vec::new(),
-                tags: Vec::new(),
-                qualities: Vec::new(),
-                props: Vec::new(),
-                attributes: Vec::new(),
-                created: None,
-                updated: None,
-                parent_kit: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
-        }
-
-        pub fn from_metadata(d: TypeMetadata) -> Self {
-            Self {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                icon: d.icon,
-                image: d.image,
-                stock: d.stock,
-                virtual_: d.virtual_,
-                unit: d.unit,
-                location: d.location,
-                families: Vec::new(),
-                connectors: Vec::new(),
-                representations: Vec::new(),
-                authors: Vec::new(),
-                concepts: Vec::new(),
-                tags: Vec::new(),
-                qualities: Vec::new(),
-                props: Vec::new(),
-                attributes: Vec::new(),
-                created: d.created,
-                updated: d.updated,
-                parent_kit: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
-        }
-
-        pub(crate) fn hydrate_from_input(d:  kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
-            let TypeInput { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
-
-            let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
-
-            let t = Arc::new(RwLock::new(TypeStore {
-                id: id.clone(),
-                name: name.clone(),
-                description: description.clone(),
-                icon: icon.clone(),
-                image: image.clone(),
-                stock,
-                virtual_,
-                unit: unit.clone(),
-                location,
-                families: Vec::new(),
-                connectors: Vec::new(),
-                representations: Vec::new(),
-                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_input(a)))).collect(),
-                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_input(c)))).collect(),
-                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_input(t)))).collect(),
-                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect(),
-                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect(),
-                created: created.clone(),
-                updated: updated.clone(),
-                parent_kit: Arc::downgrade(kit),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }));
-
-            let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
-            for cdto in connectors {
-                let port_id = cdto.port.as_ref().map(|p| p.id.clone());
-                let mut c = ConnectorStore::from_input(cdto);
-                c.parent_type = Arc::downgrade(&t);
-                if let Some(pg) = port_id {
-                    if let Some(pref) = port_by_id.get(&pg) {
-                        c.port = Some(Arc::downgrade(pref));
-                    }
-                }
-                connector_refs.push(Arc::new(RwLock::new(c)));
-            }
-
-            let mut rep_refs: Vec<RepresentationStoreRef> = Vec::with_capacity(representations.len());
-            for rdto in representations {
-                let file_id = rdto.file.as_ref().map(|f| f.id.clone());
-                let mut r = RepresentationStore::from_input(rdto);
-                r.parent_type = Arc::downgrade(&t);
-                if let Some(fg) = file_id {
-                    if let Some(fref) = file_refs.iter().find(|f| f.read().map(|f| f.id == fg).unwrap_or(false)) {
-                        r.file = Some(Arc::downgrade(fref));
-                    }
-                }
-                rep_refs.push(Arc::new(RwLock::new(r)));
-            }
-
-            if let Ok(mut t_mut) = t.write() {
-                let tw = Arc::downgrade(&t);
-                for a in &t_mut.authors {
-                    if let Ok(mut aw) = a.write() {
-                        aw.parent_type = Some(tw.clone());
-                    }
-                }
-                for c in &t_mut.concepts {
-                    if let Ok(mut cw) = c.write() {
-                        cw.parent_type = Some(tw.clone());
-                    }
-                }
-                for tag in &t_mut.tags {
-                    if let Ok(mut tw0) = tag.write() {
-                        tw0.parent_type = Some(tw.clone());
-                    }
-                }
-                for q in &t_mut.qualities {
-                    if let Ok(mut qw) = q.write() {
-                        qw.parent_type = Some(tw.clone());
-                    }
-                }
-                for p in &t_mut.props {
-                    if let Ok(mut pw) = p.write() {
-                        pw.parent_type = Some(tw.clone());
-                    }
-                }
-                for a in &t_mut.attributes {
-                    if let Ok(mut aw) = a.write() {
-                        aw.parent_type = Some(tw.clone());
-                    }
-                }
-                t_mut.families = family_weaks;
-                t_mut.connectors = connector_refs;
-                t_mut.representations = rep_refs;
-            }
-            t
-        }
-
-        pub fn to_ref(&self) -> TypeRef {
-            TypeRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> TypeMetadata {
-            TypeMetadata {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                icon: self.icon.clone(),
-                image: self.image.clone(),
-                stock: self.stock,
-                virtual_: self.virtual_,
-                unit: self.unit.clone(),
-                location: self.location.clone(),
-                created: self.created.clone(),
-                updated: self.updated.clone(),
-            }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                stock: m.stock,
-                virtual_: m.virtual_,
-                unit: m.unit,
-                location: m.location,
-                created: m.created,
-                updated: m.updated,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
-                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
-                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> TypeInput {
-            let m = self.to_metadata();
-            TypeInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                stock: m.stock,
-                virtual_: m.virtual_,
-                unit: m.unit,
-                location: m.location,
-                created: m.created,
-                updated: m.updated,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
-                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_input())).collect(),
-                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_input())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_input())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_input())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
-            }
-        }
     }
 }
 
@@ -23686,11 +23156,11 @@ mod async_kit {
 
     use crate::diff::DesignChange;
     use crate::error::{Result, SemioError};
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitGraph, KitGraphReference};
     use crate::report::{SemioReport, ValidationResult};
 
     impl KitGraph {
-        pub async fn set_name_async(this: &KitGraphRef, name: String) -> Result<()> {
+        pub async fn set_name_async(this: &KitGraphReference, name: String) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_name(name)?;
@@ -23699,7 +23169,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_description_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_description_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_description(v)?;
@@ -23708,7 +23178,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_icon_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_icon_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_icon(v)?;
@@ -23717,7 +23187,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_image_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_image_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_image(v)?;
@@ -23726,7 +23196,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_preview_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_preview_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_preview(v)?;
@@ -23735,7 +23205,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_remote_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_remote_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_remote(v)?;
@@ -23744,7 +23214,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_homepage_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_homepage_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_homepage(v)?;
@@ -23753,7 +23223,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_license_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_license_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_license(v)?;
@@ -23762,7 +23232,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_uri_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_uri_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_uri(v)?;
@@ -23771,7 +23241,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_created_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_created_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_created(v)?;
@@ -23780,7 +23250,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_updated_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_updated_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_updated(v)?;
@@ -23789,7 +23259,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn hash_async(this: &KitGraphRef) -> Result<String> {
+        pub async fn hash_async(this: &KitGraphReference) -> Result<String> {
             let r = match this.read() {
                 Ok(g) => Ok(g.hash()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -23797,7 +23267,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn validate_async(this: &KitGraphRef) -> Result<ValidationResult> {
+        pub async fn validate_async(this: &KitGraphReference) -> Result<ValidationResult> {
             let r = match this.read() {
                 Ok(g) => Ok(g.validate()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -23805,7 +23275,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn flatten_design_async(this: &KitGraphRef, design_id: &str) -> Result<SemioReport<DesignChange>> {
+        pub async fn flatten_design_async(this: &KitGraphReference, design_id: &str) -> Result<SemioReport<DesignChange>> {
             let r = match this.read() {
                 Ok(g) => g.flatten_design(design_id),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -23827,10 +23297,10 @@ pub mod io {
         use std::path::Path;
 
         use crate::error::Result;
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
 
         impl KitGraph {
-            pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
+            pub fn from_json_str(s: &str) -> Result<KitGraphReference> {
                 let dto: KitInput = serde_json::from_str(s)?;
                 Ok(KitGraph::from_input(dto))
             }
@@ -23844,7 +23314,7 @@ pub mod io {
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            pub fn load_json_file(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_json_file(path: &Path) -> Result<KitGraphReference> {
                 let payload = fs::read_to_string(path)?;
                 Self::from_json_str(&payload)
             }
@@ -23870,7 +23340,7 @@ pub mod io {
 
         use rusqlite::{params, Connection as SqlConnection, OptionalExtension, Transaction};
 
-        use crate::attribute::AttributeStore;
+        use crate::attribute::Attribute;
         use crate::author::AuthorInput;
         use crate::benchmark::BenchmarkInput;
         use crate::concept::ConceptInput;
@@ -23878,7 +23348,7 @@ pub mod io {
         use crate::connector::ConnectorInput;
         use crate::design::DesignInput;
         use crate::error::{Result, SemioError};
-        use crate::file::{ FileRef};
+        use crate::file::{ FileReference};
         use crate::folder::FolderInput;
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::group::GroupInput;
@@ -23886,11 +23356,11 @@ pub mod io {
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
         use crate::layer::LayerInput;
-        use crate::location::LocationRef;
+        use crate::location::LocationReference;
         use crate::piece::PieceInput;
-        use crate::port::{ PortRef};
+        use crate::port::{ PortReference};
         use crate::prop::PropInput;
         use crate::quality::QualityInput;
         use crate::representation::RepresentationInput;
@@ -23904,7 +23374,7 @@ pub mod io {
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
-        struct ScopeRefs<'a> {
+        struct ScopeReferences<'a> {
             kit: Option<&'a Id>,
             typ: Option<&'a Id>,
             design: Option<&'a Id>,
@@ -23988,8 +23458,8 @@ pub mod io {
             Some(Vector::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
         }
 
-        fn location_dto_from_id_cell(id: Option<String>) -> Option<LocationRef> {
-            id.filter(|s| !s.is_empty()).map(|s| LocationRef { id: Id::from(s) })
+        fn location_dto_from_id_cell(id: Option<String>) -> Option<LocationReference> {
+            id.filter(|s| !s.is_empty()).map(|s| LocationReference { id: Id::from(s) })
         }
 
         fn init_schema(conn: &mut SqlConnection) -> Result<()> {
@@ -24212,7 +23682,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_author(tx: &Transaction<'_>, author: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_author(tx: &Transaction<'_>, author: & ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -24221,7 +23691,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_concept(tx: &Transaction<'_>, concept: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_concept(tx: &Transaction<'_>, concept: & ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -24230,7 +23700,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_tag(tx: &Transaction<'_>, tag: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_tag(tx: &Transaction<'_>, tag: & ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -24250,7 +23720,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_quality(tx: &Transaction<'_>, quality: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_quality(tx: &Transaction<'_>, quality: & ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
                     id, ordinal, key, value, unit, definition, description,
@@ -24275,7 +23745,7 @@ pub mod io {
             insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
-        fn insert_prop(tx: &Transaction<'_>, prop: & ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_prop(tx: &Transaction<'_>, prop: & ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -24284,7 +23754,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeStore, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_attribute(tx: &Transaction<'_>, attribute: &Attribute, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
@@ -24319,10 +23789,10 @@ pub mod io {
                 params![connector.id.as_str(), ordinal as i64, connector.code, connector.description, port_id.id.as_str(), type_id.as_str(),],
             )?;
             for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { connector: Some(&connector.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in connector.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { connector: Some(&connector.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24334,13 +23804,13 @@ pub mod io {
                 params![representation.id.as_str(), ordinal as i64, representation.url, representation.description, representation.file.as_ref().map(|file| file.id.as_str()), type_id.as_str(),],
             )?;
             for (tag_ordinal, tag) in representation.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in representation.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in representation.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24363,10 +23833,10 @@ pub mod io {
                 tx.execute("INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?1, ?2, ?3)", params![port.id.as_str(), cp_ordinal as i64, pid.id.as_str()])?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { port: Some(&port.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { port: Some(&port.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24374,7 +23844,7 @@ pub mod io {
         fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family:: ordinal: usize) -> Result<()> {
             tx.execute("INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()])?;
             for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { family: Some(&fam.id), ..ScopeReferences::default() })?;
             }
             for (port_ordinal, port) in fam.ports.iter().enumerate() {
                 insert_port(tx, kit_id, Some(&fam.id), port, port_ordinal)?;
@@ -24401,22 +23871,22 @@ pub mod io {
                 insert_representation(tx, &typ.id, representation, representation_ordinal)?;
             }
             for (author_ordinal, author) in typ.authors.iter().enumerate() {
-                insert_author(tx, author, author_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_author(tx, author, author_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (concept_ordinal, concept) in typ.concepts.iter().enumerate() {
-                insert_concept(tx, concept, concept_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_concept(tx, concept, concept_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (tag_ordinal, tag) in typ.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in typ.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (prop_ordinal, prop) in typ.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in typ.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24492,10 +23962,10 @@ pub mod io {
                 ],
             )?;
             for (prop_ordinal, prop) in piece.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { piece: Some(&piece.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in piece.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { piece: Some(&piece.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24549,7 +24019,7 @@ pub mod io {
                 ],
             )?;
             for (attribute_ordinal, attribute) in connection.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connection: Some(&connection.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { connection: Some(&connection.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24591,22 +24061,22 @@ pub mod io {
                 )?;
             }
             for (author_ordinal, author) in design.authors.iter().enumerate() {
-                insert_author(tx, author, author_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_author(tx, author, author_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (concept_ordinal, concept) in design.concepts.iter().enumerate() {
-                insert_concept(tx, concept, concept_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_concept(tx, concept, concept_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (tag_ordinal, tag) in design.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in design.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (prop_ordinal, prop) in design.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in design.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -24680,13 +24150,13 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeStore>> {
+        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<Attribute>> {
             let sql = format!("SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AttributeStore::output(Id::from(row.get::<_, String>(0)?), row.get(1)?, row.get(2)?, row.get(3)?));
+                values.push(Attribute::output(Id::from(row.get::<_, String>(0)?), row.get(1)?, row.get(2)?, row.get(3)?));
             }
             Ok(values)
         }
@@ -24713,13 +24183,13 @@ pub mod io {
                 let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
                 let mut compatible_families = Vec::new();
                 while let Some(compatibility_row) = compatibility_rows.next()? {
-                    compatible_families.push(crate::family::FamilyRef { id: Id::from(compatibility_row.get::<_, String>(0)?) });
+                    compatible_families.push(crate::family::FamilyReference { id: Id::from(compatibility_row.get::<_, String>(0)?) });
                 }
                 let mut cp_stmt = conn.prepare("SELECT compatible_port_id FROM port_compatible_port WHERE port_id = ?1 ORDER BY ordinal")?;
                 let mut cp_rows = cp_stmt.query([id.as_str()])?;
                 let mut compatible_ports = Vec::new();
                 while let Some(cp_row) = cp_rows.next()? {
-                    compatible_ports.push(PortRef { id: Id::from(cp_row.get::<_, String>(0)?) });
+                    compatible_ports.push(PortReference { id: Id::from(cp_row.get::<_, String>(0)?) });
                 }
                 values.push(PortInput {
                     id: id.clone(),
@@ -24758,22 +24228,22 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_type_family_ids(conn: &SqlConnection, type_id: &Id) -> Result<Vec<crate::family::FamilyRef>> {
+        fn load_type_family_ids(conn: &SqlConnection, type_id: &Id) -> Result<Vec<crate::family::FamilyReference>> {
             let mut stmt = conn.prepare("SELECT family_id FROM type_family WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut out = Vec::new();
             while let Some(row) = rows.next()? {
-                out.push(crate::family::FamilyRef { id: Id::from(row.get::<_, String>(0)?) });
+                out.push(crate::family::FamilyReference { id: Id::from(row.get::<_, String>(0)?) });
             }
             Ok(out)
         }
 
-        fn load_design_family_ids(conn: &SqlConnection, design_id: &Id) -> Result<Vec<crate::family::FamilyRef>> {
+        fn load_design_family_ids(conn: &SqlConnection, design_id: &Id) -> Result<Vec<crate::family::FamilyReference>> {
             let mut stmt = conn.prepare("SELECT family_id FROM design_family WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut out = Vec::new();
             while let Some(row) = rows.next()? {
-                out.push(crate::family::FamilyRef { id: Id::from(row.get::<_, String>(0)?) });
+                out.push(crate::family::FamilyReference { id: Id::from(row.get::<_, String>(0)?) });
             }
             Ok(out)
         }
@@ -24789,7 +24259,7 @@ pub mod io {
                     id: id.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: Some(PortRef { id: Id::from(port_id) }),
+                    port: Some(PortReference { id: Id::from(port_id) }),
                     qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
                     ..Default::default()
@@ -24809,7 +24279,7 @@ pub mod io {
                     id: id.clone(),
                     url: row.get(1)?,
                     description: row.get(2)?,
-                    file: file_id.map(|value| FileRef { id: Id::from(value) }),
+                    file: file_id.map(|value| FileReference { id: Id::from(value) }),
                     tags: load_tags_for_scope(conn, "representation_id", &id)?,
                     qualities: load_qualities_for_scope(conn, "representation_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "representation_id", &id)?,
@@ -24898,8 +24368,8 @@ pub mod io {
                     hidden: opt_int_to_bool(row.get(25)?),
                     locked: opt_int_to_bool(row.get(26)?),
                     color: row.get(27)?,
-                    r#type: type_id.map(|value| crate::typ::TypeRef { id: Id::from(value) }),
-                    design: design_ref_id.map(|value| crate::design::DesignRef { id: Id::from(value) }),
+                    r#type: type_id.map(|value| crate::typ::TypeReference { id: Id::from(value) }),
+                    design: design_ref_id.map(|value| crate::design::DesignReference { id: Id::from(value) }),
                     props: load_props_for_scope(conn, "piece_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "piece_id", &id)?,
                 });
@@ -24917,7 +24387,7 @@ pub mod io {
                 let mut piece_rows = piece_stmt.query([id.as_str()])?;
                 let mut pieces = Vec::new();
                 while let Some(piece_row) = piece_rows.next()? {
-                    pieces.push(crate::piece::PieceRef { id: Id::from(piece_row.get::<_, String>(0)?) });
+                    pieces.push(crate::piece::PieceReference { id: Id::from(piece_row.get::<_, String>(0)?) });
                 }
                 values.push(GroupInput { id, name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, icon: row.get(4)?, pieces });
             }
@@ -24944,16 +24414,16 @@ pub mod io {
                     id: id.clone(),
                     connected: SideMetadata {
                         id: Id::from(row.get::<_, String>(1)?),
-                        piece: crate::piece::PieceRef { id: Id::from(row.get::<_, String>(2)?) },
-                        port: connected_port_id.map(|value| PortRef { id: Id::from(value) }),
-                        design_piece: connected_design_piece_id.map(|value| crate::piece::PieceRef { id: Id::from(value) }),
+                        piece: crate::piece::PieceReference { id: Id::from(row.get::<_, String>(2)?) },
+                        port: connected_port_id.map(|value| PortReference { id: Id::from(value) }),
+                        design_piece: connected_design_piece_id.map(|value| crate::piece::PieceReference { id: Id::from(value) }),
                         connector: None,
                     },
                     connecting: SideMetadata {
                         id: Id::from(row.get::<_, String>(5)?),
-                        piece: crate::piece::PieceRef { id: Id::from(row.get::<_, String>(6)?) },
-                        port: connecting_port_id.map(|value| PortRef { id: Id::from(value) }),
-                        design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceRef { id: Id::from(value) }),
+                        piece: crate::piece::PieceReference { id: Id::from(row.get::<_, String>(6)?) },
+                        port: connecting_port_id.map(|value| PortReference { id: Id::from(value) }),
+                        design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceReference { id: Id::from(value) }),
                         connector: None,
                     },
                     gap: row.get(9)?,
@@ -25002,7 +24472,7 @@ pub mod io {
                     unit: row.get(6)?,
                     created: row.get(7)?,
                     updated: row.get(8)?,
-                    kit: Some(crate::kit_graph::KitRef { id: kit_id.clone() }),
+                    kit: Some(crate::kit_graph::KitReference { id: kit_id.clone() }),
                     families: load_design_family_ids(conn, &id)?,
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
@@ -25126,22 +24596,22 @@ pub mod io {
                     insert_design(&tx, &dto.id, design, ordinal)?;
                 }
                 for (ordinal, author) in dto.authors.iter().enumerate() {
-                    insert_author(&tx, author, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_author(&tx, author, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, concept) in dto.concepts.iter().enumerate() {
-                    insert_concept(&tx, concept, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_concept(&tx, concept, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, tag) in dto.tags.iter().enumerate() {
-                    insert_tag(&tx, tag, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_tag(&tx, tag, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, quality) in dto.qualities.iter().enumerate() {
-                    insert_quality(&tx, quality, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_quality(&tx, quality, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, prop) in dto.props.iter().enumerate() {
-                    insert_prop(&tx, prop, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_prop(&tx, prop, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, attribute) in dto.attributes.iter().enumerate() {
-                    insert_attribute(&tx, attribute, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_attribute(&tx, attribute, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
 
                 save_kit(&tx, self, &dto.id)?;
@@ -25150,7 +24620,7 @@ pub mod io {
                 Ok(())
             }
 
-            pub fn load_sqlite(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_sqlite(path: &Path) -> Result<KitGraphReference> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
                 let (dto, initial) = load_kit_dto(&conn)?;
@@ -25180,7 +24650,7 @@ pub mod io {
 
         use crate::error::{Result, SemioError};
         use crate::file::FileInput;
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
 
         const LOCAL_DIR: &str = ".semio";
         const LOCAL_DB: &str = "kit.db";
@@ -25311,7 +24781,7 @@ pub mod io {
         }
 
         impl KitGraph {
-            pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphRef> {
+            pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphReference> {
                 let kit = KitGraph::load_sqlite(&local_db_path(folder_path))?;
                 let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_input();
                 hydrate_files(&mut dto, folder_path)?;
@@ -25341,7 +24811,7 @@ pub mod io {
         use serde::de::DeserializeOwned;
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
 
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         pub struct RemoteKitSession {
@@ -25404,7 +24874,7 @@ pub mod io {
                 Ok(RemoteKitSession { hub_url, session_id: response.session_id, kit_id: response.kit_id, owner_token: response.owner_token })
             }
 
-            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphRef> {
+            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphReference> {
                 let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
                 let dto: KitInput = serde_json::from_value(response.kit)?;
                 Ok(KitGraph::from_input(dto))
@@ -25431,7 +24901,7 @@ pub mod io {
         use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitGraph, KitGraphReference};
 
         const KIT_JSON: &str = "kit.json";
 
@@ -25446,7 +24916,7 @@ pub mod io {
                 Ok(())
             }
 
-            pub fn load_zip(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_zip(path: &Path) -> Result<KitGraphReference> {
                 let file = File::open(path)?;
                 let mut archive = ZipArchive::new(file)?;
                 let mut kit_json = String::new();
@@ -25466,7 +24936,7 @@ pub mod io {
     }
 }
 
-//#region ­ƒöûKitGraphql
+//#region ­ƒöûKit
 /// ­ƒîÉ `async-graphql` kit control plane: queries traverse live [`Arc<RwLock<_>>`] stores;
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
@@ -25478,9 +24948,9 @@ pub mod kit_graphql {
     use std::pin::Pin;
 
     use crate::change_command::ChangeKitCommand;
-    use crate::connection::ConnectionStoreRef;
-    use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignStoreRef;
+    use crate::connection::ConnectionReference;
+    use crate::connector::ConnectorReference;
+    use crate::design::DesignReference;
     use crate::events::KitEvent;
     use crate::geom::{Coordinate, Plane};
     use crate::id::Id;
@@ -25489,11 +24959,11 @@ pub mod kit_graphql {
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
     use crate::kit_read_scope::KitReadScope;
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult, TransactionState};
-    use crate::kit_graph::{KitGraph, KitGraphRef};
-    use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-    use crate::piece::PieceStoreRef;
-    use crate::representation::RepresentationStoreRef;
-    use crate::typ::TypeStoreRef;
+    use crate::kit_graph::{KitGraph, KitGraphReference};
+    use crate::kit_store_command::{KitCommand, KitCommandResult};
+    use crate::piece::PieceReference;
+    use crate::representation::RepresentationReference;
+    use crate::typ::TypeReference;
 
     /// ­ƒº¥ `ChangeKitCommand` output (externally tagged JSON; GraphQL name is not `JSON`).
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -25549,7 +25019,7 @@ pub mod kit_graphql {
     #[derive(Clone, Default)]
     pub struct GraphQlOverride {
         #[cfg(not(target_arch = "wasm32"))]
-        pub native: Option<Arc<crate::kit_store::KitStore>>,
+        pub native: Option<Arc<crate::kit_store::Kit>>,
     }
 
     pub enum GraphWork {
@@ -25562,8 +25032,8 @@ pub mod kit_graphql {
             reply: oneshot::Sender<std::result::Result<(crate::kit_change::KitChangeKind, Vec<ChangeKitCommand>), String>>,
         },
         Vcs {
-            command: KitStoreCommand,
-            reply: oneshot::Sender<std::result::Result<KitStoreCommandResult, String>>,
+            command: KitCommand,
+            reply: oneshot::Sender<std::result::Result<KitCommandResult, String>>,
         },
         Custom {
             run: Box<dyn FnOnce() -> std::result::Result<(), String> + Send>,
@@ -25575,7 +25045,7 @@ pub mod kit_graphql {
         },
     }
 
-    pub fn spawn_actor(graph: KitGraphRef, rx: async_channel::Receiver<GraphWork>) {
+    pub fn spawn_actor(graph: KitGraphReference, rx: async_channel::Receiver<GraphWork>) {
         let kmain = async move {
             while let Ok(work) = rx.recv().await {
                 match work {
@@ -25637,7 +25107,7 @@ pub mod kit_graphql {
         Ok(req)
     }
 
-    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlOverride) -> Result<async_graphql::Response, Error> {
+    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphReference, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlOverride) -> Result<async_graphql::Response, Error> {
         let mut req = request_from_json(request_json)?;
         req = req.data(graph).data(work_tx).data(vcs);
         Ok(async_graphql::Response::from(schema().execute(req).await))
@@ -25882,21 +25352,21 @@ pub mod kit_graphql {
 
     fn design_command_to_change_kit_commands(design_id: &str, command: DesignCommandInput) -> Result<Vec<ChangeKitCommand>, Error> {
         use crate::change_command::ChangeKitCommand as C;
-        use crate::connection::ConnectionRef;
-        use crate::design::DesignRef;
+        use crate::connection::ConnectionReference;
+        use crate::design::DesignReference;
         use crate::id::Id;
-        use crate::piece::PieceRef;
-        use crate::typ::TypeRef;
-        let did = DesignRef { id: Id::from(design_id) };
+        use crate::piece::PieceReference;
+        use crate::typ::TypeReference;
+        let did = DesignReference { id: Id::from(design_id) };
         match command {
             DesignCommandInput::ClusterPieces(input) => Ok(vec![C::ClusterPieces { design_id: did, piece_ids: input.piece_ids, cluster_name: input.cluster_name }]),
             DesignCommandInput::DragPieces(input) => Ok(vec![C::DragPieces { design_id: did, piece_ids: input.piece_ids, du: input.du, dv: input.dv }]),
             DesignCommandInput::MovePieces(input) => Ok(vec![C::MovePieces { design_id: did, piece_ids: input.piece_ids, gap: input.gap, shift: input.shift, rise: input.rise }]),
             DesignCommandInput::FixPieces(input) => Ok(vec![C::FixPieces { design_id: did, piece_ids: input.piece_ids }]),
             DesignCommandInput::FlattenDesign(_) => Ok(vec![C::FlattenDesign { design_id: did }]),
-            DesignCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign { parent_design_id: did, nested_design_id: DesignRef { id: Id::from(input.nested_design_id.as_str()) } }]),
-            DesignCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection { design_id: did, connection_id: ConnectionRef { id: Id::from(input.connection_id.as_str()) } }]),
-            DesignCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind { design_id: did, piece_id: PieceRef { id: Id::from(input.piece_id.as_str()) }, new_type_id: TypeRef { id: Id::from(input.new_type_id.as_str()) } }]),
+            DesignCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign { parent_design_id: did, nested_design_id: DesignReference { id: Id::from(input.nested_design_id.as_str()) } }]),
+            DesignCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection { design_id: did, connection_id: ConnectionReference { id: Id::from(input.connection_id.as_str()) } }]),
+            DesignCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind { design_id: did, piece_id: PieceReference { id: Id::from(input.piece_id.as_str()) }, new_type_id: TypeReference { id: Id::from(input.new_type_id.as_str()) } }]),
             DesignCommandInput::CreateHangingPieces(_) | DesignCommandInput::CreateConnectedPiece(_) | DesignCommandInput::CreateFixedPiece(_) => {
                 Err(Error::new("design canvas createHangingPieces/createConnectedPiece/createFixedPiece are not implemented as ChangeKitCommand yet"))
             }
@@ -25940,13 +25410,13 @@ pub mod kit_graphql {
 
     #[derive(Clone)]
     struct KitShellCtx {
-        graph: KitGraphRef,
+        graph: KitGraphReference,
         tx: async_channel::Sender<GraphWork>,
         vcs: GraphQlOverride,
     }
 
     impl KitShellCtx {
-        async fn run_command(&self, command: KitStoreCommand) -> Result<KitStoreCommandResult, Error> {
+        async fn run_command(&self, command: KitCommand) -> Result<KitCommandResult, Error> {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 if let Some(ref store) = self.vcs.native {
@@ -25960,7 +25430,7 @@ pub mod kit_graphql {
     }
 
     #[derive(Clone, Debug)]
-    enum KitStoreMount {
+    enum KitMount {
         /// Main line materialized at `the_kit_head` (must exist in `checkpoints` when non-empty graph history applies).
         MainLine { checkpoint_id: Id },
         /// Main line before any checkpoint exists: same materialization as `materialize_graph_at(None)`, with `checkpoint` exposing the root snapshot id until the first real head is set.
@@ -25971,33 +25441,33 @@ pub mod kit_graphql {
     }
 
     #[derive(Clone)]
-    pub struct KitStoreGraphql {
-        view: KitGraphRef,
-        layout: KitGraphRef,
-        mount: KitStoreMount,
+    pub struct Kit {
+        view: KitGraphReference,
+        layout: KitGraphReference,
+        mount: KitMount,
     }
 
-    impl KitStoreGraphql {
-        fn main_line_at_head(layout: &KitGraphRef) -> Result<Self> {
+    impl Kit {
+        fn main_line_at_head(layout: &KitGraphReference) -> Result<Self> {
             let g = lock_graph(layout)?;
             let head = g.the_kit_head.clone();
             let view = g.materialize_graph_at(head.as_ref());
             match head {
-                Some(hid) => Ok(Self { view, layout: layout.clone(), mount: KitStoreMount::MainLine { checkpoint_id: hid } }),
+                Some(hid) => Ok(Self { view, layout: layout.clone(), mount: KitMount::MainLine { checkpoint_id: hid } }),
                 None => Ok(Self {
                     view,
                     layout: layout.clone(),
-                    mount: KitStoreMount::InitialMainLine { root_snapshot_id: g.initial.id.clone() },
+                    mount: KitMount::InitialMainLine { root_snapshot_id: g.initial.id.clone() },
                 }),
             }
         }
 
-        fn from_checkpoint(layout: &KitGraphRef, checkpoint_id: Id) -> Result<Self> {
+        fn from_checkpoint(layout: &KitGraphReference, checkpoint_id: Id) -> Result<Self> {
             let view = { let g = lock_graph(layout)?; g.materialize_graph_at(Some(&checkpoint_id)) };
-            Ok(Self { view, layout: layout.clone(), mount: KitStoreMount::MainLine { checkpoint_id } })
+            Ok(Self { view, layout: layout.clone(), mount: KitMount::MainLine { checkpoint_id } })
         }
 
-        fn from_alternative_tip(layout: &KitGraphRef, alternative_id: Id) -> Result<Self> {
+        fn from_alternative_tip(layout: &KitGraphReference, alternative_id: Id) -> Result<Self> {
             let at = {
                 let g = lock_graph(layout)?;
                 let tip = g.alternative_tip(&alternative_id);
@@ -26010,15 +25480,15 @@ pub mod kit_graphql {
                 return Err(Error::new("alternative has no tip and kit has no head"));
             };
             let view = { let g = lock_graph(layout)?; g.materialize_graph_at(Some(hid)) };
-            Ok(Self { view, layout: layout.clone(), mount: KitStoreMount::Alternative { alternative_id } })
+            Ok(Self { view, layout: layout.clone(), mount: KitMount::Alternative { alternative_id } })
         }
 
-        fn from_draft(layout: &KitGraphRef, alternative_id: Option<Id>, draft_id: Id) -> Result<Self> {
+        fn from_draft(layout: &KitGraphReference, alternative_id: Option<Id>, draft_id: Id) -> Result<Self> {
             let view = crate::kit_read_scope::resolve_read_graph(layout, &crate::kit_read_scope::KitReadScope::Draft { alternative_id: alternative_id.clone(), draft_id: draft_id.clone() }).map_err(|e| Error::new(e.to_string()))?;
-            Ok(Self { view, layout: layout.clone(), mount: KitStoreMount::Draft { alternative_id, draft_id } })
+            Ok(Self { view, layout: layout.clone(), mount: KitMount::Draft { alternative_id, draft_id } })
         }
 
-        fn from_transaction(layout: &KitGraphRef, alternative_id: Option<Id>, draft_id: Id, transaction_id: Id) -> Result<Self> {
+        fn from_transaction(layout: &KitGraphReference, alternative_id: Option<Id>, draft_id: Id, transaction_id: Id) -> Result<Self> {
             let view = crate::kit_read_scope::resolve_read_graph(
                 layout,
                 &crate::kit_read_scope::KitReadScope::Transaction { alternative_id: alternative_id.clone(), draft_id: draft_id.clone(), transaction_id: transaction_id.clone() },
@@ -26027,15 +25497,15 @@ pub mod kit_graphql {
             Ok(Self {
                 view,
                 layout: layout.clone(),
-                mount: KitStoreMount::Transaction { alternative_id, draft_id, transaction_id },
+                mount: KitMount::Transaction { alternative_id, draft_id, transaction_id },
             })
         }
 
         fn base_checkpoint_id(&self) -> Result<Id> {
             match &self.mount {
-                KitStoreMount::MainLine { checkpoint_id } => Ok(checkpoint_id.clone()),
-                KitStoreMount::InitialMainLine { root_snapshot_id } => Ok(root_snapshot_id.clone()),
-                KitStoreMount::Alternative { alternative_id } => {
+                KitMount::MainLine { checkpoint_id } => Ok(checkpoint_id.clone()),
+                KitMount::InitialMainLine { root_snapshot_id } => Ok(root_snapshot_id.clone()),
+                KitMount::Alternative { alternative_id } => {
                     let g = lock_graph(&self.layout)?;
                     let tip = g.alternative_tip(alternative_id);
                     let at = match tip.as_ref() {
@@ -26044,12 +25514,12 @@ pub mod kit_graphql {
                     };
                     at.ok_or_else(|| Error::new("no checkpoint for alternative store"))
                 }
-                KitStoreMount::Draft { alternative_id, draft_id } => {
+                KitMount::Draft { alternative_id, draft_id } => {
                     let g = lock_graph(&self.layout)?;
                     let d = g.draft_ref_for_owner(alternative_id.as_ref(), draft_id).ok_or_else(|| Error::new("draft missing"))?;
                     d.parent_checkpoint.clone().ok_or_else(|| Error::new("draft parent missing"))
                 }
-                KitStoreMount::Transaction { alternative_id, draft_id, .. } => {
+                KitMount::Transaction { alternative_id, draft_id, .. } => {
                     let g = lock_graph(&self.layout)?;
                     let d = g.draft_ref_for_owner(alternative_id.as_ref(), draft_id).ok_or_else(|| Error::new("draft missing"))?;
                     d.parent_checkpoint.clone().ok_or_else(|| Error::new("draft parent missing"))
@@ -26059,39 +25529,39 @@ pub mod kit_graphql {
     }
 
     #[derive(Clone)]
-    pub struct KitSessionGraphql {
-        layout: KitGraphRef,
+    pub struct KitSession {
+        layout: KitGraphReference,
         #[cfg(not(target_arch = "wasm32"))]
-        native: Option<Arc<crate::kit_store::KitStore>>,
+        native: Option<Arc<crate::kit_store::Kit>>,
     }
 
     #[derive(Clone)]
-    pub struct KitGraphGraphql {
-        layout: KitGraphRef,
+    pub struct KitGraph {
+        layout: KitGraphReference,
     }
 
     #[derive(Clone)]
-    pub struct KitAlternativeGraphql {
-        layout: KitGraphRef,
+    pub struct KitAlternative {
+        layout: KitGraphReference,
         alternative_id: Id,
     }
 
     #[derive(Clone)]
-    pub struct KitCheckpointGraphql {
-        layout: KitGraphRef,
+    pub struct KitCheckpoint {
+        layout: KitGraphReference,
         checkpoint_id: Id,
     }
 
     #[derive(Clone)]
-    pub struct KitDraftGraphql {
-        layout: KitGraphRef,
+    pub struct KitDraft {
+        layout: KitGraphReference,
         alternative_id: Option<Id>,
         draft_id: Id,
     }
 
     #[derive(Clone)]
-    pub struct KitTransactionGraphql {
-        layout: KitGraphRef,
+    pub struct KitTransaction {
+        layout: KitGraphReference,
         alternative_id: Option<Id>,
         draft_id: Id,
         transaction_id: Id,
@@ -26148,16 +25618,16 @@ pub mod kit_graphql {
 
     #[Object(name = "Query")]
     impl RootQuery {
-        async fn session(&self, ctx: &Context<'_>) -> Result<KitSessionGraphql> {
-            let layout = ctx.data::<KitGraphRef>()?.clone();
+        async fn session(&self, ctx: &Context<'_>) -> Result<KitSession> {
+            let layout = ctx.data::<KitGraphReference>()?.clone();
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let native = ctx.data_opt::<GraphQlOverride>().and_then(|o| o.native.clone());
-                return Ok(KitSessionGraphql { layout, native });
+                return Ok(KitSession { layout, native });
             }
             #[cfg(target_arch = "wasm32")]
             {
-                Ok(KitSessionGraphql { layout })
+                Ok(KitSession { layout })
             }
         }
     }
@@ -26173,34 +25643,34 @@ pub mod kit_graphql {
 
     #[Object(name = "KitSessionMutation")]
     impl KitSessionMutation {
-        async fn create_alternative(&self, ctx: &Context<'_>, input: CreateKitAlternativeInput) -> Result<KitAlternativeGraphql> {
-            let graph = ctx.data::<KitGraphRef>()?.clone();
+        async fn create_alternative(&self, ctx: &Context<'_>, input: CreateKitAlternativeInput) -> Result<KitAlternative> {
+            let graph = ctx.data::<KitGraphReference>()?.clone();
             let tx = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs = ctx.data_opt::<GraphQlOverride>().cloned().unwrap_or_default();
             let shell = KitShellCtx { graph: graph.clone(), tx, vcs };
-            let res = shell.run_command(KitStoreCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
-            let KitStoreCommandResult::NewAlternative { id } = res else {
+            let res = shell.run_command(KitCommand::NewAlternative { from_checkpoint: input.from_checkpoint_id.as_deref().map(Id::from), name: input.name }).await?;
+            let KitCommandResult::NewAlternative { id } = res else {
                 return Err(Error::new("expected NewAlternative"));
             };
-            Ok(KitAlternativeGraphql { layout: graph, alternative_id: id })
+            Ok(KitAlternative { layout: graph, alternative_id: id })
         }
 
         async fn alternative(&self, ctx: &Context<'_>, id: KitAlternativeIdIn) -> Result<KitAlternativeMutation> {
-            let graph = ctx.data::<KitGraphRef>()?.clone();
+            let graph = ctx.data::<KitGraphReference>()?.clone();
             let tx = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs = ctx.data_opt::<GraphQlOverride>().cloned().unwrap_or_default();
             Ok(KitAlternativeMutation { shell: KitShellCtx { graph, tx, vcs }, alternative_id: Id::from(id.id.as_str()) })
         }
 
         async fn checkpoint(&self, ctx: &Context<'_>, id: KitCheckpointIdIn) -> Result<KitCheckpointMutation> {
-            let graph = ctx.data::<KitGraphRef>()?.clone();
+            let graph = ctx.data::<KitGraphReference>()?.clone();
             let tx = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs = ctx.data_opt::<GraphQlOverride>().cloned().unwrap_or_default();
             Ok(KitCheckpointMutation { shell: KitShellCtx { graph, tx, vcs }, checkpoint_id: Id::from(id.id.as_str()) })
         }
 
         async fn backbone(&self, ctx: &Context<'_>) -> Result<KitBackboneMutation> {
-            let graph = ctx.data::<KitGraphRef>()?.clone();
+            let graph = ctx.data::<KitGraphReference>()?.clone();
             let tx = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs = ctx.data_opt::<GraphQlOverride>().cloned().unwrap_or_default();
             Ok(KitBackboneMutation { shell: KitShellCtx { graph, tx, vcs } })
@@ -26209,12 +25679,12 @@ pub mod kit_graphql {
 
     #[Object(name = "KitAlternativeMutation")]
     impl KitAlternativeMutation {
-        async fn create_draft(&self, _ctx: &Context<'_>, parent_checkpoint_id: Option<String>) -> Result<KitDraftGraphql> {
-            let res = self.shell.run_command(KitStoreCommand::NewDraft { checkpoint_id: parent_checkpoint_id.map(Id::from), alternative_id: Some(self.alternative_id.clone()) }).await?;
-            let KitStoreCommandResult::NewDraft { draft_id } = res else {
+        async fn create_draft(&self, _ctx: &Context<'_>, parent_checkpoint_id: Option<String>) -> Result<KitDraft> {
+            let res = self.shell.run_command(KitCommand::NewDraft { checkpoint_id: parent_checkpoint_id.map(Id::from), alternative_id: Some(self.alternative_id.clone()) }).await?;
+            let KitCommandResult::NewDraft { draft_id } = res else {
                 return Err(Error::new("expected NewDraft"));
             };
-            Ok(KitDraftGraphql { layout: self.shell.graph.clone(), alternative_id: Some(self.alternative_id.clone()), draft_id })
+            Ok(KitDraft { layout: self.shell.graph.clone(), alternative_id: Some(self.alternative_id.clone()), draft_id })
         }
 
         async fn draft(&self) -> Result<Option<KitDraftMutation>> {
@@ -26228,15 +25698,15 @@ pub mod kit_graphql {
             Ok(Some(KitDraftMutation { shell: self.shell.clone(), alternative_id: Some(self.alternative_id.clone()), draft_id: d.id.clone() }))
         }
 
-        async fn unify(&self, message: String) -> Result<KitCheckpointGraphql> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitAlternativeCommands { id: self.alternative_id.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message }] }).await?;
-            let KitStoreCommandResult::ExecuteKitAlternativeCommands { results } = res else {
+        async fn unify(&self, message: String) -> Result<KitCheckpoint> {
+            let res = self.shell.run_command(KitCommand::ExecuteKitAlternativeCommands { id: self.alternative_id.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message }] }).await?;
+            let KitCommandResult::ExecuteKitAlternativeCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitAlternativeCommands"));
             };
             let r = results.into_iter().next().ok_or_else(|| Error::new("no alternative results"))?;
             match r {
                 KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint { new_checkpoint_id } => {
-                    Ok(KitCheckpointGraphql { layout: self.shell.graph.clone(), checkpoint_id: new_checkpoint_id })
+                    Ok(KitCheckpoint { layout: self.shell.graph.clone(), checkpoint_id: new_checkpoint_id })
                 }
                 _ => Err(Error::new("unexpected alternative command output")),
             }
@@ -26246,8 +25716,8 @@ pub mod kit_graphql {
     #[Object(name = "KitCheckpointMutation")]
     impl KitCheckpointMutation {
         async fn mark_release(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitCheckpointCommands { id: self.checkpoint_id.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
-            let KitStoreCommandResult::ExecuteKitCheckpointCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitCheckpointCommands { id: self.checkpoint_id.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).await?;
+            let KitCommandResult::ExecuteKitCheckpointCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitCheckpointCommands"));
             };
             match results.into_iter().next() {
@@ -26257,8 +25727,8 @@ pub mod kit_graphql {
         }
 
         async fn set_active(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::SetActiveCheckpoint { id: Some(self.checkpoint_id.clone()) }).await?;
-            let KitStoreCommandResult::SetActiveCheckpoint { ok } = res else {
+            let res = self.shell.run_command(KitCommand::SetActiveCheckpoint { id: Some(self.checkpoint_id.clone()) }).await?;
+            let KitCommandResult::SetActiveCheckpoint { ok } = res else {
                 return Err(Error::new("expected SetActiveCheckpoint"));
             };
             Ok(ok)
@@ -26267,20 +25737,20 @@ pub mod kit_graphql {
 
     #[Object(name = "KitDraftMutation")]
     impl KitDraftMutation {
-        async fn finalize(&self, message: String) -> Result<KitCheckpointGraphql> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::FinalizeToKitCheckpoint { message }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+        async fn finalize(&self, message: String) -> Result<KitCheckpoint> {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::FinalizeToKitCheckpoint { message }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             match first_draft_result(results, "finalize")? {
-                KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => Ok(KitCheckpointGraphql { layout: self.shell.graph.clone(), checkpoint_id }),
+                KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => Ok(KitCheckpoint { layout: self.shell.graph.clone(), checkpoint_id }),
                 _ => Err(Error::new("unexpected draft finalize result")),
             }
         }
 
         async fn abort(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Abort] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Abort] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             match first_draft_result(results, "abort")? {
@@ -26290,8 +25760,8 @@ pub mod kit_graphql {
         }
 
         async fn undo(&self, count: Option<i32>) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Undo { count: count.unwrap_or(1) }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Undo { count: count.unwrap_or(1) }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             match first_draft_result(results, "undo")? {
@@ -26301,8 +25771,8 @@ pub mod kit_graphql {
         }
 
         async fn redo(&self, count: Option<i32>) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Redo { count: count.unwrap_or(1) }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::Redo { count: count.unwrap_or(1) }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             match first_draft_result(results, "redo")? {
@@ -26311,13 +25781,13 @@ pub mod kit_graphql {
             }
         }
 
-        async fn start_transaction(&self) -> Result<KitTransactionGraphql> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::StartTransaction] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+        async fn start_transaction(&self) -> Result<KitTransaction> {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::StartTransaction] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             match first_draft_result(results, "startTransaction")? {
-                KitDraftCommandResult::StartTransaction { transaction_id } => Ok(KitTransactionGraphql {
+                KitDraftCommandResult::StartTransaction { transaction_id } => Ok(KitTransaction {
                     layout: self.shell.graph.clone(),
                     alternative_id: self.alternative_id.clone(),
                     draft_id: self.draft_id.clone(),
@@ -26341,8 +25811,8 @@ pub mod kit_graphql {
     impl KitTransactionMutation {
         async fn change_kit(&self, _ctx: &Context<'_>, commands: Vec<GqlChangeKitCommand>) -> Result<i32> {
             let chs: Vec<ChangeKitCommand> = commands.into_iter().map(|c| c.0).collect();
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::ChangeKitCommands { commands: chs }] }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::ChangeKitCommands { commands: chs }] }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let dr = first_draft_result(results, "changeKit")?;
@@ -26375,21 +25845,21 @@ pub mod kit_graphql {
             })
         }
 
-        async fn finalize(&self) -> Result<KitCheckpointGraphql> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::Finalize] }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+        async fn finalize(&self) -> Result<KitCheckpoint> {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::Finalize] }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let _ = first_draft_result(results, "txFinalize")?;
             let g = lock_graph(&self.shell.graph)?;
             let d = g.draft_ref_for_owner(self.alternative_id.as_ref(), &self.draft_id).ok_or_else(|| Error::new("draft missing"))?;
             let pid = d.parent_checkpoint.clone().ok_or_else(|| Error::new("draft has no parent checkpoint"))?;
-            Ok(KitCheckpointGraphql { layout: self.shell.graph.clone(), checkpoint_id: pid })
+            Ok(KitCheckpoint { layout: self.shell.graph.clone(), checkpoint_id: pid })
         }
 
         async fn abort(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::Abort] }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::Abort] }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let dr = first_draft_result(results, "txAbort")?;
@@ -26408,8 +25878,8 @@ pub mod kit_graphql {
                 Some(n) if n > 1 => vec![TransactionCommand::UndoAll],
                 Some(_) => vec![TransactionCommand::Undo],
             };
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: cmds }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: cmds }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let dr = first_draft_result(results, "txUndo")?;
@@ -26428,8 +25898,8 @@ pub mod kit_graphql {
                 Some(n) if n > 1 => vec![TransactionCommand::RedoAll],
                 Some(_) => vec![TransactionCommand::Redo],
             };
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: cmds }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: cmds }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let dr = first_draft_result(results, "txRedo")?;
@@ -26451,8 +25921,8 @@ pub mod kit_graphql {
             for c in commands {
                 flat.extend(design_command_to_change_kit_commands(did.as_str(), c)?);
             }
-            let res = self.shell.run_command(KitStoreCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::ChangeKitCommands { commands: flat }] }] }).await?;
-            let KitStoreCommandResult::ExecuteKitDraftCommands { results } = res else {
+            let res = self.shell.run_command(KitCommand::ExecuteKitDraftCommands { alternative_id: self.alternative_id.clone(), draft_id: self.draft_id.clone(), commands: vec![KitDraftCommand::ExecuteTransactionCommands { id: self.transaction_id.clone(), commands: vec![TransactionCommand::ChangeKitCommands { commands: flat }] }] }).await?;
+            let KitCommandResult::ExecuteKitDraftCommands { results } = res else {
                 return Err(Error::new("expected ExecuteKitDraftCommands"));
             };
             let dr = first_draft_result(results, "designApply")?;
@@ -26470,74 +25940,74 @@ pub mod kit_graphql {
     impl KitBackboneMutation {
         async fn attach(&self, config: BackboneConfigInput) -> Result<BackboneStatus> {
             let output = backbone_output_from_gql(config);
-            let res = self.shell.run_command(KitStoreCommand::AttachBackbone { config: output }).await?;
+            let res = self.shell.run_command(KitCommand::AttachBackbone { config: output }).await?;
             match res {
-                KitStoreCommandResult::AttachBackbone { ok } if ok => {
-                    let res2 = self.shell.run_command(KitStoreCommand::BackboneStatus).await?;
+                KitCommandResult::AttachBackbone { ok } if ok => {
+                    let res2 = self.shell.run_command(KitCommand::BackboneStatus).await?;
                     match res2 {
-                        KitStoreCommandResult::BackboneStatus { attached, kind, tip } => Ok(gql_backbone_status(attached, kind, tip)),
+                        KitCommandResult::BackboneStatus { attached, kind, tip } => Ok(gql_backbone_status(attached, kind, tip)),
                         _ => Err(Error::new("expected BackboneStatus")),
                     }
                 }
-                KitStoreCommandResult::AttachBackbone { .. } => Err(Error::new("attach backbone failed")),
+                KitCommandResult::AttachBackbone { .. } => Err(Error::new("attach backbone failed")),
                 _ => Err(Error::new("unexpected attach result")),
             }
         }
 
         async fn detach(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::DetachBackbone).await?;
+            let res = self.shell.run_command(KitCommand::DetachBackbone).await?;
             match res {
-                KitStoreCommandResult::DetachBackbone { ok } => Ok(ok),
+                KitCommandResult::DetachBackbone { ok } => Ok(ok),
                 _ => Err(Error::new("expected DetachBackbone")),
             }
         }
 
         async fn status(&self) -> Result<BackboneStatus> {
-            let res = self.shell.run_command(KitStoreCommand::BackboneStatus).await?;
+            let res = self.shell.run_command(KitCommand::BackboneStatus).await?;
             match res {
-                KitStoreCommandResult::BackboneStatus { attached, kind, tip } => Ok(gql_backbone_status(attached, kind, tip)),
+                KitCommandResult::BackboneStatus { attached, kind, tip } => Ok(gql_backbone_status(attached, kind, tip)),
                 _ => Err(Error::new("expected BackboneStatus")),
             }
         }
 
         async fn sync_now(&self) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::SyncNow).await?;
+            let res = self.shell.run_command(KitCommand::SyncNow).await?;
             match res {
-                KitStoreCommandResult::SyncNow { ok } => Ok(ok),
+                KitCommandResult::SyncNow { ok } => Ok(ok),
                 _ => Err(Error::new("expected SyncNow")),
             }
         }
 
         async fn resolve_conflict(&self, id: String, strategy: ConflictResolutionInput) -> Result<bool> {
-            let res = self.shell.run_command(KitStoreCommand::ResolveConflict { id: Id::from(id.as_str()), strategy: conflict_resolution_from_gql(strategy) }).await?;
+            let res = self.shell.run_command(KitCommand::ResolveConflict { id: Id::from(id.as_str()), strategy: conflict_resolution_from_gql(strategy) }).await?;
             match res {
-                KitStoreCommandResult::ResolveConflict { ok } => Ok(ok),
+                KitCommandResult::ResolveConflict { ok } => Ok(ok),
                 _ => Err(Error::new("expected ResolveConflict")),
             }
         }
     }
 
     #[Object(name = "KitSession")]
-    impl KitSessionGraphql {
+    impl KitSession {
         async fn id(&self) -> Result<String> {
             Ok(lock_graph(&self.layout)?.id.to_string())
         }
 
-        async fn wip(&self) -> Result<KitGraphGraphql> {
-            Ok(KitGraphGraphql { layout: self.layout.clone() })
+        async fn wip(&self) -> Result<KitGraph> {
+            Ok(KitGraph { layout: self.layout.clone() })
         }
 
         #[cfg(not(target_arch = "wasm32"))]
-        async fn authorative(&self) -> Result<Option<KitGraphGraphql>> {
+        async fn authorative(&self) -> Result<Option<KitGraph>> {
             if let Some(ref s) = self.native {
-                Ok(Some(KitGraphGraphql { layout: s.authorative_graph() }))
+                Ok(Some(KitGraph { layout: s.authorative_graph() }))
             } else {
                 Ok(None)
             }
         }
 
         #[cfg(target_arch = "wasm32")]
-        async fn authorative(&self) -> Result<Option<KitGraphGraphql>> {
+        async fn authorative(&self) -> Result<Option<KitGraph>> {
             Ok(None)
         }
 
@@ -26551,53 +26021,53 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitGraph")]
-    impl KitGraphGraphql {
+    impl KitGraph {
         async fn id(&self) -> Result<String> {
             Ok(lock_graph(&self.layout)?.id.to_string())
         }
 
-        async fn container(&self, ctx: &Context<'_>) -> Result<Option<KitSessionGraphql>> {
-            let layout = ctx.data::<KitGraphRef>()?.clone();
+        async fn owner(&self, ctx: &Context<'_>) -> Result<Option<KitSession>> {
+            let layout = ctx.data::<KitGraphReference>()?.clone();
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let native = ctx.data_opt::<GraphQlOverride>().and_then(|o| o.native.clone());
-                return Ok(Some(KitSessionGraphql { layout, native }));
+                return Ok(Some(KitSession { layout, native }));
             }
             #[cfg(target_arch = "wasm32")]
             {
-                Ok(Some(KitSessionGraphql { layout }))
+                Ok(Some(KitSession { layout }))
             }
         }
 
-        async fn the_kit(&self) -> Result<Option<KitStoreGraphql>> {
-            Ok(Some(KitStoreGraphql::main_line_at_head(&self.layout)?))
+        async fn the_kit(&self) -> Result<Option<Kit>> {
+            Ok(Some(Kit::main_line_at_head(&self.layout)?))
         }
 
-        async fn alternatives(&self) -> Result<Vec<KitAlternativeGraphql>> {
+        async fn alternatives(&self) -> Result<Vec<KitAlternative>> {
             let g = lock_graph(&self.layout)?;
-            Ok(g.alternatives.keys().map(|id| KitAlternativeGraphql { layout: self.layout.clone(), alternative_id: id.clone() }).collect())
+            Ok(g.alternatives.keys().map(|id| KitAlternative { layout: self.layout.clone(), alternative_id: id.clone() }).collect())
         }
 
-        async fn alternative(&self, id: KitAlternativeIdIn) -> Result<Option<KitAlternativeGraphql>> {
+        async fn alternative(&self, id: KitAlternativeIdIn) -> Result<Option<KitAlternative>> {
             let aid = Id::from(id.id.as_str());
             let g = lock_graph(&self.layout)?;
             if g.alternatives.contains_key(&aid) {
-                Ok(Some(KitAlternativeGraphql { layout: self.layout.clone(), alternative_id: aid }))
+                Ok(Some(KitAlternative { layout: self.layout.clone(), alternative_id: aid }))
             } else {
                 Ok(None)
             }
         }
 
-        async fn checkpoints(&self) -> Result<Vec<KitCheckpointGraphql>> {
+        async fn checkpoints(&self) -> Result<Vec<KitCheckpoint>> {
             let g = lock_graph(&self.layout)?;
-            Ok(g.checkpoints.keys().map(|id| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: id.clone() }).collect())
+            Ok(g.checkpoints.keys().map(|id| KitCheckpoint { layout: self.layout.clone(), checkpoint_id: id.clone() }).collect())
         }
 
-        async fn checkpoint(&self, id: KitCheckpointIdIn) -> Result<Option<KitCheckpointGraphql>> {
+        async fn checkpoint(&self, id: KitCheckpointIdIn) -> Result<Option<KitCheckpoint>> {
             let cid = Id::from(id.id.as_str());
             let g = lock_graph(&self.layout)?;
             if g.checkpoints.contains_key(&cid) {
-                Ok(Some(KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: cid }))
+                Ok(Some(KitCheckpoint { layout: self.layout.clone(), checkpoint_id: cid }))
             } else {
                 Ok(None)
             }
@@ -26605,7 +26075,7 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitAlternative")]
-    impl KitAlternativeGraphql {
+    impl KitAlternative {
         async fn id(&self) -> Result<String> {
             Ok(self.alternative_id.to_string())
         }
@@ -26615,34 +26085,34 @@ pub mod kit_graphql {
             Ok(g.alternatives.get(&self.alternative_id).map(|a| a.name.clone()).unwrap_or_default())
         }
 
-        async fn container(&self) -> Result<KitGraphGraphql> {
-            Ok(KitGraphGraphql { layout: self.layout.clone() })
+        async fn owner(&self) -> Result<KitGraph> {
+            Ok(KitGraph { layout: self.layout.clone() })
         }
 
-        async fn start(&self) -> Result<KitCheckpointGraphql> {
+        async fn start(&self) -> Result<KitCheckpoint> {
             let g = lock_graph(&self.layout)?;
             let a = g.alternatives.get(&self.alternative_id).ok_or_else(|| Error::new("alternative missing"))?;
             let start_id = a.root.clone().or_else(|| a.checkpoints.first().cloned()).ok_or_else(|| Error::new("alternative has no start"))?;
-            Ok(KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: start_id })
+            Ok(KitCheckpoint { layout: self.layout.clone(), checkpoint_id: start_id })
         }
 
-        async fn checkpoints(&self) -> Result<Vec<KitCheckpointGraphql>> {
+        async fn checkpoints(&self) -> Result<Vec<KitCheckpoint>> {
             let g = lock_graph(&self.layout)?;
             let a = g.alternatives.get(&self.alternative_id).ok_or_else(|| Error::new("alternative missing"))?;
-            Ok(a.checkpoints.iter().map(|cid| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: cid.clone() }).collect())
+            Ok(a.checkpoints.iter().map(|cid| KitCheckpoint { layout: self.layout.clone(), checkpoint_id: cid.clone() }).collect())
         }
 
-        async fn store(&self) -> Result<KitStoreGraphql> {
-            KitStoreGraphql::from_alternative_tip(&self.layout, self.alternative_id.clone())
+        async fn store(&self) -> Result<Kit> {
+            Kit::from_alternative_tip(&self.layout, self.alternative_id.clone())
         }
 
-        async fn draft(&self) -> Result<Option<KitDraftGraphql>> {
+        async fn draft(&self) -> Result<Option<KitDraft>> {
             let g = lock_graph(&self.layout)?;
             let d = g.alternatives.get(&self.alternative_id).and_then(|a| a.draft.as_ref());
-            Ok(d.map(|dr| KitDraftGraphql { layout: self.layout.clone(), alternative_id: Some(self.alternative_id.clone()), draft_id: dr.id.clone() }))
+            Ok(d.map(|dr| KitDraft { layout: self.layout.clone(), alternative_id: Some(self.alternative_id.clone()), draft_id: dr.id.clone() }))
         }
 
-        async fn transaction(&self) -> Result<Option<KitTransactionGraphql>> {
+        async fn transaction(&self) -> Result<Option<KitTransaction>> {
             let g = lock_graph(&self.layout)?;
             let Some(a) = g.alternatives.get(&self.alternative_id) else {
                 return Ok(None);
@@ -26653,7 +26123,7 @@ pub mod kit_graphql {
             let Some(t) = &d.open_transaction else {
                 return Ok(None);
             };
-            Ok(Some(KitTransactionGraphql {
+            Ok(Some(KitTransaction {
                 layout: self.layout.clone(),
                 alternative_id: Some(self.alternative_id.clone()),
                 draft_id: d.id.clone(),
@@ -26674,23 +26144,23 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitCheckpoint")]
-    impl KitCheckpointGraphql {
+    impl KitCheckpoint {
         async fn id(&self) -> Result<String> {
             Ok(self.checkpoint_id.to_string())
         }
 
-        async fn container(&self) -> Result<KitGraphGraphql> {
-            Ok(KitGraphGraphql { layout: self.layout.clone() })
+        async fn owner(&self) -> Result<KitGraph> {
+            Ok(KitGraph { layout: self.layout.clone() })
         }
 
-        async fn store(&self) -> Result<KitStoreGraphql> {
-            KitStoreGraphql::from_checkpoint(&self.layout, self.checkpoint_id.clone())
+        async fn store(&self) -> Result<Kit> {
+            Kit::from_checkpoint(&self.layout, self.checkpoint_id.clone())
         }
 
-        async fn parent(&self) -> Result<Option<KitCheckpointGraphql>> {
+        async fn parent(&self) -> Result<Option<KitCheckpoint>> {
             let g = lock_graph(&self.layout)?;
             match graphql_checkpoint_row(&g, &self.checkpoint_id)? {
-                Some(c) => Ok(c.parent.as_ref().map(|pid| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: pid.clone() })),
+                Some(c) => Ok(c.parent.as_ref().map(|pid| KitCheckpoint { layout: self.layout.clone(), checkpoint_id: pid.clone() })),
                 None => Ok(None),
             }
         }
@@ -26741,22 +26211,22 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitDraft")]
-    impl KitDraftGraphql {
+    impl KitDraft {
         async fn id(&self) -> Result<String> {
             Ok(self.draft_id.to_string())
         }
 
-        async fn store(&self) -> Result<KitStoreGraphql> {
-            KitStoreGraphql::from_draft(&self.layout, self.alternative_id.clone(), self.draft_id.clone())
+        async fn store(&self) -> Result<Kit> {
+            Kit::from_draft(&self.layout, self.alternative_id.clone(), self.draft_id.clone())
         }
 
-        async fn transactions(&self) -> Result<Vec<KitTransactionGraphql>> {
+        async fn transactions(&self) -> Result<Vec<KitTransaction>> {
             let g = lock_graph(&self.layout)?;
             let d = g.draft_ref_for_owner(self.alternative_id.as_ref(), &self.draft_id).ok_or_else(|| Error::new("draft missing"))?;
             Ok(d
                 .transactions
                 .iter()
-                .map(|t| KitTransactionGraphql {
+                .map(|t| KitTransaction {
                     layout: self.layout.clone(),
                     alternative_id: self.alternative_id.clone(),
                     draft_id: self.draft_id.clone(),
@@ -26765,10 +26235,10 @@ pub mod kit_graphql {
                 .collect())
         }
 
-        async fn open_transaction(&self) -> Result<Option<KitTransactionGraphql>> {
+        async fn open_transaction(&self) -> Result<Option<KitTransaction>> {
             let g = lock_graph(&self.layout)?;
             let d = g.draft_ref_for_owner(self.alternative_id.as_ref(), &self.draft_id).ok_or_else(|| Error::new("draft missing"))?;
-            Ok(d.open_transaction.as_ref().map(|t| KitTransactionGraphql {
+            Ok(d.open_transaction.as_ref().map(|t| KitTransaction {
                 layout: self.layout.clone(),
                 alternative_id: self.alternative_id.clone(),
                 draft_id: self.draft_id.clone(),
@@ -26776,7 +26246,7 @@ pub mod kit_graphql {
             }))
         }
 
-        async fn alternative(&self) -> Result<KitAlternativeGraphql> {
+        async fn alternative(&self) -> Result<KitAlternative> {
             let g = lock_graph(&self.layout)?;
             let d = g.draft_ref_for_owner(self.alternative_id.as_ref(), &self.draft_id).ok_or_else(|| Error::new("draft missing"))?;
             let aid = self
@@ -26787,13 +26257,13 @@ pub mod kit_graphql {
             if !g.alternatives.contains_key(&aid) {
                 return Err(Error::new("alternative missing for draft"));
             }
-            Ok(KitAlternativeGraphql { layout: self.layout.clone(), alternative_id: aid })
+            Ok(KitAlternative { layout: self.layout.clone(), alternative_id: aid })
         }
 
-        async fn parent(&self) -> Result<Option<KitCheckpointGraphql>> {
+        async fn parent(&self) -> Result<Option<KitCheckpoint>> {
             let g = lock_graph(&self.layout)?;
             let d = g.draft_ref_for_owner(self.alternative_id.as_ref(), &self.draft_id).ok_or_else(|| Error::new("draft missing"))?;
-            Ok(d.parent_checkpoint.as_ref().map(|pid| KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: pid.clone() }))
+            Ok(d.parent_checkpoint.as_ref().map(|pid| KitCheckpoint { layout: self.layout.clone(), checkpoint_id: pid.clone() }))
         }
 
         async fn can_undo(&self) -> Result<bool> {
@@ -26810,17 +26280,17 @@ pub mod kit_graphql {
     }
 
     #[Object(name = "KitTransaction")]
-    impl KitTransactionGraphql {
+    impl KitTransaction {
         async fn id(&self) -> Result<String> {
             Ok(self.transaction_id.to_string())
         }
 
-        async fn store(&self) -> Result<KitStoreGraphql> {
-            KitStoreGraphql::from_transaction(&self.layout, self.alternative_id.clone(), self.draft_id.clone(), self.transaction_id.clone())
+        async fn store(&self) -> Result<Kit> {
+            Kit::from_transaction(&self.layout, self.alternative_id.clone(), self.draft_id.clone(), self.transaction_id.clone())
         }
 
-        async fn draft(&self) -> Result<KitDraftGraphql> {
-            Ok(KitDraftGraphql {
+        async fn draft(&self) -> Result<KitDraft> {
+            Ok(KitDraft {
                 layout: self.layout.clone(),
                 alternative_id: self.alternative_id.clone(),
                 draft_id: self.draft_id.clone(),
@@ -26887,20 +26357,20 @@ pub mod kit_graphql {
             Ok(self.0.created_at.clone())
         }
 
-        async fn wip_checkpoint(&self, ctx: &Context<'_>) -> Result<KitCheckpointGraphql> {
-            let layout = ctx.data::<KitGraphRef>()?.clone();
-            Ok(KitCheckpointGraphql { layout, checkpoint_id: self.0.wip_checkpoint.id.clone() })
+        async fn wip_checkpoint(&self, ctx: &Context<'_>) -> Result<KitCheckpoint> {
+            let layout = ctx.data::<KitGraphReference>()?.clone();
+            Ok(KitCheckpoint { layout, checkpoint_id: self.0.wip_checkpoint.id.clone() })
         }
 
-        async fn backbone_tip(&self, ctx: &Context<'_>) -> Result<Option<KitCheckpointGraphql>> {
+        async fn backbone_tip(&self, ctx: &Context<'_>) -> Result<Option<KitCheckpoint>> {
             let Some(ref tip) = self.0.backbone_tip else {
                 return Ok(None);
             };
-            let layout = ctx.data::<KitGraphRef>()?.clone();
+            let layout = ctx.data::<KitGraphReference>()?.clone();
             if !lock_graph(&layout)?.checkpoints.contains_key(tip) {
                 return Ok(None);
             }
-            Ok(Some(KitCheckpointGraphql { layout, checkpoint_id: tip.clone() }))
+            Ok(Some(KitCheckpoint { layout, checkpoint_id: tip.clone() }))
         }
     }
 
@@ -26911,7 +26381,7 @@ pub mod kit_graphql {
     #[Subscription(name = "Subscription")]
     impl RootSubscription {
         async fn event_stream(&self, ctx: &Context<'_>) -> Result<KitEventSubscriptionStream> {
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let graph: KitGraphReference = ctx.data::<KitGraphReference>()?.clone();
             let mut rx = lock_graph(&graph)?.subscribe();
             Ok(Box::pin(stream! {
                 loop {
@@ -26937,37 +26407,37 @@ pub mod kit_graphql {
         schema().sdl()
     }
 
-    pub struct ReplaceableCatalogStoreGraphql {
-        pub types: Vec<crate::typ::TypeStoreRef>,
-        pub designs: Vec<crate::design::DesignStoreRef>,
+    pub struct ReplaceableCatalog {
+        pub types: Vec<crate::typ::TypeReference>,
+        pub designs: Vec<crate::design::DesignReference>,
     }
 
-    #[Object(name = "ReplaceableCatalogStore")]
-    impl ReplaceableCatalogStoreGraphql {
-        async fn types(&self) -> Result<Vec<TypeStoreGraphql>> {
-            Ok(self.types.iter().cloned().map(TypeStoreGraphql).collect())
+    #[Object(name = "ReplaceableCatalog")]
+    impl ReplaceableCatalog {
+        async fn types(&self) -> Result<Vec<Type>> {
+            Ok(self.types.iter().cloned().map(Type).collect())
         }
-        async fn designs(&self) -> Result<Vec<DesignStoreGraphql>> {
-            Ok(self.designs.iter().cloned().map(DesignStoreGraphql).collect())
+        async fn designs(&self) -> Result<Vec<Design>> {
+            Ok(self.designs.iter().cloned().map(Design).collect())
         }
     }
 
-    pub struct DesignStoreGraphql(pub DesignStoreRef);
+    pub struct Design(pub DesignReference);
 
     #[derive(Clone)]
-    pub struct PieceStoreGraphql(pub PieceStoreRef);
+    pub struct Piece(pub PieceReference);
 
     #[derive(Clone)]
-    pub struct TypeStoreGraphql(pub TypeStoreRef);
+    pub struct Type(pub TypeReference);
 
     #[derive(Clone)]
-    pub struct ConnectionStoreGraphql(pub ConnectionStoreRef);
+    pub struct Connection(pub ConnectionReference);
 
     #[derive(Clone)]
-    pub struct ConnectorStoreGraphql(pub ConnectorStoreRef);
+    pub struct Connector(pub ConnectorReference);
 
     #[derive(Clone)]
-    pub struct RepresentationStoreGraphql(pub RepresentationStoreRef);
+    pub struct Representation(pub RepresentationReference);
 
     #[derive(Clone, Debug, SimpleObject)]
     #[graphql(name = "CheckpointDto")]
@@ -27021,28 +26491,28 @@ pub mod kit_graphql {
         the_kit_line: Vec<String>,
     }
 
-    #[Object(name = "KitStore")]
-    impl KitStoreGraphql {
-        async fn container(&self) -> Result<KitGraphGraphql> {
-            Ok(KitGraphGraphql { layout: self.layout.clone() })
+    #[Object(name = "Kit")]
+    impl Kit {
+        async fn owner(&self) -> Result<KitGraph> {
+            Ok(KitGraph { layout: self.layout.clone() })
         }
 
-        async fn checkpoint(&self) -> Result<KitCheckpointGraphql> {
+        async fn checkpoint(&self) -> Result<KitCheckpoint> {
             let cid = self.base_checkpoint_id()?;
-            Ok(KitCheckpointGraphql { layout: self.layout.clone(), checkpoint_id: cid })
+            Ok(KitCheckpoint { layout: self.layout.clone(), checkpoint_id: cid })
         }
 
-        async fn draft(&self) -> Result<Option<KitDraftGraphql>> {
+        async fn draft(&self) -> Result<Option<KitDraft>> {
             match &self.mount {
-                KitStoreMount::Draft { alternative_id, draft_id } => Ok(Some(KitDraftGraphql { layout: self.layout.clone(), alternative_id: alternative_id.clone(), draft_id: draft_id.clone() })),
-                KitStoreMount::Transaction { alternative_id, draft_id, .. } => Ok(Some(KitDraftGraphql { layout: self.layout.clone(), alternative_id: alternative_id.clone(), draft_id: draft_id.clone() })),
+                KitMount::Draft { alternative_id, draft_id } => Ok(Some(KitDraft { layout: self.layout.clone(), alternative_id: alternative_id.clone(), draft_id: draft_id.clone() })),
+                KitMount::Transaction { alternative_id, draft_id, .. } => Ok(Some(KitDraft { layout: self.layout.clone(), alternative_id: alternative_id.clone(), draft_id: draft_id.clone() })),
                 _ => Ok(None),
             }
         }
 
-        async fn transaction(&self) -> Result<Option<KitTransactionGraphql>> {
+        async fn transaction(&self) -> Result<Option<KitTransaction>> {
             match &self.mount {
-                KitStoreMount::Transaction { alternative_id, draft_id, transaction_id } => Ok(Some(KitTransactionGraphql {
+                KitMount::Transaction { alternative_id, draft_id, transaction_id } => Ok(Some(KitTransaction {
                     layout: self.layout.clone(),
                     alternative_id: alternative_id.clone(),
                     draft_id: draft_id.clone(),
@@ -27065,10 +26535,6 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.view)?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::kit_graph::> {
-            Ok(lock_graph(&self.view)?.to_shallow())
-        }
-
         async fn id(&self) -> Result<Option<String>> {
             Ok(Some(lock_graph(&self.view)?.id.to_string()))
         }
@@ -27081,24 +26547,24 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.view)?.description.clone())
         }
 
-        async fn design(&self, id: String) -> Result<Option<DesignStoreGraphql>> {
+        async fn design(&self, id: String) -> Result<Option<Design>> {
             let g = lock_graph(&self.view)?;
-            Ok(g.design(id.as_str()).map(DesignStoreGraphql))
+            Ok(g.design(id.as_str()).map(Design))
         }
 
-        async fn designs(&self) -> Result<Vec<DesignStoreGraphql>> {
-            Ok(lock_graph(&self.view)?.designs.iter().cloned().map(DesignStoreGraphql).collect())
+        async fn designs(&self) -> Result<Vec<Design>> {
+            Ok(lock_graph(&self.view)?.designs.iter().cloned().map(Design).collect())
         }
 
         #[graphql(name = "type")]
-        async fn kit_type(&self, id: String) -> Result<Option<TypeStoreGraphql>> {
+        async fn kit_type(&self, id: String) -> Result<Option<Type>> {
             let g = lock_graph(&self.view)?;
             let target = Id::from(id.as_str());
-            Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(TypeStoreGraphql))
+            Ok(g.types.iter().find(|t| t.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(Type))
         }
 
-        async fn types(&self) -> Result<Vec<TypeStoreGraphql>> {
-            Ok(lock_graph(&self.view)?.types.iter().cloned().map(TypeStoreGraphql).collect())
+        async fn types(&self) -> Result<Vec<Type>> {
+            Ok(lock_graph(&self.view)?.types.iter().cloned().map(Type).collect())
         }
 
         async fn icon(&self) -> Result<Option<String>> {
@@ -27142,8 +26608,8 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "DesignStore")]
-    impl DesignStoreGraphql {
+    #[Object(name = "Design")]
+    impl Design {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string())
         }
@@ -27156,41 +26622,29 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<KitStoreGraphql> {
-            let g: KitGraphRef = self
+        async fn owner(&self) -> Result<Kit> {
+            let g: KitGraphReference = self
                 .0
                 .read()
                 .map_err(|_| Error::new("design lock poisoned"))?
-                .parent_kit
+                .owner
                 .upgrade()
-                .ok_or_else(|| Error::new("kit container missing for design"))?;
-            KitStoreGraphql::main_line_at_head(&g)
+                .ok_or_else(|| Error::new("kit owner missing for design"))?;
+            Kit::main_line_at_head(&g)
         }
 
-        async fn metadata(&self) -> Result<crate::design::DesignMetadata> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_metadata())
+        async fn pieces(&self) -> Result<Vec<Piece>> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(Piece).collect())
         }
 
-        async fn shallow(&self) -> Result<crate::design::> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_shallow())
-        }
-
-        async fn input(&self) -> Result<crate::design::DesignInput> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_input())
-        }
-
-        async fn pieces(&self) -> Result<Vec<PieceStoreGraphql>> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.pieces.iter().cloned().map(PieceStoreGraphql).collect())
-        }
-
-        async fn piece_by_dto_id(&self, id: String) -> Result<Option<PieceStoreGraphql>> {
+        async fn piece_by_id(&self, id: String) -> Result<Option<Piece>> {
             let target = Id::from(id.as_str());
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d.pieces.iter().find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(PieceStoreGraphql))
+            Ok(d.pieces.iter().find(|p| p.read().ok().map(|r| r.id == target).unwrap_or(false)).cloned().map(Piece))
         }
 
-        async fn connections(&self) -> Result<Vec<ConnectionStoreGraphql>> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionStoreGraphql).collect())
+        async fn connections(&self) -> Result<Vec<Connection>> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(Connection).collect())
         }
 
         async fn pieces_input(&self) -> Result<Vec<crate::piece::PieceInput>> {
@@ -27217,17 +26671,17 @@ pub mod kit_graphql {
             Ok(g.into_iter().map(|grp: Vec<Id>| grp.into_iter().map(|i| i.to_string()).collect::<Vec<_>>()).collect())
         }
         async fn quality_sum(&self, ctx: &Context<'_>, quality_id: String) -> Result<f64> {
-            let gref: &KitGraphRef = ctx.data()?;
+            let gref: &KitGraphReference = ctx.data()?;
             let g = lock_graph(gref)?;
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let qid = Id::from(quality_id.as_str());
             Ok(crate::read::design_sum_quality(&*d, &*g, &qid))
         }
-        async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalogStoreGraphql> {
+        async fn replaceable_catalog(&self, selection: Vec<String>) -> Result<ReplaceableCatalog> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let ids: Vec<Id> = selection.iter().map(|s| Id::from(s.as_str())).collect();
             let alts = d.replaceable_catalog_candidates(&ids);
-            Ok(ReplaceableCatalogStoreGraphql { types: alts.types, designs: alts.designs })
+            Ok(ReplaceableCatalog { types: alts.types, designs: alts.designs })
         }
         async fn included_designs(&self) -> Result<Vec<crate::read::IncludedDesignInfoDto>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
@@ -27239,98 +26693,9 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "PieceStore")]
-    impl PieceStoreGraphql {
-        async fn id(&self) -> Result<String> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.id.to_string())
-        }
 
-        async fn name(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.name.clone())
-        }
-
-        async fn description(&self) -> Result<Option<String>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.description.clone())
-        }
-
-        async fn container(&self) -> Result<DesignStoreGraphql> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            p.parent_design
-                .upgrade()
-                .map(DesignStoreGraphql)
-                .ok_or_else(|| Error::new("design container missing for piece"))
-        }
-
-        async fn metadata(&self) -> Result<crate::piece::PieceMetadata> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_metadata())
-        }
-
-        async fn shallow(&self) -> Result<crate::piece::> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_shallow())
-        }
-
-        async fn input(&self) -> Result<crate::piece::PieceInput> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_input())
-        }
-
-        async fn flat_plane(&self) -> Result<Plane> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.flat_plane())
-        }
-
-        async fn flat_center(&self) -> Result<Coordinate> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.flat_center())
-        }
-
-        async fn flat_pose(&self) -> Result<crate::piece::PoseInput> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.flat_pose_input_dto())
-        }
-
-        async fn scale(&self) -> Result<Option<f64>> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.scale)
-        }
-
-        async fn ref_type(&self) -> Result<Option<TypeStoreGraphql>> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.type_ref.as_ref().and_then(|w| w.upgrade()).map(TypeStoreGraphql))
-        }
-
-        async fn parent_connection(&self) -> Result<Option<ConnectionStoreGraphql>> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.parent_connection.as_ref().and_then(|w| w.upgrade()).map(ConnectionStoreGraphql))
-        }
-
-        async fn parent_piece(&self) -> Result<Option<PieceStoreGraphql>> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.parent_piece.as_ref().and_then(|w| w.upgrade()).map(PieceStoreGraphql))
-        }
-
-        async fn depth(&self) -> Result<i32> {
-            let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-            Ok(p.depth())
-        }
-
-        async fn path(&self) -> Result<Vec<PieceStoreGraphql>> {
-            let (steps, design_weak) = {
-                let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
-                (p.path(), p.parent_design.clone())
-            };
-            let design = design_weak.upgrade().ok_or_else(|| Error::new("design container missing for piece"))?;
-            let dr = design.read().map_err(|_| Error::new("design lock poisoned"))?;
-            let mut out: Vec<PieceStoreGraphql> = Vec::new();
-            for step in steps {
-                if let Some(pr) = dr.piece(step.id.as_str()) {
-                    out.push(PieceStoreGraphql(pr));
-                }
-            }
-            Ok(out)
-        }
-    }
-
-    #[Object(name = "TypeStore")]
-    impl TypeStoreGraphql {
+    #[Object(name = "Type")]
+    impl Type {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.id.to_string())
         }
@@ -27343,10 +26708,10 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<KitStoreGraphql> {
+        async fn owner(&self) -> Result<Kit> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
-            let g = t.parent_kit.upgrade().ok_or_else(|| Error::new("kit container missing for type"))?;
-            KitStoreGraphql::main_line_at_head(&g)
+            let g = t.owner.upgrade().ok_or_else(|| Error::new("kit owner missing for type"))?;
+            Kit::main_line_at_head(&g)
         }
 
         async fn metadata(&self) -> Result<crate::typ::TypeMetadata> {
@@ -27361,27 +26726,27 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_input())
         }
 
-        async fn connectors(&self) -> Result<Vec<ConnectorStoreGraphql>> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(ConnectorStoreGraphql).collect())
+        async fn connectors(&self) -> Result<Vec<Connector>> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.connectors.iter().cloned().map(Connector).collect())
         }
 
-        async fn representations(&self) -> Result<Vec<RepresentationStoreGraphql>> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(RepresentationStoreGraphql).collect())
+        async fn representations(&self) -> Result<Vec<Representation>> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.representations.iter().cloned().map(Representation).collect())
         }
 
-        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<RepresentationStoreGraphql>> {
+        async fn best_representation(&self, tag_ids: Vec<String>) -> Result<Option<Representation>> {
             let t = self.0.read().map_err(|_| Error::new("type lock poisoned"))?;
             let ids: Vec<Id> = tag_ids.iter().map(|s| Id::from(s.as_str())).collect();
             let r = t.best_representation_for_tag_ids(&ids);
             match r {
-                Some(dto) => Ok(t.representation(dto.id.as_str()).map(RepresentationStoreGraphql)),
+                Some(dto) => Ok(t.representation(dto.id.as_str()).map(Representation)),
                 None => Ok(None),
             }
         }
     }
 
-    #[Object(name = "ConnectorStore")]
-    impl ConnectorStoreGraphql {
+    #[Object(name = "Connector")]
+    impl Connector {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.id.to_string())
         }
@@ -27394,12 +26759,12 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<TypeStoreGraphql> {
+        async fn owner(&self) -> Result<Type> {
             let c = self.0.read().map_err(|_| Error::new("connector lock poisoned"))?;
             c.parent_type
                 .upgrade()
-                .map(TypeStoreGraphql)
-                .ok_or_else(|| Error::new("type container missing for connector"))
+                .map(Type)
+                .ok_or_else(|| Error::new("type owner missing for connector"))
         }
 
         async fn color(&self) -> Result<crate::connector::ColorDto> {
@@ -27419,8 +26784,8 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "RepresentationStore")]
-    impl RepresentationStoreGraphql {
+    #[Object(name = "Representation")]
+    impl Representation {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.id.to_string())
         }
@@ -27433,12 +26798,12 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.description.clone())
         }
 
-        async fn container(&self) -> Result<TypeStoreGraphql> {
+        async fn owner(&self) -> Result<Type> {
             let r = self.0.read().map_err(|_| Error::new("representation lock poisoned"))?;
             r.parent_type
                 .upgrade()
-                .map(TypeStoreGraphql)
-                .ok_or_else(|| Error::new("type container missing for representation"))
+                .map(Type)
+                .ok_or_else(|| Error::new("type owner missing for representation"))
         }
 
         async fn metadata(&self) -> Result<crate::representation::RepresentationMetadata> {
@@ -27454,18 +26819,18 @@ pub mod kit_graphql {
         }
     }
 
-    #[Object(name = "ConnectionStore")]
-    impl ConnectionStoreGraphql {
+    #[Object(name = "Connection")]
+    impl Connection {
         async fn id(&self) -> Result<String> {
             Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.id.to_string())
         }
 
-        async fn container(&self) -> Result<DesignStoreGraphql> {
+        async fn owner(&self) -> Result<Design> {
             let c = self.0.read().map_err(|_| Error::new("connection lock poisoned"))?;
             c.parent_design
                 .upgrade()
-                .map(DesignStoreGraphql)
-                .ok_or_else(|| Error::new("design container missing for connection"))
+                .map(Design)
+                .ok_or_else(|| Error::new("design owner missing for connection"))
         }
 
         async fn metadata(&self) -> Result<crate::connection::ConnectionMetadata> {
@@ -27528,7 +26893,7 @@ pub mod wasm {
     use wasm_bindgen_futures::future_to_promise;
 
     use crate::id::Id;
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitGraph, KitGraphReference};
     use async_graphql::futures_util::StreamExt;
 
     #[wasm_bindgen(js_name = boot)]
@@ -27615,20 +26980,20 @@ pub mod wasm {
     }
 
     #[wasm_bindgen]
-    pub struct KitStoreHandle {
-        inner: KitGraphRef,
+    pub struct KitHandle {
+        inner: KitGraphReference,
         work_tx: async_channel::Sender<crate::kit_graphql::GraphWork>,
     }
 
     #[wasm_bindgen]
-    impl KitStoreHandle {
+    impl KitHandle {
         #[wasm_bindgen(js_name = create)]
-        pub fn create(dto: JsValue) -> Result<KitStoreHandle, JsValue> {
+        pub fn create(dto: JsValue) -> Result<KitHandle, JsValue> {
             let dto: crate::kit_graph::KitInput = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let inner = KitGraph::from_input(dto);
             let (work_tx, work_rx) = async_channel::unbounded();
             crate::kit_graphql::spawn_actor(inner.clone(), work_rx);
-            Ok(KitStoreHandle { inner, work_tx })
+            Ok(KitHandle { inner, work_tx })
         }
 
         #[wasm_bindgen(js_name = snapshot)]
@@ -27718,19 +27083,19 @@ mod tests {
             assert!(!s.contains("AuthorShallowRow") && !s.contains("RowObject"), "SDL must not expose legacy *Row graph wrappers");
             assert!(!s.contains("piecePlacement"), "SDL must not expose design-level piecePlacement aggregate");
             assert!(!s.contains("PiecePlacementMetadata"), "SDL must not declare PiecePlacementMetadata");
-            assert!(s.contains("parentPiece:") && s.contains("depth: Int!") && s.contains("path: [PieceStore!]!"), "SDL must expose PieceStore hierarchy fields");
+            assert!(s.contains("parentPiece:") && s.contains("depth: Int!") && s.contains("path: [Piece!]!"), "SDL must expose Piece hierarchy fields");
             for bad in ["TypeShallowList", "DesignShallowList", "PieceInputList", "ConnectionInputList"] {
                 assert!(!s.contains(bad), "SDL must not declare list scalar {bad}");
             }
             for required in [
-                "type KitStore",
-                "type DesignStore",
-                "type PieceStore",
-                "type TypeStore",
-                "type ConnectionStore",
-                "type ConnectorStore",
-                "type RepresentationStore",
-                "type ReplaceableCatalogStore",
+                "type Kit",
+                "type Design",
+                "type Piece",
+                "type Type",
+                "type Connection",
+                "type Connector",
+                "type Representation",
+                "type ReplaceableCatalog",
                 "type KitSession",
                 "type KitSessionMutation",
                 "type KitGraph",
@@ -27741,7 +27106,7 @@ mod tests {
                 assert!(s.contains(required), "SDL must declare {required}");
             }
             assert!(s.contains("session: KitSession!"), "Query.session must exist");
-            assert!(!s.contains("kitStore") && !s.contains("KitStoreMutation") && !s.contains("KitReadScope"), "legacy kit batch/read scope surface removed");
+            assert!(!s.contains("kit") && !s.contains("KitMutation") && !s.contains("KitReadScope"), "legacy kit batch/read scope surface removed");
             for forbidden_entity in [
                 "\ntype Design\n",
                 "\ntype Piece\n",
@@ -27754,7 +27119,7 @@ mod tests {
                 assert!(!s.contains(forbidden_entity), "SDL must not declare bare/mixed entity {forbidden_entity:?}");
             }
             for wrapper in [
-                "KitStoreNode",
+                "KitNode",
                 "DesignNode",
                 "PieceNode",
                 "TypeNode",
@@ -27765,10 +27130,10 @@ mod tests {
             ] {
                 assert!(!s.contains(&format!("type {wrapper} {{")), "SDL must not leak *Node / internal GraphQL wrapper names: {wrapper}");
             }
-            assert!(!s.contains("StoreGraphql"), "SDL must not leak internal *StoreGraphql Rust struct suffix into SDL");
-            assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"), "replaceable catalog resolver");
-            assert!(s.contains("types: [TypeStore!]!") && s.contains("designs: [DesignStore!]!"), "ReplaceableCatalog exposes store refs");
-            assert!(s.contains("container: KitStore!") && s.contains("container: DesignStore!"), "container back-refs use *Store SDL names");
+            assert!(!s.contains(""), "SDL must not leak internal * Rust struct suffix into SDL");
+            assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalog!"), "replaceable catalog resolver");
+            assert!(s.contains("types: [Type!]!") && s.contains("designs: [Design!]!"), "ReplaceableCatalog exposes store refs");
+            assert!(s.contains("owner: Kit!") && s.contains("owner: Design!"), "owner back-refs use * SDL names");
             assert!(s.contains("metadata: DesignMetadata!") && s.contains("shallow: !"), "Design store exposes metadata + shallow projections");
             for banned in ["InputDto", "MetadataDto", "ShallowDto", "IdDto"] {
                 assert!(!s.contains(banned), "SDL must not expose removed *{banned} tier suffixes");
@@ -27788,7 +27153,7 @@ mod tests {
 
         #[test]
         fn query_session_wip_id_via_schema() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-name")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("gql-name")));
             let expected_id = kit.read().expect("read").id.to_string();
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
@@ -27808,37 +27173,37 @@ mod tests {
 
         #[test]
         fn query_legacy_kit_store_root_is_absent() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("x")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("x")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async move {
-                let body = r#"{"query":"query { kitStore { name } }"}"#;
+                let body = r#"{"query":"query { kit { name } }"}"#;
                 let mut req = kit_graphql::request_from_json(body).expect("json");
                 req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
-            assert!(out.get("data").and_then(|d| d.get("kitStore")).is_none(), "unscoped kitStore must not exist: {out:?}");
-            assert!(out.get("errors").is_some(), "expected GraphQL errors for removed kitStore field: {out:?}");
+            assert!(out.get("data").and_then(|d| d.get("kit")).is_none(), "unscoped kit must not exist: {out:?}");
+            assert!(out.get("errors").is_some(), "expected GraphQL errors for removed kit field: {out:?}");
         }
 
         #[test]
         fn kit_batch_live_variant_removed() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("live-off")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("live-off")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
                 let body = serde_json::json!({
-                    "query": "mutation($input: KitStoreInput!) { kitStore { batch(input: $input) { results { kind } } } }",
+                    "query": "mutation($input: KitInput!) { kit { batch(input: $input) { results { kind } } } }",
                     "variables": { "input": { "commands": [{ "live": { "commands": [{ "undo": { "confirm": true } }] } }] } }
                 });
                 let mut req = kit_graphql::request_from_json(&serde_json::to_string(&body).expect("body")).expect("json");
                 req = req.data(kit).data(tx).data(kit_graphql::GraphQlOverride::default());
                 serde_json::to_value(async_graphql::Response::from(kit_graphql::schema().execute(req).await)).expect("to json")
             });
-            assert!(out.get("errors").is_some() || out.pointer("/data/kitStore/batch").is_none(), "live batch must be rejected: {out:?}");
+            assert!(out.get("errors").is_some() || out.pointer("/data/kit/batch").is_none(), "live batch must be rejected: {out:?}");
         }
 
-        fn gql_json(kit: &crate::kit_graph::KitGraphRef, tx: &async_channel::Sender<crate::kit_graphql::GraphWork>, body: &serde_json::Value) -> serde_json::Value {
+        fn gql_json(kit: &crate::kit_graph::KitGraphReference, tx: &async_channel::Sender<crate::kit_graphql::GraphWork>, body: &serde_json::Value) -> serde_json::Value {
             let mut req = kit_graphql::request_from_json(&serde_json::to_string(body).expect("body")).expect("json");
             req = req.data(kit.clone()).data(tx.clone()).data(kit_graphql::GraphQlOverride::default());
             futures_lite::future::block_on(async {
@@ -27848,7 +27213,7 @@ mod tests {
 
         #[test]
         fn scoped_kit_reads_resolve_for_draft_and_transaction_after_nested_session_mutations() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("scoped-read")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("scoped-read")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let alt = gql_json(&kit, &tx, &serde_json::json!({ "query": "mutation { session { createAlternative(input: { name: \"alt-scoped\" }) { id } } }" }));
@@ -27905,7 +27270,7 @@ mod tests {
 
         #[test]
         fn transaction_undo_redo_nested_session_mutations() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("undo-rows")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("undo-rows")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let alt = gql_json(&kit, &tx, &serde_json::json!({ "query": "mutation { session { createAlternative(input: { name: \"u-alt\" }) { id } } }" }));
@@ -28007,7 +27372,7 @@ mod tests {
 
             let did: Id = "design-a".into();
             let kc = KitChange {
-                forward: vec![ChangeKitCommand::ChangeDesignCommands { design_id: crate::design::DesignRef { id: did.clone() }, commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }] }],
+                forward: vec![ChangeKitCommand::ChangeDesignCommands { design_id: crate::design::DesignReference { id: did.clone() }, commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }] }],
                 inverse: vec![],
                 children: vec![],
                 kind: KitChangeKind::ModifyDesign,
@@ -28027,7 +27392,7 @@ mod tests {
 
         #[test]
         fn kit_store_nested_session_change_kit_updates_name() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-cp-before")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("gql-cp-before")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let alt = gql_json(&kit, &tx, &serde_json::json!({ "query": "mutation { session { createAlternative(input: { name: \"cp-alt\" }) { id } } }" }));
@@ -28063,7 +27428,7 @@ mod tests {
 
         #[test]
         fn transaction_change_kit_with_inverse_response_has_inverse() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("inv0")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("inv0")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let alt = gql_json(&kit, &tx, &serde_json::json!({ "query": "mutation { session { createAlternative(input: { name: \"inv-alt\" }) { id } } }" }));
@@ -28108,13 +27473,13 @@ mod tests {
         use crate::id::Id;
         use crate::kit_backbone_output::BackboneConfig;
         use crate::kit_graph::{ KitGraph};
-        use crate::kit_store::KitStore;
+        use crate::kit_store::Kit;
 
         #[test]
         fn kit_store_no_backbone_status() {
             let kid = Id::new_v7();
             let dto = KitInput { id: kid, name: "k".into(), ..Default::default() };
-            let ks = KitStore::from_input(dto);
+            let ks = Kit::from_input(dto);
             let st = ks.backbone_status().expect("status");
             assert!(!st.attached);
             assert!(st.backbone_tip.is_none());
@@ -28131,7 +27496,7 @@ mod tests {
                 let snap = BackboneSnapshot::from_graph(&*g);
                 fs::write(&path, serde_json::to_string_pretty(&snap).expect("json")).expect("write");
             }
-            let ks = KitStore::from_graph(k);
+            let ks = Kit::from_graph(k);
             ks.attach_backbone(BackboneConfig::Dev { path: path.to_string_lossy().into() }).expect("attach");
             let st = ks.backbone_status().expect("status");
             assert!(st.attached);
@@ -28144,16 +27509,16 @@ mod tests {
 
         use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
         use crate::design::DesignInput;
-        use crate::design::DesignRef;
+        use crate::design::DesignReference;
         use crate::id::Id;
         use crate::kit_change::{Change, KitChange, KitChangeKind};
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
         use crate::piece::PieceInput;
-        use crate::piece::PieceRef;
+        use crate::piece::PieceReference;
         use crate::typ::TypeInput;
-        use crate::typ::TypeRef;
+        use crate::typ::TypeReference;
 
-        fn small_kit() -> (KitGraphRef, Id, Id, Id) {
+        fn small_kit() -> (KitGraphReference, Id, Id, Id) {
             let kid = Id::new_v7();
             let tid = Id::new_v7();
             let did = Id::new_v7();
@@ -28162,13 +27527,13 @@ mod tests {
                 id: kid,
                 name: "k".into(),
                 types: vec![TypeInput { id: tid.clone(), name: "T0".into(), ..Default::default() }],
-                designs: vec![DesignInput { id: did.clone(), name: "D0".into(), pieces: vec![PieceInput { id: pid.clone(), name: Some("P0".into()), r#type: Some(TypeRef { id: tid.clone() }), ..Default::default() }], ..Default::default() }],
+                designs: vec![DesignInput { id: did.clone(), name: "D0".into(), pieces: vec![PieceInput { id: pid.clone(), name: Some("P0".into()), r#type: Some(TypeReference { id: tid.clone() }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
             (kit, tid, did, pid)
         }
 
-        fn undo_inverses(kit: &KitGraphRef, inv: &[ChangeKitCommand]) {
+        fn undo_inverses(kit: &KitGraphReference, inv: &[ChangeKitCommand]) {
             for u in inv {
                 u.apply(kit).expect("undo step");
             }
@@ -28189,7 +27554,7 @@ mod tests {
         fn roundtrip_type_name_nested() {
             let (kit, tid, _, _) = small_kit();
             let before = kit.read().expect("read").to_input();
-            let cmd = ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![ChangeTypeCommand::Name { name: "T1".into() }] };
+            let cmd = ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![ChangeTypeCommand::Name { name: "T1".into() }] };
             let inv = cmd.apply(&kit).expect("apply");
             assert_ne!(kit.read().expect("read").to_input(), before);
             undo_inverses(&kit, &inv);
@@ -28201,8 +27566,8 @@ mod tests {
             let (kit, _, did, pid) = small_kit();
             let before = kit.read().expect("read").to_input();
             let cmd = ChangeKitCommand::ChangeDesignCommands {
-                design_id: DesignRef { id: did },
-                commands: vec![ChangeDesignCommand::Name { name: "D1".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("P1".into()) }] }],
+                design_id: DesignReference { id: did },
+                commands: vec![ChangeDesignCommand::Name { name: "D1".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceReference { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("P1".into()) }] }],
             };
             let inv = cmd.apply(&kit).expect("apply");
             assert_ne!(kit.read().expect("read").to_input(), before);
@@ -28350,7 +27715,7 @@ mod tests {
         #[test]
         fn lift_flat_drag_pieces_stays_kit_forward_not_design_child() {
             let (kit, _, did, pid) = small_kit();
-            let flat = vec![ChangeKitCommand::DragPieces { design_id: DesignRef { id: did.clone() }, piece_ids: vec![pid.as_str().to_string()], du: 0.0, dv: 0.0 }];
+            let flat = vec![ChangeKitCommand::DragPieces { design_id: DesignReference { id: did.clone() }, piece_ids: vec![pid.as_str().to_string()], du: 0.0, dv: 0.0 }];
             let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
             assert!(kc.children.is_empty());
             assert_eq!(kc.forward.len(), 1);
@@ -28360,7 +27725,7 @@ mod tests {
         #[test]
         fn lift_flat_type_command_yields_type_child() {
             let (kit, tid, _, _) = small_kit();
-            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tlift".into() }] }];
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tlift".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             assert!(kc.forward.is_empty());
             assert_eq!(kc.children.len(), 1);
@@ -28377,8 +27742,8 @@ mod tests {
         fn lift_flat_design_with_piece_splits_design_and_piece_blocks() {
             let (kit, _, did, pid) = small_kit();
             let flat = vec![ChangeKitCommand::ChangeDesignCommands {
-                design_id: DesignRef { id: did.clone() },
-                commands: vec![ChangeDesignCommand::Name { name: "Dl".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("Pl".into()) }] }],
+                design_id: DesignReference { id: did.clone() },
+                commands: vec![ChangeDesignCommand::Name { name: "Dl".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceReference { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("Pl".into()) }] }],
             }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             assert_eq!(kc.children.len(), 1);
@@ -28394,7 +27759,7 @@ mod tests {
         #[test]
         fn lift_flat_mixed_kit_and_type_preserves_flatten_order() {
             let (kit, tid, _, _) = small_kit();
-            let flat = vec![ChangeKitCommand::Name { name: "mix".into() }, ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tx".into() }] }];
+            let flat = vec![ChangeKitCommand::Name { name: "mix".into() }, ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tx".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
             assert_eq!(serde_json::to_value(&kc.flatten_forward_commands()).expect("json"), serde_json::to_value(&flat).expect("json"));
             assert_eq!(kc.forward.len(), 1);
@@ -28405,7 +27770,7 @@ mod tests {
         fn lifted_kit_change_roundtrips_apply_on_store() {
             let (kit, tid, _, _) = small_kit();
             let before = kit.read().expect("read").to_input();
-            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Trt".into() }] }];
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Trt".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             KitChange::apply_forward(&kc, &kit).expect("fwd");
             assert_eq!(kit.read().expect("r").types[0].read().expect("tr").name, "Trt");
@@ -28432,11 +27797,11 @@ mod tests {
         use crate::events::kit_event_from_kit_change;
         use crate::kit_change::KitChange;
         use crate::kit_graph::KitGraph;
-        use crate::kit_graph::KitGraphRef;
+        use crate::kit_graph::KitGraphReference;
 
         #[test]
         fn pre_batch_matches_inverse_commands_for_many_on_live_graph() {
-            let kit: KitGraphRef = Arc::new(RwLock::new(KitGraph::new("a")));
+            let kit: KitGraphReference = Arc::new(RwLock::new(KitGraph::new("a")));
             let cmds = vec![ChangeKitCommand::Name { name: "b".into() }];
             let pre = KitGraph::control_plane_pre_batch(&kit, &cmds).expect("pre");
             let inv = ChangeKitCommand::inverse_commands_for_many(&kit, &cmds).expect("inv");
@@ -28446,8 +27811,8 @@ mod tests {
         #[test]
         fn control_plane_batch_apply_with_undo_matches_bare_apply_many_dto() {
             let base = KitGraph::new("a0").to_input();
-            let a: KitGraphRef = KitGraph::from_input(base.clone());
-            let b: KitGraphRef = KitGraph::from_input(base);
+            let a: KitGraphReference = KitGraph::from_input(base.clone());
+            let b: KitGraphReference = KitGraph::from_input(base);
             let cmds = vec![ChangeKitCommand::Name { name: "a1".into() }];
             KitGraph::control_plane_batch_apply_with_undo(&a, &cmds).expect("cp");
             ChangeKitCommand::apply_many(&b, &cmds).expect("am");
@@ -28456,8 +27821,8 @@ mod tests {
 
         #[test]
         fn single_name_command_kc_emits_equal_kit_event_from_batch_and_tx_lift() {
-            let k_batch: KitGraphRef = Arc::new(RwLock::new(KitGraph::new("b0")));
-            let k_tx: KitGraphRef = Arc::new(RwLock::new(KitGraph::new("b0")));
+            let k_batch: KitGraphReference = Arc::new(RwLock::new(KitGraph::new("b0")));
+            let k_tx: KitGraphReference = Arc::new(RwLock::new(KitGraph::new("b0")));
             let cmds = vec![ChangeKitCommand::Name { name: "b1".into() }];
             let pre = KitGraph::control_plane_pre_batch(&k_batch, &cmds).expect("pre");
             let kc_b = pre.kc.expect("kc");
@@ -28468,13 +27833,13 @@ mod tests {
     }
 
     mod diff {
-        use crate::design::DesignStore;
+        use crate::design::Design;
         use crate::diff::DesignDiff;
 
         #[test]
         fn diff_between_identical_designs_empty() {
-            let a = DesignStore::new("d");
-            let b = DesignStore::new("d");
+            let a = Design::new("d");
+            let b = Design::new("d");
             let da = a.to_input();
             let db = b.to_input();
             let d = DesignDiff::between(&da, &db);
@@ -28485,16 +27850,16 @@ mod tests {
     mod flatten {
         use crate::connection::ConnectionInput;
         use crate::connector::ConnectorInput;
-        use crate::design::{ DesignStore};
+        use crate::design::{ Design};
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
         use crate::kit_graph::{ KitGraph};
-        use crate::piece::{ PieceRef, PoseDto};
-        use crate::port::{ PortRef};
+        use crate::piece::{ PieceReference, PoseDto};
+        use crate::port::{ PortReference};
         use crate::side::SideMetadata;
-        use crate::typ::{ TypeRef};
+        use crate::typ::{ TypeReference};
 
-        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphRef, Id, Id, Id, Id) {
+        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphReference, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
             let type_id = Id::new_v7();
             let port_id = Id::new_v7();
@@ -28517,28 +27882,28 @@ mod tests {
                 types: vec![TypeInput {
                     id: type_id.clone(),
                     name: "typ".into(),
-                    connectors: vec![ConnectorInput { id: connector_id, code: "C".into(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() }],
+                    connectors: vec![ConnectorInput { id: connector_id, code: "C".into(), port: Some(PortReference { id: port_id.clone() }), ..Default::default() }],
                     ..Default::default()
                 }],
                 designs: vec![DesignInput {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceInput { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
-                        PieceInput { id: middle_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
-                        PieceInput { id: leaf_id.clone(), pose: leaf_plane.map(|p| PoseDto { plane: Some(p), center: None }), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
+                        PieceInput { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() },
+                        PieceInput { id: middle_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() },
+                        PieceInput { id: leaf_id.clone(), pose: leaf_plane.map(|p| PoseDto { plane: Some(p), center: None }), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() },
                     ],
                     connections: vec![
                         ConnectionInput {
                             id: ab_id,
-                            connected: SideMetadata { id: root_side_id, piece: PieceRef { id: root_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
-                            connecting: SideMetadata { id: middle_ab_side_id, piece: PieceRef { id: middle_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
+                            connected: SideMetadata { id: root_side_id, piece: PieceReference { id: root_id.clone() }, port: Some(PortReference { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadata { id: middle_ab_side_id, piece: PieceReference { id: middle_id.clone() }, port: Some(PortReference { id: port_id.clone() }), design_piece: None, connector: None },
                             ..Default::default()
                         },
                         ConnectionInput {
                             id: bc_id,
-                            connected: SideMetadata { id: middle_bc_side_id, piece: PieceRef { id: middle_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
-                            connecting: SideMetadata { id: leaf_side_id, piece: PieceRef { id: leaf_id.clone() }, port: Some(PortRef { id: port_id }), design_piece: None, connector: None },
+                            connected: SideMetadata { id: middle_bc_side_id, piece: PieceReference { id: middle_id.clone() }, port: Some(PortReference { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadata { id: leaf_side_id, piece: PieceReference { id: leaf_id.clone() }, port: Some(PortReference { id: port_id }), design_piece: None, connector: None },
                             ..Default::default()
                         },
                     ],
@@ -28552,7 +27917,7 @@ mod tests {
 
         #[test]
         fn flatten_map_empty_design() {
-            let d = DesignStore::new("x");
+            let d = Design::new("x");
             let m = d.flatten_map();
             assert!(m.is_empty());
         }
@@ -28617,13 +27982,13 @@ mod tests {
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let root_path = root.read().expect("root read").path();
-            assert_eq!(root_path, vec![PieceRef { id: root_id.clone() }]);
+            assert_eq!(root_path, vec![PieceReference { id: root_id.clone() }]);
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(middle_path, vec![PieceRef { id: root_id.clone() }, PieceRef { id: middle_id.clone() },]);
+            assert_eq!(middle_path, vec![PieceReference { id: root_id.clone() }, PieceReference { id: middle_id.clone() },]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(leaf_path, vec![PieceRef { id: root_id }, PieceRef { id: middle_id }, PieceRef { id: leaf_id },]);
+            assert_eq!(leaf_path, vec![PieceReference { id: root_id }, PieceReference { id: middle_id }, PieceReference { id: leaf_id },]);
         }
 
         #[test]
@@ -28641,10 +28006,10 @@ mod tests {
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(middle_path, vec![PieceRef { id: middle_id.clone() }]);
+            assert_eq!(middle_path, vec![PieceReference { id: middle_id.clone() }]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(leaf_path, vec![PieceRef { id: middle_id }, PieceRef { id: leaf_id },]);
+            assert_eq!(leaf_path, vec![PieceReference { id: middle_id }, PieceReference { id: leaf_id },]);
         }
 
         #[test]
@@ -28741,11 +28106,11 @@ mod tests {
     }
 
     mod entities {
-        use crate::author::AuthorStore;
+        use crate::author::Author;
 
         #[test]
         fn author_setter_invalidates_local_hash() {
-            let mut a = AuthorStore::from_input(crate::author::AuthorInput { id: crate::Id::new_v7(), name: "n".into(), email: "e".into(), role: None, rank: None });
+            let mut a = Author::from_input(crate::author::AuthorInput { id: crate::Id::new_v7(), name: "n".into(), email: "e".into(), role: None, rank: None });
             let h0 = a.hash();
             a.set_name("n2".into());
             let h1 = a.hash();
@@ -28765,11 +28130,11 @@ mod tests {
         use crate::connector::ConnectorInput;
         use crate::design::DesignInput;
         use crate::id::Id;
-        use crate::kit_graph::{ KitGraph, KitGraphRef};
-        use crate::piece::{ PieceRef};
-        use crate::port::{ PortRef};
+        use crate::kit_graph::{ KitGraph, KitGraphReference};
+        use crate::piece::{ PieceReference};
+        use crate::port::{ PortReference};
         use crate::side::SideMetadata;
-        use crate::typ::{ TypeRef};
+        use crate::typ::{ TypeReference};
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -28810,7 +28175,7 @@ mod tests {
             serde_json::from_str(&load_asset_text(name)).expect("parse typed asset")
         }
 
-        fn synthetic_replaceable_kit() -> (KitGraphRef, HashMap<&'static str, Id>) {
+        fn synthetic_replaceable_kit() -> (KitGraphReference, HashMap<&'static str, Id>) {
             let port_l = Id::from("port-L");
             let port_l_compatible = Id::from("port-L-compatible");
             let port_g = Id::from("port-G");
@@ -28842,10 +28207,10 @@ mod tests {
 
             let make_port = |id: Id, compatible_with: Vec<Id>| {
                 let name = id.as_str().to_string();
-                PortInput { id, name, compatible_ports: compatible_with.into_iter().map(|i| PortRef { id: i }).collect(), ..Default::default() }
+                PortInput { id, name, compatible_ports: compatible_with.into_iter().map(|i| PortReference { id: i }).collect(), ..Default::default() }
             };
 
-            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorInput { id: Id::from(id), code: code.to_string(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() };
+            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorInput { id: Id::from(id), code: code.to_string(), port: Some(PortReference { id: port_id.clone() }), ..Default::default() };
 
             let make_type = |id: Id, name: &str, connectors: Vec<ConnectorInput>| TypeInput { id, name: name.to_string(), connectors, ..Default::default() };
 
@@ -28871,35 +28236,35 @@ mod tests {
                         id: root_design.clone(),
                         name: "root-design".to_string(),
                         pieces: vec![
-                            PieceInput { id: piece_external_lg.clone(), name: Some("piece-external-lg".to_string()), r#type: Some(TypeRef { id: selected_external_lg.clone() }), ..Default::default() },
-                            PieceInput { id: piece_isolated_lg.clone(), name: Some("piece-isolated-lg".to_string()), r#type: Some(TypeRef { id: selected_isolated_lg.clone() }), ..Default::default() },
-                            PieceInput { id: piece_external_ll.clone(), name: Some("piece-external-ll".to_string()), r#type: Some(TypeRef { id: selected_external_ll.clone() }), ..Default::default() },
-                            PieceInput { id: piece_neighbor_l.clone(), name: Some("piece-neighbor-l".to_string()), r#type: Some(TypeRef { id: neighbor_l.clone() }), ..Default::default() },
-                            PieceInput { id: piece_neighbor_g.clone(), name: Some("piece-neighbor-g".to_string()), r#type: Some(TypeRef { id: neighbor_g.clone() }), ..Default::default() },
+                            PieceInput { id: piece_external_lg.clone(), name: Some("piece-external-lg".to_string()), r#type: Some(TypeReference { id: selected_external_lg.clone() }), ..Default::default() },
+                            PieceInput { id: piece_isolated_lg.clone(), name: Some("piece-isolated-lg".to_string()), r#type: Some(TypeReference { id: selected_isolated_lg.clone() }), ..Default::default() },
+                            PieceInput { id: piece_external_ll.clone(), name: Some("piece-external-ll".to_string()), r#type: Some(TypeReference { id: selected_external_ll.clone() }), ..Default::default() },
+                            PieceInput { id: piece_neighbor_l.clone(), name: Some("piece-neighbor-l".to_string()), r#type: Some(TypeReference { id: neighbor_l.clone() }), ..Default::default() },
+                            PieceInput { id: piece_neighbor_g.clone(), name: Some("piece-neighbor-g".to_string()), r#type: Some(TypeReference { id: neighbor_g.clone() }), ..Default::default() },
                         ],
                         connections: vec![
                             ConnectionInput {
                                 id: Id::from("root-lg-left"),
-                                connected: SideMetadata { id: Id::from("root-lg-left-selected"), piece: PieceRef { id: piece_external_lg.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadata { id: Id::from("root-lg-left-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-lg-left-selected"), piece: PieceReference { id: piece_external_lg.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-lg-left-neighbor"), piece: PieceReference { id: piece_neighbor_l.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionInput {
                                 id: Id::from("root-lg-gable"),
-                                connected: SideMetadata { id: Id::from("root-lg-gable-selected"), piece: PieceRef { id: piece_external_lg.clone() }, port: Some(PortRef { id: port_g.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadata { id: Id::from("root-lg-gable-neighbor"), piece: PieceRef { id: piece_neighbor_g.clone() }, port: Some(PortRef { id: port_g.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-lg-gable-selected"), piece: PieceReference { id: piece_external_lg.clone() }, port: Some(PortReference { id: port_g.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-lg-gable-neighbor"), piece: PieceReference { id: piece_neighbor_g.clone() }, port: Some(PortReference { id: port_g.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionInput {
                                 id: Id::from("root-ll-left-0"),
-                                connected: SideMetadata { id: Id::from("root-ll-left-0-selected"), piece: PieceRef { id: piece_external_ll.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadata { id: Id::from("root-ll-left-0-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-ll-left-0-selected"), piece: PieceReference { id: piece_external_ll.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-ll-left-0-neighbor"), piece: PieceReference { id: piece_neighbor_l.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionInput {
                                 id: Id::from("root-ll-left-1"),
-                                connected: SideMetadata { id: Id::from("root-ll-left-1-selected"), piece: PieceRef { id: piece_external_ll.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadata { id: Id::from("root-ll-left-1-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-ll-left-1-selected"), piece: PieceReference { id: piece_external_ll.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-ll-left-1-neighbor"), piece: PieceReference { id: piece_neighbor_l.clone() }, port: Some(PortReference { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                         ],
@@ -28908,29 +28273,29 @@ mod tests {
                     DesignInput {
                         id: candidate_design_free_lg.clone(),
                         name: "candidate-design-free-lg".to_string(),
-                        pieces: vec![PieceInput { id: piece_candidate_free_lg.clone(), name: Some("piece-candidate-free-lg".to_string()), r#type: Some(TypeRef { id: candidate_lg.clone() }), ..Default::default() }],
+                        pieces: vec![PieceInput { id: piece_candidate_free_lg.clone(), name: Some("piece-candidate-free-lg".to_string()), r#type: Some(TypeReference { id: candidate_lg.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
                     DesignInput {
                         id: candidate_design_consumed_lg.clone(),
                         name: "candidate-design-consumed-lg".to_string(),
                         pieces: vec![
-                            PieceInput { id: piece_candidate_consumed_lg.clone(), name: Some("piece-candidate-consumed-lg".to_string()), r#type: Some(TypeRef { id: candidate_lg.clone() }), ..Default::default() },
-                            PieceInput { id: piece_candidate_consumed_neighbor.clone(), name: Some("piece-candidate-consumed-neighbor".to_string()), r#type: Some(TypeRef { id: neighbor_l.clone() }), ..Default::default() },
+                            PieceInput { id: piece_candidate_consumed_lg.clone(), name: Some("piece-candidate-consumed-lg".to_string()), r#type: Some(TypeReference { id: candidate_lg.clone() }), ..Default::default() },
+                            PieceInput { id: piece_candidate_consumed_neighbor.clone(), name: Some("piece-candidate-consumed-neighbor".to_string()), r#type: Some(TypeReference { id: neighbor_l.clone() }), ..Default::default() },
                         ],
                         connections: vec![ConnectionInput {
                             id: Id::from("candidate-consumed-lg-left"),
                             connected: SideMetadata {
                                 id: Id::from("candidate-consumed-lg-left-primary"),
-                                piece: PieceRef { id: piece_candidate_consumed_lg.clone() },
-                                port: Some(PortRef { id: port_l_compatible.clone() }),
+                                piece: PieceReference { id: piece_candidate_consumed_lg.clone() },
+                                port: Some(PortReference { id: port_l_compatible.clone() }),
                                 design_piece: None,
                                 connector: None,
                             },
                             connecting: SideMetadata {
                                 id: Id::from("candidate-consumed-lg-left-neighbor"),
-                                piece: PieceRef { id: piece_candidate_consumed_neighbor.clone() },
-                                port: Some(PortRef { id: port_l.clone() }),
+                                piece: PieceReference { id: piece_candidate_consumed_neighbor.clone() },
+                                port: Some(PortReference { id: port_l.clone() }),
                                 design_piece: None,
                                 connector: None,
                             },
@@ -28941,7 +28306,7 @@ mod tests {
                     DesignInput {
                         id: candidate_design_empty.clone(),
                         name: "candidate-design-empty".to_string(),
-                        pieces: vec![PieceInput { id: piece_candidate_empty.clone(), name: Some("piece-candidate-empty".to_string()), r#type: Some(TypeRef { id: connectorless.clone() }), ..Default::default() }],
+                        pieces: vec![PieceInput { id: piece_candidate_empty.clone(), name: Some("piece-candidate-empty".to_string()), r#type: Some(TypeReference { id: connectorless.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
                 ],
@@ -29127,7 +28492,7 @@ mod tests {
                 name: "sqlite-roundtrip".into(),
                 ports: vec![],
                 types: vec![TypeInput { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
-                designs: vec![DesignInput { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceInput { id: piece_id, r#type: Some(crate::typ::TypeRef { id: type_id }), ..Default::default() }], ..Default::default() }],
+                designs: vec![DesignInput { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceInput { id: piece_id, r#type: Some(crate::typ::TypeReference { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
             let dir = tempdir().expect("tempdir");
@@ -29372,16 +28737,16 @@ mod tests {
             use crate::connection::ConnectionInput;
             use crate::connector::ConnectorInput;
             use crate::design::DesignInput;
-            use crate::events::{EntityKind, EntityRef, KitEvent};
+            use crate::events::{EntityKind, EntityReference, KitEvent};
             use crate::file::FileInput;
             use crate::group::GroupInput;
             use crate::id::Id;
-            use crate::kit_graph::{ KitGraph, KitGraphRef};
+            use crate::kit_graph::{ KitGraph, KitGraphReference};
             use crate::layer::LayerInput;
-            use crate::piece::{ PieceRef};
-            use crate::port::{ PortRef};
+            use crate::piece::{ PieceReference};
+            use crate::port::{ PortReference};
             use crate::side::SideMetadata;
-            use crate::typ::{ TypeRef};
+            use crate::typ::{ TypeReference};
 
             pub fn drain(rx: &mut async_broadcast::Receiver<KitEvent>) -> Vec<KitEvent> {
                 let mut out = Vec::new();
@@ -29391,12 +28756,12 @@ mod tests {
                 out
             }
 
-            pub fn kit_entity_ref(kit: &KitGraphRef) -> EntityRef {
+            pub fn kit_entity_ref(kit: &KitGraphReference) -> EntityReference {
                 let g = kit.read().expect("kit read").id.clone();
-                EntityRef::new(EntityKind::Kit, g)
+                EntityReference::new(EntityKind::Kit, g)
             }
 
-            pub fn kit_with_piece() -> (KitGraphRef, Id, Id, Id) {
+            pub fn kit_with_piece() -> (KitGraphReference, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -29406,14 +28771,14 @@ mod tests {
                     id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeInput { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignInput { id: design_id.clone(), name: "des".into(), pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
+                    designs: vec![DesignInput { id: design_id.clone(), name: "des".into(), pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitGraph::from_input(dto);
                 (kit, type_id, design_id, piece_id)
             }
 
-            pub fn kit_with_layer() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_layer() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -29426,7 +28791,7 @@ mod tests {
                     designs: vec![DesignInput {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
+                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() }],
                         layers: vec![LayerInput { id: layer_id.clone(), name: "L".into(), ..Default::default() }],
                         ..Default::default()
                     }],
@@ -29436,7 +28801,7 @@ mod tests {
                 (kit, design_id, layer_id)
             }
 
-            pub fn kit_with_group() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_group() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -29449,8 +28814,8 @@ mod tests {
                     designs: vec![DesignInput {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
-                        groups: vec![GroupInput { id: group_id.clone(), name: "G".into(), pieces: vec![PieceRef { id: piece_id.clone() }], ..Default::default() }],
+                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() }],
+                        groups: vec![GroupInput { id: group_id.clone(), name: "G".into(), pieces: vec![PieceReference { id: piece_id.clone() }], ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -29459,7 +28824,7 @@ mod tests {
                 (kit, design_id, group_id)
             }
 
-            pub fn kit_with_type_connector() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_type_connector() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let conn_id = Id::new_v7();
@@ -29471,7 +28836,7 @@ mod tests {
                     types: vec![TypeInput {
                         id: type_id.clone(),
                         name: "typ".into(),
-                        connectors: vec![ConnectorInput { id: conn_id.clone(), code: "C".into(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() }],
+                        connectors: vec![ConnectorInput { id: conn_id.clone(), code: "C".into(), port: Some(PortReference { id: port_id.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -29480,14 +28845,14 @@ mod tests {
                 (kit, type_id, conn_id)
             }
 
-            pub fn kit_with_type_only() -> (KitGraphRef, Id) {
+            pub fn kit_with_type_only() -> (KitGraphReference, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitInput { id: kit_id, name: "kit".into(), types: vec![TypeInput { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
                 (KitGraph::from_input(dto), type_id)
             }
 
-            pub fn kit_with_port() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_port() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let kit_id = Id::new_v7();
@@ -29502,7 +28867,7 @@ mod tests {
                 (kit, type_id, port_id)
             }
 
-            pub fn kit_with_file() -> (KitGraphRef, Id) {
+            pub fn kit_with_file() -> (KitGraphReference, Id) {
                 let file_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitInput { id: kit_id, name: "kit".into(), files: vec![FileInput { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
@@ -29510,7 +28875,7 @@ mod tests {
                 (kit, file_id)
             }
 
-            pub fn kit_with_connection() -> (KitGraphRef, Id, Id, Id, Id, Id) {
+            pub fn kit_with_connection() -> (KitGraphReference, Id, Id, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_a = Id::new_v7();
@@ -29528,13 +28893,13 @@ mod tests {
                         id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![
-                            PieceInput { id: piece_a.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
-                            PieceInput { id: piece_b.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
+                            PieceInput { id: piece_a.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() },
+                            PieceInput { id: piece_b.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() },
                         ],
                         connections: vec![ConnectionInput {
                             id: conn_id.clone(),
-                            connected: SideMetadata { id: side_a, piece: PieceRef { id: piece_a.clone() }, port: None, design_piece: None, connector: None },
-                            connecting: SideMetadata { id: side_b, piece: PieceRef { id: piece_b.clone() }, port: None, design_piece: None, connector: None },
+                            connected: SideMetadata { id: side_a, piece: PieceReference { id: piece_a.clone() }, port: None, design_piece: None, connector: None },
+                            connecting: SideMetadata { id: side_b, piece: PieceReference { id: piece_b.clone() }, port: None, design_piece: None, connector: None },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -29545,7 +28910,7 @@ mod tests {
                 (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
-            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::DesignField) {
+            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::DesignField) {
                 assert!(
                     evs.iter().any(|event| matches!(
                         event,
@@ -29564,7 +28929,7 @@ mod tests {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
             }
 
-            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
+            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::PieceField) {
                 assert_piece_field(evs, piece_g, field);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
@@ -29574,8 +28939,8 @@ mod tests {
                 assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
             }
 
-            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
-                let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
+            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::PieceField) {
+                let pose_er = EntityReference::new(EntityKind::Pose, piece_g.clone());
                 assert_piece_field(evs, piece_g, field);
                 assert_piece_field(evs, piece_g, crate::events::PieceField::Pose);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == pose_er)), "{evs:?}");
@@ -29587,14 +28952,14 @@ mod tests {
                 assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
             }
 
-            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, field: crate::events::PieceField) {
+            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, field: crate::events::PieceField) {
                 assert_piece_field(evs, &piece_er.id, field);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
             }
 
-            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityRef, kit_er: EntityRef, field: crate::events::TypeField) {
+            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityReference, kit_er: EntityReference, field: crate::events::TypeField) {
                 assert!(
                     evs.iter().any(|event| matches!(
                         event,
@@ -29610,7 +28975,7 @@ mod tests {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
             }
 
-            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: crate::events::KitField) {
+            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityReference, field: crate::events::KitField) {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::FieldChanged(f) if *f == field)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_ref)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
@@ -29656,7 +29021,7 @@ mod tests {
         }
 
         mod attribute {
-            use crate::attribute::AttributeStore;
+            use crate::attribute::Attribute;
             use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit_graph::{ KitGraph};
@@ -29664,7 +29029,7 @@ mod tests {
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_input(KitInput { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeStore::output(g.clone(), "k".into(), "v".into(), None)], ..Default::default() });
+                let kit = KitGraph::from_input(KitInput { id: Id::new_v7(), name: "k".into(), attributes: vec![Attribute::output(g.clone(), "k".into(), "v".into(), None)], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -29702,11 +29067,11 @@ mod tests {
 
             use super::common::drain;
             use crate::kit_graph::KitGraph;
-            use crate::KitGraphRef;
+            use crate::KitGraphReference;
 
             #[test]
             fn subscribe_receives_ordered_stream() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("a")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("a")));
                 let mut a = kit.read().unwrap().subscribe();
                 let mut b = kit.read().unwrap().subscribe();
                 kit.write().unwrap().set_name("b".into()).unwrap();
@@ -29723,7 +29088,7 @@ mod tests {
 
             #[test]
             fn no_lock_held_across_concurrent_read_and_async_setter() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("c")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("c")));
                 let k2 = kit.clone();
                 futures_lite::future::block_on(async {
                     let _ = futures_lite::future::zip(crate::KitGraph::set_name_async(&k2, "d".into()), async { k2.read().map(|_| ()).unwrap_or(()) }).await;
@@ -29733,7 +29098,7 @@ mod tests {
 
             #[test]
             fn drop_kit_closes_bus() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("e")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("e")));
                 let mut rx = kit.read().unwrap().subscribe();
                 drop(kit);
                 let r = futures_lite::future::block_on(rx.recv());
@@ -29864,19 +29229,19 @@ mod tests {
         }
 
         mod diff_apply {
-            use crate::events::{EntityKind, EntityRef, KitEvent};
+            use crate::events::{EntityKind, EntityReference, KitEvent};
             use crate::id::Id;
             use crate::piece::PieceInput;
-            use crate::typ::TypeRef;
+            use crate::typ::TypeReference;
 
             #[test]
             fn add_design_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write().unwrap().add_design_piece(dg.as_str(), PieceInput { id: new_piece.clone(), r#type: Some(TypeRef { id: tg.clone() }), ..Default::default() }).unwrap();
+                kit.write().unwrap().add_design_piece(dg.as_str(), PieceInput { id: new_piece.clone(), r#type: Some(TypeReference { id: tg.clone() }), ..Default::default() }).unwrap();
                 let evs = super::common::drain(&mut rx);
-                let child = EntityRef::new(EntityKind::Piece, new_piece);
+                let child = EntityReference::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::ChildAdded { child: c, .. } if *c == child
@@ -29934,12 +29299,12 @@ mod tests {
                     ports: vec![
                         crate::port::PortInput {
                             id: port_a.clone(),
-                            compatible_ports: vec![crate::port::PortRef { id: port_b.clone() }],
+                            compatible_ports: vec![crate::port::PortReference { id: port_b.clone() }],
                             ..Default::default()
                         },
                         crate::port::PortInput {
                             id: port_b.clone(),
-                            compatible_ports: vec![crate::port::PortRef { id: port_a.clone() }],
+                            compatible_ports: vec![crate::port::PortReference { id: port_a.clone() }],
                             ..Default::default()
                         },
                     ],
@@ -29947,8 +29312,8 @@ mod tests {
                         id: type_id.clone(),
                         name: "typ".into(),
                         connectors: vec![
-                            crate::connector::ConnectorInput { id: conn_a.clone(), code: "A".into(), port: Some(crate::port::PortRef { id: port_a.clone() }), ..Default::default() },
-                            crate::connector::ConnectorInput { id: conn_b.clone(), code: "B".into(), port: Some(crate::port::PortRef { id: port_b.clone() }), ..Default::default() },
+                            crate::connector::ConnectorInput { id: conn_a.clone(), code: "A".into(), port: Some(crate::port::PortReference { id: port_a.clone() }), ..Default::default() },
+                            crate::connector::ConnectorInput { id: conn_b.clone(), code: "B".into(), port: Some(crate::port::PortReference { id: port_b.clone() }), ..Default::default() },
                         ],
                         ..Default::default()
                     }],
@@ -29970,16 +29335,16 @@ mod tests {
         }
 
         mod design {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::id::Id;
-            use crate::location::LocationRef;
+            use crate::location::LocationReference;
 
             macro_rules! design_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let d = {
@@ -29994,24 +29359,24 @@ mod tests {
                 };
             }
 
-            design_meta_test!(design_set_name, crate::events::DesignField::Name, |d: &mut crate::DesignStore| { d.set_name("x".into()) });
-            design_meta_test!(design_set_description, crate::events::DesignField::Description, |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
-            design_meta_test!(design_set_icon, crate::events::DesignField::Icon, |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
-            design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
-            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(LocationRef { id: Id::new_v7() })) });
-            design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
-            design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
-            design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
+            design_meta_test!(design_set_name, crate::events::DesignField::Name, |d: &mut crate::Design| { d.set_name("x".into()) });
+            design_meta_test!(design_set_description, crate::events::DesignField::Description, |d: &mut crate::Design| { d.set_description(Some("d".into())) });
+            design_meta_test!(design_set_icon, crate::events::DesignField::Icon, |d: &mut crate::Design| { d.set_icon(Some("i".into())) });
+            design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::Design| { d.set_image(Some("m".into())) });
+            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::Design| { d.set_location(Some(LocationReference { id: Id::new_v7() })) });
+            design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::Design| { d.set_unit(Some("mm".into())) });
+            design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::Design| { d.set_created(Some("c".into())) });
+            design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::Design| { d.set_updated(Some("u".into())) });
 
             #[test]
             fn design_add_family_ref_emits() {
                 use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-                use crate::design::{ DesignRef};
+                use crate::design::{ DesignReference};
                 use crate::events::KitEvent;
-                use crate::family::{ FamilyRef};
+                use crate::family::{ FamilyReference};
                 use crate::kit_graph::{ KitGraph};
                 use crate::piece::PieceInput;
-                use crate::typ::{ TypeRef};
+                use crate::typ::{ TypeReference};
 
                 let family_id = Id::new_v7();
                 let type_id = Id::new_v7();
@@ -30023,12 +29388,12 @@ mod tests {
                     name: "kit".into(),
                     families: vec![FamilyInput { id: family_id.clone(), name: "F".into(), ..Default::default() }],
                     types: vec![TypeInput { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignInput { id: design_id.clone(), name: "des".into(), pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
+                    designs: vec![DesignInput { id: design_id.clone(), name: "des".into(), pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitGraph::from_input(dto);
                 let mut rx = kit.read().unwrap().subscribe();
-                let cmd = ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: design_id.clone() }, commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyRef { id: family_id.clone() }] }] };
+                let cmd = ChangeKitCommand::ChangeDesignCommands { design_id: DesignReference { id: design_id.clone() }, commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyReference { id: family_id.clone() }] }] };
                 cmd.apply(&kit).unwrap();
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::Design { event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families), .. })));
@@ -30152,7 +29517,7 @@ mod tests {
         }
 
         mod piece {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::geom::{Coordinate, Plane, Point, Vector};
 
             macro_rules! piece_pose_test {
@@ -30160,8 +29525,8 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let p = {
@@ -30183,8 +29548,8 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let p = {
@@ -30201,21 +29566,21 @@ mod tests {
                 };
             }
 
-            piece_pose_test!(piece_set_plane, crate::events::PieceField::Plane, |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) });
-            piece_pose_test!(piece_set_center, crate::events::PieceField::Center, |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0))) });
-            piece_geom_test!(piece_set_mirror_plane, crate::events::PieceField::MirrorPlane, |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) });
-            piece_geom_test!(piece_set_scale, crate::events::PieceField::Scale, |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) });
-            piece_geom_test!(piece_set_hidden, crate::events::PieceField::Hidden, |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) });
-            piece_geom_test!(piece_set_locked, crate::events::PieceField::Locked, |p: &mut crate::PieceStore| { p.set_locked(Some(true)) });
-            piece_geom_test!(piece_set_name, crate::events::PieceField::Name, |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) });
-            piece_geom_test!(piece_set_description, crate::events::PieceField::Description, |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) });
+            piece_pose_test!(piece_set_plane, crate::events::PieceField::Plane, |p: &mut crate::Piece| { p.set_plane(Some(Plane::world_xy())) });
+            piece_pose_test!(piece_set_center, crate::events::PieceField::Center, |p: &mut crate::Piece| { p.set_center(Some(Coordinate::new(1.0, 2.0))) });
+            piece_geom_test!(piece_set_mirror_plane, crate::events::PieceField::MirrorPlane, |p: &mut crate::Piece| { p.set_mirror_plane(Some(Plane::world_xy())) });
+            piece_geom_test!(piece_set_scale, crate::events::PieceField::Scale, |p: &mut crate::Piece| { p.set_scale(Some(2.0)) });
+            piece_geom_test!(piece_set_hidden, crate::events::PieceField::Hidden, |p: &mut crate::Piece| { p.set_hidden(Some(true)) });
+            piece_geom_test!(piece_set_locked, crate::events::PieceField::Locked, |p: &mut crate::Piece| { p.set_locked(Some(true)) });
+            piece_geom_test!(piece_set_name, crate::events::PieceField::Name, |p: &mut crate::Piece| { p.set_name(Some("p".into())) });
+            piece_geom_test!(piece_set_description, crate::events::PieceField::Description, |p: &mut crate::Piece| { p.set_description(Some("pd".into())) });
 
             #[test]
             fn piece_set_id() {
                 let (kit, _, dg, pg) = super::common::kit_with_piece();
-                let old_piece = EntityRef::new(EntityKind::Piece, pg.clone());
+                let old_piece = EntityReference::new(EntityKind::Piece, pg.clone());
                 let new_id = crate::id::Id::from("id1");
-                let design = EntityRef::new(EntityKind::Design, dg.clone());
+                let design = EntityReference::new(EntityKind::Design, dg.clone());
                 let kit_ref = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
@@ -30274,8 +29639,8 @@ mod tests {
             #[test]
             fn piece_set_color_hash_only() {
                 let (kit, _, dg, pg) = super::common::kit_with_piece();
-                let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                let dre = EntityReference::new(EntityKind::Design, dg.clone());
                 let kre = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
@@ -30293,8 +29658,8 @@ mod tests {
             #[test]
             fn piece_set_type_weak_geometry() {
                 let (kit, tg, dg, pg) = super::common::kit_with_piece();
-                let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                let dre = EntityReference::new(EntityKind::Design, dg.clone());
                 let kre = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let tw = kit.read().unwrap().semio_type(tg.as_str()).map(|t| std::sync::Arc::downgrade(&t)).unwrap();
@@ -30325,7 +29690,7 @@ mod tests {
                     let tr = t.read().unwrap();
                     tr.port(port_g.as_str()).unwrap().clone()
                 };
-                let fid = crate::family::FamilyRef { id: Id::new_v7() };
+                let fid = crate::family::FamilyReference { id: Id::new_v7() };
                 p.write().unwrap().set_compatible_families(vec![fid]).unwrap();
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::Port { event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies), .. })));
@@ -30376,7 +29741,7 @@ mod tests {
 
         mod representation {
             use crate::events::KitEvent;
-            use crate::file::{ FileRef};
+            use crate::file::{ FileReference};
             use crate::id::Id;
             use crate::kit_graph::{ KitGraph};
             use crate::representation::RepresentationInput;
@@ -30394,7 +29759,7 @@ mod tests {
                     types: vec![TypeInput {
                         id: tg.clone(),
                         name: "t".into(),
-                        representations: vec![RepresentationInput { id: rg.clone(), url: "https://r".into(), file: Some(FileRef { id: fg.clone() }), ..Default::default() }],
+                        representations: vec![RepresentationInput { id: rg.clone(), url: "https://r".into(), file: Some(FileReference { id: fg.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -30447,7 +29812,7 @@ mod tests {
             use crate::kit_graph::{ KitGraph};
             use crate::piece::PieceInput;
             use crate::stat::StatInput;
-            use crate::typ::{ TypeRef};
+            use crate::typ::{ TypeReference};
 
             #[test]
             fn stat_set_description_emits() {
@@ -30462,7 +29827,7 @@ mod tests {
                     designs: vec![DesignInput {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
+                        pieces: vec![PieceInput { id: piece_id.clone(), r#type: Some(TypeReference { id: type_id.clone() }), ..Default::default() }],
                         stats: vec![StatInput { id: stat_id.clone(), key: "sk".into(), value: "sv".into(), description: None, unit: None }],
                         ..Default::default()
                     }],
@@ -30503,7 +29868,7 @@ mod tests {
         }
 
         mod type_ {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::id::Id;
 
             macro_rules! type_meta_test {
@@ -30511,7 +29876,7 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, tg) = super::common::kit_with_type_only();
-                        let tre = EntityRef::new(EntityKind::Type, tg.clone());
+                        let tre = EntityReference::new(EntityKind::Type, tg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let t = {
@@ -30526,21 +29891,21 @@ mod tests {
                 };
             }
 
-            type_meta_test!(type_set_name, crate::events::TypeField::Name, |t: &mut crate::TypeStore| { t.set_name("tn".into()) });
-            type_meta_test!(type_set_description, crate::events::TypeField::Description, |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) });
-            type_meta_test!(type_set_icon, crate::events::TypeField::Icon, |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) });
-            type_meta_test!(type_set_image, crate::events::TypeField::Image, |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) });
-            type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
-            type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
-            type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
-            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::location::LocationRef { id: crate::id::Id::new_v7() })) });
-            type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
-            type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
+            type_meta_test!(type_set_name, crate::events::TypeField::Name, |t: &mut crate::Type| { t.set_name("tn".into()) });
+            type_meta_test!(type_set_description, crate::events::TypeField::Description, |t: &mut crate::Type| { t.set_description(Some("td".into())) });
+            type_meta_test!(type_set_icon, crate::events::TypeField::Icon, |t: &mut crate::Type| { t.set_icon(Some("i".into())) });
+            type_meta_test!(type_set_image, crate::events::TypeField::Image, |t: &mut crate::Type| { t.set_image(Some("m".into())) });
+            type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::Type| { t.set_stock(Some(3)) });
+            type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::Type| { t.set_virtual(Some(true)) });
+            type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::Type| { t.set_unit(Some("u".into())) });
+            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::Type| { t.set_location(Some(crate::location::LocationReference { id: crate::id::Id::new_v7() })) });
+            type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::Type| { t.set_created(Some("c".into())) });
+            type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::Type| { t.set_updated(Some("u".into())) });
 
             #[test]
             fn type_add_family_ref_roundtrip() {
                 use crate::diff::{FamilyIdsDiff, TypeDiff};
-                use crate::family::{ FamilyRef};
+                use crate::family::{ FamilyReference};
                 use crate::kit_graph::{ KitGraph};
                 use crate::typ::TypeInput;
 
@@ -30555,7 +29920,7 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitGraph::from_input(dto);
-                let fragment = TypeDiff { families: Some(FamilyIdsDiff { added: vec![FamilyRef { id: family_id.clone() }], removed: vec![], ..Default::default() }), ..Default::default() };
+                let fragment = TypeDiff { families: Some(FamilyIdsDiff { added: vec![FamilyReference { id: family_id.clone() }], removed: vec![], ..Default::default() }), ..Default::default() };
                 KitGraph::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
                 let t = kit.read().unwrap().semio_type(type_id.as_str()).unwrap();
                 let tr = t.read().unwrap();
@@ -30574,14 +29939,14 @@ mod tests {
         use crate::kit_checkpoint::KitCheckpointCommand;
         use crate::kit_draft::KitDraftCommand;
         use crate::kit_graph::KitGraph;
-        use crate::kit_store_command::{self, KitStoreCommand};
+        use crate::kit_store_command::{self, KitCommand};
         use crate::kit_transaction::TransactionCommand;
         use crate::read::{ReadKitCommand, ReadTypeCommand, ReadTypeCommandOutput};
-        use crate::typ::TypeRef;
-        use crate::typ::TypeStore;
+        use crate::typ::TypeReference;
+        use crate::typ::Type;
         fn make_kit_with_type() -> (Arc<RwLock<KitGraph>>, Id) {
             let mut inner = KitGraph::new("k");
-            let t = Arc::new(RwLock::new(TypeStore::new("T0")));
+            let t = Arc::new(RwLock::new(Type::new("T0")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
             inner.initial = inner.to_input();
@@ -30589,7 +29954,7 @@ mod tests {
         }
 
         fn read_type_name(g: &crate::kit_graph::KitGraph, tid: &Id) -> String {
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(g).expect("read type");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => match &results[0] {
@@ -30634,17 +29999,17 @@ mod tests {
         #[test]
         fn session_draft_checkpoint_roundtrip() {
             let mut inner = KitGraph::new("p");
-            let t = Arc::new(RwLock::new(TypeStore::new("T")));
+            let t = Arc::new(RwLock::new(Type::new("T")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
             inner.initial = inner.to_input();
             let k = Arc::new(RwLock::new(inner));
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id,
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id,
                 _ => panic!(),
             };
-            let txid = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }).expect("st") {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+            let txid = match KitGraph::execute(&k, KitCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }).expect("st") {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -30652,7 +30017,7 @@ mod tests {
             };
             KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![
@@ -30660,7 +30025,7 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -30679,12 +30044,12 @@ mod tests {
         fn read_command_nested_type() {
             let k = Arc::new(RwLock::new(KitGraph::new("rk")));
             let mut inner = k.write().expect("w");
-            let t = Arc::new(RwLock::new(TypeStore::new("Ty")));
+            let t = Arc::new(RwLock::new(Type::new("Ty")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
             drop(inner);
             let g = k.read().unwrap();
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
@@ -30699,20 +30064,20 @@ mod tests {
             let v = serde_json::json!([{
                 "readKitCommands": { "scope": { "theKit": null }, "commands": [{ "readKitInputCommand": null }] }
             }]);
-            let cmds: Vec<KitStoreCommand> = serde_json::from_value(v).expect("de");
-            assert!(matches!(&cmds[0], KitStoreCommand::ReadKitCommands { .. }));
+            let cmds: Vec<KitCommand> = serde_json::from_value(v).expect("de");
+            assert!(matches!(&cmds[0], KitCommand::ReadKitCommands { .. }));
         }
 
         #[test]
         fn transaction_change_undo_redo() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let txid = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -30720,7 +30085,7 @@ mod tests {
             )
             .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -30728,25 +30093,25 @@ mod tests {
             };
             let res = KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![KitDraftCommand::ExecuteTransactionCommands {
                         id: txid,
                         commands: vec![
                             TransactionCommand::ChangeKitCommands {
-                                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
+                                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
                             },
-                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
                             TransactionCommand::Undo,
-                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
                         ],
                     }],
                 },
             )
             .expect("seq");
             match res {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => {
                     let tr = match &results[0] {
                         crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results: tr } => tr,
                         _ => panic!(),
@@ -30781,14 +30146,14 @@ mod tests {
         #[test]
         fn draft_undo_across_transactions() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let run_tx = |name: &str| {
                 let txid = match KitGraph::execute(
                     &k,
-                    KitStoreCommand::ExecuteKitDraftCommands {
+                    KitCommand::ExecuteKitDraftCommands {
                         alternative_id: None,
                         draft_id: did.clone(),
                         commands: vec![KitDraftCommand::StartTransaction],
@@ -30796,7 +30161,7 @@ mod tests {
                 )
                 .expect("st")
                 {
-                    kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                    kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                         crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
                     },
@@ -30804,14 +30169,14 @@ mod tests {
                 };
                 KitGraph::execute(
                     &k,
-                    KitStoreCommand::ExecuteKitDraftCommands {
+                    KitCommand::ExecuteKitDraftCommands {
                         alternative_id: None,
                         draft_id: did.clone(),
                         commands: vec![KitDraftCommand::ExecuteTransactionCommands {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -30828,7 +30193,7 @@ mod tests {
             }
             KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did.clone(),
                     commands: vec![KitDraftCommand::Undo { count: 1 }],
@@ -30844,13 +30209,13 @@ mod tests {
         #[test]
         fn finalize_to_checkpoint_first_has_none_parent() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let txid = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -30858,7 +30223,7 @@ mod tests {
             )
             .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -30866,7 +30231,7 @@ mod tests {
             };
             let cp = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![
@@ -30874,7 +30239,7 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -30885,7 +30250,7 @@ mod tests {
             )
             .expect("fin")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
@@ -30901,13 +30266,13 @@ mod tests {
         #[test]
         fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
             let (k, tid) = make_kit_with_type();
-            let did0 = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did0 = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let tx0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did0.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -30915,7 +30280,7 @@ mod tests {
             )
             .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -30923,7 +30288,7 @@ mod tests {
             };
             let cp_main = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did0,
                     commands: vec![
@@ -30931,7 +30296,7 @@ mod tests {
                             id: tx0,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -30942,32 +30307,32 @@ mod tests {
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
-            let alt_id = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
-                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+            let alt_id = match KitGraph::execute(&k, KitCommand::NewAlternative { from_checkpoint: Some(cp_main.clone()), name: "br".into() }).expect("alt") {
+                kit_store_command::KitCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             let did1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::NewDraft {
+                KitCommand::NewDraft {
                     checkpoint_id: Some(cp_main.clone()),
                     alternative_id: Some(alt_id.clone()),
                 },
             )
             .expect("nd1")
             {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let tx1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: Some(alt_id.clone()),
                     draft_id: did1.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -30975,7 +30340,7 @@ mod tests {
             )
                 .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -30983,7 +30348,7 @@ mod tests {
             };
             let _ = KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: Some(alt_id.clone()),
                     draft_id: did1,
                     commands: vec![
@@ -30991,7 +30356,7 @@ mod tests {
                             id: tx1,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -31016,14 +30381,14 @@ mod tests {
         #[test]
         fn alternative_share_checkpoints() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
+            let tx = match KitGraph::execute(&k, KitCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -31031,7 +30396,7 @@ mod tests {
             };
             let cp0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![
@@ -31039,7 +30404,7 @@ mod tests {
                             id: tx,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -31050,18 +30415,18 @@ mod tests {
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let a1 = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
-                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+            let a1 = match KitGraph::execute(&k, KitCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a1".into() }).expect("a1") {
+                kit_store_command::KitCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let a2 = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
-                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+            let a2 = match KitGraph::execute(&k, KitCommand::NewAlternative { from_checkpoint: Some(cp0), name: "a2".into() }).expect("a2") {
+                kit_store_command::KitCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             let g = k.read().expect("g");
@@ -31073,14 +30438,14 @@ mod tests {
         #[test]
         fn tx_undo_updates_live_snapshot_after_multiple_changes() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
+            let tx = match KitGraph::execute(&k, KitCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -31088,13 +30453,13 @@ mod tests {
             };
 
             let change_name = |name: &str| TransactionCommand::ChangeKitCommands {
-                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
+                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
             };
 
             let run_tx = |command: TransactionCommand| {
                 KitGraph::execute(
                     &k,
-                    KitStoreCommand::ExecuteKitDraftCommands {
+                    KitCommand::ExecuteKitDraftCommands {
                         alternative_id: None,
                         draft_id: did.clone(),
                         commands: vec![KitDraftCommand::ExecuteTransactionCommands {
@@ -31129,7 +30494,7 @@ mod tests {
 
             let can_redo = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![KitDraftCommand::ExecuteTransactionCommands {
@@ -31140,7 +30505,7 @@ mod tests {
             )
             .expect("can redo")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results } => match &results[0] {
                         crate::kit_transaction::TransactionCommandResult::CanRedo { can } => *can,
                         _ => panic!(),
@@ -31155,13 +30520,13 @@ mod tests {
         #[test]
         fn unify_alternative_replaces_list_with_root_and_new() {
             let (k, tid) = make_kit_with_type();
-            let did0 = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did0 = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let tx0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did0.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -31169,7 +30534,7 @@ mod tests {
             )
             .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -31177,7 +30542,7 @@ mod tests {
             };
             let cp0 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did0,
                     commands: vec![
@@ -31185,7 +30550,7 @@ mod tests {
                             id: tx0,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -31196,31 +30561,31 @@ mod tests {
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let alt = match KitGraph::execute(&k, KitStoreCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
-                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+            let alt = match KitGraph::execute(&k, KitCommand::NewAlternative { from_checkpoint: Some(cp0.clone()), name: "a".into() }).expect("na") {
+                kit_store_command::KitCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             let did1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::NewDraft {
+                KitCommand::NewDraft {
                     checkpoint_id: Some(cp0.clone()),
                     alternative_id: Some(alt.clone()),
                 },
             )
             .expect("nd1")
             {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
             let tx1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: Some(alt.clone()),
                     draft_id: did1.clone(),
                     commands: vec![KitDraftCommand::StartTransaction],
@@ -31228,7 +30593,7 @@ mod tests {
             )
                 .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -31236,7 +30601,7 @@ mod tests {
             };
             let _cp1 = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: Some(alt.clone()),
                     draft_id: did1,
                     commands: vec![
@@ -31244,7 +30609,7 @@ mod tests {
                             id: tx1,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -31255,7 +30620,7 @@ mod tests {
             )
             .expect("f1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
@@ -31266,7 +30631,7 @@ mod tests {
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
                 g.materialize_at(Some(&t))
             };
-            let _ = KitGraph::execute(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
+            let _ = KitGraph::execute(&k, KitCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
                 let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
@@ -31281,14 +30646,14 @@ mod tests {
         #[test]
         fn release_caches_materialized_kit() {
             let (k, tid) = make_kit_with_type();
-            let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
-                kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id.clone(),
+            let did = match KitGraph::execute(&k, KitCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
+                kit_store_command::KitCommandResult::NewDraft { draft_id } => draft_id.clone(),
                 _ => panic!(),
             };
-            let tx = match KitGraph::execute(&k, KitStoreCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
+            let tx = match KitGraph::execute(&k, KitCommand::ExecuteKitDraftCommands { alternative_id: None, draft_id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] })
                 .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
                     crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                     _ => panic!(),
                 },
@@ -31296,7 +30661,7 @@ mod tests {
             };
             let cp = match KitGraph::execute(
                 &k,
-                KitStoreCommand::ExecuteKitDraftCommands {
+                KitCommand::ExecuteKitDraftCommands {
                     alternative_id: None,
                     draft_id: did,
                     commands: vec![
@@ -31304,7 +30669,7 @@ mod tests {
                             id: tx,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeReference { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -31315,13 +30680,13 @@ mod tests {
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                kit_store_command::KitCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
                     crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                     _ => panic!(),
                 },
                 _ => panic!(),
             };
-            let _ = KitGraph::execute(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
+            let _ = KitGraph::execute(&k, KitCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
             let g = k.read().expect("g");
             let mk = g.checkpoints.get(&cp).expect("cp").release.as_ref().expect("mk");
             let computed = mk.compute();
@@ -31333,7 +30698,7 @@ mod tests {
         fn read_command_tree_returns_nested_results() {
             let (k, tid) = make_kit_with_type();
             let g = k.read().expect("g");
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypeInputCommand, ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid }, commands: vec![ReadTypeCommand::ReadTypeInputCommand, ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
@@ -31350,7 +30715,7 @@ mod tests {
         fn read_type_ports_and_name_nested() {
             let (k, tid) = make_kit_with_type();
             let g = k.read().expect("g");
-            let r = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypePortsInputCommand, ReadTypeCommand::ReadTypeNameCommand] }.execute(&*g).expect("r");
+            let r = ReadKitCommand::ReadKitTypeCommands { id: TypeReference { id: tid }, commands: vec![ReadTypeCommand::ReadTypePortsInputCommand, ReadTypeCommand::ReadTypeNameCommand] }.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
                     assert!(matches!(&results[0], ReadTypeCommandOutput::ReadTypePortsInputCommand { .. }));
@@ -31367,13 +30732,13 @@ mod wasm_handle_tests {
     use wasm_bindgen_test::*;
 
     use crate::kit_graph::KitGraph;
-    use crate::wasm::KitStoreHandle;
+    use crate::wasm::KitHandle;
 
     #[wasm_bindgen_test]
     fn kit_store_handle_create_roundtrips_snapshot() {
         let kit = KitGraph::new("wasm-kit-test");
         let dto = kit.to_input();
-        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
+        let h = KitHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
         let snap = h.snapshot().expect("snapshot");
         let parsed: serde_json::Value = serde_wasm_bindgen::from_value(snap).unwrap();
         assert_eq!(parsed["name"], "wasm-kit-test");
@@ -31384,7 +30749,7 @@ mod wasm_handle_tests {
         crate::wasm::boot();
         let kit = KitGraph::new("wasm-gql-name");
         let dto = kit.to_input();
-        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
+        let h = KitHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
 
         let req = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
         let prom = h.execute(req);
@@ -31395,27 +30760,27 @@ mod wasm_handle_tests {
     }
 }
 
-pub use attribute::{AttributeStore, AttributeStoreRef, AttributeStoreWeak};
-pub use author::{ AuthorRef,   AuthorStore, AuthorStoreRef, AuthorStoreWeak};
-pub use benchmark::{ BenchmarkRef,   BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
+pub use attribute::{Attribute, AttributeReference, AttributeWeak};
+pub use author::{ AuthorReference,   Author, AuthorReference, AuthorWeak};
+pub use benchmark::{ BenchmarkReference,   Benchmark, BenchmarkReference, BenchmarkWeak};
 pub use change_command::{
     ChangeAttributeCommand, ChangeConnectionCommand, ChangeConnectorCommand, ChangeDesignCommand, ChangeGroupCommand, ChangeKitCommand, ChangeLayerCommand, ChangePieceCommand, ChangePortCommand, ChangePropCommand, ChangeRepresentationCommand,
     ChangeStatCommand, ChangeTypeCommand,
 };
-pub use concept::{ ConceptRef,   ConceptStore, ConceptStoreRef, ConceptStoreWeak};
-pub use connection::{ ConnectionRef,   ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ColorDto,  ConnectorRef,   ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
-pub use design::{ DesignRef,   DesignStore, DesignStoreRef, DesignStoreWeak};
+pub use concept::{ ConceptReference,   Concept, ConceptReference, ConceptWeak};
+pub use connection::{ ConnectionReference,   Connection, ConnectionReference, ConnectionWeak};
+pub use connector::{ColorDto,  ConnectorReference,   Connector, ConnectorReference, ConnectorWeak};
+pub use design::{ DesignReference,   Design, DesignReference, DesignWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
-pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
-pub use file::{ FileRef,   FileStore, FileStoreRef, FileStoreWeak};
-pub use folder::{ FolderRef,   FolderStore, FolderStoreRef, FolderStoreWeak};
+pub use events::{EntityKind, EntityReference, EventBus, KitEvent};
+pub use file::{ FileReference,   File, FileReference, FileWeak};
+pub use folder::{ FolderReference,   Folder, FolderReference, FolderWeak};
 pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use group::{ GroupRef,   GroupStore, GroupStoreRef, GroupStoreWeak};
+pub use group::{ GroupReference,   Group, GroupReference, GroupWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{ KitGraphRef, KitGraphWeak, KitRef,   KitStore};
+pub use kit::{ KitGraphReference, KitGraphWeak, KitReference,   Kit};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_backbone_output::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{Change, KitChange, KitChangeKind, KitDesignAtomicsBlock, KitDesignChange, KitDesignChangeBlock, PieceChange, TypeChange};
@@ -31425,14 +30790,14 @@ pub use kit_conflict_registry::ConflictRegistry;
 pub use kit_diff::KitDiff;
 pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_graph::KitGraph;
-pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+pub use kit_store_command::{KitCommand, KitCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-pub use layer::{ LayerRef,   LayerStore, LayerStoreRef, LayerStoreWeak};
-pub use location::{ LocationRef,   LocationStore, LocationStoreRef, LocationStoreWeak};
-pub use piece::{ PieceRef,   PieceStore, PieceStoreRef, PieceStoreWeak};
-pub use port::{ PortRef,   PortStore, PortStoreRef, PortStoreWeak};
-pub use prop::{ PropRef,   PropStore, PropStoreRef, PropStoreWeak};
-pub use quality::{ QualityRef,   QualityStore, QualityStoreRef, QualityStoreWeak};
+pub use layer::{ LayerReference,   Layer, LayerReference, LayerWeak};
+pub use location::{ LocationReference,   Location, LocationReference, LocationWeak};
+pub use piece::{ PieceReference,   Piece, PieceReference, PieceWeak};
+pub use port::{ PortReference,   Port, PortReference, PortWeak};
+pub use prop::{ PropReference,   Prop, PropReference, PropWeak};
+pub use quality::{ QualityReference,   Quality, QualityReference, QualityWeak};
 pub use read::{
     DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand, ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand,
     ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput, ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand,
@@ -31441,8 +30806,8 @@ pub use read::{
     ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
 pub use report::{Severity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{ RepresentationRef,   RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
-pub use side::{ SideRef,   SideStore, SideStoreRef, SideStoreWeak};
-pub use stat::{ StatRef,   StatStore, StatStoreRef, StatStoreWeak};
-pub use tag::{ TagRef,   TagStore, TagStoreRef, TagStoreWeak};
-pub use typ::{ TypeRef,   TypeStore, TypeStoreRef, TypeStoreWeak};
+pub use representation::{ RepresentationReference,   Representation, RepresentationReference, RepresentationWeak};
+pub use side::{ SideReference,   Side, SideReference, SideWeak};
+pub use stat::{ StatReference,   Stat, StatReference, StatWeak};
+pub use tag::{ TagReference,   Tag, TagReference, TagWeak};
+pub use typ::{ TypeReference,   Type, TypeReference, TypeWeak};
