@@ -323,27 +323,6 @@
               {
                 "id": "019caa00-0000-7000-a000-000000000010",
                 "name": "new-test-piece",
-                "plane": {
-                  "origin": {
-                    "x": 5,
-                    "y": 5,
-                    "z": 5
-                  },
-                  "xAxis": {
-                    "x": 1,
-                    "y": 0,
-                    "z": 0
-                  },
-                  "yAxis": {
-                    "x": 0,
-                    "y": 1,
-                    "z": 0
-                  }
-                },
-                "center": {
-                  "u": 3,
-                  "v": 7
-                },
                 "scale": 1.5,
                 "mirrorPlane": {
                   "origin": {
@@ -364,7 +343,30 @@
                 },
                 "description": "New piece for testing",
                 "props": [],
-                "attributes": []
+                "attributes": [],
+                "pose": {
+                  "plane": {
+                    "origin": {
+                      "x": 5,
+                      "y": 5,
+                      "z": 5
+                    },
+                    "xAxis": {
+                      "x": 1,
+                      "y": 0,
+                      "z": 0
+                    },
+                    "yAxis": {
+                      "x": 0,
+                      "y": 1,
+                      "z": 0
+                    }
+                  },
+                  "center": {
+                    "u": 3,
+                    "v": 7
+                  }
+                }
               }
             ]
           },
@@ -440,50 +442,56 @@
           {
             "id": "019caa00-0000-7000-a000-000000000013",
             "name": "new-design-piece-1",
-            "plane": {
-              "origin": {
-                "x": 0,
-                "y": 0,
-                "z": 0
-              },
-              "xAxis": {
-                "x": 1,
-                "y": 0,
-                "z": 0
-              },
-              "yAxis": {
-                "x": 0,
-                "y": 1,
-                "z": 0
-              }
-            },
             "scale": 1,
             "props": [],
-            "attributes": []
+            "attributes": [],
+            "pose": {
+              "plane": {
+                "origin": {
+                  "x": 0,
+                  "y": 0,
+                  "z": 0
+                },
+                "xAxis": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "yAxis": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                }
+              },
+              "center": null
+            }
           },
           {
             "id": "019caa00-0000-7000-a000-000000000014",
             "name": "new-design-piece-2",
-            "plane": {
-              "origin": {
-                "x": 10,
-                "y": 0,
-                "z": 0
-              },
-              "xAxis": {
-                "x": 1,
-                "y": 0,
-                "z": 0
-              },
-              "yAxis": {
-                "x": 0,
-                "y": 1,
-                "z": 0
-              }
-            },
             "scale": 1,
             "props": [],
-            "attributes": []
+            "attributes": [],
+            "pose": {
+              "plane": {
+                "origin": {
+                  "x": 10,
+                  "y": 0,
+                  "z": 0
+                },
+                "xAxis": {
+                  "x": 1,
+                  "y": 0,
+                  "z": 0
+                },
+                "yAxis": {
+                  "x": 0,
+                  "y": 1,
+                  "z": 0
+                }
+              },
+              "center": null
+            }
           }
         ],
         "_connections": [

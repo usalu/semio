@@ -166,7 +166,7 @@ enum ConflictResolutionInput {
 
 type Connection {
 	id: String!
-	container: Design!
+	owner: Design!
 	metadata: ConnectionMetadataDto!
 	shallow: ConnectionShallowDto!
 	full: ConnectionOutput!
@@ -232,7 +232,7 @@ type Connector {
 	id: String!
 	code: String!
 	description: String
-	container: Type!
+	owner: Type!
 	metadata: ConnectorMetadataDto!
 	shallow: ConnectorShallowDto!
 	full: ConnectorOutput!
@@ -403,7 +403,7 @@ type Design {
 	id: String!
 	name: String!
 	description: String
-	container: Kit!
+	owner: Kit!
 	metadata: DesignMetadataDto!
 	shallow: DesignShallowDto!
 	full: DesignOutput!
@@ -873,7 +873,7 @@ type Representation {
 	id: String!
 	url: String!
 	description: String
-	container: Type!
+	owner: Type!
 	metadata: RepresentationMetadataDto!
 	shallow: RepresentationShallowDto!
 	full: RepresentationOutput!
@@ -1042,13 +1042,15 @@ type Vector {
 	z: Float!
 }
 
+...
+
 type Type implements Entity {
 	id: ID!
 	hash: String!
-	container: Kit!
+	owner: Kit!
 	name: String!
 	description: String
-	container: Kit!
+	owner: Kit!
 	connectors: [Connector!]!
 	representations: [Representation!]!
 	bestRepresentation(tagIds: [ID!]!): Representation
@@ -1059,7 +1061,7 @@ union Blueprint = Type | Design
 type Piece implements Entity {
 	id: String!
 	hash: String!
-	container: Blueprint!
+	owner: Blueprint!
 	name: String
 	description: String
 	pose: Pose
@@ -1079,12 +1081,12 @@ interface Operation implements Entity {
 	diff: Diff!
 }
 
-union ChangeContainer = Transaction | Draft | Checkpoint
+union ChangeOwner = Transaction | Draft | Checkpoint
 
 type Change implements Entity {
 	id: ID!
 	hash: String!
-	container: ChangeContainer!
+	owner: ChangeOwner!
 	forwards: [Operation!]!
 	backwards: [Operation!]!
 }
@@ -1104,7 +1106,7 @@ type Draft {
 type Kit{
 	id: ID!
 	hash: String!
-	container: Graph
+	owner: Graph
 	checkpoint: Checkpoint
 	draft: Draft
 	transaction: Transaction
@@ -1131,7 +1133,7 @@ type Checkpoint {
 type Alternative {
 	id: ID!
 	hash: String!
-	container: Graph
+	owner: Graph
 	name: String!
 	start: Checkpoint!
 	checkpoints: [Checkpoint!]!
@@ -1143,7 +1145,7 @@ type Alternative {
 type Graph {
 	id:ID!
 	hash: String!
-	container: Session
+	owner: Session
 	theKit: Kit
 	alternative(id: ID!): Alternative
 	alternatives: [Alternative!]!
@@ -1168,7 +1170,8 @@ type Query {
 type Mutation {
 	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
 	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-	createFixedPiece(pose: PoseInput!, name: String, description: String): ID!
+	createFixedPiece(draftId: ID!, transactionId: ID!, pose: PoseInput!, name: String, description: String): ID!
+	fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 
 interface Event {
@@ -1196,23 +1199,23 @@ type Message {
 interface Response implements Event {
 	id: ID!
 	timestamp: Timestamp!
-	requestId: ID!
+	request: Request!
 	status: ResponseStatus!
 	messages: [Message!]!
 }
 
-interface ChangedKit implements KitEvent {
-  	change: Change
+interface KitChanged  {
+  	kit: Kit
+	change: Change
 }
 
-type RenamedKit implements UserEvent & BaseEvent {
-  eventId: ID!
-  timestamp: String!
-  eventType: String!
-  userId: ID!
-  reason: String
+type KitRenamed implements UserEvent & Response {
+  kit: Kit
 }
 
+type Subscription {
+	kitRenamed: KitRenamed
+}
 
 schema {
 	query: Query

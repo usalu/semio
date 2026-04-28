@@ -9,33 +9,35 @@
       "isHidden": false,
       "isLocked": false,
       "description": "",
-      "center": {
-        "u": 4.82491,
-        "v": 0.18330000000000002
-      },
-      "plane": {
-        "origin": {
-          "x": 7.500000000000001,
-          "y": 7.700000000000001,
-          "z": -7.500000000000001
-        },
-        "xAxis": {
-          "x": 1,
-          "y": 0,
-          "z": 0
-        },
-        "yAxis": {
-          "x": 0,
-          "y": 1,
-          "z": 0
-        }
-      },
       "qualities": [
         {
           "name": "semio.diffStatus",
           "value": "unchanged"
         }
-      ]
+      ],
+      "pose": {
+        "plane": {
+          "origin": {
+            "x": 7.500000000000001,
+            "y": 7.700000000000001,
+            "z": -7.500000000000001
+          },
+          "xAxis": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "yAxis": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        },
+        "center": {
+          "u": 4.82491,
+          "v": 0.18330000000000002
+        }
+      }
     },
     {
       "id": "ed7b6b3c-02d5-4ed6-ae51-f9cbec92cb83",
@@ -78,33 +80,35 @@
       "isHidden": false,
       "isLocked": false,
       "description": "",
-      "center": {
-        "u": 12.745473939343363,
-        "v": 0.037757142777375796
-      },
-      "plane": {
-        "origin": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "xAxis": {
-          "x": 1,
-          "y": 0,
-          "z": 0
-        },
-        "yAxis": {
-          "x": 0,
-          "y": 1,
-          "z": 0
-        }
-      },
       "qualities": [
         {
           "name": "semio.diffStatus",
           "value": "unchanged"
         }
-      ]
+      ],
+      "pose": {
+        "plane": {
+          "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "xAxis": {
+            "x": 1,
+            "y": 0,
+            "z": 0
+          },
+          "yAxis": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          }
+        },
+        "center": {
+          "u": 12.745473939343363,
+          "v": 0.037757142777375796
+        }
+      }
     },
     {
       "id": "b6aff18a-820b-4629-a401-4c8e2ed0e01a",

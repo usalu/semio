@@ -3501,30 +3501,32 @@
           "type": {
             "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
           },
-          "plane": {
-            "origin": {
-              "x": 0,
-              "y": 0,
-              "z": 0
-            },
-            "xAxis": {
-              "x": 1,
-              "y": 0,
-              "z": 0
-            },
-            "yAxis": {
-              "x": 0,
-              "y": 1,
-              "z": 0
-            }
-          },
-          "center": {
-            "u": 0,
-            "v": 0
-          },
           "isHidden": false,
           "isLocked": false,
-          "description": ""
+          "description": "",
+          "pose": {
+            "plane": {
+              "origin": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "xAxis": {
+                "x": 1,
+                "y": 0,
+                "z": 0
+              },
+              "yAxis": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+              }
+            },
+            "center": {
+              "u": 0,
+              "v": 0
+            }
+          }
         },
         {
           "id": "6947a41b-8c6d-4291-bdd8-96cd535c78fc",

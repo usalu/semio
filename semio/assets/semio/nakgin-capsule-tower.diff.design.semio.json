@@ -105,28 +105,30 @@
         "type": {
           "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
         },
-        "plane": {
-          "origin": {
-            "x": 30,
-            "y": 0,
-            "z": 0
+        "description": "new extension base",
+        "pose": {
+          "plane": {
+            "origin": {
+              "x": 30,
+              "y": 0,
+              "z": 0
+            },
+            "xAxis": {
+              "x": 1,
+              "y": 0,
+              "z": 0
+            },
+            "yAxis": {
+              "x": 0,
+              "y": 1,
+              "z": 0
+            }
           },
-          "xAxis": {
-            "x": 1,
-            "y": 0,
-            "z": 0
-          },
-          "yAxis": {
-            "x": 0,
-            "y": 1,
-            "z": 0
+          "center": {
+            "u": 10,
+            "v": 0
           }
-        },
-        "center": {
-          "u": 10,
-          "v": 0
-        },
-        "description": "new extension base"
+        }
       },
       {
         "id": "019daa00-0000-7000-b000-000000000003",

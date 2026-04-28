@@ -1,0 +1,10 @@
+{
+  "title": "Piece Pose In Json And Sqlite",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Pieces in semio assets JSON and SQLite must use pose { center, plane } instead of top-level plane/center on piece objects. Update all semio/assets/semio JSON fixtures, semio/sqlite/schema.sql (and Rust sqlite I/O SCHEMA_VERSION), JS/GraphQL if needed, and close with ticket_close listing touched files.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪dc8836a5c3854d098bd236589f39bc2d"
+  ]
+}

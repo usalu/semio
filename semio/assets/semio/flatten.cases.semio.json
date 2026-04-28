@@ -3,27 +3,40 @@
     {
       "name": "nakagin_capsule_tower",
       "kit": "metabolism.kit.semio.json",
-      "designPath": ["Nakagin Capsule Tower"]
+      "designPath": [
+        "Nakagin Capsule Tower"
+      ]
     },
     {
       "name": "nakagin_capsule_tower_slanted",
       "kit": "metabolism.kit.semio.json",
-      "designPath": ["Nakagin Capsule Tower", "Slanted"]
+      "designPath": [
+        "Nakagin Capsule Tower",
+        "Slanted"
+      ]
     },
     {
       "name": "nakagin_capsule_tower_twisted",
       "kit": "metabolism.kit.semio.json",
-      "designPath": ["Nakagin Capsule Tower", "Twisted"]
+      "designPath": [
+        "Nakagin Capsule Tower",
+        "Twisted"
+      ]
     },
     {
       "name": "nakagin_capsule_tower_dancing",
       "kit": "metabolism.kit.semio.json",
-      "designPath": ["Nakagin Capsule Tower", "Dancing"]
+      "designPath": [
+        "Nakagin Capsule Tower",
+        "Dancing"
+      ]
     },
     {
       "name": "capsule_dream",
       "kit": "metabolism.kit.semio.json",
-      "designPath": ["Capsule Dream"]
+      "designPath": [
+        "Capsule Dream"
+      ]
     }
   ]
 }

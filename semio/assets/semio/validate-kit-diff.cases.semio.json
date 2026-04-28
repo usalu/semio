@@ -24,7 +24,9 @@
         "pieces": [
           {
             "id": "30000000-0000-0000-0000-000000000001",
-            "type": { "id": "10000000-0000-0000-0000-000000000001" },
+            "type": {
+              "id": "10000000-0000-0000-0000-000000000001"
+            },
             "name": "P1"
           }
         ],
@@ -72,26 +74,38 @@
         "designs": {
           "updated": [
             {
-              "design": { "id": "99999999-9999-9999-9999-999999999999" },
-              "diff": { "name": "Ghost" }
+              "design": {
+                "id": "99999999-9999-9999-9999-999999999999"
+              },
+              "diff": {
+                "name": "Ghost"
+              }
             }
           ]
         }
       },
       "expectOk": false,
-      "errorCodes": ["kitdiff.update.missing-target"],
+      "errorCodes": [
+        "kitdiff.update.missing-target"
+      ],
       "warningCodes": []
     },
     {
       "id": "remove-missing-type-warns",
       "diff": {
         "types": {
-          "removed": [{ "id": "ffffffff-ffff-ffff-ffff-ffffffffffff" }]
+          "removed": [
+            {
+              "id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+            }
+          ]
         }
       },
       "expectOk": true,
       "errorCodes": [],
-      "warningCodes": ["kitdiff.remove.missing-target"]
+      "warningCodes": [
+        "kitdiff.remove.missing-target"
+      ]
     },
     {
       "id": "add-piece-bad-type",
@@ -99,14 +113,18 @@
         "designs": {
           "updated": [
             {
-              "design": { "id": "20000000-0000-0000-0000-000000000001" },
+              "design": {
+                "id": "20000000-0000-0000-0000-000000000001"
+              },
               "diff": {
                 "pieces": {
                   "added": [
                     {
                       "id": "31000000-0000-0000-0000-000000000001",
                       "name": "Bad",
-                      "type": { "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee" }
+                      "type": {
+                        "id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+                      }
                     }
                   ]
                 }
@@ -116,14 +134,20 @@
         }
       },
       "expectOk": false,
-      "errorCodes": ["kitdiff.ref.piece-type-missing"],
+      "errorCodes": [
+        "kitdiff.ref.piece-type-missing"
+      ],
       "warningCodes": []
     },
     {
       "id": "noop-remove-add-type-warns",
       "diff": {
         "types": {
-          "removed": [{ "id": "10000000-0000-0000-0000-000000000001" }],
+          "removed": [
+            {
+              "id": "10000000-0000-0000-0000-000000000001"
+            }
+          ],
           "added": [
             {
               "id": "10000000-0000-0000-0000-000000000001",
@@ -137,7 +161,9 @@
       },
       "expectOk": true,
       "errorCodes": [],
-      "warningCodes": ["kitdiff.cycle.noop-restore"]
+      "warningCodes": [
+        "kitdiff.cycle.noop-restore"
+      ]
     }
   ]
 }

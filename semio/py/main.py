@@ -5755,8 +5755,7 @@ PieceMeta = typing.TypedDict(
         "name": typing.NotRequired[str],
         "type": typing.NotRequired[dict],
         "designPiece": typing.NotRequired[dict],
-        "plane": typing.NotRequired[dict],
-        "center": typing.NotRequired[dict],
+        "pose": typing.NotRequired[dict],
         "scale": typing.NotRequired[float],
         "mirrorPlane": typing.NotRequired[dict],
         "isHidden": typing.NotRequired[bool],
@@ -5766,6 +5765,31 @@ PieceMeta = typing.TypedDict(
     },
 )
 """PieceMeta is Piece without props and attributes."""
+
+
+def _dict_piece_plane(piece: dict | None) -> dict | None:
+    if not piece or not isinstance(piece, dict):
+        return None
+    pose = piece.get("pose")
+    if isinstance(pose, dict):
+        return pose.get("plane")
+    return None
+
+
+def _dict_piece_center(piece: dict | None) -> dict | None:
+    if not piece or not isinstance(piece, dict):
+        return None
+    pose = piece.get("pose")
+    if isinstance(pose, dict):
+        return pose.get("center")
+    return None
+
+
+def _dict_piece_diff_pose(diff: dict | None) -> dict | None:
+    if not diff or not isinstance(diff, dict):
+        return None
+    v = diff.get("pose")
+    return v if isinstance(v, dict) else None
 
 GroupMeta = typing.TypedDict(
     "GroupMeta",
@@ -6992,9 +7016,10 @@ def hash_piece(p: dict) -> str:
     if attrs and len(attrs) > 0:
         w.writeString("attributes")
         w.writeHashList([hash_attribute(a) for a in attrs])
-    if p.get("center") is not None:
+    cen = _dict_piece_center(p)
+    if cen is not None:
         w.writeString("center")
-        w.writeHash(hash_coordinate(p["center"]))
+        w.writeHash(hash_coordinate(cen))
     if p.get("color") is not None:
         w.writeString("color")
         w.writeString(p["color"])
@@ -7018,9 +7043,10 @@ def hash_piece(p: dict) -> str:
     if p.get("name") is not None:
         w.writeString("name")
         w.writeString(p["name"])
-    if p.get("plane") is not None:
+    pln = _dict_piece_plane(p)
+    if pln is not None:
         w.writeString("plane")
-        w.writeHash(hash_plane(p["plane"]))
+        w.writeHash(hash_plane(pln))
     if p.get("props") is not None and len(p["props"]) > 0:
         w.writeString("props")
         w.writeHashList([hash_prop(pr) for pr in p["props"]])
@@ -7905,8 +7931,8 @@ def piecesMetadataDict(kit: dict, design_id: str) -> dict:
         id = p.get("id", "")
         path_raw = piece_paths.get(id, id)
         result[id] = {
-            "plane": p.get("plane"),
-            "center": p.get("center", {"u": 0, "v": 0}),
+            "plane": _dict_piece_plane(p),
+            "center": _dict_piece_center(p) or {"u": 0, "v": 0},
             "fixedPieceId": findAttributeValueDict(p, "semio.fixedPieceId", id) or id,
             "parentPieceId": findAttributeValueDict(p, "semio.parentPieceId", None),
             "depth": int(findAttributeValueDict(p, "semio.depth", "0") or "0"),
@@ -8650,8 +8676,8 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
         designIdB = designB.get("id") if isinstance(designB, dict) else designB
         if designIdA != designIdB:
             return False
-        planeA = pieceA.get("plane")
-        planeB = pieceB.get("plane")
+        planeA = _dict_piece_plane(pieceA)
+        planeB = _dict_piece_plane(pieceB)
         if planeA and planeB:
             if planeA.get("origin", {}).get("x") != planeB.get("origin", {}).get("x"):
                 return False
@@ -9481,18 +9507,14 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             attrs.append(status_attr("removed"))
             pc["attributes"] = attrs
         elif pc["id"] in updated_piece_map:
-            base_plane = pc.get("plane")
-            base_center = pc.get("center")
+            base_plane = _dict_piece_plane(pc)
+            base_center = _dict_piece_center(pc)
             _applyPieceDiff(pc, updated_piece_map[pc["id"]])
             # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
-            if base_plane is not None:
-                pc["plane"] = base_plane
-            elif "plane" in pc:
-                del pc["plane"]
-            if base_center is not None:
-                pc["center"] = base_center
-            elif "center" in pc:
-                del pc["center"]
+            if base_plane is not None or base_center is not None:
+                pc["pose"] = {"plane": base_plane, "center": base_center}
+            elif "pose" in pc:
+                del pc["pose"]
             attrs = pc.get("attributes", []) or []
             attrs.append(status_attr("modified"))
             pc["attributes"] = attrs
@@ -9550,10 +9572,11 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
         aId = after.get(refKey, {}).get("id") if isinstance(after.get(refKey), dict) else None
         if _normalizeValue(bId) != _normalizeValue(aId):
             diff[refKey] = after.get(refKey)
-    if before.get("plane") != after.get("plane"):
-        diff["plane"] = after.get("plane")
-    if before.get("center") != after.get("center"):
-        diff["center"] = after.get("center")
+    if _dict_piece_plane(before) != _dict_piece_plane(after) or _dict_piece_center(before) != _dict_piece_center(after):
+        diff["pose"] = {
+            "plane": _dict_piece_plane(after),
+            "center": _dict_piece_center(after),
+        }
     if before.get("scale") != after.get("scale"):
         diff["scale"] = after.get("scale")
     if _normalizeValue(before.get("color")) != _normalizeValue(after.get("color")):
@@ -9573,14 +9596,14 @@ def _applyPieceDiff(target: dict, diff: dict) -> None:
         "name",
         "description",
         "scale",
-        "plane",
-        "center",
         "color",
         "isHidden",
         "isLocked",
     ]:
         if key in diff:
             target[key] = diff[key]
+    if "pose" in diff:
+        target["pose"] = diff["pose"]
     for refKey in ["type", "design"]:
         if refKey in diff:
             target[refKey] = diff[refKey]
@@ -10996,16 +11019,18 @@ def copyDesignDict(kit: dict, design: dict, pieceIds: list[str], connectionIds: 
     flatResult = flattenDesignDict(kit, design.get("id", ""))
     flatPieceMap: dict[str, dict] = {}
     for piece in pieces:
-        if piece.get("plane"):
-            flatPieceMap[piece["id"]] = {"plane": piece["plane"], "center": piece.get("center")}
+        if _dict_piece_plane(piece) is not None:
+            flatPieceMap[piece["id"]] = {"plane": _dict_piece_plane(piece), "center": _dict_piece_center(piece)}
     for update in flatResult.get("pieces", {}).get("updated", []):
         id = update.get("piece", {}).get("id", update.get("id", ""))
         diff = update.get("diff", {})
         entry = flatPieceMap.get(id, {})
-        if diff.get("plane"):
-            entry["plane"] = diff["plane"]
-        if diff.get("center"):
-            entry["center"] = diff["center"]
+        pd = _dict_piece_diff_pose(diff)
+        if pd:
+            if pd.get("plane") is not None:
+                entry["plane"] = pd["plane"]
+            if pd.get("center") is not None:
+                entry["center"] = pd["center"]
         flatPieceMap[id] = entry
 
     copyPieces: list[dict] = []
@@ -11018,7 +11043,7 @@ def copyDesignDict(kit: dict, design: dict, pieceIds: list[str], connectionIds: 
         if piece is None:
             continue
 
-        isFixed = piece.get("plane") is not None
+        isFixed = _dict_piece_plane(piece) is not None
         isConnected = pieceId in parentMap
 
         isInternalConnected = False
@@ -11214,7 +11239,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
         if piece["id"] in externalOriginIds:
             continue
 
-        isFixed = piece.get("plane") is not None
+        isFixed = _dict_piece_plane(piece) is not None
         isConnected = piece["id"] in sourceParentMap
 
         if isFixed and not isConnected:
@@ -11323,19 +11348,25 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                     for attr in piece.get("attributes", []):
                         if attr.get("key") == "semio.center" and attr.get("value"):
                             try:
-                                copied["center"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                                po = dict(copied.get("pose") or {})
+                                po["center"] = json.loads(attr["value"])
+                                copied["pose"] = po
+                            except (json.JSONDecodeError, TypeError):
                                 pass
                         if attr.get("key") == "semio.plane" and attr.get("value"):
                             try:
-                                copied["plane"] = json.loads(attr["value"])
-                            except json.JSONDecodeError, TypeError:
+                                po = dict(copied.get("pose") or {})
+                                po["plane"] = json.loads(attr["value"])
+                                copied["pose"] = po
+                            except (json.JSONDecodeError, TypeError):
                                 pass
-                    center = copied.get("center") or {"u": 0, "v": 0}
+                    center = _dict_piece_center(copied) or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
                     if coordinate is not None:
                         newCenter = {"u": newCenter["u"] + coordinate.get("u", 0), "v": newCenter["v"] + coordinate.get("v", 0)}
-                    copied["center"] = newCenter
+                    po = dict(copied.get("pose") or {})
+                    po["center"] = newCenter
+                    copied["pose"] = po
                     addedPieces.append(copied)
             else:
                 # Parent is not external: add connected piece as-is
@@ -11413,19 +11444,21 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceIds: li
     flatResult = flatRep["diff"]["forward"]
     flatPieceMap: dict[str, dict] = {}
     for piece in design.get("pieces", []):
-        if piece.get("plane"):
+        if _dict_piece_plane(piece) is not None:
             flatPieceMap[piece["id"]] = {
-                "plane": piece["plane"],
-                "center": piece.get("center"),
+                "plane": _dict_piece_plane(piece),
+                "center": _dict_piece_center(piece),
             }
     for update in flatResult.get("pieces", {}).get("updated", []):
         id = update.get("piece", {}).get("id", update.get("id", ""))
         existing = flatPieceMap.get(id, {})
         diff = update.get("diff", {})
-        if diff.get("plane"):
-            existing["plane"] = diff["plane"]
-        if diff.get("center"):
-            existing["center"] = diff["center"]
+        pd = _dict_piece_diff_pose(diff)
+        if pd:
+            if pd.get("plane") is not None:
+                existing["plane"] = pd["plane"]
+            if pd.get("center") is not None:
+                existing["center"] = pd["center"]
         flatPieceMap[id] = existing
 
     diff: dict = {}
@@ -11438,8 +11471,10 @@ def deletePiecesAndConnectionsInDesignDict(kit: dict, design: dict, pieceIds: li
             {
                 "piece": {"id": g},
                 "diff": {
-                    "plane": flat.get("plane", flatPlane),
-                    "center": flat.get("center", zeroCenter),
+                    "pose": {
+                        "plane": flat.get("plane", flatPlane),
+                        "center": flat.get("center", zeroCenter),
+                    }
                 },
             }
         )
@@ -12711,8 +12746,8 @@ def findFixedPieces(design: Design | dict) -> list[str]:
     result = []
     for p in pieces:
         if isinstance(p, dict):
-            hasPlane = p.get("plane") is not None
-            hasCenter = p.get("center") is not None
+            hasPlane = _dict_piece_plane(p) is not None
+            hasCenter = _dict_piece_center(p) is not None
             if hasPlane != hasCenter:
                 raise ValueError(f"Piece {p.get('id')} has inconsistent plane and center")
             if hasPlane:
@@ -13017,8 +13052,8 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
         visited.add(root_id)
         piecePaths[root_id] = root_id
         root_piece = pieceMap[root_id]
-        if root_piece.get("plane") is not None and root_piece.get("center") is not None:
-            piecePlanes[root_id] = root_piece["plane"]
+        if _dict_piece_plane(root_piece) is not None and _dict_piece_center(root_piece) is not None:
+            piecePlanes[root_id] = _dict_piece_plane(root_piece)
         else:
             piecePlanes[root_id] = {
                 "origin": {"x": 0, "y": 0, "z": 0},
@@ -13078,7 +13113,10 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
                     "u": round(child_u / TOLERANCE) * TOLERANCE,
                     "v": round(child_v / TOLERANCE) * TOLERANCE,
                 }
-                pieceMap[child_id]["center"] = child_center
+                ch = pieceMap[child_id]
+                po = dict(ch.get("pose") or {})
+                po["center"] = child_center
+                ch["pose"] = po
                 piecePaths[child_id] = piecePaths.get(parent_id, parent_id) + "," + child_id
                 q.append(neighbor_id)
 
@@ -13110,15 +13148,15 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
         if not id or id not in piecePlanes:
             continue
         new_plane = piecePlanes[id]
-        new_center = pieceMap[id].get("center") if id in pieceMap else piece.get("center")
+        new_center = _dict_piece_center(pieceMap.get(id)) if id in pieceMap else _dict_piece_center(piece)
         if new_center is None:
             new_center = {"u": 0, "v": 0}
-        old_plane = piece.get("plane")
-        old_center = piece.get("center") or {"u": 0, "v": 0}
+        old_plane = _dict_piece_plane(piece)
+        old_center = _dict_piece_center(piece) or {"u": 0, "v": 0}
         plane_changed = old_plane is None or not _plane_dict_close(new_plane, old_plane)
         center_changed = abs(float(new_center.get("u", 0) or 0) - float(old_center.get("u", 0) or 0)) > TOLERANCE or abs(float(new_center.get("v", 0) or 0) - float(old_center.get("v", 0) or 0)) > TOLERANCE
         if plane_changed or center_changed:
-            updated_rows.append({"id": id, "diff": {"plane": new_plane, "center": new_center}})
+            updated_rows.append({"id": id, "diff": {"pose": {"plane": new_plane, "center": new_center}}})
     return {
         "pieces": {
             "updated": updated_rows,
@@ -13271,7 +13309,7 @@ def computeFlatHashesDict(kit: dict, designId: str) -> dict[str, dict]:
         rootNode = None
         for nodeId in component:
             piece = pieceMap.get(nodeId)
-            if piece and piece.get("plane") is not None and piece.get("center") is not None:
+            if piece and _dict_piece_plane(piece) is not None and _dict_piece_center(piece) is not None:
                 rootNode = nodeId
                 break
         if rootNode is None and component:
@@ -13279,8 +13317,8 @@ def computeFlatHashesDict(kit: dict, designId: str) -> dict[str, dict]:
         if rootNode is None:
             continue
         rootPiece = pieceMap[rootNode]
-        planeHashes[rootNode] = _hash_plane_root(rootNode, rootPiece.get("plane"))
-        centerHashes[rootNode] = _hash_center_root(rootNode, rootPiece.get("center"))
+        planeHashes[rootNode] = _hash_plane_root(rootNode, _dict_piece_plane(rootPiece))
+        centerHashes[rootNode] = _hash_center_root(rootNode, _dict_piece_center(rootPiece))
         for source, target in networkx.bfs_edges(G, rootNode):
             if target in planeHashes:
                 continue
@@ -13327,15 +13365,18 @@ def flattenDesignCachedDict(kit: dict, designId: str, cache: dict[str, dict] | N
             updated = updatedById.get(id)
             if prev is None or updated is None:
                 if updated is not None:
+                    pd = _dict_piece_diff_pose(updated)
+                    pl = pd.get("plane") if pd else None
+                    ce = pd.get("center") if pd else None
                     nextCache[id] = {
                         "planeHash": hashes["planeHash"],
                         "centerHash": hashes["centerHash"],
-                        "plane": updated.get("plane"),
-                        "center": updated.get("center"),
+                        "plane": pl,
+                        "center": ce,
                     }
                 continue
-            reusedPlane = prev.get("plane") if prev.get("planeHash") == hashes["planeHash"] else updated.get("plane")
-            reusedCenter = prev.get("center") if prev.get("centerHash") == hashes["centerHash"] else updated.get("center")
+            reusedPlane = prev.get("plane") if prev.get("planeHash") == hashes["planeHash"] else (_dict_piece_diff_pose(updated) or {}).get("plane")
+            reusedCenter = prev.get("center") if prev.get("centerHash") == hashes["centerHash"] else (_dict_piece_diff_pose(updated) or {}).get("center")
             nextCache[id] = {
                 "planeHash": hashes["planeHash"],
                 "centerHash": hashes["centerHash"],
@@ -13347,11 +13388,14 @@ def flattenDesignCachedDict(kit: dict, designId: str, cache: dict[str, dict] | N
             updated = updatedById.get(id)
             if updated is None:
                 continue
+            pd = _dict_piece_diff_pose(updated)
+            pl = pd.get("plane") if pd else None
+            ce = pd.get("center") if pd else None
             nextCache[id] = {
                 "planeHash": hashes["planeHash"],
                 "centerHash": hashes["centerHash"],
-                "plane": updated.get("plane"),
-                "center": updated.get("center"),
+                "plane": pl,
+                "center": ce,
             }
     return rep, nextCache
 
@@ -14509,7 +14553,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
         )
 
         for p in d.get("pieces", []):
-            plane = p.get("plane") or {}
+            plane = _dict_piece_plane(p) or {}
             plane_origin = plane.get("origin") or {}
             plane_x_axis = plane.get("xAxis") or {}
             plane_y_axis = plane.get("yAxis") or {}
@@ -14517,7 +14561,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
             mirror_origin = mirror_plane.get("origin") or {}
             mirror_x_axis = mirror_plane.get("xAxis") or {}
             mirror_y_axis = mirror_plane.get("yAxis") or {}
-            center = p.get("center") or {}
+            center = _dict_piece_center(p) or {}
             cursor.execute(
                 """
                 INSERT INTO piece (id, name, type_id, design_id_ref, plane_origin_x, plane_origin_y, plane_origin_z,
@@ -15198,8 +15242,8 @@ def export_design_representation(
             piece_id = piece.get("id")
             if piece_id is None:
                 continue
-            if piece.get("plane") is not None and piece.get("center") is not None:
-                piece_planes[piece_id] = piece.get("plane")
+            if _dict_piece_plane(piece) is not None and _dict_piece_center(piece) is not None:
+                piece_planes[piece_id] = _dict_piece_plane(piece)
                 visited.add(piece_id)
                 queue.append(piece_id)
                 roots.append(piece_id)
@@ -17151,10 +17195,10 @@ def _test_flatten(design_name, parent_name=None):
             None,
         )
         assert expected_piece is not None, f"Piece {piece.get('name')} not found in expected design"
-        assert piece.get("plane") is not None
-        assert piece.get("center") is not None
-        assert _test_planes_equal(piece.get("plane"), expected_piece.get("plane"))
-        assert _test_centers_equal(piece.get("center"), expected_piece.get("center"))
+        assert _dict_piece_plane(piece) is not None
+        assert _dict_piece_center(piece) is not None
+        assert _test_planes_equal(_dict_piece_plane(piece), _dict_piece_plane(expected_piece))
+        assert _test_centers_equal(_dict_piece_center(piece), _dict_piece_center(expected_piece))
 
 
 def _test_contains_all_tags(representation: dict[str, typing.Any], selected_tag_ids: list[str]) -> bool:
@@ -17625,13 +17669,13 @@ class TestDelete:
         computed_sorted = sorted(computed_updated, key=lambda u: u.get("piece", {}).get("id", ""))
         expected_sorted = sorted(expected_updated, key=lambda u: u.get("piece", {}).get("id", ""))
         for cu, eu in zip(computed_sorted, expected_sorted):
-            cd = cu["diff"]
-            ed = eu["diff"]
-            assert abs(cd["plane"]["origin"]["x"] - ed["plane"]["origin"]["x"]) < 0.001
-            assert abs(cd["plane"]["origin"]["y"] - ed["plane"]["origin"]["y"]) < 0.001
-            assert abs(cd["plane"]["origin"]["z"] - ed["plane"]["origin"]["z"]) < 0.001
-            assert abs(cd["center"]["u"] - ed["center"]["u"]) < 0.001
-            assert abs(cd["center"]["v"] - ed["center"]["v"]) < 0.001
+            cp = cd.get("pose") or {}
+            ep = ed.get("pose") or {}
+            assert abs(cp["plane"]["origin"]["x"] - ep["plane"]["origin"]["x"]) < 0.001
+            assert abs(cp["plane"]["origin"]["y"] - ep["plane"]["origin"]["y"]) < 0.001
+            assert abs(cp["plane"]["origin"]["z"] - ep["plane"]["origin"]["z"]) < 0.001
+            assert abs(cp["center"]["u"] - ep["center"]["u"]) < 0.001
+            assert abs(cp["center"]["v"] - ep["center"]["v"]) < 0.001
 
         # Verify removed connections
         computed_conn_removed = computed_diff.get("connections", {}).get("removed", [])

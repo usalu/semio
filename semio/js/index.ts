@@ -769,6 +769,8 @@ export function connectionDiffKeyForDataKey(dataKey: string): string {
 export type PieceFieldPatchInput = Readonly<{
   name?: string | null;
   description?: string | null;
+  /** @emoji 📐 Optional explicit placement; expands to `plane` / `center` change commands. */
+  pose?: Readonly<{ plane?: KitJsonTreeDto; center?: KitJsonTreeDto }>;
   plane?: KitJsonTreeDto;
   center?: KitJsonTreeDto;
   scale?: number | string | null;
@@ -804,6 +806,11 @@ export function piecePatchToChangeCommands(patch: PieceFieldPatchInput): ChangeP
   const out: ChangePieceCommand[] = [];
   if ("name" in patch) out.push({ name: { name: patch.name == null ? null : String(patch.name) } });
   if ("description" in patch) out.push({ description: { description: patch.description == null ? null : String(patch.description) } });
+  if ("pose" in patch && patch.pose) {
+    const po = patch.pose;
+    if ("plane" in po) out.push({ plane: { plane: po.plane } });
+    if ("center" in po) out.push({ center: { center: po.center } });
+  }
   if ("plane" in patch) out.push({ plane: { plane: patch.plane } });
   if ("center" in patch) out.push({ center: { center: patch.center } });
   if ("scale" in patch) out.push({ scale: { scale: typeof patch.scale === "number" ? patch.scale : Number(patch.scale) } });
@@ -917,6 +924,14 @@ export function buildSchemaEntityChangeCommands(kind: string, id: string, field:
       if (!designId) return [];
       if (field === "name") return [kitChangeDesignPiece(designId, id, [{ name: { name: String(value) } }])];
       if (field === "description") return [kitChangeDesignPiece(designId, id, [{ description: { description: value == null ? null : String(value) } }])];
+      if (field === "pose") {
+        const po = value as { plane?: KitJsonTreeDto; center?: KitJsonTreeDto };
+        const cmds: ChangePieceCommand[] = [];
+        if (po && "plane" in po) cmds.push({ plane: { plane: po.plane } });
+        if (po && "center" in po) cmds.push({ center: { center: po.center } });
+        if (cmds.length === 0) return [];
+        return [kitChangeDesignPiece(designId, id, cmds)];
+      }
       if (field === "plane") return [kitChangeDesignPiece(designId, id, [{ plane: { plane: value as KitJsonTreeDto } }])];
       if (field === "center") return [kitChangeDesignPiece(designId, id, [{ center: { center: value as KitJsonTreeDto } }])];
       if (field === "scale") return [kitChangeDesignPiece(designId, id, [{ scale: { scale: Number(value) } }])];

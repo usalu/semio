@@ -12,31 +12,33 @@
         "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
       },
       "name": "b",
-      "center": {
-        "v": 0,
-        "u": 0
-      },
       "isHidden": false,
       "description": "",
       "isLocked": false,
-      "plane": {
-        "xAxis": {
-          "y": 0,
-          "x": 1,
-          "z": 0
+      "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+      "pose": {
+        "plane": {
+          "xAxis": {
+            "y": 0,
+            "x": 1,
+            "z": 0
+          },
+          "origin": {
+            "y": 0,
+            "x": 0,
+            "z": 0
+          },
+          "yAxis": {
+            "y": 1,
+            "x": 0,
+            "z": 0
+          }
         },
-        "origin": {
-          "y": 0,
-          "x": 0,
-          "z": 0
-        },
-        "yAxis": {
-          "y": 1,
-          "x": 0,
-          "z": 0
+        "center": {
+          "v": 0,
+          "u": 0
         }
-      },
-      "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1"
+      }
     },
     {
       "type": {
