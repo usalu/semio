@@ -375,29 +375,13 @@ pub mod kit {
 
         impl Default for Connector {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    owner_type: Weak::new(),
-                    code: RwLock::new(String::new()),
-                    description: RwLock::new(None),
-                    port_id: RwLock::new(None),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                }
+                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(String::new()), description: RwLock::new(None), port_id: RwLock::new(None), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) }
             }
         }
 
         impl Connector {
             pub async fn new(owner_type: Weak<Type>, code: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_type,
-                    code: RwLock::new(code),
-                    description: RwLock::new(None),
-                    port_id: RwLock::new(None),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                })
+                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(code), description: RwLock::new(None), port_id: RwLock::new(None), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -409,15 +393,31 @@ pub mod kit {
 
         #[Object(name = "Connector")]
         impl Connector {
-            async fn id(&self) -> Id { self.id.clone() }
-            async fn hash(&self) -> String { self.compute_hash().await }
-            async fn owner(&self) -> Arc<Type> { self.owner_type.upgrade().unwrap_or_default() }
-            async fn code(&self) -> String { self.code.read().await.clone() }
-            async fn description(&self) -> Option<String> { self.description.read().await.clone() }
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Arc<Type> {
+                self.owner_type.upgrade().unwrap_or_default()
+            }
+            async fn code(&self) -> String {
+                self.code.read().await.clone()
+            }
+            async fn description(&self) -> Option<String> {
+                self.description.read().await.clone()
+            }
             #[graphql(name = "portId")]
-            async fn port_id(&self) -> Option<Id> { self.port_id.read().await.clone() }
-            async fn qualities(&self) -> Vec<Quality> { self.qualities.read().await.clone() }
-            async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
+            async fn port_id(&self) -> Option<Id> {
+                self.port_id.read().await.clone()
+            }
+            async fn qualities(&self) -> Vec<Quality> {
+                self.qualities.read().await.clone()
+            }
+            async fn attributes(&self) -> Vec<Attribute> {
+                self.attributes.read().await.clone()
+            }
         }
         //#endregion ⚓ connector
 
@@ -450,16 +450,7 @@ pub mod kit {
 
         impl Representation {
             pub async fn new(owner_type: Weak<Type>, url: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_type,
-                    url: RwLock::new(url),
-                    description: RwLock::new(None),
-                    file: RwLock::new(None),
-                    tags: RwLock::new(Vec::new()),
-                    qualities: RwLock::new(Vec::new()),
-                    attributes: RwLock::new(Vec::new()),
-                })
+                Arc::new(Self { id: Id::new().await, owner_type, url: RwLock::new(url), description: RwLock::new(None), file: RwLock::new(None), tags: RwLock::new(Vec::new()), qualities: RwLock::new(Vec::new()), attributes: RwLock::new(Vec::new()) })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -471,15 +462,33 @@ pub mod kit {
 
         #[Object(name = "Representation")]
         impl Representation {
-            async fn id(&self) -> Id { self.id.clone() }
-            async fn hash(&self) -> String { self.compute_hash().await }
-            async fn owner(&self) -> Arc<Type> { self.owner_type.upgrade().unwrap_or_default() }
-            async fn url(&self) -> String { self.url.read().await.clone() }
-            async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-            async fn file(&self) -> Option<File> { self.file.read().await.clone() }
-            async fn tags(&self) -> Vec<Tag> { self.tags.read().await.clone() }
-            async fn qualities(&self) -> Vec<Quality> { self.qualities.read().await.clone() }
-            async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Arc<Type> {
+                self.owner_type.upgrade().unwrap_or_default()
+            }
+            async fn url(&self) -> String {
+                self.url.read().await.clone()
+            }
+            async fn description(&self) -> Option<String> {
+                self.description.read().await.clone()
+            }
+            async fn file(&self) -> Option<File> {
+                self.file.read().await.clone()
+            }
+            async fn tags(&self) -> Vec<Tag> {
+                self.tags.read().await.clone()
+            }
+            async fn qualities(&self) -> Vec<Quality> {
+                self.qualities.read().await.clone()
+            }
+            async fn attributes(&self) -> Vec<Attribute> {
+                self.attributes.read().await.clone()
+            }
         }
         //#endregion 💾 representation
 
@@ -532,12 +541,7 @@ pub mod kit {
 
         impl Type {
             pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_kit,
-                    name: RwLock::new(name),
-                    ..Default::default()
-                })
+                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -571,31 +575,73 @@ pub mod kit {
 
         #[Object(name = "Type")]
         impl Type {
-            async fn id(&self) -> Id { self.id.clone() }
-            async fn hash(&self) -> String { self.compute_hash().await }
-            async fn owner(&self) -> Arc<crate::kit::Kit> { self.owner_kit.upgrade().unwrap_or_default() }
-            async fn name(&self) -> String { self.name.read().await.clone() }
-            async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-            async fn icon(&self) -> Option<String> { self.icon.read().await.clone() }
-            async fn image(&self) -> Option<String> { self.image.read().await.clone() }
-            async fn unit(&self) -> Option<String> { self.unit.read().await.clone() }
-            async fn created(&self) -> Option<Timestamp> { self.created.read().await.clone() }
-            async fn updated(&self) -> Option<Timestamp> { self.updated.read().await.clone() }
-            async fn connectors(&self) -> Vec<Arc<Connector>> { self.connectors.read().await.clone() }
-            async fn connector(&self, id: Id) -> Option<Arc<Connector>> { self.connector_by_id(&id).await }
-            async fn representations(&self) -> Vec<Arc<Representation>> { self.representations.read().await.clone() }
-            async fn representation(&self, id: Id) -> Option<Arc<Representation>> { self.representation_by_id(&id).await }
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Arc<crate::kit::Kit> {
+                self.owner_kit.upgrade().unwrap_or_default()
+            }
+            async fn name(&self) -> String {
+                self.name.read().await.clone()
+            }
+            async fn description(&self) -> Option<String> {
+                self.description.read().await.clone()
+            }
+            async fn icon(&self) -> Option<String> {
+                self.icon.read().await.clone()
+            }
+            async fn image(&self) -> Option<String> {
+                self.image.read().await.clone()
+            }
+            async fn unit(&self) -> Option<String> {
+                self.unit.read().await.clone()
+            }
+            async fn created(&self) -> Option<Timestamp> {
+                self.created.read().await.clone()
+            }
+            async fn updated(&self) -> Option<Timestamp> {
+                self.updated.read().await.clone()
+            }
+            async fn connectors(&self) -> Vec<Arc<Connector>> {
+                self.connectors.read().await.clone()
+            }
+            async fn connector(&self, id: Id) -> Option<Arc<Connector>> {
+                self.connector_by_id(&id).await
+            }
+            async fn representations(&self) -> Vec<Arc<Representation>> {
+                self.representations.read().await.clone()
+            }
+            async fn representation(&self, id: Id) -> Option<Arc<Representation>> {
+                self.representation_by_id(&id).await
+            }
             #[graphql(name = "bestRepresentation")]
             async fn best_representation(&self, tag_ids: Vec<Id>) -> Option<Arc<Representation>> {
                 self.best_representation_for_tags(&tag_ids).await
             }
-            async fn authors(&self) -> Vec<Author> { self.authors.read().await.clone() }
-            async fn concepts(&self) -> Vec<Concept> { self.concepts.read().await.clone() }
-            async fn tags(&self) -> Vec<Tag> { self.tags.read().await.clone() }
-            async fn qualities(&self) -> Vec<Quality> { self.qualities.read().await.clone() }
-            async fn props(&self) -> Vec<Prop> { self.props.read().await.clone() }
-            async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
-            async fn stats(&self) -> Vec<Stat> { self.stats.read().await.clone() }
+            async fn authors(&self) -> Vec<Author> {
+                self.authors.read().await.clone()
+            }
+            async fn concepts(&self) -> Vec<Concept> {
+                self.concepts.read().await.clone()
+            }
+            async fn tags(&self) -> Vec<Tag> {
+                self.tags.read().await.clone()
+            }
+            async fn qualities(&self) -> Vec<Quality> {
+                self.qualities.read().await.clone()
+            }
+            async fn props(&self) -> Vec<Prop> {
+                self.props.read().await.clone()
+            }
+            async fn attributes(&self) -> Vec<Attribute> {
+                self.attributes.read().await.clone()
+            }
+            async fn stats(&self) -> Vec<Stat> {
+                self.stats.read().await.clone()
+            }
         }
         //#endregion 🏠 type
 
@@ -609,7 +655,9 @@ pub mod kit {
         }
 
         impl Default for Blueprint {
-            fn default() -> Self { Blueprint::Type(Arc::default()) }
+            fn default() -> Self {
+                Blueprint::Type(Arc::default())
+            }
         }
         //#endregion 🧩 blueprint
     }
@@ -642,7 +690,9 @@ pub mod kit {
             }
 
             impl Default for PieceConnectionKind {
-                fn default() -> Self { Self::Fixed }
+                fn default() -> Self {
+                    Self::Fixed
+                }
             }
 
             pub struct Piece {
@@ -688,24 +738,19 @@ pub mod kit {
             }
 
             impl Piece {
-                pub async fn new_fixed(
-                    owner_design: Weak<super::Design>,
-                    blueprint: super::super::r#type::Blueprint,
-                    pose: Position,
-                ) -> Arc<Self> {
-                    Arc::new(Self {
-                        id: Id::new().await,
-                        owner_design,
-                        pose: RwLock::new(Some(pose)),
-                        blueprint: RwLock::new(blueprint),
-                        connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)),
-                        ..Default::default()
-                    })
+                pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, pose: Position) -> Arc<Self> {
+                    Arc::new(Self { id: Id::new().await, owner_design, pose: RwLock::new(Some(pose)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
-                pub async fn set_name(&self, name: Option<String>) { *self.name.write().await = name; }
-                pub async fn set_description(&self, description: Option<String>) { *self.description.write().await = description; }
-                pub async fn set_pose(&self, pose: Option<Position>) { *self.pose.write().await = pose; }
+                pub async fn set_name(&self, name: Option<String>) {
+                    *self.name.write().await = name;
+                }
+                pub async fn set_description(&self, description: Option<String>) {
+                    *self.description.write().await = description;
+                }
+                pub async fn set_pose(&self, pose: Option<Position>) {
+                    *self.pose.write().await = pose;
+                }
 
                 pub async fn compute_hash(&self) -> String {
                     let name = self.name.read().await;
@@ -719,22 +764,42 @@ pub mod kit {
 
             #[Object(name = "Piece")]
             impl Piece {
-                async fn id(&self) -> Id { self.id.clone() }
-                async fn hash(&self) -> String { self.compute_hash().await }
+                async fn id(&self) -> Id {
+                    self.id.clone()
+                }
+                async fn hash(&self) -> String {
+                    self.compute_hash().await
+                }
                 async fn owner(&self) -> super::super::r#type::Blueprint {
                     super::super::r#type::Blueprint::Design(self.owner_design.upgrade().unwrap_or_default())
                 }
-                async fn name(&self) -> Option<String> { self.name.read().await.clone() }
-                async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-                async fn pose(&self) -> Option<Position> { *self.pose.read().await }
-                async fn scale(&self) -> Option<f64> { *self.scale.read().await }
-                async fn blueprint(&self) -> super::super::r#type::Blueprint { self.blueprint.read().await.clone() }
+                async fn name(&self) -> Option<String> {
+                    self.name.read().await.clone()
+                }
+                async fn description(&self) -> Option<String> {
+                    self.description.read().await.clone()
+                }
+                async fn pose(&self) -> Option<Position> {
+                    *self.pose.read().await
+                }
+                async fn scale(&self) -> Option<f64> {
+                    *self.scale.read().await
+                }
+                async fn blueprint(&self) -> super::super::r#type::Blueprint {
+                    self.blueprint.read().await.clone()
+                }
                 #[graphql(name = "connectionKind")]
-                async fn connection_kind(&self) -> Option<PieceConnectionKind> { *self.connection_kind.read().await }
+                async fn connection_kind(&self) -> Option<PieceConnectionKind> {
+                    *self.connection_kind.read().await
+                }
                 #[graphql(name = "flatPosition")]
-                async fn flat_position(&self) -> Position { self.compute_flat_position().await }
+                async fn flat_position(&self) -> Position {
+                    self.compute_flat_position().await
+                }
                 #[graphql(name = "replaceableBlueprint")]
-                async fn replaceable_blueprint(&self) -> Vec<super::super::r#type::Blueprint> { Vec::new() }
+                async fn replaceable_blueprint(&self) -> Vec<super::super::r#type::Blueprint> {
+                    Vec::new()
+                }
                 #[graphql(name = "parentConnection")]
                 async fn parent_connection(&self) -> Option<Arc<super::connection::Connection>> {
                     self.parent_connection.read().await.upgrade()
@@ -751,12 +816,18 @@ pub mod kit {
                 async fn child_pieces(&self) -> Vec<Arc<Piece>> {
                     self.child_pieces.read().await.clone()
                 }
-                async fn depth(&self) -> i32 { *self.depth.read().await }
+                async fn depth(&self) -> i32 {
+                    *self.depth.read().await
+                }
                 async fn path(&self) -> Vec<Arc<Piece>> {
                     self.path.read().await.iter().filter_map(|w| w.upgrade()).collect()
                 }
-                async fn props(&self) -> Vec<Prop> { self.props.read().await.clone() }
-                async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
+                async fn props(&self) -> Vec<Prop> {
+                    self.props.read().await.clone()
+                }
+                async fn attributes(&self) -> Vec<Attribute> {
+                    self.attributes.read().await.clone()
+                }
             }
         }
         //#endregion ⭕ piece
@@ -784,29 +855,21 @@ pub mod kit {
 
             impl Default for Side {
                 fn default() -> Self {
-                    Self {
-                        id: Id::default(),
-                        piece: RwLock::new(Weak::new()),
-                        port: RwLock::new(Weak::new()),
-                        design_piece: RwLock::new(Weak::new()),
-                        connector: RwLock::new(Weak::new()),
-                    }
+                    Self { id: Id::default(), piece: RwLock::new(Weak::new()), port: RwLock::new(Weak::new()), design_piece: RwLock::new(Weak::new()), connector: RwLock::new(Weak::new()) }
                 }
             }
 
             impl Side {
                 pub async fn new(piece: Weak<super::piece::Piece>) -> Arc<Self> {
-                    Arc::new(Self {
-                        id: Id::new().await,
-                        piece: RwLock::new(piece),
-                        ..Default::default()
-                    })
+                    Arc::new(Self { id: Id::new().await, piece: RwLock::new(piece), ..Default::default() })
                 }
             }
 
             #[Object(name = "Side")]
             impl Side {
-                async fn id(&self) -> Id { self.id.clone() }
+                async fn id(&self) -> Id {
+                    self.id.clone()
+                }
                 async fn piece(&self) -> Arc<super::piece::Piece> {
                     self.piece.read().await.upgrade().unwrap_or_default()
                 }
@@ -874,21 +937,51 @@ pub mod kit {
 
             #[Object(name = "Connection")]
             impl Connection {
-                async fn id(&self) -> Id { self.id.clone() }
-                async fn hash(&self) -> String { self.compute_hash().await }
-                async fn owner(&self) -> Arc<super::Design> { self.owner_design.upgrade().unwrap_or_default() }
-                async fn connected(&self) -> Arc<Side> { self.connected.read().await.clone() }
-                async fn connecting(&self) -> Arc<Side> { self.connecting.read().await.clone() }
-                async fn gap(&self) -> Option<f64> { *self.gap.read().await }
-                async fn shift(&self) -> Option<f64> { *self.shift.read().await }
-                async fn rise(&self) -> Option<f64> { *self.rise.read().await }
-                async fn rotation(&self) -> Option<f64> { *self.rotation.read().await }
-                async fn turn(&self) -> Option<f64> { *self.turn.read().await }
-                async fn tilt(&self) -> Option<f64> { *self.tilt.read().await }
-                async fn u(&self) -> Option<f64> { *self.u.read().await }
-                async fn v(&self) -> Option<f64> { *self.v.read().await }
-                async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-                async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
+                async fn id(&self) -> Id {
+                    self.id.clone()
+                }
+                async fn hash(&self) -> String {
+                    self.compute_hash().await
+                }
+                async fn owner(&self) -> Arc<super::Design> {
+                    self.owner_design.upgrade().unwrap_or_default()
+                }
+                async fn connected(&self) -> Arc<Side> {
+                    self.connected.read().await.clone()
+                }
+                async fn connecting(&self) -> Arc<Side> {
+                    self.connecting.read().await.clone()
+                }
+                async fn gap(&self) -> Option<f64> {
+                    *self.gap.read().await
+                }
+                async fn shift(&self) -> Option<f64> {
+                    *self.shift.read().await
+                }
+                async fn rise(&self) -> Option<f64> {
+                    *self.rise.read().await
+                }
+                async fn rotation(&self) -> Option<f64> {
+                    *self.rotation.read().await
+                }
+                async fn turn(&self) -> Option<f64> {
+                    *self.turn.read().await
+                }
+                async fn tilt(&self) -> Option<f64> {
+                    *self.tilt.read().await
+                }
+                async fn u(&self) -> Option<f64> {
+                    *self.u.read().await
+                }
+                async fn v(&self) -> Option<f64> {
+                    *self.v.read().await
+                }
+                async fn description(&self) -> Option<String> {
+                    self.description.read().await.clone()
+                }
+                async fn attributes(&self) -> Vec<Attribute> {
+                    self.attributes.read().await.clone()
+                }
             }
             //#endregion 🔗 connection
         }
@@ -959,21 +1052,11 @@ pub mod kit {
 
         impl Design {
             pub async fn new(owner_kit: Weak<crate::kit::Kit>, name: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id: Id::new().await,
-                    owner_kit,
-                    name: RwLock::new(name),
-                    ..Default::default()
-                })
+                Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn with_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
-                Arc::new(Self {
-                    id,
-                    owner_kit,
-                    name: RwLock::new(name),
-                    ..Default::default()
-                })
+                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
             }
 
             pub async fn compute_hash(&self) -> String {
@@ -998,35 +1081,89 @@ pub mod kit {
 
         #[Object(name = "Design")]
         impl Design {
-            async fn id(&self) -> Id { self.id.clone() }
-            async fn hash(&self) -> String { self.compute_hash().await }
-            async fn owner(&self) -> Arc<crate::kit::Kit> { self.owner_kit.upgrade().unwrap_or_default() }
-            async fn name(&self) -> String { self.name.read().await.clone() }
-            async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-            async fn icon(&self) -> Option<String> { self.icon.read().await.clone() }
-            async fn image(&self) -> Option<String> { self.image.read().await.clone() }
-            async fn location(&self) -> Option<Location> { self.location.read().await.clone() }
-            async fn unit(&self) -> Option<String> { self.unit.read().await.clone() }
-            async fn created(&self) -> Option<Timestamp> { self.created.read().await.clone() }
-            async fn updated(&self) -> Option<Timestamp> { self.updated.read().await.clone() }
-            async fn pieces(&self) -> Vec<Arc<piece::Piece>> { self.pieces.read().await.clone() }
-            async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> { self.piece_by_id(&id).await }
-            async fn connections(&self) -> Vec<Arc<connection::Connection>> { self.connections.read().await.clone() }
-            async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> { self.connection_by_id(&id).await }
-            async fn layers(&self) -> Vec<Layer> { self.layers.read().await.clone() }
-            async fn groups(&self) -> Vec<Group> { self.groups.read().await.clone() }
-            async fn authors(&self) -> Vec<Author> { self.authors.read().await.clone() }
-            async fn concepts(&self) -> Vec<Concept> { self.concepts.read().await.clone() }
-            async fn tags(&self) -> Vec<Tag> { self.tags.read().await.clone() }
-            async fn qualities(&self) -> Vec<Quality> { self.qualities.read().await.clone() }
-            async fn props(&self) -> Vec<Prop> { self.props.read().await.clone() }
-            async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
-            async fn stats(&self) -> Vec<Stat> { self.stats.read().await.clone() }
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Arc<crate::kit::Kit> {
+                self.owner_kit.upgrade().unwrap_or_default()
+            }
+            async fn name(&self) -> String {
+                self.name.read().await.clone()
+            }
+            async fn description(&self) -> Option<String> {
+                self.description.read().await.clone()
+            }
+            async fn icon(&self) -> Option<String> {
+                self.icon.read().await.clone()
+            }
+            async fn image(&self) -> Option<String> {
+                self.image.read().await.clone()
+            }
+            async fn location(&self) -> Option<Location> {
+                self.location.read().await.clone()
+            }
+            async fn unit(&self) -> Option<String> {
+                self.unit.read().await.clone()
+            }
+            async fn created(&self) -> Option<Timestamp> {
+                self.created.read().await.clone()
+            }
+            async fn updated(&self) -> Option<Timestamp> {
+                self.updated.read().await.clone()
+            }
+            async fn pieces(&self) -> Vec<Arc<piece::Piece>> {
+                self.pieces.read().await.clone()
+            }
+            async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
+                self.piece_by_id(&id).await
+            }
+            async fn connections(&self) -> Vec<Arc<connection::Connection>> {
+                self.connections.read().await.clone()
+            }
+            async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
+                self.connection_by_id(&id).await
+            }
+            async fn layers(&self) -> Vec<Layer> {
+                self.layers.read().await.clone()
+            }
+            async fn groups(&self) -> Vec<Group> {
+                self.groups.read().await.clone()
+            }
+            async fn authors(&self) -> Vec<Author> {
+                self.authors.read().await.clone()
+            }
+            async fn concepts(&self) -> Vec<Concept> {
+                self.concepts.read().await.clone()
+            }
+            async fn tags(&self) -> Vec<Tag> {
+                self.tags.read().await.clone()
+            }
+            async fn qualities(&self) -> Vec<Quality> {
+                self.qualities.read().await.clone()
+            }
+            async fn props(&self) -> Vec<Prop> {
+                self.props.read().await.clone()
+            }
+            async fn attributes(&self) -> Vec<Attribute> {
+                self.attributes.read().await.clone()
+            }
+            async fn stats(&self) -> Vec<Stat> {
+                self.stats.read().await.clone()
+            }
             #[graphql(name = "qualitySum")]
-            async fn quality_sum(&self, _quality_id: Id) -> f64 { 0.0 }
-            async fn references(&self) -> Vec<Arc<Design>> { Vec::new() }
+            async fn quality_sum(&self, _quality_id: Id) -> f64 {
+                0.0
+            }
+            async fn references(&self) -> Vec<Arc<Design>> {
+                Vec::new()
+            }
             #[graphql(name = "referencedBy")]
-            async fn referenced_by(&self) -> Vec<Arc<piece::Piece>> { Vec::new() }
+            async fn referenced_by(&self) -> Vec<Arc<piece::Piece>> {
+                Vec::new()
+            }
         }
         //#endregion 🏘 design
     }
@@ -1105,21 +1242,11 @@ pub mod kit {
 
     impl Kit {
         pub async fn new(owner_graph: Weak<crate::vcs::Graph>, name: String) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner_graph,
-                name: RwLock::new(name),
-                ..Default::default()
-            })
+            Arc::new(Self { id: Id::new().await, owner_graph, name: RwLock::new(name), ..Default::default() })
         }
 
         pub(crate) fn new_sync(owner_graph: Weak<crate::vcs::Graph>, name: String) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new_sync(),
-                owner_graph,
-                name: RwLock::new(name),
-                ..Default::default()
-            })
+            Arc::new(Self { id: Id::new_sync(), owner_graph, name: RwLock::new(name), ..Default::default() })
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -1147,39 +1274,101 @@ pub mod kit {
 
     #[Object(name = "Kit")]
     impl Kit {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
         /// Owner [`crate::vcs::Graph`] is set by [`crate::worker::ChildRuntime::new`] via Weak.
-        async fn owner(&self) -> Option<Arc<crate::vcs::Graph>> { self.owner_graph.upgrade() }
-        async fn checkpoint(&self) -> Option<Arc<crate::vcs::Checkpoint>> { None }
-        async fn draft(&self) -> Option<Arc<crate::vcs::Draft>> { None }
-        async fn transaction(&self) -> Option<Arc<crate::vcs::Transaction>> { None }
-        async fn name(&self) -> String { self.name.read().await.clone() }
-        async fn description(&self) -> Option<String> { self.description.read().await.clone() }
-        async fn icon(&self) -> Option<String> { self.icon.read().await.clone() }
-        async fn image(&self) -> Option<String> { self.image.read().await.clone() }
-        async fn preview(&self) -> Option<String> { self.preview.read().await.clone() }
-        async fn remote(&self) -> Option<String> { self.remote.read().await.clone() }
-        async fn homepage(&self) -> Option<String> { self.homepage.read().await.clone() }
-        async fn license(&self) -> Option<String> { self.license.read().await.clone() }
-        async fn uri(&self) -> Option<String> { self.uri.read().await.clone() }
-        async fn created(&self) -> Option<Timestamp> { self.created.read().await.clone() }
-        async fn updated(&self) -> Option<Timestamp> { self.updated.read().await.clone() }
-        async fn version(&self) -> Option<String> { self.version.read().await.clone() }
-        async fn design(&self, id: Id) -> Option<Arc<design::Design>> { self.design_by_id(&id).await }
-        async fn designs(&self) -> Vec<Arc<design::Design>> { self.designs.read().await.clone() }
+        async fn owner(&self) -> Option<Arc<crate::vcs::Graph>> {
+            self.owner_graph.upgrade()
+        }
+        async fn checkpoint(&self) -> Option<Arc<crate::vcs::Checkpoint>> {
+            None
+        }
+        async fn draft(&self) -> Option<Arc<crate::vcs::Draft>> {
+            None
+        }
+        async fn transaction(&self) -> Option<Arc<crate::vcs::Transaction>> {
+            None
+        }
+        async fn name(&self) -> String {
+            self.name.read().await.clone()
+        }
+        async fn description(&self) -> Option<String> {
+            self.description.read().await.clone()
+        }
+        async fn icon(&self) -> Option<String> {
+            self.icon.read().await.clone()
+        }
+        async fn image(&self) -> Option<String> {
+            self.image.read().await.clone()
+        }
+        async fn preview(&self) -> Option<String> {
+            self.preview.read().await.clone()
+        }
+        async fn remote(&self) -> Option<String> {
+            self.remote.read().await.clone()
+        }
+        async fn homepage(&self) -> Option<String> {
+            self.homepage.read().await.clone()
+        }
+        async fn license(&self) -> Option<String> {
+            self.license.read().await.clone()
+        }
+        async fn uri(&self) -> Option<String> {
+            self.uri.read().await.clone()
+        }
+        async fn created(&self) -> Option<Timestamp> {
+            self.created.read().await.clone()
+        }
+        async fn updated(&self) -> Option<Timestamp> {
+            self.updated.read().await.clone()
+        }
+        async fn version(&self) -> Option<String> {
+            self.version.read().await.clone()
+        }
+        async fn design(&self, id: Id) -> Option<Arc<design::Design>> {
+            self.design_by_id(&id).await
+        }
+        async fn designs(&self) -> Vec<Arc<design::Design>> {
+            self.designs.read().await.clone()
+        }
         #[graphql(name = "type")]
-        async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> { self.type_by_id(&id).await }
-        async fn types(&self) -> Vec<Arc<r#type::Type>> { self.types.read().await.clone() }
-        async fn files(&self) -> Vec<File> { self.files.read().await.clone() }
-        async fn folders(&self) -> Vec<Folder> { self.folders.read().await.clone() }
-        async fn authors(&self) -> Vec<Author> { self.authors.read().await.clone() }
-        async fn concepts(&self) -> Vec<Concept> { self.concepts.read().await.clone() }
-        async fn tags(&self) -> Vec<Tag> { self.tags.read().await.clone() }
-        async fn qualities(&self) -> Vec<Quality> { self.qualities.read().await.clone() }
-        async fn props(&self) -> Vec<Prop> { self.props.read().await.clone() }
-        async fn attributes(&self) -> Vec<Attribute> { self.attributes.read().await.clone() }
-        async fn stats(&self) -> Vec<Stat> { self.stats.read().await.clone() }
+        async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
+            self.type_by_id(&id).await
+        }
+        async fn types(&self) -> Vec<Arc<r#type::Type>> {
+            self.types.read().await.clone()
+        }
+        async fn files(&self) -> Vec<File> {
+            self.files.read().await.clone()
+        }
+        async fn folders(&self) -> Vec<Folder> {
+            self.folders.read().await.clone()
+        }
+        async fn authors(&self) -> Vec<Author> {
+            self.authors.read().await.clone()
+        }
+        async fn concepts(&self) -> Vec<Concept> {
+            self.concepts.read().await.clone()
+        }
+        async fn tags(&self) -> Vec<Tag> {
+            self.tags.read().await.clone()
+        }
+        async fn qualities(&self) -> Vec<Quality> {
+            self.qualities.read().await.clone()
+        }
+        async fn props(&self) -> Vec<Prop> {
+            self.props.read().await.clone()
+        }
+        async fn attributes(&self) -> Vec<Attribute> {
+            self.attributes.read().await.clone()
+        }
+        async fn stats(&self) -> Vec<Stat> {
+            self.stats.read().await.clone()
+        }
     }
     //#endregion 📦 kit
 }
@@ -1221,24 +1410,27 @@ pub mod vcs {
 
     impl Default for Change {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner: RwLock::new(None),
-                forwards: RwLock::new(Vec::new()),
-                backwards: RwLock::new(Vec::new()),
-            }
+            Self { id: Id::default(), owner: RwLock::new(None), forwards: RwLock::new(Vec::new()), backwards: RwLock::new(Vec::new()) }
         }
     }
 
     impl Change {
-        pub async fn new() -> Arc<Self> { Arc::new(Self { id: Id::new().await, ..Default::default() }) }
-        pub async fn compute_hash(&self) -> String { h(&[self.id.as_str()]) }
+        pub async fn new() -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, ..Default::default() })
+        }
+        pub async fn compute_hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
     }
 
     #[Object(name = "Change")]
     impl Change {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
         async fn owner(&self) -> ChangeOwnerUnion {
             match self.owner.read().await.clone() {
                 Some(ChangeOwnerRef::Transaction(w)) => ChangeOwnerUnion::Transaction(w.upgrade().unwrap_or_default()),
@@ -1247,8 +1439,12 @@ pub mod vcs {
                 None => ChangeOwnerUnion::Transaction(Arc::default()),
             }
         }
-        async fn forwards(&self) -> Vec<op::OperationKind> { self.forwards.read().await.clone() }
-        async fn backwards(&self) -> Vec<op::OperationKind> { self.backwards.read().await.clone() }
+        async fn forwards(&self) -> Vec<op::OperationKind> {
+            self.forwards.read().await.clone()
+        }
+        async fn backwards(&self) -> Vec<op::OperationKind> {
+            self.backwards.read().await.clone()
+        }
     }
 
     #[derive(Clone, Union)]
@@ -1280,16 +1476,28 @@ pub mod vcs {
         pub async fn with_id(owner_draft: Weak<Draft>, id: Id) -> Arc<Self> {
             Arc::new(Self { id, owner_draft, changes: RwLock::new(Vec::new()) })
         }
-        pub async fn compute_hash(&self) -> String { h(&[self.id.as_str()]) }
-        pub async fn record(&self, change: Arc<Change>) { self.changes.write().await.push(change); }
+        pub async fn compute_hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
+        pub async fn record(&self, change: Arc<Change>) {
+            self.changes.write().await.push(change);
+        }
     }
 
     #[Object(name = "Transaction")]
     impl Transaction {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
-        async fn owner(&self) -> Option<Arc<Draft>> { self.owner_draft.upgrade() }
-        async fn changes(&self) -> Vec<Arc<Change>> { self.changes.read().await.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        async fn owner(&self) -> Option<Arc<Draft>> {
+            self.owner_draft.upgrade()
+        }
+        async fn changes(&self) -> Vec<Arc<Change>> {
+            self.changes.read().await.clone()
+        }
     }
     //#endregion 💼 transaction
 
@@ -1321,9 +1529,15 @@ pub mod vcs {
     }
 
     impl Draft {
-        pub async fn new() -> Arc<Self> { Arc::new(Self { id: Id::new().await, ..Default::default() }) }
-        pub async fn with_id(id: Id) -> Arc<Self> { Arc::new(Self { id, ..Default::default() }) }
-        pub async fn compute_hash(&self) -> String { h(&[self.id.as_str()]) }
+        pub async fn new() -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, ..Default::default() })
+        }
+        pub async fn with_id(id: Id) -> Arc<Self> {
+            Arc::new(Self { id, ..Default::default() })
+        }
+        pub async fn compute_hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
 
         /// 🆕 Look up (or open) the transaction matching `id` and stash it as the open transaction.
         pub async fn ensure_transaction(self: &Arc<Self>, id: &Id) -> Arc<Transaction> {
@@ -1340,19 +1554,35 @@ pub mod vcs {
 
     #[Object(name = "Draft")]
     impl Draft {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
-        async fn owner(&self) -> Option<Arc<Alternative>> { self.owner_alternative.upgrade() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        async fn owner(&self) -> Option<Arc<Alternative>> {
+            self.owner_alternative.upgrade()
+        }
         #[graphql(name = "parentCheckpoint")]
-        async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> { self.parent_checkpoint.read().await.upgrade() }
+        async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
+            self.parent_checkpoint.read().await.upgrade()
+        }
         #[graphql(name = "targetAlternative")]
-        async fn target_alternative(&self) -> Option<Arc<Alternative>> { self.target_alternative.read().await.upgrade() }
+        async fn target_alternative(&self) -> Option<Arc<Alternative>> {
+            self.target_alternative.read().await.upgrade()
+        }
         #[graphql(name = "openTransaction")]
-        async fn open_transaction(&self) -> Option<Arc<Transaction>> { self.open_transaction.read().await.upgrade() }
+        async fn open_transaction(&self) -> Option<Arc<Transaction>> {
+            self.open_transaction.read().await.upgrade()
+        }
         #[graphql(name = "finalizedTransactions")]
-        async fn finalized_transactions(&self) -> Vec<Arc<Transaction>> { self.finalized_transactions.read().await.clone() }
+        async fn finalized_transactions(&self) -> Vec<Arc<Transaction>> {
+            self.finalized_transactions.read().await.clone()
+        }
         #[graphql(name = "redoTransactions")]
-        async fn redo_transactions(&self) -> Vec<Arc<Transaction>> { self.redo_transactions.read().await.clone() }
+        async fn redo_transactions(&self) -> Vec<Arc<Transaction>> {
+            self.redo_transactions.read().await.clone()
+        }
         async fn changes(&self) -> Vec<Arc<Change>> {
             let mut out = Vec::new();
             for t in self.transactions.read().await.iter() {
@@ -1363,9 +1593,13 @@ pub mod vcs {
             out
         }
         #[graphql(name = "canUndo")]
-        async fn can_undo(&self, _steps: i32) -> bool { !self.finalized_transactions.read().await.is_empty() }
+        async fn can_undo(&self, _steps: i32) -> bool {
+            !self.finalized_transactions.read().await.is_empty()
+        }
         #[graphql(name = "canRedo")]
-        async fn can_redo(&self, _steps: i32) -> bool { !self.redo_transactions.read().await.is_empty() }
+        async fn can_redo(&self, _steps: i32) -> bool {
+            !self.redo_transactions.read().await.is_empty()
+        }
     }
     //#endregion 📝 draft
 
@@ -1397,24 +1631,46 @@ pub mod vcs {
     }
 
     impl Checkpoint {
-        pub async fn new() -> Arc<Self> { Arc::new(Self { id: Id::new().await, ..Default::default() }) }
-        pub async fn compute_hash(&self) -> String { h(&[self.id.as_str()]) }
+        pub async fn new() -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, ..Default::default() })
+        }
+        pub async fn compute_hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
     }
 
     #[Object(name = "Checkpoint")]
     impl Checkpoint {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
-        async fn timestamp(&self) -> Option<Timestamp> { self.timestamp.read().await.clone() }
-        async fn authors(&self) -> Vec<Author> { self.authors.read().await.clone() }
-        async fn root(&self) -> Option<Arc<Kit>> { self.root.read().await.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        async fn timestamp(&self) -> Option<Timestamp> {
+            self.timestamp.read().await.clone()
+        }
+        async fn authors(&self) -> Vec<Author> {
+            self.authors.read().await.clone()
+        }
+        async fn root(&self) -> Option<Arc<Kit>> {
+            self.root.read().await.clone()
+        }
         #[graphql(name = "parentCheckpoint")]
-        async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> { self.parent_checkpoint.read().await.upgrade() }
-        async fn message(&self) -> Option<String> { self.message.read().await.clone() }
+        async fn parent_checkpoint(&self) -> Option<Arc<Checkpoint>> {
+            self.parent_checkpoint.read().await.upgrade()
+        }
+        async fn message(&self) -> Option<String> {
+            self.message.read().await.clone()
+        }
         #[graphql(name = "isRelease")]
-        async fn is_release(&self) -> bool { *self.is_release.read().await }
+        async fn is_release(&self) -> bool {
+            *self.is_release.read().await
+        }
         #[graphql(name = "changeCount")]
-        async fn change_count(&self) -> i32 { *self.change_count.read().await }
+        async fn change_count(&self) -> i32 {
+            *self.change_count.read().await
+        }
     }
     //#endregion 🪧 checkpoint
 
@@ -1454,15 +1710,33 @@ pub mod vcs {
 
     #[Object(name = "Alternative")]
     impl Alternative {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
-        async fn owner(&self) -> Option<Arc<Graph>> { self.owner_graph.upgrade() }
-        async fn name(&self) -> String { self.name.read().await.clone() }
-        async fn start(&self) -> Arc<Checkpoint> { self.start.read().await.upgrade().unwrap_or_default() }
-        async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> { self.checkpoints.read().await.clone() }
-        async fn store(&self) -> Arc<Kit> { self.kit.read().await.clone().unwrap_or_default() }
-        async fn draft(&self) -> Option<Arc<Draft>> { self.draft.read().await.upgrade() }
-        async fn transaction(&self) -> Option<Arc<Transaction>> { self.transaction.read().await.upgrade() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        async fn owner(&self) -> Option<Arc<Graph>> {
+            self.owner_graph.upgrade()
+        }
+        async fn name(&self) -> String {
+            self.name.read().await.clone()
+        }
+        async fn start(&self) -> Arc<Checkpoint> {
+            self.start.read().await.upgrade().unwrap_or_default()
+        }
+        async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> {
+            self.checkpoints.read().await.clone()
+        }
+        async fn store(&self) -> Arc<Kit> {
+            self.kit.read().await.clone().unwrap_or_default()
+        }
+        async fn draft(&self) -> Option<Arc<Draft>> {
+            self.draft.read().await.upgrade()
+        }
+        async fn transaction(&self) -> Option<Arc<Transaction>> {
+            self.transaction.read().await.upgrade()
+        }
     }
     //#endregion 🌱 alternative
 
@@ -1479,15 +1753,7 @@ pub mod vcs {
 
     impl Default for Graph {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_session: Weak::new(),
-                the_kit: Arc::default(),
-                alternatives: RwLock::new(Vec::new()),
-                checkpoints: RwLock::new(Vec::new()),
-                releases: RwLock::new(Vec::new()),
-                drafts: RwLock::new(Vec::new()),
-            }
+            Self { id: Id::default(), owner_session: Weak::new(), the_kit: Arc::default(), alternatives: RwLock::new(Vec::new()), checkpoints: RwLock::new(Vec::new()), releases: RwLock::new(Vec::new()), drafts: RwLock::new(Vec::new()) }
         }
     }
 
@@ -1498,19 +1764,13 @@ pub mod vcs {
             let id = Id::new().await;
             Arc::new_cyclic(|weak_self: &Weak<Graph>| {
                 let kit = crate::kit::Kit::new_sync(weak_self.clone(), "the kit".to_string());
-                Self {
-                    id,
-                    owner_session: Weak::new(),
-                    the_kit: kit,
-                    alternatives: RwLock::new(Vec::new()),
-                    checkpoints: RwLock::new(Vec::new()),
-                    releases: RwLock::new(Vec::new()),
-                    drafts: RwLock::new(Vec::new()),
-                }
+                Self { id, owner_session: Weak::new(), the_kit: kit, alternatives: RwLock::new(Vec::new()), checkpoints: RwLock::new(Vec::new()), releases: RwLock::new(Vec::new()), drafts: RwLock::new(Vec::new()) }
             })
         }
 
-        pub async fn compute_hash(&self) -> String { h(&[self.id.as_str()]) }
+        pub async fn compute_hash(&self) -> String {
+            h(&[self.id.as_str()])
+        }
 
         pub async fn ensure_draft(self: &Arc<Self>, draft_id: &Id) -> Arc<Draft> {
             if let Some(d) = self.drafts.read().await.iter().find(|d| &d.id == draft_id).cloned() {
@@ -1552,23 +1812,37 @@ pub mod vcs {
 
     #[Object(name = "Graph")]
     impl Graph {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { self.compute_hash().await }
-        async fn owner(&self) -> Option<Arc<Session>> { self.owner_session.upgrade() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            self.compute_hash().await
+        }
+        async fn owner(&self) -> Option<Arc<Session>> {
+            self.owner_session.upgrade()
+        }
         #[graphql(name = "theKit")]
-        async fn the_kit(&self) -> Option<Arc<Kit>> { Some(self.the_kit.clone()) }
+        async fn the_kit(&self) -> Option<Arc<Kit>> {
+            Some(self.the_kit.clone())
+        }
         async fn alternative(&self, id: Id) -> Option<Arc<Alternative>> {
             self.alternatives.read().await.iter().find(|a| a.id == id).cloned()
         }
-        async fn alternatives(&self) -> Vec<Arc<Alternative>> { self.alternatives.read().await.clone() }
+        async fn alternatives(&self) -> Vec<Arc<Alternative>> {
+            self.alternatives.read().await.clone()
+        }
         async fn checkpoint(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.checkpoints.read().await.iter().find(|c| c.id == id).cloned()
         }
-        async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> { self.checkpoints.read().await.clone() }
+        async fn checkpoints(&self) -> Vec<Arc<Checkpoint>> {
+            self.checkpoints.read().await.clone()
+        }
         async fn release(&self, id: Id) -> Option<Arc<Checkpoint>> {
             self.releases.read().await.iter().find(|c| c.id == id).cloned()
         }
-        async fn releases(&self) -> Vec<Arc<Checkpoint>> { self.releases.read().await.clone() }
+        async fn releases(&self) -> Vec<Arc<Checkpoint>> {
+            self.releases.read().await.clone()
+        }
     }
     //#endregion 🌐 graph
 
@@ -1586,15 +1860,23 @@ pub mod vcs {
     }
 
     impl Session {
-        pub async fn new() -> Arc<Self> { Arc::new(Self { id: Id::new().await, ..Default::default() }) }
+        pub async fn new() -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, ..Default::default() })
+        }
     }
 
     #[Object(name = "Session")]
     impl Session {
-        async fn id(&self) -> Id { self.id.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
         #[graphql(name = "startedAt")]
-        async fn started_at(&self) -> Option<Timestamp> { self.started_at.read().await.clone() }
-        async fn drafts(&self) -> Vec<Arc<Draft>> { self.drafts.read().await.clone() }
+        async fn started_at(&self) -> Option<Timestamp> {
+            self.started_at.read().await.clone()
+        }
+        async fn drafts(&self) -> Vec<Arc<Draft>> {
+            self.drafts.read().await.clone()
+        }
     }
     //#endregion 👤 session
 
@@ -1608,23 +1890,26 @@ pub mod vcs {
 
     impl Default for Conflict {
         fn default() -> Self {
-            Self {
-                id: Id::default(),
-                backbone_tip: RwLock::new(None),
-                reason: RwLock::new(String::new()),
-                created_at: RwLock::new(Timestamp::default()),
-            }
+            Self { id: Id::default(), backbone_tip: RwLock::new(None), reason: RwLock::new(String::new()), created_at: RwLock::new(Timestamp::default()) }
         }
     }
 
     #[Object(name = "Conflict")]
     impl Conflict {
-        async fn id(&self) -> Id { self.id.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
         #[graphql(name = "backboneTip")]
-        async fn backbone_tip(&self) -> Option<String> { self.backbone_tip.read().await.clone() }
-        async fn reason(&self) -> String { self.reason.read().await.clone() }
+        async fn backbone_tip(&self) -> Option<String> {
+            self.backbone_tip.read().await.clone()
+        }
+        async fn reason(&self) -> String {
+            self.reason.read().await.clone()
+        }
         #[graphql(name = "createdAt")]
-        async fn created_at(&self) -> Timestamp { self.created_at.read().await.clone() }
+        async fn created_at(&self) -> Timestamp {
+            self.created_at.read().await.clone()
+        }
     }
     //#endregion ⚠️ conflict
 }
@@ -1658,12 +1943,22 @@ pub mod op {
     #[Object(name = "CreatedFixedPieceInput")]
     impl CreatedFixedPieceInput {
         #[graphql(name = "designId")]
-        async fn design_id(&self) -> Id { self.design_id.clone() }
+        async fn design_id(&self) -> Id {
+            self.design_id.clone()
+        }
         #[graphql(name = "blueprintId")]
-        async fn blueprint_id(&self) -> Id { self.blueprint_id.clone() }
-        async fn pose(&self) -> Position { self.pose }
-        async fn name(&self) -> Option<String> { self.name.clone() }
-        async fn description(&self) -> Option<String> { self.description.clone() }
+        async fn blueprint_id(&self) -> Id {
+            self.blueprint_id.clone()
+        }
+        async fn pose(&self) -> Position {
+            self.pose
+        }
+        async fn name(&self) -> Option<String> {
+            self.name.clone()
+        }
+        async fn description(&self) -> Option<String> {
+            self.description.clone()
+        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -1675,9 +1970,13 @@ pub mod op {
     #[Object(name = "FixedPieceInput")]
     impl FixedPieceInput {
         #[graphql(name = "designId")]
-        async fn design_id(&self) -> Id { self.design_id.clone() }
+        async fn design_id(&self) -> Id {
+            self.design_id.clone()
+        }
         #[graphql(name = "pieceId")]
-        async fn piece_id(&self) -> Id { self.piece_id.clone() }
+        async fn piece_id(&self) -> Id {
+            self.piece_id.clone()
+        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
@@ -1690,26 +1989,40 @@ pub mod op {
     #[Object(name = "DraggedPieceInput")]
     impl DraggedPieceInput {
         #[graphql(name = "designId")]
-        async fn design_id(&self) -> Id { self.design_id.clone() }
+        async fn design_id(&self) -> Id {
+            self.design_id.clone()
+        }
         #[graphql(name = "pieceIds")]
-        async fn piece_ids(&self) -> Vec<Id> { self.piece_ids.clone() }
-        async fn offset(&self) -> Offset { self.offset }
+        async fn piece_ids(&self) -> Vec<Id> {
+            self.piece_ids.clone()
+        }
+        async fn offset(&self) -> Offset {
+            self.offset
+        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct RenamedKitInput { pub name: String }
+    pub struct RenamedKitInput {
+        pub name: String,
+    }
 
     #[Object(name = "RenamedKitInput")]
     impl RenamedKitInput {
-        async fn name(&self) -> String { self.name.clone() }
+        async fn name(&self) -> String {
+            self.name.clone()
+        }
     }
 
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct ChangedDescriptionInput { pub description: String }
+    pub struct ChangedDescriptionInput {
+        pub description: String,
+    }
 
     #[Object(name = "ChangedDescriptionInput")]
     impl ChangedDescriptionInput {
-        async fn description(&self) -> String { self.description.clone() }
+        async fn description(&self) -> String {
+            self.description.clone()
+        }
     }
 
     /// 🧾 The schema's `union OperationInput = …` (one variant resolved at a time).
@@ -1726,11 +2039,15 @@ pub mod op {
 
     //#region 📦 diff (placeholder)
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-    pub struct Diff { pub id: Id }
+    pub struct Diff {
+        pub id: Id,
+    }
 
     #[Object(name = "Diff")]
     impl Diff {
-        async fn id(&self) -> Id { self.id.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
     }
     //#endregion 📦 diff
 
@@ -1745,24 +2062,30 @@ pub mod op {
 
     impl CreatedFixedPiece {
         pub async fn new(input: CreatedFixedPieceInput, piece: Arc<crate::kit::design::piece::Piece>) -> Arc<Self> {
-            Arc::new(Self {
-                id: Id::new().await,
-                owner_change: Weak::new(),
-                input,
-                diff: Diff::default(),
-                piece,
-            })
+            Arc::new(Self { id: Id::new().await, owner_change: Weak::new(), input, diff: Diff::default(), piece })
         }
     }
 
     #[Object(name = "CreatedFixedPiece")]
     impl CreatedFixedPiece {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { crate::hash::h(&[self.id.as_str()]) }
-        async fn owner(&self) -> Arc<Change> { self.owner_change.upgrade().unwrap_or_default() }
-        async fn input(&self) -> CreatedFixedPieceInput { self.input.clone() }
-        async fn diff(&self) -> Diff { self.diff.clone() }
-        async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> { self.piece.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Arc<Change> {
+            self.owner_change.upgrade().unwrap_or_default()
+        }
+        async fn input(&self) -> CreatedFixedPieceInput {
+            self.input.clone()
+        }
+        async fn diff(&self) -> Diff {
+            self.diff.clone()
+        }
+        async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
+            self.piece.clone()
+        }
     }
 
     pub struct FixedPiece {
@@ -1781,12 +2104,24 @@ pub mod op {
 
     #[Object(name = "FixedPiece")]
     impl FixedPiece {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { crate::hash::h(&[self.id.as_str()]) }
-        async fn owner(&self) -> Arc<Change> { self.owner_change.upgrade().unwrap_or_default() }
-        async fn input(&self) -> FixedPieceInput { self.input.clone() }
-        async fn diff(&self) -> Diff { self.diff.clone() }
-        async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> { self.piece.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Arc<Change> {
+            self.owner_change.upgrade().unwrap_or_default()
+        }
+        async fn input(&self) -> FixedPieceInput {
+            self.input.clone()
+        }
+        async fn diff(&self) -> Diff {
+            self.diff.clone()
+        }
+        async fn piece(&self) -> Arc<crate::kit::design::piece::Piece> {
+            self.piece.clone()
+        }
     }
 
     pub struct DraggedPiece {
@@ -1805,12 +2140,24 @@ pub mod op {
 
     #[Object(name = "DraggedPiece")]
     impl DraggedPiece {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { crate::hash::h(&[self.id.as_str()]) }
-        async fn owner(&self) -> Arc<Change> { self.owner_change.upgrade().unwrap_or_default() }
-        async fn input(&self) -> DraggedPieceInput { self.input.clone() }
-        async fn diff(&self) -> Diff { self.diff.clone() }
-        async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> { self.pieces.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Arc<Change> {
+            self.owner_change.upgrade().unwrap_or_default()
+        }
+        async fn input(&self) -> DraggedPieceInput {
+            self.input.clone()
+        }
+        async fn diff(&self) -> Diff {
+            self.diff.clone()
+        }
+        async fn pieces(&self) -> Vec<Arc<crate::kit::design::piece::Piece>> {
+            self.pieces.clone()
+        }
     }
 
     pub struct RenamedKit {
@@ -1829,12 +2176,24 @@ pub mod op {
 
     #[Object(name = "RenamedKit")]
     impl RenamedKit {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { crate::hash::h(&[self.id.as_str()]) }
-        async fn owner(&self) -> Arc<Change> { self.owner_change.upgrade().unwrap_or_default() }
-        async fn input(&self) -> RenamedKitInput { self.input.clone() }
-        async fn diff(&self) -> Diff { self.diff.clone() }
-        async fn kit(&self) -> Arc<crate::kit::Kit> { self.kit.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Arc<Change> {
+            self.owner_change.upgrade().unwrap_or_default()
+        }
+        async fn input(&self) -> RenamedKitInput {
+            self.input.clone()
+        }
+        async fn diff(&self) -> Diff {
+            self.diff.clone()
+        }
+        async fn kit(&self) -> Arc<crate::kit::Kit> {
+            self.kit.clone()
+        }
     }
 
     pub struct ChangedDescription {
@@ -1853,12 +2212,24 @@ pub mod op {
 
     #[Object(name = "ChangedDescription")]
     impl ChangedDescription {
-        async fn id(&self) -> Id { self.id.clone() }
-        async fn hash(&self) -> String { crate::hash::h(&[self.id.as_str()]) }
-        async fn owner(&self) -> Arc<Change> { self.owner_change.upgrade().unwrap_or_default() }
-        async fn input(&self) -> ChangedDescriptionInput { self.input.clone() }
-        async fn diff(&self) -> Diff { self.diff.clone() }
-        async fn entity(&self) -> Arc<crate::kit::Kit> { self.entity.clone() }
+        async fn id(&self) -> Id {
+            self.id.clone()
+        }
+        async fn hash(&self) -> String {
+            crate::hash::h(&[self.id.as_str()])
+        }
+        async fn owner(&self) -> Arc<Change> {
+            self.owner_change.upgrade().unwrap_or_default()
+        }
+        async fn input(&self) -> ChangedDescriptionInput {
+            self.input.clone()
+        }
+        async fn diff(&self) -> Diff {
+            self.diff.clone()
+        }
+        async fn entity(&self) -> Arc<crate::kit::Kit> {
+            self.entity.clone()
+        }
     }
 
     /// 🌗 Sum-type carrying any operation through the event bus / change log (Arc-shared).
@@ -1874,13 +2245,7 @@ pub mod op {
 
     /// 🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
     #[derive(Clone, Interface)]
-    #[graphql(
-        name = "Operation",
-        field(name = "id", ty = "Id"),
-        field(name = "hash", ty = "String"),
-        field(name = "owner", ty = "Arc<Change>"),
-        field(name = "diff", ty = "Diff")
-    )]
+    #[graphql(name = "Operation", field(name = "id", ty = "Id"), field(name = "hash", ty = "String"), field(name = "owner", ty = "Arc<Change>"), field(name = "diff", ty = "Diff"))]
     pub enum OperationIface {
         CreatedFixedPiece(Arc<CreatedFixedPiece>),
         FixedPiece(Arc<FixedPiece>),
@@ -1943,35 +2308,10 @@ pub mod op {
     /// 📡 Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
     pub enum Command {
-        CreateFixedPiece {
-            request_id: Id,
-            draft_id: Id,
-            transaction_id: Id,
-            design_id: Id,
-            blueprint_id: Id,
-            pose: Position,
-            name: Option<String>,
-            description: Option<String>,
-        },
-        FixPiece {
-            request_id: Id,
-            draft_id: Id,
-            transaction_id: Id,
-            design_id: Id,
-            piece_id: Id,
-        },
-        RenameKit {
-            request_id: Id,
-            draft_id: Id,
-            transaction_id: Id,
-            name: String,
-        },
-        ChangeDescription {
-            request_id: Id,
-            draft_id: Id,
-            transaction_id: Id,
-            description: String,
-        },
+        CreateFixedPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, blueprint_id: Id, pose: Position, name: Option<String>, description: Option<String> },
+        FixPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id },
+        RenameKit { request_id: Id, draft_id: Id, transaction_id: Id, name: String },
+        ChangeDescription { request_id: Id, draft_id: Id, transaction_id: Id, description: String },
     }
 
     impl Command {
@@ -2033,6 +2373,8 @@ pub mod event {
         pub fn new(capacity: usize) -> Arc<Self> {
             let (mut tx, rx) = async_broadcast::broadcast(capacity);
             tx.set_overflow(true);
+            // No active receivers? still proceed (drop the message) instead of awaiting one.
+            tx.set_await_active(false);
             Arc::new(Self { tx: Mutex::new(tx), keep_alive: rx.deactivate() })
         }
 
@@ -2105,15 +2447,7 @@ pub mod worker {
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
 
-            Arc::new(Self {
-                bus,
-                wip: ChildPort { inbound: wip_tx },
-                auth: ChildPort { inbound: auth_tx },
-                wip_graph,
-                auth_graph,
-                sessions: RwLock::new(Vec::new()),
-                conflicts: RwLock::new(Vec::new()),
-            })
+            Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions: RwLock::new(Vec::new()), conflicts: RwLock::new(Vec::new()) })
         }
 
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {
@@ -2159,12 +2493,7 @@ pub mod worker {
                     Command::RenameKit { .. } => "renameKit",
                     Command::ChangeDescription { .. } => "changeDescription",
                 };
-                self.bus
-                    .emit_event(KitEvent::CommandSucceeded(CommandReceipt {
-                        request_id: request_id.clone(),
-                        kind: kind.to_string(),
-                    }))
-                    .await;
+                self.bus.emit_event(KitEvent::CommandSucceeded(CommandReceipt { request_id: request_id.clone(), kind: kind.to_string() })).await;
 
                 if let Err(e) = self.apply(cmd).await {
                     let err = e.with_request(request_id);
@@ -2175,36 +2504,10 @@ pub mod worker {
 
         async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
-                Command::CreateFixedPiece {
-                    request_id: _,
-                    draft_id,
-                    transaction_id,
-                    design_id,
-                    blueprint_id,
-                    pose,
-                    name,
-                    description,
-                } => {
-                    let piece = self
-                        .graph
-                        .apply_create_fixed_piece(
-                            draft_id,
-                            transaction_id,
-                            design_id.clone(),
-                            blueprint_id.clone(),
-                            pose,
-                            name.clone(),
-                            description.clone(),
-                        )
-                        .await?;
+                Command::CreateFixedPiece { request_id: _, draft_id, transaction_id, design_id, blueprint_id, pose, name, description } => {
+                    let piece = self.graph.apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), pose, name.clone(), description.clone()).await?;
 
-                    let input = CreatedFixedPieceInput {
-                        design_id,
-                        blueprint_id,
-                        pose,
-                        name,
-                        description,
-                    };
+                    let input = CreatedFixedPieceInput { design_id, blueprint_id, pose, name, description };
                     let op = CreatedFixedPiece::new(input, piece).await;
                     self.bus.emit_event(KitEvent::CreatedFixedPiece(op)).await;
                     Ok(())
@@ -2234,10 +2537,7 @@ pub mod gql {
     use crate::event::{EventBus, KitEvent};
     use crate::geom::Position;
     use crate::id::Id;
-    use crate::op::{
-        ChangedDescription, Command, CommandReceipt, CreatedFixedPiece, DraggedPiece, FixedPiece,
-        OperationIface, RenamedKit,
-    };
+    use crate::op::{ChangedDescription, Command, CommandReceipt, CreatedFixedPiece, DraggedPiece, FixedPiece, OperationIface, RenamedKit};
     use crate::vcs::{Conflict, Graph, Session};
     use crate::worker::ParentRuntime;
 
@@ -2256,7 +2556,9 @@ pub mod gql {
             let rt = rt(ctx)?;
             {
                 let sessions = rt.sessions.read().await;
-                if let Some(s) = sessions.first() { return Ok(s.clone()); }
+                if let Some(s) = sessions.first() {
+                    return Ok(s.clone());
+                }
             }
             let s = Session::new().await;
             rt.sessions.write().await.push(s.clone());
@@ -2271,11 +2573,6 @@ pub mod gql {
             Ok(Some(rt(ctx)?.auth_graph.clone()))
         }
 
-        #[graphql(deprecation = "Use authoritative")]
-        async fn authorative(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Arc<Graph>>> {
-            Ok(Some(rt(ctx)?.auth_graph.clone()))
-        }
-
         async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Arc<Conflict>>> {
             Ok(rt(ctx)?.conflicts.read().await.clone())
         }
@@ -2286,13 +2583,7 @@ pub mod gql {
     #[Object]
     impl Mutation {
         #[graphql(name = "renameKit")]
-        async fn rename_kit(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            name: String,
-        ) -> async_graphql::Result<Id> {
+        async fn rename_kit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, name: String) -> async_graphql::Result<Id> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
             rt.dispatch_wip(Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name }).await;
@@ -2300,22 +2591,10 @@ pub mod gql {
         }
 
         #[graphql(name = "changeDescription")]
-        async fn change_description(
-            &self,
-            ctx: &Context<'_>,
-            #[graphql(name = "draftId")] draft_id: Id,
-            #[graphql(name = "transactionId")] transaction_id: Id,
-            description: String,
-        ) -> async_graphql::Result<Id> {
+        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, description: String) -> async_graphql::Result<Id> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
-            rt.dispatch_wip(Command::ChangeDescription {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                description,
-            })
-            .await;
+            rt.dispatch_wip(Command::ChangeDescription { request_id: request_id.clone(), draft_id, transaction_id, description }).await;
             Ok(request_id)
         }
 
@@ -2335,17 +2614,7 @@ pub mod gql {
             // Skeleton: the GraphQL `createFixedPiece` does not yet take an explicit blueprint id;
             // we mint one so the piece always has a blueprint reference. A follow-up ticket adds the arg.
             let blueprint_id = Id::new().await;
-            rt.dispatch_wip(Command::CreateFixedPiece {
-                request_id: request_id.clone(),
-                draft_id,
-                transaction_id,
-                design_id,
-                blueprint_id,
-                pose,
-                name,
-                description,
-            })
-            .await;
+            rt.dispatch_wip(Command::CreateFixedPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, pose, name, description }).await;
             Ok(request_id)
         }
 
@@ -2456,7 +2725,9 @@ pub mod gql {
     }
 
     #[allow(dead_code)]
-    fn _unused() -> EmptySubscription { EmptySubscription }
+    fn _unused() -> EmptySubscription {
+        EmptySubscription
+    }
 }
 
 //#endregion 🌐 gql
@@ -2502,7 +2773,6 @@ mod tests {
 
     use async_graphql::{Request, Variables};
     use futures_lite::future::block_on;
-    use futures_util::StreamExt;
     use serde_json::json;
 
     fn pose_value() -> serde_json::Value {
@@ -2530,6 +2800,18 @@ mod tests {
             createFixedPiece(draftId: $draftId, transactionId: $txId, designId: $designId, pose: $pose)
         }
     "#;
+
+    /// 📤 Writes the generated SDL to `SEMIO_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio/graphql`.
+    #[test]
+    #[ignore = "writes the generated SDL to SEMIO_GRAPHQL_SCHEMA_OUT"]
+    fn export_semio_graphql_schema_file() {
+        let out = std::env::var("SEMIO_GRAPHQL_SCHEMA_OUT").expect("SEMIO_GRAPHQL_SCHEMA_OUT");
+        let path = std::path::PathBuf::from(out);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).expect("create schema output parent");
+        }
+        std::fs::write(path, block_on(crate::gql::sdl())).expect("write generated GraphQL schema");
+    }
 
     #[test]
     fn parses_target_schema() {
@@ -2570,9 +2852,7 @@ mod tests {
     fn create_fixed_piece_end_to_end() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let res = schema
-                .execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1"))))
-                .await;
+            let res = schema.execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1")))).await;
             assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
 
             // The wip child applies asynchronously; wait briefly for the event loop.
@@ -2583,11 +2863,7 @@ mod tests {
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
             let designs = &data["wip"]["theKit"]["designs"];
-            assert!(
-                designs.as_array().map(|a| a.iter().any(|d| !d["pieces"].as_array().unwrap().is_empty())).unwrap_or(false),
-                "expected at least one piece in wip; got: {}",
-                serde_json::to_string_pretty(&data).unwrap()
-            );
+            assert!(designs.as_array().map(|a| a.iter().any(|d| !d["pieces"].as_array().unwrap().is_empty())).unwrap_or(false), "expected at least one piece in wip; got: {}", serde_json::to_string_pretty(&data).unwrap());
         });
     }
 
@@ -2595,20 +2871,14 @@ mod tests {
     fn wip_and_authoritative_are_isolated() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
-            let _ = schema
-                .execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1"))))
-                .await;
+            let _ = schema.execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1")))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let q = "{ authoritative { theKit { designs { pieces { id } } } } }";
             let res = schema.execute(q).await;
             let data = res.data.into_json().unwrap();
             let designs = &data["authoritative"]["theKit"]["designs"];
-            assert!(
-                designs.as_array().map(|a| a.iter().all(|d| d["pieces"].as_array().unwrap().is_empty())).unwrap_or(true),
-                "authoritative leaked pieces: {}",
-                serde_json::to_string_pretty(&data).unwrap()
-            );
+            assert!(designs.as_array().map(|a| a.iter().all(|d| d["pieces"].as_array().unwrap().is_empty())).unwrap_or(true), "authoritative leaked pieces: {}", serde_json::to_string_pretty(&data).unwrap());
         });
     }
 
@@ -2620,40 +2890,13 @@ mod tests {
         block_on(async {
             let rt = crate::worker::ParentRuntime::spawn().await;
             let bus = rt.bus.clone();
-            let schema = async_graphql::Schema::build(crate::gql::Query, crate::gql::Mutation, crate::gql::SubscriptionRoot)
-                .data(rt.clone())
-                .data(bus)
-                .finish();
+            let schema = async_graphql::Schema::build(crate::gql::Query, crate::gql::Mutation, crate::gql::SubscriptionRoot).data(rt.clone()).data(bus).finish();
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let pose = crate::geom::Position::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt
-                .wip_graph
-                .apply_create_fixed_piece(
-                    crate::id::Id::from("d1"),
-                    crate::id::Id::from("t1"),
-                    crate::id::Id::from("des1"),
-                    blueprint_id.clone(),
-                    pose,
-                    None,
-                    None,
-                )
-                .await
-                .expect("insert piece 1");
-            let _p2 = rt
-                .wip_graph
-                .apply_create_fixed_piece(
-                    crate::id::Id::from("d1"),
-                    crate::id::Id::from("t1"),
-                    crate::id::Id::from("des1"),
-                    blueprint_id,
-                    pose,
-                    None,
-                    None,
-                )
-                .await
-                .expect("insert piece 2");
+            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), pose, None, None).await.expect("insert piece 1");
+            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, pose, None, None).await.expect("insert piece 2");
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
@@ -2666,12 +2909,7 @@ mod tests {
             // chain completes they must all be dropped, leaving us at the baseline (or temporarily +1
             // if any local Arc clone hasn't been dropped yet — but never +2 per piece in the design).
             let after = Arc::strong_count(&p1);
-            assert!(
-                after <= baseline + 1,
-                "deep-clone detected: strong_count grew from {} to {} after a single deep query",
-                baseline,
-                after
-            );
+            assert!(after <= baseline + 1, "deep-clone detected: strong_count grew from {} to {} after a single deep query", baseline, after);
         });
     }
 
@@ -2685,31 +2923,17 @@ mod tests {
 
             let before = schema.execute(q).await;
             let before_data = before.data.into_json().unwrap();
-            let before_pieces: usize = before_data["wip"]["theKit"]["designs"]
-                .as_array()
-                .map(|a| a.iter().map(|d| d["pieces"].as_array().map(|p| p.len()).unwrap_or(0)).sum())
-                .unwrap_or(0);
+            let before_pieces: usize = before_data["wip"]["theKit"]["designs"].as_array().map(|a| a.iter().map(|d| d["pieces"].as_array().map(|p| p.len()).unwrap_or(0)).sum()).unwrap_or(0);
 
-            let _ = schema
-                .execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1"))))
-                .await;
+            let _ = schema.execute(Request::new(CREATE_FIXED_PIECE).variables(Variables::from_value(create_fixed_piece_vars("des1")))).await;
             std::thread::sleep(std::time::Duration::from_millis(150));
 
             let after = schema.execute(q).await;
             let after_data = after.data.into_json().unwrap();
-            let after_pieces: usize = after_data["wip"]["theKit"]["designs"]
-                .as_array()
-                .map(|a| a.iter().map(|d| d["pieces"].as_array().map(|p| p.len()).unwrap_or(0)).sum())
-                .unwrap_or(0);
+            let after_pieces: usize = after_data["wip"]["theKit"]["designs"].as_array().map(|a| a.iter().map(|d| d["pieces"].as_array().map(|p| p.len()).unwrap_or(0)).sum()).unwrap_or(0);
 
             assert_eq!(after_pieces, before_pieces + 1, "mutation not visible on re-read; before={} after={}", before_pieces, after_pieces);
         });
-    }
-
-    // Touch StreamExt to suppress unused-import warnings (it's kept for future subscription tests).
-    #[allow(dead_code)]
-    fn _suppress_unused<S: futures_util::Stream + Unpin>(mut s: S) {
-        let _ = futures_util::StreamExt::next(&mut s);
     }
 }
 

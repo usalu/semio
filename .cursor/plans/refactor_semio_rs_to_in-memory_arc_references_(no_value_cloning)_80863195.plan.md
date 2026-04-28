@@ -4,25 +4,25 @@ overview: Refactor [semio/rs/lib.rs](semio/rs/lib.rs) so every entity lives behi
 todos:
  - id: field-rwlocks
    content: Convert every mutable field on every entity (Connector, Representation, Type, Side, Connection, Piece, Design, Kit, Change, Transaction, Draft, Checkpoint, Alternative, Graph, Session, Conflict, Op*, meta entities) into async_lock::RwLock<FieldT>; switch owned-child Vec<T> to RwLock<Vec<Arc<T>>> and back-pointers to Weak<Parent>.
-   status: in_progress
+   status: completed
  - id: ctor-mut-rewrite
    content: Rewrite every constructor to return Arc<Self>; rewrite every &mut self mutator to take &self and acquire its own interior write-lock. No &mut self anywhere on entities.
-   status: pending
+   status: completed
  - id: resolvers-arc
    content: "Update every #[Object] resolver: relationships return Arc<Child> / Option<Arc<Child>> / Vec<Arc<Child>>; value leaves dereference the per-field read-guard once; owners upgrade Weak to Arc."
-   status: pending
+   status: completed
  - id: graph-root
    content: Drop Arc<RwLock<Graph>> in favour of Arc<Graph> in worker::ParentRuntime. Delete snapshot_wip_graph/snapshot_auth_graph. Make Query.wip / Query.authoritative return Arc<Graph> directly. Make Graph::apply_create_fixed_piece take &self via interior locks.
-   status: pending
+   status: completed
  - id: ops-arc-payload
    content: "Change Operation structs to carry Arc<Entity> payloads (e.g. CreatedFixedPiece.piece: Arc<Piece>). Update KitEvent variants to wrap Arc<Op>. Update Subscription filter macro and OperationKind/OperationIface derives to operate over Arc<*> variants."
-   status: pending
+   status: completed
  - id: tests-no-clone
    content: "Update lib.rs tests: keep the existing 4 green; add no_deep_clone_on_traversal (Arc::strong_count guard around a deep GraphQL query) and mutation_visible_without_resnapshotting (two reads across a mutation prove in-place mutability through interior locks)."
-   status: pending
+   status: completed
  - id: compile-and-pass
    content: cargo check (native + wasm32-unknown-unknown) and cargo test --lib must pass with all 6 tests green.
-   status: pending
+   status: completed
 isProject: false
 ---
 
