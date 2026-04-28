@@ -1,18 +1,17 @@
 //! semio rust implementation
 #![allow(clippy::new_without_default)]
 
-pub mod entities {
+trait Entity {
+    fn id(&self) -> Id;
+    fn hash(&self) -> Hash;
+}
 
-    pub mod weak {}
+trait Store {}
 
-    pub mod strong {
+pub mod kit {
+    pub mod type_ {}
 
-        trait Entity {
-            fn id(&self) -> Id;
-            fn hash(&self) -> Hash;
-        }
-
-        trait Store {}
+    pub mod design {
         pub mod piece {
             #[derive(Debug)]
             pub struct Piece {
@@ -25,8 +24,8 @@ pub mod entities {
                 pub hidden: Option<bool>,
                 pub locked: Option<bool>,
                 pub color: Option<String>,
-                pub props: Vec<PropRef>,
-                pub attributes: Vec<AttributeRef>,
+                pub props: Vec<PropReference>,
+                pub attributes: Vec<AttributeReference>,
                 pub type_ref: Option<TypeWeak>,
                 pub parent_piece: Option<PieceWeak>,
                 pub parent_connection: Option<ConnectionWeak>,
@@ -60,6 +59,22 @@ pub mod entities {
                         flat_pose: Cache::default(),
                     }
                 }
+
+                #[inline]
+                fn emit_ev(&self, ev: KitEvent) {
+                    emit_weak(&self.event_bus, ev);
+                }
+
+                #[inline]
+                fn emit_piece_ev(&self, piece_id: Id, event: crate::events::PieceEvent) {
+                    if let Some(d) = self.parent_design.upgrade() {
+                        if let Ok(d) = d.read() {
+                            self.emit_ev(KitEvent::Design { design_id: d.id.clone(), event: crate::events::DesignEvent::Piece { piece_id, event } });
+                            return;
+                        }
+                    }
+                    self.emit_ev(KitEvent::Piece { piece_id, event });
+                }
             }
 
             #[Object]
@@ -69,6 +84,28 @@ pub mod entities {
                 }
                 async fn name(&self) -> Option<String> {
                     self.name.clone()
+                }
+            }
+        }
+
+        pub mod connection {
+            pub mod side {}
+        }
+    }
+}
+
+pub mod graphql {
+    #[Subscription]
+    impl SubscriptionRoot {
+        async fn on_user_change(&self, ctx: &Context<'_>) -> impl Stream<Item = User> {
+            let tx = ctx.data_unchecked::<broadcast::Sender<UserChangedEvent>>();
+            let mut rx = tx.subscribe();
+
+            async_stream::stream! {
+                while let Ok(event) = rx.recv().await {
+                    // Yield the "Shell" object.
+                    // No complex computation has happened yet.
+                    yield User { id: event.user_id };
                 }
             }
         }

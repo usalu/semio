@@ -1,9 +1,8 @@
-# NEW
-# ------------------------------------------------------------
-
 scalar Timestamp
 
-#region Weak Entities
+#region Entities
+
+#region Weak
 
 input VectorInput {
   x: Float!
@@ -61,9 +60,9 @@ type Pose {
   plane: Plane!
 }
 
-#endregion Weak Entities
+#endregion Weak
 
-#region Shared Entities
+#region Strong
 
 type Location {
   id: ID!
@@ -168,17 +167,9 @@ type Group {
   pieces: [Piece!]!
 }
 
-type Side {
-  id: ID!
-  piece: Piece!
-  port: Connector
-  designPiece: Piece
-  connector: Connector
-}
-
 #endregion Shared Entities
 
-#region Entities
+#region Strong
 
 interface Entity {
   id: ID!
@@ -194,6 +185,8 @@ interface Operation implements Entity {
   diff: Diff!
   input: OperationInput
 }
+
+#region Kit
 
 #region Type
 
@@ -248,66 +241,6 @@ type Type implements Entity {
 #endregion Type
 
 #region Design
-
-enum IncludedDesignConnectionKind {
-  CONNECTED
-  FIXED
-}
-
-type DesignFlattenMapEntry {
-  piece: Piece!
-  plane: Plane!
-  center: Coordinate!
-}
-
-type IncludedDesignInfo {
-  id: ID!
-  design: Design!
-  connectionKind: IncludedDesignConnectionKind!
-  center: Coordinate
-  plane: Plane
-  externalConnections: [Connection!]!
-}
-
-type ReplaceableCatalog {
-  types: [Type!]!
-  designs: [Design!]!
-}
-
-type Design implements Entity {
-  id: ID!
-  hash: String!
-  owner: Kit!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  location: Location
-  unit: String
-  created: Timestamp
-  updated: Timestamp
-  pieces: [Piece!]!
-  piece(id: ID!): Piece
-  connections: [Connection!]!
-  connection(id: ID!): Connection
-  layers: [Layer!]!
-  groups: [Group!]!
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
-  flattenMap: [DesignFlattenMapEntry!]!
-  clusterableGroups(selection: [ID!]!): [[ID!]!]!
-  qualitySum(qualityId: ID!): Float!
-  replaceableCatalog(selection: [ID!]!): ReplaceableCatalog!
-  includedDesigns: [IncludedDesignInfo!]!
-  includedDesignIds: [ID!]!
-}
-
-#endregion Design
 
 #region Piece
 
@@ -394,8 +327,7 @@ type FixedPiece implements Operation & Entity {
 type DraggedPieceInput {
   designId: ID!
   pieceIds: [ID!]!
-  du: Float!
-  dv: Float!
+  offset: Offset!
 }
 
 type DraggedPiece implements Operation & Entity {
@@ -411,7 +343,53 @@ type DraggedPiece implements Operation & Entity {
 
 #endregion Piece
 
-#region Kit
+#region Connection
+
+#region Side
+
+type Side {
+  id: ID!
+  piece: Piece!
+  port: Connector
+  designPiece: Piece
+  connector: Connector
+}
+
+#endregion Side
+
+#endregion Connection
+
+type Design implements Entity {
+  id: ID!
+  hash: String!
+  owner: Kit!
+  name: String!
+  description: String
+  icon: String
+  image: String
+  location: Location
+  unit: String
+  created: Timestamp
+  updated: Timestamp
+  pieces: [Piece!]!
+  piece(id: ID!): Piece
+  connections: [Connection!]!
+  connection(id: ID!): Connection
+  layers: [Layer!]!
+  groups: [Group!]!
+  authors: [Author!]!
+  concepts: [Concept!]!
+  tags: [Tag!]!
+  qualities: [Quality!]!
+  props: [Prop!]!
+  attributes: [Attribute!]!
+  stats: [Stat!]!
+  qualitySum(qualityId: ID!): Float!
+  references: [Design!]!
+  referencedBy: [Piece!]!
+}
+
+#endregion Design
 
 type Kit implements Entity {
   id: ID!
@@ -566,6 +544,8 @@ type Conflict {
 
 #endregion VCS
 
+#region Schema
+
 type Query {
   session: Session!
   wip: Graph!
@@ -596,3 +576,5 @@ schema {
   mutation: Mutation
   subscription: Subscription
 }
+
+#endregion Schema

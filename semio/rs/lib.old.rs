@@ -6,37 +6,37 @@
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    // Granular change commands: run against `KitGraphRef`, inverses for undo.
+    // Granular change commands: run against `KitGraphReference`, inverses for undo.
     use crate::attribute::AttributeFullDto;
     use crate::attribute::AttributeIdDto;
     use crate::attribute::AttributeStore;
-    use crate::attribute::AttributeStoreRef;
+    use crate::attribute::AttributeStoreReference;
     use crate::author::AuthorFullDto;
     use crate::author::AuthorIdDto;
     use crate::author::AuthorStore;
-    use crate::author::AuthorStoreRef;
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
+    use crate::author::AuthorStoreReference;
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreReference};
     use crate::concept::ConceptFullDto;
     use crate::concept::ConceptIdDto;
     use crate::concept::ConceptStore;
-    use crate::concept::ConceptStoreRef;
+    use crate::concept::ConceptStoreReference;
     use crate::connection::ConnectionFullDto;
     use crate::connection::ConnectionIdDto;
     use crate::connector::ConnectorFullDto;
     use crate::connector::ConnectorIdDto;
     use crate::connector::ConnectorStore;
-    use crate::connector::ConnectorStoreRef;
+    use crate::connector::ConnectorStoreReference;
     use crate::design::DesignFullDto;
     use crate::design::DesignIdDto;
     use crate::design::DesignStore;
     use crate::event_wire;
-    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreRef};
+    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreReference};
     use crate::file::FileFullDto;
     use crate::file::FileIdDto;
-    use crate::file::FileStoreRef;
+    use crate::file::FileStoreReference;
     use crate::folder::FolderFullDto;
     use crate::folder::FolderIdDto;
-    use crate::folder::FolderStoreRef;
+    use crate::folder::FolderStoreReference;
     use crate::geom::Coordinate;
     use crate::geom::Plane;
     use crate::geom::Point;
@@ -48,32 +48,32 @@ pub mod change_command {
     use crate::kit_diff::KitDiff;
     use crate::kit_graph::KitFullDto;
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::layer::LayerFullDto;
     use crate::layer::LayerIdDto;
     use crate::layer::LayerStore;
     use crate::location::LocationIdDto;
     use crate::piece::PieceFullDto;
     use crate::piece::PieceIdDto;
-    use crate::piece::PieceStoreRef;
+    use crate::piece::PieceStoreReference;
     use crate::piece::PieceStoreWeak;
     use crate::port::PortFullDto;
     use crate::port::PortIdDto;
-    use crate::port::{PortStore, PortStoreRef};
+    use crate::port::{PortStore, PortStoreReference};
     use crate::prop::PropFullDto;
     use crate::prop::PropIdDto;
     use crate::prop::PropStore;
-    use crate::prop::PropStoreRef;
+    use crate::prop::PropStoreReference;
     use crate::quality::QualityFullDto;
     use crate::quality::QualityIdDto;
     use crate::quality::QualityStore;
-    use crate::quality::QualityStoreRef;
+    use crate::quality::QualityStoreReference;
     use crate::representation::RepresentationFullDto;
     use crate::representation::RepresentationIdDto;
     use crate::representation::RepresentationStore;
-    use crate::representation::RepresentationStoreRef;
+    use crate::representation::RepresentationStoreReference;
     use crate::side::SideMetadataDto;
-    use crate::side::SideStoreRef;
+    use crate::side::SideStoreReference;
     use crate::stat::StatFullDto;
     use crate::stat::StatIdDto;
     use crate::stat::StatStore;
@@ -92,12 +92,12 @@ pub mod change_command {
         SemioError::InvalidOperation(e.to_string())
     }
 
-    fn build_piece_index(d: &DesignStore) -> HashMap<Id, PieceStoreRef> {
+    fn build_piece_index(d: &DesignStore) -> HashMap<Id, PieceStoreReference> {
         d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
     }
 
     /// Match [`crate::design::connection_from_full_dto`] / `wire_side_from_dto` for one side.
-    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadataDto) -> Result<()> {
+    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreReference, meta: &SideMetadataDto) -> Result<()> {
         let index = build_piece_index(d);
         {
             let mut w = side.write().map_err(|_| SemioError::LockPoisoned("side"))?;
@@ -460,10 +460,10 @@ pub mod change_command {
         Updated {
             updated: Option<String>,
         },
-        AddFamilyRef {
+        AddFamilyReference {
             family_id: FamilyIdDto,
         },
-        RemoveFamilyRef {
+        RemoveFamilyReference {
             family_id: FamilyIdDto,
         },
         SetFamilies {
@@ -582,8 +582,8 @@ pub mod change_command {
         Unit { unit: Option<String> },
         Created { created: Option<String> },
         Updated { updated: Option<String> },
-        AddFamilyRef { family_id: FamilyIdDto },
-        RemoveFamilyRef { family_id: FamilyIdDto },
+        AddFamilyReference { family_id: FamilyIdDto },
+        RemoveFamilyReference { family_id: FamilyIdDto },
         SetFamilies { families: Vec<FamilyIdDto> },
         AddPiece { piece: PieceFullDto },
         RemovePiece { piece_id: PieceIdDto },
@@ -702,7 +702,7 @@ pub mod change_command {
     }
 
     impl ChangeFileCommand {
-        pub fn apply(&self, f: &FileStoreRef) -> Result<Vec<ChangeFileCommand>> {
+        pub fn apply(&self, f: &FileStoreReference) -> Result<Vec<ChangeFileCommand>> {
             match self {
                 ChangeFileCommand::Url { url } => {
                     let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.url.clone();
@@ -772,7 +772,7 @@ pub mod change_command {
     }
 
     impl ChangeFolderCommand {
-        pub fn apply(&self, folder: &FolderStoreRef) -> Result<Vec<ChangeFolderCommand>> {
+        pub fn apply(&self, folder: &FolderStoreReference) -> Result<Vec<ChangeFolderCommand>> {
             match self {
                 ChangeFolderCommand::Path { path } => {
                     let old = folder.read().map_err(|_| SemioError::LockPoisoned("folder"))?.path.clone();
@@ -797,7 +797,7 @@ pub mod change_command {
     }
 
     impl ChangeAuthorCommand {
-        pub fn apply(&self, a: &AuthorStoreRef) -> Result<Vec<ChangeAuthorCommand>> {
+        pub fn apply(&self, a: &AuthorStoreReference) -> Result<Vec<ChangeAuthorCommand>> {
             match self {
                 ChangeAuthorCommand::Name { name } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.name.clone();
@@ -840,7 +840,7 @@ pub mod change_command {
     }
 
     impl ChangeConceptCommand {
-        pub fn apply(&self, c: &ConceptStoreRef) -> Result<Vec<ChangeConceptCommand>> {
+        pub fn apply(&self, c: &ConceptStoreReference) -> Result<Vec<ChangeConceptCommand>> {
             match self {
                 ChangeConceptCommand::Name { name } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.name.clone();
@@ -874,7 +874,7 @@ pub mod change_command {
     }
 
     impl ChangeTagCommand {
-        pub fn apply(&self, t: &crate::tag::TagStoreRef) -> Result<Vec<ChangeTagCommand>> {
+        pub fn apply(&self, t: &crate::tag::TagStoreReference) -> Result<Vec<ChangeTagCommand>> {
             match self {
                 ChangeTagCommand::Name { name } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.name.clone();
@@ -899,7 +899,7 @@ pub mod change_command {
     }
 
     impl ChangeBenchmarkCommand {
-        pub fn apply(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<Vec<ChangeBenchmarkCommand>> {
+        pub fn apply(&self, b: &crate::benchmark::BenchmarkStoreReference) -> Result<Vec<ChangeBenchmarkCommand>> {
             match self {
                 ChangeBenchmarkCommand::Name { name } => {
                     let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.name.clone();
@@ -951,7 +951,7 @@ pub mod change_command {
     }
 
     impl ChangeKitQualityCommand {
-        pub fn apply(&self, kit: &KitGraphRef, q: &QualityStoreRef) -> Result<Vec<ChangeKitQualityCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, q: &QualityStoreReference) -> Result<Vec<ChangeKitQualityCommand>> {
             match self {
                 ChangeKitQualityCommand::Key { key } => {
                     let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.key.clone();
@@ -1025,7 +1025,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitQualityCommand::AddBenchmark { benchmark: dto }])
                 }
                 ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id, commands } => {
-                    let b: BenchmarkStoreRef = {
+                    let b: BenchmarkStoreReference = {
                         let qg = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?;
                         qg.benchmarks.iter().find(|x| x.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() })?
                     };
@@ -1114,12 +1114,12 @@ pub mod change_command {
         // #region ­ƒöûCommandDiff
 
         /// ­ƒº« Computes the concrete kit diff for this command without mutating the caller's kit graph.
-        pub fn kit_diff(&self, kit: &KitGraphRef) -> Result<KitDiff> {
+        pub fn kit_diff(&self, kit: &KitGraphReference) -> Result<KitDiff> {
             Self::kit_diff_many(kit, std::slice::from_ref(self))
         }
 
         /// ­ƒº« Computes the concrete kit diff for ordered commands without mutating the caller's kit graph.
-        pub fn kit_diff_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
+        pub fn kit_diff_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             if cmds.is_empty() {
                 return Ok(KitDiff::default());
@@ -1133,7 +1133,7 @@ pub mod change_command {
         }
 
         /// Ôå®´©Å Builds undo commands for ordered commands without mutating the caller's kit graph.
-        pub fn inverse_commands_for_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+        pub fn inverse_commands_for_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
@@ -1162,7 +1162,7 @@ pub mod change_command {
         }
 
         /// Apply a semantic change by simulating on a throwaway graph, then one live [`KitGraph::apply_kit_diff`].
-        pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference) -> Result<Vec<ChangeKitCommand>> {
             let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
             let twin = KitGraph::from_full_dto(b0.clone());
             let inv = self.apply_mutation(&twin)?;
@@ -1175,7 +1175,7 @@ pub mod change_command {
         }
 
         /// Like [`Self::apply`] for each command, using one shared throwaway buffer and a single live write.
-        pub fn apply_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
+        pub fn apply_many(kit: &KitGraphReference, cmds: &[ChangeKitCommand]) -> Result<Vec<ChangeKitCommand>> {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
@@ -1199,7 +1199,7 @@ pub mod change_command {
         }
 
         /// Isolated throwaway path: inverses and mutation target only the passed graph (twin, not the live ref).
-        fn apply_mutation(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
+        fn apply_mutation(&self, kit: &KitGraphReference) -> Result<Vec<ChangeKitCommand>> {
             let inv = match self {
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
@@ -1435,7 +1435,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::AddKitAttribute { attribute: dto }])
                 }
                 ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
-                    let f: FileStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(file_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
+                    let f: FileStoreReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(file_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -1445,7 +1445,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeFolderCommands { folder_id, commands } => {
-                    let f: FolderStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.folder(folder_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
+                    let f: FolderStoreReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.folder(folder_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(&f)?;
@@ -1455,7 +1455,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFolderCommands { folder_id: folder_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeAuthorCommands { author_id, commands } => {
-                    let a: AuthorStoreRef = kit
+                    let a: AuthorStoreReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .authors
@@ -1472,7 +1472,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeAuthorCommands { author_id: author_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeConceptCommands { concept_id, commands } => {
-                    let c: ConceptStoreRef = kit
+                    let c: ConceptStoreReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .concepts
@@ -1489,7 +1489,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeTagCommands { tag_id, commands } => {
-                    let t: crate::tag::TagStoreRef =
+                    let t: crate::tag::TagStoreReference =
                         kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.tags.iter().find(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
@@ -1500,7 +1500,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeKitQualityCommands { quality_id, commands } => {
-                    let q: QualityStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.quality(quality_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
+                    let q: QualityStoreReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.quality(quality_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
                     let mut inv = Vec::new();
                     for c in commands {
                         let v = c.apply(kit, &q)?;
@@ -1528,7 +1528,7 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }])
                 }
                 ChangeKitCommand::ChangeKitPortCommands { port_id, commands } => {
-                    let pref: PortStoreRef = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
+                    let pref: PortStoreReference = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&port_id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
                     {
                         let pr = pref.read().map_err(|_| SemioError::LockPoisoned("port"))?;
                         if pr.parent_family.upgrade().is_some() {
@@ -1557,7 +1557,7 @@ pub mod change_command {
                     }
                 }
                 ChangeKitCommand::ChangeFamilyCommands { family_id, commands } => {
-                    let f: FamilyStoreRef = kit
+                    let f: FamilyStoreReference = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
                         .families
@@ -1685,7 +1685,7 @@ pub mod change_command {
 
     impl ChangeTypeCommand {
         /// Returns inverse fragments (forward order) ÔÇö the caller will reverse for nesting.
-        pub fn apply(&self, kit: &KitGraphRef, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, type_id: &Id) -> Result<Vec<ChangeTypeCommand>> {
             let t = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
             match self {
                 ChangeTypeCommand::Name { name } => {
@@ -1768,7 +1768,7 @@ pub mod change_command {
                     }
                     Ok(vec![ChangeTypeCommand::Updated { updated: old }])
                 }
-                ChangeTypeCommand::AddFamilyRef { family_id } => {
+                ChangeTypeCommand::AddFamilyReference { family_id } => {
                     let pref = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
@@ -1786,9 +1786,9 @@ pub mod change_command {
                     tw.invalidate_hash();
                     drop(tw);
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeTypeCommand::RemoveFamilyReference { family_id: family_id.clone() }])
                 }
-                ChangeTypeCommand::RemoveFamilyRef { family_id } => {
+                ChangeTypeCommand::RemoveFamilyReference { family_id } => {
                     let mut tw = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                     let before_len = tw.families.len();
                     tw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
@@ -1799,7 +1799,7 @@ pub mod change_command {
                     tw.invalidate_hash();
                     drop(tw);
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::AddFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeTypeCommand::AddFamilyReference { family_id: family_id.clone() }])
                 }
                 ChangeTypeCommand::SetFamilies { families } => {
                     let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_full_dto().families;
@@ -1867,7 +1867,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddRepresentation { representation: rdto } => {
                     let id = rdto.id.clone();
                     {
-                        let files: Vec<FileStoreRef> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
+                        let files: Vec<FileStoreReference> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
                         let mut r = RepresentationStore::from_full_dto(rdto.clone());
                         r.parent_type = Arc::downgrade(&t);
                         if let Some(fidd) = &rdto.file {
@@ -2056,7 +2056,7 @@ pub mod change_command {
 
     impl ChangeDesignCommand {
         /// Inverse atoms in forward order; [`ChangeKitCommand`] reverses the batch.
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id) -> Result<Vec<ChangeDesignCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             match self {
                 ChangeDesignCommand::Name { name } => {
@@ -2095,7 +2095,7 @@ pub mod change_command {
                         Ok(vec![ChangeDesignCommand::Image { image: old }])
                     }
                 }
-                ChangeDesignCommand::AddFamilyRef { family_id } => {
+                ChangeDesignCommand::AddFamilyReference { family_id } => {
                     let pref = kit
                         .read()
                         .map_err(|_| SemioError::LockPoisoned("kit"))?
@@ -2114,9 +2114,9 @@ pub mod change_command {
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeDesignCommand::RemoveFamilyReference { family_id: family_id.clone() }])
                 }
-                ChangeDesignCommand::RemoveFamilyRef { family_id } => {
+                ChangeDesignCommand::RemoveFamilyReference { family_id } => {
                     let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let before_len = dw.families.len();
                     dw.families.retain(|w| !w.upgrade().map(|f| f.read().map(|r| r.id == family_id.id).unwrap_or(false)).unwrap_or(false));
@@ -2128,7 +2128,7 @@ pub mod change_command {
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::AddFamilyRef { family_id: family_id.clone() }])
+                    Ok(vec![ChangeDesignCommand::AddFamilyReference { family_id: family_id.clone() }])
                 }
                 ChangeDesignCommand::SetFamilies { families } => {
                     let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_full_dto().families;
@@ -2503,7 +2503,7 @@ pub mod change_command {
     }
 
     impl ChangePieceCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, piece_id: &Id) -> Result<Vec<ChangePieceCommand>> {
             let pref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -2689,7 +2689,7 @@ pub mod change_command {
     }
 
     impl ChangeConnectionCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, connection_id: &Id) -> Result<Vec<ChangeConnectionCommand>> {
             let cref = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
@@ -2838,7 +2838,7 @@ pub mod change_command {
     }
 
     impl ChangeLayerCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let l = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
             match self {
@@ -2900,7 +2900,7 @@ pub mod change_command {
         }
     }
     impl ChangeGroupCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let g = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
             match self {
@@ -2956,7 +2956,7 @@ pub mod change_command {
         }
     }
     impl ChangeStatCommand {
-        pub fn apply(&self, kit: &KitGraphRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
             let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
             let s = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
             match self {
@@ -3000,7 +3000,7 @@ pub mod change_command {
         }
     }
     impl ChangePropCommand {
-        pub fn apply(&self, p: &PropStoreRef) -> Result<Vec<ChangePropCommand>> {
+        pub fn apply(&self, p: &PropStoreReference) -> Result<Vec<ChangePropCommand>> {
             match self {
                 ChangePropCommand::Key { key } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.key.clone();
@@ -3033,7 +3033,7 @@ pub mod change_command {
         }
     }
     impl ChangeAttributeCommand {
-        pub fn apply(&self, a: &AttributeStoreRef) -> Result<Vec<ChangeAttributeCommand>> {
+        pub fn apply(&self, a: &AttributeStoreReference) -> Result<Vec<ChangeAttributeCommand>> {
             match self {
                 ChangeAttributeCommand::Key { key } => {
                     let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.key.clone();
@@ -3067,7 +3067,7 @@ pub mod change_command {
     }
 
     impl ChangeFamilyCommand {
-        pub fn apply(&self, kit: &KitGraphRef, fam: &FamilyStoreRef) -> Result<Vec<ChangeFamilyCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, fam: &FamilyStoreReference) -> Result<Vec<ChangeFamilyCommand>> {
             match self {
                 ChangeFamilyCommand::Name { name } => {
                     let old = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.name.clone();
@@ -3116,7 +3116,7 @@ pub mod change_command {
                     if kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid).is_some() {
                         return Err(SemioError::InvalidOperation(format!("duplicate port id {}", pid.as_str())));
                     }
-                    let pr: PortStoreRef = {
+                    let pr: PortStoreReference = {
                         let fw = Arc::downgrade(fam);
                         let mut pstore = PortStore::from_full_dto(port.clone());
                         pstore.parent_family = fw;
@@ -3148,7 +3148,7 @@ pub mod change_command {
                     Ok(vec![ChangeFamilyCommand::AddPort { port: dto }])
                 }
                 ChangeFamilyCommand::ChangePortCommands { port_id, commands } => {
-                    let pref: PortStoreRef = {
+                    let pref: PortStoreReference = {
                         let fr = fam.read().map_err(|_| SemioError::LockPoisoned("family"))?;
                         fr.ports.iter().find(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?
                     };
@@ -3165,7 +3165,7 @@ pub mod change_command {
     }
 
     impl ChangePortCommand {
-        pub fn apply(&self, p: &PortStoreRef, kit: &KitGraphRef) -> Result<Vec<ChangePortCommand>> {
+        pub fn apply(&self, p: &PortStoreReference, kit: &KitGraphReference) -> Result<Vec<ChangePortCommand>> {
             match self {
                 ChangePortCommand::Id { id } => {
                     let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.id.clone();
@@ -3249,7 +3249,7 @@ pub mod change_command {
         }
     }
     impl ChangeConnectorCommand {
-        pub fn apply(&self, c: &ConnectorStoreRef) -> Result<Vec<ChangeConnectorCommand>> {
+        pub fn apply(&self, c: &ConnectorStoreReference) -> Result<Vec<ChangeConnectorCommand>> {
             match self {
                 ChangeConnectorCommand::Code { code } => {
                     let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.code.clone();
@@ -3333,7 +3333,7 @@ pub mod change_command {
         }
     }
     impl ChangeRepresentationCommand {
-        pub fn apply(&self, kit: &KitGraphRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
+        pub fn apply(&self, kit: &KitGraphReference, r: &RepresentationStoreReference) -> Result<Vec<ChangeRepresentationCommand>> {
             match self {
                 ChangeRepresentationCommand::Url { url } => {
                     let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.url.clone();
@@ -3438,7 +3438,7 @@ pub mod kit_checkpoint {
 
     use crate::id::Id;
     use crate::kit_change::KitChange;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct MaterializedKit {
@@ -3559,8 +3559,8 @@ pub mod kit_checkpoint {
             out
         }
 
-        /// Like [`Self::materialize`], but returns a live [`KitGraphRef`] for [`crate::read::ReadKitCommand`] execution.
-        pub fn materialize_graph(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
+        /// Like [`Self::materialize`], but returns a live [`KitGraphReference`] for [`crate::read::ReadKitCommand`] execution.
+        pub fn materialize_graph(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphReference {
             let Some(at_id) = at else {
                 return KitGraph::from_full_dto(initial.clone());
             };
@@ -3764,7 +3764,7 @@ pub mod kit_draft {
     use crate::kit_change::KitChange;
     use crate::kit_graph::KitFullDto;
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
 
@@ -3860,7 +3860,7 @@ pub mod kit_draft {
         }
 
         /// ­ƒº« Throwaway materialization of the draftÔÇÖs working state (base + finalized transactions + open transaction), for scoped reads.
-        pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphRef> {
+        pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphReference> {
             let k = KitGraph::from_full_dto(self.before.clone());
             for tx in &self.transactions {
                 for ch in &tx.changes {
@@ -3945,7 +3945,7 @@ pub mod kit_draft {
 pub mod kit_read_scope {
     use crate::error::{Result, SemioError};
     use crate::id::Id;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use serde::{Deserialize, Serialize};
 
     /// ­ƒº¡ Names exactly one of: the live kit authority (`theKit`), a checkpoint, an alternative tip, a draft, or the open transaction within a draft.
@@ -3981,7 +3981,7 @@ pub mod kit_read_scope {
     use crate::kit_draft::Draft as KitDraft;
 
     /// ­ƒº« Materialize a throwaway graph: draft `before` + finalized transaction stack + the open transactionÔÇÖs current `changes` (if any), matching the live WIP.
-    fn materialize_draft_working_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_draft_working_graph(kit: &KitGraphReference, session_id: &Id, draft_id: &Id) -> Result<KitGraphReference> {
         let d: KitDraft = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for read scope".into()))?.clone()
@@ -3990,7 +3990,7 @@ pub mod kit_read_scope {
     }
 
     /// ­ƒº« Same as [`materialize_draft_working_graph`] but verify `transaction_id` matches the open transaction (reads follow live undo/redo within that transaction).
-    fn materialize_transaction_read_graph(kit: &KitGraphRef, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphRef> {
+    fn materialize_transaction_read_graph(kit: &KitGraphReference, session_id: &Id, draft_id: &Id, transaction_id: &Id) -> Result<KitGraphReference> {
         {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             let d = g.sessions.get(session_id).and_then(|s| s.draft(draft_id)).ok_or_else(|| SemioError::InvalidOperation("unknown draft for transaction read scope".into()))?;
@@ -3999,8 +3999,8 @@ pub mod kit_read_scope {
         materialize_draft_working_graph(kit, session_id, draft_id)
     }
 
-    /// Ôå¬´©Å Resolves a [`KitReadScope`] to a `KitGraphRef` suitable for [`ReadKitCommand::execute_many`].
-    pub fn resolve_read_graph(kit: &KitGraphRef, scope: &KitReadScope) -> Result<KitGraphRef> {
+    /// Ôå¬´©Å Resolves a [`KitReadScope`] to a `KitGraphReference` suitable for [`ReadKitCommand::execute_many`].
+    pub fn resolve_read_graph(kit: &KitGraphReference, scope: &KitReadScope) -> Result<KitGraphReference> {
         let g0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
         let view = match scope {
             // ­ƒº¥ `TheKit` reads use the **live** coordinator graph (sessions, drafts, WIP) ÔÇö same authority as the former `Query.kitStore`; checkpoint/materialized scopes stay throwaway graphs.
@@ -4203,7 +4203,7 @@ pub mod backbone {
     use crate::id::Id;
     use crate::kit_alternative::KitAlternative;
     use crate::kit_checkpoint::KitCheckpoint;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct BackboneSnapshot {
@@ -4248,7 +4248,7 @@ pub mod backbone {
         }
     }
 
-    pub fn apply_snap_to_graph(kit: &KitGraphRef, snap: &BackboneSnapshot) -> crate::error::SetResult {
+    pub fn apply_snap_to_graph(kit: &KitGraphReference, snap: &BackboneSnapshot) -> crate::error::SetResult {
         use crate::error::SetError;
         let dto = KitCheckpoint::materialize(&snap.initial, &snap.checkpoints, snap.the_kit_head.as_ref());
         KitGraph::replace_from_full_dto(kit, dto)?;
@@ -4493,7 +4493,7 @@ pub mod wip_kit {
     use std::sync::mpsc::{Receiver, Sender};
 
     use crate::backbone::BackboneSnapshot;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 
     pub enum WipMsg {
@@ -4508,10 +4508,10 @@ pub mod wip_kit {
         Detach { reply: Sender<()> },
         Status { reply: Sender<crate::backbone::BackboneStatusDto> },
         SetActiveCheckpoint { id: Option<crate::id::Id>, reply: Sender<crate::error::Result<()>> },
-        ResolveConflict { id: crate::id::Id, strategy: crate::kit_conflict_registry::ConflictResolution, wip: KitGraphRef, reply: Sender<crate::error::Result<()>> },
+        ResolveConflict { id: crate::id::Id, strategy: crate::kit_conflict_registry::ConflictResolution, wip: KitGraphReference, reply: Sender<crate::error::Result<()>> },
     }
 
-    fn scan_finalize(graph: &KitGraphRef, res: &KitStoreCommandResult, coord: &Sender<CoordMsg>) {
+    fn scan_finalize(graph: &KitGraphReference, res: &KitStoreCommandResult, coord: &Sender<CoordMsg>) {
         use crate::kit_draft::KitDraftCommandResult;
         use crate::kit_session::SessionCommandResult;
         if let KitStoreCommandResult::ExecuteSessionCommands { results } = res {
@@ -4531,7 +4531,7 @@ pub mod wip_kit {
         }
     }
 
-    pub fn run(graph: KitGraphRef, rx: Receiver<WipMsg>, coord: Sender<CoordMsg>) {
+    pub fn run(graph: KitGraphReference, rx: Receiver<WipMsg>, coord: Sender<CoordMsg>) {
         while let Ok(msg) = rx.recv() {
             match msg {
                 WipMsg::Exec { cmd, reply } => {
@@ -4562,10 +4562,10 @@ pub mod kit_coordinator {
     use crate::kit_change::KitChange;
     use crate::kit_checkpoint::KitCheckpoint;
     use crate::kit_conflict_registry::{ConflictRegistry, KitConflict};
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::wip_kit::{CoordMsg, WipMsg};
 
-    fn process_proposal(backbone: &BackboneKind, sync: &KitGraphRef, conflicts: &ConflictRegistry, proposed: &BackboneSnapshot, wip_tx: &std::sync::mpsc::Sender<WipMsg>) -> Result<()> {
+    fn process_proposal(backbone: &BackboneKind, sync: &KitGraphReference, conflicts: &ConflictRegistry, proposed: &BackboneSnapshot, wip_tx: &std::sync::mpsc::Sender<WipMsg>) -> Result<()> {
         let auth = backbone.pull()?;
         apply_snap_to_graph(sync, &auth).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
         let tip = proposed.the_kit_head.clone().ok_or_else(|| SemioError::InvalidOperation("wip has no the_kit_head".into()))?;
@@ -4597,7 +4597,7 @@ pub mod kit_coordinator {
         Ok(())
     }
 
-    pub fn run(backbone_slot: Arc<Mutex<Option<BackboneKind>>>, sync: KitGraphRef, pending: Arc<Mutex<usize>>, conflicts: Arc<ConflictRegistry>, wip_tx: std::sync::mpsc::Sender<WipMsg>, rx: Receiver<CoordMsg>) {
+    pub fn run(backbone_slot: Arc<Mutex<Option<BackboneKind>>>, sync: KitGraphReference, pending: Arc<Mutex<usize>>, conflicts: Arc<ConflictRegistry>, wip_tx: std::sync::mpsc::Sender<WipMsg>, rx: Receiver<CoordMsg>) {
         while let Ok(msg) = rx.recv() {
             match msg {
                 CoordMsg::WipProposal { proposed, reply } => {
@@ -4689,13 +4689,13 @@ pub mod kit_store {
     use crate::backbone::BackboneConfig;
     use crate::error::{Result, SemioError};
     use crate::kit_conflict_registry::{ConflictRegistry, ConflictResolution, KitConflict};
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
     /// Control plane: wip graph actor + coordinator + optional backbone attachment (native).
     pub struct KitStore {
-        graph: KitGraphRef,
+        graph: KitGraphReference,
         wip_tx: mpsc::Sender<WipMsg>,
         coord_tx: mpsc::Sender<CoordMsg>,
         pub conflicts: Arc<ConflictRegistry>,
@@ -4710,7 +4710,7 @@ pub mod kit_store {
             Self::from_graph(KitGraph::from_full_dto(dto))
         }
 
-        pub fn from_graph(graph: KitGraphRef) -> Self {
+        pub fn from_graph(graph: KitGraphReference) -> Self {
             let conflicts = Arc::new(ConflictRegistry::new());
             let backbone_slot = Arc::new(Mutex::new(None));
             let pending = Arc::new(Mutex::new(0));
@@ -4744,7 +4744,7 @@ pub mod kit_store {
             Self { graph, wip_tx, coord_tx, conflicts, backbone_slot, pending, _executor: executor, _handles: vec![t_wip, t_coord, t_exec] }
         }
 
-        pub fn graph(&self) -> KitGraphRef {
+        pub fn graph(&self) -> KitGraphReference {
             self.graph.clone()
         }
 
@@ -4852,7 +4852,7 @@ pub mod kit_store_command {
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
     use crate::kit_graph::KitGraph;
-    use crate::kit_graph::KitGraphRef;
+    use crate::kit_graph::KitGraphReference;
     use crate::kit_read_scope::{self, KitReadScope};
     use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
     use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
@@ -4872,8 +4872,8 @@ pub mod kit_store_command {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
         }
 
-        /// Live [`KitGraphRef`] at `at` (same replay rules as [`Self::materialize_at`]).
-        pub fn materialize_graph_at(&self, at: Option<&Id>) -> crate::kit_graph::KitGraphRef {
+        /// Live [`KitGraphReference`] at `at` (same replay rules as [`Self::materialize_at`]).
+        pub fn materialize_graph_at(&self, at: Option<&Id>) -> crate::kit_graph::KitGraphReference {
             KitCheckpoint::materialize_graph(&self.initial, &self.checkpoints, at)
         }
 
@@ -4894,7 +4894,7 @@ pub mod kit_store_command {
 
         /// Replace the live graph from a full DTO while preserving the VCS tree,
         /// event bus, and in-memory undo/transaction state.
-        pub fn replace_live_graph(kit: &KitGraphRef, d: KitFullDto) -> Result<()> {
+        pub fn replace_live_graph(kit: &KitGraphReference, d: KitFullDto) -> Result<()> {
             KitGraph::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
     }
@@ -5010,7 +5010,7 @@ pub mod kit_store_command {
         /// Top-level VCS / CRUD command dispatch.
         ///
         /// Locks the kit store internally as needed.
-        pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference) -> Result<KitStoreCommandResult> {
             match self {
                 KitStoreCommand::AttachBackbone { config } => match config {
                     crate::kit_backbone_wire::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
@@ -5083,7 +5083,7 @@ pub mod kit_store_command {
 
     impl SessionCommand {
         /// Execute a session-scoped command against `kit[sid]`.
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id) -> Result<SessionCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, sid: &Id) -> Result<SessionCommandResult> {
             match self {
                 SessionCommand::ReadKitCommands { scope, commands } => {
                     let view = kit_read_scope::resolve_read_graph(kit, &scope)?;
@@ -5122,7 +5122,7 @@ pub mod kit_store_command {
 
     impl KitDraftCommand {
         /// Execute a draft-scoped command against `kit[sid][did]`.
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
                     let sc = KitReadScope::Draft { session_id: sid.clone(), draft_id: did.clone() };
@@ -5167,7 +5167,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn draft_undo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_undo(kit: &KitGraphReference, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -5189,7 +5189,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Undo { ok: true })
         }
 
-        fn draft_redo(kit: &KitGraphRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        fn draft_redo(kit: &KitGraphReference, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
@@ -5211,7 +5211,7 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Redo { ok: true })
         }
 
-        fn finalize_draft(kit: &KitGraphRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
+        fn finalize_draft(kit: &KitGraphReference, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
             let (parent, alt, kc) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.sessions.get(sid).and_then(|s| s.draft(did)).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
@@ -5264,7 +5264,7 @@ pub mod kit_store_command {
 
     impl TransactionCommand {
         /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
-        pub fn execute(self, kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
                     let sc = KitReadScope::Transaction { session_id: sid.clone(), draft_id: did.clone(), transaction_id: txid.clone() };
@@ -5341,7 +5341,7 @@ pub mod kit_store_command {
             }
         }
 
-        fn tx_undo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_undo(kit: &KitGraphReference, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5367,7 +5367,7 @@ pub mod kit_store_command {
             Ok(TransactionCommandResult::UndoAll { ok: true })
         }
 
-        fn tx_redo(kit: &KitGraphRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
+        fn tx_redo(kit: &KitGraphReference, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5396,7 +5396,7 @@ pub mod kit_store_command {
 
     impl KitCheckpointCommand {
         /// Execute a checkpoint-scoped command.
-        pub fn execute(self, kit: &KitGraphRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, cpid: &Id) -> Result<KitCheckpointCommandResult> {
             match self {
                 KitCheckpointCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5425,7 +5425,7 @@ pub mod kit_store_command {
 
     impl KitAlternativeCommand {
         /// Execute an alternative-scoped command.
-        pub fn execute(self, kit: &KitGraphRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
+        pub fn execute(self, kit: &KitGraphReference, aid: &Id) -> Result<KitAlternativeCommandResult> {
             match self {
                 KitAlternativeCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -5476,7 +5476,7 @@ pub mod attribute {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
@@ -5488,7 +5488,7 @@ pub mod attribute {
     use crate::port::PortStoreWeak;
     use crate::representation::RepresentationStoreWeak;
 
-    pub type AttributeStoreRef = std::sync::Arc<RwLock<AttributeStore>>;
+    pub type AttributeStoreReference = std::sync::Arc<RwLock<AttributeStore>>;
     pub type AttributeStoreWeak = Weak<RwLock<AttributeStore>>;
 
     /// A name/value pair attached to pretty much any domain entity.
@@ -5567,8 +5567,8 @@ pub mod attribute {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Attribute, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Attribute, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: AttributeFullDto) {
@@ -5742,13 +5742,13 @@ pub mod author {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
-    pub type AuthorStoreRef = std::sync::Arc<RwLock<AuthorStore>>;
+    pub type AuthorStoreReference = std::sync::Arc<RwLock<AuthorStore>>;
     pub type AuthorStoreWeak = Weak<RwLock<AuthorStore>>;
 
     /// A human author attached to a design, type, or kit.
@@ -5818,8 +5818,8 @@ pub mod author {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Author, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Author, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: AuthorFullDto) {
@@ -5963,12 +5963,12 @@ pub mod benchmark {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::quality::QualityStoreWeak;
 
-    pub type BenchmarkStoreRef = std::sync::Arc<RwLock<BenchmarkStore>>;
+    pub type BenchmarkStoreReference = std::sync::Arc<RwLock<BenchmarkStore>>;
     pub type BenchmarkStoreWeak = Weak<RwLock<BenchmarkStore>>;
 
     /// Numeric range benchmark used to qualify quality measurements.
@@ -6042,8 +6042,8 @@ pub mod benchmark {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Benchmark, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Benchmark, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadataDto) {
@@ -6159,13 +6159,13 @@ pub mod concept {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
-    pub type ConceptStoreRef = std::sync::Arc<RwLock<ConceptStore>>;
+    pub type ConceptStoreReference = std::sync::Arc<RwLock<ConceptStore>>;
     pub type ConceptStoreWeak = Weak<RwLock<ConceptStore>>;
 
     /// Conceptual / semantic label grouping types and designs.
@@ -6229,8 +6229,8 @@ pub mod concept {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Concept, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Concept, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: ConceptFullDto) {
@@ -6354,24 +6354,24 @@ pub mod connection {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreReference};
     use crate::connector::ConnectorStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
+    use crate::side::{SideMetadataDto, SideStore, SideStoreReference};
 
-    pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
+    pub type ConnectionStoreReference = Arc<RwLock<ConnectionStore>>;
     pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
 
     /// Join between two [`crate::piece::PieceStore`] instances.
     #[derive(Debug)]
     pub struct ConnectionStore {
         pub id: Id,
-        pub connected: SideStoreRef,
-        pub connecting: SideStoreRef,
+        pub connected: SideStoreReference,
+        pub connecting: SideStoreReference,
         pub gap: Option<f64>,
         pub shift: Option<f64>,
         pub rise: Option<f64>,
@@ -6381,7 +6381,7 @@ pub mod connection {
         pub x: Option<f64>,
         pub y: Option<f64>,
         pub description: Option<String>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub attributes: Vec<AttributeStoreReference>,
         pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
@@ -6478,7 +6478,7 @@ pub mod connection {
     }
 
     impl ConnectionStore {
-        pub(crate) fn empty_with_sides(id: Id, connected: SideStoreRef, connecting: SideStoreRef) -> Self {
+        pub(crate) fn empty_with_sides(id: Id, connected: SideStoreReference, connecting: SideStoreReference) -> Self {
             Self {
                 id,
                 connected,
@@ -6505,8 +6505,8 @@ pub mod connection {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connection, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Connection, self.id.clone())
         }
 
         fn event(&self, event: crate::events::ConnectionEvent) -> KitEvent {
@@ -6532,7 +6532,7 @@ pub mod connection {
             }
         }
 
-        pub(crate) fn flatten_parent_and_child_sides(&self, child_id: &Id) -> Option<(SideStoreRef, SideStoreRef)> {
+        pub(crate) fn flatten_parent_and_child_sides(&self, child_id: &Id) -> Option<(SideStoreReference, SideStoreReference)> {
             let connected_id = self.connected.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
             let connecting_id = self.connecting.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
             match (connected_id, connecting_id) {
@@ -6782,14 +6782,14 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::port::{PortIdDto, PortStoreWeak};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
 
-    pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
+    pub type ConnectorStoreReference = Arc<RwLock<ConnectorStore>>;
     pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
 
     /// A named socket on a [`crate::typ::TypeStore`] that references a concrete port.
@@ -6799,7 +6799,7 @@ pub mod connector {
         pub code: String,
         pub description: Option<String>,
         pub port: Option<PortStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
+        pub qualities: Vec<QualityStoreReference>,
         pub attributes: Vec<AttributeStore>,
         /// Back-reference to the owning type.
         pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
@@ -6864,8 +6864,8 @@ pub mod connector {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connector, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Connector, self.id.clone())
         }
 
         pub fn from_id_dto(d: ConnectorIdDto) -> Self {
@@ -6998,32 +6998,32 @@ pub mod design {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
+    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreReference};
     use crate::benchmark::BenchmarkFullDto;
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
-    use crate::connector::ConnectorStoreRef;
+    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreReference};
+    use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreReference};
+    use crate::connector::ConnectorStoreReference;
     use crate::error::SemioError;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyIdDto, FamilyStoreRef, FamilyStoreWeak};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyIdDto, FamilyStoreReference, FamilyStoreWeak};
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
+    use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreReference};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
+    use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreReference};
     use crate::location::LocationIdDto;
-    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
-    use crate::port::PortStoreRef;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::side::{SideStore, SideStoreRef};
-    use crate::stat::{StatFullDto, StatShallowDto, StatStore, StatStoreRef};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
-    use crate::typ::TypeStoreRef;
+    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreReference};
+    use crate::port::PortStoreReference;
+    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreReference};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
+    use crate::side::{SideStore, SideStoreReference};
+    use crate::stat::{StatFullDto, StatShallowDto, StatStore, StatStoreReference};
+    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreReference};
+    use crate::typ::TypeStoreReference;
 
-    pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
+    pub type DesignStoreReference = Arc<RwLock<DesignStore>>;
     pub type DesignStoreWeak = Weak<RwLock<DesignStore>>;
 
     /// A placed/composed design: a scene of pieces joined by connections.
@@ -7037,17 +7037,17 @@ pub mod design {
         pub location: Option<LocationIdDto>,
         pub unit: Option<String>,
         pub families: Vec<FamilyStoreWeak>,
-        pub pieces: Vec<PieceStoreRef>,
-        pub connections: Vec<ConnectionStoreRef>,
-        pub layers: Vec<LayerStoreRef>,
-        pub groups: Vec<GroupStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
-        pub stats: Vec<StatStoreRef>,
+        pub pieces: Vec<PieceStoreReference>,
+        pub connections: Vec<ConnectionStoreReference>,
+        pub layers: Vec<LayerStoreReference>,
+        pub groups: Vec<GroupStoreReference>,
+        pub authors: Vec<AuthorStoreReference>,
+        pub concepts: Vec<ConceptStoreReference>,
+        pub tags: Vec<TagStoreReference>,
+        pub qualities: Vec<QualityStoreReference>,
+        pub props: Vec<PropStoreReference>,
+        pub attributes: Vec<AttributeStoreReference>,
+        pub stats: Vec<StatStoreReference>,
         pub created: Option<String>,
         pub updated: Option<String>,
         pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
@@ -7175,7 +7175,7 @@ pub mod design {
         pub stats: Vec<StatFullDto>,
     }
 
-    pub(crate) fn resolve_connector_for_side(side: &crate::side::SideStore, typ: &crate::typ::TypeStore) -> Option<ConnectorStoreRef> {
+    pub(crate) fn resolve_connector_for_side(side: &crate::side::SideStore, typ: &crate::typ::TypeStore) -> Option<ConnectorStoreReference> {
         if let Some(pw) = &side.port {
             if let Some(p) = pw.upgrade() {
                 if let Ok(pr) = p.read() {
@@ -7187,7 +7187,7 @@ pub mod design {
     }
 
     /// Effective port for a side: explicit [`SideMetadataDto::port`], or resolved from [`SideMetadataDto::connector`] on the piece's type.
-    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadataDto, pref: &PieceStoreRef) -> Option<crate::port::PortIdDto> {
+    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadataDto, pref: &PieceStoreReference) -> Option<crate::port::PortIdDto> {
         if let Some(p) = &meta.port {
             return Some(p.clone());
         }
@@ -7212,7 +7212,7 @@ pub mod design {
         None
     }
 
-    fn connection_from_full_dto(cdto: ConnectionFullDto, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
+    fn connection_from_full_dto(cdto: ConnectionFullDto, piece_index: &HashMap<Id, PieceStoreReference>, design_weak: DesignStoreWeak) -> ConnectionStoreReference {
         let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
         let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
         wire_side_from_dto(&cdto.connected, &s1, piece_index);
@@ -7246,7 +7246,7 @@ pub mod design {
         conn
     }
 
-    fn wire_side_from_dto(meta: &crate::side::SideMetadataDto, side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
+    fn wire_side_from_dto(meta: &crate::side::SideMetadataDto, side_ref: &SideStoreReference, piece_index: &HashMap<Id, PieceStoreReference>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -7346,7 +7346,7 @@ pub mod design {
 
         // #region ­ƒöûFlattenParentage
         pub(crate) fn rewire_piece_flatten_parents(&self) {
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceStoreReference> = HashMap::new();
             for piece in &self.pieces {
                 if let Ok(pr) = piece.read() {
                     piece_index.insert(pr.id.clone(), piece.clone());
@@ -7363,7 +7363,7 @@ pub mod design {
                 return;
             }
 
-            let mut adjacency: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
+            let mut adjacency: HashMap<Id, Vec<(Id, ConnectionStoreReference)>> = HashMap::new();
             for connection in &self.connections {
                 let Ok(connection_read) = connection.read() else {
                     continue;
@@ -7409,8 +7409,8 @@ pub mod design {
         }
         // #endregion
 
-        pub(crate) fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Design, self.id.clone())
+        pub(crate) fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Design, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadataDto) {
@@ -7634,13 +7634,13 @@ pub mod design {
         }
 
         fn compute_flatten_with_kit(&self, kit: &KitGraph) -> HashMap<Id, (Plane, Coordinate)> {
-            let mut types_by_id: HashMap<Id, TypeStoreRef> = HashMap::new();
+            let mut types_by_id: HashMap<Id, TypeStoreReference> = HashMap::new();
             for t in &kit.types {
                 if let Ok(tr) = t.read() {
                     types_by_id.insert(tr.id.clone(), t.clone());
                 }
             }
-            let mut piece_map: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_map: HashMap<Id, PieceStoreReference> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
                     piece_map.insert(pr.id.clone(), p.clone());
@@ -7649,7 +7649,7 @@ pub mod design {
             if piece_map.is_empty() {
                 return HashMap::new();
             }
-            let mut adj: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
+            let mut adj: HashMap<Id, Vec<(Id, ConnectionStoreReference)>> = HashMap::new();
             for c in &self.connections {
                 let Ok(conn) = c.read() else { continue };
                 let Ok(s0) = conn.connected.read() else {
@@ -7841,36 +7841,36 @@ pub mod design {
             }
         }
 
-        pub fn piece(&self, id: &str) -> Option<PieceStoreRef> {
+        pub fn piece(&self, id: &str) -> Option<PieceStoreReference> {
             self.pieces.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn connection(&self, id: &str) -> Option<ConnectionStoreRef> {
+        pub fn connection(&self, id: &str) -> Option<ConnectionStoreReference> {
             self.connections.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn layer(&self, id: &str) -> Option<LayerStoreRef> {
+        pub fn layer(&self, id: &str) -> Option<LayerStoreReference> {
             self.layers.iter().find(|l| l.read().map(|l| l.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn group(&self, id: &str) -> Option<GroupStoreRef> {
+        pub fn group(&self, id: &str) -> Option<GroupStoreReference> {
             self.groups.iter().find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         // #region ­ƒöüPieceAlternatives
-        fn side_piece_id(side: &SideStoreRef) -> Option<Id> {
+        fn side_piece_id(side: &SideStoreReference) -> Option<Id> {
             side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())))
         }
 
-        fn side_port_ref(side: &SideStoreRef) -> Option<PortStoreRef> {
+        fn side_port_ref(side: &SideStoreReference) -> Option<PortStoreReference> {
             side.read().ok().and_then(|side| side.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn connector_port_ref(connector: &ConnectorStoreRef) -> Option<PortStoreRef> {
+        fn connector_port_ref(connector: &ConnectorStoreReference) -> Option<PortStoreReference> {
             connector.read().ok().and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn candidate_type_available_ports(candidate_type: &TypeStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_type_available_ports(candidate_type: &TypeStoreReference) -> Option<Vec<PortStoreReference>> {
             let candidate_type = candidate_type.read().ok()?;
             let mut available_ports = Vec::with_capacity(candidate_type.connectors.len());
             for connector in &candidate_type.connectors {
@@ -7879,7 +7879,7 @@ pub mod design {
             Some(available_ports)
         }
 
-        fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_design_available_ports(candidate_design: &DesignStoreReference) -> Option<Vec<PortStoreReference>> {
             let candidate_design = candidate_design.read().ok()?;
             let mut consumed_by_piece_port: HashMap<(Id, Id), usize> = HashMap::new();
             for connection in &candidate_design.connections {
@@ -7927,7 +7927,7 @@ pub mod design {
             port.parent_family.upgrade().and_then(|f| f.read().ok().map(|r| r.id.clone()))
         }
 
-        fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
+        fn ports_are_compatible(candidate_port: &PortStoreReference, required_port: &PortStoreReference) -> bool {
             let Ok(c) = candidate_port.read() else {
                 return false;
             };
@@ -7946,7 +7946,7 @@ pub mod design {
             }
         }
 
-        fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
+        fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreReference>], available_ports: &[PortStoreReference]) -> bool {
             if required_ports.is_empty() {
                 return true;
             }
@@ -7989,7 +7989,7 @@ pub mod design {
             match_requirement(0, &requirement_options, &mut used_available_indexes)
         }
 
-        fn boundary_requirement_ports(&self, selected_piece_ids: &HashSet<Id>) -> Vec<Option<PortStoreRef>> {
+        fn boundary_requirement_ports(&self, selected_piece_ids: &HashSet<Id>) -> Vec<Option<PortStoreReference>> {
             let mut required_ports = Vec::new();
             for connection in &self.connections {
                 let Ok(connection) = connection.read() else {
@@ -8007,7 +8007,7 @@ pub mod design {
             required_ports
         }
 
-        fn own_requirement_ports_for_piece(&self, piece_id: &Id) -> Vec<Option<PortStoreRef>> {
+        fn own_requirement_ports_for_piece(&self, piece_id: &Id) -> Vec<Option<PortStoreReference>> {
             let Some(piece_ref) = self.piece(piece_id.as_str()) else {
                 return vec![None];
             };
@@ -8080,13 +8080,13 @@ pub mod design {
         pub(crate) fn delete_pieces_inner(&mut self, piece_ids: &[Id], invalidate: bool) -> usize {
             let parent = self.entity_ref();
             for g in piece_ids {
-                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, g.clone()) });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, g.clone()) });
             }
             let before = self.pieces.len();
             self.pieces.retain(|p| p.read().map(|p| !piece_ids.iter().any(|g| *g == p.id)).unwrap_or(true));
             self.connections.retain(|c| {
                 if let Ok(c) = c.read() {
-                    let touches = |s: &SideStoreRef| -> bool { s.read().ok().and_then(|side| side.piece.upgrade().and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))).unwrap_or(false) };
+                    let touches = |s: &SideStoreReference| -> bool { s.read().ok().and_then(|side| side.piece.upgrade().and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))).unwrap_or(false) };
                     !(touches(&c.connected) || touches(&c.connecting))
                 } else {
                     true
@@ -8362,7 +8362,7 @@ pub mod design {
             }
         }
 
-        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak, family_by_id: &HashMap<Id, FamilyStoreRef>) -> crate::error::Result<()> {
+        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreReference>, design_weak: DesignStoreWeak, family_by_id: &HashMap<Id, FamilyStoreReference>) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             if let Some(n) = &diff.name {
                 self.set_name(n.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
@@ -8414,7 +8414,7 @@ pub mod design {
 
             if let Some(pc) = &diff.pieces {
                 for id in &pc.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, id.id.clone()) });
                 }
                 let rids: Vec<Id> = pc.removed.iter().map(|p| p.id.clone()).collect();
                 if !rids.is_empty() {
@@ -8434,19 +8434,19 @@ pub mod design {
                         let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                         pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
                     }
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, p.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, p.id.clone()) });
                     self.pieces.push(pref);
                 }
             }
 
             if let Some(cc) = &diff.connections {
                 for id in &cc.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, id.id.clone()) });
                 }
                 for id in &cc.removed {
                     self.connections.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
                 }
-                let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+                let mut piece_index: HashMap<Id, PieceStoreReference> = HashMap::new();
                 for p in &self.pieces {
                     if let Ok(pr) = p.read() {
                         piece_index.insert(pr.id.clone(), p.clone());
@@ -8457,21 +8457,21 @@ pub mod design {
                         let cref = self.connections.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)).cloned().expect("connection");
                         let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_full_dto();
                         Self::merge_connection_sparse_into_full(&mut dto, &u.diff);
-                        self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                        self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, u.id.id.clone()) });
                         self.connections.retain(|x| x.read().map(|x| x.id != u.id.id).unwrap_or(true));
                         self.connections.push(connection_from_full_dto(dto, &piece_index, design_weak.clone()));
-                        self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                        self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, u.id.id.clone()) });
                     }
                 }
                 for c in &cc.added {
                     self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, c.id.clone()) });
                 }
             }
 
             if let Some(ld) = &diff.layers {
                 for id in &ld.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Layer, id.id.clone()) });
                 }
                 for id in &ld.removed {
                     self.layers.retain(|l| l.read().map(|l| l.id != id.id).unwrap_or(true));
@@ -8491,14 +8491,14 @@ pub mod design {
                 for ldto in &ld.added {
                     let mut layer = LayerStore::from_full_dto(ldto.clone());
                     layer.parent_design = design_weak.clone();
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, ldto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Layer, ldto.id.clone()) });
                     self.layers.push(Arc::new(RwLock::new(layer)));
                 }
             }
 
             if let Some(gd) = &diff.groups {
                 for id in &gd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Group, id.id.clone()) });
                 }
                 for id in &gd.removed {
                     self.groups.retain(|g| g.read().map(|g| g.id != id.id).unwrap_or(true));
@@ -8532,14 +8532,14 @@ pub mod design {
                         }
                     }
                     g.pieces = weaks;
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, gdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Group, gdto.id.clone()) });
                     self.groups.push(Arc::new(RwLock::new(g)));
                 }
             }
 
             if let Some(ad) = &diff.authors {
                 for id in &ad.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Author, id.id.clone()) });
                 }
                 for id in &ad.removed {
                     self.authors.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
@@ -8563,14 +8563,14 @@ pub mod design {
                 for adto in &ad.added {
                     let mut s = AuthorStore::from_full_dto(adto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, adto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Author, adto.id.clone()) });
                     self.authors.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(cd) = &diff.concepts {
                 for id in &cd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Concept, id.id.clone()) });
                 }
                 for id in &cd.removed {
                     self.concepts.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
@@ -8594,14 +8594,14 @@ pub mod design {
                 for cdto in &cd.added {
                     let mut s = ConceptStore::from_full_dto(cdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, cdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Concept, cdto.id.clone()) });
                     self.concepts.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(td) = &diff.tags {
                 for id in &td.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Tag, id.id.clone()) });
                 }
                 for id in &td.removed {
                     self.tags.retain(|t| t.read().map(|t| t.id != id.id).unwrap_or(true));
@@ -8625,14 +8625,14 @@ pub mod design {
                 for tdto in &td.added {
                     let mut s = TagStore::from_full_dto(tdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, tdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Tag, tdto.id.clone()) });
                     self.tags.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(qd) = &diff.qualities {
                 for id in &qd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Quality, id.id.clone()) });
                 }
                 for id in &qd.removed {
                     self.qualities.retain(|q| q.read().map(|q| q.id != id.id).unwrap_or(true));
@@ -8662,14 +8662,14 @@ pub mod design {
                 for qdto in &qd.added {
                     let mut s = QualityStore::from_full_dto(qdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, qdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Quality, qdto.id.clone()) });
                     self.qualities.push(Arc::new(RwLock::new(s)));
                 }
             }
 
             if let Some(pd) = &diff.props {
                 for id in &pd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Prop, id.id.clone()) });
                 }
                 for id in &pd.removed {
                     self.props.retain(|p| p.read().map(|p| p.id != id.id).unwrap_or(true));
@@ -8703,14 +8703,14 @@ pub mod design {
                 for pdto in &pd.added {
                     let mut p = PropStore::from_full_dto(pdto.clone());
                     p.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, pdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Prop, pdto.id.clone()) });
                     self.props.push(Arc::new(RwLock::new(p)));
                 }
             }
 
             if let Some(ad) = &diff.attributes {
                 for id in &ad.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Attribute, id.id.clone()) });
                 }
                 for id in &ad.removed {
                     self.attributes.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
@@ -8752,14 +8752,14 @@ pub mod design {
                 for adto in &ad.added {
                     let mut a = AttributeStore::from_full_dto(adto.clone());
                     a.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Attribute, adto.id.clone()) });
                     self.attributes.push(Arc::new(RwLock::new(a)));
                 }
             }
 
             if let Some(sd) = &diff.stats {
                 for id in &sd.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Stat, id.id.clone()) });
                 }
                 for id in &sd.removed {
                     self.stats.retain(|s| s.read().map(|s| s.id != id.id).unwrap_or(true));
@@ -8781,7 +8781,7 @@ pub mod design {
                 for sdto in &sd.added {
                     let mut s = StatStore::from_full_dto(sdto.clone());
                     s.parent_design = Some(design_weak.clone());
-                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, sdto.id.clone()) });
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Stat, sdto.id.clone()) });
                     self.stats.push(Arc::new(RwLock::new(s)));
                 }
             }
@@ -8793,14 +8793,14 @@ pub mod design {
         }
 
         /// ­ƒº® Add one piece from a full DTO (semantic command path; no [`crate::diff::DesignDiff`]).
-        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFullDto, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFullDto, type_index: &HashMap<Id, TypeStoreReference>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
             {
                 let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                 pw.apply_full_dto(piece.clone(), design_weak, type_index);
             }
-            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, piece.id.clone()) });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Piece, piece.id.clone()) });
             self.pieces.push(pref);
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -8811,7 +8811,7 @@ pub mod design {
         /// ­ƒº® Remove one connection by id (semantic command path).
         pub(crate) fn semantic_remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
+            self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, connection_id.clone()) });
             self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -8822,14 +8822,14 @@ pub mod design {
         /// ­ƒº® Add one connection from full DTO (semantic command path).
         pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFullDto, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceStoreReference> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
                     piece_index.insert(pr.id.clone(), p.clone());
                 }
             }
             let cref = connection_from_full_dto(cdto.clone(), &piece_index, design_weak);
-            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cdto.id.clone()) });
+            self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityReference::new(EntityKind::Connection, cdto.id.clone()) });
             self.connections.push(cref);
             self.rewire_piece_flatten_parents();
             self.invalidate_hash_local();
@@ -8845,7 +8845,7 @@ pub mod design {
             use crate::report::SemioReport;
 
             let before = self.to_full_dto();
-            let prefs: Vec<PieceStoreRef> = self.pieces.clone();
+            let prefs: Vec<PieceStoreReference> = self.pieces.clone();
             let max_pass = prefs.len().saturating_add(8);
             for _ in 0..max_pass {
                 let mut any = false;
@@ -8958,7 +8958,7 @@ pub mod design {
 
         /// Rebuild design graph from DTO (pieces, connections with [`SideStore`] ends, nested leaves).
         /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct designs in host code.
-        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
+        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreReference>, family_by_id: &HashMap<Id, FamilyStoreReference>) -> DesignStoreReference {
             let DesignFullDto {
                 id,
                 name,
@@ -8995,7 +8995,7 @@ pub mod design {
             let dw = Arc::downgrade(&design);
 
             let piece_ids: Vec<Id> = piece_dtos.iter().map(|p| p.id.clone()).collect();
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceStoreReference> = HashMap::new();
             for pd in &piece_dtos {
                 piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(PieceStore::empty_shell(pd.id.clone()))));
             }
@@ -9007,9 +9007,9 @@ pub mod design {
                 }
             }
 
-            let pieces_ordered: Vec<PieceStoreRef> = piece_ids.into_iter().filter_map(|g| piece_index.remove(&g)).collect();
+            let pieces_ordered: Vec<PieceStoreReference> = piece_ids.into_iter().filter_map(|g| piece_index.remove(&g)).collect();
 
-            let layers: Vec<LayerStoreRef> = layer_dtos
+            let layers: Vec<LayerStoreReference> = layer_dtos
                 .into_iter()
                 .map(|ldto| {
                     let mut layer = LayerStore::from_full_dto(ldto);
@@ -9018,7 +9018,7 @@ pub mod design {
                 })
                 .collect();
 
-            let groups: Vec<GroupStoreRef> = group_dtos
+            let groups: Vec<GroupStoreReference> = group_dtos
                 .into_iter()
                 .map(|gdto| {
                     let mut g = GroupStore::from_full_dto(gdto);
@@ -9027,7 +9027,7 @@ pub mod design {
                 })
                 .collect();
 
-            let authors: Vec<AuthorStoreRef> = author_dtos
+            let authors: Vec<AuthorStoreReference> = author_dtos
                 .into_iter()
                 .map(|a| {
                     let mut s = AuthorStore::from_full_dto(a);
@@ -9036,7 +9036,7 @@ pub mod design {
                 })
                 .collect();
 
-            let concepts: Vec<ConceptStoreRef> = concept_dtos
+            let concepts: Vec<ConceptStoreReference> = concept_dtos
                 .into_iter()
                 .map(|c| {
                     let mut s = ConceptStore::from_full_dto(c);
@@ -9045,7 +9045,7 @@ pub mod design {
                 })
                 .collect();
 
-            let tags: Vec<TagStoreRef> = tag_dtos
+            let tags: Vec<TagStoreReference> = tag_dtos
                 .into_iter()
                 .map(|t| {
                     let mut s = TagStore::from_full_dto(t);
@@ -9054,7 +9054,7 @@ pub mod design {
                 })
                 .collect();
 
-            let qualities: Vec<QualityStoreRef> = quality_dtos
+            let qualities: Vec<QualityStoreReference> = quality_dtos
                 .into_iter()
                 .map(|q| {
                     let mut s = QualityStore::from_full_dto(q);
@@ -9063,7 +9063,7 @@ pub mod design {
                 })
                 .collect();
 
-            let props: Vec<PropStoreRef> = prop_dtos
+            let props: Vec<PropStoreReference> = prop_dtos
                 .into_iter()
                 .map(|p| {
                     let mut s = PropStore::from_full_dto(p);
@@ -9072,7 +9072,7 @@ pub mod design {
                 })
                 .collect();
 
-            let attributes: Vec<AttributeStoreRef> = attribute_dtos
+            let attributes: Vec<AttributeStoreReference> = attribute_dtos
                 .into_iter()
                 .map(|a| {
                     let mut s = AttributeStore::from_full_dto(a);
@@ -9081,7 +9081,7 @@ pub mod design {
                 })
                 .collect();
 
-            let stats: Vec<StatStoreRef> = stat_dtos
+            let stats: Vec<StatStoreReference> = stat_dtos
                 .into_iter()
                 .map(|s| {
                     let mut st = StatStore::from_full_dto(s);
@@ -9090,14 +9090,14 @@ pub mod design {
                 })
                 .collect();
 
-            let mut piece_index_ordered: HashMap<Id, PieceStoreRef> = HashMap::new();
+            let mut piece_index_ordered: HashMap<Id, PieceStoreReference> = HashMap::new();
             for p in &pieces_ordered {
                 if let Ok(pr) = p.read() {
                     piece_index_ordered.insert(pr.id.clone(), p.clone());
                 }
             }
 
-            let connections: Vec<ConnectionStoreRef> = connection_dtos.into_iter().map(|cdto| connection_from_full_dto(cdto, &piece_index_ordered, dw.clone())).collect();
+            let connections: Vec<ConnectionStoreReference> = connection_dtos.into_iter().map(|cdto| connection_from_full_dto(cdto, &piece_index_ordered, dw.clone())).collect();
 
             {
                 let mut dw = design.write().expect("design write");
@@ -12855,13 +12855,13 @@ pub mod kit_change {
 
     impl KitChange {
         /// Apply the forward step to a store.
-        pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
+        pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphReference) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
             Ok(())
         }
 
         /// Apply the backward (undo) step to a store.
-        pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
+        pub fn apply_backward(c: &KitChange, kit: &crate::kit_graph::KitGraphReference) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.inverse).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
             Ok(())
         }
@@ -13097,12 +13097,12 @@ pub mod events {
 
     /// ­ƒ¬¬Stable identity for event payloads.
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
-    pub struct EntityRef {
+    pub struct EntityReference {
         pub kind: EntityKind,
         pub id: Id,
     }
 
-    impl EntityRef {
+    impl EntityReference {
         pub const fn new(kind: EntityKind, id: Id) -> Self {
             Self { kind, id }
         }
@@ -13291,15 +13291,15 @@ pub mod events {
             event: StatEvent,
         },
         ChildAdded {
-            parent: EntityRef,
-            child: EntityRef,
+            parent: EntityReference,
+            child: EntityReference,
         },
         ChildRemoved {
-            parent: EntityRef,
-            child: EntityRef,
+            parent: EntityReference,
+            child: EntityReference,
         },
         HashInvalidated {
-            entity: EntityRef,
+            entity: EntityReference,
         },
         FlattenInvalidated {
             design: Id,
@@ -13438,26 +13438,26 @@ pub(crate) mod event_wire {
 
     use std::sync::{Arc, Weak};
 
-    use crate::benchmark::BenchmarkStoreRef;
-    use crate::connection::ConnectionStoreRef;
-    use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignStoreRef;
+    use crate::benchmark::BenchmarkStoreReference;
+    use crate::connection::ConnectionStoreReference;
+    use crate::connector::ConnectorStoreReference;
+    use crate::design::DesignStoreReference;
     use crate::events::EventBus;
-    use crate::family::FamilyStoreRef;
-    use crate::file::FileStoreRef;
-    use crate::folder::FolderStoreRef;
-    use crate::group::GroupStoreRef;
-    use crate::kit_graph::KitGraphRef;
-    use crate::layer::LayerStoreRef;
-    use crate::location::LocationStoreRef;
-    use crate::piece::PieceStoreRef;
-    use crate::port::PortStoreRef;
-    use crate::quality::QualityStoreRef;
-    use crate::representation::RepresentationStoreRef;
-    use crate::stat::StatStoreRef;
-    use crate::typ::TypeStoreRef;
+    use crate::family::FamilyStoreReference;
+    use crate::file::FileStoreReference;
+    use crate::folder::FolderStoreReference;
+    use crate::group::GroupStoreReference;
+    use crate::kit_graph::KitGraphReference;
+    use crate::layer::LayerStoreReference;
+    use crate::location::LocationStoreReference;
+    use crate::piece::PieceStoreReference;
+    use crate::port::PortStoreReference;
+    use crate::quality::QualityStoreReference;
+    use crate::representation::RepresentationStoreReference;
+    use crate::stat::StatStoreReference;
+    use crate::typ::TypeStoreReference;
 
-    pub(crate) fn wire_graph_bus(kit: &KitGraphRef) {
+    pub(crate) fn wire_graph_bus(kit: &KitGraphReference) {
         let w = {
             let kr = kit.read().expect("kit read");
             Arc::downgrade(&kr.event_bus)
@@ -13514,7 +13514,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_type(t: &TypeStoreRef, w: &Weak<EventBus>) {
+    fn wire_type(t: &TypeStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = t.write() {
             g.event_bus = w.clone();
             for c in &g.connectors {
@@ -13554,7 +13554,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_port(p: &PortStoreRef, w: &Weak<EventBus>) {
+    fn wire_port(p: &PortStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
@@ -13566,7 +13566,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_family(f: &FamilyStoreRef, w: &Weak<EventBus>) {
+    fn wire_family(f: &FamilyStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
             for p in &g.ports {
@@ -13578,7 +13578,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_location(l: &LocationStoreRef, w: &Weak<EventBus>) {
+    fn wire_location(l: &LocationStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
             for a in &g.attributes {
@@ -13589,7 +13589,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_connector(c: &ConnectorStoreRef, w: &Weak<EventBus>) {
+    fn wire_connector(c: &ConnectorStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
@@ -13601,7 +13601,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_representation(r: &RepresentationStoreRef, w: &Weak<EventBus>) {
+    fn wire_representation(r: &RepresentationStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = r.write() {
             g.event_bus = w.clone();
             for tg in g.tags.iter_mut() {
@@ -13616,7 +13616,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_design(d: &DesignStoreRef, w: &Weak<EventBus>) {
+    fn wire_design(d: &DesignStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = d.write() {
             g.event_bus = w.clone();
             for p in &g.pieces {
@@ -13665,7 +13665,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_piece(p: &PieceStoreRef, w: &Weak<EventBus>) {
+    fn wire_piece(p: &PieceStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for pr in &g.props {
@@ -13681,7 +13681,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_connection(c: &ConnectionStoreRef, w: &Weak<EventBus>) {
+    fn wire_connection(c: &ConnectionStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             if let Ok(mut s) = g.connected.write() {
@@ -13698,31 +13698,31 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_layer(l: &LayerStoreRef, w: &Weak<EventBus>) {
+    fn wire_layer(l: &LayerStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_group(gr: &GroupStoreRef, w: &Weak<EventBus>) {
+    fn wire_group(gr: &GroupStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = gr.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_file(f: &FileStoreRef, w: &Weak<EventBus>) {
+    fn wire_file(f: &FileStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_folder(f: &FolderStoreRef, w: &Weak<EventBus>) {
+    fn wire_folder(f: &FolderStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_quality(q: &QualityStoreRef, w: &Weak<EventBus>) {
+    fn wire_quality(q: &QualityStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = q.write() {
             g.event_bus = w.clone();
             for b in &g.benchmarks {
@@ -13731,20 +13731,20 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_stat(s: &StatStoreRef, w: &Weak<EventBus>) {
+    fn wire_stat(s: &StatStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = s.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_benchmark(b: &BenchmarkStoreRef, w: &Weak<EventBus>) {
+    fn wire_benchmark(b: &BenchmarkStoreReference, w: &Weak<EventBus>) {
         if let Ok(mut g) = b.write() {
             g.event_bus = w.clone();
         }
     }
 
     /// Re-point all `parent_kit` weak links at `kit` after in-place graph replacement (undo/redo).
-    pub(crate) fn rewire_parent_kits(kit: &KitGraphRef) {
+    pub(crate) fn rewire_parent_kits(kit: &KitGraphReference) {
         let kw = Arc::downgrade(kit);
         let kg = kit.read().expect("kit read");
         for a in &kg.authors {
@@ -13795,7 +13795,7 @@ pub(crate) mod event_wire {
     }
 
     /// Field-level bus sync after a whole-graph replace from DTOs (families and similar).
-    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFullDto, after: &crate::kit_graph::KitFullDto) {
+    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphReference, before: &crate::kit_graph::KitFullDto, after: &crate::kit_graph::KitFullDto) {
         use std::collections::HashMap;
 
         use crate::events::{DesignEvent, DesignField, KitEvent, TypeEvent, TypeField};
@@ -14051,12 +14051,12 @@ pub mod file {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type FileStoreRef = Arc<RwLock<FileStore>>;
+    pub type FileStoreReference = Arc<RwLock<FileStore>>;
     pub type FileStoreWeak = Weak<RwLock<FileStore>>;
 
     /// External resource referenced by a kit (3D model, texture, etc.).
@@ -14182,8 +14182,8 @@ pub mod file {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::File, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::File, self.id.clone())
         }
 
         pub fn from_id_dto(d: FileIdDto) -> Self {
@@ -14358,12 +14358,12 @@ pub mod folder {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
+    pub type FolderStoreReference = Arc<RwLock<FolderStore>>;
     pub type FolderStoreWeak = Weak<RwLock<FolderStore>>;
 
     /// Logical folder grouping files inside a kit.
@@ -14418,8 +14418,8 @@ pub mod folder {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Folder, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Folder, self.id.clone())
         }
 
         pub fn from_id_dto(d: FolderIdDto) -> Self {
@@ -14741,13 +14741,13 @@ pub mod location {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type LocationStoreRef = std::sync::Arc<std::sync::RwLock<LocationStore>>;
+    pub type LocationStoreReference = std::sync::Arc<std::sync::RwLock<LocationStore>>;
     pub type LocationStoreWeak = std::sync::Weak<std::sync::RwLock<LocationStore>>;
 
     #[derive(Debug)]
@@ -14756,7 +14756,7 @@ pub mod location {
         pub longitude: f64,
         pub latitude: f64,
         pub altitude: Option<f64>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub attributes: Vec<AttributeStoreReference>,
         pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: std::sync::Weak<EventBus>,
         hash_cache: crate::hash::Cache<String>,
@@ -14803,8 +14803,8 @@ pub mod location {
             Self { id: Id::new_v7(), longitude: lon, latitude: lat, altitude: None, attributes: Vec::new(), parent_kit: None, event_bus: std::sync::Weak::new(), hash_cache: Cache::default() }
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Location, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Location, self.id.clone())
         }
 
         pub fn to_id_dto(&self) -> LocationIdDto {
@@ -14843,12 +14843,12 @@ pub mod group {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::piece::{PieceIdDto, PieceStoreWeak};
 
-    pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
+    pub type GroupStoreReference = Arc<RwLock<GroupStore>>;
     pub type GroupStoreWeak = Weak<RwLock<GroupStore>>;
 
     /// User-defined group of pieces inside a [`crate::design::DesignStore`].
@@ -14963,8 +14963,8 @@ pub mod group {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Group, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Group, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -15094,7 +15094,7 @@ pub mod id {
         }
     }
 
-    impl AsRef<str> for Id {
+    impl AsReference<str> for Id {
         fn as_ref(&self) -> &str {
             &self.0
         }
@@ -15344,31 +15344,31 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
+    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreReference};
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
+    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreReference};
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
-    use crate::design::{DesignFullDto, DesignIdDto, DesignStore, DesignStoreRef};
+    use crate::design::{DesignFullDto, DesignIdDto, DesignStore, DesignStoreReference};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
-    use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyFullDto, FamilyStore, FamilyStoreRef};
-    use crate::file::{FileFullDto, FileStore, FileStoreRef};
-    use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
+    use crate::events::{EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyFullDto, FamilyStore, FamilyStoreReference};
+    use crate::file::{FileFullDto, FileStore, FileStoreReference};
+    use crate::folder::{FolderFullDto, FolderStore, FolderStoreReference};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::{LocationFullDto, LocationStore, LocationStoreRef};
-    use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
-    use crate::port::{PortFullDto, PortStore, PortStoreRef};
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::location::{LocationFullDto, LocationStore, LocationStoreReference};
+    use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreReference};
+    use crate::port::{PortFullDto, PortStore, PortStoreReference};
+    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreReference};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
     use crate::report::{SemioReport, ValidationResult};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
-    use crate::typ::{TypeFullDto, TypeIdDto, TypeStore, TypeStoreRef};
+    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreReference};
+    use crate::typ::{TypeFullDto, TypeIdDto, TypeStore, TypeStoreReference};
 
-    pub type KitGraphRef = Arc<RwLock<KitGraph>>;
+    pub type KitGraphReference = Arc<RwLock<KitGraph>>;
     pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
 
     /// ­ƒº¥ One undo step as JSON `KitFullDto` values (keeps `KitStore` before `KitFullDto` in this module).
@@ -15394,20 +15394,20 @@ pub mod kit_graph {
         pub created: Option<String>,
         pub updated: Option<String>,
         pub version: Option<String>,
-        pub types: Vec<TypeStoreRef>,
-        pub designs: Vec<DesignStoreRef>,
-        pub files: Vec<FileStoreRef>,
-        pub folders: Vec<FolderStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub types: Vec<TypeStoreReference>,
+        pub designs: Vec<DesignStoreReference>,
+        pub files: Vec<FileStoreReference>,
+        pub folders: Vec<FolderStoreReference>,
+        pub authors: Vec<AuthorStoreReference>,
+        pub concepts: Vec<ConceptStoreReference>,
+        pub tags: Vec<TagStoreReference>,
+        pub qualities: Vec<QualityStoreReference>,
+        pub props: Vec<PropStoreReference>,
+        pub attributes: Vec<AttributeStoreReference>,
         /// Flattened port index for family-owned ports.
-        pub ports: Vec<PortStoreRef>,
-        pub families: Vec<FamilyStoreRef>,
-        pub locations: Vec<LocationStoreRef>,
+        pub ports: Vec<PortStoreReference>,
+        pub families: Vec<FamilyStoreReference>,
+        pub locations: Vec<LocationStoreReference>,
         /// Broadcast bus for graph change notifications (kit holds strong ref).
         pub(crate) event_bus: Arc<EventBus>,
         hash_cache: Cache<String>,
@@ -15648,8 +15648,8 @@ pub mod kit_graph {
             self.event_bus.emit(ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Kit, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Kit, self.id.clone())
         }
 
         /// Subscribe to all [`KitEvent`]s for this kit (MPMC broadcast).
@@ -15886,11 +15886,11 @@ pub mod kit_graph {
             }
         }
 
-        pub fn semio_type(&self, id: &str) -> Option<TypeStoreRef> {
+        pub fn semio_type(&self, id: &str) -> Option<TypeStoreReference> {
             self.types.iter().find(|t| t.read().map(|t| t.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn design(&self, id: &str) -> Option<DesignStoreRef> {
+        pub fn design(&self, id: &str) -> Option<DesignStoreReference> {
             self.designs.iter().find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -15907,15 +15907,15 @@ pub mod kit_graph {
             None
         }
 
-        pub fn file(&self, id: &str) -> Option<FileStoreRef> {
+        pub fn file(&self, id: &str) -> Option<FileStoreReference> {
             self.files.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn folder(&self, id: &str) -> Option<FolderStoreRef> {
+        pub fn folder(&self, id: &str) -> Option<FolderStoreReference> {
             self.folders.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn quality(&self, id: &str) -> Option<QualityStoreRef> {
+        pub fn quality(&self, id: &str) -> Option<QualityStoreReference> {
             self.qualities.iter().find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -15929,7 +15929,7 @@ pub mod kit_graph {
         /// ­ƒº® Add a piece to a design (semantic command path; no [`crate::diff::DesignDiff`]).
         pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFullDto) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
-            let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
+            let type_index: HashMap<Id, TypeStoreReference> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let design_weak = Arc::downgrade(&dref);
             dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_piece(piece, &type_index, design_weak)?;
             self.invalidate_hash();
@@ -15998,7 +15998,7 @@ pub mod kit_graph {
             }
         }
 
-        fn find_design_id_for_connection(kit: &KitGraphRef, connection_id: &str) -> std::result::Result<Id, SetError> {
+        fn find_design_id_for_connection(kit: &KitGraphReference, connection_id: &str) -> std::result::Result<Id, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             let cid = Id::from(connection_id);
             for d in &g.designs {
@@ -16104,7 +16104,7 @@ pub mod kit_graph {
         }
 
         /// Build [`ChangeKitCommand`]s for [`Self::set_field_rpc`] / worker field patches (no apply).
-        pub fn change_kit_commands_for_field_patch(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_field_patch(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
             use crate::author::AuthorIdDto;
@@ -16522,7 +16522,7 @@ pub mod kit_graph {
         }
 
         /// ­ƒîÉ Worker boundary: set one scalar field via [`ChangeKitCommand`] batch + undo snapshot.
-        pub fn set_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
+        pub fn set_field_rpc(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_field_patch(kit, entity_kind, id, field, value)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -16531,7 +16531,7 @@ pub mod kit_graph {
         }
 
         /// ­ƒîÉ Read one field as JSON (read-only).
-        pub fn get_field_rpc(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
+        pub fn get_field_rpc(kit: &KitGraphReference, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
             let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
                 EntityKind::Kit => {
@@ -16606,12 +16606,12 @@ pub mod kit_graph {
         }
 
         /// Central content write: replace materialized kit DTO, preserving `event_bus` and VCS/undo.
-        pub fn apply_kit_state(kit: &KitGraphRef, after: KitFullDto) -> SetResult {
+        pub fn apply_kit_state(kit: &KitGraphReference, after: KitFullDto) -> SetResult {
             Self::replace_from_full_dto(kit, after)
         }
 
         /// ­ƒº® Sole mutating entry for kit content from a structural diff: merge into current DTO snapshot, replace graph, reconcile events.
-        pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
+        pub fn apply_kit_diff(kit: &KitGraphReference, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
             if diff.is_empty() {
                 return Ok(crate::kit_diff::KitDiff::default());
             }
@@ -16626,7 +16626,7 @@ pub mod kit_graph {
         }
 
         /// ­ƒîÉ Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
-        pub fn replace_from_full_dto(kit: &KitGraphRef, d: KitFullDto) -> SetResult {
+        pub fn replace_from_full_dto(kit: &KitGraphReference, d: KitFullDto) -> SetResult {
             let new_arc = Self::from_full_dto(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
                 Ok(rw) => match rw.into_inner() {
@@ -16669,12 +16669,12 @@ pub mod kit_graph {
         /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
         ///
         /// Delegates to the OO dispatcher [`crate::kit_store_command::KitStoreCommand::execute`].
-        pub fn execute_vcs(kit: &KitGraphRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+        pub fn execute_vcs(kit: &KitGraphReference, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
             cmd.execute(kit)
         }
 
         /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit`).
-        pub fn with_undo<F>(kit: &KitGraphRef, f: F) -> SetResult
+        pub fn with_undo<F>(kit: &KitGraphReference, f: F) -> SetResult
         where
             F: FnOnce() -> SetResult,
         {
@@ -16698,7 +16698,7 @@ pub mod kit_graph {
         }
 
         /// Pop last applied state and restore `before` snapshot.
-        pub fn undo(kit: &KitGraphRef) -> SetResult {
+        pub fn undo(kit: &KitGraphReference) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_past.pop()
@@ -16731,7 +16731,7 @@ pub mod kit_graph {
         }
 
         /// Re-apply a popped redo step.
-        pub fn redo(kit: &KitGraphRef) -> SetResult {
+        pub fn redo(kit: &KitGraphReference) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_future.pop()
@@ -16763,15 +16763,15 @@ pub mod kit_graph {
             }
         }
 
-        pub fn can_undo(kit: &KitGraphRef) -> bool {
+        pub fn can_undo(kit: &KitGraphReference) -> bool {
             kit.read().map(|g| !g.undo_past.is_empty()).unwrap_or(false)
         }
 
-        pub fn can_redo(kit: &KitGraphRef) -> bool {
+        pub fn can_redo(kit: &KitGraphReference) -> bool {
             kit.read().map(|g| !g.undo_future.is_empty()).unwrap_or(false)
         }
 
-        pub fn change_kit_commands_for_add_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_add_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
             use crate::design::DesignIdDto;
             use crate::family::FamilyFullDto;
@@ -16793,7 +16793,7 @@ pub mod kit_graph {
             }
         }
 
-        pub fn change_kit_commands_for_remove_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
+        pub fn change_kit_commands_for_remove_child(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
             use crate::design::DesignIdDto;
             use crate::family::FamilyIdDto;
@@ -16816,7 +16816,7 @@ pub mod kit_graph {
         }
 
         /// Add a child entity under `parent` (`Kit ÔåÆ Family`, `Design ÔåÆ Piece`).
-        pub fn add_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
+        pub fn add_child_rpc(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let cmds = Self::change_kit_commands_for_add_child(kit, parent_kind, parent_id, child_kind, dto)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -16825,7 +16825,7 @@ pub mod kit_graph {
         }
 
         /// Remove a child entity from `parent` (`Kit ÔåÆ Family`, `Design ÔåÆ Piece`).
-        pub fn remove_child_rpc(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
+        pub fn remove_child_rpc(kit: &KitGraphReference, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let cmds = Self::change_kit_commands_for_remove_child(kit, parent_kind, parent_id, child_kind, child_id)?;
             Self::with_undo(kit, || {
                 crate::change_command::ChangeKitCommand::apply_many(kit, &cmds).map_err(Self::map_semio_err)?;
@@ -17089,7 +17089,7 @@ pub mod kit_graph {
         }
 
         /// Hydrate the full kit graph from a [`KitFullDto`].
-        pub fn from_full_dto(mut d: KitFullDto) -> KitGraphRef {
+        pub fn from_full_dto(mut d: KitFullDto) -> KitGraphReference {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let vcs_root = d.clone();
             let KitFullDto {
@@ -17206,13 +17206,13 @@ pub mod kit_graph {
                 }
             }
 
-            let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f)))).collect();
-            let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f)))).collect();
+            let file_refs: Vec<FileStoreReference> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f)))).collect();
+            let folder_refs: Vec<FolderStoreReference> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f)))).collect();
 
-            let location_refs: Vec<LocationStoreRef> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_full_dto(l)))).collect();
+            let location_refs: Vec<LocationStoreReference> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_full_dto(l)))).collect();
 
-            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
-            let mut kit_level_port_refs: Vec<PortStoreRef> = Vec::new();
+            let mut port_by_id: HashMap<Id, PortStoreReference> = HashMap::new();
+            let mut kit_level_port_refs: Vec<PortStoreReference> = Vec::new();
             for pd in kit_port_dtos {
                 let iid = pd.id.clone();
                 let mut p = PortStore::from_full_dto(pd);
@@ -17222,8 +17222,8 @@ pub mod kit_graph {
                 kit_level_port_refs.push(pr);
             }
 
-            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
-            let mut family_refs: Vec<FamilyStoreRef> = Vec::new();
+            let mut family_by_id: HashMap<Id, FamilyStoreReference> = HashMap::new();
+            let mut family_refs: Vec<FamilyStoreReference> = Vec::new();
             for fd in families {
                 let fid = fd.id.clone();
                 let fam = Arc::new(RwLock::new(FamilyStore {
@@ -17238,7 +17238,7 @@ pub mod kit_graph {
                     hash_cache: Cache::default(),
                 }));
                 let fw = Arc::downgrade(&fam);
-                let mut port_refs: Vec<PortStoreRef> = Vec::new();
+                let mut port_refs: Vec<PortStoreReference> = Vec::new();
                 for pd in fd.ports {
                     let iid = pd.id.clone();
                     let mut p = PortStore::from_full_dto(pd);
@@ -17264,8 +17264,8 @@ pub mod kit_graph {
                 }
             }
 
-            let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
-            let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
+            let mut type_refs: Vec<TypeStoreReference> = Vec::with_capacity(types.len());
+            let mut type_index: HashMap<Id, TypeStoreReference> = HashMap::new();
             for tdto in types {
                 let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
                 if let Ok(tr) = t.read() {
@@ -17289,7 +17289,7 @@ pub mod kit_graph {
                 }
             }
 
-            let design_refs: Vec<DesignStoreRef> = designs
+            let design_refs: Vec<DesignStoreReference> = designs
                 .into_iter()
                 .map(|ddto| {
                     let design = DesignStore::hydrate_from_full_dto(ddto, &type_index, &family_by_id);
@@ -17411,7 +17411,7 @@ pub mod kit_graph {
         }
 
         /// Resolve a port anywhere on the kit through its families.
-        pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
+        pub fn port_by_id(&self, id: &Id) -> Option<PortStoreReference> {
             for p in &self.ports {
                 if p.read().ok().map(|r| r.id == *id).unwrap_or(false) {
                     return Some(p.clone());
@@ -17429,14 +17429,14 @@ pub mod kit_graph {
             None
         }
 
-        fn build_family_port_index(g: &KitGraph) -> (HashMap<Id, FamilyStoreRef>, HashMap<Id, PortStoreRef>) {
-            let mut family_by_id: HashMap<Id, FamilyStoreRef> = HashMap::new();
+        fn build_family_port_index(g: &KitGraph) -> (HashMap<Id, FamilyStoreReference>, HashMap<Id, PortStoreReference>) {
+            let mut family_by_id: HashMap<Id, FamilyStoreReference> = HashMap::new();
             for f in &g.families {
                 if let Ok(fr) = f.read() {
                     family_by_id.insert(fr.id.clone(), f.clone());
                 }
             }
-            let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
+            let mut port_by_id: HashMap<Id, PortStoreReference> = HashMap::new();
             for p in &g.ports {
                 if let Ok(pr) = p.read() {
                     port_by_id.insert(pr.id.clone(), p.clone());
@@ -17454,16 +17454,16 @@ pub mod kit_graph {
             (family_by_id, port_by_id)
         }
 
-        fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeStoreRef> {
+        fn domain_type_index(kit: &KitGraph) -> HashMap<Id, TypeStoreReference> {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
 
-        fn domain_family_index(kit: &KitGraph) -> HashMap<Id, FamilyStoreRef> {
+        fn domain_family_index(kit: &KitGraph) -> HashMap<Id, FamilyStoreReference> {
             kit.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect()
         }
 
         /// Rebuild one type from `to_full_dto` + sparse [`crate::diff::TypeDiff`] (remove ÔåÆ insert).
-        pub fn apply_type_diff_fragment(kit: &KitGraphRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
+        pub fn apply_type_diff_fragment(kit: &KitGraphReference, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
             if fragment.is_empty() {
                 return Ok(());
             }
@@ -17481,13 +17481,13 @@ pub mod kit_graph {
             KitGraph::insert_type_dto(kit, dto)
         }
 
-        pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignFullDto) -> SetResult {
+        pub fn insert_design_ref(kit: &KitGraphReference, dto: DesignFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
-            let family_by_id: HashMap<Id, FamilyStoreRef> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
+            let family_by_id: HashMap<Id, FamilyStoreReference> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
             let design = DesignStore::hydrate_from_full_dto(dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
@@ -17504,7 +17504,7 @@ pub mod kit_graph {
         }
 
         /// Insert a type from a full DTO (same shape as `from_full_dto` hydration for one type).
-        pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeFullDto) -> SetResult {
+        pub fn insert_type_dto(kit: &KitGraphReference, dto: TypeFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("type {}", dto.id)));
@@ -17520,7 +17520,7 @@ pub mod kit_graph {
         }
 
         /// Remove a type and return its [`TypeFullDto`] for undo, or `None` if missing.
-        pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
+        pub fn remove_type_dto(kit: &KitGraphReference, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.types.iter().position(|t| t.read().map(|r| r.id.as_str() == type_id).unwrap_or(false))
@@ -17588,7 +17588,7 @@ pub mod kit_graph {
         }
 
         /// Insert a family (with ports) onto the kit graph.
-        pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyFullDto) -> SetResult {
+        pub fn insert_family_dto(kit: &KitGraphReference, dto: FamilyFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("family {}", dto.id)));
@@ -17610,7 +17610,7 @@ pub mod kit_graph {
                 hash_cache: Cache::default(),
             }));
             let fw = Arc::downgrade(&fam);
-            let mut port_refs: Vec<PortStoreRef> = Vec::new();
+            let mut port_refs: Vec<PortStoreReference> = Vec::new();
             for pd in dto.ports.clone() {
                 let mut pstore = PortStore::from_full_dto(pd);
                 pstore.parent_family = fw.clone();
@@ -17643,7 +17643,7 @@ pub mod kit_graph {
         }
 
         /// Remove a family and return its [`FamilyFullDto`] for undo, or `None` if missing.
-        pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
+        pub fn remove_family_dto(kit: &KitGraphReference, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
             let fid = Id::from(family_id);
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -17668,12 +17668,12 @@ pub mod kit_graph {
             Ok(Some(dto))
         }
 
-        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitGraphRef, pid: &Id) -> std::result::Result<(), SemioError> {
+        pub(crate) fn ensure_port_unused_by_connectors(kit: &KitGraphReference, pid: &Id) -> std::result::Result<(), SemioError> {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
             Self::check_port_unused_by_connectors(&*g, pid).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
 
-        pub(crate) fn purge_dead_port_compatibility(kit: &KitGraphRef) {
+        pub(crate) fn purge_dead_port_compatibility(kit: &KitGraphReference) {
             let Ok(g) = kit.read() else {
                 return;
             };
@@ -17693,7 +17693,7 @@ pub mod kit_graph {
             }
         }
 
-        pub fn insert_file_dto(kit: &KitGraphRef, dto: FileFullDto) -> SetResult {
+        pub fn insert_file_dto(kit: &KitGraphReference, dto: FileFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.files.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("file {}", dto.id)));
@@ -17711,7 +17711,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_file_dto(kit: &KitGraphRef, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
+        pub fn remove_file_dto(kit: &KitGraphReference, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.files.iter().position(|f| f.read().map(|r| r.id.as_str() == file_id).unwrap_or(false))
@@ -17733,7 +17733,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_folder_dto(kit: &KitGraphRef, dto: FolderFullDto) -> SetResult {
+        pub fn insert_folder_dto(kit: &KitGraphReference, dto: FolderFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.folders.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("folder {}", dto.id)));
@@ -17751,7 +17751,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_folder_dto(kit: &KitGraphRef, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
+        pub fn remove_folder_dto(kit: &KitGraphReference, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.folders.iter().position(|f| f.read().map(|r| r.id.as_str() == folder_id).unwrap_or(false))
@@ -17773,7 +17773,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_author_dto(kit: &KitGraphRef, dto: AuthorFullDto) -> SetResult {
+        pub fn insert_author_dto(kit: &KitGraphReference, dto: AuthorFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.authors.iter().any(|a| a.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("author {}", dto.id)));
@@ -17791,7 +17791,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_author_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
+        pub fn remove_author_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.authors.iter().position(|a| a.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -17813,7 +17813,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_concept_dto(kit: &KitGraphRef, dto: ConceptFullDto) -> SetResult {
+        pub fn insert_concept_dto(kit: &KitGraphReference, dto: ConceptFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.concepts.iter().any(|c| c.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("concept {}", dto.id)));
@@ -17831,7 +17831,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_concept_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
+        pub fn remove_concept_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.concepts.iter().position(|c| c.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -17853,7 +17853,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_tag_dto(kit: &KitGraphRef, dto: TagFullDto) -> SetResult {
+        pub fn insert_tag_dto(kit: &KitGraphReference, dto: TagFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tags.iter().any(|t| t.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("tag {}", dto.id)));
@@ -17871,7 +17871,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_tag_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
+        pub fn remove_tag_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.tags.iter().position(|t| t.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -17893,7 +17893,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_quality_dto(kit: &KitGraphRef, dto: QualityFullDto) -> SetResult {
+        pub fn insert_quality_dto(kit: &KitGraphReference, dto: QualityFullDto) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.qualities.iter().any(|q| q.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("quality {}", dto.id)));
@@ -17913,7 +17913,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_quality_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
+        pub fn remove_quality_dto(kit: &KitGraphReference, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.qualities.iter().position(|q| q.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -17936,7 +17936,7 @@ pub mod kit_graph {
         }
 
         /// Remove a design and return its [`DesignFullDto`] for undo, or `None` if missing.
-        pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
+        pub fn remove_design_dto(kit: &KitGraphReference, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == design_id).unwrap_or(false))
@@ -17959,7 +17959,7 @@ pub mod kit_graph {
         }
 
         /// Replace a design with a new full DTO (same id), preserving kit order (semantic; no diffs).
-        pub fn replace_design_full(kit: &KitGraphRef, new_dto: DesignFullDto) -> SetResult {
+        pub fn replace_design_full(kit: &KitGraphReference, new_dto: DesignFullDto) -> SetResult {
             use crate::design::DesignStore;
             let id_str = new_dto.id.as_str().to_string();
             let pos = {
@@ -17989,7 +17989,7 @@ pub mod kit_graph {
         }
 
         /// ­ƒº® Clustering without undo wrapper (twin or tests); live callers use [`ChangeKitCommand::ClusterPieces`].
-        pub fn cluster_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        pub fn cluster_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
@@ -18058,7 +18058,7 @@ pub mod kit_graph {
         }
 
         /// ­ƒº® [`crate::change_command::ChangeKitCommand::ClusterPieces`] on the live kit.
-        pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
+        pub fn cluster_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
@@ -18077,12 +18077,12 @@ pub mod kit_graph {
         }
 
         /// ­ƒº® See [`ChangeKitCommand::DragPieces`].
-        pub fn drag_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        pub fn drag_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+            let (dto, design_ref): (DesignFullDto, DesignStoreReference) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -18120,19 +18120,19 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
+        pub fn drag_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
             ChangeKitCommand::DragPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn move_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+        pub fn move_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+            let (dto, design_ref): (DesignFullDto, DesignStoreReference) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -18157,14 +18157,14 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn move_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
+        pub fn move_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
             ChangeKitCommand::MovePieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn fix_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces_unchecked(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -18174,7 +18174,7 @@ pub mod kit_graph {
                 g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
             };
 
-            let pieces: Vec<PieceStoreRef> = {
+            let pieces: Vec<PieceStoreReference> = {
                 let design = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                 piece_ids.iter().filter_map(|piece_id| design.piece(piece_id.as_str())).collect()
             };
@@ -18184,21 +18184,21 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn fix_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces(kit: &KitGraphReference, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
             ChangeKitCommand::FixPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn delete_connection_in_design_unchecked(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
+        pub fn delete_connection_in_design_unchecked(kit: &KitGraphReference, design_id: &str, connection_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let cid = Id::from(connection_id);
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             g.semantic_remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
         }
 
-        pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
+        pub fn delete_connection_in_design(kit: &KitGraphReference, design_id: &str, connection_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::connection::ConnectionIdDto;
             use crate::design::DesignIdDto;
@@ -18207,7 +18207,7 @@ pub mod kit_graph {
         }
 
         /// Compute flattened design DTO and replace that design in the graph.
-        pub fn flatten_design_apply_unchecked(kit: &KitGraphRef, design_id: &str) -> SetResult {
+        pub fn flatten_design_apply_unchecked(kit: &KitGraphReference, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let after_full: DesignFullDto = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -18223,7 +18223,7 @@ pub mod kit_graph {
             Self::replace_design_full(kit, after_full)
         }
 
-        pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
+        pub fn flatten_design_apply(kit: &KitGraphReference, design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
@@ -18280,7 +18280,7 @@ pub mod kit_graph {
             Ok(design)
         }
 
-        pub fn expand_nested_design_unchecked(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design_unchecked(kit: &KitGraphReference, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
             let before: DesignFullDto = {
@@ -18317,14 +18317,14 @@ pub mod kit_graph {
             Self::replace_design_full(kit, after)
         }
 
-        pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
+        pub fn expand_nested_design(kit: &KitGraphReference, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
             ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignIdDto { id: Id::from(parent_design_id) }, nested_design_id: DesignIdDto { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
+        pub fn change_piece_type(kit: &KitGraphReference, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
             use crate::design::DesignIdDto;
             use crate::id::Id;
@@ -18336,19 +18336,19 @@ pub mod kit_graph {
                 .map_err(KitGraph::map_semio_err)
         }
 
-        pub fn paste_design_selection(_kit: &KitGraphRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
+        pub fn paste_design_selection(_kit: &KitGraphReference, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
             Err(SetError::InvalidValue("pasteDesignSelection: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_hanging_pieces(_kit: &KitGraphRef, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
+        pub fn create_hanging_pieces(_kit: &KitGraphReference, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createHangingPieces: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_connected_piece(_kit: &KitGraphRef, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
+        pub fn create_connected_piece(_kit: &KitGraphReference, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
             Err(SetError::InvalidValue("createConnectedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_fixed_piece(_kit: &KitGraphRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
+        pub fn create_fixed_piece(_kit: &KitGraphReference, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
             Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
@@ -18464,7 +18464,7 @@ pub mod kit {
     pub use super::kit_graph::*;
     /// Back-compat alias for the in-memory kit graph ([`KitGraph`]).
     pub type KitStore = KitGraph;
-    pub type KitStoreRef = KitGraphRef;
+    pub type KitStoreReference = KitGraphReference;
     pub type KitStoreWeak = KitGraphWeak;
 }
 
@@ -18472,11 +18472,11 @@ pub mod layer {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
 
-    pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
+    pub type LayerStoreReference = Arc<RwLock<LayerStore>>;
     pub type LayerStoreWeak = Weak<RwLock<LayerStore>>;
 
     /// Visual layer inside a [`crate::design::DesignStore`].
@@ -18594,8 +18594,8 @@ pub mod layer {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Layer, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Layer, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -18693,25 +18693,25 @@ pub mod piece {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
     use crate::connection::ConnectionStoreWeak;
-    use crate::design::{DesignStoreRef, DesignStoreWeak};
+    use crate::design::{DesignStoreReference, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::typ::{TypeIdDto, TypeStoreRef, TypeStoreWeak};
+    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreReference};
+    use crate::typ::{TypeIdDto, TypeStoreReference, TypeStoreWeak};
 
-    pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
+    pub type PieceStoreReference = Arc<RwLock<PieceStore>>;
     pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
 
     /// ­ƒöüReplacement catalog for one piece selection, grouped into compatible kinds and designs.
     #[derive(Clone, Debug, Default)]
     pub struct PieceAlternatives {
-        pub types: Vec<TypeStoreRef>,
-        pub designs: Vec<DesignStoreRef>,
+        pub types: Vec<TypeStoreReference>,
+        pub designs: Vec<DesignStoreReference>,
     }
 
     // #region ­ƒôìPose
@@ -18723,8 +18723,8 @@ pub mod piece {
     }
 
     impl PoseStore {
-        fn entity_ref(&self, piece_id: &Id) -> EntityRef {
-            EntityRef::new(EntityKind::Pose, piece_id.clone())
+        fn entity_ref(&self, piece_id: &Id) -> EntityReference {
+            EntityReference::new(EntityKind::Pose, piece_id.clone())
         }
 
         fn hash_into(&self, w: &mut HashWriter) {
@@ -18750,8 +18750,8 @@ pub mod piece {
         pub hidden: Option<bool>,
         pub locked: Option<bool>,
         pub color: Option<String>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub props: Vec<PropStoreReference>,
+        pub attributes: Vec<AttributeStoreReference>,
         pub type_ref: Option<TypeStoreWeak>,
         pub parent_piece: Option<PieceStoreWeak>,
         pub parent_connection: Option<ConnectionStoreWeak>,
@@ -18964,11 +18964,11 @@ pub mod piece {
             self.emit_piece_ev(self.id.clone(), event);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Piece, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Piece, self.id.clone())
         }
 
-        fn pose_entity_ref(&self) -> EntityRef {
+        fn pose_entity_ref(&self) -> EntityReference {
             self.pose.entity_ref(&self.id)
         }
 
@@ -18993,7 +18993,7 @@ pub mod piece {
             self.flat_center.invalidate();
         }
 
-        pub(crate) fn apply_full_dto(&mut self, d: PieceFullDto, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
+        pub(crate) fn apply_full_dto(&mut self, d: PieceFullDto, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreReference>) {
             self.apply_metadata_fields(PieceMetadataDto {
                 id: d.id,
                 name: d.name,
@@ -19136,7 +19136,7 @@ pub mod piece {
                 return Ok(());
             }
             let previous_id = self.id.clone();
-            let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
+            let previous_entity = EntityReference::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
             self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Id));
             self.hash_cache.invalidate();
@@ -19277,12 +19277,12 @@ pub mod piece {
         }
 
         /// ­ƒöüReturns connector-valid replacement kinds for this piece inside its host design.
-        pub fn alternative_types(&self) -> Vec<TypeStoreRef> {
+        pub fn alternative_types(&self) -> Vec<TypeStoreReference> {
             self.alternatives().types
         }
 
         /// ­ƒöüReturns connector-valid replacement designs for this piece inside its host design.
-        pub fn alternative_designs(&self) -> Vec<DesignStoreRef> {
+        pub fn alternative_designs(&self) -> Vec<DesignStoreReference> {
             self.alternatives().designs
         }
         // #endregion
@@ -19309,15 +19309,15 @@ pub mod piece {
             y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
         }
 
-        fn piece_id_from_side(side: &crate::side::SideStoreRef) -> Option<Id> {
+        fn piece_id_from_side(side: &crate::side::SideStoreReference) -> Option<Id> {
             side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.try_read().ok().map(|piece| piece.id.clone())))
         }
 
-        fn connection_child_piece(connection: &crate::connection::ConnectionStoreRef) -> Option<PieceStoreRef> {
+        fn connection_child_piece(connection: &crate::connection::ConnectionStoreReference) -> Option<PieceStoreReference> {
             connection.read().ok().and_then(|connection| connection.connecting.read().ok().and_then(|side| side.piece.upgrade()))
         }
 
-        fn connection_connected_matches_self(connection: &crate::connection::ConnectionStoreRef, self_id: &Id) -> bool {
+        fn connection_connected_matches_self(connection: &crate::connection::ConnectionStoreReference, self_id: &Id) -> bool {
             let Some(connected) = connection.read().ok().map(|connection| connection.connected.clone()) else {
                 return false;
             };
@@ -19327,7 +19327,7 @@ pub mod piece {
             }
         }
 
-        fn immediate_child_flat_pose(&self, connection_ref: &crate::connection::ConnectionStoreRef, child: &PieceStore, parent_plane: Plane, parent_center: Coordinate) -> (Plane, Coordinate) {
+        fn immediate_child_flat_pose(&self, connection_ref: &crate::connection::ConnectionStoreReference, child: &PieceStore, parent_plane: Plane, parent_center: Coordinate) -> (Plane, Coordinate) {
             let Some(parent_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
                 return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
@@ -19569,7 +19569,7 @@ pub mod piece {
                 return Ok(());
             }
             for id in &removed_connection_ids {
-                design.emit_ev(KitEvent::ChildRemoved { parent: design_entity.clone(), child: EntityRef::new(EntityKind::Connection, id.clone()) });
+                design.emit_ev(KitEvent::ChildRemoved { parent: design_entity.clone(), child: EntityReference::new(EntityKind::Connection, id.clone()) });
             }
             design.connections.retain(|connection| connection.read().map(|connection| !removed_connection_ids.contains(&connection.id)).unwrap_or(true));
             design.invalidate_hash();
@@ -19688,14 +19688,14 @@ pub mod port {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::family::{FamilyIdDto, FamilyStoreWeak};
     use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
 
-    pub type PortStoreRef = Arc<RwLock<PortStore>>;
+    pub type PortStoreReference = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
 
     /// Kit/family-scoped port (canonical: `name`, `compatiblePorts` / `compatibleFamilies` id refs). See `hash_port` in `semio/py/main.py`.
@@ -19712,7 +19712,7 @@ pub mod port {
         pub direction: Option<Vector>,
         /// Weak refs to compatible ports (resolved from wire `compatiblePorts` after the full port map exists).
         pub compatible_ports: Vec<PortStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
+        pub qualities: Vec<QualityStoreReference>,
         pub attributes: Vec<AttributeStore>,
         pub parent_family: FamilyStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
@@ -19813,8 +19813,8 @@ pub mod port {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Port, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Port, self.id.clone())
         }
 
         pub fn from_id_dto(d: PortIdDto) -> Self {
@@ -20030,13 +20030,13 @@ pub mod family {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-    use crate::port::PortStoreRef;
+    use crate::port::PortStoreReference;
 
-    pub type FamilyStoreRef = Arc<RwLock<FamilyStore>>;
+    pub type FamilyStoreReference = Arc<RwLock<FamilyStore>>;
     pub type FamilyStoreWeak = Weak<RwLock<FamilyStore>>;
 
     #[derive(Debug)]
@@ -20045,7 +20045,7 @@ pub mod family {
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
-        pub ports: Vec<PortStoreRef>,
+        pub ports: Vec<PortStoreReference>,
         pub attributes: Vec<AttributeStore>,
         pub parent_kit: Option<KitGraphWeak>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -20098,8 +20098,8 @@ pub mod family {
             Self { id: Id::new_v7(), name: name.into(), description: None, icon: None, ports: Vec::new(), attributes: Vec::new(), parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Family, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Family, self.id.clone())
         }
 
         fn emit_ev(&self, ev: KitEvent) {
@@ -20180,14 +20180,14 @@ pub mod prop {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
     use crate::piece::PieceStoreWeak;
     use crate::typ::TypeStoreWeak;
 
-    pub type PropStoreRef = std::sync::Arc<RwLock<PropStore>>;
+    pub type PropStoreReference = std::sync::Arc<RwLock<PropStore>>;
     pub type PropStoreWeak = Weak<RwLock<PropStore>>;
 
     /// A typed property value (distinct from free-form Attributes: props carry
@@ -20256,8 +20256,8 @@ pub mod prop {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Prop, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Prop, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: PropFullDto) {
@@ -20386,10 +20386,10 @@ pub mod quality {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreReference};
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
@@ -20397,7 +20397,7 @@ pub mod quality {
     use crate::representation::RepresentationStoreWeak;
     use crate::typ::TypeStoreWeak;
 
-    pub type QualityStoreRef = Arc<RwLock<QualityStore>>;
+    pub type QualityStoreReference = Arc<RwLock<QualityStore>>;
     pub type QualityStoreWeak = Weak<RwLock<QualityStore>>;
 
     /// Measurable/named quality that can be attached to ports, types, designs, etc.
@@ -20409,7 +20409,7 @@ pub mod quality {
         pub unit: Option<String>,
         pub definition: Option<String>,
         pub description: Option<String>,
-        pub benchmarks: Vec<BenchmarkStoreRef>,
+        pub benchmarks: Vec<BenchmarkStoreReference>,
         pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
@@ -20497,8 +20497,8 @@ pub mod quality {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Quality, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Quality, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadataDto) {
@@ -20770,14 +20770,14 @@ pub mod representation {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::file::{FileIdDto, FileStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
     use crate::tag::{TagFullDto, TagShallowDto, TagStore};
 
-    pub type RepresentationStoreRef = Arc<RwLock<RepresentationStore>>;
+    pub type RepresentationStoreReference = Arc<RwLock<RepresentationStore>>;
     pub type RepresentationStoreWeak = Weak<RwLock<RepresentationStore>>;
 
     /// Rendering / geometric representation of a [`crate::typ::TypeStore`].
@@ -20788,7 +20788,7 @@ pub mod representation {
         pub description: Option<String>,
         pub tags: Vec<TagStore>,
         pub file: Option<FileStoreWeak>,
-        pub qualities: Vec<QualityStoreRef>,
+        pub qualities: Vec<QualityStoreReference>,
         pub attributes: Vec<AttributeStore>,
         pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
         pub(crate) event_bus: Weak<EventBus>,
@@ -20855,8 +20855,8 @@ pub mod representation {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Representation, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Representation, self.id.clone())
         }
 
         pub fn from_id_dto(d: RepresentationIdDto) -> Self {
@@ -20999,13 +20999,13 @@ pub mod side {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::connection::ConnectionStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::piece::PieceStoreWeak;
     use crate::port::PortStoreWeak;
 
-    pub type SideStoreRef = Arc<RwLock<SideStore>>;
+    pub type SideStoreReference = Arc<RwLock<SideStore>>;
     pub type SideStoreWeak = Weak<RwLock<SideStore>>;
 
     /// One end of a [`crate::connection::ConnectionStore`].
@@ -21081,8 +21081,8 @@ pub mod side {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Side, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Side, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadataDto) {
@@ -21188,12 +21188,12 @@ pub mod stat {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
 
-    pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
+    pub type StatStoreReference = std::sync::Arc<RwLock<StatStore>>;
     pub type StatStoreWeak = Weak<RwLock<StatStore>>;
 
     /// Computed/summary stat attached to a design or kit (e.g. piece count).
@@ -21258,8 +21258,8 @@ pub mod stat {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Stat, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Stat, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: StatFullDto) {
@@ -21385,13 +21385,13 @@ pub mod tag {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
     use crate::typ::TypeStoreWeak;
 
-    pub type TagStoreRef = std::sync::Arc<RwLock<TagStore>>;
+    pub type TagStoreReference = std::sync::Arc<RwLock<TagStore>>;
     pub type TagStoreWeak = Weak<RwLock<TagStore>>;
 
     /// Freely choosable label used for filtering/grouping in the UI.
@@ -21448,8 +21448,8 @@ pub mod tag {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Tag, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Tag, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: TagFullDto) {
@@ -21572,22 +21572,22 @@ pub mod typ {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyIdDto, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreReference};
+    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreReference};
+    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreReference};
+    use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreReference};
+    use crate::events::{emit_weak, EntityKind, EntityReference, EventBus, KitEvent};
+    use crate::family::{FamilyIdDto, FamilyStore, FamilyStoreReference, FamilyStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::location::LocationIdDto;
-    use crate::port::PortStoreRef;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
+    use crate::port::PortStoreReference;
+    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreReference};
+    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreReference};
+    use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreReference};
+    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreReference};
 
-    pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
+    pub type TypeStoreReference = Arc<RwLock<TypeStore>>;
     pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
 
     /// Reusable component definition: a type.
@@ -21603,14 +21603,14 @@ pub mod typ {
         pub unit: Option<String>,
         pub location: Option<LocationIdDto>,
         pub families: Vec<FamilyStoreWeak>,
-        pub connectors: Vec<ConnectorStoreRef>,
-        pub representations: Vec<RepresentationStoreRef>,
-        pub authors: Vec<AuthorStoreRef>,
-        pub concepts: Vec<ConceptStoreRef>,
-        pub tags: Vec<TagStoreRef>,
-        pub qualities: Vec<QualityStoreRef>,
-        pub props: Vec<PropStoreRef>,
-        pub attributes: Vec<AttributeStoreRef>,
+        pub connectors: Vec<ConnectorStoreReference>,
+        pub representations: Vec<RepresentationStoreReference>,
+        pub authors: Vec<AuthorStoreReference>,
+        pub concepts: Vec<ConceptStoreReference>,
+        pub tags: Vec<TagStoreReference>,
+        pub qualities: Vec<QualityStoreReference>,
+        pub props: Vec<PropStoreReference>,
+        pub attributes: Vec<AttributeStoreReference>,
         pub created: Option<String>,
         pub updated: Option<String>,
         pub parent_kit: Weak<RwLock<crate::kit_graph::KitGraph>>,
@@ -21765,8 +21765,8 @@ pub mod typ {
             emit_weak(&self.event_bus, ev);
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Type, self.id.clone())
+        fn entity_ref(&self) -> EntityReference {
+            EntityReference::new(EntityKind::Type, self.id.clone())
         }
 
         pub fn invalidate_hash(&self) {
@@ -21968,11 +21968,11 @@ pub mod typ {
             }
         }
 
-        pub fn connector(&self, id: &str) -> Option<ConnectorStoreRef> {
+        pub fn connector(&self, id: &str) -> Option<ConnectorStoreReference> {
             self.connectors.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn port(&self, id: &str) -> Option<PortStoreRef> {
+        pub fn port(&self, id: &str) -> Option<PortStoreReference> {
             let id = Id::from(id);
             if let Some(kit) = self.parent_kit.upgrade() {
                 if let Ok(kr) = kit.read() {
@@ -21982,11 +21982,11 @@ pub mod typ {
             None
         }
 
-        pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
+        pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreReference> {
             self.connectors.iter().find(|c| c.read().ok().and_then(|cr| cr.port.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|pr| pr.id == *port_id))).unwrap_or(false)).cloned()
         }
 
-        pub fn representation(&self, id: &str) -> Option<RepresentationStoreRef> {
+        pub fn representation(&self, id: &str) -> Option<RepresentationStoreReference> {
             self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
@@ -22094,7 +22094,13 @@ pub mod typ {
 
         /// Hydrate type graph from full DTO (connectors, representations, family refs, kit link).
         /// Only [`crate::kit_graph::KitGraph::from_full_dto`] should construct types in host code.
-        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
+        pub(crate) fn hydrate_from_full_dto(
+            d: TypeFullDto,
+            kit: &Arc<RwLock<crate::kit_graph::KitGraph>>,
+            file_refs: &[crate::file::FileStoreReference],
+            family_by_id: &HashMap<Id, FamilyStoreReference>,
+            port_by_id: &HashMap<Id, PortStoreReference>,
+        ) -> TypeStoreReference {
             let TypeFullDto { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
@@ -22125,7 +22131,7 @@ pub mod typ {
                 hash_cache: Cache::default(),
             }));
 
-            let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
+            let mut connector_refs: Vec<ConnectorStoreReference> = Vec::with_capacity(connectors.len());
             for cdto in connectors {
                 let port_id = cdto.port.as_ref().map(|p| p.id.clone());
                 let mut c = ConnectorStore::from_full_dto(cdto);
@@ -22138,7 +22144,7 @@ pub mod typ {
                 connector_refs.push(Arc::new(RwLock::new(c)));
             }
 
-            let mut rep_refs: Vec<RepresentationStoreRef> = Vec::with_capacity(representations.len());
+            let mut rep_refs: Vec<RepresentationStoreReference> = Vec::with_capacity(representations.len());
             for rdto in representations {
                 let file_id = rdto.file.as_ref().map(|f| f.id.clone());
                 let mut r = RepresentationStore::from_full_dto(rdto);
@@ -22272,11 +22278,11 @@ mod async_kit {
 
     use crate::diff::DesignChange;
     use crate::error::{Result, SemioError};
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitGraph, KitGraphReference};
     use crate::report::{SemioReport, ValidationResult};
 
     impl KitGraph {
-        pub async fn set_name_async(this: &KitGraphRef, name: String) -> Result<()> {
+        pub async fn set_name_async(this: &KitGraphReference, name: String) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_name(name)?;
@@ -22285,7 +22291,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_description_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_description_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_description(v)?;
@@ -22294,7 +22300,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_icon_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_icon_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_icon(v)?;
@@ -22303,7 +22309,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_image_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_image_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_image(v)?;
@@ -22312,7 +22318,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_preview_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_preview_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_preview(v)?;
@@ -22321,7 +22327,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_remote_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_remote_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_remote(v)?;
@@ -22330,7 +22336,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_homepage_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_homepage_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_homepage(v)?;
@@ -22339,7 +22345,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_license_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_license_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_license(v)?;
@@ -22348,7 +22354,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_uri_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_uri_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_uri(v)?;
@@ -22357,7 +22363,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_created_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_created_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_created(v)?;
@@ -22366,7 +22372,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn set_updated_async(this: &KitGraphRef, v: Option<String>) -> Result<()> {
+        pub async fn set_updated_async(this: &KitGraphReference, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.set_updated(v)?;
@@ -22375,7 +22381,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn hash_async(this: &KitGraphRef) -> Result<String> {
+        pub async fn hash_async(this: &KitGraphReference) -> Result<String> {
             let r = match this.read() {
                 Ok(g) => Ok(g.hash()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -22383,7 +22389,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn validate_async(this: &KitGraphRef) -> Result<ValidationResult> {
+        pub async fn validate_async(this: &KitGraphReference) -> Result<ValidationResult> {
             let r = match this.read() {
                 Ok(g) => Ok(g.validate()),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -22391,7 +22397,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn flatten_design_async(this: &KitGraphRef, design_id: &str) -> Result<SemioReport<DesignChange>> {
+        pub async fn flatten_design_async(this: &KitGraphReference, design_id: &str) -> Result<SemioReport<DesignChange>> {
             let r = match this.read() {
                 Ok(g) => g.flatten_design(design_id),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -22413,11 +22419,11 @@ pub mod io {
         use std::path::Path;
 
         use crate::error::Result;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
 
         impl KitGraph {
             /// Parse a kit from a JSON string into a fully hydrated graph.
-            pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
+            pub fn from_json_str(s: &str) -> Result<KitGraphReference> {
                 let dto: KitFullDto = serde_json::from_str(s)?;
                 Ok(KitGraph::from_full_dto(dto))
             }
@@ -22432,7 +22438,7 @@ pub mod io {
 
             #[cfg(not(target_arch = "wasm32"))]
             /// Load a dev kit from a JSON file containing a fully embedded snapshot.
-            pub fn load_json_file(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_json_file(path: &Path) -> Result<KitGraphReference> {
                 let payload = fs::read_to_string(path)?;
                 Self::from_json_str(&payload)
             }
@@ -22475,7 +22481,7 @@ pub mod io {
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
         use crate::layer::LayerFullDto;
         use crate::location::LocationIdDto;
         use crate::piece::PieceFullDto;
@@ -22493,7 +22499,7 @@ pub mod io {
         const SCHEMA_ENGINE: &str = "semio-rs";
 
         #[derive(Clone, Copy, Default)]
-        struct ScopeRefs<'a> {
+        struct ScopeReferences<'a> {
             kit: Option<&'a Id>,
             typ: Option<&'a Id>,
             design: Option<&'a Id>,
@@ -22771,7 +22777,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_author(tx: &Transaction<'_>, author: &AuthorFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_author(tx: &Transaction<'_>, author: &AuthorFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -22780,7 +22786,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -22789,7 +22795,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_tag(tx: &Transaction<'_>, tag: &TagFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_tag(tx: &Transaction<'_>, tag: &TagFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -22809,7 +22815,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
                     id, ordinal, key, value, unit, definition, description,
@@ -22834,7 +22840,7 @@ pub mod io {
             insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
-        fn insert_prop(tx: &Transaction<'_>, prop: &PropFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_prop(tx: &Transaction<'_>, prop: &PropFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -22843,7 +22849,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFullDto, ordinal: usize, scope: ScopeReferences<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
@@ -22878,10 +22884,10 @@ pub mod io {
                 params![connector.id.as_str(), ordinal as i64, connector.code, connector.description, port_id.id.as_str(), type_id.as_str(),],
             )?;
             for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { connector: Some(&connector.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in connector.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { connector: Some(&connector.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -22893,13 +22899,13 @@ pub mod io {
                 params![representation.id.as_str(), ordinal as i64, representation.url, representation.description, representation.file.as_ref().map(|file| file.id.as_str()), type_id.as_str(),],
             )?;
             for (tag_ordinal, tag) in representation.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in representation.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in representation.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { representation: Some(&representation.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -22922,10 +22928,10 @@ pub mod io {
                 tx.execute("INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?1, ?2, ?3)", params![port.id.as_str(), cp_ordinal as i64, pid.id.as_str()])?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { port: Some(&port.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { port: Some(&port.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -22933,7 +22939,7 @@ pub mod io {
         fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFullDto, ordinal: usize) -> Result<()> {
             tx.execute("INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()])?;
             for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { family: Some(&fam.id), ..ScopeReferences::default() })?;
             }
             for (port_ordinal, port) in fam.ports.iter().enumerate() {
                 insert_port(tx, kit_id, Some(&fam.id), port, port_ordinal)?;
@@ -22960,22 +22966,22 @@ pub mod io {
                 insert_representation(tx, &typ.id, representation, representation_ordinal)?;
             }
             for (author_ordinal, author) in typ.authors.iter().enumerate() {
-                insert_author(tx, author, author_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_author(tx, author, author_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (concept_ordinal, concept) in typ.concepts.iter().enumerate() {
-                insert_concept(tx, concept, concept_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_concept(tx, concept, concept_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (tag_ordinal, tag) in typ.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in typ.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (prop_ordinal, prop) in typ.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in typ.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { typ: Some(&typ.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -23053,10 +23059,10 @@ pub mod io {
                 ],
             )?;
             for (prop_ordinal, prop) in piece.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { piece: Some(&piece.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in piece.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { piece: Some(&piece.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -23110,7 +23116,7 @@ pub mod io {
                 ],
             )?;
             for (attribute_ordinal, attribute) in connection.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connection: Some(&connection.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { connection: Some(&connection.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -23152,22 +23158,22 @@ pub mod io {
                 )?;
             }
             for (author_ordinal, author) in design.authors.iter().enumerate() {
-                insert_author(tx, author, author_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_author(tx, author, author_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (concept_ordinal, concept) in design.concepts.iter().enumerate() {
-                insert_concept(tx, concept, concept_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_concept(tx, concept, concept_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (tag_ordinal, tag) in design.tags.iter().enumerate() {
-                insert_tag(tx, tag, tag_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_tag(tx, tag, tag_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (quality_ordinal, quality) in design.qualities.iter().enumerate() {
-                insert_quality(tx, quality, quality_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_quality(tx, quality, quality_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (prop_ordinal, prop) in design.props.iter().enumerate() {
-                insert_prop(tx, prop, prop_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_prop(tx, prop, prop_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             for (attribute_ordinal, attribute) in design.attributes.iter().enumerate() {
-                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeReferences { design: Some(&design.id), ..ScopeReferences::default() })?;
             }
             Ok(())
         }
@@ -23687,22 +23693,22 @@ pub mod io {
                     insert_design(&tx, &dto.id, design, ordinal)?;
                 }
                 for (ordinal, author) in dto.authors.iter().enumerate() {
-                    insert_author(&tx, author, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_author(&tx, author, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, concept) in dto.concepts.iter().enumerate() {
-                    insert_concept(&tx, concept, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_concept(&tx, concept, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, tag) in dto.tags.iter().enumerate() {
-                    insert_tag(&tx, tag, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_tag(&tx, tag, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, quality) in dto.qualities.iter().enumerate() {
-                    insert_quality(&tx, quality, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_quality(&tx, quality, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, prop) in dto.props.iter().enumerate() {
-                    insert_prop(&tx, prop, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_prop(&tx, prop, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
                 for (ordinal, attribute) in dto.attributes.iter().enumerate() {
-                    insert_attribute(&tx, attribute, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
+                    insert_attribute(&tx, attribute, ordinal, ScopeReferences { kit: Some(&dto.id), ..ScopeReferences::default() })?;
                 }
 
                 save_kit_vcs(&tx, self, &dto.id)?;
@@ -23712,7 +23718,7 @@ pub mod io {
             }
 
             /// Load a full kit graph from a normalized SQLite database at `path`.
-            pub fn load_sqlite(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_sqlite(path: &Path) -> Result<KitGraphReference> {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
                 let (dto, vcs_initial) = load_kit_dto(&conn)?;
@@ -23742,7 +23748,7 @@ pub mod io {
 
         use crate::error::{Result, SemioError};
         use crate::file::FileFullDto;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
 
         const LOCAL_DIR: &str = ".semio";
         const LOCAL_DB: &str = "kit.db";
@@ -23874,7 +23880,7 @@ pub mod io {
 
         impl KitGraph {
             /// Load a local kit folder containing `.semio/kit.db` and regular asset files.
-            pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphRef> {
+            pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphReference> {
                 let kit = KitGraph::load_sqlite(&local_db_path(folder_path))?;
                 let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                 hydrate_files(&mut dto, folder_path)?;
@@ -23905,7 +23911,7 @@ pub mod io {
         use serde::de::DeserializeOwned;
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
 
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         pub struct RemoteKitSession {
@@ -23970,7 +23976,7 @@ pub mod io {
             }
 
             /// Load a full kit snapshot from a remote hub session.
-            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphRef> {
+            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphReference> {
                 let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
                 let dto: KitFullDto = serde_json::from_value(response.kit)?;
                 Ok(KitGraph::from_full_dto(dto))
@@ -23998,7 +24004,7 @@ pub mod io {
         use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitGraph, KitGraphReference};
 
         const KIT_JSON: &str = "kit.json";
 
@@ -24015,7 +24021,7 @@ pub mod io {
             }
 
             /// Preferred API (plan): read `kit.json` from a zip at `path`.
-            pub fn load_zip(path: &Path) -> Result<KitGraphRef> {
+            pub fn load_zip(path: &Path) -> Result<KitGraphReference> {
                 let file = File::open(path)?;
                 let mut archive = ZipArchive::new(file)?;
                 let mut kit_json = String::new();
@@ -24048,20 +24054,20 @@ pub mod kit_graphql {
     use std::pin::Pin;
 
     use crate::change_command::ChangeKitCommand;
-    use crate::connection::ConnectionStoreRef;
-    use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignStoreRef;
+    use crate::connection::ConnectionStoreReference;
+    use crate::connector::ConnectorStoreReference;
+    use crate::design::DesignStoreReference;
     use crate::events::KitEvent;
     use crate::geom::Plane;
     use crate::id::Id;
     use crate::kit_alternative::KitAlternativeCommand;
     use crate::kit_checkpoint::KitCheckpointCommand;
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitGraph, KitGraphReference};
     use crate::kit_session::SessionCommand;
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-    use crate::piece::PieceStoreRef;
-    use crate::representation::RepresentationStoreRef;
-    use crate::typ::TypeStoreRef;
+    use crate::piece::PieceStoreReference;
+    use crate::representation::RepresentationStoreReference;
+    use crate::typ::TypeStoreReference;
 
     // #subregion GqlControlPlaneScalars
     /// ­ƒº¥ `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
@@ -24231,8 +24237,8 @@ pub mod kit_graphql {
         },
     }
 
-    /// Spawn the single-writer loop for one [`KitGraphRef`] (zero busy-wait: `recv().await`).
-    pub fn spawn_actor(graph: KitGraphRef, rx: async_channel::Receiver<GraphWork>) {
+    /// Spawn the single-writer loop for one [`KitGraphReference`] (zero busy-wait: `recv().await`).
+    pub fn spawn_actor(graph: KitGraphReference, rx: async_channel::Receiver<GraphWork>) {
         let kmain = async move {
             while let Ok(work) = rx.recv().await {
                 match work {
@@ -24302,7 +24308,7 @@ pub mod kit_graphql {
     }
 
     /// ­ƒîÉ GraphQL `execute` with the same context as [`super::wasm::KitStoreHandle::execute`], plus optional native [`GraphQlVcsOverride`] (semio-store).
-    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphRef, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlVcsOverride) -> Result<async_graphql::Response, Error> {
+    pub async fn execute_with_control_plane(request_json: &str, graph: KitGraphReference, work_tx: async_channel::Sender<GraphWork>, vcs: GraphQlVcsOverride) -> Result<async_graphql::Response, Error> {
         let mut req = request_from_json(request_json)?;
         req = req.data(graph).data(work_tx).data(vcs);
         Ok(async_graphql::Response::from(schema().execute(req).await))
@@ -24712,7 +24718,7 @@ pub mod kit_graphql {
     impl RootQuery {
         /// ­ƒîÉ **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
         async fn kit(&self, ctx: &Context<'_>, scope: KitReadScopeInput) -> Result<KitStoreNode> {
-            let g: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let g: KitGraphReference = ctx.data::<KitGraphReference>()?.clone();
             let rs = kit_read_scope_from_gql(scope)?;
             let view = crate::kit_read_scope::resolve_read_graph(&g, &rs).map_err(|e| Error::new(e.to_string()))?;
             Ok(KitStoreNode(view))
@@ -24736,7 +24742,7 @@ pub mod kit_graphql {
     impl KitStoreMutation {
         /// Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
         async fn batch(&self, ctx: &Context<'_>, input: KitStoreBatchInput) -> Result<KitStoreBatchPayload> {
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let graph: KitGraphReference = ctx.data::<KitGraphReference>()?.clone();
             let tx: async_channel::Sender<GraphWork> = ctx.data::<async_channel::Sender<GraphWork>>()?.clone();
             let vcs: GraphQlVcsOverride = ctx.data_opt::<GraphQlVcsOverride>().cloned().unwrap_or_default();
             let shell = KitShellCtx { graph, tx, vcs };
@@ -24747,7 +24753,7 @@ pub mod kit_graphql {
     /// ­ƒîÉ Single kit handle + actor queue: replaces `async_graphql::Context` data for batch / shell dispatch.
     #[derive(Clone)]
     struct KitShellCtx {
-        graph: KitGraphRef,
+        graph: KitGraphReference,
         tx: async_channel::Sender<GraphWork>,
         vcs: GraphQlVcsOverride,
     }
@@ -25503,7 +25509,7 @@ pub mod kit_graphql {
     impl RootSubscription {
         /// Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
         async fn event_stream(&self, ctx: &Context<'_>) -> Result<KitEventSubscriptionStream> {
-            let graph: KitGraphRef = ctx.data::<KitGraphRef>()?.clone();
+            let graph: KitGraphReference = ctx.data::<KitGraphReference>()?.clone();
             let mut rx = lock_graph(&graph)?.subscribe();
             Ok(Box::pin(stream! {
                 loop {
@@ -25550,33 +25556,33 @@ pub mod kit_graphql {
         }
     }
 
-    /// ­ƒîÉ GraphQL projection of [`KitGraphRef`] (required: async-graphql orphan rules for external `Arc`).
+    /// ­ƒîÉ GraphQL projection of [`KitGraphReference`] (required: async-graphql orphan rules for external `Arc`).
     #[derive(Clone)]
-    pub struct KitStoreNode(pub KitGraphRef);
+    pub struct KitStoreNode(pub KitGraphReference);
 
-    /// ­ƒîÉ GraphQL projection of [`DesignStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`DesignStoreReference`].
     #[derive(Clone)]
-    pub struct DesignNode(pub DesignStoreRef);
+    pub struct DesignNode(pub DesignStoreReference);
 
-    /// ­ƒîÉ GraphQL projection of [`PieceStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`PieceStoreReference`].
     #[derive(Clone)]
-    pub struct PieceNode(pub PieceStoreRef);
+    pub struct PieceNode(pub PieceStoreReference);
 
-    /// ­ƒîÉ GraphQL projection of [`TypeStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`TypeStoreReference`].
     #[derive(Clone)]
-    pub struct TypeNode(pub TypeStoreRef);
+    pub struct TypeNode(pub TypeStoreReference);
 
-    /// ­ƒîÉ GraphQL projection of [`ConnectionStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`ConnectionStoreReference`].
     #[derive(Clone)]
-    pub struct ConnectionNode(pub ConnectionStoreRef);
+    pub struct ConnectionNode(pub ConnectionStoreReference);
 
-    /// ­ƒîÉ GraphQL projection of [`ConnectorStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`ConnectorStoreReference`].
     #[derive(Clone)]
-    pub struct ConnectorNode(pub ConnectorStoreRef);
+    pub struct ConnectorNode(pub ConnectorStoreReference);
 
-    /// ­ƒîÉ GraphQL projection of [`RepresentationStoreRef`].
+    /// ­ƒîÉ GraphQL projection of [`RepresentationStoreReference`].
     #[derive(Clone)]
-    pub struct RepresentationNode(pub RepresentationStoreRef);
+    pub struct RepresentationNode(pub RepresentationStoreReference);
 
     // #subregion GqlValueObjects
     #[derive(Clone, Debug, SimpleObject)]
@@ -26022,7 +26028,7 @@ pub mod kit_graphql {
             Ok(g.into_iter().map(|grp: Vec<Id>| grp.into_iter().map(|i| i.to_string()).collect::<Vec<_>>()).collect())
         }
         async fn quality_sum(&self, ctx: &Context<'_>, quality_id: String) -> Result<f64> {
-            let gref: &KitGraphRef = ctx.data()?;
+            let gref: &KitGraphReference = ctx.data()?;
             let g = lock_graph(gref)?;
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
             let qid = Id::from(quality_id.as_str());
@@ -26055,7 +26061,7 @@ pub mod kit_graphql {
 
         /// ­ƒîÉ Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
         async fn piece_placement(&self, ctx: &Context<'_>) -> Result<Vec<PiecePlacementRowObject>> {
-            let gref: &KitGraphRef = ctx.data()?;
+            let gref: &KitGraphReference = ctx.data()?;
             let g = lock_graph(gref)?;
             let did = self.0.read().map_err(|_| Error::new("design lock poisoned"))?.id.to_string();
             let m = g.piece_placement_metadata(&did).map_err(|e| Error::new(format!("{e:?}")))?;
@@ -26228,7 +26234,7 @@ pub mod wasm {
     use wasm_bindgen_futures::future_to_promise;
 
     use crate::id::Id;
-    use crate::kit_graph::{KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitGraph, KitGraphReference};
     use async_graphql::futures_util::StreamExt;
 
     /// ­ƒîÉ Install panic hook once per WASM load (call before other kit work).
@@ -26315,10 +26321,10 @@ pub mod wasm {
         s.trim().to_ascii_lowercase().replace(|c: char| c.is_whitespace(), "-")
     }
 
-    /// ­ƒîÉ Stateful [`KitGraphRef`] + single-writer queue; **control plane** is [`KitStoreHandle::execute`] (GraphQL).
+    /// ­ƒîÉ Stateful [`KitGraphReference`] + single-writer queue; **control plane** is [`KitStoreHandle::execute`] (GraphQL).
     #[wasm_bindgen]
     pub struct KitStoreHandle {
-        inner: KitGraphRef,
+        inner: KitGraphReference,
         work_tx: async_channel::Sender<crate::kit_graphql::GraphWork>,
     }
 
@@ -26432,7 +26438,7 @@ mod tests {
 
         #[test]
         fn query_kit_name_via_schema() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-name")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("gql-name")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async move {
@@ -26449,7 +26455,7 @@ mod tests {
 
         #[test]
         fn query_legacy_kit_store_root_is_absent() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("x")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("x")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async move {
@@ -26464,7 +26470,7 @@ mod tests {
 
         #[test]
         fn kit_batch_live_variant_removed() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("live-off")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("live-off")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
@@ -26481,7 +26487,7 @@ mod tests {
 
         #[test]
         fn scoped_kit_reads_resolve_for_draft_and_transaction_after_batch() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("scoped-read")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("scoped-read")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
@@ -26537,7 +26543,7 @@ mod tests {
 
         #[test]
         fn transaction_undo_redo_batch_rows_remain_without_live_undo() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("undo-rows")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("undo-rows")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
@@ -26653,7 +26659,7 @@ mod tests {
 
         #[test]
         fn kit_store_batch_scoped_change_kit_commands_updates_name() {
-            let kit: crate::kit_graph::KitGraphRef = Arc::new(RwLock::new(KitGraph::new("gql-shell-before")));
+            let kit: crate::kit_graph::KitGraphReference = Arc::new(RwLock::new(KitGraph::new("gql-shell-before")));
             let (tx, rx) = async_channel::unbounded();
             kit_graphql::spawn_actor(kit.clone(), rx);
             let out = futures_lite::future::block_on(async {
@@ -26742,13 +26748,13 @@ mod tests {
         use crate::design::DesignIdDto;
         use crate::id::Id;
         use crate::kit_change::{KitChange, KitChangeKind};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
         use crate::piece::PieceFullDto;
         use crate::piece::PieceIdDto;
         use crate::typ::TypeFullDto;
         use crate::typ::TypeIdDto;
 
-        fn small_kit() -> (KitGraphRef, Id, Id, Id) {
+        fn small_kit() -> (KitGraphReference, Id, Id, Id) {
             let kid = Id::new_v7();
             let tid = Id::new_v7();
             let did = Id::new_v7();
@@ -26763,7 +26769,7 @@ mod tests {
             (kit, tid, did, pid)
         }
 
-        fn undo_inverses(kit: &KitGraphRef, inv: &[ChangeKitCommand]) {
+        fn undo_inverses(kit: &KitGraphReference, inv: &[ChangeKitCommand]) {
             for u in inv {
                 u.apply(kit).expect("undo step");
             }
@@ -26960,7 +26966,7 @@ mod tests {
         use crate::side::SideMetadataDto;
         use crate::typ::{TypeFullDto, TypeIdDto};
 
-        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphRef, Id, Id, Id, Id) {
+        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphReference, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
             let type_id = Id::new_v7();
             let port_id = Id::new_v7();
@@ -27231,7 +27237,7 @@ mod tests {
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
         use crate::piece::{PieceFullDto, PieceIdDto};
         use crate::port::{PortFullDto, PortIdDto};
         use crate::side::SideMetadataDto;
@@ -27276,7 +27282,7 @@ mod tests {
             serde_json::from_str(&load_asset_text(name)).expect("parse typed asset")
         }
 
-        fn synthetic_replaceable_kit() -> (KitGraphRef, HashMap<&'static str, Id>) {
+        fn synthetic_replaceable_kit() -> (KitGraphReference, HashMap<&'static str, Id>) {
             let port_l = Id::from("port-L");
             let port_l_compatible = Id::from("port-L-compatible");
             let port_g = Id::from("port-G");
@@ -27839,11 +27845,11 @@ mod tests {
             use crate::connection::ConnectionFullDto;
             use crate::connector::ConnectorFullDto;
             use crate::design::DesignFullDto;
-            use crate::events::{EntityKind, EntityRef, KitEvent};
+            use crate::events::{EntityKind, EntityReference, KitEvent};
             use crate::file::FileFullDto;
             use crate::group::GroupFullDto;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+            use crate::kit_graph::{KitFullDto, KitGraph, KitGraphReference};
             use crate::layer::LayerFullDto;
             use crate::piece::{PieceFullDto, PieceIdDto};
             use crate::port::{PortFullDto, PortIdDto};
@@ -27859,13 +27865,13 @@ mod tests {
                 out
             }
 
-            pub fn kit_entity_ref(kit: &KitGraphRef) -> EntityRef {
+            pub fn kit_entity_ref(kit: &KitGraphReference) -> EntityReference {
                 let g = kit.read().expect("kit read").id.clone();
-                EntityRef::new(EntityKind::Kit, g)
+                EntityReference::new(EntityKind::Kit, g)
             }
 
             /// Minimal kit with one type, one design, one piece (valid type ref).
-            pub fn kit_with_piece() -> (KitGraphRef, Id, Id, Id) {
+            pub fn kit_with_piece() -> (KitGraphReference, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -27883,7 +27889,7 @@ mod tests {
             }
 
             /// One design with a layer and one piece (piece required for valid design content).
-            pub fn kit_with_layer() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_layer() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -27907,7 +27913,7 @@ mod tests {
             }
 
             /// Design with one group referencing the single piece.
-            pub fn kit_with_group() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_group() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
@@ -27930,7 +27936,7 @@ mod tests {
                 (kit, design_id, group_id)
             }
 
-            pub fn kit_with_type_connector() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_type_connector() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let conn_id = Id::new_v7();
@@ -27952,14 +27958,14 @@ mod tests {
             }
 
             /// Kit with one type containing one port (for port setter tests).
-            pub fn kit_with_type_only() -> (KitGraphRef, Id) {
+            pub fn kit_with_type_only() -> (KitGraphReference, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitFullDto { id: kit_id, name: "kit".into(), types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
                 (KitGraph::from_full_dto(dto), type_id)
             }
 
-            pub fn kit_with_port() -> (KitGraphRef, Id, Id) {
+            pub fn kit_with_port() -> (KitGraphReference, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let kit_id = Id::new_v7();
@@ -27974,7 +27980,7 @@ mod tests {
                 (kit, type_id, port_id)
             }
 
-            pub fn kit_with_file() -> (KitGraphRef, Id) {
+            pub fn kit_with_file() -> (KitGraphReference, Id) {
                 let file_id = Id::new_v7();
                 let kit_id = Id::new_v7();
                 let dto = KitFullDto { id: kit_id, name: "kit".into(), files: vec![FileFullDto { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
@@ -27983,7 +27989,7 @@ mod tests {
             }
 
             /// One design, two pieces, one connection (for connection / side tests).
-            pub fn kit_with_connection() -> (KitGraphRef, Id, Id, Id, Id, Id) {
+            pub fn kit_with_connection() -> (KitGraphReference, Id, Id, Id, Id, Id) {
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_a = Id::new_v7();
@@ -28019,7 +28025,7 @@ mod tests {
             }
 
             /// Design metadata change with a single piece: typed design field, flatten+derived, kit hash, validation.
-            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::DesignField) {
+            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::DesignField) {
                 assert!(
                     evs.iter().any(|event| matches!(
                         event,
@@ -28038,7 +28044,7 @@ mod tests {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
             }
 
-            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
+            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::PieceField) {
                 assert_piece_field(evs, piece_g, field);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
@@ -28048,8 +28054,8 @@ mod tests {
                 assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
             }
 
-            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
-                let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
+            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::PieceField) {
+                let pose_er = EntityReference::new(EntityKind::Pose, piece_g.clone());
                 assert_piece_field(evs, piece_g, field);
                 assert_piece_field(evs, piece_g, crate::events::PieceField::Pose);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == pose_er)), "{evs:?}");
@@ -28061,14 +28067,14 @@ mod tests {
                 assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
             }
 
-            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, field: crate::events::PieceField) {
+            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, field: crate::events::PieceField) {
                 assert_piece_field(evs, &piece_er.id, field);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
             }
 
-            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityRef, kit_er: EntityRef, field: crate::events::TypeField) {
+            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityReference, kit_er: EntityReference, field: crate::events::TypeField) {
                 assert!(
                     evs.iter().any(|event| matches!(
                         event,
@@ -28085,7 +28091,7 @@ mod tests {
             }
 
             /// Assert kit metadata changes emit a root typed field event, kit hash, and validation.
-            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: crate::events::KitField) {
+            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityReference, field: crate::events::KitField) {
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::FieldChanged(f) if *f == field)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_ref)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
@@ -28177,11 +28183,11 @@ mod tests {
 
             use super::common::drain;
             use crate::kit_graph::KitGraph;
-            use crate::KitGraphRef;
+            use crate::KitGraphReference;
 
             #[test]
             fn subscribe_receives_ordered_stream() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("a")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("a")));
                 let mut a = kit.read().unwrap().subscribe();
                 let mut b = kit.read().unwrap().subscribe();
                 kit.write().unwrap().set_name("b".into()).unwrap();
@@ -28193,7 +28199,7 @@ mod tests {
 
             #[test]
             fn no_lock_held_across_concurrent_read_and_async_setter() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("c")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("c")));
                 let k2 = kit.clone();
                 futures_lite::future::block_on(async {
                     let _ = futures_lite::future::zip(crate::KitGraph::set_name_async(&k2, "d".into()), async { k2.read().map(|_| ()).unwrap_or(()) }).await;
@@ -28203,7 +28209,7 @@ mod tests {
 
             #[test]
             fn drop_kit_closes_bus() {
-                let kit: KitGraphRef = Arc::new(std::sync::RwLock::new(KitGraph::new("e")));
+                let kit: KitGraphReference = Arc::new(std::sync::RwLock::new(KitGraph::new("e")));
                 let mut rx = kit.read().unwrap().subscribe();
                 drop(kit);
                 let r = futures_lite::future::block_on(rx.recv());
@@ -28334,7 +28340,7 @@ mod tests {
         }
 
         mod diff_apply {
-            use crate::events::{EntityKind, EntityRef, KitEvent};
+            use crate::events::{EntityKind, EntityReference, KitEvent};
             use crate::id::Id;
             use crate::piece::PieceFullDto;
             use crate::typ::TypeIdDto;
@@ -28346,7 +28352,7 @@ mod tests {
                 let mut rx = kit.read().unwrap().subscribe();
                 kit.write().unwrap().semantic_add_design_piece(dg.as_str(), PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }).unwrap();
                 let evs = super::common::drain(&mut rx);
-                let child = EntityRef::new(EntityKind::Piece, new_piece);
+                let child = EntityReference::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::ChildAdded { child: c, .. } if *c == child
@@ -28375,7 +28381,7 @@ mod tests {
         }
 
         mod design {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::id::Id;
             use crate::location::LocationIdDto;
 
@@ -28384,7 +28390,7 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let d = {
@@ -28557,7 +28563,7 @@ mod tests {
         }
 
         mod piece {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::geom::{Coordinate, Plane, Point, Vector};
 
             macro_rules! piece_pose_test {
@@ -28565,8 +28571,8 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let p = {
@@ -28588,8 +28594,8 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
-                        let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                        let dre = EntityReference::new(EntityKind::Design, dg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let p = {
@@ -28618,9 +28624,9 @@ mod tests {
             #[test]
             fn piece_set_id() {
                 let (kit, _, dg, pg) = super::common::kit_with_piece();
-                let old_piece = EntityRef::new(EntityKind::Piece, pg.clone());
+                let old_piece = EntityReference::new(EntityKind::Piece, pg.clone());
                 let new_id = crate::id::Id::from("id1");
-                let design = EntityRef::new(EntityKind::Design, dg.clone());
+                let design = EntityReference::new(EntityKind::Design, dg.clone());
                 let kit_ref = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
@@ -28679,8 +28685,8 @@ mod tests {
             #[test]
             fn piece_set_color_hash_only() {
                 let (kit, _, dg, pg) = super::common::kit_with_piece();
-                let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                let dre = EntityReference::new(EntityKind::Design, dg.clone());
                 let kre = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
@@ -28698,8 +28704,8 @@ mod tests {
             #[test]
             fn piece_set_type_weak_geometry() {
                 let (kit, tg, dg, pg) = super::common::kit_with_piece();
-                let pre = EntityRef::new(EntityKind::Piece, pg.clone());
-                let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                let pre = EntityReference::new(EntityKind::Piece, pg.clone());
+                let dre = EntityReference::new(EntityKind::Design, dg.clone());
                 let kre = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
                 let tw = kit.read().unwrap().semio_type(tg.as_str()).map(|t| std::sync::Arc::downgrade(&t)).unwrap();
@@ -28908,7 +28914,7 @@ mod tests {
         }
 
         mod type_ {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityReference};
             use crate::id::Id;
 
             macro_rules! type_meta_test {
@@ -28916,7 +28922,7 @@ mod tests {
                     #[test]
                     fn $fn() {
                         let (kit, tg) = super::common::kit_with_type_only();
-                        let tre = EntityRef::new(EntityKind::Type, tg.clone());
+                        let tre = EntityReference::new(EntityKind::Type, tg.clone());
                         let kre = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         let t = {
@@ -29877,27 +29883,27 @@ mod wasm_handle_tests {
     }
 }
 
-pub use attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
-pub use author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
-pub use benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
+pub use attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore, AttributeStoreReference, AttributeStoreWeak};
+pub use author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreReference, AuthorStoreWeak};
+pub use benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore, BenchmarkStoreReference, BenchmarkStoreWeak};
 pub use change_command::{
     ChangeAttributeCommand, ChangeConnectionCommand, ChangeConnectorCommand, ChangeDesignCommand, ChangeGroupCommand, ChangeKitCommand, ChangeLayerCommand, ChangePieceCommand, ChangePortCommand, ChangePropCommand, ChangeRepresentationCommand,
     ChangeStatCommand, ChangeTypeCommand,
 };
-pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
-pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
-pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
+pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreReference, ConceptStoreWeak};
+pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreReference, ConnectionStoreWeak};
+pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreReference, ConnectorStoreWeak};
+pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreReference, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
-pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
-pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
-pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
+pub use events::{EntityKind, EntityReference, EventBus, KitEvent};
+pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreReference, FileStoreWeak};
+pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreReference, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
+pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreReference, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{KitFullDto, KitGraphRef, KitGraphWeak, KitIdDto, KitMetadataDto, KitShallowDto, KitStore};
+pub use kit::{KitFullDto, KitGraphReference, KitGraphWeak, KitIdDto, KitMetadataDto, KitShallowDto, KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{KitChange, KitChangeKind};
@@ -29910,12 +29916,12 @@ pub use kit_graph::KitGraph;
 pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};
-pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
-pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak, PoseDto, PoseFullDto};
-pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak};
-pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
-pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef, QualityStoreWeak};
+pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreReference, LayerStoreWeak};
+pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreReference, LocationStoreWeak};
+pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreReference, PieceStoreWeak, PoseDto, PoseFullDto};
+pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreReference, PortStoreWeak};
+pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreReference, PropStoreWeak};
+pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreReference, QualityStoreWeak};
 pub use read::{
     DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand, ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand,
     ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput, ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand,
@@ -29924,8 +29930,8 @@ pub use read::{
     ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
-pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak};
-pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
-pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
-pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};
+pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreReference, RepresentationStoreWeak};
+pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreReference, SideStoreWeak};
+pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreReference, StatStoreWeak};
+pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreReference, TagStoreWeak};
+pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreReference, TypeStoreWeak};
