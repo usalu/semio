@@ -4738,7 +4738,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id } }])
@@ -4755,7 +4755,7 @@ pub mod change_command {
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_remove_design_pieces(&did, &[piece_id.id.clone()]).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.remove_design_pieces(&did, &[piece_id.id.clone()]).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
@@ -4851,7 +4851,7 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionRef { id } }])
@@ -4867,7 +4867,7 @@ pub mod change_command {
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        g.semantic_remove_design_connection(&did, &connection_id.id).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        g.remove_design_connection(&did, &connection_id.id).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
@@ -11349,7 +11349,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
             {
@@ -11364,7 +11364,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
+        pub(crate) fn remove_connection(&mut self, connection_id: &Id) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
             self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
@@ -11374,7 +11374,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_connection(&mut self, cdto:  design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn add_connection(&mut self, cdto:  design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
@@ -17085,7 +17085,6 @@ pub mod file {
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraphWeak;
-
     pub type FileStoreRef = Arc<RwLock<FileStore>>;
     pub type FileStoreWeak = Weak<RwLock<FileStore>>;
 
@@ -17123,13 +17122,6 @@ pub mod file {
         created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         updated: Option<String>,
-    }
-
-    impl From<FileFullWire> for FileFull {
-        fn from(w: FileFullWire) -> Self {
-            let url = w.url.or(w.blob).or(w.name).unwrap_or_default();
-            FileFull { id: w.id, url, mime: w.mime, size: w.size, hash: w.hash, description: w.description, created: w.created, updated: w.updated }
-        }
     }
 
 
@@ -17299,37 +17291,6 @@ pub mod folder {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderMetadata {
-        pub id: Id,
-        pub path: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        #[serde(default, alias = "name")]
-        pub path: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderFull {
-        pub id: Id,
-        #[serde(default, alias = "name")]
-        pub path: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
     impl FolderStore {
         pub fn new(path: impl Into<String>) -> Self {
             Self { id: Id::new_v7(), path: path.into(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
@@ -17338,44 +17299,6 @@ pub mod folder {
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Folder, self.id.clone())
-        }
-
-        pub fn from_id_dto(d: FolderRef) -> Self {
-            Self { id: d.id, path: String::new(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_metadata(d: FolderMetadata) -> Self {
-            Self { id: d.id, path: d.path, description: d.description, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_shallow(d: ) -> Self {
-            Self::from_metadata(FolderMetadata { id: d.id, path: d.path, description: d.description })
-        }
-
-        pub fn from_full(d: FolderFull) -> Self {
-            Self::from_metadata(FolderMetadata { id: d.id, path: d.path, description: d.description })
-        }
-
-        pub fn to_ref(&self) -> FolderRef {
-            FolderRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> FolderMetadata {
-            FolderMetadata { id: self.id.clone(), path: self.path.clone(), description: self.description.clone() }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, path: m.path, description: m.description }
-        }
-
-        pub fn to_full(&self) -> FolderFull {
-            let m = self.to_metadata();
-            FolderFull { id: m.id, path: m.path, description: m.description }
         }
 
         pub fn set_path(&mut self, path: String) -> crate::error::SetResult {
@@ -17453,30 +17376,8 @@ pub mod geom {
         pub v: f64,
     }
 
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum PieceCenterWire {
-        Uv {
-            u: f64,
-            v: f64,
-        },
-        Xy {
-            x: f64,
-            y: f64,
-        },
-    }
-
-    impl From<PieceCenterWire> for Coordinate {
-        fn from(w: PieceCenterWire) -> Self {
-            match w {
-                PieceCenterWire::Uv { u, v } => Coordinate { u, v },
-                PieceCenterWire::Xy { x, y } => Coordinate { u: x, v: y },
-            }
-        }
-    }
-
     pub fn deserialize_option_piece_center<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Coordinate>, D::Error> {
-        let o: Option<PieceCenterWire> = Option::deserialize(d)?;
+        let o: Option<CenterInput> = Option::deserialize(d)?;
         Ok(o.map(Into::into))
     }
 
@@ -17673,80 +17574,11 @@ pub mod location {
         hash_cache: crate::hash::Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct LocationRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationMetadata {
-        pub id: Id,
-        pub longitude: f64,
-        pub latitude: f64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub altitude: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub longitude: f64,
-        pub latitude: f64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub altitude: Option<f64>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationFull {
-        pub id: Id,
-        pub longitude: f64,
-        pub latitude: f64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub altitude: Option<f64>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
     impl LocationStore {
         pub fn new(lon: f64, lat: f64) -> Self {
             Self { id: Id::new_v7(), longitude: lon, latitude: lat, altitude: None, attributes: Vec::new(), parent_kit: None, event_bus: std::sync::Weak::new(), hash_cache: Cache::default() }
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Location, self.id.clone())
-        }
-
-        pub fn to_ref(&self) -> LocationRef {
-            LocationRef { id: self.id.clone() }
-        }
-
-        pub fn from_full(d: LocationFull) -> Self {
-            Self {
-                id: d.id,
-                longitude: d.longitude,
-                latitude: d.latitude,
-                altitude: d.altitude,
-                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
-                parent_kit: None,
-                event_bus: std::sync::Weak::new(),
-                hash_cache: Cache::default(),
-            }
-        }
-
-        pub fn to_metadata(&self) -> LocationMetadata {
-            LocationMetadata { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
-        }
-
-        pub fn to_full(&self) -> LocationFull {
-            LocationFull { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
-        }
     }
 }
 
@@ -17775,97 +17607,9 @@ pub mod group {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupMetadata {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceRef>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceRef>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupFull {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceRef>,
-    }
-
     impl GroupStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_id_dto(d: GroupRef) -> Self {
-            Self { id: d.id, name: String::new(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_metadata(d: GroupMetadata) -> Self {
-            Self { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_shallow(d: ) -> Self {
-            Self::from_metadata(GroupMetadata { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
-        }
-
-        pub fn from_full(d: GroupFull) -> Self {
-            Self::from_metadata(GroupMetadata { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
-        }
-
-        pub fn to_ref(&self) -> GroupRef {
-            GroupRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> GroupMetadata {
-            GroupMetadata {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                color: self.color.clone(),
-                icon: self.icon.clone(),
-                pieces: self.pieces.iter().filter_map(|p| p.upgrade()).filter_map(|p| p.read().ok().map(|p| p.to_ref())).collect(),
-            }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
-        }
-
-        pub fn to_full(&self) -> GroupFull {
-            let m = self.to_metadata();
-            GroupFull { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
         #[inline]
@@ -18348,159 +18092,6 @@ pub mod kit_graph {
         pub inverse_flat: Vec<ChangeKitCommand>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitMetadata {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub remote: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub homepage: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub license: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub uri: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub remote: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub homepage: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub license: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub uri: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub types: Vec<crate::typ::>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub designs: Vec<crate::design::>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub files: Vec<crate::file::>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub folders: Vec<crate::folder::>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitFull {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub remote: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub homepage: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub license: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub uri: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub types: Vec<TypeFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub designs: Vec<DesignFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub files: Vec<FileFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub folders: Vec<FolderFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<PortFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyFull>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub locations: Vec<LocationFull>,
-    }
-
-    impl KitFull {
-        pub fn find_port_dto(&self, id: &Id) -> Option<&PortFull> {
-            for p in &self.ports {
-                if &p.id == id {
-                    return Some(p);
-                }
-            }
-            for f in &self.families {
-                for p in &f.ports {
-                    if &p.id == id {
-                        return Some(p);
-                    }
-                }
-            }
-            None
-        }
-    }
-
     impl KitGraph {
         pub fn new(name: impl Into<String>) -> Self {
             let mut s = Self {
@@ -18867,17 +18458,17 @@ pub mod kit_graph {
             Ok(dw.flatten_change())
         }
 
-        pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFull) -> Result<()> {
+        pub fn add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFull) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let design_weak = Arc::downgrade(&dref);
-            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_piece(piece, &type_index, design_weak)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.add_piece(piece, &type_index, design_weak)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
         }
 
-        pub fn semantic_remove_design_pieces(&mut self, design_id: &str, piece_ids: &[Id]) -> Result<()> {
+        pub fn remove_design_pieces(&mut self, design_id: &str, piece_ids: &[Id]) -> Result<()> {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -18888,18 +18479,18 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn semantic_remove_design_connection(&mut self, design_id: &str, connection_id: &Id) -> Result<()> {
+        pub fn remove_design_connection(&mut self, design_id: &str, connection_id: &Id) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
-            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_remove_connection(connection_id)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.remove_connection(connection_id)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
         }
 
-        pub fn semantic_add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFull) -> Result<()> {
+        pub fn add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFull) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let design_weak = Arc::downgrade(&dref);
-            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_connection(c, design_weak)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.add_connection(c, design_weak)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -21058,11 +20649,11 @@ pub mod kit_graph {
             Self::insert_design_ref(kit, clustered_dto)?;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.semantic_remove_design_pieces(&dg, &pids_cluster).map_err(Self::map_semio_err)?;
+                g.remove_design_pieces(&dg, &pids_cluster).map_err(Self::map_semio_err)?;
             }
             for c in added_connections {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.semantic_add_design_connection(&dg, c).map_err(Self::map_semio_err)?;
+                g.add_design_connection(&dg, c).map_err(Self::map_semio_err)?;
             }
             Ok(())
         }
@@ -21203,7 +20794,7 @@ pub mod kit_graph {
             let dg = design_id.to_string();
             let cid = Id::from(connection_id);
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.semantic_remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
+            g.remove_design_connection(&dg, &cid).map_err(Self::map_semio_err)
         }
 
         pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
@@ -31343,11 +30934,11 @@ mod tests {
             use crate::typ::TypeRef;
 
             #[test]
-            fn semantic_add_design_piece_emits_child_added_and_hashes() {
+            fn add_design_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write().unwrap().semantic_add_design_piece(dg.as_str(), PieceFull { id: new_piece.clone(), r#type: Some(TypeRef { id: tg.clone() }), ..Default::default() }).unwrap();
+                kit.write().unwrap().add_design_piece(dg.as_str(), PieceFull { id: new_piece.clone(), r#type: Some(TypeRef { id: tg.clone() }), ..Default::default() }).unwrap();
                 let evs = super::common::drain(&mut rx);
                 let child = EntityRef::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
