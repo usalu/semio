@@ -1,0 +1,15 @@
+{
+  "title": "Semio Rs New Architecture",
+  "emoji": "🦀",
+  "status": "open",
+  "description": "Rebuild semio/rs/lib.rs as a clean greenfield skeleton matching semio/graphql/target.schema.graphql: one struct per GraphQL type with a main impl + an #[Object] impl, all pub fn async, a single global emit_event, and a parent/child web-worker topology where the parent routes Query.wip and Query.authoritative to two child workers. Wire one end-to-end operation (CreatedFixedPiece) through the full path as the reference flow.",
+  "goal": "🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "d7b81250",
+    "source": "c:\\git\\semio\\.cursor\\plans\\semio_rs_new_arch_d7b81250.plan.md"
+  },
+  "sessions": [
+    "⚪aee278dc4aef4b3fac63cda46ffa6450"
+  ]
+}

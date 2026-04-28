@@ -1,0 +1,725 @@
+input AlternativeBatchCommandInput @oneOf {
+	createAlternative: CreateAlternativeBatchInput
+	unifyAlternative: MessageOnlyInput
+}
+
+input AlternativeBatchInput {
+	alternativeId: String
+	commands: [AlternativeBatchCommandInput!]!
+}
+
+scalar AuthorShallowList
+
+input BackboneBatchCommandInput @oneOf {
+	attachBackbone: BackboneConfigBatchInput
+	detachBackbone: ConfirmOnlyInput
+	listConflicts: ConfirmOnlyInput
+	resolveConflict: ResolveConflictBatchInput
+	backboneStatus: ConfirmOnlyInput
+	syncNow: ConfirmOnlyInput
+}
+
+input BackboneBatchInput {
+	commands: [BackboneBatchCommandInput!]!
+}
+
+type BackboneBatchStatus {
+	attached: Boolean!
+	kind: String
+	tip: String
+}
+
+input BackboneConfigBatchInput @oneOf {
+	"""
+	Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
+	"""
+	memory: ConfirmOnlyInput
+	dev: DevBackboneBatchInput
+	local: LocalBackboneBatchInput
+	remote: RemoteBackboneBatchInput
+}
+
+scalar ChangeKitCommand
+
+input ChangeKitCommandsBatchInput {
+	commands: [ChangeKitCommand!]!
+}
+
+input ChangePieceTypeBatchInput {
+	pieceId: String!
+	newTypeId: String!
+}
+
+input CheckpointBatchCommandInput @oneOf {
+	markRelease: ConfirmOnlyInput
+	setActive: ConfirmOnlyInput
+}
+
+input CheckpointBatchInput {
+	checkpointId: String
+	commands: [CheckpointBatchCommandInput!]!
+}
+
+input ClusterPiecesBatchInput {
+	pieceIds: [String!]!
+	clusterName: String!
+}
+
+input ConfirmOnlyInput {
+	confirm: Boolean
+}
+
+type ConflictBatchRecord {
+	id: String!
+	backboneTip: String
+	reason: String!
+	createdAt: String!
+}
+
+enum ConflictResolutionBatchInput {
+	DROP_WIP
+	FORCE_OVERWRITE_BACKBONE
+}
+
+type Connection {
+	id: String!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+	description: String
+}
+
+scalar ConnectionFullList
+
+type Connector {
+	id: String!
+	code: String!
+}
+
+input CountInput {
+	count: Int
+}
+
+input CreateAlternativeBatchInput {
+	name: String!
+	fromCheckpointId: String
+}
+
+input CreateConnectedPieceBatchInput {
+	parentPiece: String!
+	parentPort: String!
+	childType: String!
+	childPort: String!
+}
+
+input CreateDraftBatchInput {
+	parentCheckpointId: String
+	targetAlternativeId: String
+}
+
+input CreateFixedPieceBatchInput {
+	typeId: String!
+	plane: PlaneInputBatch!
+}
+
+input CreateHangingPiecesBatchInput {
+	typeIds: [String!]!
+	plane: PlaneInputBatch!
+}
+
+input DeleteConnectionBatchInput {
+	connectionId: String!
+}
+
+type Design {
+	id: String!
+	name: String!
+	description: String
+	pieces: [Piece!]!
+	"""
+	­ƒîÉ Resolves a piece by persisted DTO id within this design.
+	"""
+	pieceByDtoId(id: String!): Piece
+	connections: [Connection!]!
+	"""
+	­ƒîÉ `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
+	"""
+	piecesFull: PieceFullList!
+	"""
+	­ƒîÉ `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
+	"""
+	connectionsFull: ConnectionFullList!
+	flattenMap: [DesignFlattenMapEntryObject!]!
+	clusterableGroups(selection: [String!]!): [[String!]!]!
+	qualitySum(qualityId: String!): Float!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
+	includedDesigns: [IncludedDesignObject!]!
+	includedDesignIds: [String!]!
+	"""
+	­ƒîÉ Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
+	"""
+	piecePlacement: [PiecePlacementRowObject!]!
+}
+
+input DesignBatchCommandInput @oneOf {
+	clusterPieces: ClusterPiecesBatchInput
+	dragPieces: DragPiecesBatchInput
+	movePieces: MovePiecesBatchInput
+	fixPieces: PieceIdsBatchInput
+	flattenDesign: ConfirmOnlyInput
+	expandDesign: ExpandDesignBatchInput
+	deleteConnection: DeleteConnectionBatchInput
+	changePieceType: ChangePieceTypeBatchInput
+	createHangingPieces: CreateHangingPiecesBatchInput
+	createConnectedPiece: CreateConnectedPieceBatchInput
+	createFixedPiece: CreateFixedPieceBatchInput
+}
+
+input DesignBatchInput {
+	designId: String!
+	commands: [DesignBatchCommandInput!]!
+}
+
+type DesignFlattenMapEntryObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+}
+
+type DesignMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: GqlIdOnly
+	unit: String
+	created: String
+	updated: String
+	kit: GqlIdOnly
+}
+
+scalar DesignShallowList
+
+input DevBackboneBatchInput {
+	path: String!
+}
+
+input DraftBatchCommandInput @oneOf {
+	finalizeDraft: MessageOnlyInput
+	abortDraft: ConfirmOnlyInput
+	undoDraft: CountInput
+	redoDraft: CountInput
+	startTransaction: ConfirmOnlyInput
+	transaction: TransactionBatchInput
+}
+
+input DraftBatchInput {
+	draftId: String
+	commands: [DraftBatchCommandInput!]!
+}
+
+input DragPiecesBatchInput {
+	pieceIds: [String!]!
+	du: Float!
+	dv: Float!
+}
+
+input ExpandDesignBatchInput {
+	nestedDesignId: String!
+}
+
+type GqlCoordinate3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type GqlIdOnly {
+	id: String!
+}
+
+type GqlPlaneObject {
+	origin: GqlPoint3!
+	xAxis: GqlVector3!
+	yAxis: GqlVector3!
+}
+
+type GqlPoint3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type GqlPoseObject {
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+}
+
+type GqlVector3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type IncludedDesignObject {
+	id: String!
+	designId: String!
+	connectionKind: String!
+	center: GqlCoordinate3
+	plane: GqlPlaneObject
+	externalConnections: ConnectionFullList!
+}
+
+type KitColoredConnectorObject {
+	typeId: GqlIdOnly!
+	connectorId: GqlIdOnly!
+	color: String!
+}
+
+scalar KitEvent
+
+scalar KitFullSnapshot
+
+type KitMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
+}
+
+input KitReadScopeAlternativeInput {
+	alternativeId: String!
+}
+
+input KitReadScopeCheckpointInput {
+	checkpointId: String!
+}
+
+input KitReadScopeDraftInput {
+	sessionId: String!
+	draftId: String!
+}
+
+"""
+GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
+"""
+input KitReadScopeInput @oneOf {
+	theKit: ConfirmOnlyInput
+	checkpoint: KitReadScopeCheckpointInput
+	alternative: KitReadScopeAlternativeInput
+	draft: KitReadScopeDraftInput
+	transaction: KitReadScopeTransactionInput
+}
+
+input KitReadScopeTransactionInput {
+	sessionId: String!
+	draftId: String!
+	transactionId: String!
+}
+
+type KitStore {
+	name: String!
+	"""
+	­ƒîÉ Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
+	"""
+	designByDtoId(id: String!): Design
+	"""
+	­ƒîÉ Resolves a kit [`crate::typ::TypeStore`] by persisted DTO id.
+	"""
+	typeByDtoId(id: String!): Type
+	description: String
+	"""
+	­ƒîÉ Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	typeIds: [String!]!
+	"""
+	­ƒîÉ Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	designIds: [String!]!
+	types: [Type!]!
+	designs: [Design!]!
+	"""
+	­ƒîÉ Per-type metadata rows.
+	"""
+	typesMetadata: [TypeMetadataObject!]!
+	"""
+	­ƒîÉ Per-design metadata rows.
+	"""
+	designsMetadata: [DesignMetadataObject!]!
+	"""
+	­ƒîÉ Colored connector index rows.
+	"""
+	coloredConnectors: [KitColoredConnectorObject!]!
+	"""
+	­ƒîÉ Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
+	"""
+	fullDto: KitFullSnapshot!
+	"""
+	`the_kit` line DTO (committed main line).
+	"""
+	theKitDto: KitFullSnapshot!
+	materializeAt(checkpointId: String): KitFullSnapshot!
+	"""
+	­ƒîÉ Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
+	"""
+	kitMetadata: KitMetadataObject!
+	"""
+	­ƒîÉ Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
+	"""
+	designsShallow: DesignShallowList!
+	"""
+	­ƒîÉ Shallow type rows (same as [`KitGraph::get_types_json`]).
+	"""
+	typesShallow: TypeShallowList!
+	"""
+	­ƒîÉ Shallow author rows (same as [`KitGraph::get_authors_json`]).
+	"""
+	authorsShallow: AuthorShallowList!
+	"""
+	Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
+	"""
+	vcsState: VcsStateGql!
+}
+
+input KitStoreBatchCommandInput @oneOf {
+	session: SessionBatchInput
+	checkpoint: CheckpointBatchInput
+	alternative: AlternativeBatchInput
+	backbone: BackboneBatchInput
+}
+
+input KitStoreBatchInput {
+	clientMutationId: String
+	commands: [KitStoreBatchCommandInput!]!
+}
+
+type KitStoreBatchPayload {
+	clientMutationId: String
+	results: [KitStoreBatchResult!]!
+}
+
+type KitStoreBatchResult {
+	kind: KitStoreBatchResultKind!
+	ok: Boolean
+	count: Int
+	sessionId: String
+	draftId: String
+	transactionId: String
+	checkpointId: String
+	alternativeId: String
+	backbone: BackboneBatchStatus
+	conflicts: [ConflictBatchRecord!]
+	"""
+	­ƒº¥ Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+	"""
+	changeKind: String
+	"""
+	­ƒº¥ Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
+	"""
+	inverse: [ChangeKitCommand!]
+}
+
+enum KitStoreBatchResultKind {
+	CHANGE_KIT_COMMANDS
+	"""
+	­ƒº¥ Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
+	"""
+	CHANGE_KIT_WITH_INVERSE
+	CLUSTER_PIECES
+	DRAG_PIECES
+	MOVE_PIECES
+	FIX_PIECES
+	FLATTEN_DESIGN
+	EXPAND_DESIGN
+	DELETE_CONNECTION
+	CHANGE_PIECE_TYPE
+	CREATE_HANGING_PIECES
+	CREATE_CONNECTED_PIECE
+	CREATE_FIXED_PIECE
+	NEW_SESSION
+	END_SESSION
+	NEW_DRAFT
+	START_TRANSACTION
+	FINALIZE_DRAFT
+	ABORT_DRAFT
+	UNDO_DRAFT
+	REDO_DRAFT
+	FINALIZE_TRANSACTION
+	ABORT_TRANSACTION
+	UNDO_TRANSACTION
+	REDO_TRANSACTION
+	MARK_RELEASE
+	SET_ACTIVE_CHECKPOINT
+	NEW_ALTERNATIVE
+	UNIFY_ALTERNATIVE
+	ATTACH_BACKBONE
+	DETACH_BACKBONE
+	LIST_CONFLICTS
+	RESOLVE_CONFLICT
+	BACKBONE_STATUS
+	SYNC_NOW
+}
+
+type KitStoreMutation {
+	"""
+	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
+	"""
+	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
+}
+
+input LocalBackboneBatchInput {
+	folder: String!
+}
+
+input MessageOnlyInput {
+	message: String!
+}
+
+input MovePiecesBatchInput {
+	pieceIds: [String!]!
+	gap: Float!
+	shift: Float!
+	rise: Float!
+}
+
+type Mutation {
+	"""
+	Control-plane kit mutations (batched commands, VCS, design canvas).
+	"""
+	kitStore: KitStoreMutation!
+}
+
+type Piece {
+	id: String!
+	name: String
+	description: String
+	flatPlane: GqlPlaneObject!
+	flatCenter: GqlCoordinate3!
+	flatPose: GqlPoseObject!
+	scale: Float
+	"""
+	Strong ref to the resolved type for this piece (in-memory, not a lookup by id).
+	"""
+	refType: Type
+	"""
+	Parent connection when the piece is linked through a connection.
+	"""
+	parentConnection: Connection
+}
+
+scalar PieceFullList
+
+input PieceIdsBatchInput {
+	pieceIds: [String!]!
+}
+
+type PiecePlacementRowObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+	fixedPieceId: String!
+	parentPieceId: String
+	depth: Int!
+	path: [String!]!
+}
+
+input PlaneInputBatch {
+	origin: PointInputBatch!
+	xAxis: VectorInputBatch!
+	yAxis: VectorInputBatch!
+}
+
+input PointInputBatch {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Query {
+	"""
+	­ƒîÉ **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
+	"""
+	kit(scope: KitReadScopeInput!): KitStore!
+}
+
+input RemoteBackboneBatchInput {
+	url: String!
+	sessionId: String!
+}
+
+type ReplaceableCatalog {
+	"""
+	­ƒîÉ
+	"""
+	typeIds: [String!]!
+	"""
+	­ƒîÉ
+	"""
+	designIds: [String!]!
+}
+
+type Representation {
+	id: String!
+	url: String!
+	description: String
+}
+
+input ResolveConflictBatchInput {
+	conflictId: String!
+	strategy: ConflictResolutionBatchInput!
+}
+
+input SessionBatchCommandInput @oneOf {
+	createSession: ConfirmOnlyInput
+	endSession: ConfirmOnlyInput
+	createDraft: CreateDraftBatchInput
+	draft: DraftBatchInput
+}
+
+input SessionBatchInput {
+	sessionId: String
+	commands: [SessionBatchCommandInput!]!
+}
+
+type Subscription {
+	"""
+	Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
+	"""
+	eventStream: KitEvent!
+}
+
+input TransactionBatchCommandInput @oneOf {
+	changeKitCommands: ChangeKitCommandsBatchInput
+	"""
+	­ƒº¥ Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
+	"""
+	changeKitWithInverse: ChangeKitCommandsBatchInput
+	"""
+	­ƒº¥ Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
+	"""
+	design: DesignBatchInput
+	finalizeTransaction: ConfirmOnlyInput
+	abortTransaction: ConfirmOnlyInput
+	undoTransaction: CountInput
+	redoTransaction: CountInput
+}
+
+input TransactionBatchInput {
+	transactionId: String
+	commands: [TransactionBatchCommandInput!]!
+}
+
+type Type {
+	id: String!
+	name: String!
+	description: String
+	connectors: [Connector!]!
+	representations: [Representation!]!
+	"""
+	Best matching representation for tag selection.
+	"""
+	bestRepresentation(tagIds: [String!]!): Representation
+}
+
+type TypeMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	typeVirtual: Boolean
+	unit: String
+	location: GqlIdOnly
+	created: String
+	updated: String
+}
+
+scalar TypeShallowList
+
+type VcsAlternativeGql {
+	id: String!
+	name: String!
+	root: String!
+	checkpoints: [String!]!
+}
+
+type VcsCheckpointGql {
+	id: String!
+	parent: String
+	message: String
+	time: String
+	authors: [String!]!
+	hash: String!
+	isRelease: Boolean!
+	changeCount: Int!
+}
+
+type VcsDraftGql {
+	id: String!
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
+	canUndo: Boolean!
+	canRedo: Boolean!
+}
+
+type VcsRootGql {
+	id: String!
+	name: String!
+}
+
+type VcsSessionGql {
+	id: String!
+	drafts: [VcsDraftGql!]!
+}
+
+type VcsStateGql {
+	theKitHead: String
+	root: VcsRootGql!
+	checkpoints: [VcsCheckpointGql!]!
+	alternatives: [VcsAlternativeGql!]!
+	sessions: [VcsSessionGql!]!
+	theKitLine: [String!]!
+}
+
+input VectorInputBatch {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Indicates that an Input Object is a OneOf Input Object (and thus requires exactly one of its field be provided)
+"""
+directive @oneOf on INPUT_OBJECT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+schema {
+	query: Query
+	mutation: Mutation
+	subscription: Subscription
+}

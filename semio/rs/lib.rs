@@ -146,7 +146,7 @@ pub mod kit {
                 fn emit_piece_event(&self, event: Event::Kit::Design::Piece) {
                     if let Some(d) = self.parent_design.upgrade() {
                         if let Ok(d) = d.read() {
-                            d.emit_event(Event::Kit::Design::Piece { piece_id: self.id, event });
+                            // d.emit_event();
                             return;
                         }
                     }
