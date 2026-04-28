@@ -472,7 +472,7 @@ type FileShallowDto {
 	url: String!
 	mime: String
 	size: Int
-	hash: String
+	hash: String!
 	description: String
 	created: String
 	updated: String
@@ -786,24 +786,6 @@ type PieceShallowDto {
 	attributes: [AttributeShallowDto!]!
 }
 
-type Piece {
-	id: String!
-	name: String
-	description: String
-	container: Design!
-	metadata: PieceMetadataDto!
-	shallow: PieceShallowDto!
-	full: PieceOutput!
-	flatPlane: Plane!
-	flatCenter: Coordinate!
-	flatPose: PoseOutput!
-	scale: Float
-	refType: Type
-	parentConnection: Connection
-	parentPiece: Piece
-	depth: Int!
-	path: [Piece!]!
-}
 
 type Plane {
 	origin: Point!
@@ -1041,20 +1023,11 @@ type TypeOutput {
 
 
 
-
-
-
-"""
-Directs the executor to include this field or fragment only when the `if` argument is true.
-"""
-directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
-
 directive @oneOf on INPUT_OBJECT
-directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
 interface Entity {
 	id: ID!
-	hash: String
+	hash: String!
 }
 
 input VectorInput {
@@ -1071,7 +1044,8 @@ type Vector {
 
 type Type implements Entity {
 	id: ID!
-	hash: String
+	hash: String!
+	container: Kit!
 	name: String!
 	description: String
 	container: Kit!
@@ -1080,9 +1054,28 @@ type Type implements Entity {
 	bestRepresentation(tagIds: [ID!]!): Representation
 }
 
+union Blueprint = Type | Design
+
+type Piece implements Entity {
+	id: String!
+	hash: String!
+	container: Blueprint!
+	name: String
+	description: String
+	pose: Pose
+	flatPose: Pose!
+	scale: Float
+	blueprint: Blueprint!
+	replaceableBlueprint:[Blueprint]!
+	parentConnection: Connection
+	parentPiece: Piece
+	depth: Int!
+	path: [Piece!]!
+}
+
 interface Operation implements Entity {
 	id: ID!
-	hash: String
+	hash: String!
 	diff: Diff!
 }
 
@@ -1090,7 +1083,7 @@ union ChangeContainer = Transaction | Draft | Checkpoint
 
 type Change implements Entity {
 	id: ID!
-	hash: String
+	hash: String!
 	container: ChangeContainer!
 	forwards: [Operation!]!
 	backwards: [Operation!]!
@@ -1098,20 +1091,19 @@ type Change implements Entity {
 
 type Transaction {
 	id: ID!
-	hash: String
+	hash: String!
 	changes: [Change!]!
 }
 
 type Draft {
 	id: ID!
-	hash: String
-	
+	hash: String!
 	changes: [Change!]!
 }
 
 type Kit{
 	id: ID!
-	hash: String
+	hash: String!
 	container: Graph
 	checkpoint: Checkpoint
 	draft: Draft
@@ -1128,7 +1120,7 @@ type Kit{
 
 type Checkpoint {
 	id: ID
-	hash: String
+	hash: String!
 	timestamp: Timestamp
 	authors: [Author!]!
 	parentCheckpoint: Checkpoint
@@ -1138,7 +1130,7 @@ type Checkpoint {
 
 type Alternative {
 	id: ID!
-	hash: String
+	hash: String!
 	container: Graph
 	name: String!
 	start: Checkpoint!
@@ -1148,9 +1140,9 @@ type Alternative {
 	transaction: Transaction
 }
 
-type Graph  {
+type Graph {
 	id:ID!
-	hash: String
+	hash: String!
 	container: Session
 	theKit: Kit
 	alternative(id: ID!): Alternative
@@ -1184,11 +1176,29 @@ interface Event {
   timestamp: Timestamp!
 }
 
+enum ResponseStatus {
+	SUCCESS
+	PARTIAL
+	FAILED
+}
+
+enum Severity {
+	INFO
+	WARNING
+	ERROR
+}
+
+type Message {
+	severity: Severity!
+	text: String!
+}
+
 interface Response implements Event {
 	id: ID!
 	timestamp: Timestamp!
 	requestId: ID!
-	errors: 
+	status: ResponseStatus!
+	messages: [Message!]!
 }
 
 interface ChangedKit implements KitEvent {

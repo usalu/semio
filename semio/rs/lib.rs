@@ -6,7 +6,7 @@ pub mod read {
 
     use serde::{Deserialize, Serialize};
 
-    use crate::attribute::{AttributeFull, AttributeRef, AttributeMetadata, AttributeShallow};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow};
     use crate::benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow};
     use crate::concept::{ConceptFull, ConceptRef, ConceptMetadata, ConceptShallow};
@@ -160,7 +160,7 @@ pub mod read {
             commands: Vec<ReadPropCommand>,
         },
         ReadKitAttributeCommands {
-            id: AttributeRef,
+            id: Id,
             commands: Vec<ReadAttributeCommand>,
         },
     }
@@ -210,8 +210,8 @@ pub mod read {
         ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallow> },
         ReadKitPropsFullCommand { props: Vec<PropFull> },
         ReadKitPropsShallowCommand { props: Vec<PropShallow> },
-        ReadKitAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadKitAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadKitAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
         ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
         ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -306,7 +306,7 @@ pub mod read {
             commands: Vec<ReadPropCommand>,
         },
         ReadTypeAttributeCommands {
-            id: AttributeRef,
+            id: Id,
             commands: Vec<ReadAttributeCommand>,
         },
     }
@@ -343,8 +343,8 @@ pub mod read {
         ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallow> },
         ReadTypePropsFullCommand { props: Vec<PropFull> },
         ReadTypePropsShallowCommand { props: Vec<PropShallow> },
-        ReadTypeAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadTypeAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadTypePortsFullCommand { ports: Vec<PortFull> },
         ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFull> },
         ReadTypeBestRepresentationCommand { representation: Option<RepresentationFull> },
@@ -453,7 +453,7 @@ pub mod read {
             commands: Vec<ReadPropCommand>,
         },
         ReadDesignAttributeCommands {
-            id: AttributeRef,
+            id: Id,
             commands: Vec<ReadAttributeCommand>,
         },
         ReadDesignStatCommands {
@@ -562,10 +562,10 @@ pub mod read {
             props: Vec<PropShallow>,
         },
         ReadDesignAttributesFullCommand {
-            attributes: Vec<AttributeFull>,
+            attributes: Vec<AttributeStore>,
         },
         ReadDesignAttributesShallowCommand {
-            attributes: Vec<AttributeShallow>,
+            attributes: Vec<AttributeStore>,
         },
         ReadDesignStatsFullCommand {
             stats: Vec<StatFull>,
@@ -668,7 +668,7 @@ pub mod read {
         ReadPieceAlternativeTypesCommand,
         ReadPieceAlternativeDesignsCommand,
         ReadPiecePropCommands { id: PropRef, commands: Vec<ReadPropCommand> },
-        ReadPieceAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadPieceAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -691,8 +691,8 @@ pub mod read {
         ReadPieceDesignCommand { design: Option<DesignRef> },
         ReadPiecePropsFullCommand { props: Vec<PropFull> },
         ReadPiecePropsShallowCommand { props: Vec<PropShallow> },
-        ReadPieceAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadPieceAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadPieceFlatPlaneCommand { flat_plane: Plane },
         ReadPieceFlatCenterCommand { flat_center: Coordinate },
         ReadPieceFlatPoseCommand { flat_pose: PoseFull },
@@ -735,7 +735,7 @@ pub mod read {
         ReadConnectionAttributesShallowCommand,
         ReadConnectionChildPlaneMatrixCommand,
         ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceRef },
-        ReadConnectionAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadConnectionAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
         ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
         ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
     }
@@ -760,8 +760,8 @@ pub mod read {
         ReadConnectionUCommand { u: Option<f64> },
         ReadConnectionVCommand { v: Option<f64> },
         ReadConnectionDescriptionCommand { description: Option<String> },
-        ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadConnectionAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
         ReadConnectionFlatSidesForChildCommand { connected: SideFull, connecting: SideFull },
         ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
@@ -816,7 +816,7 @@ pub mod read {
         ReadPortAttributesFullCommand,
         ReadPortAttributesShallowCommand,
         ReadPortQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
-        ReadPortAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadPortAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -837,8 +837,8 @@ pub mod read {
         ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortRef> },
         ReadPortQualitiesFullCommand { qualities: Vec<QualityFull> },
         ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallow> },
-        ReadPortAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadPortAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadPortAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -859,7 +859,7 @@ pub mod read {
         ReadConnectorAttributesFullCommand,
         ReadConnectorAttributesShallowCommand,
         ReadConnectorQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
-        ReadConnectorAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadConnectorAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -874,8 +874,8 @@ pub mod read {
         ReadConnectorPortIdCommand { port: Option<PortRef> },
         ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFull> },
         ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallow> },
-        ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadConnectorAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -899,7 +899,7 @@ pub mod read {
         ReadRepresentationAttributesShallowCommand,
         ReadRepresentationTagCommands { id: TagRef, commands: Vec<ReadTagCommand> },
         ReadRepresentationQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
-        ReadRepresentationAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadRepresentationAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -916,8 +916,8 @@ pub mod read {
         ReadRepresentationTagsShallowCommand { tags: Vec<TagShallow> },
         ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFull> },
         ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallow> },
-        ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
         ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
@@ -939,7 +939,7 @@ pub mod read {
         ReadFamilyAttributesFullCommand,
         ReadFamilyAttributesShallowCommand,
         ReadFamilyPortCommands { id: PortRef, commands: Vec<ReadPortCommand> },
-        ReadFamilyAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadFamilyAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -954,8 +954,8 @@ pub mod read {
         ReadFamilyIconCommand { icon: Option<String> },
         ReadFamilyPortsFullCommand { ports: Vec<PortFull> },
         ReadFamilyPortsShallowCommand { ports: Vec<PortShallow> },
-        ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadFamilyAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
         ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -1029,7 +1029,7 @@ pub mod read {
         ReadLocationAltitudeCommand,
         ReadLocationAttributesFullCommand,
         ReadLocationAttributesShallowCommand,
-        ReadLocationAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
+        ReadLocationAttributeCommands { id: Id, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1042,8 +1042,8 @@ pub mod read {
         ReadLocationLongitudeCommand { longitude: f64 },
         ReadLocationLatitudeCommand { latitude: f64 },
         ReadLocationAltitudeCommand { altitude: Option<f64> },
-        ReadLocationAttributesFullCommand { attributes: Vec<AttributeFull> },
-        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadLocationAttributesFullCommand { attributes: Vec<AttributeStore> },
+        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeStore> },
         ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
@@ -1287,10 +1287,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadAttributeCommandOutput {
-        ReadAttributeFullCommand { attribute: AttributeFull },
-        ReadAttributeShallowCommand { attribute: AttributeShallow },
-        ReadAttributeMetadataCommand { metadata: AttributeMetadata },
-        ReadAttributeIdCommand { id: AttributeRef },
+        ReadAttributeFullCommand { attribute: AttributeStore },
+        ReadAttributeShallowCommand { attribute: AttributeStore },
+        ReadAttributeMetadataCommand { metadata: AttributeStore },
+        ReadAttributeIdCommand { id: Id },
         ReadAttributeKeyCommand { key: String },
         ReadAttributeValueCommand { value: String },
         ReadAttributeDefinitionCommand { definition: Option<String> },
@@ -1323,8 +1323,6 @@ pub mod read {
         ReadStatDescriptionCommand { description: Option<String> },
     }
 
-    use crate::attribute::AttributeStore;
-    use crate::attribute::AttributeStoreRef;
     use crate::tag::TagStore;
     use crate::tag::TagStoreRef;
     use crate::typ::TypeStore;
@@ -1423,10 +1421,10 @@ pub mod read {
     impl ReadAttributeCommand {
         pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
             Ok(match self {
-                ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full() },
-                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow() },
-                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata() },
-                ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_ref() },
+                ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.clone_wire() },
+                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.clone_wire() },
+                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.clone_wire() },
+                ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.id.clone() },
                 ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
                 ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
                 ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
@@ -1572,10 +1570,10 @@ pub mod read {
                 ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
                 ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
                 ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
-                ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
-                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
-                    let a = l.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = l.attributes.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute_ref(a)?);
@@ -1634,8 +1632,8 @@ pub mod read {
                 ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
                 ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
                 ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full()).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.clone_wire()).collect() },
                 ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
                     let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1645,7 +1643,7 @@ pub mod read {
                     ReadFamilyCommandOutput::ReadFamilyPortCommands { results }
                 }
                 ReadFamilyCommand::ReadFamilyAttributeCommands { id, commands } => {
-                    let a = f.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = f.attributes.iter().find(|a| a.id == *id).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute(a)?);
@@ -1692,9 +1690,9 @@ pub mod read {
                 ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
                 ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
                 ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
-                ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadConnectionCommand::ReadConnectionAttributesShallowCommand => {
-                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() }
+                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
                 }
                 ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
                 ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
@@ -1702,7 +1700,7 @@ pub mod read {
                     ReadConnectionCommandOutput::ReadConnectionFlatSidesForChildCommand { connected: a, connecting: b }
                 }
                 ReadConnectionCommand::ReadConnectionAttributeCommands { id, commands } => {
-                    let a = c.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = c.attributes.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for cmd in commands {
                         results.push(cmd.execute_ref(a)?);
@@ -1748,8 +1746,8 @@ pub mod read {
                 }
                 ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
                 ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
-                ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full()).collect() },
-                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow()).collect() },
+                ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.clone_wire()).collect() },
                 ReadPortCommand::ReadPortQualityCommands { id, commands } => {
                     let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1759,7 +1757,7 @@ pub mod read {
                     ReadPortCommandOutput::ReadPortQualityCommands { results }
                 }
                 ReadPortCommand::ReadPortAttributeCommands { id, commands } => {
-                    let a = p.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = p.attributes.iter().find(|a| a.id == *id).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute(a)?);
@@ -1783,8 +1781,8 @@ pub mod read {
                 ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata().port },
                 ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
                 ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full()).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.clone_wire()).collect() },
                 ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
                     let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1794,7 +1792,7 @@ pub mod read {
                     ReadConnectorCommandOutput::ReadConnectorQualityCommands { results }
                 }
                 ReadConnectorCommand::ReadConnectorAttributeCommands { id, commands } => {
-                    let a = c.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = c.attributes.iter().find(|a| a.id == *id).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for cmd in commands {
                         results.push(cmd.execute(a)?);
@@ -1824,8 +1822,8 @@ pub mod read {
                 ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => {
                     ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() }
                 }
-                ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full()).collect() },
-                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.clone_wire()).collect() },
                 ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
                     let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1843,7 +1841,7 @@ pub mod read {
                     ReadRepresentationCommandOutput::ReadRepresentationQualityCommands { results }
                 }
                 ReadRepresentationCommand::ReadRepresentationAttributeCommands { id, commands } => {
-                    let a = r.attributes.iter().find(|a| a.id == id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = r.attributes.iter().find(|a| a.id == *id).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute(a)?);
@@ -1875,8 +1873,8 @@ pub mod read {
                 ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata().design },
                 ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
                 ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
-                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
                 ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
                 ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_full_dto() },
@@ -1928,7 +1926,7 @@ pub mod read {
                     ReadPieceCommandOutput::ReadPiecePropCommands { results }
                 }
                 ReadPieceCommand::ReadPieceAttributeCommands { id, commands } => {
-                    let a = o.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = o.attributes.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute_ref(a)?);
@@ -1972,8 +1970,8 @@ pub mod read {
                 ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
                 ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
-                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadTypeCommand::ReadTypePortsFullCommand => ReadTypeCommandOutput::ReadTypePortsFullCommand { ports: type_all_ports(&*r) },
                 ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand { connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full())) },
                 ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand { representation: r.best_representation_for_tag_ids(&tag_ids) },
@@ -2050,7 +2048,7 @@ pub mod read {
                     ReadTypeCommandOutput::ReadTypePropCommands { results }
                 }
                 ReadTypeCommand::ReadTypeAttributeCommands { id, commands } => {
-                    let a = r.attributes.iter().find(|a| a.read().map(|o| o.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = r.attributes.iter().find(|a| a.read().map(|o| o.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute_ref(a)?);
@@ -2272,8 +2270,8 @@ pub mod read {
                 ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
                 ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
-                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full())).collect() },
                 ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect() },
                 ReadDesignCommand::ReadDesignFlattenMapCommand => {
@@ -2378,7 +2376,7 @@ pub mod read {
                     ReadDesignCommandOutput::ReadDesignPropCommands { results }
                 }
                 ReadDesignCommand::ReadDesignAttributeCommands { id, commands } => {
-                    let a = o.attributes.iter().find(|a| a.read().map(|x| x.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = o.attributes.iter().find(|a| a.read().map(|x| x.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute_ref(a)?);
@@ -2454,8 +2452,8 @@ pub mod read {
                 ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
                 ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
-                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
                 ReadKitCommand::ReadKitTypeCommands { id, commands } => {
                     let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -2553,7 +2551,7 @@ pub mod read {
                     ReadKitCommandOutput::ReadKitPropCommands { results }
                 }
                 ReadKitCommand::ReadKitAttributeCommands { id, commands } => {
-                    let a = kit_find_attr(g, &id.id).ok_or_else(|| nf("Attribute", &id.id))?;
+                    let a = kit_find_attr(g, id).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute_ref(&a)?);
@@ -2571,10 +2569,8 @@ pub mod read {
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    use crate::attribute::AttributeFull;
-    use crate::attribute::AttributeRef;
-    use crate::attribute::AttributeStore;
-    use crate::attribute::AttributeStoreRef;
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
+    use crate::id::Id;
     use crate::author::AuthorFull;
     use crate::author::AuthorRef;
     use crate::author::AuthorStore;
@@ -2607,7 +2603,6 @@ pub mod change_command {
     use crate::group::GroupFull;
     use crate::group::GroupRef;
     use crate::group::GroupStore;
-    use crate::id::Id;
     use crate::kit_change::KitChangeKind;
     use crate::kit_diff::KitDiff;
     use crate::kit_graph::KitFull;
@@ -2798,10 +2793,10 @@ pub mod change_command {
             prop_id: PropRef,
         },
         AddKitAttribute {
-            attribute: AttributeFull,
+            attribute: AttributeStore,
         },
         RemoveKitAttribute {
-            id: AttributeRef,
+            id: Id,
         },
         ChangeFileCommands {
             file_id: FileRef,
@@ -3063,10 +3058,10 @@ pub mod change_command {
             prop_id: PropRef,
         },
         AddTypeAttribute {
-            attribute: AttributeFull,
+            attribute: AttributeStore,
         },
         RemoveTypeAttribute {
-            id: AttributeRef,
+            id: Id,
         },
     }
 
@@ -3079,8 +3074,8 @@ pub mod change_command {
         Icon { icon: Option<String> },
         CompatiblePorts { ports: Vec<PortRef> },
         CompatibleFamilies { families: Vec<crate::family::FamilyRef> },
-        AddPortAttribute { attribute: AttributeFull },
-        RemovePortAttribute { id: AttributeRef },
+        AddPortAttribute { attribute: AttributeStore },
+        RemovePortAttribute { id: Id },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3091,8 +3086,8 @@ pub mod change_command {
         Port { port: Option<PortRef> },
         AddConnectorQuality { quality: QualityFull },
         RemoveConnectorQuality { quality_id: QualityRef },
-        AddAttribute { attribute: AttributeFull },
-        RemoveAttribute { id: AttributeRef },
+        AddAttribute { attribute: AttributeStore },
+        RemoveAttribute { id: Id },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3105,8 +3100,8 @@ pub mod change_command {
         RemoveRepresentationTag { tag_id: TagRef },
         AddQuality { quality: QualityFull },
         RemoveQuality { quality_id: QualityRef },
-        AddAttribute { attribute: AttributeFull },
-        RemoveAttribute { id: AttributeRef },
+        AddAttribute { attribute: AttributeStore },
+        RemoveAttribute { id: Id },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3139,9 +3134,9 @@ pub mod change_command {
         AddPieceProp { piece_id: PieceRef, prop: PropFull },
         RemovePieceProp { piece_id: PieceRef, prop_id: PropRef },
         ChangePiecePropCommands { piece_id: PieceRef, prop_id: PropRef, commands: Vec<ChangePropCommand> },
-        AddPieceAttribute { piece_id: PieceRef, attribute: AttributeFull },
-        RemovePieceAttribute { piece_id: PieceRef, id: AttributeRef },
-        ChangePieceAttributeCommands { piece_id: PieceRef, id: AttributeRef, commands: Vec<ChangeAttributeCommand> },
+        AddPieceAttribute { piece_id: PieceRef, attribute: AttributeStore },
+        RemovePieceAttribute { piece_id: PieceRef, id: Id },
+        ChangePieceAttributeCommands { piece_id: PieceRef, id: Id, commands: Vec<ChangeAttributeCommand> },
         FixPiece { piece_id: PieceRef },
         ChangePieceCommands { piece_id: PieceRef, commands: Vec<ChangePieceCommand> },
         AddConnection { connection: ConnectionFull },
@@ -3157,8 +3152,8 @@ pub mod change_command {
         SetConnectionDescription { connection_id: ConnectionRef, description: Option<String> },
         ReplaceConnectionAttachedSide { connection_id: ConnectionRef, side: SideMetadata },
         ReplaceConnectionConnectingSide { connection_id: ConnectionRef, side: SideMetadata },
-        AddConnectionAttribute { connection_id: ConnectionRef, attribute: AttributeFull },
-        RemoveConnectionAttribute { connection_id: ConnectionRef, id: AttributeRef },
+        AddConnectionAttribute { connection_id: ConnectionRef, attribute: AttributeStore },
+        RemoveConnectionAttribute { connection_id: ConnectionRef, id: Id },
         ChangeConnectionCommands { connection_id: ConnectionRef, commands: Vec<ChangeConnectionCommand> },
         AddLayer { layer: LayerFull },
         RemoveLayer { layer_id: LayerRef },
@@ -3179,8 +3174,8 @@ pub mod change_command {
         RemoveDesignQuality { quality_id: QualityRef },
         AddDesignProp { prop: PropFull },
         RemoveDesignProp { prop_id: PropRef },
-        AddDesignAttribute { attribute: AttributeFull },
-        RemoveDesignAttribute { id: AttributeRef },
+        AddDesignAttribute { attribute: AttributeStore },
+        RemoveDesignAttribute { id: Id },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3227,8 +3222,8 @@ pub mod change_command {
         Description { value: Option<String> },
         ReplaceConnected { side: SideMetadata },
         ReplaceConnecting { side: SideMetadata },
-        AddConnectionAttribute { attribute: AttributeFull },
-        RemoveConnectionAttribute { id: AttributeRef },
+        AddConnectionAttribute { attribute: AttributeStore },
+        RemoveConnectionAttribute { id: Id },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3248,9 +3243,9 @@ pub mod change_command {
         AddProp { prop: PropFull },
         RemoveProp { prop_id: PropRef },
         ChangePropCommands { prop_id: PropRef, commands: Vec<ChangePropCommand> },
-        AddAttribute { attribute: AttributeFull },
-        RemoveAttribute { id: AttributeRef },
-        ChangeAttributeCommands { id: AttributeRef, commands: Vec<ChangeAttributeCommand> },
+        AddAttribute { attribute: AttributeStore },
+        RemoveAttribute { id: Id },
+        ChangeAttributeCommands { id: Id, commands: Vec<ChangeAttributeCommand> },
         Fix,
     }
 
@@ -3968,22 +3963,22 @@ pub mod change_command {
                         if g.attributes.iter().any(|a| a.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate attribute id on kit".into()));
                         }
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_kit = Some(Arc::downgrade(kit));
                         g.attributes.push(Arc::new(RwLock::new(a)));
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveKitAttribute { id }])
                 }
                 ChangeKitCommand::RemoveKitAttribute { id } => {
-                    let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)) };
+                    let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.iter().position(|a| a.read().map(|r| r.id == id).unwrap_or(false)) };
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: id.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: id.clone() });
                     };
                     let a = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.remove(pos) };
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
                     {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.invalidate_hash();
@@ -4585,22 +4580,22 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.attributes.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id }])
                 }
                 ChangeTypeCommand::RemoveTypeAttribute { id: aid } => {
-                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid).unwrap_or(false));
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeAttribute { attribute: dto }])
@@ -5149,21 +5144,21 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id }])
                 }
                 ChangeDesignCommand::RemoveDesignAttribute { id: aid } => {
-                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid).unwrap_or(false));
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignAttribute { attribute: dto }])
@@ -5314,21 +5309,21 @@ pub mod change_command {
                 ChangePieceCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.push(Arc::new(RwLock::new(a)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangePieceCommand::RemoveAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangePieceCommand::RemoveAttribute { id }])
                 }
                 ChangePieceCommand::RemoveAttribute { id: aid } => {
-                    let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid).unwrap_or(false));
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
                     pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::AddAttribute { attribute: dto }])
@@ -5339,9 +5334,9 @@ pub mod change_command {
                         .map_err(|_| SemioError::LockPoisoned("piece"))?
                         .attributes
                         .iter()
-                        .find(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false))
+                        .find(|a| a.read().map(|r| r.id == aid).unwrap_or(false))
                         .cloned()
-                        .ok_or_else(|| SemioError::NotFound { kind: "Attribute", id: aid.id.clone() })?;
+                        .ok_or_else(|| SemioError::NotFound { kind: "Attribute", id: aid.clone() })?;
                     let mut inv: Vec<ChangeAttributeCommand> = Vec::new();
                     for c in commands {
                         inv.extend(c.apply(&a)?);
@@ -5479,24 +5474,24 @@ pub mod change_command {
                 ChangeConnectionCommand::AddConnectionAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_connection = Some(Arc::downgrade(&cref));
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         c.attributes.push(Arc::new(RwLock::new(a)));
                         c.notify_aggregate_change();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id }])
                 }
                 ChangeConnectionCommand::RemoveConnectionAttribute { id: aid } => {
-                    let pos = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let pos = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid).unwrap_or(false));
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let dto = {
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         let a = c.attributes.remove(pos);
-                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
                         c.notify_aggregate_change();
                         dto
                     };
@@ -5898,17 +5893,17 @@ pub mod change_command {
                 ChangePortCommand::AddPortAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full(attribute.clone());
+                        let mut a = AttributeStore::from_wire(attribute.clone());
                         a.parent_port = Some(Arc::downgrade(p));
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.push(a);
                         p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangePortCommand::RemovePortAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangePortCommand::RemovePortAttribute { id }])
                 }
                 ChangePortCommand::RemovePortAttribute { id: aid } => {
-                    let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.iter().position(|a| a.id == aid);
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.remove(pos);
                     let dto = a.to_full();
@@ -5984,15 +5979,15 @@ pub mod change_command {
                 ChangeConnectorCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_full(attribute.clone()));
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_wire(attribute.clone()));
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeConnectorCommand::RemoveAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeConnectorCommand::RemoveAttribute { id }])
                 }
                 ChangeConnectorCommand::RemoveAttribute { id: aid } => {
-                    let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.iter().position(|a| a.id == aid);
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.remove(pos);
                     let dto = a.to_full();
@@ -6082,15 +6077,15 @@ pub mod change_command {
                 ChangeRepresentationCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_full(attribute.clone()));
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_wire(attribute.clone()));
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id: AttributeRef { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id }])
                 }
                 ChangeRepresentationCommand::RemoveAttribute { id: aid } => {
-                    let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.iter().position(|a| a.id == aid);
                     let Some(pos) = pos else {
-                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.remove(pos);
                     let dto = a.to_full();
@@ -8007,54 +8002,63 @@ pub mod attribute {
     pub type AttributeStoreRef = std::sync::Arc<RwLock<AttributeStore>>;
     pub type AttributeStoreWeak = Weak<RwLock<AttributeStore>>;
 
-    #[derive(Debug)]
+    /// 🧾 Live attribute row plus serde wire shape (same struct; parents omitted on the wire).
+    #[derive(Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
     pub struct AttributeStore {
         pub id: Id,
         pub key: String,
         pub value: String,
         pub definition: Option<String>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_kit: Option<KitGraphWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_design: Option<DesignStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_type: Option<TypeStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_piece: Option<PieceStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_port: Option<PortStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_connection: Option<ConnectionStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_representation: Option<RepresentationStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub parent_connector: Option<ConnectorStoreWeak>,
+        #[graphql(skip)]
+        #[serde(skip)]
         pub(crate) event_bus: Weak<EventBus>,
+        #[graphql(skip)]
+        #[serde(skip)]
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct AttributeRef {
-        pub id: Id,
+    impl PartialEq for AttributeStore {
+        fn eq(&self, other: &Self) -> bool {
+            self.id == other.id && self.key == other.key && self.value == other.value && self.definition == other.definition
+        }
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AttributeMetadata {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
+    impl Eq for AttributeStore {}
+
+    impl Clone for AttributeStore {
+        fn clone(&self) -> Self {
+            Self::wire(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
+        }
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AttributeShallow {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct AttributeFull {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
+    impl Default for AttributeStore {
+        fn default() -> Self {
+            Self::empty_shell(Id::default())
+        }
     }
 
     impl AttributeStore {
@@ -8086,27 +8090,49 @@ pub mod attribute {
             EntityRef::new(EntityKind::Attribute, self.id.clone())
         }
 
-        pub(crate) fn apply_full_fields(&mut self, d: AttributeFull) {
-            self.id = d.id;
-            self.key = d.key;
-            self.value = d.value;
-            self.definition = d.definition;
+        pub(crate) fn apply_wire_fields(&mut self, d: &AttributeStore) {
+            self.id = d.id.clone();
+            self.key = d.key.clone();
+            self.value = d.value.clone();
+            self.definition = d.definition.clone();
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_shallow(d: AttributeShallow) -> Self {
+        pub(crate) fn from_wire(d: AttributeStore) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.key = d.key;
-            s.value = d.value;
-            s.definition = d.definition;
-            s.hash_cache.invalidate();
+            s.apply_wire_fields(&d);
             s
         }
 
-        pub(crate) fn from_full(d: AttributeFull) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_fields(d);
-            s
+        pub fn wire(id: Id, key: String, value: String, definition: Option<String>) -> Self {
+            Self {
+                id,
+                key,
+                value,
+                definition,
+                parent_kit: None,
+                parent_design: None,
+                parent_type: None,
+                parent_piece: None,
+                parent_port: None,
+                parent_connection: None,
+                parent_representation: None,
+                parent_connector: None,
+                event_bus: Weak::new(),
+                hash_cache: Cache::default(),
+            }
+        }
+
+        pub fn clone_wire(&self) -> AttributeStore {
+            Self::wire(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
+        }
+
+        pub fn to_full(&self) -> AttributeStore {
+            self.clone_wire()
+        }
+
+        pub fn to_shallow(&self) -> AttributeStore {
+            self.clone_wire()
         }
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
@@ -8147,7 +8173,7 @@ pub mod attribute {
             Ok(())
         }
 
-        fn invalidate_local_and_bubble(&mut self) {
+        pub(crate) fn invalidate_local_and_bubble(&mut self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
@@ -8214,24 +8240,6 @@ pub mod attribute {
                     }
                 }
             }
-        }
-
-        pub fn to_ref(&self) -> AttributeRef {
-            AttributeRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> AttributeMetadata {
-            AttributeMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), definition: self.definition.clone() }
-        }
-
-        pub fn to_shallow(&self) -> AttributeShallow {
-            let m = self.to_metadata();
-            AttributeShallow { id: m.id, key: m.key, value: m.value, definition: m.definition }
-        }
-
-        pub fn to_full(&self) -> AttributeFull {
-            let m = self.to_metadata();
-            AttributeFull { id: m.id, key: m.key, value: m.value, definition: m.definition }
         }
 
         pub fn invalidate_hash(&self) {
@@ -8450,6 +8458,10 @@ pub mod author {
         pub fn to_full(&self) -> AuthorFull {
             let m = self.to_metadata();
             AuthorFull { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
+        }
+
+        pub fn clone_wire(&self) -> AuthorShallow {
+            self.to_shallow()
         }
 
         pub fn invalidate_hash(&self) {
@@ -8866,7 +8878,7 @@ pub mod connection {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::connector::ConnectorStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
@@ -8953,7 +8965,7 @@ pub mod connection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -8980,7 +8992,7 @@ pub mod connection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     pub fn connector_anchor_ports(_c: &ConnectorStore) -> (Point, Vector) {
@@ -9202,7 +9214,7 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
 
@@ -9221,7 +9233,7 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
 
@@ -9287,7 +9299,7 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
+    use crate::attribute::AttributeStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -9319,7 +9331,7 @@ pub mod connector {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, async_graphql::SimpleObject)]
     pub struct ColorDto {
-        /// 🎨 CSS color string for connector visuals (cached; keyed by port compatibility group).
+        /// ­ƒÄ¿ CSS color string for connector visuals (cached; keyed by port compatibility group).
         pub css: String,
     }
 
@@ -9347,7 +9359,7 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
         #[serde(default)]
         pub color: ColorDto,
     }
@@ -9364,7 +9376,7 @@ pub mod connector {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
         #[serde(default)]
         pub color: ColorDto,
     }
@@ -9415,14 +9427,14 @@ pub mod connector {
         pub fn from_shallow(d: ConnectorShallow) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
         pub fn from_full(d: ConnectorFull) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
@@ -9444,7 +9456,7 @@ pub mod connector {
                 description: m.description,
                 port: m.port,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
                 color: m.color,
             }
         }
@@ -9457,7 +9469,7 @@ pub mod connector {
                 description: m.description,
                 port: m.port,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
                 color: m.color,
             }
         }
@@ -9466,7 +9478,7 @@ pub mod connector {
             self.color_cache.invalidate();
         }
 
-        /// 🎨 Resolves the cached CSS color from the connector port's kit-wide compatibility group.
+        /// ­ƒÄ¿ Resolves the cached CSS color from the connector port's kit-wide compatibility group.
         pub fn color_css_string(&self) -> String {
             self.color_cache
                 .get_or_init(|| {
@@ -9577,7 +9589,7 @@ pub mod design {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
     use crate::benchmark::BenchmarkFull;
     use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
@@ -9702,7 +9714,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub stats: Vec<StatShallow>,
     }
@@ -9748,7 +9760,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub stats: Vec<StatFull>,
     }
@@ -9812,7 +9824,7 @@ pub mod design {
                 description: cdto.description.clone(),
             });
             cw.parent_design = design_weak.clone();
-            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect();
+            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect();
         }
         if let Ok(mut s1w) = s1.write() {
             s1w.parent_connection = Some(Arc::downgrade(&conn));
@@ -10726,12 +10738,12 @@ pub mod design {
             }
         }
 
-        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeFull>, ad: &crate::diff::AttributesDiff) {
+        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeStore>, ad: &crate::diff::AttributesDiff) {
             for id in &ad.removed {
-                attrs.retain(|a| a.id != id.id);
+                attrs.retain(|a| a.id != *id);
             }
             for u in &ad.updated {
-                if let Some(a) = attrs.iter_mut().find(|a| a.id == u.id.id) {
+                if let Some(a) = attrs.iter_mut().find(|a| a.id == u.id) {
                     if let Some(k) = &u.diff.key {
                         a.key = k.clone();
                     }
@@ -11274,47 +11286,28 @@ pub mod design {
 
             if let Some(ad) = &diff.attributes {
                 for id in &ad.removed {
-                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, id.id.clone()) });
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, id.clone()) });
                 }
                 for id in &ad.removed {
-                    self.attributes.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
+                    self.attributes.retain(|a| a.read().map(|a| a.id != *id).unwrap_or(true));
                 }
                 for u in &ad.updated {
-                    if let Some(ar) = self.attributes.iter().find(|a| a.read().map(|a| a.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
+                    if let Some(ar) = self.attributes.iter().find(|a| a.read().map(|a| a.id == u.id).unwrap_or(false)) {
+                        let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("attribute"))?;
                         if let Some(k) = &u.diff.key {
-                            fd.key = k.clone();
+                            aw.key = k.clone();
                         }
                         if let Some(v) = &u.diff.value {
-                            fd.value = v.clone();
+                            aw.value = v.clone();
                         }
                         if let Some(d) = &u.diff.definition {
-                            fd.definition = d.clone();
+                            aw.definition = d.clone();
                         }
-                        let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("attribute"))?;
-                        let pk = aw.parent_kit.clone();
-                        let pd = aw.parent_design.clone();
-                        let pt = aw.parent_type.clone();
-                        let pp = aw.parent_piece.clone();
-                        let pport = aw.parent_port.clone();
-                        let pconn = aw.parent_connection.clone();
-                        let prep = aw.parent_representation.clone();
-                        let pcon = aw.parent_connector.clone();
-                        let eb = aw.event_bus.clone();
-                        *aw = AttributeStore::from_full(fd);
-                        aw.parent_kit = pk;
-                        aw.parent_design = pd;
-                        aw.parent_type = pt;
-                        aw.parent_piece = pp;
-                        aw.parent_port = pport;
-                        aw.parent_connection = pconn;
-                        aw.parent_representation = prep;
-                        aw.parent_connector = pcon;
-                        aw.event_bus = eb;
+                        aw.invalidate_local_and_bubble();
                     }
                 }
                 for adto in &ad.added {
-                    let mut a = AttributeStore::from_full(adto.clone());
+                    let mut a = AttributeStore::from_wire(adto.clone());
                     a.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
                     self.attributes.push(Arc::new(RwLock::new(a)));
@@ -11477,12 +11470,12 @@ pub mod design {
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect(),
                 groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect(),
             }
         }
@@ -11505,12 +11498,12 @@ pub mod design {
                 connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect(),
                 groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full())).collect(),
             }
         }
@@ -11632,7 +11625,7 @@ pub mod design {
             let attributes: Vec<AttributeStoreRef> = attribute_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AttributeStore::from_full(a);
+                    let mut s = AttributeStore::from_wire(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11684,7 +11677,7 @@ pub mod diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::{AttributeFull, AttributeRef};
+    use crate::attribute::AttributeStore;
     use crate::author::{AuthorFull, AuthorRef};
     use crate::benchmark::{BenchmarkFull, BenchmarkRef};
     use crate::concept::{ConceptFull, ConceptRef};
@@ -11762,7 +11755,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AttributeDiffUpdate {
-        pub id: AttributeRef,
+        pub id: Id,
         #[serde(flatten)]
         pub diff: AttributeDiff,
     }
@@ -11771,11 +11764,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct AttributesDiff {
         #[serde(default)]
-        pub removed: Vec<AttributeRef>,
+        pub removed: Vec<Id>,
         #[serde(default)]
         pub updated: Vec<AttributeDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<AttributeFull>,
+        pub added: Vec<AttributeStore>,
     }
 
     impl AttributesDiff {
@@ -11785,18 +11778,18 @@ pub mod diff {
         fn merge_updated(a: &[AttributeDiffUpdate], b: &[AttributeDiffUpdate]) -> Vec<AttributeDiffUpdate> {
             let mut m: HashMap<Id, AttributeDiffUpdate> = HashMap::new();
             for u in a {
-                m.insert(u.id.id.clone(), u.clone());
+                m.insert(u.id.clone(), u.clone());
             }
             for u in b {
-                let e = m.entry(u.id.id.clone()).or_insert_with(|| AttributeDiffUpdate { id: u.id.clone(), diff: AttributeDiff::default() });
+                let e = m.entry(u.id.clone()).or_insert_with(|| AttributeDiffUpdate { id: u.id.clone(), diff: AttributeDiff::default() });
                 e.diff = e.diff.merge(&u.diff);
             }
             m.into_values().collect()
         }
         pub fn merge(&self, b: &Self) -> Self {
             let mut removed: Vec<_> = self.removed.iter().chain(b.removed.iter()).cloned().collect();
-            removed.sort_by(|x, y| x.id.cmp(&y.id));
-            removed.dedup_by(|x, y| x.id == y.id);
+            removed.sort();
+            removed.dedup();
             Self { removed, updated: Self::merge_updated(&self.updated, &b.updated), added: [self.added.as_slice(), b.added.as_slice()].concat() }
         }
     }
@@ -13867,14 +13860,14 @@ pub mod diff {
         d
     }
 
-    fn attributes_between(before: &[AttributeFull], after: &[AttributeFull]) -> AttributesDiff {
+    fn attributes_between(before: &[AttributeStore], after: &[AttributeStore]) -> AttributesDiff {
         let mut d = AttributesDiff::default();
-        let bm: HashMap<Id, &AttributeFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &AttributeFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &AttributeStore> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &AttributeStore> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(AttributeRef { id: g.clone() });
+            d.removed.push(g.clone());
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13893,7 +13886,7 @@ pub mod diff {
                 if b.definition != a.definition {
                     df.definition = Some(a.definition.clone());
                 }
-                d.updated.push(AttributeDiffUpdate { id: AttributeRef { id: g.clone() }, diff: df });
+                d.updated.push(AttributeDiffUpdate { id: g.clone(), diff: df });
             }
         }
         d
@@ -13938,7 +13931,7 @@ pub mod diff {
         }
     }
 
-    pub fn attribute_full_delta(b: &AttributeFull, a: &AttributeFull) -> AttributeDiff {
+    pub fn attribute_full_delta(b: &AttributeStore, a: &AttributeStore) -> AttributeDiff {
         let mut d = AttributeDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -14372,7 +14365,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attribute_diff_into_full(fd: &mut AttributeFull, d: &AttributeDiff) {
+    pub fn merge_attribute_diff_into_full(fd: &mut AttributeStore, d: &AttributeDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14483,12 +14476,12 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeFull>, d: &AttributesDiff) {
+    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeStore>, d: &AttributesDiff) {
         for id in &d.removed {
-            vec.retain(|x| x.id != id.id);
+            vec.retain(|x| x.id != *id);
         }
         for u in &d.updated {
-            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            if let Some(x) = vec.iter_mut().find(|x| x.id == u.id) {
                 merge_attribute_diff_into_full(x, &u.diff);
             }
         }
@@ -14753,7 +14746,7 @@ pub mod kit_diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::AttributeRef;
+    use crate::id::Id;
     use crate::author::{AuthorFull, AuthorRef};
     use crate::concept::ConceptRef;
     use crate::design::{DesignFull, DesignRef};
@@ -14761,7 +14754,6 @@ pub mod kit_diff {
     use crate::family::FamilyRef;
     use crate::file::FileRef;
     use crate::folder::FolderRef;
-    use crate::id::Id;
     use crate::kit_graph::KitFull;
     use crate::prop::PropRef;
     use crate::quality::QualityRef;
@@ -15309,7 +15301,7 @@ pub mod kit_diff {
             let (a_at, r_at, m_at) = diff_id_vec(&before.attributes, &after.attributes, |t| &t.id);
             if !a_at.is_empty() || !r_at.is_empty() || !m_at.is_empty() {
                 let ad = AttributesDiff {
-                    removed: r_at.iter().map(|i| AttributeRef { id: i.clone() }).collect(),
+                    removed: r_at.iter().map(|i| i.clone()).collect(),
                     updated: m_at
                         .iter()
                         .filter_map(|full| {
@@ -15318,7 +15310,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::AttributeDiffUpdate { id: AttributeRef { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::AttributeDiffUpdate { id: full.id.clone(), diff: df })
                             }
                         })
                         .collect(),
@@ -15334,7 +15326,7 @@ pub mod kit_diff {
 }
 
 pub mod kit_change {
-    //#region 🔖Imports
+    //#region ­ƒöûImports
     use serde::{Deserialize, Serialize};
 
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
@@ -15344,7 +15336,7 @@ pub mod kit_change {
     use crate::typ::TypeRef;
     //#endregion
 
-    //#region 🔖KitChangeKind
+    //#region ­ƒöûKitChangeKind
     /// Semantic kind for a [`KitChange`] (VCS and UI; replaces the old `KitOperation` wrapper).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
     #[serde(rename_all = "camelCase")]
@@ -15368,8 +15360,8 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖PieceChange
-    /// 🧩 Scoped piece mutation under one design (inverse mirrors [`ChangePieceCommand::apply`] pairing).
+    //#region ­ƒöûPieceChange
+    /// ­ƒº® Scoped piece mutation under one design (inverse mirrors [`ChangePieceCommand::apply`] pairing).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceChange {
@@ -15412,8 +15404,8 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖KitDesignAtomicsBlock
-    /// 🧩 Consecutive non-piece [`ChangeDesignCommand`] rows lifted with paired inverses.
+    //#region ­ƒöûKitDesignAtomicsBlock
+    /// ­ƒº® Consecutive non-piece [`ChangeDesignCommand`] rows lifted with paired inverses.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct KitDesignAtomicsBlock {
@@ -15429,8 +15421,8 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖KitDesignChange
-    /// 🧩 Scoped design mutation tree (piece rows become [`KitDesignChangeBlock::Piece`]).
+    //#region ­ƒöûKitDesignChange
+    /// ­ƒº® Scoped design mutation tree (piece rows become [`KitDesignChangeBlock::Piece`]).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct KitDesignChange {
@@ -15505,8 +15497,8 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖TypeChange
-    /// 🧩 Scoped type mutation under one type id (wraps [`ChangeTypeCommand`] batches).
+    //#region ­ƒöûTypeChange
+    /// ­ƒº® Scoped type mutation under one type id (wraps [`ChangeTypeCommand`] batches).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeChange {
@@ -15540,8 +15532,8 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖Change
-    /// 🌳 Typed child node under [`KitChange`] (kit root is always [`KitChange`], not this enum).
+    //#region ­ƒöûChange
+    /// ­ƒî│ Typed child node under [`KitChange`] (kit root is always [`KitChange`], not this enum).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub enum Change {
         Type(TypeChange),
@@ -15584,7 +15576,7 @@ pub mod kit_change {
     }
     //#endregion
 
-    //#region 🔖KitChange
+    //#region ­ƒöûKitChange
     fn is_default_change_kind(k: &KitChangeKind) -> bool {
         *k == KitChangeKind::Inferred
     }
@@ -15604,7 +15596,7 @@ pub mod kit_change {
     }
 
     impl KitChange {
-        //#region 🔖Apply
+        //#region ­ƒöûApply
         /// Apply the forward step to a store (depth-first: kit [`Self::forward`], then [`Self::children`]).
         pub fn apply_forward(c: &KitChange, kit: &crate::kit_graph::KitGraphRef) -> crate::error::SetResult {
             ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
@@ -15623,7 +15615,7 @@ pub mod kit_change {
         }
         //#endregion
 
-        //#region 🔖Flatten
+        //#region ­ƒöûFlatten
         /// Linear forward commands equivalent to this tree (for checkpoint merge and events).
         pub fn flatten_forward_commands(&self) -> Vec<ChangeKitCommand> {
             let mut out = self.forward.clone();
@@ -15643,8 +15635,8 @@ pub mod kit_change {
         }
         //#endregion
 
-        //#region 🔖Lift
-        /// 🧮 Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
+        //#region ­ƒöûLift
+        /// ­ƒº« Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
         pub fn lift_flat(kit: &crate::kit_graph::KitGraphRef, forward: Vec<ChangeKitCommand>, kind: KitChangeKind, author: Option<String>, time: Option<String>) -> Result<Self, SemioError> {
             let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
             let twin = crate::kit_graph::KitGraph::from_full(before);
@@ -15683,7 +15675,7 @@ pub mod kit_change {
         //#endregion
     }
 
-    //#region 🔖LiftHelpers
+    //#region ­ƒöûLiftHelpers
     fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeRef) -> Result<Vec<ChangeTypeCommand>, SemioError> {
         match inv {
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] if type_id == expect_id => Ok(commands.clone()),
@@ -15823,7 +15815,7 @@ pub mod error {
 }
 
 pub mod validate {
-    //! 🧾 Field-level validation helpers returning [`crate::error::SetError`].
+    //! ­ƒº¥ Field-level validation helpers returning [`crate::error::SetError`].
 
     use crate::error::{SetError, SetResult};
 
@@ -17764,7 +17756,7 @@ pub mod location {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -17807,7 +17799,7 @@ pub mod location {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub altitude: Option<f64>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -17818,7 +17810,7 @@ pub mod location {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub altitude: Option<f64>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl LocationStore {
@@ -17840,7 +17832,7 @@ pub mod location {
                 longitude: d.longitude,
                 latitude: d.latitude,
                 altitude: d.altitude,
-                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
+                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
                 parent_kit: None,
                 event_bus: std::sync::Weak::new(),
                 hash_cache: Cache::default(),
@@ -17853,11 +17845,11 @@ pub mod location {
 
         pub fn to_shallow(&self) -> LocationShallow {
             let m = self.to_metadata();
-            LocationShallow { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() }
+            LocationShallow { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
         }
 
         pub fn to_full(&self) -> LocationFull {
-            LocationFull { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() }
+            LocationFull { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
         }
     }
 }
@@ -18123,6 +18115,18 @@ pub mod id {
         }
     }
 
+    impl PartialEq<&Id> for Id {
+        fn eq(&self, other: &&Id) -> bool {
+            self.0 == other.0
+        }
+    }
+
+    impl PartialEq<Id> for &Id {
+        fn eq(&self, other: &Id) -> bool {
+            self.0 == other.0
+        }
+    }
+
     impl From<String> for Id {
         fn from(s: String) -> Self {
             Self(s)
@@ -18367,7 +18371,7 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
     use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
@@ -18526,7 +18530,7 @@ pub mod kit_graph {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -18574,7 +18578,7 @@ pub mod kit_graph {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub ports: Vec<PortFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -20216,7 +20220,7 @@ pub mod kit_graph {
                 tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full(t)))).collect(),
                 qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect(),
                 props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
                 ports: Vec::new(),
                 families: Vec::new(),
                 locations: Vec::new(),
@@ -20294,7 +20298,7 @@ pub mod kit_graph {
                     description: fd.description,
                     icon: fd.icon,
                     ports: Vec::new(),
-                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_full(a)).collect(),
+                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_wire(a)).collect(),
                     parent_kit: None,
                     event_bus: Weak::new(),
                     hash_cache: Cache::default(),
@@ -20430,12 +20434,12 @@ pub mod kit_graph {
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
                 folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
 
@@ -20459,12 +20463,12 @@ pub mod kit_graph {
                 designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full())).collect(),
                 files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
                 folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
                 families: self.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
                 locations: self.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect(),
@@ -20514,7 +20518,7 @@ pub mod kit_graph {
             (family_by_id, port_by_id)
         }
 
-        /// 🧮 Same 32-bit string hash magnitude as sketchpad `hashString` for union-find tie-breaks.
+        /// ­ƒº« Same 32-bit string hash magnitude as sketchpad `hashString` for union-find tie-breaks.
         pub(crate) fn js_string_hash_abs(text: &str) -> u32 {
             let mut h: i32 = 0;
             for c in text.chars() {
@@ -20523,7 +20527,7 @@ pub mod kit_graph {
             if h == i32::MIN { 2_147_483_648u32 } else { h.unsigned_abs() }
         }
 
-        /// 🗺️ Union-find root for a port's compatibility component (matches sketchpad `createPortGroupMap` tie-break).
+        /// ­ƒù║´©Å Union-find root for a port's compatibility component (matches sketchpad `createPortGroupMap` tie-break).
         pub(crate) fn port_compatibility_group_root_id(kit: &KitGraph, start: &Id) -> Option<Id> {
             use std::collections::HashMap;
             let (_, port_by_id) = Self::build_family_port_index(kit);
@@ -20718,7 +20722,7 @@ pub mod kit_graph {
                 description: dto.description.clone(),
                 icon: dto.icon.clone(),
                 ports: Vec::new(),
-                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_full).collect(),
+                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_wire).collect(),
                 parent_kit: None,
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
@@ -21725,7 +21729,7 @@ pub mod piece {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::connection::ConnectionStoreWeak;
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
@@ -21745,7 +21749,7 @@ pub mod piece {
         pub designs: Vec<DesignStoreRef>,
     }
 
-    /// 📍Owned placement container for a piece's explicit plane and center.
+    /// ­ƒôìOwned placement container for a piece's explicit plane and center.
     #[derive(Debug, Default)]
     pub struct PoseStore {
         pub plane: Option<Plane>,
@@ -21800,7 +21804,7 @@ pub mod piece {
         pub center: Coordinate,
     }
 
-    /// 📐Optional pose with independently-optional plane and center for piece storage.
+    /// ­ƒôÉOptional pose with independently-optional plane and center for piece storage.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     #[serde(rename_all = "camelCase")]
     pub struct PoseDto {
@@ -21886,7 +21890,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -21916,7 +21920,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl PieceStore {
@@ -22034,7 +22038,7 @@ pub mod piece {
             self.parent_connection = None;
             self.parent_design = design_weak;
             self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect();
-            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect();
+            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect();
         }
 
         pub fn invalidate_flat_pose(&self) {
@@ -22281,12 +22285,12 @@ pub mod piece {
             path
         }
 
-        /// 🪜Hierarchy depth from root/fixed ancestor (`path().len() - 1`).
+        /// ­ƒ¬£Hierarchy depth from root/fixed ancestor (`path().len() - 1`).
         pub fn depth(&self) -> i32 {
             i32::try_from(self.path().len().saturating_sub(1)).unwrap_or(0)
         }
 
-        /// 🔁Returns connector-valid replacement kinds and designs for this piece inside its host design.
+        /// ­ƒöüReturns connector-valid replacement kinds and designs for this piece inside its host design.
         pub fn alternatives(&self) -> PieceAlternatives {
             let Some(design_ref) = self.parent_design.upgrade() else {
                 return PieceAlternatives::default();
@@ -22663,7 +22667,7 @@ pub mod piece {
                 r#type: m.r#type,
                 design: m.design,
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
 
@@ -22682,7 +22686,7 @@ pub mod piece {
                 r#type: m.r#type,
                 design: m.design,
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
     }
@@ -22698,7 +22702,7 @@ pub mod port {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
+    use crate::attribute::AttributeStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::family::{FamilyRef, FamilyStoreWeak};
     use crate::geom::{Point, Vector};
@@ -22766,7 +22770,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -22793,7 +22797,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl PortStore {
@@ -22849,7 +22853,7 @@ pub mod port {
             s.point = d.point;
             s.direction = d.direction;
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
@@ -22861,7 +22865,7 @@ pub mod port {
             s.point = d.point;
             s.direction = d.direction;
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
@@ -22888,7 +22892,7 @@ pub mod port {
                 direction: self.direction,
                 compatible_ports,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
             }
         }
 
@@ -22907,7 +22911,7 @@ pub mod port {
                 direction: self.direction,
                 compatible_ports,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
             }
         }
 
@@ -23035,7 +23039,7 @@ pub mod family {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
+    use crate::attribute::AttributeStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -23082,7 +23086,7 @@ pub mod family {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -23096,7 +23100,7 @@ pub mod family {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub ports: Vec<crate::port::PortFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl FamilyStore {
@@ -23122,7 +23126,7 @@ pub mod family {
 
         pub fn to_shallow(&self) -> FamilyShallow {
             let m = self.to_metadata();
-            FamilyShallow { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.to_shallow()).collect() }
+            FamilyShallow { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_wire()).collect() }
         }
 
         pub fn to_full(&self) -> FamilyFull {
@@ -23133,7 +23137,7 @@ pub mod family {
                 description: m.description,
                 icon: m.icon,
                 ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
-                attributes: self.attributes.iter().map(|a| a.to_full()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
             }
         }
 
@@ -23766,7 +23770,7 @@ pub mod representation {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
+    use crate::attribute::AttributeStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileRef, FileStoreWeak};
     use crate::hash::{Cache, HashWriter};
@@ -23820,7 +23824,7 @@ pub mod representation {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -23837,7 +23841,7 @@ pub mod representation {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl RepresentationStore {
@@ -23866,7 +23870,7 @@ pub mod representation {
             let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_shallow).collect();
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
@@ -23874,7 +23878,7 @@ pub mod representation {
             let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_full).collect();
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
             s
         }
 
@@ -23896,7 +23900,7 @@ pub mod representation {
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_shallow).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
             }
         }
 
@@ -23909,7 +23913,7 @@ pub mod representation {
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_full).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
             }
         }
 
@@ -24560,7 +24564,7 @@ pub mod typ {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
     use crate::connector::{ConnectorFull, ConnectorShallow, ConnectorStore, ConnectorStoreRef};
@@ -24675,7 +24679,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallow>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
@@ -24718,7 +24722,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFull>,
+        pub attributes: Vec<AttributeStore>,
     }
 
     impl TypeStore {
@@ -25104,7 +25108,7 @@ pub mod typ {
                 tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full(t)))).collect(),
                 qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect(),
                 props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
                 created: created.clone(),
                 updated: updated.clone(),
                 parent_kit: Arc::downgrade(kit),
@@ -25214,12 +25218,12 @@ pub mod typ {
                 families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
 
@@ -25240,12 +25244,12 @@ pub mod typ {
                 families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
                 connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
                 concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
             }
         }
     }
@@ -25443,7 +25447,7 @@ pub mod io {
 
         use rusqlite::{params, Connection as SqlConnection, OptionalExtension, Transaction};
 
-        use crate::attribute::AttributeFull;
+        use crate::attribute::AttributeStore;
         use crate::author::AuthorFull;
         use crate::benchmark::BenchmarkFull;
         use crate::concept::ConceptFull;
@@ -25857,7 +25861,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeStore, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
@@ -26253,13 +26257,13 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeFull>> {
+        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeStore>> {
             let sql = format!("SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AttributeFull { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, definition: row.get(3)? });
+                values.push(AttributeStore::wire(Id::from(row.get::<_, String>(0)?), row.get(1)?, row.get(2)?, row.get(3)?));
             }
             Ok(values)
         }
@@ -27039,8 +27043,8 @@ pub mod io {
     }
 }
 
-//#region 🔖KitGraphql
-/// 🌐 `async-graphql` kit control plane: queries traverse live [`Arc<RwLock<_>>`] stores;
+//#region ­ƒöûKitGraphql
+/// ­ƒîÉ `async-graphql` kit control plane: queries traverse live [`Arc<RwLock<_>>`] stores;
 pub mod kit_graphql {
     use std::sync::{Arc, RwLock};
 
@@ -27068,7 +27072,7 @@ pub mod kit_graphql {
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
 
-    /// 🧾 `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
+    /// ­ƒº¥ `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(transparent)]
     pub struct GqlChangeKitCommand(pub ChangeKitCommand);
@@ -28629,7 +28633,7 @@ pub mod kit_graphql {
             Ok(lock_graph(&self.view)?.to_full())
         }
 
-        /// 🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFull` subfield.
+        /// ­ƒº¥ Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFull` subfield.
         async fn full_snapshot(&self) -> Result<GqlKitFullSnapshot> {
             Ok(GqlKitFullSnapshot(lock_graph(&self.view)?.to_full()))
         }
@@ -29285,7 +29289,7 @@ mod tests {
             assert_eq!(s, checked_in, "run `npx nx build semio/graphql` to regenerate semio/graphql/schema.graphql from semio/rs");
         }
 
-        /// 🧾 Guards for cleaned store/DTO GraphQL surface (see repo cleanup plan).
+        /// ­ƒº¥ Guards for cleaned store/DTO GraphQL surface (see repo cleanup plan).
         fn assert_graphql_schema_hygiene(s: &str) {
             assert!(!s.contains("Gql"), "SDL must not expose ad hoc Gql* names");
             assert!(!s.contains("AuthorShallowRow") && !s.contains("RowObject"), "SDL must not expose legacy *Row graph wrappers");
@@ -29910,7 +29914,7 @@ mod tests {
             assert_eq!(pl, KitDiff::between(&baseline, &tmp));
         }
 
-        //#region 🔖KitChangeTree
+        //#region ­ƒöûKitChangeTree
         #[test]
         fn lift_flat_kit_metadata_stays_in_forward_with_no_children() {
             let (kit, _, _, _) = small_kit();
@@ -31229,7 +31233,7 @@ mod tests {
         }
 
         mod attribute {
-            use crate::attribute::AttributeFull;
+            use crate::attribute::AttributeStore;
             use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit_graph::{KitFull, KitGraph};
@@ -31237,7 +31241,7 @@ mod tests {
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFull { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeStore::wire(g.clone(), "k".into(), "v".into(), None)], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -32968,7 +32972,7 @@ mod wasm_handle_tests {
     }
 }
 
-pub use attribute::{AttributeFull, AttributeRef, AttributeMetadata, AttributeShallow, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
+pub use attribute::{AttributeStore, AttributeStoreRef, AttributeStoreWeak};
 pub use author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
 pub use benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
 pub use change_command::{
