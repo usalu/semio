@@ -1,18 +1,18 @@
-type AttributeFullDto {
+type AttributeFull {
 	id: Id!
 	key: String!
 	value: String!
 	definition: String
 }
 
-type AttributeShallowDto {
+type AttributeShallow {
 	id: Id!
 	key: String!
 	value: String!
 	definition: String
 }
 
-type AuthorFullDto {
+type AuthorFull {
 	id: Id!
 	name: String!
 	email: String!
@@ -20,7 +20,7 @@ type AuthorFullDto {
 	rank: Int
 }
 
-type AuthorShallowDto {
+type AuthorShallow {
 	id: Id!
 	name: String!
 	email: String!
@@ -49,7 +49,7 @@ type BackboneStatus {
 	tip: String
 }
 
-type BenchmarkFullDto {
+type BenchmarkFull {
 	id: Id!
 	name: String!
 	min: Float
@@ -58,7 +58,7 @@ type BenchmarkFullDto {
 	maxExcluded: Boolean
 }
 
-type BenchmarkMetadataDto {
+type BenchmarkMetadata {
 	id: Id!
 	name: String!
 	min: Float
@@ -86,14 +86,14 @@ type ColorDto {
 	css: String!
 }
 
-type ConceptFullDto {
+type ConceptFull {
 	id: Id!
 	name: String!
 	description: String
 	order: Int
 }
 
-type ConceptShallowDto {
+type ConceptShallow {
 	id: Id!
 	name: String!
 	description: String
@@ -109,10 +109,10 @@ enum ConflictResolutionInput {
 	FORCE_OVERWRITE_BACKBONE
 }
 
-type ConnectionFullDto {
+type ConnectionFull {
 	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
+	connected: SideMetadata!
+	connecting: SideMetadata!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -122,13 +122,13 @@ type ConnectionFullDto {
 	x: Float
 	y: Float
 	description: String
-	attributes: [AttributeFullDto!]!
+	attributes: [AttributeFull!]!
 }
 
-type ConnectionMetadataDto {
+type ConnectionMetadata {
 	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
+	connected: SideMetadata!
+	connecting: SideMetadata!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -140,10 +140,10 @@ type ConnectionMetadataDto {
 	description: String
 }
 
-type ConnectionShallowDto {
+type ConnectionShallow {
 	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
+	connected: SideMetadata!
+	connecting: SideMetadata!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -153,15 +153,15 @@ type ConnectionShallowDto {
 	x: Float
 	y: Float
 	description: String
-	attributes: [AttributeShallowDto!]!
+	attributes: [AttributeShallow!]!
 }
 
 type ConnectionStore {
 	id: String!
 	container: DesignStore!
-	metadata: ConnectionMetadataDto!
-	shallow: ConnectionShallowDto!
-	full: ConnectionFullDto!
+	metadata: ConnectionMetadata!
+	shallow: ConnectionShallow!
+	full: ConnectionFull!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -173,35 +173,35 @@ type ConnectionStore {
 	description: String
 }
 
-type ConnectorFullDto {
+type ConnectorFull {
 	id: Id!
 	code: String!
 	description: String
-	port: PortIdDto
-	qualities: [QualityFullDto!]!
-	attributes: [AttributeFullDto!]!
+	port: PortRef
+	qualities: [QualityFull!]!
+	attributes: [AttributeFull!]!
 	color: ColorDto!
 }
 
-type ConnectorIdDto {
-	id: Id!
-}
-
-type ConnectorMetadataDto {
+type ConnectorMetadata {
 	id: Id!
 	code: String!
 	description: String
-	port: PortIdDto
+	port: PortRef
 	color: ColorDto!
 }
 
-type ConnectorShallowDto {
+type ConnectorRef {
+	id: Id!
+}
+
+type ConnectorShallow {
 	id: Id!
 	code: String!
 	description: String
-	port: PortIdDto
-	qualities: [QualityShallowDto!]!
-	attributes: [AttributeShallowDto!]!
+	port: PortRef
+	qualities: [QualityShallow!]!
+	attributes: [AttributeShallow!]!
 	color: ColorDto!
 }
 
@@ -211,9 +211,9 @@ type ConnectorStore {
 	description: String
 	container: TypeStore!
 	color: ColorDto!
-	metadata: ConnectorMetadataDto!
-	shallow: ConnectorShallowDto!
-	full: ConnectorFullDto!
+	metadata: ConnectorMetadata!
+	shallow: ConnectorShallow!
+	full: ConnectorFull!
 }
 
 type Coordinate {
@@ -267,75 +267,75 @@ type DesignFlattenMapEntryDto {
 	center: Coordinate!
 }
 
-type DesignFullDto {
+type DesignFull {
 	id: Id!
 	name: String!
 	description: String
 	icon: String
 	image: String
-	location: LocationIdDto
+	location: LocationRef
 	unit: String
 	created: String
 	updated: String
-	kit: KitIdDto
-	families: [FamilyIdDto!]!
-	pieces: [PieceFullDto!]!
-	connections: [ConnectionFullDto!]!
-	layers: [LayerFullDto!]!
-	groups: [GroupFullDto!]!
-	authors: [AuthorFullDto!]!
-	concepts: [ConceptFullDto!]!
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
-	stats: [StatFullDto!]!
+	kit: KitRef
+	families: [FamilyRef!]!
+	pieces: [PieceFull!]!
+	connections: [ConnectionFull!]!
+	layers: [LayerFull!]!
+	groups: [GroupFull!]!
+	authors: [AuthorFull!]!
+	concepts: [ConceptFull!]!
+	tags: [TagFull!]!
+	qualities: [QualityFull!]!
+	props: [PropFull!]!
+	attributes: [AttributeFull!]!
+	stats: [StatFull!]!
 }
 
-type DesignIdDto {
-	id: Id!
-}
-
-type DesignMetadataDto {
+type DesignMetadata {
 	id: Id!
 	name: String!
 	description: String
 	icon: String
 	image: String
-	location: LocationIdDto
+	location: LocationRef
 	unit: String
 	created: String
 	updated: String
-	kit: KitIdDto
+	kit: KitRef
 }
 
 type DesignMutation {
 	applyCommands(commands: [DesignCommandInput!]!): Int!
 }
 
-type DesignShallowDto {
+type DesignRef {
+	id: Id!
+}
+
+type DesignShallow {
 	id: Id!
 	name: String!
 	description: String
 	icon: String
 	image: String
-	location: LocationIdDto
+	location: LocationRef
 	unit: String
 	created: String
 	updated: String
-	kit: KitIdDto
-	families: [FamilyIdDto!]!
-	pieces: [PieceShallowDto!]!
-	connections: [ConnectionShallowDto!]!
-	layers: [LayerShallowDto!]!
-	groups: [GroupShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-	stats: [StatShallowDto!]!
+	kit: KitRef
+	families: [FamilyRef!]!
+	pieces: [PieceShallow!]!
+	connections: [ConnectionShallow!]!
+	layers: [LayerShallow!]!
+	groups: [GroupShallow!]!
+	authors: [AuthorShallow!]!
+	concepts: [ConceptShallow!]!
+	tags: [TagShallow!]!
+	qualities: [QualityShallow!]!
+	props: [PropShallow!]!
+	attributes: [AttributeShallow!]!
+	stats: [StatShallow!]!
 }
 
 type DesignStore {
@@ -343,14 +343,14 @@ type DesignStore {
 	name: String!
 	description: String
 	container: KitStore!
-	metadata: DesignMetadataDto!
-	shallow: DesignShallowDto!
-	full: DesignFullDto!
+	metadata: DesignMetadata!
+	shallow: DesignShallow!
+	full: DesignFull!
 	pieces: [PieceStore!]!
 	pieceByDtoId(id: String!): PieceStore
 	connections: [ConnectionStore!]!
-	piecesFull: [PieceFullDto!]!
-	connectionsFull: [ConnectionFullDto!]!
+	piecesFull: [PieceFull!]!
+	connectionsFull: [ConnectionFull!]!
 	flattenMap: [DesignFlattenMapEntryDto!]!
 	clusterableGroups(selection: [String!]!): [[String!]!]!
 	qualitySum(qualityId: String!): Float!
@@ -373,20 +373,20 @@ input ExpandDesignInput {
 	nestedDesignId: String!
 }
 
-type FamilyFullDto {
+type FamilyFull {
 	id: Id!
 	name: String!
 	description: String
 	icon: String
-	ports: [PortFullDto!]!
-	attributes: [AttributeFullDto!]!
+	ports: [PortFull!]!
+	attributes: [AttributeFull!]!
 }
 
-type FamilyIdDto {
+type FamilyRef {
 	id: Id!
 }
 
-type FileFullDto {
+type FileFull {
 	id: Id!
 	url: String!
 	mime: String
@@ -397,11 +397,11 @@ type FileFullDto {
 	updated: String
 }
 
-type FileIdDto {
+type FileRef {
 	id: Id!
 }
 
-type FileShallowDto {
+type FileShallow {
 	id: Id!
 	url: String!
 	mime: String
@@ -412,34 +412,34 @@ type FileShallowDto {
 	updated: String
 }
 
-type FolderFullDto {
+type FolderFull {
 	id: Id!
 	path: String!
 	description: String
 }
 
-type FolderShallowDto {
+type FolderShallow {
 	id: Id!
 	path: String!
 	description: String
 }
 
-type GroupFullDto {
+type GroupFull {
 	id: Id!
 	name: String!
 	description: String
 	color: String
 	icon: String
-	pieces: [PieceIdDto!]!
+	pieces: [PieceRef!]!
 }
 
-type GroupShallowDto {
+type GroupShallow {
 	id: Id!
 	name: String!
 	description: String
 	color: String
 	icon: String
-	pieces: [PieceIdDto!]!
+	pieces: [PieceRef!]!
 }
 
 scalar Id
@@ -455,7 +455,7 @@ type IncludedDesignInfoDto {
 	connectionKind: IncludedDesignConnectionKind!
 	center: Coordinate
 	plane: Plane
-	externalConnections: [ConnectionFullDto!]!
+	externalConnections: [ConnectionFull!]!
 }
 
 type KitAlternative {
@@ -544,7 +544,7 @@ type KitDraftMutation {
 
 scalar KitEvent
 
-type KitFullDto {
+type KitFull {
 	id: Id!
 	name: String!
 	description: String
@@ -558,19 +558,19 @@ type KitFullDto {
 	created: String
 	updated: String
 	version: String
-	types: [TypeFullDto!]!
-	designs: [DesignFullDto!]!
-	files: [FileFullDto!]!
-	folders: [FolderFullDto!]!
-	authors: [AuthorFullDto!]!
-	concepts: [ConceptFullDto!]!
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
-	ports: [PortFullDto!]!
-	families: [FamilyFullDto!]!
-	locations: [LocationFullDto!]!
+	types: [TypeFull!]!
+	designs: [DesignFull!]!
+	files: [FileFull!]!
+	folders: [FolderFull!]!
+	authors: [AuthorFull!]!
+	concepts: [ConceptFull!]!
+	tags: [TagFull!]!
+	qualities: [QualityFull!]!
+	props: [PropFull!]!
+	attributes: [AttributeFull!]!
+	ports: [PortFull!]!
+	families: [FamilyFull!]!
+	locations: [LocationFull!]!
 }
 
 scalar KitFullSnapshot
@@ -585,11 +585,7 @@ type KitGraph {
 	checkpoint(id: KitCheckpointIdIn!): KitCheckpoint
 }
 
-type KitIdDto {
-	id: Id!
-}
-
-type KitMetadataDto {
+type KitMetadata {
 	id: Id!
 	name: String!
 	description: String
@@ -603,6 +599,10 @@ type KitMetadataDto {
 	created: String
 	updated: String
 	version: String
+}
+
+type KitRef {
+	id: Id!
 }
 
 type KitSession {
@@ -619,7 +619,7 @@ type KitSessionMutation {
 	backbone: KitBackboneMutation!
 }
 
-type KitShallowDto {
+type KitShallow {
 	id: Id!
 	name: String!
 	description: String
@@ -633,16 +633,16 @@ type KitShallowDto {
 	created: String
 	updated: String
 	version: String
-	types: [TypeShallowDto!]!
-	designs: [DesignShallowDto!]!
-	files: [FileShallowDto!]!
-	folders: [FolderShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
+	types: [TypeShallow!]!
+	designs: [DesignShallow!]!
+	files: [FileShallow!]!
+	folders: [FolderShallow!]!
+	authors: [AuthorShallow!]!
+	concepts: [ConceptShallow!]!
+	tags: [TagShallow!]!
+	qualities: [QualityShallow!]!
+	props: [PropShallow!]!
+	attributes: [AttributeShallow!]!
 }
 
 type KitStore {
@@ -650,13 +650,13 @@ type KitStore {
 	checkpoint: KitCheckpoint!
 	draft: KitDraft
 	transaction: KitTransaction
-	full: KitFullDto!
+	full: KitFull!
 	"""
-	🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFullDto` subfield.
+	🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFull` subfield.
 	"""
 	fullSnapshot: KitFullSnapshot!
-	metadata: KitMetadataDto!
-	shallow: KitShallowDto!
+	metadata: KitMetadata!
+	shallow: KitShallow!
 	id: String
 	name: String!
 	description: String
@@ -697,7 +697,7 @@ type KitTransactionMutation {
 	redo(count: Int): Boolean!
 }
 
-type LayerFullDto {
+type LayerFull {
 	id: Id!
 	name: String!
 	description: String
@@ -707,7 +707,7 @@ type LayerFullDto {
 	locked: Boolean
 }
 
-type LayerShallowDto {
+type LayerShallow {
 	id: Id!
 	name: String!
 	description: String
@@ -721,15 +721,15 @@ input LocalBackboneInput {
 	folder: String!
 }
 
-type LocationFullDto {
+type LocationFull {
 	id: Id!
 	longitude: Float!
 	latitude: Float!
 	altitude: Float
-	attributes: [AttributeFullDto!]!
+	attributes: [AttributeFull!]!
 }
 
-type LocationIdDto {
+type LocationRef {
 	id: Id!
 }
 
@@ -744,61 +744,58 @@ type Mutation {
 	session: KitSessionMutation!
 }
 
-type PieceFullDto {
+type PieceFull {
 	id: Id!
 	name: String
 	description: String
-	plane: Plane
-	center: Coordinate
+	pose: PoseDto
 	scale: Float
 	mirrorPlane: Plane
 	hidden: Boolean
 	locked: Boolean
 	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
-}
-
-type PieceIdDto {
-	id: Id!
+	kind: TypeRef
+	design: DesignRef
+	props: [PropFull!]!
+	attributes: [AttributeFull!]!
 }
 
 input PieceIdsInput {
 	pieceIds: [String!]!
 }
 
-type PieceMetadataDto {
+type PieceMetadata {
 	id: Id!
 	name: String
 	description: String
-	plane: Plane
-	center: Coordinate
+	pose: PoseDto
 	scale: Float
 	mirrorPlane: Plane
 	hidden: Boolean
 	locked: Boolean
 	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
+	kind: TypeRef
+	design: DesignRef
 }
 
-type PieceShallowDto {
+type PieceRef {
+	id: Id!
+}
+
+type PieceShallow {
 	id: Id!
 	name: String
 	description: String
-	plane: Plane
-	center: Coordinate
+	pose: PoseDto
 	scale: Float
 	mirrorPlane: Plane
 	hidden: Boolean
 	locked: Boolean
 	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
+	kind: TypeRef
+	design: DesignRef
+	props: [PropShallow!]!
+	attributes: [AttributeShallow!]!
 }
 
 type PieceStore {
@@ -806,12 +803,12 @@ type PieceStore {
 	name: String
 	description: String
 	container: DesignStore!
-	metadata: PieceMetadataDto!
-	shallow: PieceShallowDto!
-	full: PieceFullDto!
+	metadata: PieceMetadata!
+	shallow: PieceShallow!
+	full: PieceFull!
 	flatPlane: Plane!
 	flatCenter: Coordinate!
-	flatPose: PoseFullDto!
+	flatPose: PoseFull!
 	scale: Float
 	refType: TypeStore
 	parentConnection: ConnectionStore
@@ -844,67 +841,75 @@ input PointInput {
 	z: Float!
 }
 
-type PortFullDto {
+type PortFull {
 	id: Id!
 	name: String!
 	description: String
 	icon: String
-	compatibleFamilies: [FamilyIdDto!]!
+	compatibleFamilies: [FamilyRef!]!
 	mandatory: Boolean
 	t: Float
 	point: Point
 	direction: Vector
-	compatiblePorts: [PortIdDto!]!
-	qualities: [QualityFullDto!]!
-	attributes: [AttributeFullDto!]!
+	compatiblePorts: [PortRef!]!
+	qualities: [QualityFull!]!
+	attributes: [AttributeFull!]!
 }
 
-type PortIdDto {
+type PortRef {
 	id: Id!
 }
 
-type PoseFullDto {
+"""
+📐Optional pose with independently-optional plane and center for piece storage.
+"""
+type PoseDto {
+	plane: Plane
+	center: Coordinate
+}
+
+type PoseFull {
 	plane: Plane!
 	center: Coordinate!
 }
 
-type PropFullDto {
+type PropFull {
 	id: Id!
 	key: String!
 	value: String!
 	unit: String
-	quality: QualityIdDto
+	quality: QualityRef
 }
 
-type PropShallowDto {
+type PropShallow {
 	id: Id!
 	key: String!
 	value: String!
 	unit: String
 }
 
-type QualityFullDto {
+type QualityFull {
 	id: Id!
 	key: String!
 	value: String
 	unit: String
 	definition: String
 	description: String
-	benchmarks: [BenchmarkFullDto!]!
+	benchmarks: [BenchmarkFull!]!
 }
 
-type QualityIdDto {
+type QualityRef {
 	id: Id!
 }
 
-type QualityShallowDto {
+type QualityShallow {
 	id: Id!
 	key: String!
 	value: String
 	unit: String
 	definition: String
 	description: String
-	benchmarks: [BenchmarkMetadataDto!]!
+	benchmarks: [BenchmarkMetadata!]!
 }
 
 type Query {
@@ -921,31 +926,31 @@ type ReplaceableCatalogStore {
 	designs: [DesignStore!]!
 }
 
-type RepresentationFullDto {
+type RepresentationFull {
 	id: Id!
 	url: String!
 	description: String
-	file: FileIdDto
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	attributes: [AttributeFullDto!]!
+	file: FileRef
+	tags: [TagFull!]!
+	qualities: [QualityFull!]!
+	attributes: [AttributeFull!]!
 }
 
-type RepresentationMetadataDto {
+type RepresentationMetadata {
 	id: Id!
 	url: String!
 	description: String
-	file: FileIdDto
+	file: FileRef
 }
 
-type RepresentationShallowDto {
+type RepresentationShallow {
 	id: Id!
 	url: String!
 	description: String
-	file: FileIdDto
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	attributes: [AttributeShallowDto!]!
+	file: FileRef
+	tags: [TagShallow!]!
+	qualities: [QualityShallow!]!
+	attributes: [AttributeShallow!]!
 }
 
 type RepresentationStore {
@@ -953,20 +958,20 @@ type RepresentationStore {
 	url: String!
 	description: String
 	container: TypeStore!
-	metadata: RepresentationMetadataDto!
-	shallow: RepresentationShallowDto!
-	full: RepresentationFullDto!
+	metadata: RepresentationMetadata!
+	shallow: RepresentationShallow!
+	full: RepresentationFull!
 }
 
-type SideMetadataDto {
+type SideMetadata {
 	id: Id!
-	piece: PieceIdDto!
-	port: PortIdDto
-	designPiece: PieceIdDto
-	connector: ConnectorIdDto
+	piece: PieceRef!
+	port: PortRef
+	designPiece: PieceRef
+	connector: ConnectorRef
 }
 
-type StatFullDto {
+type StatFull {
 	id: Id!
 	key: String!
 	value: String!
@@ -974,7 +979,7 @@ type StatFullDto {
 	description: String
 }
 
-type StatShallowDto {
+type StatShallow {
 	id: Id!
 	key: String!
 	value: String!
@@ -986,13 +991,13 @@ type Subscription {
 	eventStream: KitEvent!
 }
 
-type TagFullDto {
+type TagFull {
 	id: Id!
 	name: String!
 	order: Int
 }
 
-type TagShallowDto {
+type TagShallow {
 	id: Id!
 	name: String!
 	order: Int
@@ -1003,7 +1008,7 @@ enum TransactionState {
 	finalized
 }
 
-type TypeFullDto {
+type TypeFull {
 	id: Id!
 	name: String!
 	description: String
@@ -1012,25 +1017,21 @@ type TypeFullDto {
 	stock: Int
 	isAbstract: Boolean
 	unit: String
-	location: LocationIdDto
+	location: LocationRef
 	created: String
 	updated: String
-	families: [FamilyIdDto!]!
-	connectors: [ConnectorFullDto!]!
-	representations: [RepresentationFullDto!]!
-	authors: [AuthorFullDto!]!
-	concepts: [ConceptFullDto!]!
-	tags: [TagFullDto!]!
-	qualities: [QualityFullDto!]!
-	props: [PropFullDto!]!
-	attributes: [AttributeFullDto!]!
+	families: [FamilyRef!]!
+	connectors: [ConnectorFull!]!
+	representations: [RepresentationFull!]!
+	authors: [AuthorFull!]!
+	concepts: [ConceptFull!]!
+	tags: [TagFull!]!
+	qualities: [QualityFull!]!
+	props: [PropFull!]!
+	attributes: [AttributeFull!]!
 }
 
-type TypeIdDto {
-	id: Id!
-}
-
-type TypeMetadataDto {
+type TypeMetadata {
 	id: Id!
 	name: String!
 	description: String
@@ -1039,12 +1040,16 @@ type TypeMetadataDto {
 	stock: Int
 	isAbstract: Boolean
 	unit: String
-	location: LocationIdDto
+	location: LocationRef
 	created: String
 	updated: String
 }
 
-type TypeShallowDto {
+type TypeRef {
+	id: Id!
+}
+
+type TypeShallow {
 	id: Id!
 	name: String!
 	description: String
@@ -1053,18 +1058,18 @@ type TypeShallowDto {
 	stock: Int
 	isAbstract: Boolean
 	unit: String
-	location: LocationIdDto
+	location: LocationRef
 	created: String
 	updated: String
-	families: [FamilyIdDto!]!
-	connectors: [ConnectorShallowDto!]!
-	representations: [RepresentationShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
+	families: [FamilyRef!]!
+	connectors: [ConnectorShallow!]!
+	representations: [RepresentationShallow!]!
+	authors: [AuthorShallow!]!
+	concepts: [ConceptShallow!]!
+	tags: [TagShallow!]!
+	qualities: [QualityShallow!]!
+	props: [PropShallow!]!
+	attributes: [AttributeShallow!]!
 }
 
 type TypeStore {
@@ -1072,9 +1077,9 @@ type TypeStore {
 	name: String!
 	description: String
 	container: KitStore!
-	metadata: TypeMetadataDto!
-	shallow: TypeShallowDto!
-	full: TypeFullDto!
+	metadata: TypeMetadata!
+	shallow: TypeShallow!
+	full: TypeFull!
 	connectors: [ConnectorStore!]!
 	representations: [RepresentationStore!]!
 	bestRepresentation(tagIds: [String!]!): RepresentationStore

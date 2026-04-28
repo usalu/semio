@@ -7,16 +7,16 @@ todos:
    status: completed
  - id: rename-rust
    content: Remove or rename Rust DTO tier structs, conversion helpers, command payloads, and GraphQL resolver return types.
-   status: in_progress
+   status: completed
  - id: regen-schema
    content: Regenerate GraphQL SDL and update schema hygiene assertions to forbid the removed suffixes.
-   status: pending
+   status: completed
  - id: js-boundary
    content: Preserve semio/js DTO/query layer, adjusting only query aliases/mappings if schema names changed.
-   status: pending
+   status: completed
  - id: verify
    content: Run focused Rust/GraphQL and affected JS checks, then grep Rust and GraphQL for removed suffixes.
-   status: pending
+   status: completed
 isProject: false
 ---
 

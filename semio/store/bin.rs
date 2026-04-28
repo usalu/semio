@@ -14,7 +14,7 @@ use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use semio::id::Id;
-use semio::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+use semio::kit_graph::{KitFull, KitGraph, KitGraphRef};
 use semio::kit_graphql::{GraphQlOverride, GraphWork};
 use semio::kit_store::KitStore;
 use serde::Deserialize;
@@ -91,7 +91,7 @@ fn install_from_kit_graph(graph: KitGraphRef) -> std::result::Result<KitRuntime,
 }
 
 fn preview_runtime() -> KitRuntime {
-    runtime_from_kit_graph(KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "GraphiQL Preview".to_string(), ..Default::default() }), false).expect("preview runtime")
+    runtime_from_kit_graph(KitGraph::from_full(KitFull { id: Id::new_v7(), name: "GraphiQL Preview".to_string(), ..Default::default() }), false).expect("preview runtime")
 }
 
 #[derive(Debug, Deserialize)]
@@ -107,7 +107,7 @@ struct InstallBody {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CreateInstall {
-    dto: KitFullDto,
+    dto: KitFull,
 }
 
 #[derive(Debug, Deserialize)]
@@ -145,7 +145,7 @@ impl InstallBody {
             return Err("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote".to_string());
         }
         if let Some(c) = self.create {
-            return Ok(KitGraph::from_full_dto(c.dto));
+            return Ok(KitGraph::from_full(c.dto));
         }
         if let Some(p) = self.import_file {
             return KitGraph::load_json_file(Path::new(&p.path)).map_err(|e: SemioError| e.to_string());
@@ -316,7 +316,7 @@ async fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio::kit::KitFullDto;
+    use semio::kit::KitFull;
     use serde_json::{json, Value};
     use tokio::task::JoinHandle;
 
@@ -404,7 +404,7 @@ mod tests {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
         let kid = Id::new_v7();
-        let dto = KitFullDto { id: kid, name: "A".to_string(), ..Default::default() };
+        let dto = KitFull { id: kid, name: "A".to_string(), ..Default::default() };
         post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
 
         let qm = batch_mutation_with_fields("");
@@ -505,7 +505,7 @@ mod tests {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
         let kid = Id::new_v7();
-        let dto = KitFullDto { id: kid.clone(), name: "P".to_string(), ..Default::default() };
+        let dto = KitFull { id: kid.clone(), name: "P".to_string(), ..Default::default() };
         post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
 
         let qm = batch_mutation_with_fields("");
@@ -563,7 +563,7 @@ mod tests {
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
         let kid = Id::new_v7();
-        let dto = KitFullDto { id: kid, name: "Bb".to_string(), ..Default::default() };
+        let dto = KitFull { id: kid, name: "Bb".to_string(), ..Default::default() };
         post_install(&client, &base, &json!({ "create": { "dto": serde_json::to_value(&dto)? } })).await?;
 
         let qm = batch_mutation_with_fields("");

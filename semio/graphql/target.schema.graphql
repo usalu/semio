@@ -1052,6 +1052,11 @@ directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 directive @oneOf on INPUT_OBJECT
 directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 
+interface Entity {
+	id: ID!
+	hash: String
+}
+
 input VectorInput {
 	x: Float!
 	y: Float!
@@ -1064,8 +1069,9 @@ type Vector {
 	z: Float!
 }
 
-type Type {
+type Type implements Entity {
 	id: ID!
+	hash: String
 	name: String!
 	description: String
 	container: Kit!
@@ -1074,15 +1080,33 @@ type Type {
 	bestRepresentation(tagIds: [ID!]!): Representation
 }
 
+interface Operation implements Entity {
+	id: ID!
+	hash: String
+	diff: Diff!
+}
 
+union ChangeContainer = Transaction | Draft | Checkpoint
 
-type Change {
+type Change implements Entity {
+	id: ID!
+	hash: String
+	container: ChangeContainer!
 	forwards: [Operation!]!
 	backwards: [Operation!]!
 }
 
 type Transaction {
 	id: ID!
+	hash: String
+	changes: [Change!]!
+}
+
+type Draft {
+	id: ID!
+	hash: String
+	
+	changes: [Change!]!
 }
 
 type Kit{

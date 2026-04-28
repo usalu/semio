@@ -6,31 +6,31 @@ pub mod read {
 
     use serde::{Deserialize, Serialize};
 
-    use crate::attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto};
-    use crate::author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto};
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto};
-    use crate::concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto};
-    use crate::connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto};
-    use crate::connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStoreRef};
-    use crate::design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef};
-    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyMetadataDto, FamilyShallowDto, FamilyStoreRef};
-    use crate::file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto};
-    use crate::folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto};
+    use crate::attribute::{AttributeFull, AttributeRef, AttributeMetadata, AttributeShallow};
+    use crate::author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow};
+    use crate::benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow};
+    use crate::concept::{ConceptFull, ConceptRef, ConceptMetadata, ConceptShallow};
+    use crate::connection::{ConnectionFull, ConnectionRef, ConnectionMetadata, ConnectionShallow};
+    use crate::connector::{ConnectorFull, ConnectorRef, ConnectorMetadata, ConnectorShallow, ConnectorStoreRef};
+    use crate::design::{DesignFull, DesignRef, DesignMetadata, DesignShallow, DesignStore, DesignStoreRef};
+    use crate::family::{FamilyFull, FamilyRef, FamilyMetadata, FamilyShallow, FamilyStoreRef};
+    use crate::file::{FileFull, FileRef, FileMetadata, FileShallow};
+    use crate::folder::{FolderFull, FolderRef, FolderMetadata, FolderShallow};
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto};
+    use crate::group::{GroupFull, GroupRef, GroupMetadata, GroupShallow};
     use crate::id::Id;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitIdDto, KitMetadataDto, KitShallowDto};
-    use crate::layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto};
-    use crate::location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto};
-    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto, PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStoreRef, PoseFullDto};
-    use crate::port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStoreRef};
-    use crate::prop::{PropFullDto, PropIdDto, PropShallowDto};
-    use crate::quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto};
-    use crate::representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStoreRef};
-    use crate::side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStoreRef};
-    use crate::stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto};
-    use crate::tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto};
-    use crate::typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStoreRef};
+    use crate::kit_graph::{KitFull, KitGraph, KitRef, KitMetadata, KitShallow};
+    use crate::layer::{LayerFull, LayerRef, LayerMetadata, LayerShallow};
+    use crate::location::{LocationFull, LocationRef, LocationMetadata, LocationShallow};
+    use crate::piece::{ConnectedPieceOutputDto, FixedPieceOutputDto, PieceAlternativesDto, PieceFull, PieceRef, PieceMetadata, PieceShallow, PieceStoreRef, PoseFull};
+    use crate::port::{PortFull, PortRef, PortMetadata, PortShallow, PortStoreRef};
+    use crate::prop::{PropFull, PropRef, PropShallow};
+    use crate::quality::{QualityFull, QualityRef, QualityMetadata, QualityShallow};
+    use crate::representation::{RepresentationFull, RepresentationRef, RepresentationMetadata, RepresentationShallow, RepresentationStoreRef};
+    use crate::side::{SideFull, SideRef, SideMetadata, SideShallow, SideStoreRef};
+    use crate::stat::{StatFull, StatRef, StatMetadata, StatShallow};
+    use crate::tag::{TagFull, TagRef, TagMetadata, TagShallow};
+    use crate::typ::{TypeFull, TypeRef, TypeMetadata, TypeShallow, TypeStoreRef};
 
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, async_graphql::Enum)]
     #[serde(rename_all = "lowercase")]
@@ -61,7 +61,7 @@ pub mod read {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub external_connections: Vec<ConnectionFullDto>,
+        pub external_connections: Vec<ConnectionFull>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -112,55 +112,55 @@ pub mod read {
         ReadKitAttributesFullCommand,
         ReadKitAttributesShallowCommand,
         ReadKitTypeCommands {
-            id: TypeIdDto,
+            id: TypeRef,
             commands: Vec<ReadTypeCommand>,
         },
         ReadKitDesignCommands {
-            id: DesignIdDto,
+            id: DesignRef,
             commands: Vec<ReadDesignCommand>,
         },
         ReadKitFileCommands {
-            id: FileIdDto,
+            id: FileRef,
             commands: Vec<ReadFileCommand>,
         },
         ReadKitFolderCommands {
-            id: FolderIdDto,
+            id: FolderRef,
             commands: Vec<ReadFolderCommand>,
         },
         ReadKitLocationCommands {
-            id: LocationIdDto,
+            id: LocationRef,
             commands: Vec<ReadLocationCommand>,
         },
         ReadKitFamilyCommands {
-            id: FamilyIdDto,
+            id: FamilyRef,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadKitPortCommands {
-            id: PortIdDto,
+            id: PortRef,
             commands: Vec<ReadPortCommand>,
         },
         ReadKitAuthorCommands {
-            id: AuthorIdDto,
+            id: AuthorRef,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadKitConceptCommands {
-            id: ConceptIdDto,
+            id: ConceptRef,
             commands: Vec<ReadConceptCommand>,
         },
         ReadKitTagCommands {
-            id: TagIdDto,
+            id: TagRef,
             commands: Vec<ReadTagCommand>,
         },
         ReadKitQualityCommands {
-            id: QualityIdDto,
+            id: QualityRef,
             commands: Vec<ReadQualityCommand>,
         },
         ReadKitPropCommands {
-            id: PropIdDto,
+            id: PropRef,
             commands: Vec<ReadPropCommand>,
         },
         ReadKitAttributeCommands {
-            id: AttributeIdDto,
+            id: AttributeRef,
             commands: Vec<ReadAttributeCommand>,
         },
     }
@@ -168,10 +168,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommandOutput {
-        ReadKitFullCommand { kit: KitFullDto },
-        ReadKitShallowCommand { kit: KitShallowDto },
-        ReadKitMetadataCommand { metadata: KitMetadataDto },
-        ReadKitIdCommand { id: KitIdDto },
+        ReadKitFullCommand { kit: KitFull },
+        ReadKitShallowCommand { kit: KitShallow },
+        ReadKitMetadataCommand { metadata: KitMetadata },
+        ReadKitIdCommand { id: KitRef },
         ReadKitNameCommand { name: String },
         ReadKitDescriptionCommand { description: Option<String> },
         ReadKitIconCommand { icon: Option<String> },
@@ -183,35 +183,35 @@ pub mod read {
         ReadKitUriCommand { uri: Option<String> },
         ReadKitCreatedCommand { created: Option<String> },
         ReadKitUpdatedCommand { updated: Option<String> },
-        ReadKitTypesFullCommand { types: Vec<TypeFullDto> },
-        ReadKitTypesShallowCommand { types: Vec<TypeShallowDto> },
-        ReadKitTypeIdsCommand { r#type_ids: Vec<TypeIdDto> },
-        ReadKitTypesMetadataCommand { types: Vec<TypeMetadataDto> },
-        ReadKitDesignsFullCommand { designs: Vec<DesignFullDto> },
-        ReadKitDesignsShallowCommand { designs: Vec<DesignShallowDto> },
-        ReadKitDesignIdsCommand { design_ids: Vec<DesignIdDto> },
-        ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadataDto> },
-        ReadKitFilesFullCommand { files: Vec<FileFullDto> },
-        ReadKitFilesShallowCommand { files: Vec<FileShallowDto> },
-        ReadKitFoldersFullCommand { folders: Vec<FolderFullDto> },
-        ReadKitFoldersShallowCommand { folders: Vec<FolderShallowDto> },
-        ReadKitLocationsFullCommand { locations: Vec<LocationFullDto> },
-        ReadKitLocationsShallowCommand { locations: Vec<LocationShallowDto> },
-        ReadKitFamiliesFullCommand { families: Vec<FamilyFullDto> },
-        ReadKitFamiliesShallowCommand { families: Vec<FamilyShallowDto> },
-        ReadKitPortsFullCommand { ports: Vec<PortFullDto> },
-        ReadKitAuthorsFullCommand { authors: Vec<AuthorFullDto> },
-        ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
-        ReadKitConceptsFullCommand { concepts: Vec<ConceptFullDto> },
-        ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
-        ReadKitTagsFullCommand { tags: Vec<TagFullDto> },
-        ReadKitTagsShallowCommand { tags: Vec<TagShallowDto> },
-        ReadKitQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-        ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-        ReadKitPropsFullCommand { props: Vec<PropFullDto> },
-        ReadKitPropsShallowCommand { props: Vec<PropShallowDto> },
-        ReadKitAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadKitTypesFullCommand { types: Vec<TypeFull> },
+        ReadKitTypesShallowCommand { types: Vec<TypeShallow> },
+        ReadKitTypeIdsCommand { r#type_ids: Vec<TypeRef> },
+        ReadKitTypesMetadataCommand { types: Vec<TypeMetadata> },
+        ReadKitDesignsFullCommand { designs: Vec<DesignFull> },
+        ReadKitDesignsShallowCommand { designs: Vec<DesignShallow> },
+        ReadKitDesignIdsCommand { design_ids: Vec<DesignRef> },
+        ReadKitDesignsMetadataCommand { designs: Vec<DesignMetadata> },
+        ReadKitFilesFullCommand { files: Vec<FileFull> },
+        ReadKitFilesShallowCommand { files: Vec<FileShallow> },
+        ReadKitFoldersFullCommand { folders: Vec<FolderFull> },
+        ReadKitFoldersShallowCommand { folders: Vec<FolderShallow> },
+        ReadKitLocationsFullCommand { locations: Vec<LocationFull> },
+        ReadKitLocationsShallowCommand { locations: Vec<LocationShallow> },
+        ReadKitFamiliesFullCommand { families: Vec<FamilyFull> },
+        ReadKitFamiliesShallowCommand { families: Vec<FamilyShallow> },
+        ReadKitPortsFullCommand { ports: Vec<PortFull> },
+        ReadKitAuthorsFullCommand { authors: Vec<AuthorFull> },
+        ReadKitAuthorsShallowCommand { authors: Vec<AuthorShallow> },
+        ReadKitConceptsFullCommand { concepts: Vec<ConceptFull> },
+        ReadKitConceptsShallowCommand { concepts: Vec<ConceptShallow> },
+        ReadKitTagsFullCommand { tags: Vec<TagFull> },
+        ReadKitTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadKitQualitiesFullCommand { qualities: Vec<QualityFull> },
+        ReadKitQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadKitPropsFullCommand { props: Vec<PropFull> },
+        ReadKitPropsShallowCommand { props: Vec<PropShallow> },
+        ReadKitAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadKitAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadKitTypeCommands { results: Vec<ReadTypeCommandOutput> },
         ReadKitDesignCommands { results: Vec<ReadDesignCommandOutput> },
         ReadKitFileCommands { results: Vec<ReadFileCommandOutput> },
@@ -264,49 +264,49 @@ pub mod read {
         ReadTypeAttributesShallowCommand,
         ReadTypePortsFullCommand,
         ReadTypeConnectorForPortIdCommand {
-            port_id: PortIdDto,
+            port_id: PortRef,
         },
         ReadTypeBestRepresentationCommand {
             tag_ids: Vec<Id>,
         },
         ReadTypeFamilyCommands {
-            id: FamilyIdDto,
+            id: FamilyRef,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadTypeConnectorCommands {
-            id: ConnectorIdDto,
+            id: ConnectorRef,
             commands: Vec<ReadConnectorCommand>,
         },
         ReadTypeRepresentationCommands {
-            id: RepresentationIdDto,
+            id: RepresentationRef,
             commands: Vec<ReadRepresentationCommand>,
         },
         ReadTypePortCommands {
-            id: PortIdDto,
+            id: PortRef,
             commands: Vec<ReadPortCommand>,
         },
         ReadTypeAuthorCommands {
-            id: AuthorIdDto,
+            id: AuthorRef,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadTypeConceptCommands {
-            id: ConceptIdDto,
+            id: ConceptRef,
             commands: Vec<ReadConceptCommand>,
         },
         ReadTypeTagCommands {
-            id: TagIdDto,
+            id: TagRef,
             commands: Vec<ReadTagCommand>,
         },
         ReadTypeQualityCommands {
-            id: QualityIdDto,
+            id: QualityRef,
             commands: Vec<ReadQualityCommand>,
         },
         ReadTypePropCommands {
-            id: PropIdDto,
+            id: PropRef,
             commands: Vec<ReadPropCommand>,
         },
         ReadTypeAttributeCommands {
-            id: AttributeIdDto,
+            id: AttributeRef,
             commands: Vec<ReadAttributeCommand>,
         },
     }
@@ -314,10 +314,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadTypeCommandOutput {
-        ReadTypeFullCommand { dto: TypeFullDto },
-        ReadTypeShallowCommand { dto: TypeShallowDto },
-        ReadTypeMetadataCommand { metadata: TypeMetadataDto },
-        ReadTypeIdCommand { id: TypeIdDto },
+        ReadTypeFullCommand { dto: TypeFull },
+        ReadTypeShallowCommand { dto: TypeShallow },
+        ReadTypeMetadataCommand { metadata: TypeMetadata },
+        ReadTypeIdCommand { id: TypeRef },
         ReadTypeNameCommand { name: String },
         ReadTypeDescriptionCommand { description: Option<String> },
         ReadTypeIconCommand { icon: Option<String> },
@@ -325,29 +325,29 @@ pub mod read {
         ReadTypeStockCommand { stock: Option<i64> },
         ReadTypeVirtualCommand { r#virtual: Option<bool> },
         ReadTypeUnitCommand { unit: Option<String> },
-        ReadTypeLocationCommand { location: Option<crate::location::LocationIdDto> },
+        ReadTypeLocationCommand { location: Option<crate::location::LocationRef> },
         ReadTypeCreatedCommand { created: Option<String> },
         ReadTypeUpdatedCommand { updated: Option<String> },
-        ReadTypeFamiliesCommand { families: Vec<FamilyIdDto> },
-        ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFullDto> },
-        ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallowDto> },
-        ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFullDto> },
-        ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallowDto> },
-        ReadTypeAuthorsFullCommand { authors: Vec<AuthorFullDto> },
-        ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallowDto> },
-        ReadTypeConceptsFullCommand { concepts: Vec<ConceptFullDto> },
-        ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallowDto> },
-        ReadTypeTagsFullCommand { tags: Vec<TagFullDto> },
-        ReadTypeTagsShallowCommand { tags: Vec<TagShallowDto> },
-        ReadTypeQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-        ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-        ReadTypePropsFullCommand { props: Vec<PropFullDto> },
-        ReadTypePropsShallowCommand { props: Vec<PropShallowDto> },
-        ReadTypeAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
-        ReadTypePortsFullCommand { ports: Vec<PortFullDto> },
-        ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFullDto> },
-        ReadTypeBestRepresentationCommand { representation: Option<RepresentationFullDto> },
+        ReadTypeFamiliesCommand { families: Vec<FamilyRef> },
+        ReadTypeConnectorsFullCommand { connectors: Vec<ConnectorFull> },
+        ReadTypeConnectorsShallowCommand { connectors: Vec<ConnectorShallow> },
+        ReadTypeRepresentationsFullCommand { representations: Vec<RepresentationFull> },
+        ReadTypeRepresentationsShallowCommand { representations: Vec<RepresentationShallow> },
+        ReadTypeAuthorsFullCommand { authors: Vec<AuthorFull> },
+        ReadTypeAuthorsShallowCommand { authors: Vec<AuthorShallow> },
+        ReadTypeConceptsFullCommand { concepts: Vec<ConceptFull> },
+        ReadTypeConceptsShallowCommand { concepts: Vec<ConceptShallow> },
+        ReadTypeTagsFullCommand { tags: Vec<TagFull> },
+        ReadTypeTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadTypeQualitiesFullCommand { qualities: Vec<QualityFull> },
+        ReadTypeQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadTypePropsFullCommand { props: Vec<PropFull> },
+        ReadTypePropsShallowCommand { props: Vec<PropShallow> },
+        ReadTypeAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadTypeAttributesShallowCommand { attributes: Vec<AttributeShallow> },
+        ReadTypePortsFullCommand { ports: Vec<PortFull> },
+        ReadTypeConnectorForPortIdCommand { connector: Option<ConnectorFull> },
+        ReadTypeBestRepresentationCommand { representation: Option<RepresentationFull> },
         ReadTypeFamilyCommands { results: Vec<ReadFamilyCommandOutput> },
         ReadTypeConnectorCommands { results: Vec<ReadConnectorCommandOutput> },
         ReadTypeRepresentationCommands { results: Vec<ReadRepresentationCommandOutput> },
@@ -402,62 +402,62 @@ pub mod read {
         ReadDesignStatsShallowCommand,
         ReadDesignFlattenMapCommand,
         ReadDesignClusterableGroupsCommand {
-            selection: Vec<PieceIdDto>,
+            selection: Vec<PieceRef>,
         },
         ReadDesignIncludedDesignsCommand,
         ReadDesignQualitySumCommand {
-            quality_id: QualityIdDto,
+            quality_id: QualityRef,
         },
         ReadDesignReplaceableCatalogCommand {
-            selection: Vec<PieceIdDto>,
+            selection: Vec<PieceRef>,
         },
         ReadDesignIncludedDesignIdsCommand,
         ReadDesignFamilyCommands {
-            id: FamilyIdDto,
+            id: FamilyRef,
             commands: Vec<ReadFamilyCommand>,
         },
         ReadDesignPieceCommands {
-            id: PieceIdDto,
+            id: PieceRef,
             commands: Vec<ReadPieceCommand>,
         },
         ReadDesignConnectionCommands {
-            id: ConnectionIdDto,
+            id: ConnectionRef,
             commands: Vec<ReadConnectionCommand>,
         },
         ReadDesignLayerCommands {
-            id: LayerIdDto,
+            id: LayerRef,
             commands: Vec<ReadLayerCommand>,
         },
         ReadDesignGroupCommands {
-            id: GroupIdDto,
+            id: GroupRef,
             commands: Vec<ReadGroupCommand>,
         },
         ReadDesignAuthorCommands {
-            id: AuthorIdDto,
+            id: AuthorRef,
             commands: Vec<ReadAuthorCommand>,
         },
         ReadDesignConceptCommands {
-            id: ConceptIdDto,
+            id: ConceptRef,
             commands: Vec<ReadConceptCommand>,
         },
         ReadDesignTagCommands {
-            id: TagIdDto,
+            id: TagRef,
             commands: Vec<ReadTagCommand>,
         },
         ReadDesignQualityCommands {
-            id: QualityIdDto,
+            id: QualityRef,
             commands: Vec<ReadQualityCommand>,
         },
         ReadDesignPropCommands {
-            id: PropIdDto,
+            id: PropRef,
             commands: Vec<ReadPropCommand>,
         },
         ReadDesignAttributeCommands {
-            id: AttributeIdDto,
+            id: AttributeRef,
             commands: Vec<ReadAttributeCommand>,
         },
         ReadDesignStatCommands {
-            id: StatIdDto,
+            id: StatRef,
             commands: Vec<ReadStatCommand>,
         },
     }
@@ -466,16 +466,16 @@ pub mod read {
     #[serde(rename_all = "camelCase")]
     pub enum ReadDesignCommandOutput {
         ReadDesignFullCommand {
-            dto: DesignFullDto,
+            dto: DesignFull,
         },
         ReadDesignShallowCommand {
-            dto: DesignShallowDto,
+            dto: DesignShallow,
         },
         ReadDesignMetadataCommand {
-            metadata: DesignMetadataDto,
+            metadata: DesignMetadata,
         },
         ReadDesignIdCommand {
-            id: DesignIdDto,
+            id: DesignRef,
         },
         ReadDesignNameCommand {
             name: String,
@@ -490,7 +490,7 @@ pub mod read {
             image: Option<String>,
         },
         ReadDesignLocationCommand {
-            location: Option<crate::location::LocationIdDto>,
+            location: Option<crate::location::LocationRef>,
         },
         ReadDesignUnitCommand {
             unit: Option<String>,
@@ -502,82 +502,82 @@ pub mod read {
             updated: Option<String>,
         },
         ReadDesignKitCommand {
-            kit: Option<crate::kit_graph::KitIdDto>,
+            kit: Option<crate::kit_graph::KitRef>,
         },
         ReadDesignFamiliesCommand {
-            families: Vec<FamilyIdDto>,
+            families: Vec<FamilyRef>,
         },
         ReadDesignPiecesFullCommand {
-            pieces: Vec<PieceFullDto>,
+            pieces: Vec<PieceFull>,
         },
         ReadDesignPiecesShallowCommand {
-            pieces: Vec<PieceShallowDto>,
+            pieces: Vec<PieceShallow>,
         },
         ReadDesignConnectionsFullCommand {
-            connections: Vec<ConnectionFullDto>,
+            connections: Vec<ConnectionFull>,
         },
         ReadDesignConnectionsShallowCommand {
-            connections: Vec<ConnectionShallowDto>,
+            connections: Vec<ConnectionShallow>,
         },
         ReadDesignLayersFullCommand {
-            layers: Vec<LayerFullDto>,
+            layers: Vec<LayerFull>,
         },
         ReadDesignLayersShallowCommand {
-            layers: Vec<LayerShallowDto>,
+            layers: Vec<LayerShallow>,
         },
         ReadDesignGroupsFullCommand {
-            groups: Vec<GroupFullDto>,
+            groups: Vec<GroupFull>,
         },
         ReadDesignGroupsShallowCommand {
-            groups: Vec<GroupShallowDto>,
+            groups: Vec<GroupShallow>,
         },
         ReadDesignAuthorsFullCommand {
-            authors: Vec<AuthorFullDto>,
+            authors: Vec<AuthorFull>,
         },
         ReadDesignAuthorsShallowCommand {
-            authors: Vec<AuthorShallowDto>,
+            authors: Vec<AuthorShallow>,
         },
         ReadDesignConceptsFullCommand {
-            concepts: Vec<ConceptFullDto>,
+            concepts: Vec<ConceptFull>,
         },
         ReadDesignConceptsShallowCommand {
-            concepts: Vec<ConceptShallowDto>,
+            concepts: Vec<ConceptShallow>,
         },
         ReadDesignTagsFullCommand {
-            tags: Vec<TagFullDto>,
+            tags: Vec<TagFull>,
         },
         ReadDesignTagsShallowCommand {
-            tags: Vec<TagShallowDto>,
+            tags: Vec<TagShallow>,
         },
         ReadDesignQualitiesFullCommand {
-            qualities: Vec<QualityFullDto>,
+            qualities: Vec<QualityFull>,
         },
         ReadDesignQualitiesShallowCommand {
-            qualities: Vec<QualityShallowDto>,
+            qualities: Vec<QualityShallow>,
         },
         ReadDesignPropsFullCommand {
-            props: Vec<PropFullDto>,
+            props: Vec<PropFull>,
         },
         ReadDesignPropsShallowCommand {
-            props: Vec<PropShallowDto>,
+            props: Vec<PropShallow>,
         },
         ReadDesignAttributesFullCommand {
-            attributes: Vec<AttributeFullDto>,
+            attributes: Vec<AttributeFull>,
         },
         ReadDesignAttributesShallowCommand {
-            attributes: Vec<AttributeShallowDto>,
+            attributes: Vec<AttributeShallow>,
         },
         ReadDesignStatsFullCommand {
-            stats: Vec<StatFullDto>,
+            stats: Vec<StatFull>,
         },
         ReadDesignStatsShallowCommand {
-            stats: Vec<StatShallowDto>,
+            stats: Vec<StatShallow>,
         },
         ReadDesignFlattenMapCommand {
             entries: Vec<DesignFlattenMapEntryDto>,
         },
         ReadDesignClusterableGroupsCommand {
-            groups: Vec<Vec<PieceIdDto>>,
+            groups: Vec<Vec<PieceRef>>,
         },
         ReadDesignIncludedDesignsCommand {
             designs: Vec<IncludedDesignInfoDto>,
@@ -586,12 +586,12 @@ pub mod read {
             sum: f64,
         },
         ReadDesignReplaceableCatalogCommand {
-            types: Vec<crate::typ::TypeIdDto>,
-            designs: Vec<crate::design::DesignIdDto>,
+            types: Vec<crate::typ::TypeRef>,
+            designs: Vec<crate::design::DesignRef>,
         },
         ReadDesignIncludedDesignIdsCommand {
             #[serde(rename = "designIds")]
-            design_ids: Vec<crate::design::DesignIdDto>,
+            design_ids: Vec<crate::design::DesignRef>,
         },
         ReadDesignFamilyCommands {
             results: Vec<ReadFamilyCommandOutput>,
@@ -667,17 +667,17 @@ pub mod read {
         ReadPieceAlternativesCommand,
         ReadPieceAlternativeTypesCommand,
         ReadPieceAlternativeDesignsCommand,
-        ReadPiecePropCommands { id: PropIdDto, commands: Vec<ReadPropCommand> },
-        ReadPieceAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadPiecePropCommands { id: PropRef, commands: Vec<ReadPropCommand> },
+        ReadPieceAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPieceCommandOutput {
-        ReadPieceFullCommand { dto: PieceFullDto },
-        ReadPieceShallowCommand { dto: PieceShallowDto },
-        ReadPieceMetadataCommand { metadata: PieceMetadataDto },
-        ReadPieceIdCommand { id: PieceIdDto },
+        ReadPieceFullCommand { dto: PieceFull },
+        ReadPieceShallowCommand { dto: PieceShallow },
+        ReadPieceMetadataCommand { metadata: PieceMetadata },
+        ReadPieceIdCommand { id: PieceRef },
         ReadPieceNameCommand { name: Option<String> },
         ReadPieceDescriptionCommand { description: Option<String> },
         ReadPiecePlaneCommand { plane: Option<Plane> },
@@ -687,25 +687,25 @@ pub mod read {
         ReadPieceHiddenCommand { hidden: Option<bool> },
         ReadPieceLockedCommand { locked: Option<bool> },
         ReadPieceColorCommand { color: Option<String> },
-        ReadPieceTypeCommand { r#type: Option<TypeIdDto> },
-        ReadPieceDesignCommand { design: Option<DesignIdDto> },
-        ReadPiecePropsFullCommand { props: Vec<PropFullDto> },
-        ReadPiecePropsShallowCommand { props: Vec<PropShallowDto> },
-        ReadPieceAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadPieceTypeCommand { r#type: Option<TypeRef> },
+        ReadPieceDesignCommand { design: Option<DesignRef> },
+        ReadPiecePropsFullCommand { props: Vec<PropFull> },
+        ReadPiecePropsShallowCommand { props: Vec<PropShallow> },
+        ReadPieceAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadPieceAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadPieceFlatPlaneCommand { flat_plane: Plane },
         ReadPieceFlatCenterCommand { flat_center: Coordinate },
-        ReadPieceFlatPoseCommand { flat_pose: PoseFullDto },
-        ReadPiecePathCommand { path: Vec<PieceIdDto> },
-        ReadPieceParentPieceIdCommand { parent_piece: Option<PieceIdDto> },
-        ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionIdDto> },
-        ReadPieceParentConnectionFullCommand { connection: Option<crate::connection::ConnectionFullDto> },
-        ReadPieceParentDesignIdCommand { parent_design: DesignIdDto },
+        ReadPieceFlatPoseCommand { flat_pose: PoseFull },
+        ReadPiecePathCommand { path: Vec<PieceRef> },
+        ReadPieceParentPieceIdCommand { parent_piece: Option<PieceRef> },
+        ReadPieceParentConnectionIdCommand { parent_connection: Option<ConnectionRef> },
+        ReadPieceParentConnectionFullCommand { connection: Option<crate::connection::ConnectionFull> },
+        ReadPieceParentDesignIdCommand { parent_design: DesignRef },
         ReadPieceFixedCommand { fixed: FixedPieceOutputDto },
         ReadPieceConnectedCommand { connected: ConnectedPieceOutputDto },
         ReadPieceAlternativesCommand { alternatives: PieceAlternativesDto },
-        ReadPieceAlternativeTypesCommand { types: Vec<TypeIdDto> },
-        ReadPieceAlternativeDesignsCommand { designs: Vec<DesignIdDto> },
+        ReadPieceAlternativeTypesCommand { types: Vec<TypeRef> },
+        ReadPieceAlternativeDesignsCommand { designs: Vec<DesignRef> },
         ReadPiecePropCommands { results: Vec<ReadPropCommandOutput> },
         ReadPieceAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -734,8 +734,8 @@ pub mod read {
         ReadConnectionAttributesFullCommand,
         ReadConnectionAttributesShallowCommand,
         ReadConnectionChildPlaneMatrixCommand,
-        ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceIdDto },
-        ReadConnectionAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadConnectionFlatSidesForChildCommand { child_piece_id: PieceRef },
+        ReadConnectionAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
         ReadConnectionConnectedSideCommands { commands: Vec<ReadSideCommand> },
         ReadConnectionConnectingSideCommands { commands: Vec<ReadSideCommand> },
     }
@@ -743,14 +743,14 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectionCommandOutput {
-        ReadConnectionFullCommand { dto: ConnectionFullDto },
-        ReadConnectionShallowCommand { dto: ConnectionShallowDto },
-        ReadConnectionMetadataCommand { metadata: ConnectionMetadataDto },
-        ReadConnectionIdCommand { id: ConnectionIdDto },
-        ReadConnectionConnectedSideMetadataCommand { side: SideMetadataDto },
-        ReadConnectionConnectingSideMetadataCommand { side: SideMetadataDto },
-        ReadConnectionConnectedSideFullCommand { side: SideFullDto },
-        ReadConnectionConnectingSideFullCommand { side: SideFullDto },
+        ReadConnectionFullCommand { dto: ConnectionFull },
+        ReadConnectionShallowCommand { dto: ConnectionShallow },
+        ReadConnectionMetadataCommand { metadata: ConnectionMetadata },
+        ReadConnectionIdCommand { id: ConnectionRef },
+        ReadConnectionConnectedSideMetadataCommand { side: SideMetadata },
+        ReadConnectionConnectingSideMetadataCommand { side: SideMetadata },
+        ReadConnectionConnectedSideFullCommand { side: SideFull },
+        ReadConnectionConnectingSideFullCommand { side: SideFull },
         ReadConnectionGapCommand { gap: Option<f64> },
         ReadConnectionShiftCommand { shift: Option<f64> },
         ReadConnectionRiseCommand { rise: Option<f64> },
@@ -760,10 +760,10 @@ pub mod read {
         ReadConnectionUCommand { u: Option<f64> },
         ReadConnectionVCommand { v: Option<f64> },
         ReadConnectionDescriptionCommand { description: Option<String> },
-        ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadConnectionAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadConnectionAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadConnectionChildPlaneMatrixCommand { matrix: [[f64; 4]; 4] },
-        ReadConnectionFlatSidesForChildCommand { connected: SideFullDto, connecting: SideFullDto },
+        ReadConnectionFlatSidesForChildCommand { connected: SideFull, connecting: SideFull },
         ReadConnectionAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
         ReadConnectionConnectedSideCommands { results: Vec<ReadSideCommandOutput> },
         ReadConnectionConnectingSideCommands { results: Vec<ReadSideCommandOutput> },
@@ -785,13 +785,13 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadSideCommandOutput {
-        ReadSideFullCommand { side: SideFullDto },
-        ReadSideShallowCommand { side: SideShallowDto },
-        ReadSideMetadataCommand { side: SideMetadataDto },
-        ReadSideIdCommand { id: SideIdDto },
-        ReadSidePieceIdCommand { piece: PieceIdDto },
-        ReadSidePortIdCommand { port: Option<PortIdDto> },
-        ReadSideDesignPieceIdCommand { design_piece: Option<PieceIdDto> },
+        ReadSideFullCommand { side: SideFull },
+        ReadSideShallowCommand { side: SideShallow },
+        ReadSideMetadataCommand { side: SideMetadata },
+        ReadSideIdCommand { id: SideRef },
+        ReadSidePieceIdCommand { piece: PieceRef },
+        ReadSidePortIdCommand { port: Option<PortRef> },
+        ReadSideDesignPieceIdCommand { design_piece: Option<PieceRef> },
     }
 
 
@@ -815,30 +815,30 @@ pub mod read {
         ReadPortQualitiesShallowCommand,
         ReadPortAttributesFullCommand,
         ReadPortAttributesShallowCommand,
-        ReadPortQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-        ReadPortAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadPortQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadPortAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPortCommandOutput {
-        ReadPortFullCommand { port: PortFullDto },
-        ReadPortShallowCommand { port: PortShallowDto },
-        ReadPortMetadataCommand { metadata: PortMetadataDto },
-        ReadPortIdCommand { id: PortIdDto },
+        ReadPortFullCommand { port: PortFull },
+        ReadPortShallowCommand { port: PortShallow },
+        ReadPortMetadataCommand { metadata: PortMetadata },
+        ReadPortIdCommand { id: PortRef },
         ReadPortNameCommand { name: String },
         ReadPortDescriptionCommand { description: Option<String> },
         ReadPortIconCommand { icon: Option<String> },
-        ReadPortCompatibleFamiliesCommand { families: Vec<FamilyIdDto> },
+        ReadPortCompatibleFamiliesCommand { families: Vec<FamilyRef> },
         ReadPortMandatoryCommand { mandatory: Option<bool> },
         ReadPortTCommand { t: Option<f64> },
         ReadPortPointCommand { point: Option<crate::geom::Point> },
         ReadPortDirectionCommand { direction: Option<crate::geom::Vector> },
-        ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortIdDto> },
-        ReadPortQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-        ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-        ReadPortAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadPortCompatiblePortsCommand { compatible_ports: Vec<PortRef> },
+        ReadPortQualitiesFullCommand { qualities: Vec<QualityFull> },
+        ReadPortQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadPortAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadPortAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadPortQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadPortAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -858,24 +858,24 @@ pub mod read {
         ReadConnectorQualitiesShallowCommand,
         ReadConnectorAttributesFullCommand,
         ReadConnectorAttributesShallowCommand,
-        ReadConnectorQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-        ReadConnectorAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadConnectorQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadConnectorAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConnectorCommandOutput {
-        ReadConnectorFullCommand { connector: ConnectorFullDto },
-        ReadConnectorShallowCommand { connector: ConnectorShallowDto },
-        ReadConnectorMetadataCommand { metadata: ConnectorMetadataDto },
-        ReadConnectorIdCommand { id: ConnectorIdDto },
+        ReadConnectorFullCommand { connector: ConnectorFull },
+        ReadConnectorShallowCommand { connector: ConnectorShallow },
+        ReadConnectorMetadataCommand { metadata: ConnectorMetadata },
+        ReadConnectorIdCommand { id: ConnectorRef },
         ReadConnectorCodeCommand { code: String },
         ReadConnectorDescriptionCommand { description: Option<String> },
-        ReadConnectorPortIdCommand { port: Option<PortIdDto> },
-        ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-        ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-        ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadConnectorPortIdCommand { port: Option<PortRef> },
+        ReadConnectorQualitiesFullCommand { qualities: Vec<QualityFull> },
+        ReadConnectorQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadConnectorAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadConnectorAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadConnectorQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadConnectorAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -897,27 +897,27 @@ pub mod read {
         ReadRepresentationQualitiesShallowCommand,
         ReadRepresentationAttributesFullCommand,
         ReadRepresentationAttributesShallowCommand,
-        ReadRepresentationTagCommands { id: TagIdDto, commands: Vec<ReadTagCommand> },
-        ReadRepresentationQualityCommands { id: QualityIdDto, commands: Vec<ReadQualityCommand> },
-        ReadRepresentationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadRepresentationTagCommands { id: TagRef, commands: Vec<ReadTagCommand> },
+        ReadRepresentationQualityCommands { id: QualityRef, commands: Vec<ReadQualityCommand> },
+        ReadRepresentationAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadRepresentationCommandOutput {
-        ReadRepresentationFullCommand { representation: RepresentationFullDto },
-        ReadRepresentationShallowCommand { representation: RepresentationShallowDto },
-        ReadRepresentationMetadataCommand { metadata: RepresentationMetadataDto },
-        ReadRepresentationIdCommand { id: RepresentationIdDto },
+        ReadRepresentationFullCommand { representation: RepresentationFull },
+        ReadRepresentationShallowCommand { representation: RepresentationShallow },
+        ReadRepresentationMetadataCommand { metadata: RepresentationMetadata },
+        ReadRepresentationIdCommand { id: RepresentationRef },
         ReadRepresentationUrlCommand { url: String },
         ReadRepresentationDescriptionCommand { description: Option<String> },
-        ReadRepresentationFileIdCommand { file: Option<crate::file::FileIdDto> },
-        ReadRepresentationTagsFullCommand { tags: Vec<TagFullDto> },
-        ReadRepresentationTagsShallowCommand { tags: Vec<TagShallowDto> },
-        ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFullDto> },
-        ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallowDto> },
-        ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadRepresentationFileIdCommand { file: Option<crate::file::FileRef> },
+        ReadRepresentationTagsFullCommand { tags: Vec<TagFull> },
+        ReadRepresentationTagsShallowCommand { tags: Vec<TagShallow> },
+        ReadRepresentationQualitiesFullCommand { qualities: Vec<QualityFull> },
+        ReadRepresentationQualitiesShallowCommand { qualities: Vec<QualityShallow> },
+        ReadRepresentationAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadRepresentationAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadRepresentationTagCommands { results: Vec<ReadTagCommandOutput> },
         ReadRepresentationQualityCommands { results: Vec<ReadQualityCommandOutput> },
         ReadRepresentationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
@@ -938,24 +938,24 @@ pub mod read {
         ReadFamilyPortsShallowCommand,
         ReadFamilyAttributesFullCommand,
         ReadFamilyAttributesShallowCommand,
-        ReadFamilyPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
-        ReadFamilyAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadFamilyPortCommands { id: PortRef, commands: Vec<ReadPortCommand> },
+        ReadFamilyAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadFamilyCommandOutput {
-        ReadFamilyFullCommand { family: FamilyFullDto },
-        ReadFamilyShallowCommand { family: FamilyShallowDto },
-        ReadFamilyMetadataCommand { metadata: FamilyMetadataDto },
-        ReadFamilyIdCommand { id: FamilyIdDto },
+        ReadFamilyFullCommand { family: FamilyFull },
+        ReadFamilyShallowCommand { family: FamilyShallow },
+        ReadFamilyMetadataCommand { metadata: FamilyMetadata },
+        ReadFamilyIdCommand { id: FamilyRef },
         ReadFamilyNameCommand { name: String },
         ReadFamilyDescriptionCommand { description: Option<String> },
         ReadFamilyIconCommand { icon: Option<String> },
-        ReadFamilyPortsFullCommand { ports: Vec<PortFullDto> },
-        ReadFamilyPortsShallowCommand { ports: Vec<PortShallowDto> },
-        ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadFamilyPortsFullCommand { ports: Vec<PortFull> },
+        ReadFamilyPortsShallowCommand { ports: Vec<PortShallow> },
+        ReadFamilyAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadFamilyAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadFamilyPortCommands { results: Vec<ReadPortCommandOutput> },
         ReadFamilyAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
@@ -980,10 +980,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadFileCommandOutput {
-        ReadFileFullCommand { file: FileFullDto },
-        ReadFileShallowCommand { file: FileShallowDto },
-        ReadFileMetadataCommand { metadata: FileMetadataDto },
-        ReadFileIdCommand { id: FileIdDto },
+        ReadFileFullCommand { file: FileFull },
+        ReadFileShallowCommand { file: FileShallow },
+        ReadFileMetadataCommand { metadata: FileMetadata },
+        ReadFileIdCommand { id: FileRef },
         ReadFileUrlCommand { url: String },
         ReadFileMimeCommand { mime: Option<String> },
         ReadFileSizeCommand { size: Option<i64> },
@@ -1008,10 +1008,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadFolderCommandOutput {
-        ReadFolderFullCommand { folder: FolderFullDto },
-        ReadFolderShallowCommand { folder: FolderShallowDto },
-        ReadFolderMetadataCommand { metadata: FolderMetadataDto },
-        ReadFolderIdCommand { id: FolderIdDto },
+        ReadFolderFullCommand { folder: FolderFull },
+        ReadFolderShallowCommand { folder: FolderShallow },
+        ReadFolderMetadataCommand { metadata: FolderMetadata },
+        ReadFolderIdCommand { id: FolderRef },
         ReadFolderPathCommand { path: String },
         ReadFolderDescriptionCommand { description: Option<String> },
     }
@@ -1029,21 +1029,21 @@ pub mod read {
         ReadLocationAltitudeCommand,
         ReadLocationAttributesFullCommand,
         ReadLocationAttributesShallowCommand,
-        ReadLocationAttributeCommands { id: AttributeIdDto, commands: Vec<ReadAttributeCommand> },
+        ReadLocationAttributeCommands { id: AttributeRef, commands: Vec<ReadAttributeCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadLocationCommandOutput {
-        ReadLocationFullCommand { location: LocationFullDto },
-        ReadLocationShallowCommand { location: LocationShallowDto },
-        ReadLocationMetadataCommand { metadata: LocationMetadataDto },
-        ReadLocationIdCommand { id: LocationIdDto },
+        ReadLocationFullCommand { location: LocationFull },
+        ReadLocationShallowCommand { location: LocationShallow },
+        ReadLocationMetadataCommand { metadata: LocationMetadata },
+        ReadLocationIdCommand { id: LocationRef },
         ReadLocationLongitudeCommand { longitude: f64 },
         ReadLocationLatitudeCommand { latitude: f64 },
         ReadLocationAltitudeCommand { altitude: Option<f64> },
-        ReadLocationAttributesFullCommand { attributes: Vec<AttributeFullDto> },
-        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallowDto> },
+        ReadLocationAttributesFullCommand { attributes: Vec<AttributeFull> },
+        ReadLocationAttributesShallowCommand { attributes: Vec<AttributeShallow> },
         ReadLocationAttributeCommands { results: Vec<ReadAttributeCommandOutput> },
     }
 
@@ -1066,10 +1066,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadLayerCommandOutput {
-        ReadLayerFullCommand { layer: LayerFullDto },
-        ReadLayerShallowCommand { layer: LayerShallowDto },
-        ReadLayerMetadataCommand { metadata: LayerMetadataDto },
-        ReadLayerIdCommand { id: LayerIdDto },
+        ReadLayerFullCommand { layer: LayerFull },
+        ReadLayerShallowCommand { layer: LayerShallow },
+        ReadLayerMetadataCommand { metadata: LayerMetadata },
+        ReadLayerIdCommand { id: LayerRef },
         ReadLayerNameCommand { name: String },
         ReadLayerDescriptionCommand { description: Option<String> },
         ReadLayerColorCommand { color: Option<String> },
@@ -1096,15 +1096,15 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadGroupCommandOutput {
-        ReadGroupFullCommand { group: GroupFullDto },
-        ReadGroupShallowCommand { group: GroupShallowDto },
-        ReadGroupMetadataCommand { metadata: GroupMetadataDto },
-        ReadGroupIdCommand { id: GroupIdDto },
+        ReadGroupFullCommand { group: GroupFull },
+        ReadGroupShallowCommand { group: GroupShallow },
+        ReadGroupMetadataCommand { metadata: GroupMetadata },
+        ReadGroupIdCommand { id: GroupRef },
         ReadGroupNameCommand { name: String },
         ReadGroupDescriptionCommand { description: Option<String> },
         ReadGroupColorCommand { color: Option<String> },
         ReadGroupIconCommand { icon: Option<String> },
-        ReadGroupPiecesCommand { pieces: Vec<PieceIdDto> },
+        ReadGroupPiecesCommand { pieces: Vec<PieceRef> },
     }
 
 
@@ -1124,10 +1124,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadAuthorCommandOutput {
-        ReadAuthorFullCommand { author: AuthorFullDto },
-        ReadAuthorShallowCommand { author: AuthorShallowDto },
-        ReadAuthorMetadataCommand { metadata: AuthorMetadataDto },
-        ReadAuthorIdCommand { id: AuthorIdDto },
+        ReadAuthorFullCommand { author: AuthorFull },
+        ReadAuthorShallowCommand { author: AuthorShallow },
+        ReadAuthorMetadataCommand { metadata: AuthorMetadata },
+        ReadAuthorIdCommand { id: AuthorRef },
         ReadAuthorNameCommand { name: String },
         ReadAuthorEmailCommand { email: String },
         ReadAuthorRoleCommand { role: Option<String> },
@@ -1150,10 +1150,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadConceptCommandOutput {
-        ReadConceptFullCommand { concept: ConceptFullDto },
-        ReadConceptShallowCommand { concept: ConceptShallowDto },
-        ReadConceptMetadataCommand { metadata: ConceptMetadataDto },
-        ReadConceptIdCommand { id: ConceptIdDto },
+        ReadConceptFullCommand { concept: ConceptFull },
+        ReadConceptShallowCommand { concept: ConceptShallow },
+        ReadConceptMetadataCommand { metadata: ConceptMetadata },
+        ReadConceptIdCommand { id: ConceptRef },
         ReadConceptNameCommand { name: String },
         ReadConceptDescriptionCommand { description: Option<String> },
         ReadConceptOrderCommand { order: Option<i64> },
@@ -1174,10 +1174,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadTagCommandOutput {
-        ReadTagFullCommand { tag: TagFullDto },
-        ReadTagShallowCommand { tag: TagShallowDto },
-        ReadTagMetadataCommand { metadata: TagMetadataDto },
-        ReadTagIdCommand { id: TagIdDto },
+        ReadTagFullCommand { tag: TagFull },
+        ReadTagShallowCommand { tag: TagShallow },
+        ReadTagMetadataCommand { metadata: TagMetadata },
+        ReadTagIdCommand { id: TagRef },
         ReadTagNameCommand { name: String },
         ReadTagOrderCommand { order: Option<i64> },
     }
@@ -1197,23 +1197,23 @@ pub mod read {
         ReadQualityDescriptionCommand,
         ReadQualityBenchmarksFullCommand,
         ReadQualityBenchmarksShallowCommand,
-        ReadQualityBenchmarkCommands { id: BenchmarkIdDto, commands: Vec<ReadBenchmarkCommand> },
+        ReadQualityBenchmarkCommands { id: BenchmarkRef, commands: Vec<ReadBenchmarkCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadQualityCommandOutput {
-        ReadQualityFullCommand { quality: QualityFullDto },
-        ReadQualityShallowCommand { quality: QualityShallowDto },
-        ReadQualityMetadataCommand { metadata: QualityMetadataDto },
-        ReadQualityIdCommand { id: QualityIdDto },
+        ReadQualityFullCommand { quality: QualityFull },
+        ReadQualityShallowCommand { quality: QualityShallow },
+        ReadQualityMetadataCommand { metadata: QualityMetadata },
+        ReadQualityIdCommand { id: QualityRef },
         ReadQualityKeyCommand { key: String },
         ReadQualityValueCommand { value: Option<String> },
         ReadQualityUnitCommand { unit: Option<String> },
         ReadQualityDefinitionCommand { definition: Option<String> },
         ReadQualityDescriptionCommand { description: Option<String> },
-        ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFullDto> },
-        ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallowDto> },
+        ReadQualityBenchmarksFullCommand { benchmarks: Vec<BenchmarkFull> },
+        ReadQualityBenchmarksShallowCommand { benchmarks: Vec<BenchmarkShallow> },
         ReadQualityBenchmarkCommands { results: Vec<ReadBenchmarkCommandOutput> },
     }
 
@@ -1235,10 +1235,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadBenchmarkCommandOutput {
-        ReadBenchmarkFullCommand { benchmark: BenchmarkFullDto },
-        ReadBenchmarkShallowCommand { benchmark: BenchmarkShallowDto },
-        ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadataDto },
-        ReadBenchmarkIdCommand { id: BenchmarkIdDto },
+        ReadBenchmarkFullCommand { benchmark: BenchmarkFull },
+        ReadBenchmarkShallowCommand { benchmark: BenchmarkShallow },
+        ReadBenchmarkMetadataCommand { metadata: BenchmarkMetadata },
+        ReadBenchmarkIdCommand { id: BenchmarkRef },
         ReadBenchmarkNameCommand { name: String },
         ReadBenchmarkMinCommand { min: Option<f64> },
         ReadBenchmarkMaxCommand { max: Option<f64> },
@@ -1262,13 +1262,13 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadPropCommandOutput {
-        ReadPropFullCommand { prop: PropFullDto },
-        ReadPropShallowCommand { prop: PropShallowDto },
-        ReadPropIdCommand { id: PropIdDto },
+        ReadPropFullCommand { prop: PropFull },
+        ReadPropShallowCommand { prop: PropShallow },
+        ReadPropIdCommand { id: PropRef },
         ReadPropKeyCommand { key: String },
         ReadPropValueCommand { value: String },
         ReadPropUnitCommand { unit: Option<String> },
-        ReadPropQualityIdCommand { quality: Option<QualityIdDto> },
+        ReadPropQualityIdCommand { quality: Option<QualityRef> },
     }
 
 
@@ -1287,10 +1287,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadAttributeCommandOutput {
-        ReadAttributeFullCommand { attribute: AttributeFullDto },
-        ReadAttributeShallowCommand { attribute: AttributeShallowDto },
-        ReadAttributeMetadataCommand { metadata: AttributeMetadataDto },
-        ReadAttributeIdCommand { id: AttributeIdDto },
+        ReadAttributeFullCommand { attribute: AttributeFull },
+        ReadAttributeShallowCommand { attribute: AttributeShallow },
+        ReadAttributeMetadataCommand { metadata: AttributeMetadata },
+        ReadAttributeIdCommand { id: AttributeRef },
         ReadAttributeKeyCommand { key: String },
         ReadAttributeValueCommand { value: String },
         ReadAttributeDefinitionCommand { definition: Option<String> },
@@ -1313,10 +1313,10 @@ pub mod read {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadStatCommandOutput {
-        ReadStatFullCommand { stat: StatFullDto },
-        ReadStatShallowCommand { stat: StatShallowDto },
-        ReadStatMetadataCommand { metadata: StatMetadataDto },
-        ReadStatIdCommand { id: StatIdDto },
+        ReadStatFullCommand { stat: StatFull },
+        ReadStatShallowCommand { stat: StatShallow },
+        ReadStatMetadataCommand { metadata: StatMetadata },
+        ReadStatIdCommand { id: StatRef },
         ReadStatKeyCommand { key: String },
         ReadStatValueCommand { value: String },
         ReadStatUnitCommand { unit: Option<String> },
@@ -1372,14 +1372,14 @@ pub mod read {
     pub(crate) fn kit_design(g: &KitGraph, id: &Id) -> Option<DesignStoreRef> {
         g.designs.iter().find(|d| d.read().map(|r| r.id == *id).unwrap_or(false)).cloned()
     }
-    fn type_all_ports(t: &TypeStore) -> Vec<PortFullDto> {
+    fn type_all_ports(t: &TypeStore) -> Vec<PortFull> {
         let mut out = Vec::new();
         for fw in &t.families {
             let Some(f) = fw.upgrade() else { continue };
             let Ok(fr) = f.read() else { continue };
             for p in &fr.ports {
                 if let Ok(pr) = p.read() {
-                    out.push(pr.to_full_dto());
+                    out.push(pr.to_full());
                 }
             }
         }
@@ -1391,10 +1391,10 @@ pub mod read {
         pub fn execute(&self, s: &crate::stat::StatStoreRef) -> Result<ReadStatCommandOutput> {
             let s = s.read().map_err(|_| lp("stat"))?;
             Ok(match self {
-                ReadStatCommand::ReadStatFullCommand => ReadStatCommandOutput::ReadStatFullCommand { stat: s.to_full_dto() },
-                ReadStatCommand::ReadStatShallowCommand => ReadStatCommandOutput::ReadStatShallowCommand { stat: s.to_shallow_dto() },
-                ReadStatCommand::ReadStatMetadataCommand => ReadStatCommandOutput::ReadStatMetadataCommand { metadata: s.to_metadata_dto() },
-                ReadStatCommand::ReadStatIdCommand => ReadStatCommandOutput::ReadStatIdCommand { id: s.to_id_dto() },
+                ReadStatCommand::ReadStatFullCommand => ReadStatCommandOutput::ReadStatFullCommand { stat: s.to_full() },
+                ReadStatCommand::ReadStatShallowCommand => ReadStatCommandOutput::ReadStatShallowCommand { stat: s.to_shallow() },
+                ReadStatCommand::ReadStatMetadataCommand => ReadStatCommandOutput::ReadStatMetadataCommand { metadata: s.to_metadata() },
+                ReadStatCommand::ReadStatIdCommand => ReadStatCommandOutput::ReadStatIdCommand { id: s.to_ref() },
                 ReadStatCommand::ReadStatKeyCommand => ReadStatCommandOutput::ReadStatKeyCommand { key: s.key.clone() },
                 ReadStatCommand::ReadStatValueCommand => ReadStatCommandOutput::ReadStatValueCommand { value: s.value.clone() },
                 ReadStatCommand::ReadStatUnitCommand => ReadStatCommandOutput::ReadStatUnitCommand { unit: s.unit.clone() },
@@ -1407,10 +1407,10 @@ pub mod read {
         pub fn execute(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<ReadBenchmarkCommandOutput> {
             let b = b.read().map_err(|_| lp("benchmark"))?;
             Ok(match self {
-                ReadBenchmarkCommand::ReadBenchmarkFullCommand => ReadBenchmarkCommandOutput::ReadBenchmarkFullCommand { benchmark: b.to_full_dto() },
-                ReadBenchmarkCommand::ReadBenchmarkShallowCommand => ReadBenchmarkCommandOutput::ReadBenchmarkShallowCommand { benchmark: b.to_shallow_dto() },
-                ReadBenchmarkCommand::ReadBenchmarkMetadataCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMetadataCommand { metadata: b.to_metadata_dto() },
-                ReadBenchmarkCommand::ReadBenchmarkIdCommand => ReadBenchmarkCommandOutput::ReadBenchmarkIdCommand { id: b.to_id_dto() },
+                ReadBenchmarkCommand::ReadBenchmarkFullCommand => ReadBenchmarkCommandOutput::ReadBenchmarkFullCommand { benchmark: b.to_full() },
+                ReadBenchmarkCommand::ReadBenchmarkShallowCommand => ReadBenchmarkCommandOutput::ReadBenchmarkShallowCommand { benchmark: b.to_shallow() },
+                ReadBenchmarkCommand::ReadBenchmarkMetadataCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMetadataCommand { metadata: b.to_metadata() },
+                ReadBenchmarkCommand::ReadBenchmarkIdCommand => ReadBenchmarkCommandOutput::ReadBenchmarkIdCommand { id: b.to_ref() },
                 ReadBenchmarkCommand::ReadBenchmarkNameCommand => ReadBenchmarkCommandOutput::ReadBenchmarkNameCommand { name: b.name.clone() },
                 ReadBenchmarkCommand::ReadBenchmarkMinCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMinCommand { min: b.min },
                 ReadBenchmarkCommand::ReadBenchmarkMaxCommand => ReadBenchmarkCommandOutput::ReadBenchmarkMaxCommand { max: b.max },
@@ -1423,10 +1423,10 @@ pub mod read {
     impl ReadAttributeCommand {
         pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
             Ok(match self {
-                ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full_dto() },
-                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow_dto() },
-                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata_dto() },
-                ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_id_dto() },
+                ReadAttributeCommand::ReadAttributeFullCommand => ReadAttributeCommandOutput::ReadAttributeFullCommand { attribute: a.to_full() },
+                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.to_shallow() },
+                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.to_metadata() },
+                ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.to_ref() },
                 ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
                 ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
                 ReadAttributeCommand::ReadAttributeDefinitionCommand => ReadAttributeCommandOutput::ReadAttributeDefinitionCommand { definition: a.definition.clone() },
@@ -1442,13 +1442,13 @@ pub mod read {
         pub fn execute(&self, p: &crate::prop::PropStoreRef) -> Result<ReadPropCommandOutput> {
             let p = p.read().map_err(|_| lp("prop"))?;
             Ok(match self {
-                ReadPropCommand::ReadPropFullCommand => ReadPropCommandOutput::ReadPropFullCommand { prop: p.to_full_dto() },
-                ReadPropCommand::ReadPropShallowCommand => ReadPropCommandOutput::ReadPropShallowCommand { prop: p.to_shallow_dto() },
-                ReadPropCommand::ReadPropIdCommand => ReadPropCommandOutput::ReadPropIdCommand { id: p.to_id_dto() },
+                ReadPropCommand::ReadPropFullCommand => ReadPropCommandOutput::ReadPropFullCommand { prop: p.to_full() },
+                ReadPropCommand::ReadPropShallowCommand => ReadPropCommandOutput::ReadPropShallowCommand { prop: p.to_shallow() },
+                ReadPropCommand::ReadPropIdCommand => ReadPropCommandOutput::ReadPropIdCommand { id: p.to_ref() },
                 ReadPropCommand::ReadPropKeyCommand => ReadPropCommandOutput::ReadPropKeyCommand { key: p.key.clone() },
                 ReadPropCommand::ReadPropValueCommand => ReadPropCommandOutput::ReadPropValueCommand { value: p.value.clone() },
                 ReadPropCommand::ReadPropUnitCommand => ReadPropCommandOutput::ReadPropUnitCommand { unit: p.unit.clone() },
-                ReadPropCommand::ReadPropQualityIdCommand => ReadPropCommandOutput::ReadPropQualityIdCommand { quality: p.to_full_dto().quality },
+                ReadPropCommand::ReadPropQualityIdCommand => ReadPropCommandOutput::ReadPropQualityIdCommand { quality: p.to_full().quality },
             })
         }
     }
@@ -1456,10 +1456,10 @@ pub mod read {
     impl ReadTagCommand {
         pub fn execute(&self, t: &TagStore) -> Result<ReadTagCommandOutput> {
             Ok(match self {
-                ReadTagCommand::ReadTagFullCommand => ReadTagCommandOutput::ReadTagFullCommand { tag: t.to_full_dto() },
-                ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow_dto() },
-                ReadTagCommand::ReadTagMetadataCommand => ReadTagCommandOutput::ReadTagMetadataCommand { metadata: t.to_metadata_dto() },
-                ReadTagCommand::ReadTagIdCommand => ReadTagCommandOutput::ReadTagIdCommand { id: t.to_id_dto() },
+                ReadTagCommand::ReadTagFullCommand => ReadTagCommandOutput::ReadTagFullCommand { tag: t.to_full() },
+                ReadTagCommand::ReadTagShallowCommand => ReadTagCommandOutput::ReadTagShallowCommand { tag: t.to_shallow() },
+                ReadTagCommand::ReadTagMetadataCommand => ReadTagCommandOutput::ReadTagMetadataCommand { metadata: t.to_metadata() },
+                ReadTagCommand::ReadTagIdCommand => ReadTagCommandOutput::ReadTagIdCommand { id: t.to_ref() },
                 ReadTagCommand::ReadTagNameCommand => ReadTagCommandOutput::ReadTagNameCommand { name: t.name.clone() },
                 ReadTagCommand::ReadTagOrderCommand => ReadTagCommandOutput::ReadTagOrderCommand { order: t.order },
             })
@@ -1474,17 +1474,17 @@ pub mod read {
         pub fn execute(&self, q: &crate::quality::QualityStoreRef) -> Result<ReadQualityCommandOutput> {
             let q = q.read().map_err(|_| lp("quality"))?;
             Ok(match self {
-                ReadQualityCommand::ReadQualityFullCommand => ReadQualityCommandOutput::ReadQualityFullCommand { quality: q.to_full_dto() },
-                ReadQualityCommand::ReadQualityShallowCommand => ReadQualityCommandOutput::ReadQualityShallowCommand { quality: q.to_shallow_dto() },
-                ReadQualityCommand::ReadQualityMetadataCommand => ReadQualityCommandOutput::ReadQualityMetadataCommand { metadata: q.to_metadata_dto() },
-                ReadQualityCommand::ReadQualityIdCommand => ReadQualityCommandOutput::ReadQualityIdCommand { id: q.to_id_dto() },
+                ReadQualityCommand::ReadQualityFullCommand => ReadQualityCommandOutput::ReadQualityFullCommand { quality: q.to_full() },
+                ReadQualityCommand::ReadQualityShallowCommand => ReadQualityCommandOutput::ReadQualityShallowCommand { quality: q.to_shallow() },
+                ReadQualityCommand::ReadQualityMetadataCommand => ReadQualityCommandOutput::ReadQualityMetadataCommand { metadata: q.to_metadata() },
+                ReadQualityCommand::ReadQualityIdCommand => ReadQualityCommandOutput::ReadQualityIdCommand { id: q.to_ref() },
                 ReadQualityCommand::ReadQualityKeyCommand => ReadQualityCommandOutput::ReadQualityKeyCommand { key: q.key.clone() },
                 ReadQualityCommand::ReadQualityValueCommand => ReadQualityCommandOutput::ReadQualityValueCommand { value: q.value.clone() },
                 ReadQualityCommand::ReadQualityUnitCommand => ReadQualityCommandOutput::ReadQualityUnitCommand { unit: q.unit.clone() },
                 ReadQualityCommand::ReadQualityDefinitionCommand => ReadQualityCommandOutput::ReadQualityDefinitionCommand { definition: q.definition.clone() },
                 ReadQualityCommand::ReadQualityDescriptionCommand => ReadQualityCommandOutput::ReadQualityDescriptionCommand { description: q.description.clone() },
-                ReadQualityCommand::ReadQualityBenchmarksFullCommand => ReadQualityCommandOutput::ReadQualityBenchmarksFullCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect() },
-                ReadQualityCommand::ReadQualityBenchmarksShallowCommand => ReadQualityCommandOutput::ReadQualityBenchmarksShallowCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_shallow_dto())).collect() },
+                ReadQualityCommand::ReadQualityBenchmarksFullCommand => ReadQualityCommandOutput::ReadQualityBenchmarksFullCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full())).collect() },
+                ReadQualityCommand::ReadQualityBenchmarksShallowCommand => ReadQualityCommandOutput::ReadQualityBenchmarksShallowCommand { benchmarks: q.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_shallow())).collect() },
                 ReadQualityCommand::ReadQualityBenchmarkCommands { id, commands } => {
                     let b = q.benchmarks.iter().find(|b| b.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Benchmark", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1501,10 +1501,10 @@ pub mod read {
         pub fn execute(&self, a: &crate::author::AuthorStoreRef) -> Result<ReadAuthorCommandOutput> {
             let a = a.read().map_err(|_| lp("author"))?;
             Ok(match self {
-                ReadAuthorCommand::ReadAuthorFullCommand => ReadAuthorCommandOutput::ReadAuthorFullCommand { author: a.to_full_dto() },
-                ReadAuthorCommand::ReadAuthorShallowCommand => ReadAuthorCommandOutput::ReadAuthorShallowCommand { author: a.to_shallow_dto() },
-                ReadAuthorCommand::ReadAuthorMetadataCommand => ReadAuthorCommandOutput::ReadAuthorMetadataCommand { metadata: a.to_metadata_dto() },
-                ReadAuthorCommand::ReadAuthorIdCommand => ReadAuthorCommandOutput::ReadAuthorIdCommand { id: a.to_id_dto() },
+                ReadAuthorCommand::ReadAuthorFullCommand => ReadAuthorCommandOutput::ReadAuthorFullCommand { author: a.to_full() },
+                ReadAuthorCommand::ReadAuthorShallowCommand => ReadAuthorCommandOutput::ReadAuthorShallowCommand { author: a.to_shallow() },
+                ReadAuthorCommand::ReadAuthorMetadataCommand => ReadAuthorCommandOutput::ReadAuthorMetadataCommand { metadata: a.to_metadata() },
+                ReadAuthorCommand::ReadAuthorIdCommand => ReadAuthorCommandOutput::ReadAuthorIdCommand { id: a.to_ref() },
                 ReadAuthorCommand::ReadAuthorNameCommand => ReadAuthorCommandOutput::ReadAuthorNameCommand { name: a.name.clone() },
                 ReadAuthorCommand::ReadAuthorEmailCommand => ReadAuthorCommandOutput::ReadAuthorEmailCommand { email: a.email.clone() },
                 ReadAuthorCommand::ReadAuthorRoleCommand => ReadAuthorCommandOutput::ReadAuthorRoleCommand { role: a.role.clone() },
@@ -1517,10 +1517,10 @@ pub mod read {
         pub fn execute(&self, c: &crate::concept::ConceptStoreRef) -> Result<ReadConceptCommandOutput> {
             let c = c.read().map_err(|_| lp("concept"))?;
             Ok(match self {
-                ReadConceptCommand::ReadConceptFullCommand => ReadConceptCommandOutput::ReadConceptFullCommand { concept: c.to_full_dto() },
-                ReadConceptCommand::ReadConceptShallowCommand => ReadConceptCommandOutput::ReadConceptShallowCommand { concept: c.to_shallow_dto() },
-                ReadConceptCommand::ReadConceptMetadataCommand => ReadConceptCommandOutput::ReadConceptMetadataCommand { metadata: c.to_metadata_dto() },
-                ReadConceptCommand::ReadConceptIdCommand => ReadConceptCommandOutput::ReadConceptIdCommand { id: c.to_id_dto() },
+                ReadConceptCommand::ReadConceptFullCommand => ReadConceptCommandOutput::ReadConceptFullCommand { concept: c.to_full() },
+                ReadConceptCommand::ReadConceptShallowCommand => ReadConceptCommandOutput::ReadConceptShallowCommand { concept: c.to_shallow() },
+                ReadConceptCommand::ReadConceptMetadataCommand => ReadConceptCommandOutput::ReadConceptMetadataCommand { metadata: c.to_metadata() },
+                ReadConceptCommand::ReadConceptIdCommand => ReadConceptCommandOutput::ReadConceptIdCommand { id: c.to_ref() },
                 ReadConceptCommand::ReadConceptNameCommand => ReadConceptCommandOutput::ReadConceptNameCommand { name: c.name.clone() },
                 ReadConceptCommand::ReadConceptDescriptionCommand => ReadConceptCommandOutput::ReadConceptDescriptionCommand { description: c.description.clone() },
                 ReadConceptCommand::ReadConceptOrderCommand => ReadConceptCommandOutput::ReadConceptOrderCommand { order: c.order },
@@ -1532,10 +1532,10 @@ pub mod read {
         pub fn execute(&self, f: &crate::file::FileStoreRef) -> Result<ReadFileCommandOutput> {
             let f = f.read().map_err(|_| lp("file"))?;
             Ok(match self {
-                ReadFileCommand::ReadFileFullCommand => ReadFileCommandOutput::ReadFileFullCommand { file: f.to_full_dto() },
-                ReadFileCommand::ReadFileShallowCommand => ReadFileCommandOutput::ReadFileShallowCommand { file: f.to_shallow_dto() },
-                ReadFileCommand::ReadFileMetadataCommand => ReadFileCommandOutput::ReadFileMetadataCommand { metadata: f.to_metadata_dto() },
-                ReadFileCommand::ReadFileIdCommand => ReadFileCommandOutput::ReadFileIdCommand { id: f.to_id_dto() },
+                ReadFileCommand::ReadFileFullCommand => ReadFileCommandOutput::ReadFileFullCommand { file: f.to_full() },
+                ReadFileCommand::ReadFileShallowCommand => ReadFileCommandOutput::ReadFileShallowCommand { file: f.to_shallow() },
+                ReadFileCommand::ReadFileMetadataCommand => ReadFileCommandOutput::ReadFileMetadataCommand { metadata: f.to_metadata() },
+                ReadFileCommand::ReadFileIdCommand => ReadFileCommandOutput::ReadFileIdCommand { id: f.to_ref() },
                 ReadFileCommand::ReadFileUrlCommand => ReadFileCommandOutput::ReadFileUrlCommand { url: f.url.clone() },
                 ReadFileCommand::ReadFileMimeCommand => ReadFileCommandOutput::ReadFileMimeCommand { mime: f.mime.clone() },
                 ReadFileCommand::ReadFileSizeCommand => ReadFileCommandOutput::ReadFileSizeCommand { size: f.size },
@@ -1551,10 +1551,10 @@ pub mod read {
         pub fn execute(&self, f: &crate::folder::FolderStoreRef) -> Result<ReadFolderCommandOutput> {
             let f = f.read().map_err(|_| lp("folder"))?;
             Ok(match self {
-                ReadFolderCommand::ReadFolderFullCommand => ReadFolderCommandOutput::ReadFolderFullCommand { folder: f.to_full_dto() },
-                ReadFolderCommand::ReadFolderShallowCommand => ReadFolderCommandOutput::ReadFolderShallowCommand { folder: f.to_shallow_dto() },
-                ReadFolderCommand::ReadFolderMetadataCommand => ReadFolderCommandOutput::ReadFolderMetadataCommand { metadata: f.to_metadata_dto() },
-                ReadFolderCommand::ReadFolderIdCommand => ReadFolderCommandOutput::ReadFolderIdCommand { id: f.to_id_dto() },
+                ReadFolderCommand::ReadFolderFullCommand => ReadFolderCommandOutput::ReadFolderFullCommand { folder: f.to_full() },
+                ReadFolderCommand::ReadFolderShallowCommand => ReadFolderCommandOutput::ReadFolderShallowCommand { folder: f.to_shallow() },
+                ReadFolderCommand::ReadFolderMetadataCommand => ReadFolderCommandOutput::ReadFolderMetadataCommand { metadata: f.to_metadata() },
+                ReadFolderCommand::ReadFolderIdCommand => ReadFolderCommandOutput::ReadFolderIdCommand { id: f.to_ref() },
                 ReadFolderCommand::ReadFolderPathCommand => ReadFolderCommandOutput::ReadFolderPathCommand { path: f.path.clone() },
                 ReadFolderCommand::ReadFolderDescriptionCommand => ReadFolderCommandOutput::ReadFolderDescriptionCommand { description: f.description.clone() },
             })
@@ -1565,15 +1565,15 @@ pub mod read {
         pub fn execute(&self, l: &crate::location::LocationStoreRef) -> Result<ReadLocationCommandOutput> {
             let l = l.read().map_err(|_| lp("location"))?;
             Ok(match self {
-                ReadLocationCommand::ReadLocationFullCommand => ReadLocationCommandOutput::ReadLocationFullCommand { location: l.to_full_dto() },
-                ReadLocationCommand::ReadLocationShallowCommand => ReadLocationCommandOutput::ReadLocationShallowCommand { location: l.to_shallow_dto() },
-                ReadLocationCommand::ReadLocationMetadataCommand => ReadLocationCommandOutput::ReadLocationMetadataCommand { metadata: l.to_metadata_dto() },
-                ReadLocationCommand::ReadLocationIdCommand => ReadLocationCommandOutput::ReadLocationIdCommand { id: l.to_id_dto() },
+                ReadLocationCommand::ReadLocationFullCommand => ReadLocationCommandOutput::ReadLocationFullCommand { location: l.to_full() },
+                ReadLocationCommand::ReadLocationShallowCommand => ReadLocationCommandOutput::ReadLocationShallowCommand { location: l.to_shallow() },
+                ReadLocationCommand::ReadLocationMetadataCommand => ReadLocationCommandOutput::ReadLocationMetadataCommand { metadata: l.to_metadata() },
+                ReadLocationCommand::ReadLocationIdCommand => ReadLocationCommandOutput::ReadLocationIdCommand { id: l.to_ref() },
                 ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
                 ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
                 ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
-                ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadLocationCommand::ReadLocationAttributesFullCommand => ReadLocationCommandOutput::ReadLocationAttributesFullCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
                 ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
                     let a = l.attributes.iter().find(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Attribute", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1590,10 +1590,10 @@ pub mod read {
         pub fn execute(&self, l: &crate::layer::LayerStoreRef) -> Result<ReadLayerCommandOutput> {
             let l = l.read().map_err(|_| lp("layer"))?;
             Ok(match self {
-                ReadLayerCommand::ReadLayerFullCommand => ReadLayerCommandOutput::ReadLayerFullCommand { layer: l.to_full_dto() },
-                ReadLayerCommand::ReadLayerShallowCommand => ReadLayerCommandOutput::ReadLayerShallowCommand { layer: l.to_shallow_dto() },
-                ReadLayerCommand::ReadLayerMetadataCommand => ReadLayerCommandOutput::ReadLayerMetadataCommand { metadata: l.to_metadata_dto() },
-                ReadLayerCommand::ReadLayerIdCommand => ReadLayerCommandOutput::ReadLayerIdCommand { id: l.to_id_dto() },
+                ReadLayerCommand::ReadLayerFullCommand => ReadLayerCommandOutput::ReadLayerFullCommand { layer: l.to_full() },
+                ReadLayerCommand::ReadLayerShallowCommand => ReadLayerCommandOutput::ReadLayerShallowCommand { layer: l.to_shallow() },
+                ReadLayerCommand::ReadLayerMetadataCommand => ReadLayerCommandOutput::ReadLayerMetadataCommand { metadata: l.to_metadata() },
+                ReadLayerCommand::ReadLayerIdCommand => ReadLayerCommandOutput::ReadLayerIdCommand { id: l.to_ref() },
                 ReadLayerCommand::ReadLayerNameCommand => ReadLayerCommandOutput::ReadLayerNameCommand { name: l.name.clone() },
                 ReadLayerCommand::ReadLayerDescriptionCommand => ReadLayerCommandOutput::ReadLayerDescriptionCommand { description: l.description.clone() },
                 ReadLayerCommand::ReadLayerColorCommand => ReadLayerCommandOutput::ReadLayerColorCommand { color: l.color.clone() },
@@ -1608,15 +1608,15 @@ pub mod read {
         pub fn execute(&self, g: &crate::group::GroupStoreRef) -> Result<ReadGroupCommandOutput> {
             let g = g.read().map_err(|_| lp("group"))?;
             Ok(match self {
-                ReadGroupCommand::ReadGroupFullCommand => ReadGroupCommandOutput::ReadGroupFullCommand { group: g.to_full_dto() },
-                ReadGroupCommand::ReadGroupShallowCommand => ReadGroupCommandOutput::ReadGroupShallowCommand { group: g.to_shallow_dto() },
-                ReadGroupCommand::ReadGroupMetadataCommand => ReadGroupCommandOutput::ReadGroupMetadataCommand { metadata: g.to_metadata_dto() },
-                ReadGroupCommand::ReadGroupIdCommand => ReadGroupCommandOutput::ReadGroupIdCommand { id: g.to_id_dto() },
+                ReadGroupCommand::ReadGroupFullCommand => ReadGroupCommandOutput::ReadGroupFullCommand { group: g.to_full() },
+                ReadGroupCommand::ReadGroupShallowCommand => ReadGroupCommandOutput::ReadGroupShallowCommand { group: g.to_shallow() },
+                ReadGroupCommand::ReadGroupMetadataCommand => ReadGroupCommandOutput::ReadGroupMetadataCommand { metadata: g.to_metadata() },
+                ReadGroupCommand::ReadGroupIdCommand => ReadGroupCommandOutput::ReadGroupIdCommand { id: g.to_ref() },
                 ReadGroupCommand::ReadGroupNameCommand => ReadGroupCommandOutput::ReadGroupNameCommand { name: g.name.clone() },
                 ReadGroupCommand::ReadGroupDescriptionCommand => ReadGroupCommandOutput::ReadGroupDescriptionCommand { description: g.description.clone() },
                 ReadGroupCommand::ReadGroupColorCommand => ReadGroupCommandOutput::ReadGroupColorCommand { color: g.color.clone() },
                 ReadGroupCommand::ReadGroupIconCommand => ReadGroupCommandOutput::ReadGroupIconCommand { icon: g.icon.clone() },
-                ReadGroupCommand::ReadGroupPiecesCommand => ReadGroupCommandOutput::ReadGroupPiecesCommand { pieces: g.pieces.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() },
+                ReadGroupCommand::ReadGroupPiecesCommand => ReadGroupCommandOutput::ReadGroupPiecesCommand { pieces: g.pieces.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_ref()))).collect() },
             })
         }
     }
@@ -1625,17 +1625,17 @@ pub mod read {
         pub fn execute(&self, f: &FamilyStoreRef) -> Result<ReadFamilyCommandOutput> {
             let f = f.read().map_err(|_| lp("family"))?;
             Ok(match self {
-                ReadFamilyCommand::ReadFamilyFullCommand => ReadFamilyCommandOutput::ReadFamilyFullCommand { family: f.to_full_dto() },
-                ReadFamilyCommand::ReadFamilyShallowCommand => ReadFamilyCommandOutput::ReadFamilyShallowCommand { family: f.to_shallow_dto() },
-                ReadFamilyCommand::ReadFamilyMetadataCommand => ReadFamilyCommandOutput::ReadFamilyMetadataCommand { metadata: f.to_metadata_dto() },
-                ReadFamilyCommand::ReadFamilyIdCommand => ReadFamilyCommandOutput::ReadFamilyIdCommand { id: f.to_id_dto() },
+                ReadFamilyCommand::ReadFamilyFullCommand => ReadFamilyCommandOutput::ReadFamilyFullCommand { family: f.to_full() },
+                ReadFamilyCommand::ReadFamilyShallowCommand => ReadFamilyCommandOutput::ReadFamilyShallowCommand { family: f.to_shallow() },
+                ReadFamilyCommand::ReadFamilyMetadataCommand => ReadFamilyCommandOutput::ReadFamilyMetadataCommand { metadata: f.to_metadata() },
+                ReadFamilyCommand::ReadFamilyIdCommand => ReadFamilyCommandOutput::ReadFamilyIdCommand { id: f.to_ref() },
                 ReadFamilyCommand::ReadFamilyNameCommand => ReadFamilyCommandOutput::ReadFamilyNameCommand { name: f.name.clone() },
                 ReadFamilyCommand::ReadFamilyDescriptionCommand => ReadFamilyCommandOutput::ReadFamilyDescriptionCommand { description: f.description.clone() },
                 ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
-                ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full_dto()).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadFamilyCommand::ReadFamilyPortsFullCommand => ReadFamilyCommandOutput::ReadFamilyPortsFullCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesFullCommand => ReadFamilyCommandOutput::ReadFamilyAttributesFullCommand { attributes: f.attributes.iter().map(|a| a.to_full()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.to_shallow()).collect() },
                 ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
                     let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1660,13 +1660,13 @@ pub mod read {
         pub fn execute(&self, s: &SideStoreRef) -> Result<ReadSideCommandOutput> {
             let s = s.read().map_err(|_| lp("side"))?;
             Ok(match self {
-                ReadSideCommand::ReadSideFullCommand => ReadSideCommandOutput::ReadSideFullCommand { side: s.to_full_dto() },
-                ReadSideCommand::ReadSideShallowCommand => ReadSideCommandOutput::ReadSideShallowCommand { side: s.to_shallow_dto() },
-                ReadSideCommand::ReadSideMetadataCommand => ReadSideCommandOutput::ReadSideMetadataCommand { side: s.to_metadata_dto() },
-                ReadSideCommand::ReadSideIdCommand => ReadSideCommandOutput::ReadSideIdCommand { id: s.to_id_dto() },
-                ReadSideCommand::ReadSidePieceIdCommand => ReadSideCommandOutput::ReadSidePieceIdCommand { piece: s.to_metadata_dto().piece },
-                ReadSideCommand::ReadSidePortIdCommand => ReadSideCommandOutput::ReadSidePortIdCommand { port: s.to_metadata_dto().port },
-                ReadSideCommand::ReadSideDesignPieceIdCommand => ReadSideCommandOutput::ReadSideDesignPieceIdCommand { design_piece: s.to_metadata_dto().design_piece },
+                ReadSideCommand::ReadSideFullCommand => ReadSideCommandOutput::ReadSideFullCommand { side: s.to_full() },
+                ReadSideCommand::ReadSideShallowCommand => ReadSideCommandOutput::ReadSideShallowCommand { side: s.to_shallow() },
+                ReadSideCommand::ReadSideMetadataCommand => ReadSideCommandOutput::ReadSideMetadataCommand { side: s.to_metadata() },
+                ReadSideCommand::ReadSideIdCommand => ReadSideCommandOutput::ReadSideIdCommand { id: s.to_ref() },
+                ReadSideCommand::ReadSidePieceIdCommand => ReadSideCommandOutput::ReadSidePieceIdCommand { piece: s.to_metadata().piece },
+                ReadSideCommand::ReadSidePortIdCommand => ReadSideCommandOutput::ReadSidePortIdCommand { port: s.to_metadata().port },
+                ReadSideCommand::ReadSideDesignPieceIdCommand => ReadSideCommandOutput::ReadSideDesignPieceIdCommand { design_piece: s.to_metadata().design_piece },
             })
         }
     }
@@ -1675,14 +1675,14 @@ pub mod read {
         pub fn execute(&self, c: &crate::connection::ConnectionStoreRef) -> Result<ReadConnectionCommandOutput> {
             let c = c.read().map_err(|_| lp("connection"))?;
             Ok(match self {
-                ReadConnectionCommand::ReadConnectionFullCommand => ReadConnectionCommandOutput::ReadConnectionFullCommand { dto: c.to_full_dto() },
-                ReadConnectionCommand::ReadConnectionShallowCommand => ReadConnectionCommandOutput::ReadConnectionShallowCommand { dto: c.to_shallow_dto() },
-                ReadConnectionCommand::ReadConnectionMetadataCommand => ReadConnectionCommandOutput::ReadConnectionMetadataCommand { metadata: c.to_metadata_dto() },
-                ReadConnectionCommand::ReadConnectionIdCommand => ReadConnectionCommandOutput::ReadConnectionIdCommand { id: c.to_id_dto() },
-                ReadConnectionCommand::ReadConnectionConnectedSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideMetadataCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_metadata_dto() },
-                ReadConnectionCommand::ReadConnectionConnectingSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideMetadataCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_metadata_dto() },
-                ReadConnectionCommand::ReadConnectionConnectedSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideFullCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_full_dto() },
-                ReadConnectionCommand::ReadConnectionConnectingSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideFullCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_full_dto() },
+                ReadConnectionCommand::ReadConnectionFullCommand => ReadConnectionCommandOutput::ReadConnectionFullCommand { dto: c.to_full() },
+                ReadConnectionCommand::ReadConnectionShallowCommand => ReadConnectionCommandOutput::ReadConnectionShallowCommand { dto: c.to_shallow() },
+                ReadConnectionCommand::ReadConnectionMetadataCommand => ReadConnectionCommandOutput::ReadConnectionMetadataCommand { metadata: c.to_metadata() },
+                ReadConnectionCommand::ReadConnectionIdCommand => ReadConnectionCommandOutput::ReadConnectionIdCommand { id: c.to_ref() },
+                ReadConnectionCommand::ReadConnectionConnectedSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideMetadataCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_metadata() },
+                ReadConnectionCommand::ReadConnectionConnectingSideMetadataCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideMetadataCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_metadata() },
+                ReadConnectionCommand::ReadConnectionConnectedSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectedSideFullCommand { side: c.connected.read().map_err(|_| lp("side"))?.to_full() },
+                ReadConnectionCommand::ReadConnectionConnectingSideFullCommand => ReadConnectionCommandOutput::ReadConnectionConnectingSideFullCommand { side: c.connecting.read().map_err(|_| lp("side"))?.to_full() },
                 ReadConnectionCommand::ReadConnectionGapCommand => ReadConnectionCommandOutput::ReadConnectionGapCommand { gap: c.gap },
                 ReadConnectionCommand::ReadConnectionShiftCommand => ReadConnectionCommandOutput::ReadConnectionShiftCommand { shift: c.shift },
                 ReadConnectionCommand::ReadConnectionRiseCommand => ReadConnectionCommandOutput::ReadConnectionRiseCommand { rise: c.rise },
@@ -1692,9 +1692,9 @@ pub mod read {
                 ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
                 ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
                 ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
-                ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
+                ReadConnectionCommand::ReadConnectionAttributesFullCommand => ReadConnectionCommandOutput::ReadConnectionAttributesFullCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
                 ReadConnectionCommand::ReadConnectionAttributesShallowCommand => {
-                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() }
+                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() }
                 }
                 ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
                 ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
@@ -1731,10 +1731,10 @@ pub mod read {
         pub fn execute(&self, p: &PortStoreRef) -> Result<ReadPortCommandOutput> {
             let p = p.read().map_err(|_| lp("port"))?;
             Ok(match self {
-                ReadPortCommand::ReadPortFullCommand => ReadPortCommandOutput::ReadPortFullCommand { port: p.to_full_dto() },
-                ReadPortCommand::ReadPortShallowCommand => ReadPortCommandOutput::ReadPortShallowCommand { port: p.to_shallow_dto() },
-                ReadPortCommand::ReadPortMetadataCommand => ReadPortCommandOutput::ReadPortMetadataCommand { metadata: p.to_metadata_dto() },
-                ReadPortCommand::ReadPortIdCommand => ReadPortCommandOutput::ReadPortIdCommand { id: p.to_id_dto() },
+                ReadPortCommand::ReadPortFullCommand => ReadPortCommandOutput::ReadPortFullCommand { port: p.to_full() },
+                ReadPortCommand::ReadPortShallowCommand => ReadPortCommandOutput::ReadPortShallowCommand { port: p.to_shallow() },
+                ReadPortCommand::ReadPortMetadataCommand => ReadPortCommandOutput::ReadPortMetadataCommand { metadata: p.to_metadata() },
+                ReadPortCommand::ReadPortIdCommand => ReadPortCommandOutput::ReadPortIdCommand { id: p.to_ref() },
                 ReadPortCommand::ReadPortNameCommand => ReadPortCommandOutput::ReadPortNameCommand { name: p.name.clone() },
                 ReadPortCommand::ReadPortDescriptionCommand => ReadPortCommandOutput::ReadPortDescriptionCommand { description: p.description.clone() },
                 ReadPortCommand::ReadPortIconCommand => ReadPortCommandOutput::ReadPortIconCommand { icon: p.icon.clone() },
@@ -1744,12 +1744,12 @@ pub mod read {
                 ReadPortCommand::ReadPortPointCommand => ReadPortCommandOutput::ReadPortPointCommand { point: p.point },
                 ReadPortCommand::ReadPortDirectionCommand => ReadPortCommandOutput::ReadPortDirectionCommand { direction: p.direction },
                 ReadPortCommand::ReadPortCompatiblePortsCommand => {
-                    ReadPortCommandOutput::ReadPortCompatiblePortsCommand { compatible_ports: p.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_id_dto()))).collect() }
+                    ReadPortCommandOutput::ReadPortCompatiblePortsCommand { compatible_ports: p.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|p| p.to_ref()))).collect() }
                 }
-                ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-                ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-                ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full_dto()).collect() },
-                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadPortCommand::ReadPortQualitiesFullCommand => ReadPortCommandOutput::ReadPortQualitiesFullCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
+                ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
+                ReadPortCommand::ReadPortAttributesFullCommand => ReadPortCommandOutput::ReadPortAttributesFullCommand { attributes: p.attributes.iter().map(|a| a.to_full()).collect() },
+                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.to_shallow()).collect() },
                 ReadPortCommand::ReadPortQualityCommands { id, commands } => {
                     let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1774,17 +1774,17 @@ pub mod read {
         pub fn execute(&self, c: &ConnectorStoreRef) -> Result<ReadConnectorCommandOutput> {
             let c = c.read().map_err(|_| lp("connector"))?;
             Ok(match self {
-                ReadConnectorCommand::ReadConnectorFullCommand => ReadConnectorCommandOutput::ReadConnectorFullCommand { connector: c.to_full_dto() },
-                ReadConnectorCommand::ReadConnectorShallowCommand => ReadConnectorCommandOutput::ReadConnectorShallowCommand { connector: c.to_shallow_dto() },
-                ReadConnectorCommand::ReadConnectorMetadataCommand => ReadConnectorCommandOutput::ReadConnectorMetadataCommand { metadata: c.to_metadata_dto() },
-                ReadConnectorCommand::ReadConnectorIdCommand => ReadConnectorCommandOutput::ReadConnectorIdCommand { id: c.to_id_dto() },
+                ReadConnectorCommand::ReadConnectorFullCommand => ReadConnectorCommandOutput::ReadConnectorFullCommand { connector: c.to_full() },
+                ReadConnectorCommand::ReadConnectorShallowCommand => ReadConnectorCommandOutput::ReadConnectorShallowCommand { connector: c.to_shallow() },
+                ReadConnectorCommand::ReadConnectorMetadataCommand => ReadConnectorCommandOutput::ReadConnectorMetadataCommand { metadata: c.to_metadata() },
+                ReadConnectorCommand::ReadConnectorIdCommand => ReadConnectorCommandOutput::ReadConnectorIdCommand { id: c.to_ref() },
                 ReadConnectorCommand::ReadConnectorCodeCommand => ReadConnectorCommandOutput::ReadConnectorCodeCommand { code: c.code.clone() },
                 ReadConnectorCommand::ReadConnectorDescriptionCommand => ReadConnectorCommandOutput::ReadConnectorDescriptionCommand { description: c.description.clone() },
-                ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata_dto().port },
-                ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-                ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full_dto()).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata().port },
+                ReadConnectorCommand::ReadConnectorQualitiesFullCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesFullCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
+                ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesFullCommand => ReadConnectorCommandOutput::ReadConnectorAttributesFullCommand { attributes: c.attributes.iter().map(|a| a.to_full()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.to_shallow()).collect() },
                 ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
                     let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1809,23 +1809,23 @@ pub mod read {
         pub fn execute(&self, r: &RepresentationStoreRef) -> Result<ReadRepresentationCommandOutput> {
             let r = r.read().map_err(|_| lp("representation"))?;
             Ok(match self {
-                ReadRepresentationCommand::ReadRepresentationFullCommand => ReadRepresentationCommandOutput::ReadRepresentationFullCommand { representation: r.to_full_dto() },
-                ReadRepresentationCommand::ReadRepresentationShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationShallowCommand { representation: r.to_shallow_dto() },
-                ReadRepresentationCommand::ReadRepresentationMetadataCommand => ReadRepresentationCommandOutput::ReadRepresentationMetadataCommand { metadata: r.to_metadata_dto() },
-                ReadRepresentationCommand::ReadRepresentationIdCommand => ReadRepresentationCommandOutput::ReadRepresentationIdCommand { id: r.to_id_dto() },
+                ReadRepresentationCommand::ReadRepresentationFullCommand => ReadRepresentationCommandOutput::ReadRepresentationFullCommand { representation: r.to_full() },
+                ReadRepresentationCommand::ReadRepresentationShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationShallowCommand { representation: r.to_shallow() },
+                ReadRepresentationCommand::ReadRepresentationMetadataCommand => ReadRepresentationCommandOutput::ReadRepresentationMetadataCommand { metadata: r.to_metadata() },
+                ReadRepresentationCommand::ReadRepresentationIdCommand => ReadRepresentationCommandOutput::ReadRepresentationIdCommand { id: r.to_ref() },
                 ReadRepresentationCommand::ReadRepresentationUrlCommand => ReadRepresentationCommandOutput::ReadRepresentationUrlCommand { url: r.url.clone() },
                 ReadRepresentationCommand::ReadRepresentationDescriptionCommand => ReadRepresentationCommandOutput::ReadRepresentationDescriptionCommand { description: r.description.clone() },
-                ReadRepresentationCommand::ReadRepresentationFileIdCommand => ReadRepresentationCommandOutput::ReadRepresentationFileIdCommand { file: r.to_metadata_dto().file },
-                ReadRepresentationCommand::ReadRepresentationTagsFullCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsFullCommand { tags: r.tags.iter().map(|t| t.to_full_dto()).collect() },
-                ReadRepresentationCommand::ReadRepresentationTagsShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsShallowCommand { tags: r.tags.iter().map(|t| t.to_shallow_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationFileIdCommand => ReadRepresentationCommandOutput::ReadRepresentationFileIdCommand { file: r.to_metadata().file },
+                ReadRepresentationCommand::ReadRepresentationTagsFullCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsFullCommand { tags: r.tags.iter().map(|t| t.to_full()).collect() },
+                ReadRepresentationCommand::ReadRepresentationTagsShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationTagsShallowCommand { tags: r.tags.iter().map(|t| t.to_shallow()).collect() },
                 ReadRepresentationCommand::ReadRepresentationQualitiesFullCommand => {
-                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() }
+                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() }
                 }
                 ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => {
-                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() }
+                    ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() }
                 }
-                ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full_dto()).collect() },
-                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow_dto()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesFullCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesFullCommand { attributes: r.attributes.iter().map(|a| a.to_full()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.to_shallow()).collect() },
                 ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
                     let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1858,10 +1858,10 @@ pub mod read {
         pub fn execute(&self, p: &PieceStoreRef, _g: &KitGraph) -> Result<ReadPieceCommandOutput> {
             let o = p.read().map_err(|_| lp("piece"))?;
             Ok(match self {
-                ReadPieceCommand::ReadPieceFullCommand => ReadPieceCommandOutput::ReadPieceFullCommand { dto: o.to_full_dto() },
-                ReadPieceCommand::ReadPieceShallowCommand => ReadPieceCommandOutput::ReadPieceShallowCommand { dto: o.to_shallow_dto() },
-                ReadPieceCommand::ReadPieceMetadataCommand => ReadPieceCommandOutput::ReadPieceMetadataCommand { metadata: o.to_metadata_dto() },
-                ReadPieceCommand::ReadPieceIdCommand => ReadPieceCommandOutput::ReadPieceIdCommand { id: o.to_id_dto() },
+                ReadPieceCommand::ReadPieceFullCommand => ReadPieceCommandOutput::ReadPieceFullCommand { dto: o.to_full() },
+                ReadPieceCommand::ReadPieceShallowCommand => ReadPieceCommandOutput::ReadPieceShallowCommand { dto: o.to_shallow() },
+                ReadPieceCommand::ReadPieceMetadataCommand => ReadPieceCommandOutput::ReadPieceMetadataCommand { metadata: o.to_metadata() },
+                ReadPieceCommand::ReadPieceIdCommand => ReadPieceCommandOutput::ReadPieceIdCommand { id: o.to_ref() },
                 ReadPieceCommand::ReadPieceNameCommand => ReadPieceCommandOutput::ReadPieceNameCommand { name: o.name.clone() },
                 ReadPieceCommand::ReadPieceDescriptionCommand => ReadPieceCommandOutput::ReadPieceDescriptionCommand { description: o.description.clone() },
                 ReadPieceCommand::ReadPiecePlaneCommand => ReadPieceCommandOutput::ReadPiecePlaneCommand { plane: o.pose.plane },
@@ -1871,31 +1871,31 @@ pub mod read {
                 ReadPieceCommand::ReadPieceHiddenCommand => ReadPieceCommandOutput::ReadPieceHiddenCommand { hidden: o.hidden },
                 ReadPieceCommand::ReadPieceLockedCommand => ReadPieceCommandOutput::ReadPieceLockedCommand { locked: o.locked },
                 ReadPieceCommand::ReadPieceColorCommand => ReadPieceCommandOutput::ReadPieceColorCommand { color: o.color.clone() },
-                ReadPieceCommand::ReadPieceTypeCommand => ReadPieceCommandOutput::ReadPieceTypeCommand { r#type: o.to_metadata_dto().r#type },
-                ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata_dto().design },
-                ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadPieceCommand::ReadPieceTypeCommand => ReadPieceCommandOutput::ReadPieceTypeCommand { r#type: o.to_metadata().r#type },
+                ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata().design },
+                ReadPieceCommand::ReadPiecePropsFullCommand => ReadPieceCommandOutput::ReadPiecePropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadPieceCommand::ReadPieceAttributesFullCommand => ReadPieceCommandOutput::ReadPieceAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
                 ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
                 ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
                 ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_full_dto() },
                 ReadPieceCommand::ReadPiecePathCommand => ReadPieceCommandOutput::ReadPiecePathCommand { path: o.path() },
-                ReadPieceCommand::ReadPieceParentPieceIdCommand => ReadPieceCommandOutput::ReadPieceParentPieceIdCommand { parent_piece: o.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto())) },
+                ReadPieceCommand::ReadPieceParentPieceIdCommand => ReadPieceCommandOutput::ReadPieceParentPieceIdCommand { parent_piece: o.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref())) },
                 ReadPieceCommand::ReadPieceParentConnectionIdCommand => {
-                    ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand { parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_id_dto())) }
+                    ReadPieceCommandOutput::ReadPieceParentConnectionIdCommand { parent_connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_ref())) }
                 }
                 ReadPieceCommand::ReadPieceParentConnectionFullCommand => {
-                    ReadPieceCommandOutput::ReadPieceParentConnectionFullCommand { connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_full_dto())) }
+                    ReadPieceCommandOutput::ReadPieceParentConnectionFullCommand { connection: o.parent_connection.as_ref().and_then(|w| w.upgrade()).and_then(|c| c.read().ok().map(|c| c.to_full())) }
                 }
                 ReadPieceCommand::ReadPieceParentDesignIdCommand => ReadPieceCommandOutput::ReadPieceParentDesignIdCommand {
-                    parent_design: o.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
+                    parent_design: o.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| DesignRef { id: d.id.clone() })).ok_or_else(|| SemioError::InvalidOperation("piece has no parent design".into()))?,
                 },
                 ReadPieceCommand::ReadPieceFixedCommand => {
                     if o.parent_piece.is_some() || o.parent_connection.is_some() {
                         return Err(SemioError::InvalidOperation("ReadPieceFixedCommand requires no parent piece or connection".into()));
                     }
-                    ReadPieceCommandOutput::ReadPieceFixedCommand { fixed: crate::piece::FixedPieceOutputDto { piece: o.to_id_dto(), pose: o.pose_full_dto() } }
+                    ReadPieceCommandOutput::ReadPieceFixedCommand { fixed: crate::piece::FixedPieceOutputDto { piece: o.to_ref(), pose: o.pose_full_dto() } }
                 }
                 ReadPieceCommand::ReadPieceConnectedCommand => {
                     let (pp, pc) = (o.parent_piece.as_ref().and_then(|w| w.upgrade()), o.parent_connection.as_ref().and_then(|w| w.upgrade()));
@@ -1904,20 +1904,20 @@ pub mod read {
                     };
                     let _pp = pp.read().map_err(|_| lp("piece"))?;
                     let _pc = pc.read().map_err(|_| lp("connection"))?;
-                    ReadPieceCommandOutput::ReadPieceConnectedCommand { connected: crate::piece::ConnectedPieceOutputDto { piece: o.to_id_dto(), parent_piece: _pp.to_id_dto(), parent_connection: _pc.to_id_dto(), flat_pose: o.flat_pose_full_dto() } }
+                    ReadPieceCommandOutput::ReadPieceConnectedCommand { connected: crate::piece::ConnectedPieceOutputDto { piece: o.to_ref(), parent_piece: _pp.to_ref(), parent_connection: _pc.to_ref(), flat_pose: o.flat_pose_full_dto() } }
                 }
                 ReadPieceCommand::ReadPieceAlternativesCommand => {
                     let alt = o.alternatives();
                     ReadPieceCommandOutput::ReadPieceAlternativesCommand {
                         alternatives: crate::piece::PieceAlternativesDto {
-                            types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect(),
-                            designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect(),
+                            types: alt.types.iter().filter_map(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() })).collect(),
+                            designs: alt.designs.iter().filter_map(|d| d.read().ok().map(|r| DesignRef { id: r.id.clone() })).collect(),
                         },
                     }
                 }
-                ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand { types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() })).collect() },
+                ReadPieceCommand::ReadPieceAlternativeTypesCommand => ReadPieceCommandOutput::ReadPieceAlternativeTypesCommand { types: o.alternative_types().iter().filter_map(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() })).collect() },
                 ReadPieceCommand::ReadPieceAlternativeDesignsCommand => {
-                    ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand { designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignIdDto { id: r.id.clone() })).collect() }
+                    ReadPieceCommandOutput::ReadPieceAlternativeDesignsCommand { designs: o.alternative_designs().iter().filter_map(|d| d.read().ok().map(|r| DesignRef { id: r.id.clone() })).collect() }
                 }
                 ReadPieceCommand::ReadPiecePropCommands { id, commands } => {
                     let pr = o.props.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Prop", &id.id))?;
@@ -1943,10 +1943,10 @@ pub mod read {
         pub fn execute(&self, t: &TypeStoreRef, g: &KitGraph) -> Result<ReadTypeCommandOutput> {
             let r = t.read().map_err(|_| lp("type"))?;
             Ok(match self {
-                ReadTypeCommand::ReadTypeFullCommand => ReadTypeCommandOutput::ReadTypeFullCommand { dto: r.to_full_dto() },
-                ReadTypeCommand::ReadTypeShallowCommand => ReadTypeCommandOutput::ReadTypeShallowCommand { dto: r.to_shallow_dto() },
-                ReadTypeCommand::ReadTypeMetadataCommand => ReadTypeCommandOutput::ReadTypeMetadataCommand { metadata: r.to_metadata_dto() },
-                ReadTypeCommand::ReadTypeIdCommand => ReadTypeCommandOutput::ReadTypeIdCommand { id: r.to_id_dto() },
+                ReadTypeCommand::ReadTypeFullCommand => ReadTypeCommandOutput::ReadTypeFullCommand { dto: r.to_full() },
+                ReadTypeCommand::ReadTypeShallowCommand => ReadTypeCommandOutput::ReadTypeShallowCommand { dto: r.to_shallow() },
+                ReadTypeCommand::ReadTypeMetadataCommand => ReadTypeCommandOutput::ReadTypeMetadataCommand { metadata: r.to_metadata() },
+                ReadTypeCommand::ReadTypeIdCommand => ReadTypeCommandOutput::ReadTypeIdCommand { id: r.to_ref() },
                 ReadTypeCommand::ReadTypeNameCommand => ReadTypeCommandOutput::ReadTypeNameCommand { name: r.name.clone() },
                 ReadTypeCommand::ReadTypeDescriptionCommand => ReadTypeCommandOutput::ReadTypeDescriptionCommand { description: r.description.clone() },
                 ReadTypeCommand::ReadTypeIconCommand => ReadTypeCommandOutput::ReadTypeIconCommand { icon: r.icon.clone() },
@@ -1957,25 +1957,25 @@ pub mod read {
                 ReadTypeCommand::ReadTypeLocationCommand => ReadTypeCommandOutput::ReadTypeLocationCommand { location: r.location.clone() },
                 ReadTypeCommand::ReadTypeCreatedCommand => ReadTypeCommandOutput::ReadTypeCreatedCommand { created: r.created.clone() },
                 ReadTypeCommand::ReadTypeUpdatedCommand => ReadTypeCommandOutput::ReadTypeUpdatedCommand { updated: r.updated.clone() },
-                ReadTypeCommand::ReadTypeFamiliesCommand => ReadTypeCommandOutput::ReadTypeFamiliesCommand { families: r.to_full_dto().families },
-                ReadTypeCommand::ReadTypeConnectorsFullCommand => ReadTypeCommandOutput::ReadTypeConnectorsFullCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeConnectorsShallowCommand => ReadTypeCommandOutput::ReadTypeConnectorsShallowCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeRepresentationsFullCommand => ReadTypeCommandOutput::ReadTypeRepresentationsFullCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeRepresentationsShallowCommand => ReadTypeCommandOutput::ReadTypeRepresentationsShallowCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeAuthorsFullCommand => ReadTypeCommandOutput::ReadTypeAuthorsFullCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeAuthorsShallowCommand => ReadTypeCommandOutput::ReadTypeAuthorsShallowCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeConceptsFullCommand => ReadTypeCommandOutput::ReadTypeConceptsFullCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeConceptsShallowCommand => ReadTypeCommandOutput::ReadTypeConceptsShallowCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeTagsFullCommand => ReadTypeCommandOutput::ReadTypeTagsFullCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeTagsShallowCommand => ReadTypeCommandOutput::ReadTypeTagsShallowCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeQualitiesFullCommand => ReadTypeCommandOutput::ReadTypeQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadTypeCommand::ReadTypeFamiliesCommand => ReadTypeCommandOutput::ReadTypeFamiliesCommand { families: r.to_full().families },
+                ReadTypeCommand::ReadTypeConnectorsFullCommand => ReadTypeCommandOutput::ReadTypeConnectorsFullCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect() },
+                ReadTypeCommand::ReadTypeConnectorsShallowCommand => ReadTypeCommandOutput::ReadTypeConnectorsShallowCommand { connectors: r.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeRepresentationsFullCommand => ReadTypeCommandOutput::ReadTypeRepresentationsFullCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_full())).collect() },
+                ReadTypeCommand::ReadTypeRepresentationsShallowCommand => ReadTypeCommandOutput::ReadTypeRepresentationsShallowCommand { representations: r.representations.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeAuthorsFullCommand => ReadTypeCommandOutput::ReadTypeAuthorsFullCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadTypeCommand::ReadTypeAuthorsShallowCommand => ReadTypeCommandOutput::ReadTypeAuthorsShallowCommand { authors: r.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeConceptsFullCommand => ReadTypeCommandOutput::ReadTypeConceptsFullCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect() },
+                ReadTypeCommand::ReadTypeConceptsShallowCommand => ReadTypeCommandOutput::ReadTypeConceptsShallowCommand { concepts: r.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeTagsFullCommand => ReadTypeCommandOutput::ReadTypeTagsFullCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect() },
+                ReadTypeCommand::ReadTypeTagsShallowCommand => ReadTypeCommandOutput::ReadTypeTagsShallowCommand { tags: r.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeQualitiesFullCommand => ReadTypeCommandOutput::ReadTypeQualitiesFullCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
+                ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypePropsFullCommand => ReadTypeCommandOutput::ReadTypePropsFullCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadTypeCommand::ReadTypeAttributesFullCommand => ReadTypeCommandOutput::ReadTypeAttributesFullCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
                 ReadTypeCommand::ReadTypePortsFullCommand => ReadTypeCommandOutput::ReadTypePortsFullCommand { ports: type_all_ports(&*r) },
-                ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand { connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full_dto())) },
+                ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand { connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_full())) },
                 ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand { representation: r.best_representation_for_tag_ids(&tag_ids) },
                 ReadTypeCommand::ReadTypeFamilyCommands { id, commands } => {
                     let f = kit_family(g, &id.id).ok_or_else(|| nf("Family", &id.id))?;
@@ -2168,19 +2168,19 @@ pub mod read {
             let Ok(cr) = conn.read() else { continue };
             let Ok(s0) = cr.connected.read() else { continue };
             let Ok(s1) = cr.connecting.read() else { continue };
-            if let Some(dp) = s0.to_metadata_dto().design_piece {
+            if let Some(dp) = s0.to_metadata().design_piece {
                 design_ids.insert(dp.id);
             }
-            if let Some(dp) = s1.to_metadata_dto().design_piece {
+            if let Some(dp) = s1.to_metadata().design_piece {
                 design_ids.insert(dp.id);
             }
         }
         let mut out: Vec<IncludedDesignInfoDto> = vec![];
         for design_id in design_ids {
-            let ex: Vec<ConnectionFullDto> = d
+            let ex: Vec<ConnectionFull> = d
                 .connections
                 .iter()
-                .filter_map(|c| c.read().ok().map(|cr| cr.to_full_dto()))
+                .filter_map(|c| c.read().ok().map(|cr| cr.to_full()))
                 .filter(|c| c.connected.design_piece.as_ref().is_some_and(|p| p.id == design_id) || c.connecting.design_piece.as_ref().is_some_and(|p| p.id == design_id))
                 .collect();
             out.push(IncludedDesignInfoDto { id: design_id.clone(), design_id: design_id.clone(), connection_kind: IncludedDesignConnectionKind::Connected, center: None, plane: None, external_connections: ex });
@@ -2188,8 +2188,8 @@ pub mod read {
         out
     }
 
-    pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignIdDto> {
-        design_included_infos(d).into_iter().map(|i| crate::design::DesignIdDto { id: i.design_id }).collect()
+    pub(crate) fn design_included_design_ids(d: &DesignStore) -> Vec<crate::design::DesignRef> {
+        design_included_infos(d).into_iter().map(|i| crate::design::DesignRef { id: i.design_id }).collect()
     }
 
     pub(crate) fn design_sum_quality(d: &DesignStore, g: &KitGraph, quality_id: &Id) -> f64 {
@@ -2201,7 +2201,7 @@ pub mod read {
             let mut from_piece = false;
             for prop in &pr.props {
                 if let Ok(p) = prop.read() {
-                    let df = p.to_full_dto();
+                    let df = p.to_full();
                     if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
                         if let Ok(v) = df.value.parse::<f64>() {
                             sum += v;
@@ -2214,13 +2214,13 @@ pub mod read {
             if from_piece {
                 continue;
             }
-            let tid = pr.type_ref.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| r.id.clone())).or_else(|| pr.to_full_dto().r#type.map(|t| t.id));
+            let tid = pr.type_ref.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| r.id.clone())).or_else(|| pr.to_full().r#type.map(|t| t.id));
             if let Some(tid) = tid {
                 if let Some(t) = types_by_id.get(&tid) {
                     if let Ok(tr) = t.read() {
                         for prop in &tr.props {
                             if let Ok(p) = prop.read() {
-                                let df = p.to_full_dto();
+                                let df = p.to_full();
                                 if df.quality.as_ref().is_some_and(|q| &q.id == quality_id) {
                                     if let Ok(v) = df.value.parse::<f64>() {
                                         sum += v;
@@ -2240,10 +2240,10 @@ pub mod read {
         pub fn execute(&self, d: &DesignStoreRef, g: &KitGraph) -> Result<ReadDesignCommandOutput> {
             let o = d.read().map_err(|_| lp("design"))?;
             Ok(match self {
-                ReadDesignCommand::ReadDesignFullCommand => ReadDesignCommandOutput::ReadDesignFullCommand { dto: o.to_full_dto() },
-                ReadDesignCommand::ReadDesignShallowCommand => ReadDesignCommandOutput::ReadDesignShallowCommand { dto: o.to_shallow_dto() },
-                ReadDesignCommand::ReadDesignMetadataCommand => ReadDesignCommandOutput::ReadDesignMetadataCommand { metadata: o.to_metadata_dto() },
-                ReadDesignCommand::ReadDesignIdCommand => ReadDesignCommandOutput::ReadDesignIdCommand { id: o.to_id_dto() },
+                ReadDesignCommand::ReadDesignFullCommand => ReadDesignCommandOutput::ReadDesignFullCommand { dto: o.to_full() },
+                ReadDesignCommand::ReadDesignShallowCommand => ReadDesignCommandOutput::ReadDesignShallowCommand { dto: o.to_shallow() },
+                ReadDesignCommand::ReadDesignMetadataCommand => ReadDesignCommandOutput::ReadDesignMetadataCommand { metadata: o.to_metadata() },
+                ReadDesignCommand::ReadDesignIdCommand => ReadDesignCommandOutput::ReadDesignIdCommand { id: o.to_ref() },
                 ReadDesignCommand::ReadDesignNameCommand => ReadDesignCommandOutput::ReadDesignNameCommand { name: o.name.clone() },
                 ReadDesignCommand::ReadDesignDescriptionCommand => ReadDesignCommandOutput::ReadDesignDescriptionCommand { description: o.description.clone() },
                 ReadDesignCommand::ReadDesignIconCommand => ReadDesignCommandOutput::ReadDesignIconCommand { icon: o.icon.clone() },
@@ -2252,30 +2252,30 @@ pub mod read {
                 ReadDesignCommand::ReadDesignUnitCommand => ReadDesignCommandOutput::ReadDesignUnitCommand { unit: o.unit.clone() },
                 ReadDesignCommand::ReadDesignCreatedCommand => ReadDesignCommandOutput::ReadDesignCreatedCommand { created: o.created.clone() },
                 ReadDesignCommand::ReadDesignUpdatedCommand => ReadDesignCommandOutput::ReadDesignUpdatedCommand { updated: o.updated.clone() },
-                ReadDesignCommand::ReadDesignKitCommand => ReadDesignCommandOutput::ReadDesignKitCommand { kit: o.to_full_dto().kit },
-                ReadDesignCommand::ReadDesignFamiliesCommand => ReadDesignCommandOutput::ReadDesignFamiliesCommand { families: o.to_full_dto().families },
-                ReadDesignCommand::ReadDesignPiecesFullCommand => ReadDesignCommandOutput::ReadDesignPiecesFullCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignPiecesShallowCommand => ReadDesignCommandOutput::ReadDesignPiecesShallowCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignConnectionsFullCommand => ReadDesignCommandOutput::ReadDesignConnectionsFullCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignConnectionsShallowCommand => ReadDesignCommandOutput::ReadDesignConnectionsShallowCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignLayersFullCommand => ReadDesignCommandOutput::ReadDesignLayersFullCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignLayersShallowCommand => ReadDesignCommandOutput::ReadDesignLayersShallowCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignGroupsFullCommand => ReadDesignCommandOutput::ReadDesignGroupsFullCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignGroupsShallowCommand => ReadDesignCommandOutput::ReadDesignGroupsShallowCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignAuthorsFullCommand => ReadDesignCommandOutput::ReadDesignAuthorsFullCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignAuthorsShallowCommand => ReadDesignCommandOutput::ReadDesignAuthorsShallowCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignConceptsFullCommand => ReadDesignCommandOutput::ReadDesignConceptsFullCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignConceptsShallowCommand => ReadDesignCommandOutput::ReadDesignConceptsShallowCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignTagsFullCommand => ReadDesignCommandOutput::ReadDesignTagsFullCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignTagsShallowCommand => ReadDesignCommandOutput::ReadDesignTagsShallowCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignQualitiesFullCommand => ReadDesignCommandOutput::ReadDesignQualitiesFullCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-                ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect() },
-                ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect() },
+                ReadDesignCommand::ReadDesignKitCommand => ReadDesignCommandOutput::ReadDesignKitCommand { kit: o.to_full().kit },
+                ReadDesignCommand::ReadDesignFamiliesCommand => ReadDesignCommandOutput::ReadDesignFamiliesCommand { families: o.to_full().families },
+                ReadDesignCommand::ReadDesignPiecesFullCommand => ReadDesignCommandOutput::ReadDesignPiecesFullCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadDesignCommand::ReadDesignPiecesShallowCommand => ReadDesignCommandOutput::ReadDesignPiecesShallowCommand { pieces: o.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignConnectionsFullCommand => ReadDesignCommandOutput::ReadDesignConnectionsFullCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect() },
+                ReadDesignCommand::ReadDesignConnectionsShallowCommand => ReadDesignCommandOutput::ReadDesignConnectionsShallowCommand { connections: o.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignLayersFullCommand => ReadDesignCommandOutput::ReadDesignLayersFullCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect() },
+                ReadDesignCommand::ReadDesignLayersShallowCommand => ReadDesignCommandOutput::ReadDesignLayersShallowCommand { layers: o.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignGroupsFullCommand => ReadDesignCommandOutput::ReadDesignGroupsFullCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_full())).collect() },
+                ReadDesignCommand::ReadDesignGroupsShallowCommand => ReadDesignCommandOutput::ReadDesignGroupsShallowCommand { groups: o.groups.iter().filter_map(|x| x.read().ok().map(|x| x.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignAuthorsFullCommand => ReadDesignCommandOutput::ReadDesignAuthorsFullCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadDesignCommand::ReadDesignAuthorsShallowCommand => ReadDesignCommandOutput::ReadDesignAuthorsShallowCommand { authors: o.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignConceptsFullCommand => ReadDesignCommandOutput::ReadDesignConceptsFullCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect() },
+                ReadDesignCommand::ReadDesignConceptsShallowCommand => ReadDesignCommandOutput::ReadDesignConceptsShallowCommand { concepts: o.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignTagsFullCommand => ReadDesignCommandOutput::ReadDesignTagsFullCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect() },
+                ReadDesignCommand::ReadDesignTagsShallowCommand => ReadDesignCommandOutput::ReadDesignTagsShallowCommand { tags: o.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignQualitiesFullCommand => ReadDesignCommandOutput::ReadDesignQualitiesFullCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
+                ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignPropsFullCommand => ReadDesignCommandOutput::ReadDesignPropsFullCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignAttributesFullCommand => ReadDesignCommandOutput::ReadDesignAttributesFullCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadDesignCommand::ReadDesignStatsFullCommand => ReadDesignCommandOutput::ReadDesignStatsFullCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full())).collect() },
+                ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect() },
                 ReadDesignCommand::ReadDesignFlattenMapCommand => {
                     let m = o.flatten_map();
                     let entries: Vec<DesignFlattenMapEntryDto> = m.into_iter().map(|(piece_id, (plane, center))| DesignFlattenMapEntryDto { piece_id, plane, center }).collect();
@@ -2283,7 +2283,7 @@ pub mod read {
                 }
                 ReadDesignCommand::ReadDesignClusterableGroupsCommand { selection } => {
                     let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
-                    let groups: Vec<Vec<PieceIdDto>> = design_clusterable_groups(&*o, &ids).into_iter().map(|g| g.into_iter().map(|id| PieceIdDto { id }).collect()).collect();
+                    let groups: Vec<Vec<PieceRef>> = design_clusterable_groups(&*o, &ids).into_iter().map(|g| g.into_iter().map(|id| PieceRef { id }).collect()).collect();
                     ReadDesignCommandOutput::ReadDesignClusterableGroupsCommand { groups }
                 }
                 ReadDesignCommand::ReadDesignIncludedDesignsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignsCommand { designs: design_included_infos(&*o) },
@@ -2292,8 +2292,8 @@ pub mod read {
                     let ids: Vec<Id> = selection.iter().map(|p| p.id.clone()).collect();
                     let alts = o.replaceable_catalog_candidates(&ids);
                     ReadDesignCommandOutput::ReadDesignReplaceableCatalogCommand {
-                        types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeIdDto { id: r.id.clone() })).collect(),
-                        designs: alts.designs.iter().filter_map(|d| d.read().ok().map(|r| crate::design::DesignIdDto { id: r.id.clone() })).collect(),
+                        types: alts.types.iter().filter_map(|t| t.read().ok().map(|r| crate::typ::TypeRef { id: r.id.clone() })).collect(),
+                        designs: alts.designs.iter().filter_map(|d| d.read().ok().map(|r| crate::design::DesignRef { id: r.id.clone() })).collect(),
                     }
                 }
                 ReadDesignCommand::ReadDesignIncludedDesignIdsCommand => ReadDesignCommandOutput::ReadDesignIncludedDesignIdsCommand { design_ids: design_included_design_ids(&*o) },
@@ -2400,10 +2400,10 @@ pub mod read {
     impl ReadKitCommand {
         pub fn execute(&self, g: &KitGraph) -> Result<ReadKitCommandOutput> {
             Ok(match self {
-                ReadKitCommand::ReadKitFullCommand => ReadKitCommandOutput::ReadKitFullCommand { kit: g.to_full_dto() },
-                ReadKitCommand::ReadKitShallowCommand => ReadKitCommandOutput::ReadKitShallowCommand { kit: g.to_shallow_dto() },
-                ReadKitCommand::ReadKitMetadataCommand => ReadKitCommandOutput::ReadKitMetadataCommand { metadata: g.to_metadata_dto() },
-                ReadKitCommand::ReadKitIdCommand => ReadKitCommandOutput::ReadKitIdCommand { id: g.to_id_dto() },
+                ReadKitCommand::ReadKitFullCommand => ReadKitCommandOutput::ReadKitFullCommand { kit: g.to_full() },
+                ReadKitCommand::ReadKitShallowCommand => ReadKitCommandOutput::ReadKitShallowCommand { kit: g.to_shallow() },
+                ReadKitCommand::ReadKitMetadataCommand => ReadKitCommandOutput::ReadKitMetadataCommand { metadata: g.to_metadata() },
+                ReadKitCommand::ReadKitIdCommand => ReadKitCommandOutput::ReadKitIdCommand { id: g.to_ref() },
                 ReadKitCommand::ReadKitNameCommand => ReadKitCommandOutput::ReadKitNameCommand { name: g.name.clone() },
                 ReadKitCommand::ReadKitDescriptionCommand => ReadKitCommandOutput::ReadKitDescriptionCommand { description: g.description.clone() },
                 ReadKitCommand::ReadKitIconCommand => ReadKitCommandOutput::ReadKitIconCommand { icon: g.icon.clone() },
@@ -2415,47 +2415,47 @@ pub mod read {
                 ReadKitCommand::ReadKitUriCommand => ReadKitCommandOutput::ReadKitUriCommand { uri: g.uri.clone() },
                 ReadKitCommand::ReadKitCreatedCommand => ReadKitCommandOutput::ReadKitCreatedCommand { created: g.created.clone() },
                 ReadKitCommand::ReadKitUpdatedCommand => ReadKitCommandOutput::ReadKitUpdatedCommand { updated: g.updated.clone() },
-                ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand { r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() })).collect() },
-                ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata_dto())).collect() },
-                ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand { design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignIdDto { id: d.id.clone() })).collect() },
-                ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata_dto())).collect() },
-                ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitFoldersShallowCommand => ReadKitCommandOutput::ReadKitFoldersShallowCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitLocationsFullCommand => ReadKitCommandOutput::ReadKitLocationsFullCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitLocationsShallowCommand => ReadKitCommandOutput::ReadKitLocationsShallowCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitFamiliesFullCommand => ReadKitCommandOutput::ReadKitFamiliesFullCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitFamiliesShallowCommand => ReadKitCommandOutput::ReadKitFamiliesShallowCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitTypesFullCommand => ReadKitCommandOutput::ReadKitTypesFullCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect() },
+                ReadKitCommand::ReadKitTypesShallowCommand => ReadKitCommandOutput::ReadKitTypesShallowCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect() },
+                ReadKitCommand::ReadKitTypeIdsCommand => ReadKitCommandOutput::ReadKitTypeIdsCommand { r#type_ids: g.types.iter().filter_map(|t| t.read().ok().map(|t| TypeRef { id: t.id.clone() })).collect() },
+                ReadKitCommand::ReadKitTypesMetadataCommand => ReadKitCommandOutput::ReadKitTypesMetadataCommand { types: g.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_metadata())).collect() },
+                ReadKitCommand::ReadKitDesignsFullCommand => ReadKitCommandOutput::ReadKitDesignsFullCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full())).collect() },
+                ReadKitCommand::ReadKitDesignsShallowCommand => ReadKitCommandOutput::ReadKitDesignsShallowCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect() },
+                ReadKitCommand::ReadKitDesignIdsCommand => ReadKitCommandOutput::ReadKitDesignIdsCommand { design_ids: g.designs.iter().filter_map(|d| d.read().ok().map(|d| DesignRef { id: d.id.clone() })).collect() },
+                ReadKitCommand::ReadKitDesignsMetadataCommand => ReadKitCommandOutput::ReadKitDesignsMetadataCommand { designs: g.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_metadata())).collect() },
+                ReadKitCommand::ReadKitFilesFullCommand => ReadKitCommandOutput::ReadKitFilesFullCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect() },
+                ReadKitCommand::ReadKitFilesShallowCommand => ReadKitCommandOutput::ReadKitFilesShallowCommand { files: g.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect() },
+                ReadKitCommand::ReadKitFoldersFullCommand => ReadKitCommandOutput::ReadKitFoldersFullCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect() },
+                ReadKitCommand::ReadKitFoldersShallowCommand => ReadKitCommandOutput::ReadKitFoldersShallowCommand { folders: g.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect() },
+                ReadKitCommand::ReadKitLocationsFullCommand => ReadKitCommandOutput::ReadKitLocationsFullCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect() },
+                ReadKitCommand::ReadKitLocationsShallowCommand => ReadKitCommandOutput::ReadKitLocationsShallowCommand { locations: g.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect() },
+                ReadKitCommand::ReadKitFamiliesFullCommand => ReadKitCommandOutput::ReadKitFamiliesFullCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect() },
+                ReadKitCommand::ReadKitFamiliesShallowCommand => ReadKitCommandOutput::ReadKitFamiliesShallowCommand { families: g.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect() },
                 ReadKitCommand::ReadKitPortsFullCommand => {
-                    let mut ports: Vec<PortFullDto> = g.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect();
+                    let mut ports: Vec<PortFull> = g.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect();
                     for f in &g.families {
                         if let Ok(fr) = f.read() {
                             for p in &fr.ports {
                                 if let Ok(pr) = p.read() {
-                                    ports.push(pr.to_full_dto());
+                                    ports.push(pr.to_full());
                                 }
                             }
                         }
                     }
                     ReadKitCommandOutput::ReadKitPortsFullCommand { ports }
                 }
-                ReadKitCommand::ReadKitAuthorsFullCommand => ReadKitCommandOutput::ReadKitAuthorsFullCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitAuthorsShallowCommand => ReadKitCommandOutput::ReadKitAuthorsShallowCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitConceptsFullCommand => ReadKitCommandOutput::ReadKitConceptsFullCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitConceptsShallowCommand => ReadKitCommandOutput::ReadKitConceptsShallowCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitTagsFullCommand => ReadKitCommandOutput::ReadKitTagsFullCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitTagsShallowCommand => ReadKitCommandOutput::ReadKitTagsShallowCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitQualitiesFullCommand => ReadKitCommandOutput::ReadKitQualitiesFullCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect() },
-                ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() },
-                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() },
+                ReadKitCommand::ReadKitAuthorsFullCommand => ReadKitCommandOutput::ReadKitAuthorsFullCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadKitCommand::ReadKitAuthorsShallowCommand => ReadKitCommandOutput::ReadKitAuthorsShallowCommand { authors: g.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
+                ReadKitCommand::ReadKitConceptsFullCommand => ReadKitCommandOutput::ReadKitConceptsFullCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect() },
+                ReadKitCommand::ReadKitConceptsShallowCommand => ReadKitCommandOutput::ReadKitConceptsShallowCommand { concepts: g.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect() },
+                ReadKitCommand::ReadKitTagsFullCommand => ReadKitCommandOutput::ReadKitTagsFullCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect() },
+                ReadKitCommand::ReadKitTagsShallowCommand => ReadKitCommandOutput::ReadKitTagsShallowCommand { tags: g.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect() },
+                ReadKitCommand::ReadKitQualitiesFullCommand => ReadKitCommandOutput::ReadKitQualitiesFullCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect() },
+                ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
+                ReadKitCommand::ReadKitPropsFullCommand => ReadKitCommandOutput::ReadKitPropsFullCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect() },
+                ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
+                ReadKitCommand::ReadKitAttributesFullCommand => ReadKitCommandOutput::ReadKitAttributesFullCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() },
+                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() },
                 ReadKitCommand::ReadKitTypeCommands { id, commands } => {
                     let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -2571,81 +2571,81 @@ pub mod read {
 pub mod change_command {
     #![allow(clippy::result_large_err)]
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
-    use crate::attribute::AttributeFullDto;
-    use crate::attribute::AttributeIdDto;
+    use crate::attribute::AttributeFull;
+    use crate::attribute::AttributeRef;
     use crate::attribute::AttributeStore;
     use crate::attribute::AttributeStoreRef;
-    use crate::author::AuthorFullDto;
-    use crate::author::AuthorIdDto;
+    use crate::author::AuthorFull;
+    use crate::author::AuthorRef;
     use crate::author::AuthorStore;
     use crate::author::AuthorStoreRef;
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
-    use crate::concept::ConceptFullDto;
-    use crate::concept::ConceptIdDto;
+    use crate::benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkStore, BenchmarkStoreRef};
+    use crate::concept::ConceptFull;
+    use crate::concept::ConceptRef;
     use crate::concept::ConceptStore;
     use crate::concept::ConceptStoreRef;
-    use crate::connection::ConnectionFullDto;
-    use crate::connection::ConnectionIdDto;
-    use crate::connector::ConnectorFullDto;
-    use crate::connector::ConnectorIdDto;
+    use crate::connection::ConnectionFull;
+    use crate::connection::ConnectionRef;
+    use crate::connector::ConnectorFull;
+    use crate::connector::ConnectorRef;
     use crate::connector::ConnectorStore;
     use crate::connector::ConnectorStoreRef;
-    use crate::design::DesignFullDto;
-    use crate::design::DesignIdDto;
+    use crate::design::DesignFull;
+    use crate::design::DesignRef;
     use crate::design::DesignStore;
     use crate::event_wire;
-    use crate::family::{FamilyFullDto, FamilyIdDto, FamilyStoreRef};
-    use crate::file::FileFullDto;
-    use crate::file::FileIdDto;
+    use crate::family::{FamilyFull, FamilyRef, FamilyStoreRef};
+    use crate::file::FileFull;
+    use crate::file::FileRef;
     use crate::file::FileStoreRef;
-    use crate::folder::FolderFullDto;
-    use crate::folder::FolderIdDto;
+    use crate::folder::FolderFull;
+    use crate::folder::FolderRef;
     use crate::folder::FolderStoreRef;
     use crate::geom::Coordinate;
     use crate::geom::Plane;
     use crate::geom::Point;
-    use crate::group::GroupFullDto;
-    use crate::group::GroupIdDto;
+    use crate::group::GroupFull;
+    use crate::group::GroupRef;
     use crate::group::GroupStore;
     use crate::id::Id;
     use crate::kit_change::KitChangeKind;
     use crate::kit_diff::KitDiff;
-    use crate::kit_graph::KitFullDto;
+    use crate::kit_graph::KitFull;
     use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
-    use crate::layer::LayerFullDto;
-    use crate::layer::LayerIdDto;
+    use crate::layer::LayerFull;
+    use crate::layer::LayerRef;
     use crate::layer::LayerStore;
-    use crate::location::LocationIdDto;
-    use crate::piece::PieceFullDto;
-    use crate::piece::PieceIdDto;
+    use crate::location::LocationRef;
+    use crate::piece::PieceFull;
+    use crate::piece::PieceRef;
     use crate::piece::PieceStoreRef;
     use crate::piece::PieceStoreWeak;
-    use crate::port::PortFullDto;
-    use crate::port::PortIdDto;
+    use crate::port::PortFull;
+    use crate::port::PortRef;
     use crate::port::{PortStore, PortStoreRef};
-    use crate::prop::PropFullDto;
-    use crate::prop::PropIdDto;
+    use crate::prop::PropFull;
+    use crate::prop::PropRef;
     use crate::prop::PropStore;
     use crate::prop::PropStoreRef;
-    use crate::quality::QualityFullDto;
-    use crate::quality::QualityIdDto;
+    use crate::quality::QualityFull;
+    use crate::quality::QualityRef;
     use crate::quality::QualityStore;
     use crate::quality::QualityStoreRef;
-    use crate::representation::RepresentationFullDto;
-    use crate::representation::RepresentationIdDto;
+    use crate::representation::RepresentationFull;
+    use crate::representation::RepresentationRef;
     use crate::representation::RepresentationStore;
     use crate::representation::RepresentationStoreRef;
-    use crate::side::SideMetadataDto;
+    use crate::side::SideMetadata;
     use crate::side::SideStoreRef;
-    use crate::stat::StatFullDto;
-    use crate::stat::StatIdDto;
+    use crate::stat::StatFull;
+    use crate::stat::StatRef;
     use crate::stat::StatStore;
-    use crate::tag::TagFullDto;
-    use crate::tag::TagIdDto;
+    use crate::tag::TagFull;
+    use crate::tag::TagRef;
     use crate::tag::TagStore;
-    use crate::typ::TypeFullDto;
-    use crate::typ::TypeIdDto;
+    use crate::typ::TypeFull;
+    use crate::typ::TypeRef;
     use crate::{error::Result, error::SemioError};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
@@ -2660,7 +2660,7 @@ pub mod change_command {
         d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
     }
 
-    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadataDto) -> Result<()> {
+    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadata) -> Result<()> {
         let index = build_piece_index(d);
         {
             let mut w = side.write().map_err(|_| SemioError::LockPoisoned("side"))?;
@@ -2740,152 +2740,152 @@ pub mod change_command {
         Version {
             version: Option<String>,
         },
-        ReplaceKitFromFullDto {
-            dto: KitFullDto,
+        ReplaceKitFromFull {
+            dto: KitFull,
         },
         AddType {
-            r#type: TypeFullDto,
+            r#type: TypeFull,
         },
         RemoveType {
-            type_id: TypeIdDto,
+            type_id: TypeRef,
         },
         AddDesign {
-            design: DesignFullDto,
+            design: DesignFull,
         },
         RemoveDesign {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
         },
         AddFile {
-            file: FileFullDto,
+            file: FileFull,
         },
         RemoveFile {
-            file_id: FileIdDto,
+            file_id: FileRef,
         },
         AddFolder {
-            folder: FolderFullDto,
+            folder: FolderFull,
         },
         RemoveFolder {
-            folder_id: FolderIdDto,
+            folder_id: FolderRef,
         },
         AddAuthor {
-            author: AuthorFullDto,
+            author: AuthorFull,
         },
         RemoveAuthor {
-            author_id: AuthorIdDto,
+            author_id: AuthorRef,
         },
         AddConcept {
-            concept: ConceptFullDto,
+            concept: ConceptFull,
         },
         RemoveConcept {
-            concept_id: ConceptIdDto,
+            concept_id: ConceptRef,
         },
         AddTag {
-            tag: TagFullDto,
+            tag: TagFull,
         },
         RemoveTag {
-            tag_id: TagIdDto,
+            tag_id: TagRef,
         },
         AddQuality {
-            quality: QualityFullDto,
+            quality: QualityFull,
         },
         RemoveQuality {
-            quality_id: QualityIdDto,
+            quality_id: QualityRef,
         },
         AddKitProp {
-            prop: PropFullDto,
+            prop: PropFull,
         },
         RemoveKitProp {
-            prop_id: PropIdDto,
+            prop_id: PropRef,
         },
         AddKitAttribute {
-            attribute: AttributeFullDto,
+            attribute: AttributeFull,
         },
         RemoveKitAttribute {
-            id: AttributeIdDto,
+            id: AttributeRef,
         },
         ChangeFileCommands {
-            file_id: FileIdDto,
+            file_id: FileRef,
             commands: Vec<ChangeFileCommand>,
         },
         ChangeFolderCommands {
-            folder_id: FolderIdDto,
+            folder_id: FolderRef,
             commands: Vec<ChangeFolderCommand>,
         },
         ChangeAuthorCommands {
-            author_id: AuthorIdDto,
+            author_id: AuthorRef,
             commands: Vec<ChangeAuthorCommand>,
         },
         ChangeConceptCommands {
-            concept_id: ConceptIdDto,
+            concept_id: ConceptRef,
             commands: Vec<ChangeConceptCommand>,
         },
         ChangeTagCommands {
-            tag_id: TagIdDto,
+            tag_id: TagRef,
             commands: Vec<ChangeTagCommand>,
         },
         ChangeKitQualityCommands {
-            quality_id: QualityIdDto,
+            quality_id: QualityRef,
             commands: Vec<ChangeKitQualityCommand>,
         },
         ChangeTypeCommands {
-            type_id: TypeIdDto,
+            type_id: TypeRef,
             commands: Vec<ChangeTypeCommand>,
         },
         ChangeDesignCommands {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
             commands: Vec<ChangeDesignCommand>,
         },
         ChangeKitPortCommands {
-            port_id: PortIdDto,
+            port_id: PortRef,
             commands: Vec<ChangePortCommand>,
         },
         AddFamily {
-            family: FamilyFullDto,
+            family: FamilyFull,
         },
         RemoveFamily {
-            family_id: FamilyIdDto,
+            family_id: FamilyRef,
         },
         ChangeFamilyCommands {
-            family_id: FamilyIdDto,
+            family_id: FamilyRef,
             commands: Vec<ChangeFamilyCommand>,
         },
         ClusterPieces {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
             piece_ids: Vec<String>,
             cluster_name: String,
         },
         DragPieces {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
             piece_ids: Vec<String>,
             du: f64,
             dv: f64,
         },
         MovePieces {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
             piece_ids: Vec<String>,
             gap: f64,
             shift: f64,
             rise: f64,
         },
         FixPieces {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
             piece_ids: Vec<String>,
         },
         FlattenDesign {
-            design_id: DesignIdDto,
+            design_id: DesignRef,
         },
         ExpandNestedDesign {
-            parent_design_id: DesignIdDto,
-            nested_design_id: DesignIdDto,
+            parent_design_id: DesignRef,
+            nested_design_id: DesignRef,
         },
         DeleteConnection {
-            design_id: DesignIdDto,
-            connection_id: ConnectionIdDto,
+            design_id: DesignRef,
+            connection_id: ConnectionRef,
         },
         ChangePieceKind {
-            design_id: DesignIdDto,
-            piece_id: PieceIdDto,
-            new_type_id: TypeIdDto,
+            design_id: DesignRef,
+            piece_id: PieceRef,
+            new_type_id: TypeRef,
         },
     }
 
@@ -2895,9 +2895,9 @@ pub mod change_command {
         Name { name: String },
         Description { description: Option<String> },
         Icon { icon: Option<String> },
-        AddPort { port: PortFullDto },
-        RemovePort { port_id: PortIdDto },
-        ChangePortCommands { port_id: PortIdDto, commands: Vec<ChangePortCommand> },
+        AddPort { port: PortFull },
+        RemovePort { port_id: PortRef },
+        ChangePortCommands { port_id: PortRef, commands: Vec<ChangePortCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -2951,9 +2951,9 @@ pub mod change_command {
         Unit { unit: Option<String> },
         Definition { definition: Option<String> },
         Description { description: Option<String> },
-        AddBenchmark { benchmark: BenchmarkFullDto },
-        RemoveBenchmark { benchmark_id: BenchmarkIdDto },
-        ChangeBenchmarkCommands { benchmark_id: BenchmarkIdDto, commands: Vec<ChangeBenchmarkCommand> },
+        AddBenchmark { benchmark: BenchmarkFull },
+        RemoveBenchmark { benchmark_id: BenchmarkRef },
+        ChangeBenchmarkCommands { benchmark_id: BenchmarkRef, commands: Vec<ChangeBenchmarkCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -2991,7 +2991,7 @@ pub mod change_command {
             unit: Option<String>,
         },
         Location {
-            location: Option<LocationIdDto>,
+            location: Option<LocationRef>,
         },
         Created {
             created: Option<String>,
@@ -3000,73 +3000,73 @@ pub mod change_command {
             updated: Option<String>,
         },
         AddFamilyRef {
-            family_id: FamilyIdDto,
+            family_id: FamilyRef,
         },
         RemoveFamilyRef {
-            family_id: FamilyIdDto,
+            family_id: FamilyRef,
         },
         SetFamilies {
-            families: Vec<FamilyIdDto>,
+            families: Vec<FamilyRef>,
         },
         ChangePortCommands {
-            port_id: PortIdDto,
+            port_id: PortRef,
             commands: Vec<ChangePortCommand>,
         },
         AddConnector {
-            connector: ConnectorFullDto,
+            connector: ConnectorFull,
         },
         RemoveConnector {
-            connector_id: ConnectorIdDto,
+            connector_id: ConnectorRef,
         },
         ChangeConnectorCommands {
-            connector_id: ConnectorIdDto,
+            connector_id: ConnectorRef,
             commands: Vec<ChangeConnectorCommand>,
         },
         AddRepresentation {
-            representation: RepresentationFullDto,
+            representation: RepresentationFull,
         },
         RemoveRepresentation {
-            id: RepresentationIdDto,
+            id: RepresentationRef,
         },
         ChangeRepresentationCommands {
-            id: RepresentationIdDto,
+            id: RepresentationRef,
             commands: Vec<ChangeRepresentationCommand>,
         },
         AddTypeAuthor {
-            author: AuthorFullDto,
+            author: AuthorFull,
         },
         RemoveTypeAuthor {
-            author_id: AuthorIdDto,
+            author_id: AuthorRef,
         },
         AddTypeConcept {
-            concept: ConceptFullDto,
+            concept: ConceptFull,
         },
         RemoveTypeConcept {
-            concept_id: ConceptIdDto,
+            concept_id: ConceptRef,
         },
         AddTypeTag {
-            tag: TagFullDto,
+            tag: TagFull,
         },
         RemoveTypeTag {
-            tag_id: TagIdDto,
+            tag_id: TagRef,
         },
         AddTypeQuality {
-            quality: QualityFullDto,
+            quality: QualityFull,
         },
         RemoveTypeQuality {
-            quality_id: QualityIdDto,
+            quality_id: QualityRef,
         },
         AddTypeProp {
-            prop: PropFullDto,
+            prop: PropFull,
         },
         RemoveTypeProp {
-            prop_id: PropIdDto,
+            prop_id: PropRef,
         },
         AddTypeAttribute {
-            attribute: AttributeFullDto,
+            attribute: AttributeFull,
         },
         RemoveTypeAttribute {
-            id: AttributeIdDto,
+            id: AttributeRef,
         },
     }
 
@@ -3077,10 +3077,10 @@ pub mod change_command {
         Name { name: String },
         Description { description: Option<String> },
         Icon { icon: Option<String> },
-        CompatiblePorts { ports: Vec<PortIdDto> },
-        CompatibleFamilies { families: Vec<crate::family::FamilyIdDto> },
-        AddPortAttribute { attribute: AttributeFullDto },
-        RemovePortAttribute { id: AttributeIdDto },
+        CompatiblePorts { ports: Vec<PortRef> },
+        CompatibleFamilies { families: Vec<crate::family::FamilyRef> },
+        AddPortAttribute { attribute: AttributeFull },
+        RemovePortAttribute { id: AttributeRef },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3088,11 +3088,11 @@ pub mod change_command {
     pub enum ChangeConnectorCommand {
         Code { code: String },
         Description { description: Option<String> },
-        Port { port: Option<PortIdDto> },
-        AddConnectorQuality { quality: QualityFullDto },
-        RemoveConnectorQuality { quality_id: QualityIdDto },
-        AddAttribute { attribute: AttributeFullDto },
-        RemoveAttribute { id: AttributeIdDto },
+        Port { port: Option<PortRef> },
+        AddConnectorQuality { quality: QualityFull },
+        RemoveConnectorQuality { quality_id: QualityRef },
+        AddAttribute { attribute: AttributeFull },
+        RemoveAttribute { id: AttributeRef },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3100,13 +3100,13 @@ pub mod change_command {
     pub enum ChangeRepresentationCommand {
         Url { url: String },
         Description { description: Option<String> },
-        File { file: Option<FileIdDto> },
-        AddRepresentationTag { tag: TagFullDto },
-        RemoveRepresentationTag { tag_id: TagIdDto },
-        AddQuality { quality: QualityFullDto },
-        RemoveQuality { quality_id: QualityIdDto },
-        AddAttribute { attribute: AttributeFullDto },
-        RemoveAttribute { id: AttributeIdDto },
+        File { file: Option<FileRef> },
+        AddRepresentationTag { tag: TagFull },
+        RemoveRepresentationTag { tag_id: TagRef },
+        AddQuality { quality: QualityFull },
+        RemoveQuality { quality_id: QualityRef },
+        AddAttribute { attribute: AttributeFull },
+        RemoveAttribute { id: AttributeRef },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3116,71 +3116,71 @@ pub mod change_command {
         Description { description: Option<String> },
         Icon { icon: Option<String> },
         Image { image: Option<String> },
-        Location { location: Option<LocationIdDto> },
+        Location { location: Option<LocationRef> },
         Unit { unit: Option<String> },
         Created { created: Option<String> },
         Updated { updated: Option<String> },
-        AddFamilyRef { family_id: FamilyIdDto },
-        RemoveFamilyRef { family_id: FamilyIdDto },
-        SetFamilies { families: Vec<FamilyIdDto> },
-        AddPiece { piece: PieceFullDto },
-        RemovePiece { piece_id: PieceIdDto },
-        RenamePiece { piece_id: PieceIdDto, name: Option<String> },
-        SetPieceDescription { piece_id: PieceIdDto, description: Option<String> },
-        SetPiecePlane { piece_id: PieceIdDto, plane: Option<Plane> },
-        SetPieceCenter { piece_id: PieceIdDto, center: Option<Coordinate> },
-        SetPieceColor { piece_id: PieceIdDto, color: Option<String> },
-        SetPieceKind { piece_id: PieceIdDto, kind_id: Option<TypeIdDto> },
-        SetPieceScale { piece_id: PieceIdDto, scale: Option<f64> },
-        SetPieceMirrorPlane { piece_id: PieceIdDto, mirror_plane: Option<Plane> },
-        SetPieceHidden { piece_id: PieceIdDto, hidden: Option<bool> },
-        SetPieceLocked { piece_id: PieceIdDto, locked: Option<bool> },
-        SetPieceStableId { piece_id: PieceIdDto, stable_id: Id },
-        AddPieceProp { piece_id: PieceIdDto, prop: PropFullDto },
-        RemovePieceProp { piece_id: PieceIdDto, prop_id: PropIdDto },
-        ChangePiecePropCommands { piece_id: PieceIdDto, prop_id: PropIdDto, commands: Vec<ChangePropCommand> },
-        AddPieceAttribute { piece_id: PieceIdDto, attribute: AttributeFullDto },
-        RemovePieceAttribute { piece_id: PieceIdDto, id: AttributeIdDto },
-        ChangePieceAttributeCommands { piece_id: PieceIdDto, id: AttributeIdDto, commands: Vec<ChangeAttributeCommand> },
-        FixPiece { piece_id: PieceIdDto },
-        ChangePieceCommands { piece_id: PieceIdDto, commands: Vec<ChangePieceCommand> },
-        AddConnection { connection: ConnectionFullDto },
-        RemoveConnection { connection_id: ConnectionIdDto },
-        SetConnectionGap { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionShift { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionRise { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionRotation { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionTurn { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionTilt { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionAxisU { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionAxisV { connection_id: ConnectionIdDto, value: Option<f64> },
-        SetConnectionDescription { connection_id: ConnectionIdDto, description: Option<String> },
-        ReplaceConnectionAttachedSide { connection_id: ConnectionIdDto, side: SideMetadataDto },
-        ReplaceConnectionConnectingSide { connection_id: ConnectionIdDto, side: SideMetadataDto },
-        AddConnectionAttribute { connection_id: ConnectionIdDto, attribute: AttributeFullDto },
-        RemoveConnectionAttribute { connection_id: ConnectionIdDto, id: AttributeIdDto },
-        ChangeConnectionCommands { connection_id: ConnectionIdDto, commands: Vec<ChangeConnectionCommand> },
-        AddLayer { layer: LayerFullDto },
-        RemoveLayer { layer_id: LayerIdDto },
-        ChangeLayerCommands { layer_id: LayerIdDto, commands: Vec<ChangeLayerCommand> },
-        AddGroup { group: GroupFullDto },
-        RemoveGroup { group_id: GroupIdDto },
-        ChangeGroupCommands { group_id: GroupIdDto, commands: Vec<ChangeGroupCommand> },
-        AddStat { stat: StatFullDto },
-        RemoveStat { stat_id: StatIdDto },
-        ChangeStatCommands { stat_id: StatIdDto, commands: Vec<ChangeStatCommand> },
-        AddDesignAuthor { author: AuthorFullDto },
-        RemoveDesignAuthor { author_id: AuthorIdDto },
-        AddDesignConcept { concept: ConceptFullDto },
-        RemoveDesignConcept { concept_id: ConceptIdDto },
-        AddDesignTag { tag: TagFullDto },
-        RemoveDesignTag { tag_id: TagIdDto },
-        AddDesignQuality { quality: QualityFullDto },
-        RemoveDesignQuality { quality_id: QualityIdDto },
-        AddDesignProp { prop: PropFullDto },
-        RemoveDesignProp { prop_id: PropIdDto },
-        AddDesignAttribute { attribute: AttributeFullDto },
-        RemoveDesignAttribute { id: AttributeIdDto },
+        AddFamilyRef { family_id: FamilyRef },
+        RemoveFamilyRef { family_id: FamilyRef },
+        SetFamilies { families: Vec<FamilyRef> },
+        AddPiece { piece: PieceFull },
+        RemovePiece { piece_id: PieceRef },
+        RenamePiece { piece_id: PieceRef, name: Option<String> },
+        SetPieceDescription { piece_id: PieceRef, description: Option<String> },
+        SetPiecePlane { piece_id: PieceRef, plane: Option<Plane> },
+        SetPieceCenter { piece_id: PieceRef, center: Option<Coordinate> },
+        SetPieceColor { piece_id: PieceRef, color: Option<String> },
+        SetPieceKind { piece_id: PieceRef, kind_id: Option<TypeRef> },
+        SetPieceScale { piece_id: PieceRef, scale: Option<f64> },
+        SetPieceMirrorPlane { piece_id: PieceRef, mirror_plane: Option<Plane> },
+        SetPieceHidden { piece_id: PieceRef, hidden: Option<bool> },
+        SetPieceLocked { piece_id: PieceRef, locked: Option<bool> },
+        SetPieceStableId { piece_id: PieceRef, stable_id: Id },
+        AddPieceProp { piece_id: PieceRef, prop: PropFull },
+        RemovePieceProp { piece_id: PieceRef, prop_id: PropRef },
+        ChangePiecePropCommands { piece_id: PieceRef, prop_id: PropRef, commands: Vec<ChangePropCommand> },
+        AddPieceAttribute { piece_id: PieceRef, attribute: AttributeFull },
+        RemovePieceAttribute { piece_id: PieceRef, id: AttributeRef },
+        ChangePieceAttributeCommands { piece_id: PieceRef, id: AttributeRef, commands: Vec<ChangeAttributeCommand> },
+        FixPiece { piece_id: PieceRef },
+        ChangePieceCommands { piece_id: PieceRef, commands: Vec<ChangePieceCommand> },
+        AddConnection { connection: ConnectionFull },
+        RemoveConnection { connection_id: ConnectionRef },
+        SetConnectionGap { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionShift { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionRise { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionRotation { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionTurn { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionTilt { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionAxisU { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionAxisV { connection_id: ConnectionRef, value: Option<f64> },
+        SetConnectionDescription { connection_id: ConnectionRef, description: Option<String> },
+        ReplaceConnectionAttachedSide { connection_id: ConnectionRef, side: SideMetadata },
+        ReplaceConnectionConnectingSide { connection_id: ConnectionRef, side: SideMetadata },
+        AddConnectionAttribute { connection_id: ConnectionRef, attribute: AttributeFull },
+        RemoveConnectionAttribute { connection_id: ConnectionRef, id: AttributeRef },
+        ChangeConnectionCommands { connection_id: ConnectionRef, commands: Vec<ChangeConnectionCommand> },
+        AddLayer { layer: LayerFull },
+        RemoveLayer { layer_id: LayerRef },
+        ChangeLayerCommands { layer_id: LayerRef, commands: Vec<ChangeLayerCommand> },
+        AddGroup { group: GroupFull },
+        RemoveGroup { group_id: GroupRef },
+        ChangeGroupCommands { group_id: GroupRef, commands: Vec<ChangeGroupCommand> },
+        AddStat { stat: StatFull },
+        RemoveStat { stat_id: StatRef },
+        ChangeStatCommands { stat_id: StatRef, commands: Vec<ChangeStatCommand> },
+        AddDesignAuthor { author: AuthorFull },
+        RemoveDesignAuthor { author_id: AuthorRef },
+        AddDesignConcept { concept: ConceptFull },
+        RemoveDesignConcept { concept_id: ConceptRef },
+        AddDesignTag { tag: TagFull },
+        RemoveDesignTag { tag_id: TagRef },
+        AddDesignQuality { quality: QualityFull },
+        RemoveDesignQuality { quality_id: QualityRef },
+        AddDesignProp { prop: PropFull },
+        RemoveDesignProp { prop_id: PropRef },
+        AddDesignAttribute { attribute: AttributeFull },
+        RemoveDesignAttribute { id: AttributeRef },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3201,7 +3201,7 @@ pub mod change_command {
         Description { description: Option<String> },
         Color { color: Option<String> },
         Icon { icon: Option<String> },
-        Pieces { pieces: Vec<PieceIdDto> },
+        Pieces { pieces: Vec<PieceRef> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3225,10 +3225,10 @@ pub mod change_command {
         X { value: Option<f64> },
         Y { value: Option<f64> },
         Description { value: Option<String> },
-        ReplaceConnected { side: SideMetadataDto },
-        ReplaceConnecting { side: SideMetadataDto },
-        AddConnectionAttribute { attribute: AttributeFullDto },
-        RemoveConnectionAttribute { id: AttributeIdDto },
+        ReplaceConnected { side: SideMetadata },
+        ReplaceConnecting { side: SideMetadata },
+        AddConnectionAttribute { attribute: AttributeFull },
+        RemoveConnectionAttribute { id: AttributeRef },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3239,18 +3239,18 @@ pub mod change_command {
         Plane { plane: Option<Plane> },
         Center { center: Option<Coordinate> },
         Color { color: Option<String> },
-        Type { type_id: Option<TypeIdDto> },
+        Type { type_id: Option<TypeRef> },
         Scale { scale: Option<f64> },
         MirrorPlane { mirror_plane: Option<Plane> },
         Hidden { hidden: Option<bool> },
         Locked { locked: Option<bool> },
         Id { id: Id },
-        AddProp { prop: PropFullDto },
-        RemoveProp { prop_id: PropIdDto },
-        ChangePropCommands { prop_id: PropIdDto, commands: Vec<ChangePropCommand> },
-        AddAttribute { attribute: AttributeFullDto },
-        RemoveAttribute { id: AttributeIdDto },
-        ChangeAttributeCommands { id: AttributeIdDto, commands: Vec<ChangeAttributeCommand> },
+        AddProp { prop: PropFull },
+        RemoveProp { prop_id: PropRef },
+        ChangePropCommands { prop_id: PropRef, commands: Vec<ChangePropCommand> },
+        AddAttribute { attribute: AttributeFull },
+        RemoveAttribute { id: AttributeRef },
+        ChangeAttributeCommands { id: AttributeRef, commands: Vec<ChangeAttributeCommand> },
         Fix,
     }
 
@@ -3575,13 +3575,13 @@ pub mod change_command {
                             return Err(SemioError::InvalidOperation("duplicate benchmark id on quality".into()));
                         }
                         let mut b = BenchmarkStore::empty_shell(benchmark.id.clone());
-                        b.apply_metadata_dto(BenchmarkMetadataDto { id: benchmark.id.clone(), name: benchmark.name.clone(), min: benchmark.min, max: benchmark.max, min_excluded: benchmark.min_excluded, max_excluded: benchmark.max_excluded });
+                        b.apply_metadata_dto(BenchmarkMetadata { id: benchmark.id.clone(), name: benchmark.name.clone(), min: benchmark.min, max: benchmark.max, min_excluded: benchmark.min_excluded, max_excluded: benchmark.max_excluded });
                         b.parent_quality = Some(Arc::downgrade(q));
                         qg.benchmarks.push(Arc::new(RwLock::new(b)));
                     }
                     q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkIdDto { id } }])
+                    Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkRef { id } }])
                 }
                 ChangeKitQualityCommand::RemoveBenchmark { benchmark_id } => {
                     let pos = { q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.iter().position(|b| b.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)) };
@@ -3589,7 +3589,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() });
                     };
                     let b = { q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.remove(pos) };
-                    let dto = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.to_full_dto();
+                    let dto = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.to_full();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeKitQualityCommand::AddBenchmark { benchmark: dto }])
                 }
@@ -3626,7 +3626,7 @@ pub mod change_command {
                 | ChangeKitCommand::Created { .. }
                 | ChangeKitCommand::Updated { .. }
                 | ChangeKitCommand::Version { .. }
-                | ChangeKitCommand::ReplaceKitFromFullDto { .. }
+                | ChangeKitCommand::ReplaceKitFromFull { .. }
                 | ChangeKitCommand::AddAuthor { .. }
                 | ChangeKitCommand::RemoveAuthor { .. }
                 | ChangeKitCommand::AddConcept { .. }
@@ -3684,15 +3684,15 @@ pub mod change_command {
         }
 
         pub fn kit_diff_many(kit: &KitGraphRef, cmds: &[ChangeKitCommand]) -> Result<KitDiff> {
-            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
             if cmds.is_empty() {
                 return Ok(KitDiff::default());
             }
-            let twin = KitGraph::from_full_dto(before.clone());
+            let twin = KitGraph::from_full(before.clone());
             for c in cmds {
                 c.apply_mutation(&twin)?;
             }
-            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full();
             Ok(KitDiff::between_dto(&before, &after))
         }
 
@@ -3700,8 +3700,8 @@ pub mod change_command {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
-            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-            let twin = KitGraph::from_full_dto(before);
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+            let twin = KitGraph::from_full(before);
             let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
             for c in cmds {
                 groups.push(c.apply_mutation(&twin)?);
@@ -3714,19 +3714,19 @@ pub mod change_command {
         }
 
 
-        pub fn plan_kit_diff(&self, baseline: &KitFullDto) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
-            let twin = KitGraph::from_full_dto(baseline.clone());
+        pub fn plan_kit_diff(&self, baseline: &KitFull) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+            let twin = KitGraph::from_full(baseline.clone());
             let inv = self.apply_mutation(&twin)?;
-            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            let after = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full();
             let d = crate::kit_diff::KitDiff::between(baseline, &after);
             Ok((d, inv))
         }
 
         pub fn apply(&self, kit: &KitGraphRef) -> Result<Vec<ChangeKitCommand>> {
-            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-            let twin = KitGraph::from_full_dto(b0.clone());
+            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+            let twin = KitGraph::from_full(b0.clone());
             let inv = self.apply_mutation(&twin)?;
-            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full();
             if a != b0 {
                 let diff = crate::kit_diff::KitDiff::between(&b0, &a);
                 KitGraph::with_undo(kit, || KitGraph::apply_kit_diff(kit, &diff).map(|_| ())).map_err(SemioError::from)?;
@@ -3738,14 +3738,14 @@ pub mod change_command {
             if cmds.is_empty() {
                 return Ok(vec![]);
             }
-            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-            let twin = KitGraph::from_full_dto(b0.clone());
+            let b0 = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+            let twin = KitGraph::from_full(b0.clone());
             let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
             for c in cmds {
                 let inv = c.apply_mutation(&twin)?;
                 groups.push(inv);
             }
-            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full_dto();
+            let a = twin.read().map_err(|_| SemioError::LockPoisoned("twin"))?.to_full();
             if a != b0 {
                 let diff = crate::kit_diff::KitDiff::between(&b0, &a);
                 KitGraph::with_undo(kit, || KitGraph::apply_kit_diff(kit, &diff).map(|_| ())).map_err(SemioError::from)?;
@@ -3819,15 +3819,15 @@ pub mod change_command {
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_version(version.clone()).map_err(se)?;
                     Ok(if old == *version { vec![] } else { vec![ChangeKitCommand::Version { version: old }] })
                 }
-                ChangeKitCommand::ReplaceKitFromFullDto { dto } => {
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    KitGraph::replace_from_full_dto(kit, dto.clone()).map_err(se)?;
-                    Ok(if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                ChangeKitCommand::ReplaceKitFromFull { dto } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    KitGraph::replace_from_full(kit, dto.clone()).map_err(se)?;
+                    Ok(if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::AddType { r#type } => {
                     let id = r#type.id.clone();
                     KitGraph::insert_type_dto(kit, r#type.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeRef { id } }])
                 }
                 ChangeKitCommand::RemoveType { type_id } => {
                     let snap = KitGraph::remove_type_dto(kit, type_id.id.as_str()).map_err(se)?;
@@ -3841,7 +3841,7 @@ pub mod change_command {
                 ChangeKitCommand::AddDesign { design } => {
                     let id = design.id.clone();
                     KitGraph::insert_design_ref(kit, design.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignRef { id } }])
                 }
                 ChangeKitCommand::RemoveDesign { design_id } => {
                     let snap = KitGraph::remove_design_dto(kit, design_id.id.as_str()).map_err(se)?;
@@ -3855,7 +3855,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFile { file } => {
                     let id = file.id.clone();
                     KitGraph::insert_file_dto(kit, file.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileRef { id } }])
                 }
                 ChangeKitCommand::RemoveFile { file_id } => {
                     let snap = KitGraph::remove_file_dto(kit, file_id.id.as_str()).map_err(se)?;
@@ -3868,7 +3868,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFolder { folder } => {
                     let id = folder.id.clone();
                     KitGraph::insert_folder_dto(kit, folder.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderRef { id } }])
                 }
                 ChangeKitCommand::RemoveFolder { folder_id } => {
                     let snap = KitGraph::remove_folder_dto(kit, folder_id.id.as_str()).map_err(se)?;
@@ -3881,7 +3881,7 @@ pub mod change_command {
                 ChangeKitCommand::AddAuthor { author } => {
                     let id = author.id.clone();
                     KitGraph::insert_author_dto(kit, author.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorRef { id } }])
                 }
                 ChangeKitCommand::RemoveAuthor { author_id } => {
                     let snap = KitGraph::remove_author_dto(kit, author_id.id.as_str()).map_err(se)?;
@@ -3894,7 +3894,7 @@ pub mod change_command {
                 ChangeKitCommand::AddConcept { concept } => {
                     let id = concept.id.clone();
                     KitGraph::insert_concept_dto(kit, concept.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptRef { id } }])
                 }
                 ChangeKitCommand::RemoveConcept { concept_id } => {
                     let snap = KitGraph::remove_concept_dto(kit, concept_id.id.as_str()).map_err(se)?;
@@ -3907,7 +3907,7 @@ pub mod change_command {
                 ChangeKitCommand::AddTag { tag } => {
                     let id = tag.id.clone();
                     KitGraph::insert_tag_dto(kit, tag.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagRef { id } }])
                 }
                 ChangeKitCommand::RemoveTag { tag_id } => {
                     let snap = KitGraph::remove_tag_dto(kit, tag_id.id.as_str()).map_err(se)?;
@@ -3920,7 +3920,7 @@ pub mod change_command {
                 ChangeKitCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
                     KitGraph::insert_quality_dto(kit, quality.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeKitCommand::RemoveQuality { quality_id } => {
                     let snap = KitGraph::remove_quality_dto(kit, quality_id.id.as_str()).map_err(se)?;
@@ -3937,14 +3937,14 @@ pub mod change_command {
                         if g.props.iter().any(|p| p.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate prop id on kit".into()));
                         }
-                        let mut p = PropStore::from_full_dto(prop.clone());
+                        let mut p = PropStore::from_full(prop.clone());
                         p.parent_kit = Some(Arc::downgrade(kit));
                         g.props.push(Arc::new(RwLock::new(p)));
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropRef { id } }])
                 }
                 ChangeKitCommand::RemoveKitProp { prop_id } => {
                     let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false)) };
@@ -3952,7 +3952,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
                     };
                     let p = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.props.remove(pos) };
-                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full();
                     {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.invalidate_hash();
@@ -3968,14 +3968,14 @@ pub mod change_command {
                         if g.attributes.iter().any(|a| a.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate attribute id on kit".into()));
                         }
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_kit = Some(Arc::downgrade(kit));
                         g.attributes.push(Arc::new(RwLock::new(a)));
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeRef { id } }])
                 }
                 ChangeKitCommand::RemoveKitAttribute { id } => {
                     let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)) };
@@ -3983,7 +3983,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: id.id.clone() });
                     };
                     let a = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.remove(pos) };
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                     {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.invalidate_hash();
@@ -4104,7 +4104,7 @@ pub mod change_command {
                 ChangeKitCommand::AddFamily { family } => {
                     let id = family.id.clone();
                     KitGraph::insert_family_dto(kit, family.clone()).map_err(se)?;
-                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyIdDto { id } }])
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyRef { id } }])
                 }
                 ChangeKitCommand::RemoveFamily { family_id } => {
                     let snap = KitGraph::remove_family_dto(kit, family_id.id.as_str()).map_err(se)?;
@@ -4132,55 +4132,55 @@ pub mod change_command {
                     Ok(vec![ChangeKitCommand::ChangeFamilyCommands { family_id: family_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ClusterPieces { design_id, piece_ids, cluster_name } => {
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::cluster_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), cluster_name.clone()).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::DragPieces { design_id, piece_ids, du, dv } => {
                     if piece_ids.is_empty() {
                         return Ok(vec![]);
                     }
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::drag_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *du, *dv).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::MovePieces { design_id, piece_ids, gap, shift, rise } => {
                     if piece_ids.is_empty() {
                         return Ok(vec![]);
                     }
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::move_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone(), *gap, *shift, *rise).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::FixPieces { design_id, piece_ids } => {
                     if piece_ids.is_empty() {
                         return Ok(vec![]);
                     }
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::fix_pieces_unchecked(kit, design_id.id.as_str(), piece_ids.clone()).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::FlattenDesign { design_id } => {
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::flatten_design_apply_unchecked(kit, design_id.id.as_str()).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::ExpandNestedDesign { parent_design_id, nested_design_id } => {
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::expand_nested_design_unchecked(kit, parent_design_id.id.as_str(), nested_design_id.id.as_str()).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::DeleteConnection { design_id, connection_id } => {
-                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                     KitGraph::delete_connection_in_design_unchecked(kit, design_id.id.as_str(), connection_id.id.as_str()).map_err(se)?;
-                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
+                    let new = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+                    Ok(if new == old { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFull { dto: old }] })
                 }
                 ChangeKitCommand::ChangePieceKind { design_id, piece_id, new_type_id } => {
                     let inner = ChangeKitCommand::ChangeDesignCommands {
@@ -4357,7 +4357,7 @@ pub mod change_command {
                     Ok(vec![ChangeTypeCommand::AddFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeTypeCommand::SetFamilies { families } => {
-                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_full_dto().families;
+                    let old = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.to_full().families;
                     let mut new_weaks = Vec::new();
                     for fid in families {
                         let pref =
@@ -4385,7 +4385,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddConnector { connector: cdto } => {
                     let id = cdto.id.clone();
                     {
-                        let mut c = ConnectorStore::from_full_dto(cdto.clone());
+                        let mut c = ConnectorStore::from_full(cdto.clone());
                         c.parent_type = Arc::downgrade(&t);
                         if let Some(pidd) = &cdto.port {
                             if let Some(pr) = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pidd.id) {
@@ -4397,7 +4397,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorRef { id } }])
                 }
                 ChangeTypeCommand::RemoveConnector { connector_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.iter().position(|c| c.read().map(|r| r.id == connector_id.id).unwrap_or(false));
@@ -4405,7 +4405,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Connector", id: connector_id.id.clone() });
                     };
                     let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.remove(pos);
-                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.to_full_dto();
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddConnector { connector: dto }])
@@ -4423,7 +4423,7 @@ pub mod change_command {
                     let id = rdto.id.clone();
                     {
                         let files: Vec<FileStoreRef> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
-                        let mut r = RepresentationStore::from_full_dto(rdto.clone());
+                        let mut r = RepresentationStore::from_full(rdto.clone());
                         r.parent_type = Arc::downgrade(&t);
                         if let Some(fidd) = &rdto.file {
                             if let Some(fref) = files.iter().find(|f| f.read().map(|r| r.id == fidd.id).unwrap_or(false)) {
@@ -4435,7 +4435,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationRef { id } }])
                 }
                 ChangeTypeCommand::RemoveRepresentation { id: rid } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.representations.iter().position(|r| r.read().map(|r| r.id == rid.id).unwrap_or(false));
@@ -4443,7 +4443,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Representation", id: rid.id.clone() });
                     };
                     let r = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.representations.remove(pos);
-                    let dto = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_full_dto();
+                    let dto = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddRepresentation { representation: dto }])
@@ -4460,14 +4460,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeAuthor { author } => {
                     let id = author.id.clone();
                     {
-                        let mut a = AuthorStore::from_full_dto(author.clone());
+                        let mut a = AuthorStore::from_full(author.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.authors.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeAuthor { author_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
@@ -4475,7 +4475,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() });
                     };
                     let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.authors.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeAuthor { author: dto }])
@@ -4483,14 +4483,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeConcept { concept } => {
                     let id = concept.id.clone();
                     {
-                        let mut c = ConceptStore::from_full_dto(concept.clone());
+                        let mut c = ConceptStore::from_full(concept.clone());
                         c.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.concepts.push(Arc::new(RwLock::new(c)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeConcept { concept_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
@@ -4498,7 +4498,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() });
                     };
                     let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.remove(pos);
-                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeConcept { concept: dto }])
@@ -4506,14 +4506,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeTag { tag } => {
                     let id = tag.id.clone();
                     {
-                        let mut tg = TagStore::from_full_dto(tag.clone());
+                        let mut tg = TagStore::from_full(tag.clone());
                         tg.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.tags.push(Arc::new(RwLock::new(tg)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeTag { tag_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.tags.iter().position(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false));
@@ -4521,7 +4521,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
                     };
                     let x = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.tags.remove(pos);
-                    let dto = x.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                    let dto = x.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeTag { tag: dto }])
@@ -4529,7 +4529,7 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let qref = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        let qref = Arc::new(RwLock::new(QualityStore::from_full(quality.clone())));
                         {
                             let twq = Arc::downgrade(&qref);
                             if let Ok(mut qg) = qref.write() {
@@ -4546,7 +4546,7 @@ pub mod change_command {
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeQuality { quality_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -4554,7 +4554,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
                     };
                     let q = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.remove(pos);
-                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeQuality { quality: dto }])
@@ -4562,14 +4562,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_full_dto(prop.clone());
+                        let mut p = PropStore::from_full(prop.clone());
                         p.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.props.push(Arc::new(RwLock::new(p)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeProp { prop_id } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -4577,7 +4577,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
                     };
                     let p = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.props.remove(pos);
-                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeProp { prop: dto }])
@@ -4585,14 +4585,14 @@ pub mod change_command {
                 ChangeTypeCommand::AddTypeAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.attributes.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id: AttributeRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeAttribute { id: aid } => {
                     let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
@@ -4600,7 +4600,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeAttribute { attribute: dto }])
@@ -4685,7 +4685,7 @@ pub mod change_command {
                     Ok(vec![ChangeDesignCommand::AddFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeDesignCommand::SetFamilies { families } => {
-                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_full_dto().families;
+                    let old = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.to_full().families;
                     let mut new_weaks = Vec::new();
                     for fid in families {
                         let pref =
@@ -4746,7 +4746,7 @@ pub mod change_command {
                         g.semantic_add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id } }])
                 }
                 ChangeDesignCommand::RemovePiece { piece_id } => {
                     let did = design_id.to_string();
@@ -4756,7 +4756,7 @@ pub mod change_command {
                         let dr = dref.read().map_err(|_| SemioError::LockPoisoned("design"))?;
                         let p = dr.piece(piece_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.id.clone() })?;
                         let pr = p.read().map_err(|_| SemioError::LockPoisoned("piece"))?;
-                        pr.to_full_dto()
+                        pr.to_full()
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -4859,7 +4859,7 @@ pub mod change_command {
                         g.semantic_add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionRef { id } }])
                 }
                 ChangeDesignCommand::RemoveConnection { connection_id } => {
                     let did = design_id.to_string();
@@ -4867,7 +4867,7 @@ pub mod change_command {
                         let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         let dref = g.design(&did).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
                         let dr = dref.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                        dr.connections.iter().find(|c| c.read().map(|r| r.id == connection_id.id).unwrap_or(false)).and_then(|c| c.read().ok().map(|c| c.to_full_dto()))
+                        dr.connections.iter().find(|c| c.read().map(|r| r.id == connection_id.id).unwrap_or(false)).and_then(|c| c.read().ok().map(|c| c.to_full()))
                     }
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
@@ -4928,13 +4928,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddLayer { layer } => {
                     let id = layer.id.clone();
                     {
-                        let mut l = LayerStore::from_full_dto(layer.clone());
+                        let mut l = LayerStore::from_full(layer.clone());
                         l.parent_design = Arc::downgrade(&d);
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.push(Arc::new(RwLock::new(l)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerRef { id } }])
                 }
                 ChangeDesignCommand::RemoveLayer { layer_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().position(|l| l.read().map(|r| r.id == layer_id.id).unwrap_or(false));
@@ -4942,7 +4942,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Layer", id: layer_id.id.clone() });
                     };
                     let l = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.remove(pos);
-                    let dto = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full_dto();
+                    let dto = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddLayer { layer: dto }])
@@ -4960,7 +4960,7 @@ pub mod change_command {
                     let id = group.id.clone();
                     {
                         let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                        let mut g = GroupStore::from_full_dto(group.clone());
+                        let mut g = GroupStore::from_full(group.clone());
                         g.parent_design = Arc::downgrade(&d);
                         let mut weaks = Vec::with_capacity(group.pieces.len());
                         for pid in &group.pieces {
@@ -4973,7 +4973,7 @@ pub mod change_command {
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupRef { id } }])
                 }
                 ChangeDesignCommand::RemoveGroup { group_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().position(|g| g.read().map(|r| r.id == group_id.id).unwrap_or(false));
@@ -4981,7 +4981,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Group", id: group_id.id.clone() });
                     };
                     let g = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.groups.remove(pos);
-                    let dto = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto();
+                    let dto = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddGroup { group: dto }])
@@ -4998,13 +4998,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddStat { stat } => {
                     let id = stat.id.clone();
                     {
-                        let mut s = StatStore::from_full_dto(stat.clone());
+                        let mut s = StatStore::from_full(stat.clone());
                         s.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.push(Arc::new(RwLock::new(s)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatRef { id } }])
                 }
                 ChangeDesignCommand::RemoveStat { stat_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().position(|s| s.read().map(|r| r.id == stat_id.id).unwrap_or(false));
@@ -5012,7 +5012,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Stat", id: stat_id.id.clone() });
                     };
                     let s = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.remove(pos);
-                    let dto = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full_dto();
+                    let dto = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddStat { stat: dto }])
@@ -5029,13 +5029,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignAuthor { author } => {
                     let id = author.id.clone();
                     {
-                        let mut a = AuthorStore::from_full_dto(author.clone());
+                        let mut a = AuthorStore::from_full(author.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAuthor { author_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
@@ -5043,7 +5043,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() });
                     };
                     let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignAuthor { author: dto }])
@@ -5051,13 +5051,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignConcept { concept } => {
                     let id = concept.id.clone();
                     {
-                        let mut c = ConceptStore::from_full_dto(concept.clone());
+                        let mut c = ConceptStore::from_full(concept.clone());
                         c.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.push(Arc::new(RwLock::new(c)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignConcept { concept_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
@@ -5065,7 +5065,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() });
                     };
                     let c = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.remove(pos);
-                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignConcept { concept: dto }])
@@ -5073,13 +5073,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignTag { tag } => {
                     let id = tag.id.clone();
                     {
-                        let mut t = TagStore::from_full_dto(tag.clone());
+                        let mut t = TagStore::from_full(tag.clone());
                         t.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.push(Arc::new(RwLock::new(t)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignTag { tag_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.tags.iter().position(|t| t.read().map(|r| r.id == tag_id.id).unwrap_or(false));
@@ -5087,7 +5087,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
                     };
                     let t = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.remove(pos);
-                    let dto = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                    let dto = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignTag { tag: dto }])
@@ -5095,7 +5095,7 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let qref = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        let qref = Arc::new(RwLock::new(QualityStore::from_full(quality.clone())));
                         {
                             let twq = Arc::downgrade(&qref);
                             if let Ok(mut qg) = qref.write() {
@@ -5111,7 +5111,7 @@ pub mod change_command {
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignQuality { quality_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -5119,7 +5119,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
                     };
                     let q = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.remove(pos);
-                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignQuality { quality: dto }])
@@ -5127,13 +5127,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_full_dto(prop.clone());
+                        let mut p = PropStore::from_full(prop.clone());
                         p.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.push(Arc::new(RwLock::new(p)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignProp { prop_id } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -5141,7 +5141,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
                     };
                     let p = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.remove(pos);
-                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignProp { prop: dto }])
@@ -5149,13 +5149,13 @@ pub mod change_command {
                 ChangeDesignCommand::AddDesignAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id: AttributeRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAttribute { id: aid } => {
                     let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
@@ -5163,7 +5163,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignAttribute { attribute: dto }])
@@ -5229,7 +5229,7 @@ pub mod change_command {
                 ChangePieceCommand::Type { type_id: tid } => {
                     let old_weak = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.type_ref.clone();
                     let tref = tid.as_ref().and_then(|tip| kit.read().ok()?.semio_type(tip.id.as_str()).map(|t| Arc::downgrade(&t)));
-                    let old_tid = old_weak.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| TypeIdDto { id: r.id.clone() }));
+                    let old_tid = old_weak.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|r| TypeRef { id: r.id.clone() }));
                     pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.set_type_weak(tref).map_err(se)?;
                     Ok(vec![ChangePieceCommand::Type { type_id: old_tid }])
                 }
@@ -5281,13 +5281,13 @@ pub mod change_command {
                 ChangePieceCommand::AddProp { prop } => {
                     let id = prop.id.clone();
                     {
-                        let mut p = PropStore::from_full_dto(prop.clone());
+                        let mut p = PropStore::from_full(prop.clone());
                         p.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.push(Arc::new(RwLock::new(p)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropIdDto { id } }])
+                    Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropRef { id } }])
                 }
                 ChangePieceCommand::RemoveProp { prop_id } => {
                     let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
@@ -5295,7 +5295,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
                     };
                     let p = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.remove(pos);
-                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full();
                     pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::AddProp { prop: dto }])
@@ -5314,13 +5314,13 @@ pub mod change_command {
                 ChangePieceCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.push(Arc::new(RwLock::new(a)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangePieceCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangePieceCommand::RemoveAttribute { id: AttributeRef { id } }])
                 }
                 ChangePieceCommand::RemoveAttribute { id: aid } => {
                     let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
@@ -5328,7 +5328,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                     pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::AddAttribute { attribute: dto }])
@@ -5456,7 +5456,7 @@ pub mod change_command {
                     let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let d_ref: &DesignStore = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connected.clone();
-                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata_dto();
+                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
                     rewire_side_from_metadata(d_ref, &side, new_meta)?;
                     drop(d_read);
                     event_wire::wire_graph_bus(kit);
@@ -5470,7 +5470,7 @@ pub mod change_command {
                     let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
                     let d_ref: &DesignStore = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connecting.clone();
-                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata_dto();
+                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
                     rewire_side_from_metadata(d_ref, &side, new_meta)?;
                     drop(d_read);
                     event_wire::wire_graph_bus(kit);
@@ -5479,14 +5479,14 @@ pub mod change_command {
                 ChangeConnectionCommand::AddConnectionAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_connection = Some(Arc::downgrade(&cref));
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         c.attributes.push(Arc::new(RwLock::new(a)));
                         c.notify_aggregate_change();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id: AttributeRef { id } }])
                 }
                 ChangeConnectionCommand::RemoveConnectionAttribute { id: aid } => {
                     let pos = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
@@ -5496,7 +5496,7 @@ pub mod change_command {
                     let dto = {
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         let a = c.attributes.remove(pos);
-                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                         c.notify_aggregate_change();
                         dto
                     };
@@ -5612,7 +5612,7 @@ pub mod change_command {
                 }
                 ChangeGroupCommand::Pieces { pieces } => {
                     let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
-                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto().pieces;
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full().pieces;
                     let weaks: Result<Vec<PieceStoreWeak>> = pieces.iter().map(|pid| dr.piece(pid.id.as_str()).map(|p| Arc::downgrade(&p)).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })).collect();
                     let weaks = weaks?;
                     g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_pieces(weaks).map_err(se)?;
@@ -5788,7 +5788,7 @@ pub mod change_command {
                     }
                     let pr: PortStoreRef = {
                         let fw = Arc::downgrade(fam);
-                        let mut pstore = PortStore::from_full_dto(port.clone());
+                        let mut pstore = PortStore::from_full(port.clone());
                         pstore.parent_family = fw;
                         Arc::new(RwLock::new(pstore))
                     };
@@ -5802,7 +5802,7 @@ pub mod change_command {
                     }
                     pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
-                    Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortIdDto { id: pid } }])
+                    Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortRef { id: pid } }])
                 }
                 ChangeFamilyCommand::RemovePort { port_id } => {
                     KitGraph::ensure_port_unused_by_connectors(kit, &port_id.id)?;
@@ -5811,7 +5811,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Port", id: port_id.id.clone() });
                     };
                     let pr = fam.write().map_err(|_| SemioError::LockPoisoned("family"))?.ports.remove(pos);
-                    let dto = pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full_dto();
+                    let dto = pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full();
                     KitGraph::purge_dead_port_compatibility(kit);
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
                     event_wire::wire_graph_bus(kit);
@@ -5874,7 +5874,7 @@ pub mod change_command {
                     }
                 }
                 ChangePortCommand::CompatiblePorts { ports } => {
-                    let old_dto: Vec<PortIdDto> = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|r| r.read().ok().map(|x| PortIdDto { id: x.id.clone() }))).collect();
+                    let old_dto: Vec<PortRef> = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|r| r.read().ok().map(|x| PortRef { id: x.id.clone() }))).collect();
                     {
                         let kr = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_ports_from_ids(ports, &*kr);
@@ -5898,12 +5898,12 @@ pub mod change_command {
                 ChangePortCommand::AddPortAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        let mut a = AttributeStore::from_full(attribute.clone());
                         a.parent_port = Some(Arc::downgrade(p));
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.push(a);
                         p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangePortCommand::RemovePortAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangePortCommand::RemovePortAttribute { id: AttributeRef { id } }])
                 }
                 ChangePortCommand::RemovePortAttribute { id: aid } => {
                     let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.iter().position(|a| a.id == aid.id);
@@ -5911,7 +5911,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.remove(pos);
-                    let dto = a.to_full_dto();
+                    let dto = a.to_full();
                     p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
                     Ok(vec![ChangePortCommand::AddPortAttribute { attribute: dto }])
                 }
@@ -5942,7 +5942,7 @@ pub mod change_command {
                 ChangeConnectorCommand::Port { port: pid } => {
                     let t = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.parent_type.upgrade().ok_or_else(|| SemioError::InvalidOperation("connector has no parent type".into()))?;
                     let kit = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.parent_kit.upgrade().ok_or_else(|| SemioError::InvalidOperation("type has no parent kit".into()))?;
-                    let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.port.as_ref().and_then(|w| w.upgrade()).and_then(|pr| pr.read().ok().map(|r| r.to_id_dto()));
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.port.as_ref().and_then(|w| w.upgrade()).and_then(|pr| pr.read().ok().map(|r| r.to_ref()));
                     let new_port = if let Some(pid) = pid { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.port_by_id(&pid.id).map(|x| Arc::downgrade(&x)) } else { None };
                     c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_port_weak(new_port).map_err(se)?;
                     if &old == pid {
@@ -5954,7 +5954,7 @@ pub mod change_command {
                 ChangeConnectorCommand::AddConnectorQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        let q = Arc::new(RwLock::new(QualityStore::from_full(quality.clone())));
                         {
                             let wq = Arc::downgrade(&q);
                             if let Ok(mut qg) = q.write() {
@@ -5969,7 +5969,7 @@ pub mod change_command {
                         c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.push(q);
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeConnectorCommand::RemoveConnectorQuality { quality_id: QualityIdDto { id } }])
+                    Ok(vec![ChangeConnectorCommand::RemoveConnectorQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeConnectorCommand::RemoveConnectorQuality { quality_id } => {
                     let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -5977,17 +5977,17 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
                     };
                     let q = c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.remove(pos);
-                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full();
                     c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     Ok(vec![ChangeConnectorCommand::AddConnectorQuality { quality: dto }])
                 }
                 ChangeConnectorCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_full_dto(attribute.clone()));
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_full(attribute.clone()));
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeConnectorCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeConnectorCommand::RemoveAttribute { id: AttributeRef { id } }])
                 }
                 ChangeConnectorCommand::RemoveAttribute { id: aid } => {
                     let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.iter().position(|a| a.id == aid.id);
@@ -5995,7 +5995,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.remove(pos);
-                    let dto = a.to_full_dto();
+                    let dto = a.to_full();
                     c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     Ok(vec![ChangeConnectorCommand::AddAttribute { attribute: dto }])
                 }
@@ -6024,7 +6024,7 @@ pub mod change_command {
                     }
                 }
                 ChangeRepresentationCommand::File { file: fidd } => {
-                    let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_metadata_dto().file;
+                    let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_metadata().file;
                     let w = if let Some(fid) = fidd { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(fid.id.as_str()).map(|x| Arc::downgrade(&x)) } else { None };
                     r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_file(w).map_err(se)?;
                     if &old == fidd {
@@ -6035,9 +6035,9 @@ pub mod change_command {
                 }
                 ChangeRepresentationCommand::AddRepresentationTag { tag } => {
                     let id = tag.id.clone();
-                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.push(TagStore::from_full_dto(tag.clone()));
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.push(TagStore::from_full(tag.clone()));
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
-                    Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagIdDto { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagRef { id } }])
                 }
                 ChangeRepresentationCommand::RemoveRepresentationTag { tag_id } => {
                     let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.iter().position(|t| t.id == tag_id.id);
@@ -6045,14 +6045,14 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
                     };
                     let t = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.remove(pos);
-                    let dto = t.to_full_dto();
+                    let dto = t.to_full();
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     Ok(vec![ChangeRepresentationCommand::AddRepresentationTag { tag: dto }])
                 }
                 ChangeRepresentationCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
                     {
-                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        let q = Arc::new(RwLock::new(QualityStore::from_full(quality.clone())));
                         {
                             if let Ok(mut qg) = q.write() {
                                 qg.parent_representation = Some(Arc::downgrade(r));
@@ -6067,7 +6067,7 @@ pub mod change_command {
                         r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.push(q);
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeRepresentationCommand::RemoveQuality { quality_id: QualityIdDto { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeRepresentationCommand::RemoveQuality { quality_id } => {
                     let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
@@ -6075,17 +6075,17 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
                     };
                     let q = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.remove(pos);
-                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full();
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     Ok(vec![ChangeRepresentationCommand::AddQuality { quality: dto }])
                 }
                 ChangeRepresentationCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_full_dto(attribute.clone()));
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_full(attribute.clone()));
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
-                    Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                    Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id: AttributeRef { id } }])
                 }
                 ChangeRepresentationCommand::RemoveAttribute { id: aid } => {
                     let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.iter().position(|a| a.id == aid.id);
@@ -6093,7 +6093,7 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
                     };
                     let a = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.remove(pos);
-                    let dto = a.to_full_dto();
+                    let dto = a.to_full();
                     r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     Ok(vec![ChangeRepresentationCommand::AddAttribute { attribute: dto }])
                 }
@@ -6108,23 +6108,23 @@ pub mod kit_checkpoint {
 
     use crate::id::Id;
     use crate::kit_change::KitChange;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct MaterializedKit {
-        pub initial: KitFullDto,
+        pub initial: KitFull,
         pub change_list: Vec<KitChange>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub computed: Option<KitFullDto>,
+        pub computed: Option<KitFull>,
     }
 
     impl MaterializedKit {
-        pub fn compute(&self) -> KitFullDto {
-            let k = KitGraph::from_full_dto(self.initial.clone());
+        pub fn compute(&self) -> KitFull {
+            let k = KitGraph::from_full(self.initial.clone());
             for c in &self.change_list {
                 let _ = KitChange::apply_forward(c, &k);
             }
-            let out = k.read().expect("kit read").to_full_dto();
+            let out = k.read().expect("kit read").to_full();
             out
         }
     }
@@ -6204,12 +6204,12 @@ pub mod kit_checkpoint {
             children
         }
 
-        pub fn materialize(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFullDto {
+        pub fn materialize(initial: &KitFull, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFull {
             let Some(at_id) = at else {
                 return initial.clone();
             };
             let path = Self::chain_root_to_leaf_from(at_id, map);
-            let k = KitGraph::from_full_dto(initial.clone());
+            let k = KitGraph::from_full(initial.clone());
             for cid in &path {
                 if let Some(cp) = map.get(cid) {
                     for ch in &cp.changes {
@@ -6217,16 +6217,16 @@ pub mod kit_checkpoint {
                     }
                 }
             }
-            let out = k.read().expect("kit read").to_full_dto();
+            let out = k.read().expect("kit read").to_full();
             out
         }
 
-        pub fn materialize_graph(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
+        pub fn materialize_graph(initial: &KitFull, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitGraphRef {
             let Some(at_id) = at else {
-                return KitGraph::from_full_dto(initial.clone());
+                return KitGraph::from_full(initial.clone());
             };
             let path = Self::chain_root_to_leaf_from(at_id, map);
-            let k = KitGraph::from_full_dto(initial.clone());
+            let k = KitGraph::from_full(initial.clone());
             for cid in &path {
                 if let Some(cp) = map.get(cid) {
                     for ch in &cp.changes {
@@ -6237,7 +6237,7 @@ pub mod kit_checkpoint {
             k
         }
 
-        pub fn mark_as_release(&mut self, initial: KitFullDto, all_checkpoints: &HashMap<Id, KitCheckpoint>) {
+        pub fn mark_as_release(&mut self, initial: KitFull, all_checkpoints: &HashMap<Id, KitCheckpoint>) {
             let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
             let mut change_list: Vec<KitChange> = Vec::new();
             for id in &path {
@@ -6413,7 +6413,7 @@ pub mod kit_draft {
 
     use crate::id::Id;
     use crate::kit_change::KitChange;
-    use crate::kit_graph::KitFullDto;
+    use crate::kit_graph::KitFull;
     use crate::kit_graph::KitGraph;
     use crate::kit_graph::KitGraphRef;
     use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
@@ -6424,14 +6424,14 @@ pub mod kit_draft {
         pub id: Id,
         pub parent_checkpoint: Option<Id>,
         pub target_alternative: Option<Id>,
-        pub before: KitFullDto,
+        pub before: KitFull,
         pub transactions: Vec<Transaction>,
         pub redo_transactions: Vec<Transaction>,
         pub open_transaction: Option<Transaction>,
     }
 
     impl Draft {
-        pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFullDto) -> Self {
+        pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFull) -> Self {
             Self { id: Id::new_v7(), parent_checkpoint, target_alternative, before, transactions: Vec::new(), redo_transactions: Vec::new(), open_transaction: None }
         }
 
@@ -6496,7 +6496,7 @@ pub mod kit_draft {
         }
 
         pub fn materialize_working_graph(&self) -> crate::error::Result<KitGraphRef> {
-            let k = KitGraph::from_full_dto(self.before.clone());
+            let k = KitGraph::from_full(self.before.clone());
             for tx in &self.transactions {
                 for ch in &tx.changes {
                     KitChange::apply_forward(ch, &k).map_err(|e| crate::error::SemioError::InvalidOperation(e.to_string()))?;
@@ -6750,11 +6750,11 @@ pub mod backbone {
     use crate::id::Id;
     use crate::kit_alternative::KitAlternative;
     use crate::kit_checkpoint::KitCheckpoint;
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct BackboneSnapshot {
-        pub initial: KitFullDto,
+        pub initial: KitFull,
         pub checkpoints: HashMap<Id, KitCheckpoint>,
         pub the_kit_head: Option<Id>,
         pub alternatives: HashMap<Id, KitAlternative>,
@@ -6798,7 +6798,7 @@ pub mod backbone {
     pub fn apply_snap_to_graph(kit: &KitGraphRef, snap: &BackboneSnapshot) -> crate::error::SetResult {
         use crate::error::SetError;
         let dto = KitCheckpoint::materialize(&snap.initial, &snap.checkpoints, snap.the_kit_head.as_ref());
-        KitGraph::replace_from_full_dto(kit, dto)?;
+        KitGraph::replace_from_full(kit, dto)?;
         let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
         g.initial = snap.initial.clone();
         g.checkpoints = snap.checkpoints.clone();
@@ -6920,7 +6920,7 @@ pub mod backbone {
                 return Ok(ProposeOutcome::Rejected { current_tip: auth.the_kit_head.clone() });
             }
             let dto = KitCheckpoint::materialize(&proposed.initial, &proposed.checkpoints, proposed.the_kit_head.as_ref());
-            let k = KitGraph::from_full_dto(dto);
+            let k = KitGraph::from_full(dto);
             {
                 let mut g = k.write().map_err(|_| SemioError::LockPoisoned("kit".into()))?;
                 g.initial = proposed.initial.clone();
@@ -6939,7 +6939,7 @@ pub mod backbone {
                 let g = k.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?;
                 KitCheckpoint::materialize(&g.initial, &g.checkpoints, id)
             };
-            let k2 = KitGraph::from_full_dto(dto);
+            let k2 = KitGraph::from_full(dto);
             k2.read().map_err(|_| SemioError::LockPoisoned("kit".into()))?.save_local_folder(&self.folder)?;
             Ok(())
         }
@@ -7230,7 +7230,7 @@ pub mod kit_store {
     use crate::backbone::BackboneConfig;
     use crate::error::{Result, SemioError};
     use crate::kit_conflict_registry::{ConflictRegistry, ConflictResolution, KitConflict};
-    use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+    use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
     use crate::kit_store_command::{KitStoreCommand, KitStoreCommandResult};
     use crate::wip_kit::{CoordMsg, WipMsg};
 
@@ -7248,8 +7248,8 @@ pub mod kit_store {
     }
 
     impl KitStore {
-        pub fn from_full_dto(dto: KitFullDto) -> Self {
-            Self::from_graph(KitGraph::from_full_dto(dto))
+        pub fn from_full(dto: KitFull) -> Self {
+            Self::from_graph(KitGraph::from_full(dto))
         }
 
         pub fn from_graph(graph: KitGraphRef) -> Self {
@@ -7260,7 +7260,7 @@ pub mod kit_store {
                 let g = graph.read().expect("kit");
                 g.initial.clone()
             };
-            let sync = KitGraph::from_full_dto(init);
+            let sync = KitGraph::from_full(init);
             let (wip_tx, wip_rx) = mpsc::channel::<WipMsg>();
             let (coord_tx, coord_rx) = mpsc::channel::<CoordMsg>();
             let g1 = graph.clone();
@@ -7401,14 +7401,14 @@ pub mod kit_store_command {
     use crate::read::{ReadKitCommand, ReadKitCommandOutput};
     use crate::{error::Result, error::SemioError};
 
-    type KitFullDto = crate::kit_graph::KitFullDto;
+    type KitFull = crate::kit_graph::KitFull;
 
     impl KitGraph {
-        pub fn the_kit_dto(&self) -> KitFullDto {
+        pub fn the_kit_dto(&self) -> KitFull {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
         }
 
-        pub fn materialize_at(&self, at: Option<&Id>) -> KitFullDto {
+        pub fn materialize_at(&self, at: Option<&Id>) -> KitFull {
             KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
         }
 
@@ -7429,8 +7429,8 @@ pub mod kit_store_command {
             }
         }
 
-        pub fn replace_live_graph(kit: &KitGraphRef, d: KitFullDto) -> Result<()> {
-            KitGraph::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
+        pub fn replace_live_graph(kit: &KitGraphRef, d: KitFull) -> Result<()> {
+            KitGraph::replace_from_full(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
     }
 
@@ -7966,8 +7966,8 @@ pub mod kit_store_command {
                         (alt.root.clone(), a, b)
                     };
                     let ch = KitChange {
-                        forward: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: after_dto.clone() }],
-                        inverse: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: before_dto.clone() }],
+                        forward: vec![ChangeKitCommand::ReplaceKitFromFull { dto: after_dto.clone() }],
+                        inverse: vec![ChangeKitCommand::ReplaceKitFromFull { dto: before_dto.clone() }],
                         children: vec![],
                         kind: KitChangeKind::UnifyCheckpoints,
                         author: None,
@@ -8026,12 +8026,12 @@ pub mod attribute {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct AttributeIdDto {
+    pub struct AttributeRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AttributeMetadataDto {
+    pub struct AttributeMetadata {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -8040,7 +8040,7 @@ pub mod attribute {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AttributeShallowDto {
+    pub struct AttributeShallow {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -8049,7 +8049,7 @@ pub mod attribute {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct AttributeFullDto {
+    pub struct AttributeFull {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -8086,7 +8086,7 @@ pub mod attribute {
             EntityRef::new(EntityKind::Attribute, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: AttributeFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: AttributeFull) {
             self.id = d.id;
             self.key = d.key;
             self.value = d.value;
@@ -8094,7 +8094,7 @@ pub mod attribute {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_shallow_dto(d: AttributeShallowDto) -> Self {
+        pub(crate) fn from_shallow(d: AttributeShallow) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
             s.key = d.key;
             s.value = d.value;
@@ -8103,9 +8103,9 @@ pub mod attribute {
             s
         }
 
-        pub(crate) fn from_full_dto(d: AttributeFullDto) -> Self {
+        pub(crate) fn from_full(d: AttributeFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -8216,22 +8216,22 @@ pub mod attribute {
             }
         }
 
-        pub fn to_id_dto(&self) -> AttributeIdDto {
-            AttributeIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> AttributeRef {
+            AttributeRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> AttributeMetadataDto {
-            AttributeMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), definition: self.definition.clone() }
+        pub fn to_metadata(&self) -> AttributeMetadata {
+            AttributeMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), definition: self.definition.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> AttributeShallowDto {
-            let m = self.to_metadata_dto();
-            AttributeShallowDto { id: m.id, key: m.key, value: m.value, definition: m.definition }
+        pub fn to_shallow(&self) -> AttributeShallow {
+            let m = self.to_metadata();
+            AttributeShallow { id: m.id, key: m.key, value: m.value, definition: m.definition }
         }
 
-        pub fn to_full_dto(&self) -> AttributeFullDto {
-            let m = self.to_metadata_dto();
-            AttributeFullDto { id: m.id, key: m.key, value: m.value, definition: m.definition }
+        pub fn to_full(&self) -> AttributeFull {
+            let m = self.to_metadata();
+            AttributeFull { id: m.id, key: m.key, value: m.value, definition: m.definition }
         }
 
         pub fn invalidate_hash(&self) {
@@ -8281,12 +8281,12 @@ pub mod author {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorIdDto {
+    pub struct AuthorRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorMetadataDto {
+    pub struct AuthorMetadata {
         pub id: Id,
         pub name: String,
         pub email: String,
@@ -8297,7 +8297,7 @@ pub mod author {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorShallowDto {
+    pub struct AuthorShallow {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8310,7 +8310,7 @@ pub mod author {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct AuthorFullDto {
+    pub struct AuthorFull {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8336,7 +8336,7 @@ pub mod author {
             EntityRef::new(EntityKind::Author, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: AuthorFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: AuthorFull) {
             self.id = d.id;
             self.name = d.name;
             self.email = d.email;
@@ -8345,9 +8345,9 @@ pub mod author {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_full_dto(d: AuthorFullDto) -> Self {
+        pub(crate) fn from_full(d: AuthorFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -8434,22 +8434,22 @@ pub mod author {
             }
         }
 
-        pub fn to_id_dto(&self) -> AuthorIdDto {
-            AuthorIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> AuthorRef {
+            AuthorRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> AuthorMetadataDto {
-            AuthorMetadataDto { id: self.id.clone(), name: self.name.clone(), email: self.email.clone(), role: self.role.clone(), rank: self.rank }
+        pub fn to_metadata(&self) -> AuthorMetadata {
+            AuthorMetadata { id: self.id.clone(), name: self.name.clone(), email: self.email.clone(), role: self.role.clone(), rank: self.rank }
         }
 
-        pub fn to_shallow_dto(&self) -> AuthorShallowDto {
-            let m = self.to_metadata_dto();
-            AuthorShallowDto { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
+        pub fn to_shallow(&self) -> AuthorShallow {
+            let m = self.to_metadata();
+            AuthorShallow { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
-        pub fn to_full_dto(&self) -> AuthorFullDto {
-            let m = self.to_metadata_dto();
-            AuthorFullDto { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
+        pub fn to_full(&self) -> AuthorFull {
+            let m = self.to_metadata();
+            AuthorFull { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
         pub fn invalidate_hash(&self) {
@@ -8499,26 +8499,12 @@ pub mod benchmark {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkIdDto {
+    pub struct BenchmarkRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkMetadataDto {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub min: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub max: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
-        pub min_excluded: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
-        pub max_excluded: Option<bool>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkShallowDto {
+    pub struct BenchmarkMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8532,7 +8518,21 @@ pub mod benchmark {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct BenchmarkFullDto {
+    pub struct BenchmarkShallow {
+        pub id: Id,
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub min: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
+        pub min_excluded: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
+        pub max_excluded: Option<bool>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct BenchmarkFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8559,7 +8559,7 @@ pub mod benchmark {
             EntityRef::new(EntityKind::Benchmark, self.id.clone())
         }
 
-        pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadataDto) {
+        pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadata) {
             self.id = d.id;
             self.name = d.name;
             self.min = d.min;
@@ -8631,22 +8631,22 @@ pub mod benchmark {
             }
         }
 
-        pub fn to_id_dto(&self) -> BenchmarkIdDto {
-            BenchmarkIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> BenchmarkRef {
+            BenchmarkRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> BenchmarkMetadataDto {
-            BenchmarkMetadataDto { id: self.id.clone(), name: self.name.clone(), min: self.min, max: self.max, min_excluded: self.min_excluded, max_excluded: self.max_excluded }
+        pub fn to_metadata(&self) -> BenchmarkMetadata {
+            BenchmarkMetadata { id: self.id.clone(), name: self.name.clone(), min: self.min, max: self.max, min_excluded: self.min_excluded, max_excluded: self.max_excluded }
         }
 
-        pub fn to_shallow_dto(&self) -> BenchmarkShallowDto {
-            let m = self.to_metadata_dto();
-            BenchmarkShallowDto { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
+        pub fn to_shallow(&self) -> BenchmarkShallow {
+            let m = self.to_metadata();
+            BenchmarkShallow { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
         }
 
-        pub fn to_full_dto(&self) -> BenchmarkFullDto {
-            let m = self.to_metadata_dto();
-            BenchmarkFullDto { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
+        pub fn to_full(&self) -> BenchmarkFull {
+            let m = self.to_metadata();
+            BenchmarkFull { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
         }
 
         pub fn invalidate_hash(&self) {
@@ -8695,12 +8695,12 @@ pub mod concept {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptIdDto {
+    pub struct ConceptRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptMetadataDto {
+    pub struct ConceptMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8710,7 +8710,7 @@ pub mod concept {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptShallowDto {
+    pub struct ConceptShallow {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8721,7 +8721,7 @@ pub mod concept {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConceptFullDto {
+    pub struct ConceptFull {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -8745,7 +8745,7 @@ pub mod concept {
             EntityRef::new(EntityKind::Concept, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: ConceptFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: ConceptFull) {
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
@@ -8753,9 +8753,9 @@ pub mod concept {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_full_dto(d: ConceptFullDto) -> Self {
+        pub(crate) fn from_full(d: ConceptFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -8823,22 +8823,22 @@ pub mod concept {
             }
         }
 
-        pub fn to_id_dto(&self) -> ConceptIdDto {
-            ConceptIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> ConceptRef {
+            ConceptRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> ConceptMetadataDto {
-            ConceptMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), order: self.order }
+        pub fn to_metadata(&self) -> ConceptMetadata {
+            ConceptMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), order: self.order }
         }
 
-        pub fn to_shallow_dto(&self) -> ConceptShallowDto {
-            let m = self.to_metadata_dto();
-            ConceptShallowDto { id: m.id, name: m.name, description: m.description, order: m.order }
+        pub fn to_shallow(&self) -> ConceptShallow {
+            let m = self.to_metadata();
+            ConceptShallow { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
-        pub fn to_full_dto(&self) -> ConceptFullDto {
-            let m = self.to_metadata_dto();
-            ConceptFullDto { id: m.id, name: m.name, description: m.description, order: m.order }
+        pub fn to_full(&self) -> ConceptFull {
+            let m = self.to_metadata();
+            ConceptFull { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -8866,14 +8866,14 @@ pub mod connection {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStoreRef};
     use crate::connector::ConnectorStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
+    use crate::side::{SideMetadata, SideStore, SideStoreRef};
 
     pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
     pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
@@ -8900,15 +8900,15 @@ pub mod connection {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionIdDto {
+    pub struct ConnectionRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionMetadataDto {
+    pub struct ConnectionMetadata {
         pub id: Id,
-        pub connected: SideMetadataDto,
-        pub connecting: SideMetadataDto,
+        pub connected: SideMetadata,
+        pub connecting: SideMetadata,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8930,37 +8930,10 @@ pub mod connection {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionShallowDto {
+    pub struct ConnectionShallow {
         pub id: Id,
-        pub connected: SideMetadataDto,
-        pub connecting: SideMetadataDto,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub gap: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub shift: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub rise: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub rotation: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub turn: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub tilt: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "u")]
-        pub x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", alias = "v")]
-        pub y: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectionFullDto {
-        pub id: Id,
-        pub connected: SideMetadataDto,
-        pub connecting: SideMetadataDto,
+        pub connected: SideMetadata,
+        pub connecting: SideMetadata,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub gap: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -8980,7 +8953,34 @@ pub mod connection {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeShallow>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct ConnectionFull {
+        pub id: Id,
+        pub connected: SideMetadata,
+        pub connecting: SideMetadata,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub gap: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub shift: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub rise: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub rotation: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub turn: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub tilt: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "u")]
+        pub x: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "v")]
+        pub y: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeFull>,
     }
 
     pub fn connector_anchor_ports(_c: &ConnectorStore) -> (Point, Vector) {
@@ -9051,7 +9051,7 @@ pub mod connection {
             }
         }
 
-        pub(crate) fn apply_metadata_fields(&mut self, d: ConnectionMetadataDto) {
+        pub(crate) fn apply_metadata_fields(&mut self, d: ConnectionMetadata) {
             self.id = d.id;
             self.gap = d.gap;
             self.shift = d.shift;
@@ -9166,15 +9166,15 @@ pub mod connection {
             compute_child_center_uv(parent_center, connection_u, connection_v, pd.z, t)
         }
 
-        pub fn to_id_dto(&self) -> ConnectionIdDto {
-            ConnectionIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> ConnectionRef {
+            ConnectionRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> ConnectionMetadataDto {
-            ConnectionMetadataDto {
+        pub fn to_metadata(&self) -> ConnectionMetadata {
+            ConnectionMetadata {
                 id: self.id.clone(),
-                connected: self.connected.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
-                connecting: self.connecting.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
+                connected: self.connected.read().map(|s| s.to_metadata()).unwrap_or_default(),
+                connecting: self.connecting.read().map(|s| s.to_metadata()).unwrap_or_default(),
                 gap: self.gap,
                 shift: self.shift,
                 rise: self.rise,
@@ -9187,9 +9187,9 @@ pub mod connection {
             }
         }
 
-        pub fn to_shallow_dto(&self) -> ConnectionShallowDto {
-            let m = self.to_metadata_dto();
-            ConnectionShallowDto {
+        pub fn to_shallow(&self) -> ConnectionShallow {
+            let m = self.to_metadata();
+            ConnectionShallow {
                 id: m.id,
                 connected: m.connected,
                 connecting: m.connecting,
@@ -9202,13 +9202,13 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> ConnectionFullDto {
-            let m = self.to_metadata_dto();
-            ConnectionFullDto {
+        pub fn to_full(&self) -> ConnectionFull {
+            let m = self.to_metadata();
+            ConnectionFull {
                 id: m.id,
                 connected: m.connected,
                 connecting: m.connecting,
@@ -9221,14 +9221,14 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
             }
         }
 
-        pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side::SideFullDto, crate::side::SideFullDto)> {
+        pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side::SideFull, crate::side::SideFull)> {
             let (a, b) = self.flatten_parent_and_child_sides(child_id)?;
-            let sa = a.read().ok()?.to_full_dto();
-            let sb = b.read().ok()?.to_full_dto();
+            let sa = a.read().ok()?.to_full();
+            let sb = b.read().ok()?.to_full();
             Some((sa, sb))
         }
 
@@ -9287,13 +9287,13 @@ pub mod connector {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::port::{PortIdDto, PortStoreWeak};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::port::{PortRef, PortStoreWeak};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
 
     pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
     pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
@@ -9313,7 +9313,7 @@ pub mod connector {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct ConnectorIdDto {
+    pub struct ConnectorRef {
         pub id: Id,
     }
 
@@ -9324,71 +9324,71 @@ pub mod connector {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
-    pub struct ConnectorMetadataDto {
+    pub struct ConnectorMetadata {
         pub id: Id,
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortIdDto>,
+        pub port: Option<PortRef>,
         #[serde(default)]
         pub color: ColorDto,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
-    pub struct ConnectorShallowDto {
+    pub struct ConnectorShallow {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortIdDto>,
+        pub port: Option<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
         #[serde(default)]
         pub color: ColorDto,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, async_graphql::SimpleObject)]
-    pub struct ConnectorFullDto {
+    pub struct ConnectorFull {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<PortIdDto>,
+        pub port: Option<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
         #[serde(default)]
         pub color: ColorDto,
     }
 
-    impl PartialEq for ConnectorMetadataDto {
+    impl PartialEq for ConnectorMetadata {
         fn eq(&self, other: &Self) -> bool {
             self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port
         }
     }
-    impl Eq for ConnectorMetadataDto {}
+    impl Eq for ConnectorMetadata {}
 
-    impl PartialEq for ConnectorShallowDto {
+    impl PartialEq for ConnectorShallow {
         fn eq(&self, other: &Self) -> bool {
             self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port && self.qualities == other.qualities && self.attributes == other.attributes
         }
     }
-    impl Eq for ConnectorShallowDto {}
+    impl Eq for ConnectorShallow {}
 
-    impl PartialEq for ConnectorFullDto {
+    impl PartialEq for ConnectorFull {
         fn eq(&self, other: &Self) -> bool {
             self.id == other.id && self.code == other.code && self.description == other.description && self.port == other.port && self.qualities == other.qualities && self.attributes == other.attributes
         }
     }
-    impl Eq for ConnectorFullDto {}
+    impl Eq for ConnectorFull {}
 
     impl ConnectorStore {
         pub fn new(code: impl Into<String>) -> Self {
@@ -9404,60 +9404,60 @@ pub mod connector {
             EntityRef::new(EntityKind::Connector, self.id.clone())
         }
 
-        pub fn from_id_dto(d: ConnectorIdDto) -> Self {
+        pub fn from_id_dto(d: ConnectorRef) -> Self {
             Self { id: d.id, code: String::new(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: ConnectorMetadataDto) -> Self {
+        pub fn from_metadata(d: ConnectorMetadata) -> Self {
             Self { id: d.id, code: d.code, description: d.description, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default(), color_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+        pub fn from_shallow(d: ConnectorShallow) -> Self {
+            let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
             s
         }
 
-        pub fn from_full_dto(d: ConnectorFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+        pub fn from_full(d: ConnectorFull) -> Self {
+            let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
             s
         }
 
-        pub fn to_id_dto(&self) -> ConnectorIdDto {
-            ConnectorIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> ConnectorRef {
+            ConnectorRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> ConnectorMetadataDto {
-            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
+        pub fn to_metadata(&self) -> ConnectorMetadata {
+            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
             let css = self.color_css_string();
-            ConnectorMetadataDto { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port, color: ColorDto { css } }
+            ConnectorMetadata { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port, color: ColorDto { css } }
         }
 
-        pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
-            let m = self.to_metadata_dto();
-            ConnectorShallowDto {
+        pub fn to_shallow(&self) -> ConnectorShallow {
+            let m = self.to_metadata();
+            ConnectorShallow {
                 id: m.id,
                 code: m.code,
                 description: m.description,
                 port: m.port,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
                 color: m.color,
             }
         }
 
-        pub fn to_full_dto(&self) -> ConnectorFullDto {
-            let m = self.to_metadata_dto();
-            ConnectorFullDto {
+        pub fn to_full(&self) -> ConnectorFull {
+            let m = self.to_metadata();
+            ConnectorFull {
                 id: m.id,
                 code: m.code,
                 description: m.description,
                 port: m.port,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
                 color: m.color,
             }
         }
@@ -9577,29 +9577,29 @@ pub mod design {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
-    use crate::benchmark::BenchmarkFullDto;
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
+    use crate::benchmark::BenchmarkFull;
+    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
+    use crate::connection::{ConnectionFull, ConnectionMetadata, ConnectionShallow, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
     use crate::error::SemioError;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyIdDto, FamilyStoreRef, FamilyStoreWeak};
+    use crate::family::{FamilyRef, FamilyStoreRef, FamilyStoreWeak};
     use crate::geom::{Coordinate, Plane};
-    use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
+    use crate::group::{GroupFull, GroupShallow, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit_graph::KitGraph;
-    use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
-    use crate::location::LocationIdDto;
-    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
+    use crate::layer::{LayerFull, LayerShallow, LayerStore, LayerStoreRef};
+    use crate::location::LocationRef;
+    use crate::piece::{PieceAlternatives, PieceFull, PieceShallow, PieceStore, PieceStoreRef};
     use crate::port::PortStoreRef;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
     use crate::side::{SideStore, SideStoreRef};
-    use crate::stat::{StatFullDto, StatShallowDto, StatStore, StatStoreRef};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
+    use crate::stat::{StatFull, StatShallow, StatStore, StatStoreRef};
+    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
     use crate::typ::TypeStoreRef;
 
     pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
@@ -9612,7 +9612,7 @@ pub mod design {
         pub description: Option<String>,
         pub icon: Option<String>,
         pub image: Option<String>,
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         pub unit: Option<String>,
         pub families: Vec<FamilyStoreWeak>,
         pub pieces: Vec<PieceStoreRef>,
@@ -9635,12 +9635,12 @@ pub mod design {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct DesignIdDto {
+    pub struct DesignRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct DesignMetadataDto {
+    pub struct DesignMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9650,7 +9650,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9658,11 +9658,11 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct DesignShallowDto {
+    pub struct DesignShallow {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9672,7 +9672,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9680,35 +9680,35 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyIdDto>,
+        pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceShallowDto>,
+        pub pieces: Vec<PieceShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connections: Vec<ConnectionShallowDto>,
+        pub connections: Vec<ConnectionShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub layers: Vec<LayerShallowDto>,
+        pub layers: Vec<LayerShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub groups: Vec<GroupShallowDto>,
+        pub groups: Vec<GroupShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallowDto>,
+        pub authors: Vec<AuthorShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallowDto>,
+        pub concepts: Vec<ConceptShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallowDto>,
+        pub tags: Vec<TagShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallowDto>,
+        pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub stats: Vec<StatShallowDto>,
+        pub stats: Vec<StatShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct DesignFullDto {
+    pub struct DesignFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9718,7 +9718,7 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub image: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
@@ -9726,31 +9726,31 @@ pub mod design {
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub kit: Option<crate::kit_graph::KitIdDto>,
+        pub kit: Option<crate::kit_graph::KitRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyIdDto>,
+        pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceFullDto>,
+        pub pieces: Vec<PieceFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connections: Vec<ConnectionFullDto>,
+        pub connections: Vec<ConnectionFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub layers: Vec<LayerFullDto>,
+        pub layers: Vec<LayerFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub groups: Vec<GroupFullDto>,
+        pub groups: Vec<GroupFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorFullDto>,
+        pub authors: Vec<AuthorFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptFullDto>,
+        pub concepts: Vec<ConceptFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagFullDto>,
+        pub tags: Vec<TagFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropFullDto>,
+        pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub stats: Vec<StatFullDto>,
+        pub stats: Vec<StatFull>,
     }
 
     pub(crate) fn resolve_connector_for_side(side: &crate::side::SideStore, typ: &crate::typ::TypeStore) -> Option<ConnectorStoreRef> {
@@ -9764,7 +9764,7 @@ pub mod design {
         typ.connectors.first().cloned()
     }
 
-    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadataDto, pref: &PieceStoreRef) -> Option<crate::port::PortIdDto> {
+    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadata, pref: &PieceStoreRef) -> Option<crate::port::PortRef> {
         if let Some(p) = &meta.port {
             return Some(p.clone());
         }
@@ -9779,7 +9779,7 @@ pub mod design {
                 if let Some(pwk) = &cread.port {
                     if let Some(pu) = pwk.upgrade() {
                         if let Ok(pr) = pu.read() {
-                            return Some(crate::port::PortIdDto { id: pr.id.clone() });
+                            return Some(crate::port::PortRef { id: pr.id.clone() });
                         }
                     }
                 }
@@ -9789,7 +9789,7 @@ pub mod design {
         None
     }
 
-    fn connection_from_full_dto(cdto: ConnectionFullDto, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
+    fn connection_from_full(cdto: ConnectionFull, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
         let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
         let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
         wire_side_from_dto(&cdto.connected, &s1, piece_index);
@@ -9797,7 +9797,7 @@ pub mod design {
         let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
         {
             let mut cw = conn.write().expect("connection write");
-            cw.apply_metadata_fields(ConnectionMetadataDto {
+            cw.apply_metadata_fields(ConnectionMetadata {
                 id: cdto.id.clone(),
                 connected: cdto.connected.clone(),
                 connecting: cdto.connecting.clone(),
@@ -9812,7 +9812,7 @@ pub mod design {
                 description: cdto.description.clone(),
             });
             cw.parent_design = design_weak.clone();
-            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect();
+            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect();
         }
         if let Ok(mut s1w) = s1.write() {
             s1w.parent_connection = Some(Arc::downgrade(&conn));
@@ -9823,7 +9823,7 @@ pub mod design {
         conn
     }
 
-    fn wire_side_from_dto(meta: &crate::side::SideMetadataDto, side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
+    fn wire_side_from_dto(meta: &crate::side::SideMetadata, side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -9988,7 +9988,7 @@ pub mod design {
             EntityRef::new(EntityKind::Design, self.id.clone())
         }
 
-        pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadataDto) {
+        pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadata) {
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
@@ -10126,7 +10126,7 @@ pub mod design {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<LocationIdDto>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationRef>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
@@ -10665,7 +10665,7 @@ pub mod design {
             before - self.pieces.len()
         }
 
-        fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDiff) {
+        fn merge_piece_sparse_into_full(dto: &mut PieceFull, d: &crate::diff::PieceDiff) {
             if let Some(v) = &d.name {
                 dto.name = v.clone();
             }
@@ -10704,7 +10704,7 @@ pub mod design {
             }
         }
 
-        fn apply_props_coll_dto(props: &mut Vec<PropFullDto>, pd: &crate::diff::PropsDiff) {
+        fn apply_props_coll_dto(props: &mut Vec<PropFull>, pd: &crate::diff::PropsDiff) {
             for id in &pd.removed {
                 props.retain(|p| p.id != id.id);
             }
@@ -10726,7 +10726,7 @@ pub mod design {
             }
         }
 
-        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeFullDto>, ad: &crate::diff::AttributesDiff) {
+        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeFull>, ad: &crate::diff::AttributesDiff) {
             for id in &ad.removed {
                 attrs.retain(|a| a.id != id.id);
             }
@@ -10748,7 +10748,7 @@ pub mod design {
             }
         }
 
-        fn merge_connection_sparse_into_full(dto: &mut ConnectionFullDto, d: &crate::diff::ConnectionDiff) {
+        fn merge_connection_sparse_into_full(dto: &mut ConnectionFull, d: &crate::diff::ConnectionDiff) {
             if let Some(v) = &d.connected {
                 dto.connected = v.clone();
             }
@@ -10787,7 +10787,7 @@ pub mod design {
             }
         }
 
-        fn merge_layer_sparse_into_full(fd: &mut LayerFullDto, d: &crate::diff::LayerDiff) {
+        fn merge_layer_sparse_into_full(fd: &mut LayerFull, d: &crate::diff::LayerDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10808,7 +10808,7 @@ pub mod design {
             }
         }
 
-        fn merge_group_sparse_into_full(fd: &mut GroupFullDto, d: &crate::diff::GroupDiff) {
+        fn merge_group_sparse_into_full(fd: &mut GroupFull, d: &crate::diff::GroupDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10826,7 +10826,7 @@ pub mod design {
             }
         }
 
-        fn merge_author_sparse_into_full(fd: &mut AuthorFullDto, d: &crate::diff::AuthorDiff) {
+        fn merge_author_sparse_into_full(fd: &mut AuthorFull, d: &crate::diff::AuthorDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10841,7 +10841,7 @@ pub mod design {
             }
         }
 
-        fn merge_concept_sparse_into_full(fd: &mut ConceptFullDto, d: &crate::diff::ConceptDiff) {
+        fn merge_concept_sparse_into_full(fd: &mut ConceptFull, d: &crate::diff::ConceptDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10853,7 +10853,7 @@ pub mod design {
             }
         }
 
-        fn merge_tag_sparse_into_full(fd: &mut TagFullDto, d: &crate::diff::TagDiff) {
+        fn merge_tag_sparse_into_full(fd: &mut TagFull, d: &crate::diff::TagDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -10862,7 +10862,7 @@ pub mod design {
             }
         }
 
-        fn apply_benchmarks_coll_dto(bm: &mut Vec<BenchmarkFullDto>, bd: &crate::diff::BenchmarksDiff) {
+        fn apply_benchmarks_coll_dto(bm: &mut Vec<BenchmarkFull>, bd: &crate::diff::BenchmarksDiff) {
             for id in &bd.removed {
                 bm.retain(|b| b.id != id.id);
             }
@@ -10890,7 +10890,7 @@ pub mod design {
             }
         }
 
-        fn merge_quality_sparse_into_full(fd: &mut QualityFullDto, d: &crate::diff::QualityDiff) {
+        fn merge_quality_sparse_into_full(fd: &mut QualityFull, d: &crate::diff::QualityDiff) {
             if let Some(k) = &d.key {
                 fd.key = k.clone();
             }
@@ -10911,7 +10911,7 @@ pub mod design {
             }
         }
 
-        fn merge_stat_sparse_into_full(fd: &mut StatFullDto, d: &crate::diff::StatDiff) {
+        fn merge_stat_sparse_into_full(fd: &mut StatFull, d: &crate::diff::StatDiff) {
             if let Some(k) = &d.key {
                 fd.key = k.clone();
             }
@@ -10971,7 +10971,7 @@ pub mod design {
                 self.set_updated(u.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
             if let Some(k) = &diff.kit {
-                let mut m = self.to_metadata_dto();
+                let mut m = self.to_metadata();
                 m.kit = k.clone();
                 self.apply_metadata_fields(m);
             }
@@ -10986,7 +10986,7 @@ pub mod design {
                 }
                 for u in &pc.updated {
                     if let Some(pref) = self.piece(u.id.id.as_str()) {
-                        let mut dto = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.to_full_dto();
+                        let mut dto = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.to_full();
                         Self::merge_piece_sparse_into_full(&mut dto, &u.diff);
                         let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                         pw.apply_full_dto(dto, design_weak.clone(), type_index);
@@ -11019,16 +11019,16 @@ pub mod design {
                 for u in &cc.updated {
                     if self.connections.iter().any(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)) {
                         let cref = self.connections.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)).cloned().expect("connection");
-                        let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_full_dto();
+                        let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_full();
                         Self::merge_connection_sparse_into_full(&mut dto, &u.diff);
                         self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
                         self.connections.retain(|x| x.read().map(|x| x.id != u.id.id).unwrap_or(true));
-                        self.connections.push(connection_from_full_dto(dto, &piece_index, design_weak.clone()));
+                        self.connections.push(connection_from_full(dto, &piece_index, design_weak.clone()));
                         self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
                     }
                 }
                 for c in &cc.added {
-                    self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+                    self.connections.push(connection_from_full(c.clone(), &piece_index, design_weak.clone()));
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
                 }
             }
@@ -11042,18 +11042,18 @@ pub mod design {
                 }
                 for u in &ld.updated {
                     if let Some(lr) = self.layers.iter().find(|l| l.read().map(|l| l.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = lr.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full_dto();
+                        let mut fd = lr.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full();
                         Self::merge_layer_sparse_into_full(&mut fd, &u.diff);
                         let mut lw = lr.write().map_err(|_| SemioError::LockPoisoned("layer"))?;
                         let pd = lw.parent_design.clone();
                         let eb = lw.event_bus.clone();
-                        *lw = LayerStore::from_full_dto(fd);
+                        *lw = LayerStore::from_full(fd);
                         lw.parent_design = pd;
                         lw.event_bus = eb;
                     }
                 }
                 for ldto in &ld.added {
-                    let mut layer = LayerStore::from_full_dto(ldto.clone());
+                    let mut layer = LayerStore::from_full(ldto.clone());
                     layer.parent_design = design_weak.clone();
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, ldto.id.clone()) });
                     self.layers.push(Arc::new(RwLock::new(layer)));
@@ -11069,12 +11069,12 @@ pub mod design {
                 }
                 for u in &gd.updated {
                     if let Some(gr) = self.groups.iter().find(|g| g.read().map(|g| g.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = gr.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto();
+                        let mut fd = gr.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full();
                         Self::merge_group_sparse_into_full(&mut fd, &u.diff);
                         let mut gw = gr.write().map_err(|_| SemioError::LockPoisoned("group"))?;
                         let pd = gw.parent_design.clone();
                         let eb = gw.event_bus.clone();
-                        *gw = GroupStore::from_full_dto(fd.clone());
+                        *gw = GroupStore::from_full(fd.clone());
                         gw.parent_design = pd;
                         gw.event_bus = eb;
                         let mut weaks = Vec::with_capacity(fd.pieces.len());
@@ -11087,7 +11087,7 @@ pub mod design {
                     }
                 }
                 for gdto in &gd.added {
-                    let mut g = GroupStore::from_full_dto(gdto.clone());
+                    let mut g = GroupStore::from_full(gdto.clone());
                     g.parent_design = design_weak.clone();
                     let mut weaks = Vec::with_capacity(gdto.pieces.len());
                     for pid in &gdto.pieces {
@@ -11110,14 +11110,14 @@ pub mod design {
                 }
                 for u in &ad.updated {
                     if let Some(ar) = self.authors.iter().find(|a| a.read().map(|a| a.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full();
                         Self::merge_author_sparse_into_full(&mut fd, &u.diff);
                         let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("author"))?;
                         let pk = aw.parent_kit.clone();
                         let pd = aw.parent_design.clone();
                         let pt = aw.parent_type.clone();
                         let eb = aw.event_bus.clone();
-                        *aw = AuthorStore::from_full_dto(fd);
+                        *aw = AuthorStore::from_full(fd);
                         aw.parent_kit = pk;
                         aw.parent_design = pd;
                         aw.parent_type = pt;
@@ -11125,7 +11125,7 @@ pub mod design {
                     }
                 }
                 for adto in &ad.added {
-                    let mut s = AuthorStore::from_full_dto(adto.clone());
+                    let mut s = AuthorStore::from_full(adto.clone());
                     s.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, adto.id.clone()) });
                     self.authors.push(Arc::new(RwLock::new(s)));
@@ -11141,14 +11141,14 @@ pub mod design {
                 }
                 for u in &cd.updated {
                     if let Some(cr) = self.concepts.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = cr.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                        let mut fd = cr.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full();
                         Self::merge_concept_sparse_into_full(&mut fd, &u.diff);
                         let mut cw = cr.write().map_err(|_| SemioError::LockPoisoned("concept"))?;
                         let pk = cw.parent_kit.clone();
                         let pd = cw.parent_design.clone();
                         let pt = cw.parent_type.clone();
                         let eb = cw.event_bus.clone();
-                        *cw = ConceptStore::from_full_dto(fd);
+                        *cw = ConceptStore::from_full(fd);
                         cw.parent_kit = pk;
                         cw.parent_design = pd;
                         cw.parent_type = pt;
@@ -11156,7 +11156,7 @@ pub mod design {
                     }
                 }
                 for cdto in &cd.added {
-                    let mut s = ConceptStore::from_full_dto(cdto.clone());
+                    let mut s = ConceptStore::from_full(cdto.clone());
                     s.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, cdto.id.clone()) });
                     self.concepts.push(Arc::new(RwLock::new(s)));
@@ -11172,14 +11172,14 @@ pub mod design {
                 }
                 for u in &td.updated {
                     if let Some(tr) = self.tags.iter().find(|t| t.read().map(|t| t.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = tr.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                        let mut fd = tr.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full();
                         Self::merge_tag_sparse_into_full(&mut fd, &u.diff);
                         let mut tw = tr.write().map_err(|_| SemioError::LockPoisoned("tag"))?;
                         let pk = tw.parent_kit.clone();
                         let pd = tw.parent_design.clone();
                         let pt = tw.parent_type.clone();
                         let eb = tw.event_bus.clone();
-                        *tw = TagStore::from_full_dto(fd);
+                        *tw = TagStore::from_full(fd);
                         tw.parent_kit = pk;
                         tw.parent_design = pd;
                         tw.parent_type = pt;
@@ -11187,7 +11187,7 @@ pub mod design {
                     }
                 }
                 for tdto in &td.added {
-                    let mut s = TagStore::from_full_dto(tdto.clone());
+                    let mut s = TagStore::from_full(tdto.clone());
                     s.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, tdto.id.clone()) });
                     self.tags.push(Arc::new(RwLock::new(s)));
@@ -11203,7 +11203,7 @@ pub mod design {
                 }
                 for u in &qd.updated {
                     if let Some(qr) = self.qualities.iter().find(|q| q.read().map(|q| q.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = qr.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                        let mut fd = qr.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full();
                         Self::merge_quality_sparse_into_full(&mut fd, &u.diff);
                         let mut qw = qr.write().map_err(|_| SemioError::LockPoisoned("quality"))?;
                         let pk = qw.parent_kit.clone();
@@ -11213,7 +11213,7 @@ pub mod design {
                         let pc = qw.parent_connector.clone();
                         let pr = qw.parent_representation.clone();
                         let eb = qw.event_bus.clone();
-                        *qw = QualityStore::from_full_dto(fd);
+                        *qw = QualityStore::from_full(fd);
                         qw.parent_kit = pk;
                         qw.parent_design = pd;
                         qw.parent_type = pt;
@@ -11224,7 +11224,7 @@ pub mod design {
                     }
                 }
                 for qdto in &qd.added {
-                    let mut s = QualityStore::from_full_dto(qdto.clone());
+                    let mut s = QualityStore::from_full(qdto.clone());
                     s.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, qdto.id.clone()) });
                     self.qualities.push(Arc::new(RwLock::new(s)));
@@ -11240,7 +11240,7 @@ pub mod design {
                 }
                 for u in &pd.updated {
                     if let Some(pr) = self.props.iter().find(|p| p.read().map(|p| p.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = pr.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                        let mut fd = pr.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full();
                         if let Some(k) = &u.diff.key {
                             fd.key = k.clone();
                         }
@@ -11256,7 +11256,7 @@ pub mod design {
                         let pt = pw.parent_type.clone();
                         let pp = pw.parent_piece.clone();
                         let eb = pw.event_bus.clone();
-                        *pw = PropStore::from_full_dto(fd);
+                        *pw = PropStore::from_full(fd);
                         pw.parent_kit = pk;
                         pw.parent_design = pd;
                         pw.parent_type = pt;
@@ -11265,7 +11265,7 @@ pub mod design {
                     }
                 }
                 for pdto in &pd.added {
-                    let mut p = PropStore::from_full_dto(pdto.clone());
+                    let mut p = PropStore::from_full(pdto.clone());
                     p.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, pdto.id.clone()) });
                     self.props.push(Arc::new(RwLock::new(p)));
@@ -11281,7 +11281,7 @@ pub mod design {
                 }
                 for u in &ad.updated {
                     if let Some(ar) = self.attributes.iter().find(|a| a.read().map(|a| a.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full();
                         if let Some(k) = &u.diff.key {
                             fd.key = k.clone();
                         }
@@ -11301,7 +11301,7 @@ pub mod design {
                         let prep = aw.parent_representation.clone();
                         let pcon = aw.parent_connector.clone();
                         let eb = aw.event_bus.clone();
-                        *aw = AttributeStore::from_full_dto(fd);
+                        *aw = AttributeStore::from_full(fd);
                         aw.parent_kit = pk;
                         aw.parent_design = pd;
                         aw.parent_type = pt;
@@ -11314,7 +11314,7 @@ pub mod design {
                     }
                 }
                 for adto in &ad.added {
-                    let mut a = AttributeStore::from_full_dto(adto.clone());
+                    let mut a = AttributeStore::from_full(adto.clone());
                     a.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
                     self.attributes.push(Arc::new(RwLock::new(a)));
@@ -11330,20 +11330,20 @@ pub mod design {
                 }
                 for u in &sd.updated {
                     if let Some(sr) = self.stats.iter().find(|s| s.read().map(|s| s.id == u.id.id).unwrap_or(false)) {
-                        let mut fd = sr.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full_dto();
+                        let mut fd = sr.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full();
                         Self::merge_stat_sparse_into_full(&mut fd, &u.diff);
                         let mut sw = sr.write().map_err(|_| SemioError::LockPoisoned("stat"))?;
                         let pk = sw.parent_kit.clone();
                         let pd = sw.parent_design.clone();
                         let eb = sw.event_bus.clone();
-                        *sw = StatStore::from_full_dto(fd);
+                        *sw = StatStore::from_full(fd);
                         sw.parent_kit = pk;
                         sw.parent_design = pd;
                         sw.event_bus = eb;
                     }
                 }
                 for sdto in &sd.added {
-                    let mut s = StatStore::from_full_dto(sdto.clone());
+                    let mut s = StatStore::from_full(sdto.clone());
                     s.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, sdto.id.clone()) });
                     self.stats.push(Arc::new(RwLock::new(s)));
@@ -11356,7 +11356,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFullDto, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_piece(&mut self, piece: PieceFull, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
             {
@@ -11381,7 +11381,7 @@ pub mod design {
             Ok(())
         }
 
-        pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFullDto, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
+        pub(crate) fn semantic_add_connection(&mut self, cdto: ConnectionFull, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
@@ -11389,7 +11389,7 @@ pub mod design {
                     piece_index.insert(pr.id.clone(), p.clone());
                 }
             }
-            let cref = connection_from_full_dto(cdto.clone(), &piece_index, design_weak);
+            let cref = connection_from_full(cdto.clone(), &piece_index, design_weak);
             self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cdto.id.clone()) });
             self.connections.push(cref);
             self.rewire_piece_flatten_parents();
@@ -11403,7 +11403,7 @@ pub mod design {
             use crate::error::SetError;
             use crate::report::SemioReport;
 
-            let before = self.to_full_dto();
+            let before = self.to_full();
             let prefs: Vec<PieceStoreRef> = self.pieces.clone();
             let max_pass = prefs.len().saturating_add(8);
             for _ in 0..max_pass {
@@ -11433,19 +11433,19 @@ pub mod design {
                 }
             }
             self.rewire_piece_flatten_parents();
-            let after = self.to_full_dto();
+            let after = self.to_full();
             let forward = crate::diff::DesignDiff::between(&before, &after);
             let backward = crate::diff::DesignDiff::between(&after, &before);
             SemioReport::ok(DesignChange { forward, backward, author: None, time: None, before: Some(before), after: Some(after) })
         }
 
-        pub fn to_id_dto(&self) -> DesignIdDto {
-            DesignIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> DesignRef {
+            DesignRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> DesignMetadataDto {
-            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit_graph::KitIdDto { id: k.id.clone() }));
-            DesignMetadataDto {
+        pub fn to_metadata(&self) -> DesignMetadata {
+            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit_graph::KitRef { id: k.id.clone() }));
+            DesignMetadata {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -11459,9 +11459,9 @@ pub mod design {
             }
         }
 
-        pub fn to_shallow_dto(&self) -> DesignShallowDto {
-            let m = self.to_metadata_dto();
-            DesignShallowDto {
+        pub fn to_shallow(&self) -> DesignShallow {
+            let m = self.to_metadata();
+            DesignShallow {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -11472,24 +11472,24 @@ pub mod design {
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
-                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
-                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
-                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect(),
-                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
+                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
+                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect(),
+                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> DesignFullDto {
-            let m = self.to_metadata_dto();
-            DesignFullDto {
+        pub fn to_full(&self) -> DesignFull {
+            let m = self.to_metadata();
+            DesignFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -11500,23 +11500,23 @@ pub mod design {
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
-                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
-                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect(),
-                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_full_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
+                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect(),
+                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full())).collect(),
             }
         }
 
-        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
-            let DesignFullDto {
+        pub(crate) fn hydrate_from_full(d: DesignFull, type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
+            let DesignFull {
                 id,
                 name,
                 description,
@@ -11544,7 +11544,7 @@ pub mod design {
             let design = Arc::new(RwLock::new(DesignStore::empty_shell(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
-                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, location, unit, created, updated, kit });
+                dw.apply_metadata_fields(DesignMetadata { id, name, description, icon, image, location, unit, created, updated, kit });
                 let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
                 dw.families = family_weaks;
             }
@@ -11569,7 +11569,7 @@ pub mod design {
             let layers: Vec<LayerStoreRef> = layer_dtos
                 .into_iter()
                 .map(|ldto| {
-                    let mut layer = LayerStore::from_full_dto(ldto);
+                    let mut layer = LayerStore::from_full(ldto);
                     layer.parent_design = dw.clone();
                     Arc::new(RwLock::new(layer))
                 })
@@ -11578,7 +11578,7 @@ pub mod design {
             let groups: Vec<GroupStoreRef> = group_dtos
                 .into_iter()
                 .map(|gdto| {
-                    let mut g = GroupStore::from_full_dto(gdto);
+                    let mut g = GroupStore::from_full(gdto);
                     g.parent_design = dw.clone();
                     Arc::new(RwLock::new(g))
                 })
@@ -11587,7 +11587,7 @@ pub mod design {
             let authors: Vec<AuthorStoreRef> = author_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AuthorStore::from_full_dto(a);
+                    let mut s = AuthorStore::from_full(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11596,7 +11596,7 @@ pub mod design {
             let concepts: Vec<ConceptStoreRef> = concept_dtos
                 .into_iter()
                 .map(|c| {
-                    let mut s = ConceptStore::from_full_dto(c);
+                    let mut s = ConceptStore::from_full(c);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11605,7 +11605,7 @@ pub mod design {
             let tags: Vec<TagStoreRef> = tag_dtos
                 .into_iter()
                 .map(|t| {
-                    let mut s = TagStore::from_full_dto(t);
+                    let mut s = TagStore::from_full(t);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11614,7 +11614,7 @@ pub mod design {
             let qualities: Vec<QualityStoreRef> = quality_dtos
                 .into_iter()
                 .map(|q| {
-                    let mut s = QualityStore::from_full_dto(q);
+                    let mut s = QualityStore::from_full(q);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11623,7 +11623,7 @@ pub mod design {
             let props: Vec<PropStoreRef> = prop_dtos
                 .into_iter()
                 .map(|p| {
-                    let mut s = PropStore::from_full_dto(p);
+                    let mut s = PropStore::from_full(p);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11632,7 +11632,7 @@ pub mod design {
             let attributes: Vec<AttributeStoreRef> = attribute_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AttributeStore::from_full_dto(a);
+                    let mut s = AttributeStore::from_full(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11641,7 +11641,7 @@ pub mod design {
             let stats: Vec<StatStoreRef> = stat_dtos
                 .into_iter()
                 .map(|s| {
-                    let mut st = StatStore::from_full_dto(s);
+                    let mut st = StatStore::from_full(s);
                     st.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(st))
                 })
@@ -11654,7 +11654,7 @@ pub mod design {
                 }
             }
 
-            let connections: Vec<ConnectionStoreRef> = connection_dtos.into_iter().map(|cdto| connection_from_full_dto(cdto, &piece_index_ordered, dw.clone())).collect();
+            let connections: Vec<ConnectionStoreRef> = connection_dtos.into_iter().map(|cdto| connection_from_full(cdto, &piece_index_ordered, dw.clone())).collect();
 
             {
                 let mut dw = design.write().expect("design write");
@@ -11684,31 +11684,31 @@ pub mod diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::{AttributeFullDto, AttributeIdDto};
-    use crate::author::{AuthorFullDto, AuthorIdDto};
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto};
-    use crate::concept::{ConceptFullDto, ConceptIdDto};
-    use crate::connection::{ConnectionFullDto, ConnectionIdDto};
-    use crate::connector::{ConnectorFullDto, ConnectorIdDto};
-    use crate::design::DesignFullDto;
-    use crate::family::{FamilyFullDto, FamilyIdDto};
-    use crate::file::{FileFullDto, FileIdDto};
-    use crate::folder::{FolderFullDto, FolderIdDto};
+    use crate::attribute::{AttributeFull, AttributeRef};
+    use crate::author::{AuthorFull, AuthorRef};
+    use crate::benchmark::{BenchmarkFull, BenchmarkRef};
+    use crate::concept::{ConceptFull, ConceptRef};
+    use crate::connection::{ConnectionFull, ConnectionRef};
+    use crate::connector::{ConnectorFull, ConnectorRef};
+    use crate::design::DesignFull;
+    use crate::family::{FamilyFull, FamilyRef};
+    use crate::file::{FileFull, FileRef};
+    use crate::folder::{FolderFull, FolderRef};
     use crate::geom::{Coordinate, Plane, Point, Vector};
-    use crate::group::{GroupFullDto, GroupIdDto};
+    use crate::group::{GroupFull, GroupRef};
     use crate::id::Id;
-    use crate::kit_graph::KitIdDto;
-    use crate::layer::{LayerFullDto, LayerIdDto};
-    use crate::location::LocationIdDto;
-    use crate::piece::{PieceFullDto, PieceIdDto};
-    use crate::port::{PortFullDto, PortIdDto};
-    use crate::prop::{PropFullDto, PropIdDto};
-    use crate::quality::{QualityFullDto, QualityIdDto};
-    use crate::representation::{RepresentationFullDto, RepresentationIdDto};
-    use crate::side::SideMetadataDto;
-    use crate::stat::{StatFullDto, StatIdDto};
-    use crate::tag::{TagFullDto, TagIdDto};
-    use crate::typ::{TypeFullDto, TypeIdDto};
+    use crate::kit_graph::KitRef;
+    use crate::layer::{LayerFull, LayerRef};
+    use crate::location::LocationRef;
+    use crate::piece::{PieceFull, PieceRef};
+    use crate::port::{PortFull, PortRef};
+    use crate::prop::{PropFull, PropRef};
+    use crate::quality::{QualityFull, QualityRef};
+    use crate::representation::{RepresentationFull, RepresentationRef};
+    use crate::side::SideMetadata;
+    use crate::stat::{StatFull, StatRef};
+    use crate::tag::{TagFull, TagRef};
+    use crate::typ::{TypeFull, TypeRef};
 
     #[inline]
     pub fn merge_opt<T: Clone>(a: &Option<T>, b: &Option<T>) -> Option<T> {
@@ -11735,9 +11735,9 @@ pub mod diff {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub time: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub before: Option<DesignFullDto>,
+        pub before: Option<DesignFull>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub after: Option<DesignFullDto>,
+        pub after: Option<DesignFull>,
     }
 
     pub type DesignChange = DesignDiffPair;
@@ -11762,7 +11762,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AttributeDiffUpdate {
-        pub id: AttributeIdDto,
+        pub id: AttributeRef,
         #[serde(flatten)]
         pub diff: AttributeDiff,
     }
@@ -11771,11 +11771,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct AttributesDiff {
         #[serde(default)]
-        pub removed: Vec<AttributeIdDto>,
+        pub removed: Vec<AttributeRef>,
         #[serde(default)]
         pub updated: Vec<AttributeDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<AttributeFullDto>,
+        pub added: Vec<AttributeFull>,
     }
 
     impl AttributesDiff {
@@ -11821,7 +11821,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PropDiffUpdate {
-        pub id: PropIdDto,
+        pub id: PropRef,
         #[serde(flatten)]
         pub diff: PropDiff,
     }
@@ -11830,11 +11830,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PropsDiff {
         #[serde(default)]
-        pub removed: Vec<PropIdDto>,
+        pub removed: Vec<PropRef>,
         #[serde(default)]
         pub updated: Vec<PropDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<PropFullDto>,
+        pub added: Vec<PropFull>,
     }
 
     impl PropsDiff {
@@ -11887,7 +11887,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarkDiffUpdate {
-        pub id: BenchmarkIdDto,
+        pub id: BenchmarkRef,
         #[serde(flatten)]
         pub diff: BenchmarkDiff,
     }
@@ -11896,11 +11896,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarksDiff {
         #[serde(default)]
-        pub removed: Vec<BenchmarkIdDto>,
+        pub removed: Vec<BenchmarkRef>,
         #[serde(default)]
         pub updated: Vec<BenchmarkDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<BenchmarkFullDto>,
+        pub added: Vec<BenchmarkFull>,
     }
 
     impl BenchmarksDiff {
@@ -11954,7 +11954,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct QualityDiffUpdate {
-        pub id: QualityIdDto,
+        pub id: QualityRef,
         #[serde(flatten)]
         pub diff: QualityDiff,
     }
@@ -11963,11 +11963,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct QualitiesDiff {
         #[serde(default)]
-        pub removed: Vec<QualityIdDto>,
+        pub removed: Vec<QualityRef>,
         #[serde(default)]
         pub updated: Vec<QualityDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<QualityFullDto>,
+        pub added: Vec<QualityFull>,
     }
 
     impl QualitiesDiff {
@@ -12011,7 +12011,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct AuthorDiffUpdate {
-        pub id: AuthorIdDto,
+        pub id: AuthorRef,
         #[serde(flatten)]
         pub diff: AuthorDiff,
     }
@@ -12020,11 +12020,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct AuthorsDiff {
         #[serde(default)]
-        pub removed: Vec<AuthorIdDto>,
+        pub removed: Vec<AuthorRef>,
         #[serde(default)]
         pub updated: Vec<AuthorDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<AuthorFullDto>,
+        pub added: Vec<AuthorFull>,
     }
 
     impl AuthorsDiff {
@@ -12067,7 +12067,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConceptDiffUpdate {
-        pub id: ConceptIdDto,
+        pub id: ConceptRef,
         #[serde(flatten)]
         pub diff: ConceptDiff,
     }
@@ -12076,11 +12076,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConceptsDiff {
         #[serde(default)]
-        pub removed: Vec<ConceptIdDto>,
+        pub removed: Vec<ConceptRef>,
         #[serde(default)]
         pub updated: Vec<ConceptDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<ConceptFullDto>,
+        pub added: Vec<ConceptFull>,
     }
 
     impl ConceptsDiff {
@@ -12122,7 +12122,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct TagDiffUpdate {
-        pub id: TagIdDto,
+        pub id: TagRef,
         #[serde(flatten)]
         pub diff: TagDiff,
     }
@@ -12131,11 +12131,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct TagsDiff {
         #[serde(default)]
-        pub removed: Vec<TagIdDto>,
+        pub removed: Vec<TagRef>,
         #[serde(default)]
         pub updated: Vec<TagDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<TagFullDto>,
+        pub added: Vec<TagFull>,
     }
 
     impl TagsDiff {
@@ -12179,7 +12179,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StatDiffUpdate {
-        pub id: StatIdDto,
+        pub id: StatRef,
         #[serde(flatten)]
         pub diff: StatDiff,
     }
@@ -12188,11 +12188,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct StatsDiff {
         #[serde(default)]
-        pub removed: Vec<StatIdDto>,
+        pub removed: Vec<StatRef>,
         #[serde(default)]
         pub updated: Vec<StatDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<StatFullDto>,
+        pub added: Vec<StatFull>,
     }
 
     impl StatsDiff {
@@ -12245,7 +12245,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct LayerDiffUpdate {
-        pub id: LayerIdDto,
+        pub id: LayerRef,
         #[serde(flatten)]
         pub diff: LayerDiff,
     }
@@ -12254,11 +12254,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct LayersDiff {
         #[serde(default)]
-        pub removed: Vec<LayerIdDto>,
+        pub removed: Vec<LayerRef>,
         #[serde(default)]
         pub updated: Vec<LayerDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<LayerFullDto>,
+        pub added: Vec<LayerFull>,
     }
 
     impl LayersDiff {
@@ -12289,7 +12289,7 @@ pub mod diff {
         pub color: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         #[serde(default)]
-        pub pieces: Option<Vec<PieceIdDto>>,
+        pub pieces: Option<Vec<PieceRef>>,
     }
 
     impl GroupDiff {
@@ -12310,7 +12310,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct GroupDiffUpdate {
-        pub id: GroupIdDto,
+        pub id: GroupRef,
         #[serde(flatten)]
         pub diff: GroupDiff,
     }
@@ -12319,11 +12319,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct GroupsDiff {
         #[serde(default)]
-        pub removed: Vec<GroupIdDto>,
+        pub removed: Vec<GroupRef>,
         #[serde(default)]
         pub updated: Vec<GroupDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<GroupFullDto>,
+        pub added: Vec<GroupFull>,
     }
 
     impl GroupsDiff {
@@ -12359,8 +12359,8 @@ pub mod diff {
         pub locked: Option<Option<bool>>,
         pub color: Option<Option<String>>,
         #[serde(rename = "type", default)]
-        pub r#type: Option<Option<TypeIdDto>>,
-        pub design: Option<Option<crate::design::DesignIdDto>>,
+        pub r#type: Option<Option<TypeRef>>,
+        pub design: Option<Option<crate::design::DesignRef>>,
         #[serde(default)]
         pub props: Option<PropsDiff>,
         #[serde(default)]
@@ -12403,7 +12403,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceDiffUpdate {
-        pub id: PieceIdDto,
+        pub id: PieceRef,
         #[serde(flatten)]
         pub diff: PieceDiff,
     }
@@ -12412,11 +12412,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PiecesDiff {
         #[serde(default)]
-        pub removed: Vec<PieceIdDto>,
+        pub removed: Vec<PieceRef>,
         #[serde(default)]
         pub updated: Vec<PieceDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<PieceFullDto>,
+        pub added: Vec<PieceFull>,
     }
 
     impl PiecesDiff {
@@ -12442,8 +12442,8 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionDiff {
-        pub connected: Option<SideMetadataDto>,
-        pub connecting: Option<SideMetadataDto>,
+        pub connected: Option<SideMetadata>,
+        pub connecting: Option<SideMetadata>,
         pub gap: Option<Option<f64>>,
         pub shift: Option<Option<f64>>,
         pub rise: Option<Option<f64>>,
@@ -12493,7 +12493,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionDiffUpdate {
-        pub id: ConnectionIdDto,
+        pub id: ConnectionRef,
         #[serde(flatten)]
         pub diff: ConnectionDiff,
     }
@@ -12502,11 +12502,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConnectionsDiff {
         #[serde(default)]
-        pub removed: Vec<ConnectionIdDto>,
+        pub removed: Vec<ConnectionRef>,
         #[serde(default)]
         pub updated: Vec<ConnectionDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<ConnectionFullDto>,
+        pub added: Vec<ConnectionFull>,
     }
 
     impl ConnectionsDiff {
@@ -12538,9 +12538,9 @@ pub mod diff {
         pub description: Option<Option<String>>,
         pub icon: Option<Option<String>>,
         #[serde(rename = "compatiblePorts", default)]
-        pub compatible_ports: Option<Vec<PortIdDto>>,
+        pub compatible_ports: Option<Vec<PortRef>>,
         #[serde(rename = "compatibleFamilies", default)]
-        pub compatible_families: Option<Vec<crate::family::FamilyIdDto>>,
+        pub compatible_families: Option<Vec<crate::family::FamilyRef>>,
         #[serde(default)]
         pub attributes: Option<AttributesDiff>,
     }
@@ -12565,7 +12565,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PortDiffUpdate {
-        pub id: PortIdDto,
+        pub id: PortRef,
         #[serde(flatten)]
         pub diff: PortDiff,
     }
@@ -12574,11 +12574,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct PortsDiff {
         #[serde(default)]
-        pub removed: Vec<PortIdDto>,
+        pub removed: Vec<PortRef>,
         #[serde(default)]
         pub updated: Vec<PortDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<PortFullDto>,
+        pub added: Vec<PortFull>,
     }
 
     impl PortsDiff {
@@ -12606,7 +12606,7 @@ pub mod diff {
     pub struct ConnectorDiff {
         pub code: Option<String>,
         pub description: Option<Option<String>>,
-        pub port: Option<Option<PortIdDto>>,
+        pub port: Option<Option<PortRef>>,
         #[serde(default)]
         pub qualities: Option<QualitiesDiff>,
         #[serde(default)]
@@ -12631,7 +12631,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectorDiffUpdate {
-        pub id: ConnectorIdDto,
+        pub id: ConnectorRef,
         #[serde(flatten)]
         pub diff: ConnectorDiff,
     }
@@ -12640,11 +12640,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct ConnectorsDiff {
         #[serde(default)]
-        pub removed: Vec<ConnectorIdDto>,
+        pub removed: Vec<ConnectorRef>,
         #[serde(default)]
         pub updated: Vec<ConnectorDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<ConnectorFullDto>,
+        pub added: Vec<ConnectorFull>,
     }
 
     impl ConnectorsDiff {
@@ -12672,7 +12672,7 @@ pub mod diff {
     pub struct RepresentationDiff {
         pub url: Option<String>,
         pub description: Option<Option<String>>,
-        pub file: Option<Option<FileIdDto>>,
+        pub file: Option<Option<FileRef>>,
         #[serde(default)]
         pub tags: Option<TagsDiff>,
         #[serde(default)]
@@ -12705,7 +12705,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct RepresentationDiffUpdate {
-        pub id: RepresentationIdDto,
+        pub id: RepresentationRef,
         #[serde(flatten)]
         pub diff: RepresentationDiff,
     }
@@ -12714,11 +12714,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct RepresentationsDiff {
         #[serde(default)]
-        pub removed: Vec<RepresentationIdDto>,
+        pub removed: Vec<RepresentationRef>,
         #[serde(default)]
         pub updated: Vec<RepresentationDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<RepresentationFullDto>,
+        pub added: Vec<RepresentationFull>,
     }
 
     impl RepresentationsDiff {
@@ -12745,9 +12745,9 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FamilyIdsDiff {
         #[serde(default)]
-        pub removed: Vec<FamilyIdDto>,
+        pub removed: Vec<FamilyRef>,
         #[serde(default)]
-        pub added: Vec<FamilyIdDto>,
+        pub added: Vec<FamilyRef>,
     }
 
     impl FamilyIdsDiff {
@@ -12776,7 +12776,7 @@ pub mod diff {
         #[serde(rename = "typeVirtual", default)]
         pub type_virtual: Option<Option<bool>>,
         pub unit: Option<Option<String>>,
-        pub location: Option<Option<LocationIdDto>>,
+        pub location: Option<Option<LocationRef>>,
         pub created: Option<Option<String>>,
         pub updated: Option<Option<String>>,
         #[serde(default)]
@@ -12849,7 +12849,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeDiffUpdate {
-        pub id: TypeIdDto,
+        pub id: TypeRef,
         #[serde(flatten)]
         pub diff: TypeDiff,
     }
@@ -12858,11 +12858,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct TypesDiff {
         #[serde(default)]
-        pub removed: Vec<TypeIdDto>,
+        pub removed: Vec<TypeRef>,
         #[serde(default)]
         pub updated: Vec<TypeDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<TypeFullDto>,
+        pub added: Vec<TypeFull>,
     }
 
     impl TypesDiff {
@@ -12917,7 +12917,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FileDiffUpdate {
-        pub id: FileIdDto,
+        pub id: FileRef,
         #[serde(flatten)]
         pub diff: FileDiff,
     }
@@ -12926,11 +12926,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FilesDiff {
         #[serde(default)]
-        pub removed: Vec<FileIdDto>,
+        pub removed: Vec<FileRef>,
         #[serde(default)]
         pub updated: Vec<FileDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<FileFullDto>,
+        pub added: Vec<FileFull>,
     }
 
     impl FilesDiff {
@@ -12983,7 +12983,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FamilyDiffUpdate {
-        pub id: FamilyIdDto,
+        pub id: FamilyRef,
         #[serde(flatten)]
         pub diff: FamilyDiff,
     }
@@ -12992,11 +12992,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FamiliesDiff {
         #[serde(default)]
-        pub removed: Vec<FamilyIdDto>,
+        pub removed: Vec<FamilyRef>,
         #[serde(default)]
         pub updated: Vec<FamilyDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<FamilyFullDto>,
+        pub added: Vec<FamilyFull>,
     }
 
     impl FamiliesDiff {
@@ -13038,7 +13038,7 @@ pub mod diff {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FolderDiffUpdate {
-        pub id: FolderIdDto,
+        pub id: FolderRef,
         #[serde(flatten)]
         pub diff: FolderDiff,
     }
@@ -13047,11 +13047,11 @@ pub mod diff {
     #[serde(rename_all = "camelCase")]
     pub struct FoldersDiff {
         #[serde(default)]
-        pub removed: Vec<FolderIdDto>,
+        pub removed: Vec<FolderRef>,
         #[serde(default)]
         pub updated: Vec<FolderDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<FolderFullDto>,
+        pub added: Vec<FolderFull>,
     }
 
     impl FoldersDiff {
@@ -13083,11 +13083,11 @@ pub mod diff {
         pub image: Option<Option<String>>,
         #[serde(default)]
         pub families: Option<FamilyIdsDiff>,
-        pub location: Option<Option<LocationIdDto>>,
+        pub location: Option<Option<LocationRef>>,
         pub unit: Option<Option<String>>,
         pub created: Option<Option<String>>,
         pub updated: Option<Option<String>>,
-        pub kit: Option<Option<KitIdDto>>,
+        pub kit: Option<Option<KitRef>>,
         #[serde(default)]
         pub pieces: Option<PiecesDiff>,
         #[serde(default)]
@@ -13163,11 +13163,11 @@ pub mod diff {
             }
         }
 
-        pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
+        pub fn between(before: &DesignFull, after: &DesignFull) -> Self {
             Self::between_dto(before, after)
         }
 
-        pub fn between_dto(before: &DesignFullDto, after: &DesignFullDto) -> Self {
+        pub fn between_dto(before: &DesignFull, after: &DesignFull) -> Self {
             let mut d = DesignDiff::default();
             if before.name != after.name {
                 d.name = Some(after.name.clone());
@@ -13199,39 +13199,39 @@ pub mod diff {
             if before.kit != after.kit {
                 d.kit = Some(after.kit.clone());
             }
-            let bp: HashMap<Id, &PieceFullDto> = before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
-            let ap: HashMap<Id, &PieceFullDto> = after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let bp: HashMap<Id, &PieceFull> = before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let ap: HashMap<Id, &PieceFull> = after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
             let kb: std::collections::HashSet<Id> = bp.keys().cloned().collect();
             let ka: std::collections::HashSet<Id> = ap.keys().cloned().collect();
             let mut pd = PiecesDiff::default();
             for g in kb.difference(&ka) {
-                pd.removed.push(PieceIdDto { id: g.clone() });
+                pd.removed.push(PieceRef { id: g.clone() });
             }
             for g in ka.difference(&kb) {
                 pd.added.push((*ap[g]).clone());
             }
             for g in ka.intersection(&kb) {
                 if bp[g] != ap[g] {
-                    pd.updated.push(PieceDiffUpdate { id: PieceIdDto { id: g.clone() }, diff: piece_full_delta(bp[g], ap[g]) });
+                    pd.updated.push(PieceDiffUpdate { id: PieceRef { id: g.clone() }, diff: piece_full_delta(bp[g], ap[g]) });
                 }
             }
             if !pd.is_empty() {
                 d.pieces = Some(pd);
             }
-            let bc: HashMap<Id, &ConnectionFullDto> = before.connections.iter().map(|c| (c.id.clone(), c)).collect();
-            let ac: HashMap<Id, &ConnectionFullDto> = after.connections.iter().map(|c| (c.id.clone(), c)).collect();
+            let bc: HashMap<Id, &ConnectionFull> = before.connections.iter().map(|c| (c.id.clone(), c)).collect();
+            let ac: HashMap<Id, &ConnectionFull> = after.connections.iter().map(|c| (c.id.clone(), c)).collect();
             let kbc: std::collections::HashSet<Id> = bc.keys().cloned().collect();
             let kac: std::collections::HashSet<Id> = ac.keys().cloned().collect();
             let mut cd = ConnectionsDiff::default();
             for g in kbc.difference(&kac) {
-                cd.removed.push(ConnectionIdDto { id: g.clone() });
+                cd.removed.push(ConnectionRef { id: g.clone() });
             }
             for g in kac.difference(&kbc) {
                 cd.added.push((*ac[g]).clone());
             }
             for g in kac.intersection(&kbc) {
                 if bc[g] != ac[g] {
-                    cd.updated.push(ConnectionDiffUpdate { id: ConnectionIdDto { id: g.clone() }, diff: connection_full_delta(bc[g], ac[g]) });
+                    cd.updated.push(ConnectionDiffUpdate { id: ConnectionRef { id: g.clone() }, diff: connection_full_delta(bc[g], ac[g]) });
                 }
             }
             if !cd.is_empty() {
@@ -13255,7 +13255,7 @@ pub mod diff {
             d
         }
 
-        pub fn merge_into_full_dto(&self, d: &mut crate::design::DesignFullDto) {
+        pub fn merge_into_full(&self, d: &mut crate::design::DesignFull) {
             if let Some(n) = &self.name {
                 d.name = n.clone();
             }
@@ -13353,7 +13353,7 @@ pub mod diff {
             }
         }
 
-        fn merge_piece_sparse_dto(dto: &mut PieceFullDto, d: &PieceDiff) {
+        fn merge_piece_sparse_dto(dto: &mut PieceFull, d: &PieceDiff) {
             if let Some(v) = &d.name {
                 dto.name = v.clone();
             }
@@ -13392,7 +13392,7 @@ pub mod diff {
             }
         }
 
-        fn merge_connection_sparse_dto(dto: &mut ConnectionFullDto, d: &ConnectionDiff) {
+        fn merge_connection_sparse_dto(dto: &mut ConnectionFull, d: &ConnectionDiff) {
             if let Some(v) = &d.connected {
                 dto.connected = v.clone();
             }
@@ -13431,7 +13431,7 @@ pub mod diff {
             }
         }
 
-        fn merge_layer_sparse_dto(fd: &mut LayerFullDto, d: &LayerDiff) {
+        fn merge_layer_sparse_dto(fd: &mut LayerFull, d: &LayerDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -13452,7 +13452,7 @@ pub mod diff {
             }
         }
 
-        fn merge_group_sparse_dto(fd: &mut GroupFullDto, d: &GroupDiff) {
+        fn merge_group_sparse_dto(fd: &mut GroupFull, d: &GroupDiff) {
             if let Some(n) = &d.name {
                 fd.name = n.clone();
             }
@@ -13471,7 +13471,7 @@ pub mod diff {
         }
     }
 
-    fn piece_full_delta(b: &PieceFullDto, a: &PieceFullDto) -> PieceDiff {
+    fn piece_full_delta(b: &PieceFull, a: &PieceFull) -> PieceDiff {
         let mut d = PieceDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13514,7 +13514,7 @@ pub mod diff {
         d
     }
 
-    fn connection_full_delta(b: &ConnectionFullDto, a: &ConnectionFullDto) -> ConnectionDiff {
+    fn connection_full_delta(b: &ConnectionFull, a: &ConnectionFull) -> ConnectionDiff {
         let mut d = ConnectionDiff::default();
         if b.connected != a.connected {
             d.connected = Some(a.connected.clone());
@@ -13556,14 +13556,14 @@ pub mod diff {
         d
     }
 
-    fn layers_between(before: &[LayerFullDto], after: &[LayerFullDto]) -> Option<LayersDiff> {
+    fn layers_between(before: &[LayerFull], after: &[LayerFull]) -> Option<LayersDiff> {
         let mut d = LayersDiff::default();
-        let bm: HashMap<Id, &LayerFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &LayerFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &LayerFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &LayerFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(LayerIdDto { id: g.clone() });
+            d.removed.push(LayerRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13591,7 +13591,7 @@ pub mod diff {
                 if b.locked != a.locked {
                     df.locked = Some(a.locked);
                 }
-                d.updated.push(LayerDiffUpdate { id: LayerIdDto { id: g.clone() }, diff: df });
+                d.updated.push(LayerDiffUpdate { id: LayerRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13601,14 +13601,14 @@ pub mod diff {
         }
     }
 
-    fn groups_between(before: &[GroupFullDto], after: &[GroupFullDto]) -> Option<GroupsDiff> {
+    fn groups_between(before: &[GroupFull], after: &[GroupFull]) -> Option<GroupsDiff> {
         let mut d = GroupsDiff::default();
-        let bm: HashMap<Id, &GroupFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &GroupFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &GroupFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &GroupFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(GroupIdDto { id: g.clone() });
+            d.removed.push(GroupRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13633,7 +13633,7 @@ pub mod diff {
                 if b.pieces != a.pieces {
                     df.pieces = Some(a.pieces.clone());
                 }
-                d.updated.push(GroupDiffUpdate { id: GroupIdDto { id: g.clone() }, diff: df });
+                d.updated.push(GroupDiffUpdate { id: GroupRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13643,14 +13643,14 @@ pub mod diff {
         }
     }
 
-    fn authors_between(before: &[AuthorFullDto], after: &[AuthorFullDto]) -> Option<AuthorsDiff> {
+    fn authors_between(before: &[AuthorFull], after: &[AuthorFull]) -> Option<AuthorsDiff> {
         let mut d = AuthorsDiff::default();
-        let bm: HashMap<Id, &AuthorFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &AuthorFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &AuthorFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &AuthorFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(AuthorIdDto { id: g.clone() });
+            d.removed.push(AuthorRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13672,7 +13672,7 @@ pub mod diff {
                 if b.rank != a.rank {
                     df.rank = Some(a.rank);
                 }
-                d.updated.push(AuthorDiffUpdate { id: AuthorIdDto { id: g.clone() }, diff: df });
+                d.updated.push(AuthorDiffUpdate { id: AuthorRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13682,14 +13682,14 @@ pub mod diff {
         }
     }
 
-    fn concepts_between(before: &[ConceptFullDto], after: &[ConceptFullDto]) -> Option<ConceptsDiff> {
+    fn concepts_between(before: &[ConceptFull], after: &[ConceptFull]) -> Option<ConceptsDiff> {
         let mut d = ConceptsDiff::default();
-        let bm: HashMap<Id, &ConceptFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &ConceptFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &ConceptFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &ConceptFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(ConceptIdDto { id: g.clone() });
+            d.removed.push(ConceptRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13708,7 +13708,7 @@ pub mod diff {
                 if b.order != a.order {
                     df.order = Some(a.order);
                 }
-                d.updated.push(ConceptDiffUpdate { id: ConceptIdDto { id: g.clone() }, diff: df });
+                d.updated.push(ConceptDiffUpdate { id: ConceptRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13718,14 +13718,14 @@ pub mod diff {
         }
     }
 
-    fn tags_between(before: &[TagFullDto], after: &[TagFullDto]) -> Option<TagsDiff> {
+    fn tags_between(before: &[TagFull], after: &[TagFull]) -> Option<TagsDiff> {
         let mut d = TagsDiff::default();
-        let bm: HashMap<Id, &TagFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &TagFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &TagFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &TagFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(TagIdDto { id: g.clone() });
+            d.removed.push(TagRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13741,7 +13741,7 @@ pub mod diff {
                 if b.order != a.order {
                     df.order = Some(a.order);
                 }
-                d.updated.push(TagDiffUpdate { id: TagIdDto { id: g.clone() }, diff: df });
+                d.updated.push(TagDiffUpdate { id: TagRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13751,14 +13751,14 @@ pub mod diff {
         }
     }
 
-    fn qualities_between(before: &[QualityFullDto], after: &[QualityFullDto]) -> Option<QualitiesDiff> {
+    fn qualities_between(before: &[QualityFull], after: &[QualityFull]) -> Option<QualitiesDiff> {
         let mut d = QualitiesDiff::default();
-        let bm: HashMap<Id, &QualityFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &QualityFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &QualityFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &QualityFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(QualityIdDto { id: g.clone() });
+            d.removed.push(QualityRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13787,7 +13787,7 @@ pub mod diff {
                 if !bm.is_empty() {
                     df.benchmarks = Some(bm);
                 }
-                d.updated.push(QualityDiffUpdate { id: QualityIdDto { id: g.clone() }, diff: df });
+                d.updated.push(QualityDiffUpdate { id: QualityRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13797,14 +13797,14 @@ pub mod diff {
         }
     }
 
-    fn benchmarks_between(before: &[BenchmarkFullDto], after: &[BenchmarkFullDto]) -> BenchmarksDiff {
+    fn benchmarks_between(before: &[BenchmarkFull], after: &[BenchmarkFull]) -> BenchmarksDiff {
         let mut d = BenchmarksDiff::default();
-        let bm: HashMap<Id, &BenchmarkFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &BenchmarkFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &BenchmarkFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &BenchmarkFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(BenchmarkIdDto { id: g.clone() });
+            d.removed.push(BenchmarkRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13829,20 +13829,20 @@ pub mod diff {
                 if b.max_excluded != a.max_excluded {
                     df.max_excluded = Some(a.max_excluded);
                 }
-                d.updated.push(BenchmarkDiffUpdate { id: BenchmarkIdDto { id: g.clone() }, diff: df });
+                d.updated.push(BenchmarkDiffUpdate { id: BenchmarkRef { id: g.clone() }, diff: df });
             }
         }
         d
     }
 
-    fn props_between(before: &[PropFullDto], after: &[PropFullDto]) -> PropsDiff {
+    fn props_between(before: &[PropFull], after: &[PropFull]) -> PropsDiff {
         let mut d = PropsDiff::default();
-        let bm: HashMap<Id, &PropFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &PropFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &PropFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &PropFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(PropIdDto { id: g.clone() });
+            d.removed.push(PropRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13861,20 +13861,20 @@ pub mod diff {
                 if b.unit != a.unit {
                     df.unit = Some(a.unit.clone());
                 }
-                d.updated.push(PropDiffUpdate { id: PropIdDto { id: g.clone() }, diff: df });
+                d.updated.push(PropDiffUpdate { id: PropRef { id: g.clone() }, diff: df });
             }
         }
         d
     }
 
-    fn attributes_between(before: &[AttributeFullDto], after: &[AttributeFullDto]) -> AttributesDiff {
+    fn attributes_between(before: &[AttributeFull], after: &[AttributeFull]) -> AttributesDiff {
         let mut d = AttributesDiff::default();
-        let bm: HashMap<Id, &AttributeFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &AttributeFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &AttributeFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &AttributeFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(AttributeIdDto { id: g.clone() });
+            d.removed.push(AttributeRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13893,20 +13893,20 @@ pub mod diff {
                 if b.definition != a.definition {
                     df.definition = Some(a.definition.clone());
                 }
-                d.updated.push(AttributeDiffUpdate { id: AttributeIdDto { id: g.clone() }, diff: df });
+                d.updated.push(AttributeDiffUpdate { id: AttributeRef { id: g.clone() }, diff: df });
             }
         }
         d
     }
 
-    fn stats_between(before: &[StatFullDto], after: &[StatFullDto]) -> Option<StatsDiff> {
+    fn stats_between(before: &[StatFull], after: &[StatFull]) -> Option<StatsDiff> {
         let mut d = StatsDiff::default();
-        let bm: HashMap<Id, &StatFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &StatFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &StatFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &StatFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(StatIdDto { id: g.clone() });
+            d.removed.push(StatRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -13928,7 +13928,7 @@ pub mod diff {
                 if b.description != a.description {
                     df.description = Some(a.description.clone());
                 }
-                d.updated.push(StatDiffUpdate { id: StatIdDto { id: g.clone() }, diff: df });
+                d.updated.push(StatDiffUpdate { id: StatRef { id: g.clone() }, diff: df });
             }
         }
         if d.is_empty() {
@@ -13938,7 +13938,7 @@ pub mod diff {
         }
     }
 
-    pub fn attribute_full_delta(b: &AttributeFullDto, a: &AttributeFullDto) -> AttributeDiff {
+    pub fn attribute_full_delta(b: &AttributeFull, a: &AttributeFull) -> AttributeDiff {
         let mut d = AttributeDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -13952,7 +13952,7 @@ pub mod diff {
         d
     }
 
-    pub fn prop_full_delta(b: &PropFullDto, a: &PropFullDto) -> PropDiff {
+    pub fn prop_full_delta(b: &PropFull, a: &PropFull) -> PropDiff {
         let mut d = PropDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -13966,7 +13966,7 @@ pub mod diff {
         d
     }
 
-    pub fn author_full_delta(b: &AuthorFullDto, a: &AuthorFullDto) -> AuthorDiff {
+    pub fn author_full_delta(b: &AuthorFull, a: &AuthorFull) -> AuthorDiff {
         let mut d = AuthorDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13983,7 +13983,7 @@ pub mod diff {
         d
     }
 
-    pub fn concept_full_delta(b: &ConceptFullDto, a: &ConceptFullDto) -> ConceptDiff {
+    pub fn concept_full_delta(b: &ConceptFull, a: &ConceptFull) -> ConceptDiff {
         let mut d = ConceptDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -13997,7 +13997,7 @@ pub mod diff {
         d
     }
 
-    pub fn tag_full_delta(b: &TagFullDto, a: &TagFullDto) -> TagDiff {
+    pub fn tag_full_delta(b: &TagFull, a: &TagFull) -> TagDiff {
         let mut d = TagDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14008,7 +14008,7 @@ pub mod diff {
         d
     }
 
-    pub fn quality_full_delta(b: &QualityFullDto, a: &QualityFullDto) -> QualityDiff {
+    pub fn quality_full_delta(b: &QualityFull, a: &QualityFull) -> QualityDiff {
         let mut d = QualityDiff::default();
         if b.key != a.key {
             d.key = Some(a.key.clone());
@@ -14032,7 +14032,7 @@ pub mod diff {
         d
     }
 
-    pub fn file_full_delta(b: &FileFullDto, a: &FileFullDto) -> FileDiff {
+    pub fn file_full_delta(b: &FileFull, a: &FileFull) -> FileDiff {
         let mut d = FileDiff::default();
         if b.url != a.url {
             d.url = Some(a.url.clone());
@@ -14058,7 +14058,7 @@ pub mod diff {
         d
     }
 
-    pub fn family_full_delta(b: &FamilyFullDto, a: &FamilyFullDto) -> FamilyDiff {
+    pub fn family_full_delta(b: &FamilyFull, a: &FamilyFull) -> FamilyDiff {
         let mut d = FamilyDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14080,7 +14080,7 @@ pub mod diff {
         d
     }
 
-    pub fn folder_full_delta(b: &FolderFullDto, a: &FolderFullDto) -> FolderDiff {
+    pub fn folder_full_delta(b: &FolderFull, a: &FolderFull) -> FolderDiff {
         let mut d = FolderDiff::default();
         if b.path != a.path {
             d.path = Some(a.path.clone());
@@ -14091,7 +14091,7 @@ pub mod diff {
         d
     }
 
-    pub fn type_full_delta(b: &TypeFullDto, a: &TypeFullDto) -> TypeDiff {
+    pub fn type_full_delta(b: &TypeFull, a: &TypeFull) -> TypeDiff {
         let mut d = TypeDiff::default();
         if b.name != a.name {
             d.name = Some(a.name.clone());
@@ -14161,16 +14161,16 @@ pub mod diff {
         d
     }
 
-    fn family_ids_between(before: &[FamilyIdDto], after: &[FamilyIdDto]) -> Option<FamilyIdsDiff> {
+    fn family_ids_between(before: &[FamilyRef], after: &[FamilyRef]) -> Option<FamilyIdsDiff> {
         let kb: HashSet<Id> = before.iter().map(|x| x.id.clone()).collect();
         let ka: HashSet<Id> = after.iter().map(|x| x.id.clone()).collect();
         let mut removed = Vec::new();
         for id in kb.difference(&ka) {
-            removed.push(FamilyIdDto { id: id.clone() });
+            removed.push(FamilyRef { id: id.clone() });
         }
         let mut added = Vec::new();
         for id in ka.difference(&kb) {
-            added.push(FamilyIdDto { id: id.clone() });
+            added.push(FamilyRef { id: id.clone() });
         }
         if removed.is_empty() && added.is_empty() {
             None
@@ -14179,14 +14179,14 @@ pub mod diff {
         }
     }
 
-    fn ports_between(before: &[PortFullDto], after: &[PortFullDto]) -> PortsDiff {
+    fn ports_between(before: &[PortFull], after: &[PortFull]) -> PortsDiff {
         let mut d = PortsDiff::default();
-        let bm: HashMap<Id, &PortFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &PortFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &PortFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &PortFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(PortIdDto { id: g.clone() });
+            d.removed.push(PortRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -14195,13 +14195,13 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(PortDiffUpdate { id: PortIdDto { id: g.clone() }, diff: port_full_delta(b, a) });
+                d.updated.push(PortDiffUpdate { id: PortRef { id: g.clone() }, diff: port_full_delta(b, a) });
             }
         }
         d
     }
 
-    fn port_full_delta(b: &PortFullDto, a: &PortFullDto) -> PortDiff {
+    fn port_full_delta(b: &PortFull, a: &PortFull) -> PortDiff {
         let mut d = PortDiff::default();
         if b.id != a.id {
             d.id = Some(a.id.clone());
@@ -14228,14 +14228,14 @@ pub mod diff {
         d
     }
 
-    fn connectors_between(before: &[ConnectorFullDto], after: &[ConnectorFullDto]) -> ConnectorsDiff {
+    fn connectors_between(before: &[ConnectorFull], after: &[ConnectorFull]) -> ConnectorsDiff {
         let mut d = ConnectorsDiff::default();
-        let bm: HashMap<Id, &ConnectorFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &ConnectorFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &ConnectorFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &ConnectorFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(ConnectorIdDto { id: g.clone() });
+            d.removed.push(ConnectorRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -14244,13 +14244,13 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(ConnectorDiffUpdate { id: ConnectorIdDto { id: g.clone() }, diff: connector_full_delta(b, a) });
+                d.updated.push(ConnectorDiffUpdate { id: ConnectorRef { id: g.clone() }, diff: connector_full_delta(b, a) });
             }
         }
         d
     }
 
-    fn connector_full_delta(b: &ConnectorFullDto, a: &ConnectorFullDto) -> ConnectorDiff {
+    fn connector_full_delta(b: &ConnectorFull, a: &ConnectorFull) -> ConnectorDiff {
         let mut d = ConnectorDiff::default();
         if b.code != a.code {
             d.code = Some(a.code.clone());
@@ -14272,14 +14272,14 @@ pub mod diff {
         d
     }
 
-    fn representations_between(before: &[RepresentationFullDto], after: &[RepresentationFullDto]) -> RepresentationsDiff {
+    fn representations_between(before: &[RepresentationFull], after: &[RepresentationFull]) -> RepresentationsDiff {
         let mut d = RepresentationsDiff::default();
-        let bm: HashMap<Id, &RepresentationFullDto> = before.iter().map(|x| (x.id.clone(), x)).collect();
-        let am: HashMap<Id, &RepresentationFullDto> = after.iter().map(|x| (x.id.clone(), x)).collect();
+        let bm: HashMap<Id, &RepresentationFull> = before.iter().map(|x| (x.id.clone(), x)).collect();
+        let am: HashMap<Id, &RepresentationFull> = after.iter().map(|x| (x.id.clone(), x)).collect();
         let kb: std::collections::HashSet<Id> = bm.keys().cloned().collect();
         let ka: std::collections::HashSet<Id> = am.keys().cloned().collect();
         for g in kb.difference(&ka) {
-            d.removed.push(RepresentationIdDto { id: g.clone() });
+            d.removed.push(RepresentationRef { id: g.clone() });
         }
         for g in ka.difference(&kb) {
             d.added.push((*am[g]).clone());
@@ -14288,13 +14288,13 @@ pub mod diff {
             let b = bm[g];
             let a = am[g];
             if b != a {
-                d.updated.push(RepresentationDiffUpdate { id: RepresentationIdDto { id: g.clone() }, diff: representation_full_delta(b, a) });
+                d.updated.push(RepresentationDiffUpdate { id: RepresentationRef { id: g.clone() }, diff: representation_full_delta(b, a) });
             }
         }
         d
     }
 
-    fn representation_full_delta(b: &RepresentationFullDto, a: &RepresentationFullDto) -> RepresentationDiff {
+    fn representation_full_delta(b: &RepresentationFull, a: &RepresentationFull) -> RepresentationDiff {
         let mut d = RepresentationDiff::default();
         if b.url != a.url {
             d.url = Some(a.url.clone());
@@ -14321,7 +14321,7 @@ pub mod diff {
     }
 
 
-    pub fn merge_file_diff_into_full(fd: &mut FileFullDto, d: &FileDiff) {
+    pub fn merge_file_diff_into_full(fd: &mut FileFull, d: &FileDiff) {
         if let Some(v) = &d.url {
             fd.url = v.clone();
         }
@@ -14345,7 +14345,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_family_diff_into_full(fd: &mut FamilyFullDto, d: &FamilyDiff) {
+    pub fn merge_family_diff_into_full(fd: &mut FamilyFull, d: &FamilyDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14363,7 +14363,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_folder_diff_into_full(fd: &mut FolderFullDto, d: &FolderDiff) {
+    pub fn merge_folder_diff_into_full(fd: &mut FolderFull, d: &FolderDiff) {
         if let Some(v) = &d.path {
             fd.path = v.clone();
         }
@@ -14372,7 +14372,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attribute_diff_into_full(fd: &mut AttributeFullDto, d: &AttributeDiff) {
+    pub fn merge_attribute_diff_into_full(fd: &mut AttributeFull, d: &AttributeDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14384,7 +14384,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_prop_diff_into_full(fd: &mut PropFullDto, d: &PropDiff) {
+    pub fn merge_prop_diff_into_full(fd: &mut PropFull, d: &PropDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14396,7 +14396,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_author_diff_into_full(fd: &mut AuthorFullDto, d: &AuthorDiff) {
+    pub fn merge_author_diff_into_full(fd: &mut AuthorFull, d: &AuthorDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14411,7 +14411,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_concept_diff_into_full(fd: &mut ConceptFullDto, d: &ConceptDiff) {
+    pub fn merge_concept_diff_into_full(fd: &mut ConceptFull, d: &ConceptDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14423,7 +14423,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_tag_diff_into_full(fd: &mut TagFullDto, d: &TagDiff) {
+    pub fn merge_tag_diff_into_full(fd: &mut TagFull, d: &TagDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14432,7 +14432,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_benchmark_diff_into_full(fd: &mut BenchmarkFullDto, d: &BenchmarkDiff) {
+    pub fn merge_benchmark_diff_into_full(fd: &mut BenchmarkFull, d: &BenchmarkDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14450,7 +14450,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_benchmarks_diff_into_vec(vec: &mut Vec<BenchmarkFullDto>, d: &BenchmarksDiff) {
+    pub fn merge_benchmarks_diff_into_vec(vec: &mut Vec<BenchmarkFull>, d: &BenchmarksDiff) {
         for id in &d.removed {
             vec.retain(|b| b.id != id.id);
         }
@@ -14462,7 +14462,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_quality_diff_into_full(fd: &mut QualityFullDto, d: &QualityDiff) {
+    pub fn merge_quality_diff_into_full(fd: &mut QualityFull, d: &QualityDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14483,7 +14483,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeFullDto>, d: &AttributesDiff) {
+    pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeFull>, d: &AttributesDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14495,7 +14495,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_props_coll_into_vec(vec: &mut Vec<PropFullDto>, d: &PropsDiff) {
+    pub fn merge_props_coll_into_vec(vec: &mut Vec<PropFull>, d: &PropsDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14507,7 +14507,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_authors_coll_into_vec(vec: &mut Vec<AuthorFullDto>, d: &AuthorsDiff) {
+    pub fn merge_authors_coll_into_vec(vec: &mut Vec<AuthorFull>, d: &AuthorsDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14519,7 +14519,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_concepts_coll_into_vec(vec: &mut Vec<ConceptFullDto>, d: &ConceptsDiff) {
+    pub fn merge_concepts_coll_into_vec(vec: &mut Vec<ConceptFull>, d: &ConceptsDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14531,7 +14531,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_tags_coll_into_vec(vec: &mut Vec<TagFullDto>, d: &TagsDiff) {
+    pub fn merge_tags_coll_into_vec(vec: &mut Vec<TagFull>, d: &TagsDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14543,7 +14543,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_qualities_coll_into_vec(vec: &mut Vec<QualityFullDto>, d: &QualitiesDiff) {
+    pub fn merge_qualities_coll_into_vec(vec: &mut Vec<QualityFull>, d: &QualitiesDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14555,7 +14555,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_stat_diff_into_full(fd: &mut StatFullDto, d: &StatDiff) {
+    pub fn merge_stat_diff_into_full(fd: &mut StatFull, d: &StatDiff) {
         if let Some(v) = &d.key {
             fd.key = v.clone();
         }
@@ -14570,7 +14570,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_stats_coll_into_vec(vec: &mut Vec<StatFullDto>, d: &StatsDiff) {
+    pub fn merge_stats_coll_into_vec(vec: &mut Vec<StatFull>, d: &StatsDiff) {
         for id in &d.removed {
             vec.retain(|x| x.id != id.id);
         }
@@ -14582,7 +14582,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_port_diff_into_full(fd: &mut PortFullDto, d: &PortDiff) {
+    pub fn merge_port_diff_into_full(fd: &mut PortFull, d: &PortDiff) {
         if let Some(v) = &d.id {
             fd.id = v.clone();
         }
@@ -14606,14 +14606,14 @@ pub mod diff {
         }
     }
 
-    pub fn merge_family_ids_into_vec(vec: &mut Vec<FamilyIdDto>, d: &FamilyIdsDiff) {
+    pub fn merge_family_ids_into_vec(vec: &mut Vec<FamilyRef>, d: &FamilyIdsDiff) {
         for r in &d.removed {
             vec.retain(|x| x.id != r.id);
         }
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_ports_diff_into_vec(vec: &mut Vec<PortFullDto>, d: &PortsDiff) {
+    pub fn merge_ports_diff_into_vec(vec: &mut Vec<PortFull>, d: &PortsDiff) {
         for id in &d.removed {
             vec.retain(|p| p.id != id.id);
         }
@@ -14625,7 +14625,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_connector_diff_into_full(fd: &mut ConnectorFullDto, d: &ConnectorDiff) {
+    pub fn merge_connector_diff_into_full(fd: &mut ConnectorFull, d: &ConnectorDiff) {
         if let Some(v) = &d.code {
             fd.code = v.clone();
         }
@@ -14643,7 +14643,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_connectors_diff_into_vec(vec: &mut Vec<ConnectorFullDto>, d: &ConnectorsDiff) {
+    pub fn merge_connectors_diff_into_vec(vec: &mut Vec<ConnectorFull>, d: &ConnectorsDiff) {
         for id in &d.removed {
             vec.retain(|c| c.id != id.id);
         }
@@ -14655,7 +14655,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_representation_diff_into_full(fd: &mut RepresentationFullDto, d: &RepresentationDiff) {
+    pub fn merge_representation_diff_into_full(fd: &mut RepresentationFull, d: &RepresentationDiff) {
         if let Some(v) = &d.url {
             fd.url = v.clone();
         }
@@ -14676,7 +14676,7 @@ pub mod diff {
         }
     }
 
-    pub fn merge_representations_diff_into_vec(vec: &mut Vec<RepresentationFullDto>, d: &RepresentationsDiff) {
+    pub fn merge_representations_diff_into_vec(vec: &mut Vec<RepresentationFull>, d: &RepresentationsDiff) {
         for id in &d.removed {
             vec.retain(|r| r.id != id.id);
         }
@@ -14688,7 +14688,7 @@ pub mod diff {
         vec.extend(d.added.iter().cloned());
     }
 
-    pub fn merge_type_diff_into_full(fd: &mut TypeFullDto, d: &TypeDiff) {
+    pub fn merge_type_diff_into_full(fd: &mut TypeFull, d: &TypeDiff) {
         if let Some(v) = &d.name {
             fd.name = v.clone();
         }
@@ -14753,20 +14753,20 @@ pub mod kit_diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::AttributeIdDto;
-    use crate::author::{AuthorFullDto, AuthorIdDto};
-    use crate::concept::ConceptIdDto;
-    use crate::design::{DesignFullDto, DesignIdDto};
+    use crate::attribute::AttributeRef;
+    use crate::author::{AuthorFull, AuthorRef};
+    use crate::concept::ConceptRef;
+    use crate::design::{DesignFull, DesignRef};
     use crate::diff::{merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FamiliesDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff};
-    use crate::family::FamilyIdDto;
-    use crate::file::FileIdDto;
-    use crate::folder::FolderIdDto;
+    use crate::family::FamilyRef;
+    use crate::file::FileRef;
+    use crate::folder::FolderRef;
     use crate::id::Id;
-    use crate::kit_graph::KitFullDto;
-    use crate::prop::PropIdDto;
-    use crate::quality::QualityIdDto;
-    use crate::tag::TagIdDto;
-    use crate::typ::TypeIdDto;
+    use crate::kit_graph::KitFull;
+    use crate::prop::PropRef;
+    use crate::quality::QualityRef;
+    use crate::tag::TagRef;
+    use crate::typ::TypeRef;
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
@@ -14781,11 +14781,11 @@ pub mod kit_diff {
     #[serde(rename_all = "camelCase")]
     pub struct DesignsDiff {
         #[serde(default)]
-        pub removed: Vec<DesignIdDto>,
+        pub removed: Vec<DesignRef>,
         #[serde(default)]
         pub updated: Vec<DesignDiffUpdate>,
         #[serde(default)]
-        pub added: Vec<DesignFullDto>,
+        pub added: Vec<DesignFull>,
     }
 
     impl DesignsDiff {
@@ -14847,7 +14847,7 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        pub fn between(before: &KitFullDto, after: &KitFullDto) -> Self {
+        pub fn between(before: &KitFull, after: &KitFull) -> Self {
             Self::between_dto(before, after)
         }
 
@@ -14910,7 +14910,7 @@ pub mod kit_diff {
             Self { designs: Some(DesignsDiff { removed: vec![], updated: vec![DesignDiffUpdate { design_id, diff: d }], added: vec![] }), ..Default::default() }
         }
 
-        pub fn merge_into_baseline_dto(&self, k: &mut KitFullDto) {
+        pub fn merge_into_baseline_dto(&self, k: &mut KitFull) {
             if let Some(n) = &self.name {
                 k.name = n.clone();
             }
@@ -14972,7 +14972,7 @@ pub mod kit_diff {
                 }
                 for u in &d.updated {
                     if let Some(dsgn) = k.designs.iter_mut().find(|x| x.id == u.design_id) {
-                        u.diff.merge_into_full_dto(dsgn);
+                        u.diff.merge_into_full(dsgn);
                     }
                 }
                 k.designs.extend(d.added.iter().cloned());
@@ -15045,7 +15045,7 @@ pub mod kit_diff {
     }
 
     impl KitDiff {
-        pub fn between_dto(before: &KitFullDto, after: &KitFullDto) -> Self {
+        pub fn between_dto(before: &KitFull, after: &KitFull) -> Self {
             let mut d = Self::default();
             if before.name != after.name {
                 d.name = Some(after.name.clone());
@@ -15083,7 +15083,7 @@ pub mod kit_diff {
             let (a_t, r_t, m_t) = diff_id_vec(&before.types, &after.types, |t| &t.id);
             if !a_t.is_empty() || !r_t.is_empty() || !m_t.is_empty() {
                 d.types = Some(TypesDiff {
-                    removed: r_t.iter().map(|i| TypeIdDto { id: i.clone() }).collect(),
+                    removed: r_t.iter().map(|i| TypeRef { id: i.clone() }).collect(),
                     updated: m_t
                         .iter()
                         .filter_map(|full| {
@@ -15092,7 +15092,7 @@ pub mod kit_diff {
                             if diff.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::TypeDiffUpdate { id: TypeIdDto { id: full.id.clone() }, diff })
+                                Some(crate::diff::TypeDiffUpdate { id: TypeRef { id: full.id.clone() }, diff })
                             }
                         })
                         .collect(),
@@ -15105,7 +15105,7 @@ pub mod kit_diff {
             let (a_fam, r_fam, m_fam) = diff_id_vec(&before.families, &after.families, |t| &t.id);
             if !a_fam.is_empty() || !r_fam.is_empty() || !m_fam.is_empty() {
                 d.families = Some(FamiliesDiff {
-                    removed: r_fam.iter().map(|i| FamilyIdDto { id: i.clone() }).collect(),
+                    removed: r_fam.iter().map(|i| FamilyRef { id: i.clone() }).collect(),
                     updated: m_fam
                         .iter()
                         .filter_map(|full| {
@@ -15114,7 +15114,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FamilyDiffUpdate { id: FamilyIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::FamilyDiffUpdate { id: FamilyRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15124,13 +15124,13 @@ pub mod kit_diff {
                     d.families = None;
                 }
             }
-            let bm: HashMap<Id, &DesignFullDto> = before.designs.iter().map(|x| (x.id.clone(), x)).collect();
-            let am: HashMap<Id, &DesignFullDto> = after.designs.iter().map(|x| (x.id.clone(), x)).collect();
+            let bm: HashMap<Id, &DesignFull> = before.designs.iter().map(|x| (x.id.clone(), x)).collect();
+            let am: HashMap<Id, &DesignFull> = after.designs.iter().map(|x| (x.id.clone(), x)).collect();
             let kb: HashSet<Id> = bm.keys().cloned().collect();
             let ka: HashSet<Id> = am.keys().cloned().collect();
             let mut des = DesignsDiff::default();
             for id in kb.difference(&ka) {
-                des.removed.push(DesignIdDto { id: id.clone() });
+                des.removed.push(DesignRef { id: id.clone() });
             }
             for id in ka.difference(&kb) {
                 des.added.push((*am.get(id).expect("a")).clone());
@@ -15151,7 +15151,7 @@ pub mod kit_diff {
             let (a_f, r_f, m_f) = diff_id_vec(&before.files, &after.files, |t| &t.id);
             if !a_f.is_empty() || !r_f.is_empty() || !m_f.is_empty() {
                 d.files = Some(FilesDiff {
-                    removed: r_f.iter().map(|i| FileIdDto { id: i.clone() }).collect(),
+                    removed: r_f.iter().map(|i| FileRef { id: i.clone() }).collect(),
                     updated: m_f
                         .iter()
                         .filter_map(|full| {
@@ -15160,7 +15160,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FileDiffUpdate { id: FileIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::FileDiffUpdate { id: FileRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15173,7 +15173,7 @@ pub mod kit_diff {
             let (a_fo, r_fo, m_fo) = diff_id_vec(&before.folders, &after.folders, |t| &t.id);
             if !a_fo.is_empty() || !r_fo.is_empty() || !m_fo.is_empty() {
                 d.folders = Some(FoldersDiff {
-                    removed: r_fo.iter().map(|i| FolderIdDto { id: i.clone() }).collect(),
+                    removed: r_fo.iter().map(|i| FolderRef { id: i.clone() }).collect(),
                     updated: m_fo
                         .iter()
                         .filter_map(|full| {
@@ -15182,7 +15182,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::FolderDiffUpdate { id: FolderIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::FolderDiffUpdate { id: FolderRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15192,13 +15192,13 @@ pub mod kit_diff {
                     d.folders = None;
                 }
             }
-            let merge_simple_authors = |bf: &[AuthorFullDto], af: &[AuthorFullDto]| -> Option<AuthorsDiff> {
+            let merge_simple_authors = |bf: &[AuthorFull], af: &[AuthorFull]| -> Option<AuthorsDiff> {
                 let (a, r, m) = diff_id_vec(bf, af, |t| &t.id);
                 if a.is_empty() && r.is_empty() && m.is_empty() {
                     return None;
                 }
                 Some(AuthorsDiff {
-                    removed: r.iter().map(|i| AuthorIdDto { id: i.clone() }).collect(),
+                    removed: r.iter().map(|i| AuthorRef { id: i.clone() }).collect(),
                     updated: m
                         .iter()
                         .filter_map(|full| {
@@ -15207,7 +15207,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::AuthorDiffUpdate { id: AuthorIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::AuthorDiffUpdate { id: AuthorRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15221,7 +15221,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(ConceptsDiff {
-                        removed: r.iter().map(|i| ConceptIdDto { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| ConceptRef { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|full| {
@@ -15230,7 +15230,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::ConceptDiffUpdate { id: ConceptIdDto { id: full.id.clone() }, diff: df })
+                                    Some(crate::diff::ConceptDiffUpdate { id: ConceptRef { id: full.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -15244,7 +15244,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(TagsDiff {
-                        removed: r.iter().map(|i| TagIdDto { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| TagRef { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|full| {
@@ -15253,7 +15253,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::TagDiffUpdate { id: TagIdDto { id: full.id.clone() }, diff: df })
+                                    Some(crate::diff::TagDiffUpdate { id: TagRef { id: full.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -15267,7 +15267,7 @@ pub mod kit_diff {
                     None
                 } else {
                     Some(QualitiesDiff {
-                        removed: r.iter().map(|i| QualityIdDto { id: i.clone() }).collect(),
+                        removed: r.iter().map(|i| QualityRef { id: i.clone() }).collect(),
                         updated: m
                             .iter()
                             .filter_map(|full| {
@@ -15276,7 +15276,7 @@ pub mod kit_diff {
                                 if df.is_empty() {
                                     None
                                 } else {
-                                    Some(crate::diff::QualityDiffUpdate { id: QualityIdDto { id: full.id.clone() }, diff: df })
+                                    Some(crate::diff::QualityDiffUpdate { id: QualityRef { id: full.id.clone() }, diff: df })
                                 }
                             })
                             .collect(),
@@ -15287,7 +15287,7 @@ pub mod kit_diff {
             let (a_p, r_p, m_p) = diff_id_vec(&before.props, &after.props, |t| &t.id);
             if !a_p.is_empty() || !r_p.is_empty() || !m_p.is_empty() {
                 let pd = PropsDiff {
-                    removed: r_p.iter().map(|i| PropIdDto { id: i.clone() }).collect(),
+                    removed: r_p.iter().map(|i| PropRef { id: i.clone() }).collect(),
                     updated: m_p
                         .iter()
                         .filter_map(|full| {
@@ -15296,7 +15296,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::PropDiffUpdate { id: PropIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::PropDiffUpdate { id: PropRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15309,7 +15309,7 @@ pub mod kit_diff {
             let (a_at, r_at, m_at) = diff_id_vec(&before.attributes, &after.attributes, |t| &t.id);
             if !a_at.is_empty() || !r_at.is_empty() || !m_at.is_empty() {
                 let ad = AttributesDiff {
-                    removed: r_at.iter().map(|i| AttributeIdDto { id: i.clone() }).collect(),
+                    removed: r_at.iter().map(|i| AttributeRef { id: i.clone() }).collect(),
                     updated: m_at
                         .iter()
                         .filter_map(|full| {
@@ -15318,7 +15318,7 @@ pub mod kit_diff {
                             if df.is_empty() {
                                 None
                             } else {
-                                Some(crate::diff::AttributeDiffUpdate { id: AttributeIdDto { id: full.id.clone() }, diff: df })
+                                Some(crate::diff::AttributeDiffUpdate { id: AttributeRef { id: full.id.clone() }, diff: df })
                             }
                         })
                         .collect(),
@@ -15338,10 +15338,10 @@ pub mod kit_change {
     use serde::{Deserialize, Serialize};
 
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
-    use crate::design::DesignIdDto;
+    use crate::design::DesignRef;
     use crate::error::SemioError;
-    use crate::piece::PieceIdDto;
-    use crate::typ::TypeIdDto;
+    use crate::piece::PieceRef;
+    use crate::typ::TypeRef;
     //#endregion
 
     //#region 🔖KitChangeKind
@@ -15373,8 +15373,8 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceChange {
-        pub design_id: DesignIdDto,
-        pub piece_id: PieceIdDto,
+        pub design_id: DesignRef,
+        pub piece_id: PieceRef,
         pub forward: Vec<ChangePieceCommand>,
         pub inverse: Vec<ChangePieceCommand>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
@@ -15434,7 +15434,7 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct KitDesignChange {
-        pub design_id: DesignIdDto,
+        pub design_id: DesignRef,
         pub blocks: Vec<KitDesignChangeBlock>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
@@ -15510,7 +15510,7 @@ pub mod kit_change {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct TypeChange {
-        pub type_id: TypeIdDto,
+        pub type_id: TypeRef,
         pub forward: Vec<ChangeTypeCommand>,
         pub inverse: Vec<ChangeTypeCommand>,
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
@@ -15646,8 +15646,8 @@ pub mod kit_change {
         //#region 🔖Lift
         /// 🧮 Lifts a flat command batch into a typed tree using an isolated twin of `kit` (same semantics as [`ChangeKitCommand::inverse_commands_for_many`]).
         pub fn lift_flat(kit: &crate::kit_graph::KitGraphRef, forward: Vec<ChangeKitCommand>, kind: KitChangeKind, author: Option<String>, time: Option<String>) -> Result<Self, SemioError> {
-            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-            let twin = crate::kit_graph::KitGraph::from_full_dto(before);
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
+            let twin = crate::kit_graph::KitGraph::from_full(before);
             let mut kit_forward: Vec<ChangeKitCommand> = Vec::new();
             let mut kit_inverse_groups: Vec<Vec<ChangeKitCommand>> = Vec::new();
             let mut children: Vec<Change> = Vec::new();
@@ -15684,25 +15684,25 @@ pub mod kit_change {
     }
 
     //#region 🔖LiftHelpers
-    fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeIdDto) -> Result<Vec<ChangeTypeCommand>, SemioError> {
+    fn unwrap_type_inverse(inv: &[ChangeKitCommand], expect_id: &TypeRef) -> Result<Vec<ChangeTypeCommand>, SemioError> {
         match inv {
             [ChangeKitCommand::ChangeTypeCommands { type_id, commands }] if type_id == expect_id => Ok(commands.clone()),
             _ => Err(SemioError::InvalidOperation("inverse for ChangeTypeCommands mismatch".into())),
         }
     }
 
-    fn unwrap_design_inverse(inv: &[ChangeKitCommand], expect_did: &DesignIdDto) -> Result<Vec<ChangeDesignCommand>, SemioError> {
+    fn unwrap_design_inverse(inv: &[ChangeKitCommand], expect_did: &DesignRef) -> Result<Vec<ChangeDesignCommand>, SemioError> {
         match inv {
             [ChangeKitCommand::ChangeDesignCommands { design_id, commands }] if design_id == expect_did => Ok(commands.clone()),
             _ => Err(SemioError::InvalidOperation("inverse for ChangeDesignCommands mismatch".into())),
         }
     }
 
-    fn lift_design_change_from_commands(twin: &crate::kit_graph::KitGraphRef, design_id: DesignIdDto, commands: Vec<ChangeDesignCommand>) -> Result<KitDesignChange, SemioError> {
+    fn lift_design_change_from_commands(twin: &crate::kit_graph::KitGraphRef, design_id: DesignRef, commands: Vec<ChangeDesignCommand>) -> Result<KitDesignChange, SemioError> {
         let mut blocks: Vec<KitDesignChangeBlock> = Vec::new();
         let mut buf: Vec<ChangeDesignCommand> = Vec::new();
 
-        fn flush_atomics(twin: &crate::kit_graph::KitGraphRef, design_id: &DesignIdDto, buf: &mut Vec<ChangeDesignCommand>, blocks: &mut Vec<KitDesignChangeBlock>) -> Result<(), SemioError> {
+        fn flush_atomics(twin: &crate::kit_graph::KitGraphRef, design_id: &DesignRef, buf: &mut Vec<ChangeDesignCommand>, blocks: &mut Vec<KitDesignChangeBlock>) -> Result<(), SemioError> {
             if buf.is_empty() {
                 return Ok(());
             }
@@ -15735,7 +15735,7 @@ pub mod kit_change {
         Ok(KitDesignChange { design_id, blocks, kind: KitChangeKind::Inferred, author: None, time: None })
     }
 
-    fn unwrap_piece_inverse(inv: &[ChangeKitCommand], expect_did: &DesignIdDto, expect_pid: &PieceIdDto) -> Result<Vec<ChangePieceCommand>, SemioError> {
+    fn unwrap_piece_inverse(inv: &[ChangeKitCommand], expect_did: &DesignRef, expect_pid: &PieceRef) -> Result<Vec<ChangePieceCommand>, SemioError> {
         let cmds = unwrap_design_inverse(inv, expect_did)?;
         match cmds.as_slice() {
             [ChangeDesignCommand::ChangePieceCommands { piece_id, commands }] if piece_id == expect_pid => Ok(commands.clone()),
@@ -16836,7 +16836,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFullDto, after: &crate::kit_graph::KitFullDto) {
+    pub(crate) fn emit_kit_dto_reconcile_events(kit: &KitGraphRef, before: &crate::kit_graph::KitFull, after: &crate::kit_graph::KitFull) {
         use std::collections::HashMap;
 
         use crate::events::{DesignEvent, DesignField, KitEvent, TypeEvent, TypeField};
@@ -17113,12 +17113,12 @@ pub mod file {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileIdDto {
+    pub struct FileRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileMetadataDto {
+    pub struct FileMetadata {
         pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17136,7 +17136,7 @@ pub mod file {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileShallowDto {
+    pub struct FileShallow {
         pub id: Id,
         #[serde(default, alias = "blob", alias = "name")]
         pub url: String,
@@ -17155,7 +17155,7 @@ pub mod file {
     }
 
     #[derive(Deserialize)]
-    struct FileFullDtoWire {
+    struct FileFullWire {
         id: Id,
         url: Option<String>,
         name: Option<String>,
@@ -17175,15 +17175,15 @@ pub mod file {
         updated: Option<String>,
     }
 
-    impl From<FileFullDtoWire> for FileFullDto {
-        fn from(w: FileFullDtoWire) -> Self {
+    impl From<FileFullWire> for FileFull {
+        fn from(w: FileFullWire) -> Self {
             let url = w.url.or(w.blob).or(w.name).unwrap_or_default();
-            FileFullDto { id: w.id, url, mime: w.mime, size: w.size, hash: w.hash, description: w.description, created: w.created, updated: w.updated }
+            FileFull { id: w.id, url, mime: w.mime, size: w.size, hash: w.hash, description: w.description, created: w.created, updated: w.updated }
         }
     }
 
     #[derive(Clone, Debug, Serialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FileFullDto {
+    pub struct FileFull {
         pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17200,10 +17200,10 @@ pub mod file {
         pub updated: Option<String>,
     }
 
-    impl<'de> Deserialize<'de> for FileFullDto {
+    impl<'de> Deserialize<'de> for FileFull {
         fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-            let w = FileFullDtoWire::deserialize(deserializer)?;
-            Ok(FileFullDto::from(w))
+            let w = FileFullWire::deserialize(deserializer)?;
+            Ok(FileFull::from(w))
         }
     }
 
@@ -17221,38 +17221,38 @@ pub mod file {
             EntityRef::new(EntityKind::File, self.id.clone())
         }
 
-        pub fn from_id_dto(d: FileIdDto) -> Self {
+        pub fn from_id_dto(d: FileRef) -> Self {
             Self { id: d.id, url: String::new(), mime: None, size: None, hash: None, description: None, created: None, updated: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: FileMetadataDto) -> Self {
+        pub fn from_metadata(d: FileMetadata) -> Self {
             Self { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: FileShallowDto) -> Self {
-            Self::from_metadata_dto(FileMetadataDto { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
+        pub fn from_shallow(d: FileShallow) -> Self {
+            Self::from_metadata(FileMetadata { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
         }
 
-        pub fn from_full_dto(d: FileFullDto) -> Self {
-            Self::from_metadata_dto(FileMetadataDto { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
+        pub fn from_full(d: FileFull) -> Self {
+            Self::from_metadata(FileMetadata { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
         }
 
-        pub fn to_id_dto(&self) -> FileIdDto {
-            FileIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> FileRef {
+            FileRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> FileMetadataDto {
-            FileMetadataDto { id: self.id.clone(), url: self.url.clone(), mime: self.mime.clone(), size: self.size, hash: self.hash.clone(), description: self.description.clone(), created: self.created.clone(), updated: self.updated.clone() }
+        pub fn to_metadata(&self) -> FileMetadata {
+            FileMetadata { id: self.id.clone(), url: self.url.clone(), mime: self.mime.clone(), size: self.size, hash: self.hash.clone(), description: self.description.clone(), created: self.created.clone(), updated: self.updated.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> FileShallowDto {
-            let m = self.to_metadata_dto();
-            FileShallowDto { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
+        pub fn to_shallow(&self) -> FileShallow {
+            let m = self.to_metadata();
+            FileShallow { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
         }
 
-        pub fn to_full_dto(&self) -> FileFullDto {
-            let m = self.to_metadata_dto();
-            FileFullDto { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
+        pub fn to_full(&self) -> FileFull {
+            let m = self.to_metadata();
+            FileFull { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
         }
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
@@ -17412,12 +17412,12 @@ pub mod folder {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderIdDto {
+    pub struct FolderRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderMetadataDto {
+    pub struct FolderMetadata {
         pub id: Id,
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17425,7 +17425,7 @@ pub mod folder {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderShallowDto {
+    pub struct FolderShallow {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub path: String,
@@ -17434,7 +17434,7 @@ pub mod folder {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FolderFullDto {
+    pub struct FolderFull {
         pub id: Id,
         #[serde(default, alias = "name")]
         pub path: String,
@@ -17456,38 +17456,38 @@ pub mod folder {
             EntityRef::new(EntityKind::Folder, self.id.clone())
         }
 
-        pub fn from_id_dto(d: FolderIdDto) -> Self {
+        pub fn from_id_dto(d: FolderRef) -> Self {
             Self { id: d.id, path: String::new(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: FolderMetadataDto) -> Self {
+        pub fn from_metadata(d: FolderMetadata) -> Self {
             Self { id: d.id, path: d.path, description: d.description, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: FolderShallowDto) -> Self {
-            Self::from_metadata_dto(FolderMetadataDto { id: d.id, path: d.path, description: d.description })
+        pub fn from_shallow(d: FolderShallow) -> Self {
+            Self::from_metadata(FolderMetadata { id: d.id, path: d.path, description: d.description })
         }
 
-        pub fn from_full_dto(d: FolderFullDto) -> Self {
-            Self::from_metadata_dto(FolderMetadataDto { id: d.id, path: d.path, description: d.description })
+        pub fn from_full(d: FolderFull) -> Self {
+            Self::from_metadata(FolderMetadata { id: d.id, path: d.path, description: d.description })
         }
 
-        pub fn to_id_dto(&self) -> FolderIdDto {
-            FolderIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> FolderRef {
+            FolderRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> FolderMetadataDto {
-            FolderMetadataDto { id: self.id.clone(), path: self.path.clone(), description: self.description.clone() }
+        pub fn to_metadata(&self) -> FolderMetadata {
+            FolderMetadata { id: self.id.clone(), path: self.path.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> FolderShallowDto {
-            let m = self.to_metadata_dto();
-            FolderShallowDto { id: m.id, path: m.path, description: m.description }
+        pub fn to_shallow(&self) -> FolderShallow {
+            let m = self.to_metadata();
+            FolderShallow { id: m.id, path: m.path, description: m.description }
         }
 
-        pub fn to_full_dto(&self) -> FolderFullDto {
-            let m = self.to_metadata_dto();
-            FolderFullDto { id: m.id, path: m.path, description: m.description }
+        pub fn to_full(&self) -> FolderFull {
+            let m = self.to_metadata();
+            FolderFull { id: m.id, path: m.path, description: m.description }
         }
 
         pub fn set_path(&mut self, path: String) -> crate::error::SetResult {
@@ -17764,7 +17764,7 @@ pub mod location {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -17786,39 +17786,39 @@ pub mod location {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct LocationIdDto {
+    pub struct LocationRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationMetadataDto {
-        pub id: Id,
-        pub longitude: f64,
-        pub latitude: f64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub altitude: Option<f64>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationShallowDto {
+    pub struct LocationMetadata {
         pub id: Id,
         pub longitude: f64,
         pub latitude: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub altitude: Option<f64>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LocationFullDto {
+    pub struct LocationShallow {
         pub id: Id,
         pub longitude: f64,
         pub latitude: f64,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub altitude: Option<f64>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeShallow>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct LocationFull {
+        pub id: Id,
+        pub longitude: f64,
+        pub latitude: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub altitude: Option<f64>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl LocationStore {
@@ -17830,34 +17830,34 @@ pub mod location {
             EntityRef::new(EntityKind::Location, self.id.clone())
         }
 
-        pub fn to_id_dto(&self) -> LocationIdDto {
-            LocationIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> LocationRef {
+            LocationRef { id: self.id.clone() }
         }
 
-        pub fn from_full_dto(d: LocationFullDto) -> Self {
+        pub fn from_full(d: LocationFull) -> Self {
             Self {
                 id: d.id,
                 longitude: d.longitude,
                 latitude: d.latitude,
                 altitude: d.altitude,
-                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
+                attributes: d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
                 parent_kit: None,
                 event_bus: std::sync::Weak::new(),
                 hash_cache: Cache::default(),
             }
         }
 
-        pub fn to_metadata_dto(&self) -> LocationMetadataDto {
-            LocationMetadataDto { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude }
+        pub fn to_metadata(&self) -> LocationMetadata {
+            LocationMetadata { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude }
         }
 
-        pub fn to_shallow_dto(&self) -> LocationShallowDto {
-            let m = self.to_metadata_dto();
-            LocationShallowDto { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect() }
+        pub fn to_shallow(&self) -> LocationShallow {
+            let m = self.to_metadata();
+            LocationShallow { id: m.id, longitude: m.longitude, latitude: m.latitude, altitude: m.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect() }
         }
 
-        pub fn to_full_dto(&self) -> LocationFullDto {
-            LocationFullDto { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect() }
+        pub fn to_full(&self) -> LocationFull {
+            LocationFull { id: self.id.clone(), longitude: self.longitude, latitude: self.latitude, altitude: self.altitude, attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect() }
         }
     }
 }
@@ -17869,7 +17869,7 @@ pub mod group {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::piece::{PieceIdDto, PieceStoreWeak};
+    use crate::piece::{PieceRef, PieceStoreWeak};
 
     pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
     pub type GroupStoreWeak = Weak<RwLock<GroupStore>>;
@@ -17888,12 +17888,12 @@ pub mod group {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupIdDto {
+    pub struct GroupRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupMetadataDto {
+    pub struct GroupMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17903,11 +17903,11 @@ pub mod group {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceIdDto>,
+        pub pieces: Vec<PieceRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupShallowDto {
+    pub struct GroupShallow {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17917,11 +17917,11 @@ pub mod group {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceIdDto>,
+        pub pieces: Vec<PieceRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct GroupFullDto {
+    pub struct GroupFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -17931,7 +17931,7 @@ pub mod group {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub pieces: Vec<PieceIdDto>,
+        pub pieces: Vec<PieceRef>,
     }
 
     impl GroupStore {
@@ -17939,45 +17939,45 @@ pub mod group {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_id_dto(d: GroupIdDto) -> Self {
+        pub fn from_id_dto(d: GroupRef) -> Self {
             Self { id: d.id, name: String::new(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: GroupMetadataDto) -> Self {
+        pub fn from_metadata(d: GroupMetadata) -> Self {
             Self { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: GroupShallowDto) -> Self {
-            Self::from_metadata_dto(GroupMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
+        pub fn from_shallow(d: GroupShallow) -> Self {
+            Self::from_metadata(GroupMetadata { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
         }
 
-        pub fn from_full_dto(d: GroupFullDto) -> Self {
-            Self::from_metadata_dto(GroupMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
+        pub fn from_full(d: GroupFull) -> Self {
+            Self::from_metadata(GroupMetadata { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
         }
 
-        pub fn to_id_dto(&self) -> GroupIdDto {
-            GroupIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> GroupRef {
+            GroupRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> GroupMetadataDto {
-            GroupMetadataDto {
+        pub fn to_metadata(&self) -> GroupMetadata {
+            GroupMetadata {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 color: self.color.clone(),
                 icon: self.icon.clone(),
-                pieces: self.pieces.iter().filter_map(|p| p.upgrade()).filter_map(|p| p.read().ok().map(|p| p.to_id_dto())).collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.upgrade()).filter_map(|p| p.read().ok().map(|p| p.to_ref())).collect(),
             }
         }
 
-        pub fn to_shallow_dto(&self) -> GroupShallowDto {
-            let m = self.to_metadata_dto();
-            GroupShallowDto { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
+        pub fn to_shallow(&self) -> GroupShallow {
+            let m = self.to_metadata();
+            GroupShallow { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
-        pub fn to_full_dto(&self) -> GroupFullDto {
-            let m = self.to_metadata_dto();
-            GroupFullDto { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
+        pub fn to_full(&self) -> GroupFull {
+            let m = self.to_metadata();
+            GroupFull { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
         #[inline]
@@ -18367,29 +18367,29 @@ pub mod kit_graph {
 
     use async_broadcast::Receiver;
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
     use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand};
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connection::{ConnectionFullDto, ConnectionIdDto};
-    use crate::design::{DesignFullDto, DesignIdDto, DesignStore, DesignStoreRef};
+    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
+    use crate::connection::{ConnectionFull, ConnectionRef};
+    use crate::design::{DesignFull, DesignRef, DesignStore, DesignStoreRef};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyFullDto, FamilyStore, FamilyStoreRef};
-    use crate::file::{FileFullDto, FileStore, FileStoreRef};
-    use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
+    use crate::family::{FamilyFull, FamilyStore, FamilyStoreRef};
+    use crate::file::{FileFull, FileStore, FileStoreRef};
+    use crate::folder::{FolderFull, FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::{LocationFullDto, LocationStore, LocationStoreRef};
-    use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
-    use crate::port::{PortFullDto, PortStore, PortStoreRef};
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::location::{LocationFull, LocationStore, LocationStoreRef};
+    use crate::piece::{PieceFull, PieceRef, PieceStoreRef};
+    use crate::port::{PortFull, PortStore, PortStoreRef};
+    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
     use crate::report::{SemioReport, ValidationResult};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
-    use crate::typ::{TypeFullDto, TypeIdDto, TypeStore, TypeStoreRef};
+    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
+    use crate::typ::{TypeFull, TypeRef, TypeStore, TypeStoreRef};
 
     pub type KitGraphRef = Arc<RwLock<KitGraph>>;
     pub type KitGraphWeak = Weak<RwLock<KitGraph>>;
@@ -18434,7 +18434,7 @@ pub mod kit_graph {
         undo_past: Vec<UndoStep>,
         undo_future: Vec<UndoStep>,
         undo_inhibit: u32,
-        pub initial: KitFullDto,
+        pub initial: KitFull,
         pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
         pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
         pub the_kit_head: Option<Id>,
@@ -18449,40 +18449,12 @@ pub mod kit_graph {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitIdDto {
+    pub struct KitRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitMetadataDto {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub image: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub preview: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub remote: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub homepage: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub license: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub uri: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub updated: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitShallowDto {
+    pub struct KitMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -18507,30 +18479,58 @@ pub mod kit_graph {
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub version: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub types: Vec<crate::typ::TypeShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub designs: Vec<crate::design::DesignShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub files: Vec<crate::file::FileShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub folders: Vec<crate::folder::FolderShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallowDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct KitFullDto {
+    pub struct KitShallow {
+        pub id: Id,
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub icon: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub image: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub preview: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub remote: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub homepage: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub license: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub uri: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub created: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub updated: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub version: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub types: Vec<crate::typ::TypeShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub designs: Vec<crate::design::DesignShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub files: Vec<crate::file::FileShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub folders: Vec<crate::folder::FolderShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub authors: Vec<AuthorShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub concepts: Vec<ConceptShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub tags: Vec<TagShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub qualities: Vec<QualityShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub props: Vec<PropShallow>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub attributes: Vec<AttributeShallow>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct KitFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -18556,35 +18556,35 @@ pub mod kit_graph {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub version: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub types: Vec<TypeFullDto>,
+        pub types: Vec<TypeFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub designs: Vec<DesignFullDto>,
+        pub designs: Vec<DesignFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub files: Vec<FileFullDto>,
+        pub files: Vec<FileFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub folders: Vec<FolderFullDto>,
+        pub folders: Vec<FolderFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorFullDto>,
+        pub authors: Vec<AuthorFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptFullDto>,
+        pub concepts: Vec<ConceptFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagFullDto>,
+        pub tags: Vec<TagFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropFullDto>,
+        pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<PortFullDto>,
+        pub ports: Vec<PortFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyFullDto>,
+        pub families: Vec<FamilyFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub locations: Vec<LocationFullDto>,
+        pub locations: Vec<LocationFull>,
     }
 
-    impl KitFullDto {
-        pub fn find_port_dto(&self, id: &Id) -> Option<&PortFullDto> {
+    impl KitFull {
+        pub fn find_port_dto(&self, id: &Id) -> Option<&PortFull> {
             for p in &self.ports {
                 if &p.id == id {
                     return Some(p);
@@ -18636,14 +18636,14 @@ pub mod kit_graph {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                initial: KitFullDto::default(),
+                initial: KitFull::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
                 the_kit_draft: None,
                 children: std::collections::HashMap::new(),
             };
-            s.initial = s.to_full_dto();
+            s.initial = s.to_full();
             s
         }
 
@@ -18967,7 +18967,7 @@ pub mod kit_graph {
             Ok(dw.flatten_change())
         }
 
-        pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFullDto) -> Result<()> {
+        pub fn semantic_add_design_piece(&mut self, design_id: &str, piece: crate::piece::PieceFull) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let design_weak = Arc::downgrade(&dref);
@@ -18996,7 +18996,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn semantic_add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFullDto) -> Result<()> {
+        pub fn semantic_add_design_connection(&mut self, design_id: &str, c: crate::connection::ConnectionFull) -> Result<()> {
             let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let design_weak = Arc::downgrade(&dref);
             dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.semantic_add_connection(c, design_weak)?;
@@ -19133,22 +19133,22 @@ pub mod kit_graph {
         pub fn change_kit_commands_for_field_patch(kit: &KitGraphRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             let id = id.to_string();
             let field = field.to_string();
-            use crate::author::AuthorIdDto;
+            use crate::author::AuthorRef;
             use crate::change_command::{
                 ChangeAuthorCommand, ChangeConceptCommand, ChangeDesignCommand, ChangeFamilyCommand, ChangeFileCommand, ChangeFolderCommand, ChangeKitCommand, ChangeKitQualityCommand, ChangePieceCommand, ChangePortCommand, ChangeTagCommand,
                 ChangeTypeCommand,
             };
-            use crate::concept::ConceptIdDto;
-            use crate::connection::ConnectionIdDto;
-            use crate::design::DesignIdDto;
-            use crate::family::FamilyIdDto;
-            use crate::file::FileIdDto;
-            use crate::folder::FolderIdDto;
-            use crate::piece::PieceIdDto;
-            use crate::port::PortIdDto;
-            use crate::quality::QualityIdDto;
-            use crate::tag::TagIdDto;
-            use crate::typ::TypeIdDto;
+            use crate::concept::ConceptRef;
+            use crate::connection::ConnectionRef;
+            use crate::design::DesignRef;
+            use crate::family::FamilyRef;
+            use crate::file::FileRef;
+            use crate::folder::FolderRef;
+            use crate::piece::PieceRef;
+            use crate::port::PortRef;
+            use crate::quality::QualityRef;
+            use crate::tag::TagRef;
+            use crate::typ::TypeRef;
             Ok(match entity_kind {
                 EntityKind::Kit => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19237,7 +19237,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Type => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19276,7 +19276,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Piece => {
                     let design_id = {
@@ -19299,8 +19299,8 @@ pub mod kit_graph {
                         }
                         let pcmds = Self::piece_diff_to_change_commands(&pd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                            design_id: DesignIdDto { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: Id::from(id.as_str()) }, commands: pcmds }],
+                            design_id: DesignRef { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: Id::from(id.as_str()) }, commands: pcmds }],
                         }]);
                     }
                     let piece_cmd = match field.as_str() {
@@ -19314,7 +19314,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: design_id }, commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: Id::from(id.as_str()) }, commands: vec![piece_cmd] }] }]
+                    vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: design_id }, commands: vec![ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: Id::from(id.as_str()) }, commands: vec![piece_cmd] }] }]
                 }
                 EntityKind::Connection => {
                     let design_id = Self::find_design_id_for_connection(kit, &id)?;
@@ -19325,8 +19325,8 @@ pub mod kit_graph {
                         }
                         let ccmds = Self::connection_diff_to_change_commands(&cd)?;
                         return Ok(vec![ChangeKitCommand::ChangeDesignCommands {
-                            design_id: DesignIdDto { id: design_id },
-                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: ConnectionIdDto { id: Id::from(id.as_str()) }, commands: ccmds }],
+                            design_id: DesignRef { id: design_id },
+                            commands: vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: ConnectionRef { id: Id::from(id.as_str()) }, commands: ccmds }],
                         }]);
                     }
                     return Err(SetError::InvalidValue(format!("unknown connection field '{field}' (use __patch for batch)")));
@@ -19356,7 +19356,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown author field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeAuthorCommands { author_id: AuthorIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeAuthorCommands { author_id: AuthorRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Concept => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19379,7 +19379,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown concept field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeConceptCommands { concept_id: ConceptIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeConceptCommands { concept_id: ConceptRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Tag => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19398,7 +19398,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown tag field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeTagCommands { tag_id: TagIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeTagCommands { tag_id: TagRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::File => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19437,7 +19437,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown file field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFileCommands { file_id: FileIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFileCommands { file_id: FileRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Folder => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19456,7 +19456,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown folder field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFolderCommands { folder_id: FolderIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFolderCommands { folder_id: FolderRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Quality => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19487,7 +19487,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown quality field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: QualityIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: QualityRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Family => {
                     let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -19510,7 +19510,7 @@ pub mod kit_graph {
                         }
                         _ => return Err(SetError::InvalidValue(format!("unknown family field '{field}'"))),
                     };
-                    vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyIdDto { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
+                    vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyRef { id: Id::from(id.as_str()) }, commands: vec![cmd] }]
                 }
                 EntityKind::Port => {
                     let pref = {
@@ -19538,9 +19538,9 @@ pub mod kit_graph {
                     };
                     let pid = Id::from(id.as_str());
                     if let Some(fid) = parent_fam_id {
-                        vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyIdDto { id: fid }, commands: vec![ChangeFamilyCommand::ChangePortCommands { port_id: PortIdDto { id: pid }, commands: vec![pcmd] }] }]
+                        vec![ChangeKitCommand::ChangeFamilyCommands { family_id: FamilyRef { id: fid }, commands: vec![ChangeFamilyCommand::ChangePortCommands { port_id: PortRef { id: pid }, commands: vec![pcmd] }] }]
                     } else {
-                        vec![ChangeKitCommand::ChangeKitPortCommands { port_id: PortIdDto { id: pid }, commands: vec![pcmd] }]
+                        vec![ChangeKitCommand::ChangeKitPortCommands { port_id: PortRef { id: pid }, commands: vec![pcmd] }]
                     }
                 }
                 _ => return Err(SetError::InvalidValue(format!("change_kit_commands_for_field_patch not implemented for {entity_kind:?}"))),
@@ -19626,15 +19626,15 @@ pub mod kit_graph {
             }
         }
 
-        pub fn apply_kit_state(kit: &KitGraphRef, after: KitFullDto) -> SetResult {
-            Self::replace_from_full_dto(kit, after)
+        pub fn apply_kit_state(kit: &KitGraphRef, after: KitFull) -> SetResult {
+            Self::replace_from_full(kit, after)
         }
 
         pub fn apply_kit_diff(kit: &KitGraphRef, diff: &crate::kit_diff::KitDiff) -> std::result::Result<crate::kit_diff::KitDiff, SetError> {
             if diff.is_empty() {
                 return Ok(crate::kit_diff::KitDiff::default());
             }
-            let b0 = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto();
+            let b0 = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full();
             let mut a = b0.clone();
             diff.merge_into_baseline_dto(&mut a);
             if b0 != a {
@@ -19644,15 +19644,15 @@ pub mod kit_graph {
             Ok(crate::kit_diff::KitDiff::between(&b0, &a))
         }
 
-        pub fn replace_from_full_dto(kit: &KitGraphRef, d: KitFullDto) -> SetResult {
-            let new_arc = Self::from_full_dto(d);
+        pub fn replace_from_full(kit: &KitGraphRef, d: KitFull) -> SetResult {
+            let new_arc = Self::from_full(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
                 Ok(rw) => match rw.into_inner() {
                     Ok(s) => s,
                     Err(_) => return Err(SetError::LockPoisoned("kit".into())),
                 },
                 Err(_) => {
-                    return Err(SetError::Internal("replace_from_full_dto: expected single owner of new kit".into()));
+                    return Err(SetError::Internal("replace_from_full: expected single owner of new kit".into()));
                 }
             };
             let bus = {
@@ -19697,9 +19697,9 @@ pub mod kit_graph {
             if skip {
                 return f();
             }
-            let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             f()?;
-            let after = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let after = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             if before == after {
                 return Ok(());
             }
@@ -19748,14 +19748,14 @@ pub mod kit_graph {
             use crate::kit_change::KitChange;
             let before = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.to_full_dto()
+                g.to_full()
             };
             let kind = ChangeKitCommand::declared_kind(c);
             let kc = KitChange::lift_flat(kit, vec![c.clone()], kind, None, None).map_err(|e| SemioError::InvalidOperation(format!("lift kit change: {e}")))?;
             c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             let after = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.to_full_dto()
+                g.to_full()
             };
             if before == after {
                 return Ok(false);
@@ -19780,12 +19780,12 @@ pub mod kit_graph {
             let Some(step) = step else {
                 return Err(SetError::Internal("nothing to undo".into()));
             };
-            let before: KitFullDto = serde_json::from_value(step.before.clone()).map_err(|e| SetError::Internal(format!("undo: {e}")))?;
+            let before: KitFull = serde_json::from_value(step.before.clone()).map_err(|e| SetError::Internal(format!("undo: {e}")))?;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit += 1;
             }
-            let r = Self::replace_from_full_dto(kit, before);
+            let r = Self::replace_from_full(kit, before);
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
@@ -19812,12 +19812,12 @@ pub mod kit_graph {
             let Some(step) = step else {
                 return Err(SetError::Internal("nothing to redo".into()));
             };
-            let after: KitFullDto = serde_json::from_value(step.after.clone()).map_err(|e| SetError::Internal(format!("redo: {e}")))?;
+            let after: KitFull = serde_json::from_value(step.after.clone()).map_err(|e| SetError::Internal(format!("redo: {e}")))?;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit += 1;
             }
-            let r = Self::replace_from_full_dto(kit, after);
+            let r = Self::replace_from_full(kit, after);
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
@@ -19846,8 +19846,8 @@ pub mod kit_graph {
 
         pub fn change_kit_commands_for_add_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-            use crate::design::DesignIdDto;
-            use crate::family::FamilyFullDto;
+            use crate::design::DesignRef;
+            use crate::family::FamilyFull;
             let pg = parent_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Kit, EntityKind::Family) => {
@@ -19855,12 +19855,12 @@ pub mod kit_graph {
                     if pg != kid {
                         return Err(SetError::NotFound(format!("kit {pg}")));
                     }
-                    let family: FamilyFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                    let family: FamilyFull = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                     Ok(vec![ChangeKitCommand::AddFamily { family }])
                 }
                 (EntityKind::Design, EntityKind::Piece) => {
-                    let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::AddPiece { piece }] }])
+                    let piece: PieceFull = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::AddPiece { piece }] }])
                 }
                 _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_add_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
@@ -19868,9 +19868,9 @@ pub mod kit_graph {
 
         pub fn change_kit_commands_for_remove_child(kit: &KitGraphRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> std::result::Result<Vec<crate::change_command::ChangeKitCommand>, SetError> {
             use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-            use crate::design::DesignIdDto;
-            use crate::family::FamilyIdDto;
-            use crate::piece::PieceIdDto;
+            use crate::design::DesignRef;
+            use crate::family::FamilyRef;
+            use crate::piece::PieceRef;
             let pg = parent_id.to_string();
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
@@ -19879,10 +19879,10 @@ pub mod kit_graph {
                     if pg != kid {
                         return Err(SetError::NotFound(format!("kit {pg}")));
                     }
-                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyIdDto { id: Id::from(cg.as_str()) } }])
+                    Ok(vec![ChangeKitCommand::RemoveFamily { family_id: FamilyRef { id: Id::from(cg.as_str()) } }])
                 }
                 (EntityKind::Design, EntityKind::Piece) => {
-                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id: Id::from(cg.as_str()) } }] }])
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: Id::from(pg.as_str()) }, commands: vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id: Id::from(cg.as_str()) } }] }])
                 }
                 _ => Err(SetError::InvalidValue(format!("change_kit_commands_for_remove_child not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
@@ -20028,7 +20028,7 @@ pub mod kit_graph {
             self.hash() == other.hash()
         }
 
-        pub fn from_id_dto(d: KitIdDto) -> Self {
+        pub fn from_id_dto(d: KitRef) -> Self {
             Self {
                 id: d.id,
                 name: String::new(),
@@ -20062,7 +20062,7 @@ pub mod kit_graph {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                initial: KitFullDto::default(),
+                initial: KitFull::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
@@ -20071,7 +20071,7 @@ pub mod kit_graph {
             }
         }
 
-        pub fn from_metadata_dto(d: KitMetadataDto) -> Self {
+        pub fn from_metadata(d: KitMetadata) -> Self {
             Self {
                 id: d.id,
                 name: d.name,
@@ -20105,7 +20105,7 @@ pub mod kit_graph {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                initial: KitFullDto::default(),
+                initial: KitFull::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
                 the_kit_head: None,
@@ -20114,11 +20114,11 @@ pub mod kit_graph {
             }
         }
 
-        fn quality_key_index(qualities: &[QualityFullDto]) -> HashMap<Id, String> {
+        fn quality_key_index(qualities: &[QualityFull]) -> HashMap<Id, String> {
             qualities.iter().map(|q| (q.id.clone(), q.key.clone())).collect()
         }
 
-        fn apply_resolved_prop_key(quality_id_to_key: &HashMap<Id, String>, p: &mut PropFullDto) {
+        fn apply_resolved_prop_key(quality_id_to_key: &HashMap<Id, String>, p: &mut PropFull) {
             if !p.key.is_empty() {
                 return;
             }
@@ -20129,7 +20129,7 @@ pub mod kit_graph {
             }
         }
 
-        fn wire_compat_resolve_prop_keys_in_kit_dto(d: &mut KitFullDto) {
+        fn wire_compat_resolve_prop_keys_in_kit_dto(d: &mut KitFull) {
             let m = Self::quality_key_index(&d.qualities);
             for p in &mut d.props {
                 Self::apply_resolved_prop_key(&m, p);
@@ -20151,10 +20151,10 @@ pub mod kit_graph {
             }
         }
 
-        pub fn from_full_dto(mut d: KitFullDto) -> KitGraphRef {
+        pub fn from_full(mut d: KitFull) -> KitGraphRef {
             Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let root = d.clone();
-            let KitFullDto {
+            let KitFull {
                 id,
                 name,
                 description,
@@ -20183,7 +20183,7 @@ pub mod kit_graph {
                 attributes,
             } = d;
 
-            let mut port_dto_index: HashMap<Id, PortFullDto> = HashMap::new();
+            let mut port_dto_index: HashMap<Id, PortFull> = HashMap::new();
             for p in &kit_port_dtos {
                 port_dto_index.insert(p.id.clone(), p.clone());
             }
@@ -20211,12 +20211,12 @@ pub mod kit_graph {
                 designs: Vec::new(),
                 files: Vec::new(),
                 folders: Vec::new(),
-                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a)))).collect(),
-                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c)))).collect(),
-                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t)))).collect(),
-                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect(),
-                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
+                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full(a)))).collect(),
+                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full(c)))).collect(),
+                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full(t)))).collect(),
+                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect(),
+                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
                 ports: Vec::new(),
                 families: Vec::new(),
                 locations: Vec::new(),
@@ -20268,16 +20268,16 @@ pub mod kit_graph {
                 }
             }
 
-            let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f)))).collect();
-            let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f)))).collect();
+            let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full(f)))).collect();
+            let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full(f)))).collect();
 
-            let location_refs: Vec<LocationStoreRef> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_full_dto(l)))).collect();
+            let location_refs: Vec<LocationStoreRef> = locations.into_iter().map(|l| Arc::new(RwLock::new(LocationStore::from_full(l)))).collect();
 
             let mut port_by_id: HashMap<Id, PortStoreRef> = HashMap::new();
             let mut kit_level_port_refs: Vec<PortStoreRef> = Vec::new();
             for pd in kit_port_dtos {
                 let iid = pd.id.clone();
-                let mut p = PortStore::from_full_dto(pd);
+                let mut p = PortStore::from_full(pd);
                 p.parent_family = Weak::new();
                 let pr = Arc::new(RwLock::new(p));
                 port_by_id.insert(iid, pr.clone());
@@ -20294,7 +20294,7 @@ pub mod kit_graph {
                     description: fd.description,
                     icon: fd.icon,
                     ports: Vec::new(),
-                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_full_dto(a)).collect(),
+                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_full(a)).collect(),
                     parent_kit: None,
                     event_bus: Weak::new(),
                     hash_cache: Cache::default(),
@@ -20303,7 +20303,7 @@ pub mod kit_graph {
                 let mut port_refs: Vec<PortStoreRef> = Vec::new();
                 for pd in fd.ports {
                     let iid = pd.id.clone();
-                    let mut p = PortStore::from_full_dto(pd);
+                    let mut p = PortStore::from_full(pd);
                     p.parent_family = fw.clone();
                     let pr = Arc::new(RwLock::new(p));
                     port_by_id.insert(iid, pr.clone());
@@ -20329,14 +20329,14 @@ pub mod kit_graph {
             let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
             let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
             for tdto in types {
-                let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
+                let t = TypeStore::hydrate_from_full(tdto, &kit, &file_refs, &family_by_id, &port_by_id);
                 if let Ok(tr) = t.read() {
                     type_index.insert(tr.id.clone(), t.clone());
                 }
                 type_refs.push(t);
             }
 
-            // and family port lists must be present on [`KitStore`] before [`DesignStore::hydrate_from_full_dto`].
+            // and family port lists must be present on [`KitStore`] before [`DesignStore::hydrate_from_full`].
             {
                 let kw = Arc::downgrade(&kit);
                 if let Ok(mut k) = kit.write() {
@@ -20353,7 +20353,7 @@ pub mod kit_graph {
             let design_refs: Vec<DesignStoreRef> = designs
                 .into_iter()
                 .map(|ddto| {
-                    let design = DesignStore::hydrate_from_full_dto(ddto, &type_index, &family_by_id);
+                    let design = DesignStore::hydrate_from_full(ddto, &type_index, &family_by_id);
                     if let Ok(mut dw) = design.write() {
                         dw.parent_kit = Arc::downgrade(&kit);
                     }
@@ -20388,12 +20388,12 @@ pub mod kit_graph {
             kit
         }
 
-        pub fn to_id_dto(&self) -> KitIdDto {
-            KitIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> KitRef {
+            KitRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> KitMetadataDto {
-            KitMetadataDto {
+        pub fn to_metadata(&self) -> KitMetadata {
+            KitMetadata {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -20410,9 +20410,9 @@ pub mod kit_graph {
             }
         }
 
-        pub fn to_shallow_dto(&self) -> KitShallowDto {
-            let m = self.to_metadata_dto();
-            KitShallowDto {
+        pub fn to_shallow(&self) -> KitShallow {
+            let m = self.to_metadata();
+            KitShallow {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -20426,22 +20426,22 @@ pub mod kit_graph {
                 created: m.created,
                 updated: m.updated,
                 version: m.version,
-                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
-                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect(),
-                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect(),
-                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
+                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect(),
+                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
+                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> KitFullDto {
-            let m = self.to_metadata_dto();
-            KitFullDto {
+        pub fn to_full(&self) -> KitFull {
+            let m = self.to_metadata();
+            KitFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -20455,19 +20455,19 @@ pub mod kit_graph {
                 created: m.created,
                 updated: m.updated,
                 version: m.version,
-                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
-                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect(),
-                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
-                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                families: self.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
-                locations: self.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect(),
+                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
+                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full())).collect(),
+                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
+                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                families: self.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_full())).collect(),
+                locations: self.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_full())).collect(),
             }
         }
 
@@ -20587,7 +20587,7 @@ pub mod kit_graph {
             let dto = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let t = g.semio_type(type_id.as_str()).ok_or_else(|| SetError::NotFound(format!("type {}", type_id)))?;
-                let dto = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?.to_full_dto();
+                let dto = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?.to_full();
                 dto
             };
             let mut dto = dto;
@@ -20598,14 +20598,14 @@ pub mod kit_graph {
             KitGraph::insert_type_dto(kit, dto)
         }
 
-        pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignFullDto) -> SetResult {
+        pub fn insert_design_ref(kit: &KitGraphRef, dto: DesignFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
             let family_by_id: HashMap<Id, FamilyStoreRef> = g.families.iter().filter_map(|f| f.read().ok().map(|r| (r.id.clone(), f.clone()))).collect();
-            let design = DesignStore::hydrate_from_full_dto(dto, &idx, &family_by_id);
+            let design = DesignStore::hydrate_from_full(dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
@@ -20620,13 +20620,13 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeFullDto) -> SetResult {
+        pub fn insert_type_dto(kit: &KitGraphRef, dto: TypeFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("type {}", dto.id)));
             }
             let (family_by_id, port_by_id) = Self::build_family_port_index(&g);
-            let t = TypeStore::hydrate_from_full_dto(dto, kit, &g.files, &family_by_id, &port_by_id);
+            let t = TypeStore::hydrate_from_full(dto, kit, &g.files, &family_by_id, &port_by_id);
             g.types.push(t);
             g.invalidate_hash();
             g.invalidate_validation();
@@ -20635,7 +20635,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
+        pub fn remove_type_dto(kit: &KitGraphRef, type_id: &str) -> std::result::Result<Option<TypeFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.types.iter().position(|t| t.read().map(|r| r.id.as_str() == type_id).unwrap_or(false))
@@ -20645,7 +20645,7 @@ pub mod kit_graph {
             };
             let t = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.types.remove(pos) };
             if let Ok(tr) = t.read() {
-                let dto = tr.to_full_dto();
+                let dto = tr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -20702,7 +20702,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyFullDto) -> SetResult {
+        pub fn insert_family_dto(kit: &KitGraphRef, dto: FamilyFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.families.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("family {}", dto.id)));
@@ -20718,7 +20718,7 @@ pub mod kit_graph {
                 description: dto.description.clone(),
                 icon: dto.icon.clone(),
                 ports: Vec::new(),
-                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_full_dto).collect(),
+                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_full).collect(),
                 parent_kit: None,
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
@@ -20726,7 +20726,7 @@ pub mod kit_graph {
             let fw = Arc::downgrade(&fam);
             let mut port_refs: Vec<PortStoreRef> = Vec::new();
             for pd in dto.ports.clone() {
-                let mut pstore = PortStore::from_full_dto(pd);
+                let mut pstore = PortStore::from_full(pd);
                 pstore.parent_family = fw.clone();
                 port_refs.push(Arc::new(RwLock::new(pstore)));
             }
@@ -20756,7 +20756,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyFullDto>, SetError> {
+        pub fn remove_family_dto(kit: &KitGraphRef, family_id: &str) -> std::result::Result<Option<FamilyFull>, SetError> {
             let fid = Id::from(family_id);
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -20770,7 +20770,7 @@ pub mod kit_graph {
                 Self::assert_family_removable(&*g, &fid)?;
             }
             let fam = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.families.remove(pos) };
-            let dto = fam.read().map_err(|_| SetError::LockPoisoned("family".into()))?.to_full_dto();
+            let dto = fam.read().map_err(|_| SetError::LockPoisoned("family".into()))?.to_full();
             {
                 let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.invalidate_hash();
@@ -20806,12 +20806,12 @@ pub mod kit_graph {
             }
         }
 
-        pub fn insert_file_dto(kit: &KitGraphRef, dto: FileFullDto) -> SetResult {
+        pub fn insert_file_dto(kit: &KitGraphRef, dto: FileFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.files.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("file {}", dto.id)));
             }
-            let f = Arc::new(RwLock::new(FileStore::from_full_dto(dto)));
+            let f = Arc::new(RwLock::new(FileStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.parent_kit = Some(kw);
@@ -20824,7 +20824,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_file_dto(kit: &KitGraphRef, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
+        pub fn remove_file_dto(kit: &KitGraphRef, file_id: &str) -> std::result::Result<Option<FileFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.files.iter().position(|f| f.read().map(|r| r.id.as_str() == file_id).unwrap_or(false))
@@ -20834,7 +20834,7 @@ pub mod kit_graph {
             };
             let f = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.files.remove(pos) };
             if let Ok(fr) = f.read() {
-                let dto = fr.to_full_dto();
+                let dto = fr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -20846,12 +20846,12 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_folder_dto(kit: &KitGraphRef, dto: FolderFullDto) -> SetResult {
+        pub fn insert_folder_dto(kit: &KitGraphRef, dto: FolderFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.folders.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("folder {}", dto.id)));
             }
-            let f = Arc::new(RwLock::new(FolderStore::from_full_dto(dto)));
+            let f = Arc::new(RwLock::new(FolderStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.parent_kit = Some(kw);
@@ -20864,7 +20864,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_folder_dto(kit: &KitGraphRef, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
+        pub fn remove_folder_dto(kit: &KitGraphRef, folder_id: &str) -> std::result::Result<Option<FolderFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.folders.iter().position(|f| f.read().map(|r| r.id.as_str() == folder_id).unwrap_or(false))
@@ -20874,7 +20874,7 @@ pub mod kit_graph {
             };
             let f = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.folders.remove(pos) };
             if let Ok(fr) = f.read() {
-                let dto = fr.to_full_dto();
+                let dto = fr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -20886,12 +20886,12 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_author_dto(kit: &KitGraphRef, dto: AuthorFullDto) -> SetResult {
+        pub fn insert_author_dto(kit: &KitGraphRef, dto: AuthorFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.authors.iter().any(|a| a.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("author {}", dto.id)));
             }
-            let a = Arc::new(RwLock::new(AuthorStore::from_full_dto(dto)));
+            let a = Arc::new(RwLock::new(AuthorStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 a.write().map_err(|_| SetError::LockPoisoned("author".into()))?.parent_kit = Some(kw);
@@ -20904,7 +20904,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_author_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
+        pub fn remove_author_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<AuthorFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.authors.iter().position(|a| a.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20914,7 +20914,7 @@ pub mod kit_graph {
             };
             let a = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.authors.remove(pos) };
             if let Ok(ar) = a.read() {
-                let dto = ar.to_full_dto();
+                let dto = ar.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -20926,12 +20926,12 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_concept_dto(kit: &KitGraphRef, dto: ConceptFullDto) -> SetResult {
+        pub fn insert_concept_dto(kit: &KitGraphRef, dto: ConceptFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.concepts.iter().any(|c| c.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("concept {}", dto.id)));
             }
-            let c = Arc::new(RwLock::new(ConceptStore::from_full_dto(dto)));
+            let c = Arc::new(RwLock::new(ConceptStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 c.write().map_err(|_| SetError::LockPoisoned("concept".into()))?.parent_kit = Some(kw);
@@ -20944,7 +20944,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_concept_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
+        pub fn remove_concept_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<ConceptFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.concepts.iter().position(|c| c.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20954,7 +20954,7 @@ pub mod kit_graph {
             };
             let c = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.concepts.remove(pos) };
             if let Ok(cr) = c.read() {
-                let dto = cr.to_full_dto();
+                let dto = cr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -20966,12 +20966,12 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_tag_dto(kit: &KitGraphRef, dto: TagFullDto) -> SetResult {
+        pub fn insert_tag_dto(kit: &KitGraphRef, dto: TagFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tags.iter().any(|t| t.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("tag {}", dto.id)));
             }
-            let t = Arc::new(RwLock::new(TagStore::from_full_dto(dto)));
+            let t = Arc::new(RwLock::new(TagStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 t.write().map_err(|_| SetError::LockPoisoned("tag".into()))?.parent_kit = Some(kw);
@@ -20984,7 +20984,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_tag_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
+        pub fn remove_tag_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<TagFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.tags.iter().position(|t| t.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -20994,7 +20994,7 @@ pub mod kit_graph {
             };
             let t = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.tags.remove(pos) };
             if let Ok(tr) = t.read() {
-                let dto = tr.to_full_dto();
+                let dto = tr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -21006,12 +21006,12 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn insert_quality_dto(kit: &KitGraphRef, dto: QualityFullDto) -> SetResult {
+        pub fn insert_quality_dto(kit: &KitGraphRef, dto: QualityFull) -> SetResult {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.qualities.iter().any(|q| q.read().map(|r| r.id == dto.id).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("quality {}", dto.id)));
             }
-            let q = Arc::new(RwLock::new(QualityStore::from_full_dto(dto)));
+            let q = Arc::new(RwLock::new(QualityStore::from_full(dto)));
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut qw) = q.write() {
@@ -21026,7 +21026,7 @@ pub mod kit_graph {
             Ok(())
         }
 
-        pub fn remove_quality_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
+        pub fn remove_quality_dto(kit: &KitGraphRef, id: &str) -> std::result::Result<Option<QualityFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.qualities.iter().position(|q| q.read().map(|r| r.id.as_str() == id).unwrap_or(false))
@@ -21036,7 +21036,7 @@ pub mod kit_graph {
             };
             let q = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.qualities.remove(pos) };
             if let Ok(qr) = q.read() {
-                let dto = qr.to_full_dto();
+                let dto = qr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -21048,7 +21048,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
+        pub fn remove_design_dto(kit: &KitGraphRef, design_id: &str) -> std::result::Result<Option<DesignFull>, SetError> {
             let pos = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == design_id).unwrap_or(false))
@@ -21058,7 +21058,7 @@ pub mod kit_graph {
             };
             let d = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.designs.remove(pos) };
             if let Ok(dr) = d.read() {
-                let dto = dr.to_full_dto();
+                let dto = dr.to_full();
                 {
                     let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.invalidate_hash();
@@ -21070,7 +21070,7 @@ pub mod kit_graph {
             Ok(None)
         }
 
-        pub fn replace_design_full(kit: &KitGraphRef, new_dto: DesignFullDto) -> SetResult {
+        pub fn replace_design_full(kit: &KitGraphRef, new_dto: DesignFull) -> SetResult {
             use crate::design::DesignStore;
             let id_str = new_dto.id.as_str().to_string();
             let pos = {
@@ -21084,7 +21084,7 @@ pub mod kit_graph {
             let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             let idx = Self::domain_type_index(&g);
             let family_by_id = Self::domain_family_index(&g);
-            let design = DesignStore::hydrate_from_full_dto(new_dto, &idx, &family_by_id);
+            let design = DesignStore::hydrate_from_full(new_dto, &idx, &family_by_id);
             {
                 let kw = Arc::downgrade(kit);
                 if let Ok(mut dw) = design.write() {
@@ -21103,22 +21103,22 @@ pub mod kit_graph {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
-            let parent_dto: DesignFullDto = {
+            let parent_dto: DesignFull = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                dr.to_full()
             };
 
             let cluster_set: HashSet<&str> = piece_ids.iter().map(|s| s.as_str()).collect();
-            let clustered_pieces: Vec<PieceFullDto> = parent_dto.pieces.iter().filter(|p| cluster_set.contains(p.id.as_str())).cloned().collect();
+            let clustered_pieces: Vec<PieceFull> = parent_dto.pieces.iter().filter(|p| cluster_set.contains(p.id.as_str())).cloned().collect();
             if clustered_pieces.is_empty() {
                 return Err(SetError::InvalidValue("no pieces found matching the provided IDs".into()));
             }
 
-            let internal_connections: Vec<ConnectionFullDto> = parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str())).cloned().collect();
+            let internal_connections: Vec<ConnectionFull> = parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str())).cloned().collect();
 
-            let external_connections: Vec<ConnectionFullDto> = parent_dto
+            let external_connections: Vec<ConnectionFull> = parent_dto
                 .connections
                 .iter()
                 .filter(|c| {
@@ -21130,7 +21130,7 @@ pub mod kit_graph {
                 .collect();
 
             let new_id = Id::new_v7();
-            let clustered_dto = DesignFullDto {
+            let clustered_dto = DesignFull {
                 id: new_id.clone(),
                 name: cluster_name,
                 description: Some(format!("Clustered design with {} pieces", clustered_pieces.len())),
@@ -21141,14 +21141,14 @@ pub mod kit_graph {
                 ..Default::default()
             };
 
-            let mut added_connections: Vec<ConnectionFullDto> = Vec::new();
+            let mut added_connections: Vec<ConnectionFull> = Vec::new();
             for mut c in external_connections {
                 let connected_in = cluster_set.contains(c.connected.piece.id.as_str());
                 let connecting_in = cluster_set.contains(c.connecting.piece.id.as_str());
                 if connected_in {
-                    c.connected.design_piece = Some(PieceIdDto { id: new_id.clone() });
+                    c.connected.design_piece = Some(PieceRef { id: new_id.clone() });
                 } else if connecting_in {
-                    c.connecting.design_piece = Some(PieceIdDto { id: new_id.clone() });
+                    c.connecting.design_piece = Some(PieceRef { id: new_id.clone() });
                 }
                 added_connections.push(c);
             }
@@ -21169,9 +21169,9 @@ pub mod kit_graph {
 
         pub fn cluster_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::ClusterPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, cluster_name }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ClusterPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, cluster_name }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         fn domain_has_selected_ancestor_drag(piece: &str, selected: &HashSet<String>, parent_map: &HashMap<String, (String, String)>) -> bool {
@@ -21190,11 +21190,11 @@ pub mod kit_graph {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+            let (dto, design_ref): (DesignFull, DesignStoreRef) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                (dr.to_full_dto(), d.clone())
+                (dr.to_full(), d.clone())
             };
 
             let selected: HashSet<String> = piece_ids.into_iter().collect();
@@ -21230,9 +21230,9 @@ pub mod kit_graph {
 
         pub fn drag_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::DragPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DragPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, du, dv }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn move_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
@@ -21240,11 +21240,11 @@ pub mod kit_graph {
                 return Ok(());
             }
             let dg = design_id.to_string();
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+            let (dto, design_ref): (DesignFull, DesignStoreRef) = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                (dr.to_full_dto(), d.clone())
+                (dr.to_full(), d.clone())
             };
 
             let selected: HashSet<String> = piece_ids.iter().cloned().collect();
@@ -21267,9 +21267,9 @@ pub mod kit_graph {
 
         pub fn move_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::MovePieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::MovePieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids, gap, shift, rise }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn fix_pieces_unchecked(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
@@ -21294,9 +21294,9 @@ pub mod kit_graph {
 
         pub fn fix_pieces(kit: &KitGraphRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::FixPieces { design_id: DesignIdDto { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FixPieces { design_id: DesignRef { id: Id::from(design_id) }, piece_ids }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn delete_connection_in_design_unchecked(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
@@ -21308,15 +21308,15 @@ pub mod kit_graph {
 
         pub fn delete_connection_in_design(kit: &KitGraphRef, design_id: &str, connection_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::connection::ConnectionIdDto;
-            use crate::design::DesignIdDto;
+            use crate::connection::ConnectionRef;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::DeleteConnection { design_id: DesignIdDto { id: Id::from(design_id) }, connection_id: ConnectionIdDto { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::DeleteConnection { design_id: DesignRef { id: Id::from(design_id) }, connection_id: ConnectionRef { id: Id::from(connection_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn flatten_design_apply_unchecked(kit: &KitGraphRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
-            let after_full: DesignFullDto = {
+            let after_full: DesignFull = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let report = g.flatten_design(dg.as_str()).map_err(Self::map_semio_err)?;
                 if !report.ok {
@@ -21332,20 +21332,20 @@ pub mod kit_graph {
 
         pub fn flatten_design_apply(kit: &KitGraphRef, design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::FlattenDesign { design_id: DesignIdDto { id: Id::from(design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::FlattenDesign { design_id: DesignRef { id: Id::from(design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
-        fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFullDto> {
-            kit.design(id).and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
+        fn design_dto_by_id(kit: &KitGraph, id: &str) -> Option<DesignFull> {
+            kit.design(id).and_then(|d| d.read().ok().map(|r| r.to_full()))
         }
 
-        fn domain_connection_key(c: &ConnectionFullDto) -> String {
+        fn domain_connection_key(c: &ConnectionFull) -> String {
             format!("{}|{}|{}|{}", c.id, c.connected.piece.id, c.connecting.piece.id, c.connected.port.as_ref().map(|p| p.id.to_string()).unwrap_or_default())
         }
 
-        fn strip_design_piece_id(c: &ConnectionFullDto, nested: &str) -> ConnectionFullDto {
+        fn strip_design_piece_id(c: &ConnectionFull, nested: &str) -> ConnectionFull {
             let mut o = c.clone();
             if o.connected.design_piece.as_ref().is_some_and(|d| d.id.as_str() == nested) {
                 o.connected.design_piece = None;
@@ -21356,7 +21356,7 @@ pub mod kit_graph {
             o
         }
 
-        fn expand_nested_design_pieces_in_dto(kit: &KitGraph, mut design: DesignFullDto) -> std::result::Result<DesignFullDto, SetError> {
+        fn expand_nested_design_pieces_in_dto(kit: &KitGraph, mut design: DesignFull) -> std::result::Result<DesignFull, SetError> {
             let nested_ids: Vec<String> = {
                 let mut s: HashSet<String> = HashSet::new();
                 for c in &design.connections {
@@ -21376,11 +21376,11 @@ pub mod kit_graph {
                 };
                 let expanded = Self::expand_nested_design_pieces_in_dto(kit, child)?;
                 let existing: HashSet<String> = design.pieces.iter().map(|p| p.id.to_string()).collect();
-                let add_p: Vec<PieceFullDto> = expanded.pieces.into_iter().filter(|p| !existing.contains(p.id.as_str())).collect();
+                let add_p: Vec<PieceFull> = expanded.pieces.into_iter().filter(|p| !existing.contains(p.id.as_str())).collect();
                 let keys: HashSet<String> = design.connections.iter().map(Self::domain_connection_key).collect();
-                let add_c: Vec<ConnectionFullDto> = expanded.connections.into_iter().filter(|c| !keys.contains(&Self::domain_connection_key(c))).collect();
+                let add_c: Vec<ConnectionFull> = expanded.connections.into_iter().filter(|c| !keys.contains(&Self::domain_connection_key(c))).collect();
                 design.pieces.extend(add_p);
-                let mut new_conns: Vec<ConnectionFullDto> = design.connections.iter().map(|c| Self::strip_design_piece_id(c, &nid)).collect();
+                let mut new_conns: Vec<ConnectionFull> = design.connections.iter().map(|c| Self::strip_design_piece_id(c, &nid)).collect();
                 new_conns.extend(add_c);
                 design.connections = new_conns;
             }
@@ -21390,18 +21390,18 @@ pub mod kit_graph {
         pub fn expand_nested_design_unchecked(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
-            let before: DesignFullDto = {
+            let before: DesignFull = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(pg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                dr.to_full()
             };
 
-            let mut expanded_child: DesignFullDto = {
+            let mut expanded_child: DesignFull = {
                 let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g.design(ng.as_str()).ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
                 let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                dr.to_full()
             };
 
             {
@@ -21410,14 +21410,14 @@ pub mod kit_graph {
             }
 
             let existing_piece: HashSet<String> = before.pieces.iter().map(|p| p.id.to_string()).collect();
-            let add_pieces: Vec<PieceFullDto> = expanded_child.pieces.into_iter().filter(|p| !existing_piece.contains(p.id.as_str())).collect();
+            let add_pieces: Vec<PieceFull> = expanded_child.pieces.into_iter().filter(|p| !existing_piece.contains(p.id.as_str())).collect();
 
             let existing_conn_key: HashSet<String> = before.connections.iter().map(Self::domain_connection_key).collect();
-            let add_connections: Vec<ConnectionFullDto> = expanded_child.connections.into_iter().filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c))).collect();
+            let add_connections: Vec<ConnectionFull> = expanded_child.connections.into_iter().filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c))).collect();
 
             let mut after = before.clone();
             after.pieces.extend(add_pieces);
-            let mut conns: Vec<ConnectionFullDto> = after.connections.iter().map(|c| Self::strip_design_piece_id(c, ng.as_str())).collect();
+            let mut conns: Vec<ConnectionFull> = after.connections.iter().map(|c| Self::strip_design_piece_id(c, ng.as_str())).collect();
             conns.extend(add_connections);
             after.connections = conns;
 
@@ -21426,18 +21426,18 @@ pub mod kit_graph {
 
         pub fn expand_nested_design(kit: &KitGraphRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignIdDto { id: Id::from(parent_design_id) }, nested_design_id: DesignIdDto { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
+            ChangeKitCommand::ExpandNestedDesign { parent_design_id: DesignRef { id: Id::from(parent_design_id) }, nested_design_id: DesignRef { id: Id::from(nested_design_id) } }.apply(kit).map(|_| ()).map_err(KitGraph::map_semio_err)
         }
 
         pub fn change_piece_type(kit: &KitGraphRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             use crate::change_command::ChangeKitCommand;
-            use crate::design::DesignIdDto;
+            use crate::design::DesignRef;
             use crate::id::Id;
-            use crate::piece::PieceIdDto;
-            use crate::typ::TypeIdDto;
-            ChangeKitCommand::ChangePieceKind { design_id: DesignIdDto { id: Id::from(design_id) }, piece_id: PieceIdDto { id: Id::from(piece_id) }, new_type_id: TypeIdDto { id: Id::from(new_type_id) } }
+            use crate::piece::PieceRef;
+            use crate::typ::TypeRef;
+            ChangeKitCommand::ChangePieceKind { design_id: DesignRef { id: Id::from(design_id) }, piece_id: PieceRef { id: Id::from(piece_id) }, new_type_id: TypeRef { id: Id::from(new_type_id) } }
                 .apply(kit)
                 .map(|_| ())
                 .map_err(KitGraph::map_semio_err)
@@ -21460,35 +21460,35 @@ pub mod kit_graph {
         }
 
         pub fn get_kit_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            serde_json::to_value(self.to_metadata_dto()).map_err(|e| SetError::InvalidValue(e.to_string()))
+            serde_json::to_value(self.to_metadata()).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_designs_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect();
+            let v: Vec<_> = self.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_types_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect();
+            let v: Vec<_> = self.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_authors_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect();
+            let v: Vec<_> = self.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_pieces_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
             let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-            let v: Vec<_> = dr.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
+            let v: Vec<_> = dr.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_connections_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
             let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
-            let v: Vec<_> = dr.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
+            let v: Vec<_> = dr.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
     }
@@ -21527,29 +21527,12 @@ pub mod layer {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerIdDto {
+    pub struct LayerRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerMetadataDto {
-        pub id: Id,
-        #[serde(default, alias = "path")]
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub color: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub order: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub visible: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub locked: Option<bool>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerShallowDto {
+    pub struct LayerMetadata {
         pub id: Id,
         #[serde(default, alias = "path")]
         pub name: String,
@@ -21566,7 +21549,24 @@ pub mod layer {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct LayerFullDto {
+    pub struct LayerShallow {
+        pub id: Id,
+        #[serde(default, alias = "path")]
+        pub name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub color: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub order: Option<i64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub visible: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub locked: Option<bool>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct LayerFull {
         pub id: Id,
         #[serde(default, alias = "path")]
         pub name: String,
@@ -21587,38 +21587,38 @@ pub mod layer {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_id_dto(d: LayerIdDto) -> Self {
+        pub fn from_id_dto(d: LayerRef) -> Self {
             Self { id: d.id, name: String::new(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: LayerMetadataDto) -> Self {
+        pub fn from_metadata(d: LayerMetadata) -> Self {
             Self { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: LayerShallowDto) -> Self {
-            Self::from_metadata_dto(LayerMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
+        pub fn from_shallow(d: LayerShallow) -> Self {
+            Self::from_metadata(LayerMetadata { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
         }
 
-        pub fn from_full_dto(d: LayerFullDto) -> Self {
-            Self::from_metadata_dto(LayerMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
+        pub fn from_full(d: LayerFull) -> Self {
+            Self::from_metadata(LayerMetadata { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
         }
 
-        pub fn to_id_dto(&self) -> LayerIdDto {
-            LayerIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> LayerRef {
+            LayerRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> LayerMetadataDto {
-            LayerMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), color: self.color.clone(), order: self.order, visible: self.visible, locked: self.locked }
+        pub fn to_metadata(&self) -> LayerMetadata {
+            LayerMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), color: self.color.clone(), order: self.order, visible: self.visible, locked: self.locked }
         }
 
-        pub fn to_shallow_dto(&self) -> LayerShallowDto {
-            let m = self.to_metadata_dto();
-            LayerShallowDto { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
+        pub fn to_shallow(&self) -> LayerShallow {
+            let m = self.to_metadata();
+            LayerShallow { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
         }
 
-        pub fn to_full_dto(&self) -> LayerFullDto {
-            let m = self.to_metadata_dto();
-            LayerFullDto { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
+        pub fn to_full(&self) -> LayerFull {
+            let m = self.to_metadata();
+            LayerFull { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
         }
 
         #[inline]
@@ -21725,7 +21725,7 @@ pub mod piece {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
     use crate::connection::ConnectionStoreWeak;
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
@@ -21733,8 +21733,8 @@ pub mod piece {
     use crate::geom::{Coordinate, Plane, Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::typ::{TypeIdDto, TypeStoreRef, TypeStoreWeak};
+    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
+    use crate::typ::{TypeRef, TypeStoreRef, TypeStoreWeak};
 
     pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
     pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
@@ -21786,16 +21786,16 @@ pub mod piece {
         pub parent_design: DesignStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
-        flat_pose: Cache<PoseFullDto>,
+        flat_pose: Cache<PoseFull>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct PieceIdDto {
+    pub struct PieceRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct PoseFullDto {
+    pub struct PoseFull {
         pub plane: Plane,
         pub center: Coordinate,
     }
@@ -21813,28 +21813,28 @@ pub mod piece {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct FixedPieceOutputDto {
-        pub piece: PieceIdDto,
-        pub pose: PoseFullDto,
+        pub piece: PieceRef,
+        pub pose: PoseFull,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ConnectedPieceOutputDto {
-        pub piece: PieceIdDto,
-        pub parent_piece: PieceIdDto,
-        pub parent_connection: crate::connection::ConnectionIdDto,
-        pub flat_pose: PoseFullDto,
+        pub piece: PieceRef,
+        pub parent_piece: PieceRef,
+        pub parent_connection: crate::connection::ConnectionRef,
+        pub flat_pose: PoseFull,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct PieceAlternativesDto {
-        pub types: Vec<crate::typ::TypeIdDto>,
-        pub designs: Vec<crate::design::DesignIdDto>,
+        pub types: Vec<crate::typ::TypeRef>,
+        pub designs: Vec<crate::design::DesignRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceMetadataDto {
+    pub struct PieceMetadata {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -21854,13 +21854,13 @@ pub mod piece {
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
         #[graphql(name = "kind")]
-        pub r#type: Option<TypeIdDto>,
+        pub r#type: Option<TypeRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignIdDto>,
+        pub design: Option<crate::design::DesignRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceShallowDto {
+    pub struct PieceShallow {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -21880,17 +21880,17 @@ pub mod piece {
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
         #[graphql(name = "kind")]
-        pub r#type: Option<TypeIdDto>,
+        pub r#type: Option<TypeRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignIdDto>,
+        pub design: Option<crate::design::DesignRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallowDto>,
+        pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PieceFullDto {
+    pub struct PieceFull {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -21910,13 +21910,13 @@ pub mod piece {
         pub color: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
         #[graphql(name = "kind")]
-        pub r#type: Option<TypeIdDto>,
+        pub r#type: Option<TypeRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub design: Option<crate::design::DesignIdDto>,
+        pub design: Option<crate::design::DesignRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropFullDto>,
+        pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl PieceStore {
@@ -21995,7 +21995,7 @@ pub mod piece {
             self.pose.entity_ref(&self.id)
         }
 
-        pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
+        pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadata) {
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
@@ -22010,8 +22010,8 @@ pub mod piece {
             self.flat_pose.invalidate();
         }
 
-        pub(crate) fn apply_full_dto(&mut self, d: PieceFullDto, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
-            self.apply_metadata_fields(PieceMetadataDto {
+        pub(crate) fn apply_full_dto(&mut self, d: PieceFull, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
+            self.apply_metadata_fields(PieceMetadata {
                 id: d.id,
                 name: d.name,
                 description: d.description,
@@ -22033,8 +22033,8 @@ pub mod piece {
             self.parent_piece = None;
             self.parent_connection = None;
             self.parent_design = design_weak;
-            self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect();
-            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect();
+            self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect();
+            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect();
         }
 
         pub fn invalidate_flat_pose(&self) {
@@ -22252,8 +22252,8 @@ pub mod piece {
             Ok(())
         }
 
-        pub fn flat_pose(&self) -> PoseFullDto {
-            self.flat_pose.get_or_init(|| PoseFullDto {
+        pub fn flat_pose(&self) -> PoseFull {
+            self.flat_pose.get_or_init(|| PoseFull {
                 plane: self.pose.plane.or_else(|| self.computed_flat_plane()).unwrap_or_else(Plane::world_xy),
                 center: self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default(),
             })
@@ -22267,17 +22267,17 @@ pub mod piece {
             self.flat_pose().center
         }
 
-        pub fn pose_full_dto(&self) -> PoseFullDto {
-            PoseFullDto { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
+        pub fn pose_full_dto(&self) -> PoseFull {
+            PoseFull { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
         }
 
-        pub fn flat_pose_full_dto(&self) -> PoseFullDto {
+        pub fn flat_pose_full_dto(&self) -> PoseFull {
             self.flat_pose()
         }
 
-        pub fn path(&self) -> Vec<PieceIdDto> {
+        pub fn path(&self) -> Vec<PieceRef> {
             let mut path = self.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.path())).unwrap_or_default();
-            path.push(self.to_id_dto());
+            path.push(self.to_ref());
             path
         }
 
@@ -22621,19 +22621,19 @@ pub mod piece {
             }
         }
 
-        pub fn to_id_dto(&self) -> PieceIdDto {
-            PieceIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> PieceRef {
+            PieceRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> PieceMetadataDto {
-            let r#type = self.type_ref.as_ref().and_then(|t| t.upgrade()).and_then(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() }));
-            let design = self.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| crate::design::DesignIdDto { id: d.id.clone() }));
+        pub fn to_metadata(&self) -> PieceMetadata {
+            let r#type = self.type_ref.as_ref().and_then(|t| t.upgrade()).and_then(|t| t.read().ok().map(|t| TypeRef { id: t.id.clone() }));
+            let design = self.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| crate::design::DesignRef { id: d.id.clone() }));
             let pose = if self.pose.plane.is_some() || self.pose.center.is_some() {
                 Some(PoseDto { plane: self.pose.plane, center: self.pose.center })
             } else {
                 None
             };
-            PieceMetadataDto {
+            PieceMetadata {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -22648,9 +22648,9 @@ pub mod piece {
             }
         }
 
-        pub fn to_shallow_dto(&self) -> PieceShallowDto {
-            let m = self.to_metadata_dto();
-            PieceShallowDto {
+        pub fn to_shallow(&self) -> PieceShallow {
+            let m = self.to_metadata();
+            PieceShallow {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22662,14 +22662,14 @@ pub mod piece {
                 color: m.color,
                 r#type: m.r#type,
                 design: m.design,
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> PieceFullDto {
-            let m = self.to_metadata_dto();
-            PieceFullDto {
+        pub fn to_full(&self) -> PieceFull {
+            let m = self.to_metadata();
+            PieceFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22681,8 +22681,8 @@ pub mod piece {
                 color: m.color,
                 r#type: m.r#type,
                 design: m.design,
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
             }
         }
     }
@@ -22698,13 +22698,13 @@ pub mod port {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyIdDto, FamilyStoreWeak};
+    use crate::family::{FamilyRef, FamilyStoreWeak};
     use crate::geom::{Point, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
 
     pub type PortStoreRef = Arc<RwLock<PortStore>>;
     pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
@@ -22715,7 +22715,7 @@ pub mod port {
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
-        pub compatible_families: Vec<FamilyIdDto>,
+        pub compatible_families: Vec<FamilyRef>,
         pub mandatory: Option<bool>,
         pub t: Option<f64>,
         pub point: Option<Point>,
@@ -22729,12 +22729,12 @@ pub mod port {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
-    pub struct PortIdDto {
+    pub struct PortRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PortMetadataDto {
+    pub struct PortMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22744,7 +22744,7 @@ pub mod port {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PortShallowDto {
+    pub struct PortShallow {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22752,7 +22752,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<FamilyIdDto>,
+        pub compatible_families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22762,15 +22762,15 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
-        pub compatible_ports: Vec<PortIdDto>,
+        pub compatible_ports: Vec<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PortFullDto {
+    pub struct PortFull {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -22779,7 +22779,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-        pub compatible_families: Vec<FamilyIdDto>,
+        pub compatible_families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -22789,11 +22789,11 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatiblePorts")]
-        pub compatible_ports: Vec<PortIdDto>,
+        pub compatible_ports: Vec<PortRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl PortStore {
@@ -22826,13 +22826,13 @@ pub mod port {
             EntityRef::new(EntityKind::Port, self.id.clone())
         }
 
-        pub fn from_id_dto(d: PortIdDto) -> Self {
+        pub fn from_id_dto(d: PortRef) -> Self {
             let mut s = Self::new();
             s.id = d.id;
             s
         }
 
-        pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
+        pub fn from_metadata(d: PortMetadata) -> Self {
             let mut s = Self::new();
             s.id = d.id;
             s.name = d.name;
@@ -22841,42 +22841,42 @@ pub mod port {
             s
         }
 
-        pub fn from_shallow_dto(d: PortShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
+        pub fn from_shallow(d: PortShallow) -> Self {
+            let mut s = Self::from_metadata(PortMetadata { id: d.id, name: d.name, description: d.description, icon: d.icon });
             s.compatible_families = d.compatible_families;
             s.mandatory = d.mandatory;
             s.t = d.t;
             s.point = d.point;
             s.direction = d.direction;
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
             s
         }
 
-        pub fn from_full_dto(d: PortFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, name: d.name, description: d.description, icon: d.icon });
+        pub fn from_full(d: PortFull) -> Self {
+            let mut s = Self::from_metadata(PortMetadata { id: d.id, name: d.name, description: d.description, icon: d.icon });
             s.compatible_families = d.compatible_families;
             s.mandatory = d.mandatory;
             s.t = d.t;
             s.point = d.point;
             s.direction = d.direction;
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
             s
         }
 
-        pub fn to_id_dto(&self) -> PortIdDto {
-            PortIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> PortRef {
+            PortRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> PortMetadataDto {
-            PortMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
+        pub fn to_metadata(&self) -> PortMetadata {
+            PortMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> PortShallowDto {
-            let m = self.to_metadata_dto();
-            let compatible_ports: Vec<PortIdDto> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() }))).collect();
-            PortShallowDto {
+        pub fn to_shallow(&self) -> PortShallow {
+            let m = self.to_metadata();
+            let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
+            PortShallow {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22887,15 +22887,15 @@ pub mod port {
                 point: self.point,
                 direction: self.direction,
                 compatible_ports,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> PortFullDto {
-            let m = self.to_metadata_dto();
-            let compatible_ports: Vec<PortIdDto> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortIdDto { id: r.id.clone() }))).collect();
-            PortFullDto {
+        pub fn to_full(&self) -> PortFull {
+            let m = self.to_metadata();
+            let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
+            PortFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22906,8 +22906,8 @@ pub mod port {
                 point: self.point,
                 direction: self.direction,
                 compatible_ports,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
             }
         }
 
@@ -22951,7 +22951,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_compatible_families(&mut self, v: Vec<FamilyIdDto>) -> crate::error::SetResult {
+        pub fn set_compatible_families(&mut self, v: Vec<FamilyRef>) -> crate::error::SetResult {
             if self.compatible_families == v {
                 return Ok(());
             }
@@ -22961,7 +22961,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortIdDto], kit: &crate::kit_graph::KitGraph) {
+        pub fn set_compatible_ports_from_ids(&mut self, ports: &[PortRef], kit: &crate::kit_graph::KitGraph) {
             self.compatible_ports = ports.iter().filter_map(|pid| kit.port_by_id(&pid.id).map(|r| std::sync::Arc::downgrade(&r))).collect();
         }
 
@@ -23035,7 +23035,7 @@ pub mod family {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -23059,12 +23059,12 @@ pub mod family {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
-    pub struct FamilyIdDto {
+    pub struct FamilyRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyMetadataDto {
+    pub struct FamilyMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23074,7 +23074,7 @@ pub mod family {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyShallowDto {
+    pub struct FamilyShallow {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23082,11 +23082,11 @@ pub mod family {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyFullDto {
+    pub struct FamilyFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23094,9 +23094,9 @@ pub mod family {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<crate::port::PortFullDto>,
+        pub ports: Vec<crate::port::PortFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl FamilyStore {
@@ -23112,28 +23112,28 @@ pub mod family {
             emit_weak(&self.event_bus, ev);
         }
 
-        pub fn to_id_dto(&self) -> FamilyIdDto {
-            FamilyIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> FamilyRef {
+            FamilyRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> FamilyMetadataDto {
-            FamilyMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
+        pub fn to_metadata(&self) -> FamilyMetadata {
+            FamilyMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> FamilyShallowDto {
-            let m = self.to_metadata_dto();
-            FamilyShallowDto { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.to_shallow_dto()).collect() }
+        pub fn to_shallow(&self) -> FamilyShallow {
+            let m = self.to_metadata();
+            FamilyShallow { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.to_shallow()).collect() }
         }
 
-        pub fn to_full_dto(&self) -> FamilyFullDto {
-            let m = self.to_metadata_dto();
-            FamilyFullDto {
+        pub fn to_full(&self) -> FamilyFull {
+            let m = self.to_metadata();
+            FamilyFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().map(|a| a.to_full_dto()).collect(),
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                attributes: self.attributes.iter().map(|a| a.to_full()).collect(),
             }
         }
 
@@ -23203,7 +23203,7 @@ pub mod prop {
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
-        pub quality: Option<crate::quality::QualityIdDto>,
+        pub quality: Option<crate::quality::QualityRef>,
         pub parent_kit: Option<KitGraphWeak>,
         pub parent_design: Option<DesignStoreWeak>,
         pub parent_type: Option<TypeStoreWeak>,
@@ -23213,12 +23213,12 @@ pub mod prop {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropIdDto {
+    pub struct PropRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropMetadataDto {
+    pub struct PropMetadata {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -23227,7 +23227,7 @@ pub mod prop {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropShallowDto {
+    pub struct PropShallow {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -23236,7 +23236,7 @@ pub mod prop {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct PropFullDto {
+    pub struct PropFull {
         pub id: Id,
         #[serde(default)]
         pub key: String,
@@ -23244,7 +23244,7 @@ pub mod prop {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub quality: Option<crate::quality::QualityIdDto>,
+        pub quality: Option<crate::quality::QualityRef>,
     }
 
     impl PropStore {
@@ -23261,7 +23261,7 @@ pub mod prop {
             EntityRef::new(EntityKind::Prop, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: PropFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: PropFull) {
             self.id = d.id;
             self.key = d.key;
             self.value = d.value;
@@ -23270,9 +23270,9 @@ pub mod prop {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_full_dto(d: PropFullDto) -> Self {
+        pub(crate) fn from_full(d: PropFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -23347,22 +23347,22 @@ pub mod prop {
             }
         }
 
-        pub fn to_id_dto(&self) -> PropIdDto {
-            PropIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> PropRef {
+            PropRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> PropMetadataDto {
-            PropMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
+        pub fn to_metadata(&self) -> PropMetadata {
+            PropMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> PropShallowDto {
-            let m = self.to_metadata_dto();
-            PropShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit }
+        pub fn to_shallow(&self) -> PropShallow {
+            let m = self.to_metadata();
+            PropShallow { id: m.id, key: m.key, value: m.value, unit: m.unit }
         }
 
-        pub fn to_full_dto(&self) -> PropFullDto {
-            let m = self.to_metadata_dto();
-            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: self.quality.clone() }
+        pub fn to_full(&self) -> PropFull {
+            let m = self.to_metadata();
+            PropFull { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: self.quality.clone() }
         }
 
         pub fn invalidate_hash(&self) {
@@ -23387,7 +23387,7 @@ pub mod quality {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
+    use crate::benchmark::{BenchmarkFull, BenchmarkMetadata, BenchmarkStore, BenchmarkStoreRef};
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
@@ -23421,26 +23421,12 @@ pub mod quality {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct QualityIdDto {
+    pub struct QualityRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityMetadataDto {
-        pub id: Id,
-        pub key: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub value: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityShallowDto {
+    pub struct QualityMetadata {
         pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23451,12 +23437,10 @@ pub mod quality {
         pub definition: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub benchmarks: Vec<BenchmarkMetadataDto>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityFullDto {
+    pub struct QualityShallow {
         pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -23468,7 +23452,23 @@ pub mod quality {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub benchmarks: Vec<BenchmarkFullDto>,
+        pub benchmarks: Vec<BenchmarkMetadata>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct QualityFull {
+        pub id: Id,
+        pub key: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub value: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub unit: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub definition: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub benchmarks: Vec<BenchmarkFull>,
     }
 
     impl QualityStore {
@@ -23501,7 +23501,7 @@ pub mod quality {
             EntityRef::new(EntityKind::Quality, self.id.clone())
         }
 
-        pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadataDto) {
+        pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadata) {
             self.id = d.id;
             self.key = d.key;
             self.value = d.value;
@@ -23565,9 +23565,9 @@ pub mod quality {
             self.invalidate_hash();
         }
 
-        pub(crate) fn from_shallow_dto(d: QualityShallowDto) -> Self {
+        pub(crate) fn from_shallow(d: QualityShallow) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_metadata_fields(QualityMetadataDto { id: d.id, key: d.key, value: d.value, unit: d.unit, definition: d.definition, description: d.description });
+            s.apply_metadata_fields(QualityMetadata { id: d.id, key: d.key, value: d.value, unit: d.unit, definition: d.definition, description: d.description });
             s.benchmarks = d
                 .benchmarks
                 .into_iter()
@@ -23580,37 +23580,37 @@ pub mod quality {
             s
         }
 
-        pub(crate) fn from_full_dto(d: QualityFullDto) -> Self {
-            let QualityFullDto { id, key, value, unit, definition, description, benchmarks } = d;
+        pub(crate) fn from_full(d: QualityFull) -> Self {
+            let QualityFull { id, key, value, unit, definition, description, benchmarks } = d;
             let mut s = Self::empty_shell(id.clone());
-            s.apply_metadata_fields(QualityMetadataDto { id, key, value, unit, definition, description });
+            s.apply_metadata_fields(QualityMetadata { id, key, value, unit, definition, description });
             s.benchmarks = benchmarks
                 .into_iter()
                 .map(|b| {
                     let mut bs = BenchmarkStore::empty_shell(b.id.clone());
-                    bs.apply_metadata_dto(BenchmarkMetadataDto { id: b.id, name: b.name, min: b.min, max: b.max, min_excluded: b.min_excluded, max_excluded: b.max_excluded });
+                    bs.apply_metadata_dto(BenchmarkMetadata { id: b.id, name: b.name, min: b.min, max: b.max, min_excluded: b.min_excluded, max_excluded: b.max_excluded });
                     Arc::new(RwLock::new(bs))
                 })
                 .collect();
             s
         }
 
-        pub fn to_id_dto(&self) -> QualityIdDto {
-            QualityIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> QualityRef {
+            QualityRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> QualityMetadataDto {
-            QualityMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), definition: self.definition.clone(), description: self.description.clone() }
+        pub fn to_metadata(&self) -> QualityMetadata {
+            QualityMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), definition: self.definition.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> QualityShallowDto {
-            let m = self.to_metadata_dto();
-            QualityShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata_dto())).collect() }
+        pub fn to_shallow(&self) -> QualityShallow {
+            let m = self.to_metadata();
+            QualityShallow { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata())).collect() }
         }
 
-        pub fn to_full_dto(&self) -> QualityFullDto {
-            let m = self.to_metadata_dto();
-            QualityFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect() }
+        pub fn to_full(&self) -> QualityFull {
+            let m = self.to_metadata();
+            QualityFull { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full())).collect() }
         }
 
         pub fn invalidate_hash(&self) {
@@ -23766,13 +23766,13 @@ pub mod representation {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::file::{FileIdDto, FileStoreWeak};
+    use crate::file::{FileRef, FileStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::tag::{TagFull, TagShallow, TagStore};
 
     pub type RepresentationStoreRef = Arc<RwLock<RepresentationStore>>;
     pub type RepresentationStoreWeak = Weak<RwLock<RepresentationStore>>;
@@ -23792,52 +23792,52 @@ pub mod representation {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationIdDto {
+    pub struct RepresentationRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationMetadataDto {
+    pub struct RepresentationMetadata {
         pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileIdDto>,
+        pub file: Option<FileRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationShallowDto {
+    pub struct RepresentationShallow {
         pub id: Id,
         #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileIdDto>,
+        pub file: Option<FileRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallowDto>,
+        pub tags: Vec<TagShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationFullDto {
+    pub struct RepresentationFull {
         pub id: Id,
         #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileIdDto>,
+        pub file: Option<FileRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagFullDto>,
+        pub tags: Vec<TagFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl RepresentationStore {
@@ -23854,62 +23854,62 @@ pub mod representation {
             EntityRef::new(EntityKind::Representation, self.id.clone())
         }
 
-        pub fn from_id_dto(d: RepresentationIdDto) -> Self {
+        pub fn from_id_dto(d: RepresentationRef) -> Self {
             Self { id: d.id, url: String::new(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_metadata_dto(d: RepresentationMetadataDto) -> Self {
+        pub fn from_metadata(d: RepresentationMetadata) -> Self {
             Self { id: d.id, url: d.url, description: d.description, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_shallow_dto(d: RepresentationShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(RepresentationMetadataDto { id: d.id, url: d.url, description: d.description, file: d.file });
-            s.tags = d.tags.into_iter().map(TagStore::from_shallow_dto).collect();
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+        pub fn from_shallow(d: RepresentationShallow) -> Self {
+            let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
+            s.tags = d.tags.into_iter().map(TagStore::from_shallow).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow).collect();
             s
         }
 
-        pub fn from_full_dto(d: RepresentationFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(RepresentationMetadataDto { id: d.id, url: d.url, description: d.description, file: d.file });
-            s.tags = d.tags.into_iter().map(TagStore::from_full_dto).collect();
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+        pub fn from_full(d: RepresentationFull) -> Self {
+            let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
+            s.tags = d.tags.into_iter().map(TagStore::from_full).collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full).collect();
             s
         }
 
-        pub fn to_id_dto(&self) -> RepresentationIdDto {
-            RepresentationIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> RepresentationRef {
+            RepresentationRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> RepresentationMetadataDto {
-            let file = self.file.as_ref().and_then(|f| f.upgrade()).and_then(|f| f.read().ok().map(|f| f.to_id_dto()));
-            RepresentationMetadataDto { id: self.id.clone(), url: self.url.clone(), description: self.description.clone(), file }
+        pub fn to_metadata(&self) -> RepresentationMetadata {
+            let file = self.file.as_ref().and_then(|f| f.upgrade()).and_then(|f| f.read().ok().map(|f| f.to_ref()));
+            RepresentationMetadata { id: self.id.clone(), url: self.url.clone(), description: self.description.clone(), file }
         }
 
-        pub fn to_shallow_dto(&self) -> RepresentationShallowDto {
-            let m = self.to_metadata_dto();
-            RepresentationShallowDto {
+        pub fn to_shallow(&self) -> RepresentationShallow {
+            let m = self.to_metadata();
+            RepresentationShallow {
                 id: m.id,
                 url: m.url,
                 description: m.description,
                 file: m.file,
-                tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+                tags: self.tags.iter().map(TagStore::to_shallow).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> RepresentationFullDto {
-            let m = self.to_metadata_dto();
-            RepresentationFullDto {
+        pub fn to_full(&self) -> RepresentationFull {
+            let m = self.to_metadata();
+            RepresentationFull {
                 id: m.id,
                 url: m.url,
                 description: m.description,
                 file: m.file,
-                tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+                tags: self.tags.iter().map(TagStore::to_full).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full).collect(),
             }
         }
 
@@ -24014,7 +24014,7 @@ pub mod side {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideIdDto {
+    pub struct SideRef {
         pub id: Id,
     }
 
@@ -24023,42 +24023,42 @@ pub mod side {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideMetadataDto {
+    pub struct SideMetadata {
         #[serde(default = "new_side_dto_id")]
         pub id: Id,
-        pub piece: crate::piece::PieceIdDto,
+        pub piece: crate::piece::PieceRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortIdDto>,
+        pub port: Option<crate::port::PortRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceIdDto>,
+        pub design_piece: Option<crate::piece::PieceRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "connector")]
-        pub connector: Option<crate::connector::ConnectorIdDto>,
+        pub connector: Option<crate::connector::ConnectorRef>,
     }
 
-    impl Default for SideMetadataDto {
+    impl Default for SideMetadata {
         fn default() -> Self {
-            Self { id: Id::new_v7(), piece: crate::piece::PieceIdDto { id: Id::new_v7() }, port: None, design_piece: None, connector: None }
+            Self { id: Id::new_v7(), piece: crate::piece::PieceRef { id: Id::new_v7() }, port: None, design_piece: None, connector: None }
         }
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideShallowDto {
+    pub struct SideShallow {
         pub id: Id,
-        pub piece: crate::piece::PieceIdDto,
+        pub piece: crate::piece::PieceRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortIdDto>,
+        pub port: Option<crate::port::PortRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceIdDto>,
+        pub design_piece: Option<crate::piece::PieceRef>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideFullDto {
+    pub struct SideFull {
         pub id: Id,
-        pub piece: crate::piece::PieceIdDto,
+        pub piece: crate::piece::PieceRef,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortIdDto>,
+        pub port: Option<crate::port::PortRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceIdDto>,
+        pub design_piece: Option<crate::piece::PieceRef>,
     }
 
     impl SideStore {
@@ -24075,7 +24075,7 @@ pub mod side {
             EntityRef::new(EntityKind::Side, self.id.clone())
         }
 
-        pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadataDto) {
+        pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadata) {
             self.id = d.id;
             self.hash_cache.invalidate();
         }
@@ -24113,25 +24113,25 @@ pub mod side {
             }
         }
 
-        pub fn to_id_dto(&self) -> SideIdDto {
-            SideIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> SideRef {
+            SideRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> SideMetadataDto {
+        pub fn to_metadata(&self) -> SideMetadata {
             let piece_id = self.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone())).unwrap_or_default();
-            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            let design_piece = self.design_piece.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            SideMetadataDto { id: self.id.clone(), piece: crate::piece::PieceIdDto { id: piece_id }, port, design_piece, connector: None }
+            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
+            let design_piece = self.design_piece.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
+            SideMetadata { id: self.id.clone(), piece: crate::piece::PieceRef { id: piece_id }, port, design_piece, connector: None }
         }
 
-        pub fn to_shallow_dto(&self) -> SideShallowDto {
-            let m = self.to_metadata_dto();
-            SideShallowDto { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
+        pub fn to_shallow(&self) -> SideShallow {
+            let m = self.to_metadata();
+            SideShallow { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
-        pub fn to_full_dto(&self) -> SideFullDto {
-            let m = self.to_metadata_dto();
-            SideFullDto { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
+        pub fn to_full(&self) -> SideFull {
+            let m = self.to_metadata();
+            SideFull { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
         pub fn invalidate_hash(&self) {
@@ -24200,23 +24200,12 @@ pub mod stat {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatIdDto {
+    pub struct StatRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatMetadataDto {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatShallowDto {
+    pub struct StatMetadata {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -24227,7 +24216,18 @@ pub mod stat {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatFullDto {
+    pub struct StatShallow {
+        pub id: Id,
+        pub key: String,
+        pub value: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub unit: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
+    pub struct StatFull {
         pub id: Id,
         pub key: String,
         pub value: String,
@@ -24251,7 +24251,7 @@ pub mod stat {
             EntityRef::new(EntityKind::Stat, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: StatFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: StatFull) {
             self.id = d.id;
             self.key = d.key;
             self.value = d.value;
@@ -24260,9 +24260,9 @@ pub mod stat {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_full_dto(d: StatFullDto) -> Self {
+        pub(crate) fn from_full(d: StatFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -24333,22 +24333,22 @@ pub mod stat {
             }
         }
 
-        pub fn to_id_dto(&self) -> StatIdDto {
-            StatIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> StatRef {
+            StatRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> StatMetadataDto {
-            StatMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), description: self.description.clone() }
+        pub fn to_metadata(&self) -> StatMetadata {
+            StatMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), description: self.description.clone() }
         }
 
-        pub fn to_shallow_dto(&self) -> StatShallowDto {
-            let m = self.to_metadata_dto();
-            StatShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
+        pub fn to_shallow(&self) -> StatShallow {
+            let m = self.to_metadata();
+            StatShallow { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
         }
 
-        pub fn to_full_dto(&self) -> StatFullDto {
-            let m = self.to_metadata_dto();
-            StatFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
+        pub fn to_full(&self) -> StatFull {
+            let m = self.to_metadata();
+            StatFull { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
         }
 
         pub fn invalidate_hash(&self) {
@@ -24396,12 +24396,12 @@ pub mod tag {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagIdDto {
+    pub struct TagRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagMetadataDto {
+    pub struct TagMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24409,7 +24409,7 @@ pub mod tag {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagShallowDto {
+    pub struct TagShallow {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -24418,7 +24418,7 @@ pub mod tag {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TagFullDto {
+    pub struct TagFull {
         pub id: Id,
         #[serde(default)]
         pub name: String,
@@ -24440,14 +24440,14 @@ pub mod tag {
             EntityRef::new(EntityKind::Tag, self.id.clone())
         }
 
-        pub(crate) fn apply_full_dto_fields(&mut self, d: TagFullDto) {
+        pub(crate) fn apply_full_fields(&mut self, d: TagFull) {
             self.id = d.id;
             self.name = d.name;
             self.order = d.order;
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_shallow_dto(d: TagShallowDto) -> Self {
+        pub(crate) fn from_shallow(d: TagShallow) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
             s.name = d.name;
             s.order = d.order;
@@ -24455,9 +24455,9 @@ pub mod tag {
             s
         }
 
-        pub(crate) fn from_full_dto(d: TagFullDto) -> Self {
+        pub(crate) fn from_full(d: TagFull) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_full_dto_fields(d);
+            s.apply_full_fields(d);
             s
         }
 
@@ -24515,22 +24515,22 @@ pub mod tag {
             }
         }
 
-        pub fn to_id_dto(&self) -> TagIdDto {
-            TagIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> TagRef {
+            TagRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> TagMetadataDto {
-            TagMetadataDto { id: self.id.clone(), name: self.name.clone(), order: self.order }
+        pub fn to_metadata(&self) -> TagMetadata {
+            TagMetadata { id: self.id.clone(), name: self.name.clone(), order: self.order }
         }
 
-        pub fn to_shallow_dto(&self) -> TagShallowDto {
-            let m = self.to_metadata_dto();
-            TagShallowDto { id: m.id, name: m.name, order: m.order }
+        pub fn to_shallow(&self) -> TagShallow {
+            let m = self.to_metadata();
+            TagShallow { id: m.id, name: m.name, order: m.order }
         }
 
-        pub fn to_full_dto(&self) -> TagFullDto {
-            let m = self.to_metadata_dto();
-            TagFullDto { id: m.id, name: m.name, order: m.order }
+        pub fn to_full(&self) -> TagFull {
+            let m = self.to_metadata();
+            TagFull { id: m.id, name: m.name, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -24560,20 +24560,20 @@ pub mod typ {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
-    use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
-    use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
+    use crate::attribute::{AttributeFull, AttributeShallow, AttributeStore, AttributeStoreRef};
+    use crate::author::{AuthorFull, AuthorShallow, AuthorStore, AuthorStoreRef};
+    use crate::concept::{ConceptFull, ConceptShallow, ConceptStore, ConceptStoreRef};
+    use crate::connector::{ConnectorFull, ConnectorShallow, ConnectorStore, ConnectorStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::family::{FamilyIdDto, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
+    use crate::family::{FamilyRef, FamilyStore, FamilyStoreRef, FamilyStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
-    use crate::location::LocationIdDto;
+    use crate::location::LocationRef;
     use crate::port::PortStoreRef;
-    use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
-    use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef};
-    use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
+    use crate::prop::{PropFull, PropShallow, PropStore, PropStoreRef};
+    use crate::quality::{QualityFull, QualityShallow, QualityStore, QualityStoreRef};
+    use crate::representation::{RepresentationFull, RepresentationShallow, RepresentationStore, RepresentationStoreRef};
+    use crate::tag::{TagFull, TagShallow, TagStore, TagStoreRef};
 
     pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
     pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
@@ -24588,7 +24588,7 @@ pub mod typ {
         pub stock: Option<i64>,
         pub virtual_: Option<bool>,
         pub unit: Option<String>,
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         pub families: Vec<FamilyStoreWeak>,
         pub connectors: Vec<ConnectorStoreRef>,
         pub representations: Vec<RepresentationStoreRef>,
@@ -24606,12 +24606,12 @@ pub mod typ {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct TypeIdDto {
+    pub struct TypeRef {
         pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeMetadataDto {
+    pub struct TypeMetadata {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24628,7 +24628,7 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
@@ -24636,7 +24636,7 @@ pub mod typ {
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeShallowDto {
+    pub struct TypeShallow {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24653,33 +24653,33 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyIdDto>,
+        pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connectors: Vec<ConnectorShallowDto>,
+        pub connectors: Vec<ConnectorShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub representations: Vec<RepresentationShallowDto>,
+        pub representations: Vec<RepresentationShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorShallowDto>,
+        pub authors: Vec<AuthorShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptShallowDto>,
+        pub concepts: Vec<ConceptShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagShallowDto>,
+        pub tags: Vec<TagShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityShallowDto>,
+        pub qualities: Vec<QualityShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropShallowDto>,
+        pub props: Vec<PropShallow>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeShallowDto>,
+        pub attributes: Vec<AttributeShallow>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct TypeFullDto {
+    pub struct TypeFull {
         pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -24696,29 +24696,29 @@ pub mod typ {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub location: Option<LocationIdDto>,
+        pub location: Option<LocationRef>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub families: Vec<FamilyIdDto>,
+        pub families: Vec<FamilyRef>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub connectors: Vec<ConnectorFullDto>,
+        pub connectors: Vec<ConnectorFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub representations: Vec<RepresentationFullDto>,
+        pub representations: Vec<RepresentationFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub authors: Vec<AuthorFullDto>,
+        pub authors: Vec<AuthorFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub concepts: Vec<ConceptFullDto>,
+        pub concepts: Vec<ConceptFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagFullDto>,
+        pub tags: Vec<TagFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityFullDto>,
+        pub qualities: Vec<QualityFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub props: Vec<PropFullDto>,
+        pub props: Vec<PropFull>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeFullDto>,
+        pub attributes: Vec<AttributeFull>,
     }
 
     impl TypeStore {
@@ -24864,7 +24864,7 @@ pub mod typ {
             Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<LocationIdDto>) -> crate::error::SetResult {
+        pub fn set_location(&mut self, v: Option<LocationRef>) -> crate::error::SetResult {
             if self.location == v {
                 return Ok(());
             }
@@ -24980,7 +24980,7 @@ pub mod typ {
             self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
-        pub fn best_representation_for_tag_ids(&self, tag_ids: &[Id]) -> Option<RepresentationFullDto> {
+        pub fn best_representation_for_tag_ids(&self, tag_ids: &[Id]) -> Option<RepresentationFull> {
             if self.representations.is_empty() {
                 return None;
             }
@@ -24988,17 +24988,17 @@ pub mod typ {
                 for r in &self.representations {
                     if let Ok(rep) = r.read() {
                         if rep.tags.is_empty() {
-                            return Some(rep.to_full_dto());
+                            return Some(rep.to_full());
                         }
                     }
                 }
-                return self.representations.first().and_then(|r| r.read().ok().map(|r| r.to_full_dto()));
+                return self.representations.first().and_then(|r| r.read().ok().map(|r| r.to_full()));
             }
             let mut best_j: f64 = -1.0;
             let mut best_i: Option<usize> = None;
             for (i, r) in self.representations.iter().enumerate() {
                 let Ok(rep) = r.read() else { continue };
-                let dto = rep.to_full_dto();
+                let dto = rep.to_full();
                 let rtags: Vec<Id> = dto.tags.iter().map(|t| t.id.clone()).collect();
                 if !tag_ids.iter().all(|tid| rtags.contains(tid)) {
                     continue;
@@ -25009,7 +25009,7 @@ pub mod typ {
                     best_i = Some(i);
                 }
             }
-            best_i.and_then(|i| self.representations.get(i).and_then(|r| r.read().ok().map(|r| r.to_full_dto())))
+            best_i.and_then(|i| self.representations.get(i).and_then(|r| r.read().ok().map(|r| r.to_full())))
         }
 
         fn jaccard(a: &[Id], b: &[Id]) -> f64 {
@@ -25025,7 +25025,7 @@ pub mod typ {
             }
         }
 
-        pub fn from_id_dto(d: TypeIdDto) -> Self {
+        pub fn from_id_dto(d: TypeRef) -> Self {
             Self {
                 id: d.id,
                 name: String::new(),
@@ -25053,7 +25053,7 @@ pub mod typ {
             }
         }
 
-        pub fn from_metadata_dto(d: TypeMetadataDto) -> Self {
+        pub fn from_metadata(d: TypeMetadata) -> Self {
             Self {
                 id: d.id,
                 name: d.name,
@@ -25081,8 +25081,8 @@ pub mod typ {
             }
         }
 
-        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
-            let TypeFullDto { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
+        pub(crate) fn hydrate_from_full(d: TypeFull, kit: &Arc<RwLock<crate::kit_graph::KitGraph>>, file_refs: &[crate::file::FileStoreRef], family_by_id: &HashMap<Id, FamilyStoreRef>, port_by_id: &HashMap<Id, PortStoreRef>) -> TypeStoreRef {
+            let TypeFull { id, name, description, icon, image, stock, virtual_, unit, location, created, updated, families, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let family_weaks: Vec<FamilyStoreWeak> = families.iter().filter_map(|f| family_by_id.get(&f.id).map(|r| Arc::downgrade(r))).collect();
 
@@ -25099,12 +25099,12 @@ pub mod typ {
                 families: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
-                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a)))).collect(),
-                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c)))).collect(),
-                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t)))).collect(),
-                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect(),
-                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
+                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full(a)))).collect(),
+                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full(c)))).collect(),
+                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full(t)))).collect(),
+                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full(q)))).collect(),
+                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full(p)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full(a)))).collect(),
                 created: created.clone(),
                 updated: updated.clone(),
                 parent_kit: Arc::downgrade(kit),
@@ -25115,7 +25115,7 @@ pub mod typ {
             let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
             for cdto in connectors {
                 let port_id = cdto.port.as_ref().map(|p| p.id.clone());
-                let mut c = ConnectorStore::from_full_dto(cdto);
+                let mut c = ConnectorStore::from_full(cdto);
                 c.parent_type = Arc::downgrade(&t);
                 if let Some(pg) = port_id {
                     if let Some(pref) = port_by_id.get(&pg) {
@@ -25128,7 +25128,7 @@ pub mod typ {
             let mut rep_refs: Vec<RepresentationStoreRef> = Vec::with_capacity(representations.len());
             for rdto in representations {
                 let file_id = rdto.file.as_ref().map(|f| f.id.clone());
-                let mut r = RepresentationStore::from_full_dto(rdto);
+                let mut r = RepresentationStore::from_full(rdto);
                 r.parent_type = Arc::downgrade(&t);
                 if let Some(fg) = file_id {
                     if let Some(fref) = file_refs.iter().find(|f| f.read().map(|f| f.id == fg).unwrap_or(false)) {
@@ -25177,12 +25177,12 @@ pub mod typ {
             t
         }
 
-        pub fn to_id_dto(&self) -> TypeIdDto {
-            TypeIdDto { id: self.id.clone() }
+        pub fn to_ref(&self) -> TypeRef {
+            TypeRef { id: self.id.clone() }
         }
 
-        pub fn to_metadata_dto(&self) -> TypeMetadataDto {
-            TypeMetadataDto {
+        pub fn to_metadata(&self) -> TypeMetadata {
+            TypeMetadata {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -25197,9 +25197,9 @@ pub mod typ {
             }
         }
 
-        pub fn to_shallow_dto(&self) -> TypeShallowDto {
-            let m = self.to_metadata_dto();
-            TypeShallowDto {
+        pub fn to_shallow(&self) -> TypeShallow {
+            let m = self.to_metadata();
+            TypeShallow {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -25211,21 +25211,21 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
-                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
-                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
+                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
+                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
             }
         }
 
-        pub fn to_full_dto(&self) -> TypeFullDto {
-            let m = self.to_metadata_dto();
-            TypeFullDto {
+        pub fn to_full(&self) -> TypeFull {
+            let m = self.to_metadata();
+            TypeFull {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -25237,15 +25237,15 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_id_dto()))).collect(),
-                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
-                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full_dto())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
+                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
+                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full())).collect(),
             }
         }
     }
@@ -25400,20 +25400,20 @@ pub mod io {
         use std::path::Path;
 
         use crate::error::Result;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
 
         impl KitGraph {
             pub fn from_json_str(s: &str) -> Result<KitGraphRef> {
-                let dto: KitFullDto = serde_json::from_str(s)?;
-                Ok(KitGraph::from_full_dto(dto))
+                let dto: KitFull = serde_json::from_str(s)?;
+                Ok(KitGraph::from_full(dto))
             }
 
             pub fn to_json_pretty(&self) -> Result<String> {
-                Ok(serde_json::to_string_pretty(&self.to_full_dto())?)
+                Ok(serde_json::to_string_pretty(&self.to_full())?)
             }
 
             pub fn to_json(&self) -> Result<String> {
-                Ok(serde_json::to_string(&self.to_full_dto())?)
+                Ok(serde_json::to_string(&self.to_full())?)
             }
 
             #[cfg(not(target_arch = "wasm32"))]
@@ -25443,34 +25443,34 @@ pub mod io {
 
         use rusqlite::{params, Connection as SqlConnection, OptionalExtension, Transaction};
 
-        use crate::attribute::AttributeFullDto;
-        use crate::author::AuthorFullDto;
-        use crate::benchmark::BenchmarkFullDto;
-        use crate::concept::ConceptFullDto;
-        use crate::connection::ConnectionFullDto;
-        use crate::connector::ConnectorFullDto;
-        use crate::design::DesignFullDto;
+        use crate::attribute::AttributeFull;
+        use crate::author::AuthorFull;
+        use crate::benchmark::BenchmarkFull;
+        use crate::concept::ConceptFull;
+        use crate::connection::ConnectionFull;
+        use crate::connector::ConnectorFull;
+        use crate::design::DesignFull;
         use crate::error::{Result, SemioError};
-        use crate::file::{FileFullDto, FileIdDto};
-        use crate::folder::FolderFullDto;
+        use crate::file::{FileFull, FileRef};
+        use crate::folder::FolderFull;
         use crate::geom::{Coordinate, Plane, Point, Vector};
-        use crate::group::GroupFullDto;
+        use crate::group::GroupFull;
         use crate::id::Id;
         use crate::kit_alternative::KitAlternative;
         use crate::kit_change::KitChange;
         use crate::kit_checkpoint::{KitCheckpoint, MaterializedKit};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
-        use crate::layer::LayerFullDto;
-        use crate::location::LocationIdDto;
-        use crate::piece::PieceFullDto;
-        use crate::port::{PortFullDto, PortIdDto};
-        use crate::prop::PropFullDto;
-        use crate::quality::QualityFullDto;
-        use crate::representation::RepresentationFullDto;
-        use crate::side::SideMetadataDto;
-        use crate::stat::StatFullDto;
-        use crate::tag::TagFullDto;
-        use crate::typ::TypeFullDto;
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::layer::LayerFull;
+        use crate::location::LocationRef;
+        use crate::piece::PieceFull;
+        use crate::port::{PortFull, PortRef};
+        use crate::prop::PropFull;
+        use crate::quality::QualityFull;
+        use crate::representation::RepresentationFull;
+        use crate::side::SideMetadata;
+        use crate::stat::StatFull;
+        use crate::tag::TagFull;
+        use crate::typ::TypeFull;
 
         const SCHEMA_SQL: &str = include_str!("../sqlite/schema.sql");
         const SCHEMA_VERSION: &str = "2026-04-23-kit-vcs-sqlite-roundtrip";
@@ -25561,8 +25561,8 @@ pub mod io {
             Some(Vector::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
         }
 
-        fn location_dto_from_id_cell(id: Option<String>) -> Option<LocationIdDto> {
-            id.filter(|s| !s.is_empty()).map(|s| LocationIdDto { id: Id::from(s) })
+        fn location_dto_from_id_cell(id: Option<String>) -> Option<LocationRef> {
+            id.filter(|s| !s.is_empty()).map(|s| LocationRef { id: Id::from(s) })
         }
 
         fn init_schema(conn: &mut SqlConnection) -> Result<()> {
@@ -25785,7 +25785,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_author(tx: &Transaction<'_>, author: &AuthorFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_author(tx: &Transaction<'_>, author: &AuthorFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -25794,7 +25794,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -25803,7 +25803,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_tag(tx: &Transaction<'_>, tag: &TagFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_tag(tx: &Transaction<'_>, tag: &TagFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -25812,7 +25812,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_benchmarks(tx: &Transaction<'_>, quality_id: &Id, benchmarks: &[BenchmarkFullDto]) -> Result<()> {
+        fn insert_benchmarks(tx: &Transaction<'_>, quality_id: &Id, benchmarks: &[BenchmarkFull]) -> Result<()> {
             for (ordinal, benchmark) in benchmarks.iter().enumerate() {
                 tx.execute(
                     "INSERT INTO benchmark (id, ordinal, name, min_value, max_value, min_excluded, max_excluded, quality_id)
@@ -25823,7 +25823,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
                     id, ordinal, key, value, unit, definition, description,
@@ -25848,7 +25848,7 @@ pub mod io {
             insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
-        fn insert_prop(tx: &Transaction<'_>, prop: &PropFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_prop(tx: &Transaction<'_>, prop: &PropFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -25857,7 +25857,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
+        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFull, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
@@ -25884,7 +25884,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFullDto, ordinal: usize) -> Result<()> {
+        fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFull, ordinal: usize) -> Result<()> {
             let port_id = connector.port.as_ref().ok_or_else(|| SemioError::InvalidOperation("connector.port is required for SQLite persistence".into()))?;
             tx.execute(
                 "INSERT INTO connector (id, ordinal, name, description, port_id, type_id)
@@ -25900,7 +25900,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_representation(tx: &Transaction<'_>, type_id: &Id, representation: &RepresentationFullDto, ordinal: usize) -> Result<()> {
+        fn insert_representation(tx: &Transaction<'_>, type_id: &Id, representation: &RepresentationFull, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO representation (id, ordinal, url, description, file_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
@@ -25918,7 +25918,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(tx: &Transaction<'_>, kit_id: &Id, parent_family_id: Option<&Id>, port: &PortFullDto, ordinal: usize) -> Result<()> {
+        fn insert_port(tx: &Transaction<'_>, kit_id: &Id, parent_family_id: Option<&Id>, port: &PortFull, ordinal: usize) -> Result<()> {
             let (point_x, point_y, point_z) = point_parts3(port.point.as_ref());
             let (dir_x, dir_y, dir_z) = vector_parts3(port.direction.as_ref());
             tx.execute(
@@ -25944,7 +25944,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFullDto, ordinal: usize) -> Result<()> {
+        fn insert_family(tx: &Transaction<'_>, kit_id: &Id, fam: &crate::family::FamilyFull, ordinal: usize) -> Result<()> {
             tx.execute("INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", params![fam.id.as_str(), ordinal as i64, fam.name, fam.description, fam.icon, kit_id.as_str()])?;
             for (attribute_ordinal, attribute) in fam.attributes.iter().enumerate() {
                 insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { family: Some(&fam.id), ..ScopeRefs::default() })?;
@@ -25955,7 +25955,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
+        fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFull, ordinal: usize) -> Result<()> {
             let location_id = typ.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO \"type\" (
@@ -25994,7 +25994,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_layer(tx: &Transaction<'_>, design_id: &Id, layer: &LayerFullDto, ordinal: usize) -> Result<()> {
+        fn insert_layer(tx: &Transaction<'_>, design_id: &Id, layer: &LayerFull, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO layer (id, ordinal, name, description, color, order_index, visible, locked, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -26003,9 +26003,9 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: &PieceFullDto, ordinal: usize) -> Result<()> {
-            let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) = plane_parts(piece.plane.as_ref());
-            let (center_x, center_y, center_z) = piece_center_parts(piece.center.as_ref());
+        fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: &PieceFull, ordinal: usize) -> Result<()> {
+            let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) = plane_parts(piece.pose.as_ref().and_then(|p| p.plane.as_ref()));
+            let (center_x, center_y, center_z) = piece_center_parts(piece.pose.as_ref().and_then(|p| p.center.as_ref()));
             let (mirror_ox, mirror_oy, mirror_oz, mirror_xx, mirror_xy, mirror_xz, mirror_yx, mirror_yy, mirror_yz) = plane_parts(piece.mirror_plane.as_ref());
             tx.execute(
                 "INSERT INTO piece (
@@ -26073,7 +26073,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_group(tx: &Transaction<'_>, design_id: &Id, group: &GroupFullDto, ordinal: usize) -> Result<()> {
+        fn insert_group(tx: &Transaction<'_>, design_id: &Id, group: &GroupFull, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO \"group\" (id, ordinal, name, description, color, icon, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -26085,7 +26085,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_connection(tx: &Transaction<'_>, design_id: &Id, connection: &ConnectionFullDto, ordinal: usize) -> Result<()> {
+        fn insert_connection(tx: &Transaction<'_>, design_id: &Id, connection: &ConnectionFull, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO connection (
                     id, ordinal,
@@ -26127,7 +26127,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: &DesignFullDto, ordinal: usize) -> Result<()> {
+        fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: &DesignFull, ordinal: usize) -> Result<()> {
             let location_id = design.location.as_ref().map(|l| l.id.as_str());
             tx.execute(
                 "INSERT INTO design (
@@ -26184,40 +26184,40 @@ pub mod io {
             Ok(())
         }
 
-        fn load_authors_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AuthorFullDto>> {
+        fn load_authors_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AuthorFull>> {
             let sql = format!("SELECT id, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AuthorFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, email: row.get(2)?, role: row.get(3)?, rank: row.get(4)? });
+                values.push(AuthorFull { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, email: row.get(2)?, role: row.get(3)?, rank: row.get(4)? });
             }
             Ok(values)
         }
 
-        fn load_concepts_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<ConceptFullDto>> {
+        fn load_concepts_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<ConceptFull>> {
             let sql = format!("SELECT id, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(ConceptFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, order: row.get(3)? });
+                values.push(ConceptFull { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, order: row.get(3)? });
             }
             Ok(values)
         }
 
-        fn load_tags_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<TagFullDto>> {
+        fn load_tags_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<TagFull>> {
             let sql = format!("SELECT id, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(TagFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, order: row.get(2)? });
+                values.push(TagFull { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, order: row.get(2)? });
             }
             Ok(values)
         }
 
-        fn load_benchmarks(conn: &SqlConnection, quality_id: &Id) -> Result<Vec<BenchmarkFullDto>> {
+        fn load_benchmarks(conn: &SqlConnection, quality_id: &Id) -> Result<Vec<BenchmarkFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, min_value, max_value, min_excluded, max_excluded
                  FROM benchmark WHERE quality_id = ?1 ORDER BY ordinal",
@@ -26225,46 +26225,46 @@ pub mod io {
             let mut rows = stmt.query([quality_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(BenchmarkFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, min: row.get(2)?, max: row.get(3)?, min_excluded: opt_int_to_bool(row.get(4)?), max_excluded: opt_int_to_bool(row.get(5)?) });
+                values.push(BenchmarkFull { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, min: row.get(2)?, max: row.get(3)?, min_excluded: opt_int_to_bool(row.get(4)?), max_excluded: opt_int_to_bool(row.get(5)?) });
             }
             Ok(values)
         }
 
-        fn load_qualities_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<QualityFullDto>> {
+        fn load_qualities_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<QualityFull>> {
             let sql = format!("SELECT id, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let quality_id = Id::from(row.get::<_, String>(0)?);
-                values.push(QualityFullDto { id: quality_id.clone(), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, definition: row.get(4)?, description: row.get(5)?, benchmarks: load_benchmarks(conn, &quality_id)? });
+                values.push(QualityFull { id: quality_id.clone(), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, definition: row.get(4)?, description: row.get(5)?, benchmarks: load_benchmarks(conn, &quality_id)? });
             }
             Ok(values)
         }
 
-        fn load_props_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<PropFullDto>> {
+        fn load_props_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<PropFull>> {
             let sql = format!("SELECT id, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(PropFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, quality: None });
+                values.push(PropFull { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, quality: None });
             }
             Ok(values)
         }
 
-        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeFullDto>> {
+        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeFull>> {
             let sql = format!("SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AttributeFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, definition: row.get(3)? });
+                values.push(AttributeFull { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, definition: row.get(3)? });
             }
             Ok(values)
         }
 
-        fn load_ports_for_parent(conn: &SqlConnection, kit_id: &Id, parent_family_id: Option<&Id>) -> Result<Vec<PortFullDto>> {
+        fn load_ports_for_parent(conn: &SqlConnection, kit_id: &Id, parent_family_id: Option<&Id>) -> Result<Vec<PortFull>> {
             let mut values = Vec::new();
             let sql = if parent_family_id.is_none() {
                 "SELECT id, name, icon, mandatory, t, description,
@@ -26286,15 +26286,15 @@ pub mod io {
                 let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
                 let mut compatible_families = Vec::new();
                 while let Some(compatibility_row) = compatibility_rows.next()? {
-                    compatible_families.push(crate::family::FamilyIdDto { id: Id::from(compatibility_row.get::<_, String>(0)?) });
+                    compatible_families.push(crate::family::FamilyRef { id: Id::from(compatibility_row.get::<_, String>(0)?) });
                 }
                 let mut cp_stmt = conn.prepare("SELECT compatible_port_id FROM port_compatible_port WHERE port_id = ?1 ORDER BY ordinal")?;
                 let mut cp_rows = cp_stmt.query([id.as_str()])?;
                 let mut compatible_ports = Vec::new();
                 while let Some(cp_row) = cp_rows.next()? {
-                    compatible_ports.push(PortIdDto { id: Id::from(cp_row.get::<_, String>(0)?) });
+                    compatible_ports.push(PortRef { id: Id::from(cp_row.get::<_, String>(0)?) });
                 }
-                values.push(PortFullDto {
+                values.push(PortFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     icon: row.get(2)?,
@@ -26313,13 +26313,13 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_families(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<crate::family::FamilyFullDto>> {
+        fn load_families(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<crate::family::FamilyFull>> {
             let mut stmt = conn.prepare("SELECT id, name, description, icon FROM family WHERE kit_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                values.push(crate::family::FamilyFullDto {
+                values.push(crate::family::FamilyFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
@@ -26331,38 +26331,38 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_type_family_ids(conn: &SqlConnection, type_id: &Id) -> Result<Vec<crate::family::FamilyIdDto>> {
+        fn load_type_family_ids(conn: &SqlConnection, type_id: &Id) -> Result<Vec<crate::family::FamilyRef>> {
             let mut stmt = conn.prepare("SELECT family_id FROM type_family WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut out = Vec::new();
             while let Some(row) = rows.next()? {
-                out.push(crate::family::FamilyIdDto { id: Id::from(row.get::<_, String>(0)?) });
+                out.push(crate::family::FamilyRef { id: Id::from(row.get::<_, String>(0)?) });
             }
             Ok(out)
         }
 
-        fn load_design_family_ids(conn: &SqlConnection, design_id: &Id) -> Result<Vec<crate::family::FamilyIdDto>> {
+        fn load_design_family_ids(conn: &SqlConnection, design_id: &Id) -> Result<Vec<crate::family::FamilyRef>> {
             let mut stmt = conn.prepare("SELECT family_id FROM design_family WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut out = Vec::new();
             while let Some(row) = rows.next()? {
-                out.push(crate::family::FamilyIdDto { id: Id::from(row.get::<_, String>(0)?) });
+                out.push(crate::family::FamilyRef { id: Id::from(row.get::<_, String>(0)?) });
             }
             Ok(out)
         }
 
-        fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
+        fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFull>> {
             let mut stmt = conn.prepare("SELECT id, name, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
                 let port_id: String = row.get(3)?;
-                values.push(ConnectorFullDto {
+                values.push(ConnectorFull {
                     id: id.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: Some(PortIdDto { id: Id::from(port_id) }),
+                    port: Some(PortRef { id: Id::from(port_id) }),
                     qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
                     ..Default::default()
@@ -26371,18 +26371,18 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_representations(conn: &SqlConnection, type_id: &Id) -> Result<Vec<RepresentationFullDto>> {
+        fn load_representations(conn: &SqlConnection, type_id: &Id) -> Result<Vec<RepresentationFull>> {
             let mut stmt = conn.prepare("SELECT id, url, description, file_id FROM representation WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
                 let file_id: Option<String> = row.get(3)?;
-                values.push(RepresentationFullDto {
+                values.push(RepresentationFull {
                     id: id.clone(),
                     url: row.get(1)?,
                     description: row.get(2)?,
-                    file: file_id.map(|value| FileIdDto { id: Id::from(value) }),
+                    file: file_id.map(|value| FileRef { id: Id::from(value) }),
                     tags: load_tags_for_scope(conn, "representation_id", &id)?,
                     qualities: load_qualities_for_scope(conn, "representation_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "representation_id", &id)?,
@@ -26391,7 +26391,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_types(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<TypeFullDto>> {
+        fn load_types(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<TypeFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at
                  FROM \"type\" WHERE kit_id = ?1 ORDER BY ordinal",
@@ -26400,7 +26400,7 @@ pub mod io {
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                values.push(TypeFullDto {
+                values.push(TypeFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
@@ -26426,7 +26426,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_layers(conn: &SqlConnection, design_id: &Id) -> Result<Vec<LayerFullDto>> {
+        fn load_layers(conn: &SqlConnection, design_id: &Id) -> Result<Vec<LayerFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, color, order_index, visible, locked
                  FROM layer WHERE design_id = ?1 ORDER BY ordinal",
@@ -26434,12 +26434,12 @@ pub mod io {
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(LayerFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, order: row.get(4)?, visible: opt_int_to_bool(row.get(5)?), locked: opt_int_to_bool(row.get(6)?) });
+                values.push(LayerFull { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, order: row.get(4)?, visible: opt_int_to_bool(row.get(5)?), locked: opt_int_to_bool(row.get(6)?) });
             }
             Ok(values)
         }
 
-        fn load_pieces(conn: &SqlConnection, design_id: &Id) -> Result<Vec<PieceFullDto>> {
+        fn load_pieces(conn: &SqlConnection, design_id: &Id) -> Result<Vec<PieceFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description,
                         plane_origin_x, plane_origin_y, plane_origin_z,
@@ -26458,19 +26458,21 @@ pub mod io {
                 let id = Id::from(row.get::<_, String>(0)?);
                 let type_id: Option<String> = row.get(28)?;
                 let design_ref_id: Option<String> = row.get(29)?;
-                values.push(PieceFullDto {
+                let db_plane = plane_from_parts(row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?);
+                let db_center = piece_center_from_parts(row.get(12)?, row.get(13)?, row.get(14)?);
+                let pose = if db_plane.is_some() || db_center.is_some() { Some(crate::piece::PoseDto { plane: db_plane, center: db_center }) } else { None };
+                values.push(PieceFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
-                    plane: plane_from_parts(row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?),
-                    center: piece_center_from_parts(row.get(12)?, row.get(13)?, row.get(14)?),
+                    pose,
                     scale: row.get(15)?,
                     mirror_plane: plane_from_parts(row.get(16)?, row.get(17)?, row.get(18)?, row.get(19)?, row.get(20)?, row.get(21)?, row.get(22)?, row.get(23)?, row.get(24)?),
                     hidden: opt_int_to_bool(row.get(25)?),
                     locked: opt_int_to_bool(row.get(26)?),
                     color: row.get(27)?,
-                    r#type: type_id.map(|value| crate::typ::TypeIdDto { id: Id::from(value) }),
-                    design: design_ref_id.map(|value| crate::design::DesignIdDto { id: Id::from(value) }),
+                    r#type: type_id.map(|value| crate::typ::TypeRef { id: Id::from(value) }),
+                    design: design_ref_id.map(|value| crate::design::DesignRef { id: Id::from(value) }),
                     props: load_props_for_scope(conn, "piece_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "piece_id", &id)?,
                 });
@@ -26478,7 +26480,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_groups(conn: &SqlConnection, design_id: &Id) -> Result<Vec<GroupFullDto>> {
+        fn load_groups(conn: &SqlConnection, design_id: &Id) -> Result<Vec<GroupFull>> {
             let mut stmt = conn.prepare("SELECT id, name, description, color, icon FROM \"group\" WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
@@ -26488,14 +26490,14 @@ pub mod io {
                 let mut piece_rows = piece_stmt.query([id.as_str()])?;
                 let mut pieces = Vec::new();
                 while let Some(piece_row) = piece_rows.next()? {
-                    pieces.push(crate::piece::PieceIdDto { id: Id::from(piece_row.get::<_, String>(0)?) });
+                    pieces.push(crate::piece::PieceRef { id: Id::from(piece_row.get::<_, String>(0)?) });
                 }
-                values.push(GroupFullDto { id, name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, icon: row.get(4)?, pieces });
+                values.push(GroupFull { id, name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, icon: row.get(4)?, pieces });
             }
             Ok(values)
         }
 
-        fn load_connections(conn: &SqlConnection, design_id: &Id) -> Result<Vec<ConnectionFullDto>> {
+        fn load_connections(conn: &SqlConnection, design_id: &Id) -> Result<Vec<ConnectionFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id,
                         connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
@@ -26511,20 +26513,20 @@ pub mod io {
                 let connected_design_piece_id: Option<String> = row.get(4)?;
                 let connecting_port_id: Option<String> = row.get(7)?;
                 let connecting_design_piece_id: Option<String> = row.get(8)?;
-                values.push(ConnectionFullDto {
+                values.push(ConnectionFull {
                     id: id.clone(),
-                    connected: SideMetadataDto {
+                    connected: SideMetadata {
                         id: Id::from(row.get::<_, String>(1)?),
-                        piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(2)?) },
-                        port: connected_port_id.map(|value| PortIdDto { id: Id::from(value) }),
-                        design_piece: connected_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
+                        piece: crate::piece::PieceRef { id: Id::from(row.get::<_, String>(2)?) },
+                        port: connected_port_id.map(|value| PortRef { id: Id::from(value) }),
+                        design_piece: connected_design_piece_id.map(|value| crate::piece::PieceRef { id: Id::from(value) }),
                         connector: None,
                     },
-                    connecting: SideMetadataDto {
+                    connecting: SideMetadata {
                         id: Id::from(row.get::<_, String>(5)?),
-                        piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(6)?) },
-                        port: connecting_port_id.map(|value| PortIdDto { id: Id::from(value) }),
-                        design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
+                        piece: crate::piece::PieceRef { id: Id::from(row.get::<_, String>(6)?) },
+                        port: connecting_port_id.map(|value| PortRef { id: Id::from(value) }),
+                        design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceRef { id: Id::from(value) }),
                         connector: None,
                     },
                     gap: row.get(9)?,
@@ -26542,17 +26544,17 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_stats(conn: &SqlConnection, design_id: &Id) -> Result<Vec<StatFullDto>> {
+        fn load_stats(conn: &SqlConnection, design_id: &Id) -> Result<Vec<StatFull>> {
             let mut stmt = conn.prepare("SELECT id, key, value, unit, description FROM stat WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(StatFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, description: row.get(4)? });
+                values.push(StatFull { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, description: row.get(4)? });
             }
             Ok(values)
         }
 
-        fn load_designs(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<DesignFullDto>> {
+        fn load_designs(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<DesignFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, icon, image,
                         location_id,
@@ -26563,7 +26565,7 @@ pub mod io {
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                values.push(DesignFullDto {
+                values.push(DesignFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
@@ -26573,7 +26575,7 @@ pub mod io {
                     unit: row.get(6)?,
                     created: row.get(7)?,
                     updated: row.get(8)?,
-                    kit: Some(crate::kit_graph::KitIdDto { id: kit_id.clone() }),
+                    kit: Some(crate::kit_graph::KitRef { id: kit_id.clone() }),
                     families: load_design_family_ids(conn, &id)?,
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
@@ -26591,7 +26593,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_files(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FileFullDto>> {
+        fn load_files(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FileFull>> {
             let mut stmt = conn.prepare(
                 "SELECT id, url, mime, size, hash, description, created_at, updated_at
                  FROM file WHERE kit_id = ?1 ORDER BY ordinal",
@@ -26599,22 +26601,22 @@ pub mod io {
             let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(FileFullDto { id: Id::from(row.get::<_, String>(0)?), url: row.get(1)?, mime: row.get(2)?, size: row.get(3)?, hash: row.get(4)?, description: row.get(5)?, created: row.get(6)?, updated: row.get(7)? });
+                values.push(FileFull { id: Id::from(row.get::<_, String>(0)?), url: row.get(1)?, mime: row.get(2)?, size: row.get(3)?, hash: row.get(4)?, description: row.get(5)?, created: row.get(6)?, updated: row.get(7)? });
             }
             Ok(values)
         }
 
-        fn load_folders(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FolderFullDto>> {
+        fn load_folders(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FolderFull>> {
             let mut stmt = conn.prepare("SELECT id, path, description FROM folder WHERE kit_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(FolderFullDto { id: Id::from(row.get::<_, String>(0)?), path: row.get(1)?, description: row.get(2)? });
+                values.push(FolderFull { id: Id::from(row.get::<_, String>(0)?), path: row.get(1)?, description: row.get(2)? });
             }
             Ok(values)
         }
 
-        fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFullDto, KitFullDto)> {
+        fn load_kit_dto(conn: &SqlConnection) -> Result<(KitFull, KitFull)> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
                  FROM kit LIMIT 1",
@@ -26622,9 +26624,9 @@ pub mod io {
             let mut rows = stmt.query([])?;
             let row = rows.next()?.expect("kit row must exist in sqlite persistence");
             let id = Id::from(row.get::<_, String>(0)?);
-            let initial: KitFullDto = serde_json::from_str(&row.get::<_, String>(12)?)?;
+            let initial: KitFull = serde_json::from_str(&row.get::<_, String>(12)?)?;
             Ok((
-                KitFullDto {
+                KitFull {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
@@ -26663,7 +26665,7 @@ pub mod io {
                 let tx = conn.transaction()?;
                 clear_schema(&tx)?;
 
-                let dto = self.to_full_dto();
+                let dto = self.to_full();
                 let initial_json = serde_json::to_string(&self.initial)?;
                 tx.execute("INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))", params![SCHEMA_VERSION, SCHEMA_ENGINE])?;
                 tx.execute(
@@ -26725,7 +26727,7 @@ pub mod io {
                 let mut conn = SqlConnection::open(path)?;
                 init_schema(&mut conn)?;
                 let (dto, initial) = load_kit_dto(&conn)?;
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     g.initial = initial;
@@ -26750,8 +26752,8 @@ pub mod io {
         use tempfile::NamedTempFile;
 
         use crate::error::{Result, SemioError};
-        use crate::file::FileFullDto;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::file::FileFull;
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
 
         const LOCAL_DIR: &str = ".semio";
         const LOCAL_DB: &str = "kit.db";
@@ -26841,12 +26843,12 @@ pub mod io {
             Ok(Some(normalized))
         }
 
-        fn derived_asset_path(file: &FileFullDto) -> PathBuf {
+        fn derived_asset_path(file: &FileFull) -> PathBuf {
             let ext = Path::new(&file.url).extension().and_then(OsStr::to_str).map(|value| value.to_ascii_lowercase()).unwrap_or_else(|| extension_from_mime(file.mime.as_deref()).to_string());
             PathBuf::from("files").join(format!("{}.{}", file.id, ext))
         }
 
-        fn externalize_files(dto: &mut KitFullDto, folder_path: &Path) -> Result<()> {
+        fn externalize_files(dto: &mut KitFull, folder_path: &Path) -> Result<()> {
             for file in &mut dto.files {
                 let Some((_mime_from_url, bytes)) = parse_data_url(&file.url)? else {
                     continue;
@@ -26862,7 +26864,7 @@ pub mod io {
             Ok(())
         }
 
-        fn hydrate_files(dto: &mut KitFullDto, folder_path: &Path) -> Result<()> {
+        fn hydrate_files(dto: &mut KitFull, folder_path: &Path) -> Result<()> {
             for file in &mut dto.files {
                 if is_data_url(&file.url) {
                     continue;
@@ -26884,20 +26886,20 @@ pub mod io {
         impl KitGraph {
             pub fn load_local_folder(folder_path: &Path) -> Result<KitGraphRef> {
                 let kit = KitGraph::load_sqlite(&local_db_path(folder_path))?;
-                let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full();
                 hydrate_files(&mut dto, folder_path)?;
-                Ok(KitGraph::from_full_dto(dto))
+                Ok(KitGraph::from_full(dto))
             }
 
             pub fn save_local_folder(&self, folder_path: &Path) -> Result<()> {
                 fs::create_dir_all(folder_path.join(LOCAL_DIR))?;
-                let mut dto = self.to_full_dto();
+                let mut dto = self.to_full();
                 externalize_files(&mut dto, folder_path)?;
 
                 let temp_db_dir = folder_path.join(LOCAL_DIR);
                 let temp_db = NamedTempFile::new_in(&temp_db_dir)?;
                 let temp_path = temp_db.path().to_path_buf();
-                KitGraph::from_full_dto(dto).read().map_err(|_| SemioError::LockPoisoned("kit"))?.save_sqlite(&temp_path)?;
+                KitGraph::from_full(dto).read().map_err(|_| SemioError::LockPoisoned("kit"))?.save_sqlite(&temp_path)?;
                 let final_db_path = local_db_path(folder_path);
                 temp_db.persist(&final_db_path).map_err(|err| err.error)?;
                 Ok(())
@@ -26912,7 +26914,7 @@ pub mod io {
         use serde::de::DeserializeOwned;
 
         use crate::error::{Result, SemioError};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
 
         #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
         pub struct RemoteKitSession {
@@ -26970,19 +26972,19 @@ pub mod io {
         impl KitGraph {
             pub fn create_remote_session(&self, hub_url: &str) -> Result<RemoteKitSession> {
                 let hub_url = normalize_hub_url(hub_url);
-                let request = CreateRemoteSessionRequest { kit_name: self.name.clone(), kit: serde_json::to_value(self.to_full_dto())? };
+                let request = CreateRemoteSessionRequest { kit_name: self.name.clone(), kit: serde_json::to_value(self.to_full())? };
                 let response: CreateRemoteSessionResponse = decode_json_response(ureq::post(&format!("{hub_url}/sessions")).send_json(request).map_err(map_http_error)?)?;
                 Ok(RemoteKitSession { hub_url, session_id: response.session_id, kit_id: response.kit_id, owner_token: response.owner_token })
             }
 
             pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitGraphRef> {
                 let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
-                let dto: KitFullDto = serde_json::from_value(response.kit)?;
-                Ok(KitGraph::from_full_dto(dto))
+                let dto: KitFull = serde_json::from_value(response.kit)?;
+                Ok(KitGraph::from_full(dto))
             }
 
             pub fn save_remote_session(&self, remote: &RemoteKitSession) -> Result<()> {
-                let payload = ReplaceRemoteSnapshotRequest { kit: serde_json::to_value(self.to_full_dto())? };
+                let payload = ReplaceRemoteSnapshotRequest { kit: serde_json::to_value(self.to_full())? };
                 ureq::put(&remote_snapshot_url(&remote.hub_url, &remote.session_id)).set("Authorization", &format!("Bearer {}", remote.owner_token)).send_json(payload).map_err(map_http_error)?;
                 Ok(())
             }
@@ -27101,13 +27103,13 @@ pub mod kit_graphql {
 
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(transparent)]
-    struct GqlKitFullSnapshot(pub crate::kit_graph::KitFullDto);
+    struct GqlKitFullSnapshot(pub crate::kit_graph::KitFull);
 
     #[Scalar(name = "KitFullSnapshot")]
     impl ScalarType for GqlKitFullSnapshot {
         fn parse(value: Value) -> InputValueResult<Self> {
             let v = value.into_json().map_err(|_| InputValueError::custom("KitFullSnapshot: expected JSON value"))?;
-            let dto: crate::kit_graph::KitFullDto = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
+            let dto: crate::kit_graph::KitFull = serde_json::from_value(v).map_err(|e| InputValueError::custom(e.to_string()))?;
             Ok(GqlKitFullSnapshot(dto))
         }
 
@@ -27453,21 +27455,21 @@ pub mod kit_graphql {
 
     fn design_command_to_change_kit_commands(design_id: &str, command: DesignCommandInput) -> Result<Vec<ChangeKitCommand>, Error> {
         use crate::change_command::ChangeKitCommand as C;
-        use crate::connection::ConnectionIdDto;
-        use crate::design::DesignIdDto;
+        use crate::connection::ConnectionRef;
+        use crate::design::DesignRef;
         use crate::id::Id;
-        use crate::piece::PieceIdDto;
-        use crate::typ::TypeIdDto;
-        let did = DesignIdDto { id: Id::from(design_id) };
+        use crate::piece::PieceRef;
+        use crate::typ::TypeRef;
+        let did = DesignRef { id: Id::from(design_id) };
         match command {
             DesignCommandInput::ClusterPieces(input) => Ok(vec![C::ClusterPieces { design_id: did, piece_ids: input.piece_ids, cluster_name: input.cluster_name }]),
             DesignCommandInput::DragPieces(input) => Ok(vec![C::DragPieces { design_id: did, piece_ids: input.piece_ids, du: input.du, dv: input.dv }]),
             DesignCommandInput::MovePieces(input) => Ok(vec![C::MovePieces { design_id: did, piece_ids: input.piece_ids, gap: input.gap, shift: input.shift, rise: input.rise }]),
             DesignCommandInput::FixPieces(input) => Ok(vec![C::FixPieces { design_id: did, piece_ids: input.piece_ids }]),
             DesignCommandInput::FlattenDesign(_) => Ok(vec![C::FlattenDesign { design_id: did }]),
-            DesignCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign { parent_design_id: did, nested_design_id: DesignIdDto { id: Id::from(input.nested_design_id.as_str()) } }]),
-            DesignCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection { design_id: did, connection_id: ConnectionIdDto { id: Id::from(input.connection_id.as_str()) } }]),
-            DesignCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind { design_id: did, piece_id: PieceIdDto { id: Id::from(input.piece_id.as_str()) }, new_type_id: TypeIdDto { id: Id::from(input.new_type_id.as_str()) } }]),
+            DesignCommandInput::ExpandDesign(input) => Ok(vec![C::ExpandNestedDesign { parent_design_id: did, nested_design_id: DesignRef { id: Id::from(input.nested_design_id.as_str()) } }]),
+            DesignCommandInput::DeleteConnection(input) => Ok(vec![C::DeleteConnection { design_id: did, connection_id: ConnectionRef { id: Id::from(input.connection_id.as_str()) } }]),
+            DesignCommandInput::ChangePieceType(input) => Ok(vec![C::ChangePieceKind { design_id: did, piece_id: PieceRef { id: Id::from(input.piece_id.as_str()) }, new_type_id: TypeRef { id: Id::from(input.new_type_id.as_str()) } }]),
             DesignCommandInput::CreateHangingPieces(_) | DesignCommandInput::CreateConnectedPiece(_) | DesignCommandInput::CreateFixedPiece(_) => {
                 Err(Error::new("design canvas createHangingPieces/createConnectedPiece/createFixedPiece are not implemented as ChangeKitCommand yet"))
             }
@@ -28623,21 +28625,21 @@ pub mod kit_graphql {
             }
         }
 
-        async fn full(&self) -> Result<crate::kit_graph::KitFullDto> {
-            Ok(lock_graph(&self.view)?.to_full_dto())
+        async fn full(&self) -> Result<crate::kit_graph::KitFull> {
+            Ok(lock_graph(&self.view)?.to_full())
         }
 
-        /// 🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFullDto` subfield.
+        /// 🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFull` subfield.
         async fn full_snapshot(&self) -> Result<GqlKitFullSnapshot> {
-            Ok(GqlKitFullSnapshot(lock_graph(&self.view)?.to_full_dto()))
+            Ok(GqlKitFullSnapshot(lock_graph(&self.view)?.to_full()))
         }
 
-        async fn metadata(&self) -> Result<crate::kit_graph::KitMetadataDto> {
-            Ok(lock_graph(&self.view)?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::kit_graph::KitMetadata> {
+            Ok(lock_graph(&self.view)?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::kit_graph::KitShallowDto> {
-            Ok(lock_graph(&self.view)?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::kit_graph::KitShallow> {
+            Ok(lock_graph(&self.view)?.to_shallow())
         }
 
         async fn id(&self) -> Result<Option<String>> {
@@ -28738,16 +28740,16 @@ pub mod kit_graphql {
             KitStoreGraphql::main_line_at_head(&g)
         }
 
-        async fn metadata(&self) -> Result<crate::design::DesignMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::design::DesignMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::design::DesignShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::design::DesignShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::design::DesignFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::design::DesignFull> {
+            Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.to_full())
         }
 
         async fn pieces(&self) -> Result<Vec<PieceStoreGraphql>> {
@@ -28764,14 +28766,14 @@ pub mod kit_graphql {
             Ok(self.0.read().map_err(|_| Error::new("design lock poisoned"))?.connections.iter().cloned().map(ConnectionStoreGraphql).collect())
         }
 
-        async fn pieces_full(&self) -> Result<Vec<crate::piece::PieceFullDto>> {
+        async fn pieces_full(&self) -> Result<Vec<crate::piece::PieceFull>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect())
+            Ok(d.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full())).collect())
         }
 
-        async fn connections_full(&self) -> Result<Vec<crate::connection::ConnectionFullDto>> {
+        async fn connections_full(&self) -> Result<Vec<crate::connection::ConnectionFull>> {
             let d = self.0.read().map_err(|_| Error::new("design lock poisoned"))?;
-            Ok(d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect())
+            Ok(d.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full())).collect())
         }
 
         async fn flatten_map(&self) -> Result<Vec<crate::read::DesignFlattenMapEntryDto>> {
@@ -28832,16 +28834,16 @@ pub mod kit_graphql {
                 .ok_or_else(|| Error::new("design container missing for piece"))
         }
 
-        async fn metadata(&self) -> Result<crate::piece::PieceMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::piece::PieceMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::piece::PieceShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::piece::PieceShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::piece::PieceFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::piece::PieceFull> {
+            Ok(self.0.read().map_err(|_| Error::new("piece lock poisoned"))?.to_full())
         }
 
         async fn flat_plane(&self) -> Result<Plane> {
@@ -28854,7 +28856,7 @@ pub mod kit_graphql {
             Ok(p.flat_center())
         }
 
-        async fn flat_pose(&self) -> Result<crate::piece::PoseFullDto> {
+        async fn flat_pose(&self) -> Result<crate::piece::PoseFull> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(p.flat_pose_full_dto())
         }
@@ -28920,16 +28922,16 @@ pub mod kit_graphql {
             KitStoreGraphql::main_line_at_head(&g)
         }
 
-        async fn metadata(&self) -> Result<crate::typ::TypeMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::typ::TypeMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::typ::TypeShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::typ::TypeShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::typ::TypeFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::typ::TypeFull> {
+            Ok(self.0.read().map_err(|_| Error::new("type lock poisoned"))?.to_full())
         }
 
         async fn connectors(&self) -> Result<Vec<ConnectorStoreGraphql>> {
@@ -28974,19 +28976,19 @@ pub mod kit_graphql {
         }
 
         async fn color(&self) -> Result<crate::connector::ColorDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata_dto().color)
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata().color)
         }
 
-        async fn metadata(&self) -> Result<crate::connector::ConnectorMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::connector::ConnectorMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::connector::ConnectorShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::connector::ConnectorShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::connector::ConnectorFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::connector::ConnectorFull> {
+            Ok(self.0.read().map_err(|_| Error::new("connector lock poisoned"))?.to_full())
         }
     }
 
@@ -29012,16 +29014,16 @@ pub mod kit_graphql {
                 .ok_or_else(|| Error::new("type container missing for representation"))
         }
 
-        async fn metadata(&self) -> Result<crate::representation::RepresentationMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::representation::RepresentationMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::representation::RepresentationShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::representation::RepresentationShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::representation::RepresentationFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::representation::RepresentationFull> {
+            Ok(self.0.read().map_err(|_| Error::new("representation lock poisoned"))?.to_full())
         }
     }
 
@@ -29039,16 +29041,16 @@ pub mod kit_graphql {
                 .ok_or_else(|| Error::new("design container missing for connection"))
         }
 
-        async fn metadata(&self) -> Result<crate::connection::ConnectionMetadataDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_metadata_dto())
+        async fn metadata(&self) -> Result<crate::connection::ConnectionMetadata> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_metadata())
         }
 
-        async fn shallow(&self) -> Result<crate::connection::ConnectionShallowDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_shallow_dto())
+        async fn shallow(&self) -> Result<crate::connection::ConnectionShallow> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_shallow())
         }
 
-        async fn full(&self) -> Result<crate::connection::ConnectionFullDto> {
-            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_full_dto())
+        async fn full(&self) -> Result<crate::connection::ConnectionFull> {
+            Ok(self.0.read().map_err(|_| Error::new("connection lock poisoned"))?.to_full())
         }
 
         async fn gap(&self) -> Result<Option<f64>> {
@@ -29119,7 +29121,7 @@ pub mod wasm {
             match KitGraph::from_json_str(&s) {
                 Ok(kit) => {
                     let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
-                    serde_wasm_bindgen::to_value(&guard.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
+                    serde_wasm_bindgen::to_value(&guard.to_full()).map_err(|e| JsValue::from_str(&e.to_string()))
                 }
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
@@ -29129,8 +29131,8 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitToJson)]
     pub fn wasm_kit_to_json(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let kit = KitGraph::from_full_dto(dto);
+            let dto: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let kit = KitGraph::from_full(dto);
             let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
             guard.to_json_pretty().map(|json| JsValue::from_str(&json)).map_err(|e| JsValue::from_str(&e.to_string()))
         })
@@ -29139,8 +29141,8 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitValidate)]
     pub fn wasm_kit_validate(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let kit = KitGraph::from_full_dto(dto);
+            let dto: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let kit = KitGraph::from_full(dto);
             match KitGraph::validate_async(&kit).await {
                 Ok(v) => serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
@@ -29151,10 +29153,10 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitsAreEqual)]
     pub fn wasm_kits_are_equal(a: JsValue, b: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let a: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let b: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let ka = KitGraph::from_full_dto(a);
-            let kb = KitGraph::from_full_dto(b);
+            let a: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let b: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ka = KitGraph::from_full(a);
+            let kb = KitGraph::from_full(b);
             let ga = ka.read().map_err(|_| JsValue::from_str("a poisoned"))?;
             let gb = kb.read().map_err(|_| JsValue::from_str("b poisoned"))?;
             Ok(JsValue::from_bool(ga.are_equal(&gb)))
@@ -29165,8 +29167,8 @@ pub mod wasm {
     pub fn wasm_flatten_design(kit: JsValue, design_id: &str) -> js_sys::Promise {
         let design_id = design_id.to_string();
         future_to_promise(async move {
-            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(kit).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let k = KitGraph::from_full_dto(dto);
+            let dto: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(kit).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let k = KitGraph::from_full(dto);
             match KitGraph::flatten_design_async(&k, &design_id).await {
                 Ok(rep) => serde_wasm_bindgen::to_value(&rep).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
@@ -29195,8 +29197,8 @@ pub mod wasm {
     impl KitStoreHandle {
         #[wasm_bindgen(js_name = create)]
         pub fn create(dto: JsValue) -> Result<KitStoreHandle, JsValue> {
-            let dto: crate::kit_graph::KitFullDto = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let inner = KitGraph::from_full_dto(dto);
+            let dto: crate::kit_graph::KitFull = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let inner = KitGraph::from_full(dto);
             let (work_tx, work_rx) = async_channel::unbounded();
             crate::kit_graphql::spawn_actor(inner.clone(), work_rx);
             Ok(KitStoreHandle { inner, work_tx })
@@ -29205,7 +29207,7 @@ pub mod wasm {
         #[wasm_bindgen(js_name = snapshot)]
         pub fn snapshot(&self) -> Result<JsValue, JsValue> {
             let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
-            serde_wasm_bindgen::to_value(&g.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
+            serde_wasm_bindgen::to_value(&g.to_full()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = execute)]
@@ -29288,7 +29290,7 @@ mod tests {
             assert!(!s.contains("Gql"), "SDL must not expose ad hoc Gql* names");
             assert!(!s.contains("AuthorShallowRow") && !s.contains("RowObject"), "SDL must not expose legacy *Row graph wrappers");
             assert!(!s.contains("piecePlacement"), "SDL must not expose design-level piecePlacement aggregate");
-            assert!(!s.contains("PiecePlacementMetadataDto"), "SDL must not declare PiecePlacementMetadataDto");
+            assert!(!s.contains("PiecePlacementMetadata"), "SDL must not declare PiecePlacementMetadata");
             assert!(s.contains("parentPiece:") && s.contains("depth: Int!") && s.contains("path: [PieceStore!]!"), "SDL must expose PieceStore hierarchy fields");
             for bad in ["TypeShallowList", "DesignShallowList", "PieceFullList", "ConnectionFullList"] {
                 assert!(!s.contains(bad), "SDL must not declare list scalar {bad}");
@@ -29340,7 +29342,10 @@ mod tests {
             assert!(s.contains("replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!"), "replaceable catalog resolver");
             assert!(s.contains("types: [TypeStore!]!") && s.contains("designs: [DesignStore!]!"), "ReplaceableCatalog exposes store refs");
             assert!(s.contains("container: KitStore!") && s.contains("container: DesignStore!"), "container back-refs use *Store SDL names");
-            assert!(s.contains("metadata: DesignMetadataDto!") && s.contains("shallow: DesignShallowDto!"), "Design DTO tiers");
+            assert!(s.contains("metadata: DesignMetadata!") && s.contains("shallow: DesignShallow!"), "Design store exposes metadata + shallow projections");
+            for banned in ["FullDto", "MetadataDto", "ShallowDto", "IdDto"] {
+                assert!(!s.contains(banned), "SDL must not expose removed *{banned} tier suffixes");
+            }
         }
 
         #[test]
@@ -29575,7 +29580,7 @@ mod tests {
 
             let did: Id = "design-a".into();
             let kc = KitChange {
-                forward: vec![ChangeKitCommand::ChangeDesignCommands { design_id: crate::design::DesignIdDto { id: did.clone() }, commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }] }],
+                forward: vec![ChangeKitCommand::ChangeDesignCommands { design_id: crate::design::DesignRef { id: did.clone() }, commands: vec![ChangeDesignCommand::Name { name: "Renamed".into() }] }],
                 inverse: vec![],
                 children: vec![],
                 kind: KitChangeKind::ModifyDesign,
@@ -29675,14 +29680,14 @@ mod tests {
         use crate::backbone::BackboneSnapshot;
         use crate::id::Id;
         use crate::kit_backbone_wire::BackboneConfig;
-        use crate::kit_graph::{KitFullDto, KitGraph};
+        use crate::kit_graph::{KitFull, KitGraph};
         use crate::kit_store::KitStore;
 
         #[test]
         fn kit_store_no_backbone_status() {
             let kid = Id::new_v7();
-            let dto = KitFullDto { id: kid, name: "k".into(), ..Default::default() };
-            let ks = KitStore::from_full_dto(dto);
+            let dto = KitFull { id: kid, name: "k".into(), ..Default::default() };
+            let ks = KitStore::from_full(dto);
             let st = ks.backbone_status().expect("status");
             assert!(!st.attached);
             assert!(st.backbone_tip.is_none());
@@ -29693,7 +29698,7 @@ mod tests {
             let dir = tempdir().expect("tmp");
             let path = dir.path().join("bb.json");
             let kid = Id::new_v7();
-            let k = KitGraph::from_full_dto(KitFullDto { id: kid, name: "k".into(), ..Default::default() });
+            let k = KitGraph::from_full(KitFull { id: kid, name: "k".into(), ..Default::default() });
             {
                 let g = k.read().expect("read");
                 let snap = BackboneSnapshot::from_graph(&*g);
@@ -29711,26 +29716,26 @@ mod tests {
         use std::sync::{Arc, RwLock};
 
         use crate::change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
-        use crate::design::DesignFullDto;
-        use crate::design::DesignIdDto;
+        use crate::design::DesignFull;
+        use crate::design::DesignRef;
         use crate::id::Id;
         use crate::kit_change::{Change, KitChange, KitChangeKind};
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
-        use crate::piece::PieceFullDto;
-        use crate::piece::PieceIdDto;
-        use crate::typ::TypeFullDto;
-        use crate::typ::TypeIdDto;
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::piece::PieceFull;
+        use crate::piece::PieceRef;
+        use crate::typ::TypeFull;
+        use crate::typ::TypeRef;
 
         fn small_kit() -> (KitGraphRef, Id, Id, Id) {
             let kid = Id::new_v7();
             let tid = Id::new_v7();
             let did = Id::new_v7();
             let pid = Id::new_v7();
-            let kit = KitGraph::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full(KitFull {
                 id: kid,
                 name: "k".into(),
-                types: vec![TypeFullDto { id: tid.clone(), name: "T0".into(), ..Default::default() }],
-                designs: vec![DesignFullDto { id: did.clone(), name: "D0".into(), pieces: vec![PieceFullDto { id: pid.clone(), name: Some("P0".into()), r#type: Some(TypeIdDto { id: tid.clone() }), ..Default::default() }], ..Default::default() }],
+                types: vec![TypeFull { id: tid.clone(), name: "T0".into(), ..Default::default() }],
+                designs: vec![DesignFull { id: did.clone(), name: "D0".into(), pieces: vec![PieceFull { id: pid.clone(), name: Some("P0".into()), r#type: Some(TypeRef { id: tid.clone() }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
             (kit, tid, did, pid)
@@ -29745,64 +29750,64 @@ mod tests {
         #[test]
         fn roundtrip_kit_metadata_scalar() {
             let kit = Arc::new(RwLock::new(KitGraph::new("orig")));
-            let before = kit.read().expect("read").to_full_dto();
+            let before = kit.read().expect("read").to_full();
             let cmd = ChangeKitCommand::Name { name: "renamed".into() };
             let inv = cmd.apply(&kit).expect("apply");
             assert_eq!(kit.read().expect("read").name, "renamed");
             undo_inverses(&kit, &inv);
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
         fn roundtrip_type_name_nested() {
             let (kit, tid, _, _) = small_kit();
-            let before = kit.read().expect("read").to_full_dto();
-            let cmd = ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![ChangeTypeCommand::Name { name: "T1".into() }] };
+            let before = kit.read().expect("read").to_full();
+            let cmd = ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![ChangeTypeCommand::Name { name: "T1".into() }] };
             let inv = cmd.apply(&kit).expect("apply");
-            assert_ne!(kit.read().expect("read").to_full_dto(), before);
+            assert_ne!(kit.read().expect("read").to_full(), before);
             undo_inverses(&kit, &inv);
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
         fn roundtrip_design_and_piece_nested() {
             let (kit, _, did, pid) = small_kit();
-            let before = kit.read().expect("read").to_full_dto();
+            let before = kit.read().expect("read").to_full();
             let cmd = ChangeKitCommand::ChangeDesignCommands {
-                design_id: DesignIdDto { id: did },
-                commands: vec![ChangeDesignCommand::Name { name: "D1".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("P1".into()) }] }],
+                design_id: DesignRef { id: did },
+                commands: vec![ChangeDesignCommand::Name { name: "D1".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("P1".into()) }] }],
             };
             let inv = cmd.apply(&kit).expect("apply");
-            assert_ne!(kit.read().expect("read").to_full_dto(), before);
+            assert_ne!(kit.read().expect("read").to_full(), before);
             undo_inverses(&kit, &inv);
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
-        fn roundtrip_replace_kit_from_full_dto_command() {
+        fn roundtrip_replace_kit_from_full_command() {
             let (kit, _, _, _) = small_kit();
-            let before = kit.read().expect("read").to_full_dto();
+            let before = kit.read().expect("read").to_full();
             let mut after = before.clone();
             after.name = "patched".into();
-            let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: after };
+            let cmd = ChangeKitCommand::ReplaceKitFromFull { dto: after };
             let inv = cmd.apply(&kit).expect("apply");
             assert_eq!(kit.read().expect("read").name, "patched");
             undo_inverses(&kit, &inv);
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
         fn roundtrip_kit_change_apply_forward_backward_on_store() {
             let (kit, _, _, _) = small_kit();
-            let before = kit.read().expect("read").to_full_dto();
+            let before = kit.read().expect("read").to_full();
             let cmds = vec![ChangeKitCommand::Name { name: "via-change".into() }];
-            let tmp = KitGraph::from_full_dto(before.clone());
+            let tmp = KitGraph::from_full(before.clone());
             let inv = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
             let kc = KitChange { forward: cmds, inverse: inv, children: vec![], kind: KitChangeKind::Inferred, author: None, time: None };
             KitChange::apply_forward(&kc, &kit).expect("forward");
             assert_eq!(kit.read().expect("read").name, "via-change");
             KitChange::apply_backward(&kc, &kit).expect("backward");
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
@@ -29818,31 +29823,31 @@ mod tests {
         #[test]
         fn kit_diff_for_command_matches_concrete_mutation() {
             let kit = Arc::new(RwLock::new(KitGraph::new("before")));
-            let before = kit.read().expect("r").to_full_dto();
+            let before = kit.read().expect("r").to_full();
             let cmd = ChangeKitCommand::Name { name: "after".into() };
             let diff = cmd.kit_diff(&kit).expect("kit_diff");
-            assert_eq!(kit.read().expect("r").to_full_dto(), before);
+            assert_eq!(kit.read().expect("r").to_full(), before);
 
             cmd.apply(&kit).expect("apply");
-            let after = kit.read().expect("r").to_full_dto();
+            let after = kit.read().expect("r").to_full();
             assert_eq!(diff, crate::kit_diff::KitDiff::between_dto(&before, &after));
         }
 
         #[test]
         fn kit_diff_many_and_inverse_commands_for_many_are_non_mutating() {
             let kit = Arc::new(RwLock::new(KitGraph::new("a")));
-            let before = kit.read().expect("r").to_full_dto();
+            let before = kit.read().expect("r").to_full();
             let cmds = vec![ChangeKitCommand::Name { name: "b".into() }, ChangeKitCommand::Description { description: Some("desc".into()) }, ChangeKitCommand::Name { name: "c".into() }];
 
             let diff = ChangeKitCommand::kit_diff_many(&kit, &cmds).expect("kit_diff_many");
             let inv = ChangeKitCommand::inverse_commands_for_many(&kit, &cmds).expect("inverse_commands_for_many");
-            assert_eq!(kit.read().expect("r").to_full_dto(), before);
+            assert_eq!(kit.read().expect("r").to_full(), before);
 
             ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
-            let after = kit.read().expect("r").to_full_dto();
+            let after = kit.read().expect("r").to_full();
             assert_eq!(diff, crate::kit_diff::KitDiff::between_dto(&before, &after));
             undo_inverses(&kit, &inv);
-            assert_eq!(kit.read().expect("r").to_full_dto(), before);
+            assert_eq!(kit.read().expect("r").to_full(), before);
         }
 
         #[test]
@@ -29856,22 +29861,22 @@ mod tests {
         #[test]
         fn compact_preserves_final_kit_dto() {
             let cmds = vec![ChangeKitCommand::Name { name: "n1".into() }, ChangeKitCommand::Name { name: "n2".into() }, ChangeKitCommand::Description { description: Some("d".into()) }, ChangeKitCommand::Description { description: None }];
-            let seed = KitGraph::new("k0").to_full_dto();
-            let a = KitGraph::from_full_dto(seed.clone());
-            let b = KitGraph::from_full_dto(seed);
+            let seed = KitGraph::new("k0").to_full();
+            let a = KitGraph::from_full(seed.clone());
+            let b = KitGraph::from_full(seed);
             ChangeKitCommand::apply_many(&a, &cmds).expect("apply_many a");
             let compacted = ChangeKitCommand::compact(cmds);
             ChangeKitCommand::apply_many(&b, &compacted).expect("apply_many b");
-            assert_eq!(a.read().expect("r").to_full_dto(), b.read().expect("r").to_full_dto());
+            assert_eq!(a.read().expect("r").to_full(), b.read().expect("r").to_full());
         }
 
         #[test]
         fn apply_many_matches_full_dto_after_name_change() {
             let kit = Arc::new(RwLock::new(KitGraph::new("k0")));
-            let before = kit.read().expect("r").to_full_dto();
+            let before = kit.read().expect("r").to_full();
             let cmds = [ChangeKitCommand::Name { name: "k1".into() }];
             ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
-            let after = kit.read().expect("r").to_full_dto();
+            let after = kit.read().expect("r").to_full();
             let mut b = before.clone();
             b.name = "k1".into();
             assert_eq!(after, b);
@@ -29881,7 +29886,7 @@ mod tests {
         fn kit_diff_merge_into_baseline_matches_between_and_apply_kit_diff() {
             use crate::kit_diff::KitDiff;
             let (kit, _, _, _) = small_kit();
-            let b0 = kit.read().expect("r").to_full_dto();
+            let b0 = kit.read().expect("r").to_full();
             let mut expect = b0.clone();
             expect.name = "merged-name".into();
             let d = KitDiff::between(&b0, &expect);
@@ -29897,7 +29902,7 @@ mod tests {
         fn plan_kit_diff_aligns_with_between() {
             use crate::kit_diff::KitDiff;
             let (kit, _, _, _) = small_kit();
-            let baseline = kit.read().expect("r").to_full_dto();
+            let baseline = kit.read().expect("r").to_full();
             let cmd = ChangeKitCommand::Name { name: "planned".into() };
             let (pl, _inv) = cmd.plan_kit_diff(&baseline).expect("plan");
             let mut tmp = baseline.clone();
@@ -29918,7 +29923,7 @@ mod tests {
         #[test]
         fn lift_flat_drag_pieces_stays_kit_forward_not_design_child() {
             let (kit, _, did, pid) = small_kit();
-            let flat = vec![ChangeKitCommand::DragPieces { design_id: DesignIdDto { id: did.clone() }, piece_ids: vec![pid.as_str().to_string()], du: 0.0, dv: 0.0 }];
+            let flat = vec![ChangeKitCommand::DragPieces { design_id: DesignRef { id: did.clone() }, piece_ids: vec![pid.as_str().to_string()], du: 0.0, dv: 0.0 }];
             let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
             assert!(kc.children.is_empty());
             assert_eq!(kc.forward.len(), 1);
@@ -29928,7 +29933,7 @@ mod tests {
         #[test]
         fn lift_flat_type_command_yields_type_child() {
             let (kit, tid, _, _) = small_kit();
-            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tlift".into() }] }];
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tlift".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             assert!(kc.forward.is_empty());
             assert_eq!(kc.children.len(), 1);
@@ -29945,8 +29950,8 @@ mod tests {
         fn lift_flat_design_with_piece_splits_design_and_piece_blocks() {
             let (kit, _, did, pid) = small_kit();
             let flat = vec![ChangeKitCommand::ChangeDesignCommands {
-                design_id: DesignIdDto { id: did.clone() },
-                commands: vec![ChangeDesignCommand::Name { name: "Dl".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceIdDto { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("Pl".into()) }] }],
+                design_id: DesignRef { id: did.clone() },
+                commands: vec![ChangeDesignCommand::Name { name: "Dl".into() }, ChangeDesignCommand::ChangePieceCommands { piece_id: PieceRef { id: pid.clone() }, commands: vec![ChangePieceCommand::Name { name: Some("Pl".into()) }] }],
             }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             assert_eq!(kc.children.len(), 1);
@@ -29962,7 +29967,7 @@ mod tests {
         #[test]
         fn lift_flat_mixed_kit_and_type_preserves_flatten_order() {
             let (kit, tid, _, _) = small_kit();
-            let flat = vec![ChangeKitCommand::Name { name: "mix".into() }, ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tx".into() }] }];
+            let flat = vec![ChangeKitCommand::Name { name: "mix".into() }, ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Tx".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat.clone(), KitChangeKind::Inferred, None, None).expect("lift");
             assert_eq!(serde_json::to_value(&kc.flatten_forward_commands()).expect("json"), serde_json::to_value(&flat).expect("json"));
             assert_eq!(kc.forward.len(), 1);
@@ -29972,20 +29977,20 @@ mod tests {
         #[test]
         fn lifted_kit_change_roundtrips_apply_on_store() {
             let (kit, tid, _, _) = small_kit();
-            let before = kit.read().expect("read").to_full_dto();
-            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Trt".into() }] }];
+            let before = kit.read().expect("read").to_full();
+            let flat = vec![ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![ChangeTypeCommand::Name { name: "Trt".into() }] }];
             let kc = KitChange::lift_flat(&kit, flat, KitChangeKind::Inferred, None, None).expect("lift");
             KitChange::apply_forward(&kc, &kit).expect("fwd");
             assert_eq!(kit.read().expect("r").types[0].read().expect("tr").name, "Trt");
             KitChange::apply_backward(&kc, &kit).expect("back");
-            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+            assert_eq!(kit.read().expect("read").to_full(), before);
         }
 
         #[test]
         fn flatten_inverse_matches_apply_many_inverse_for_flat_batch() {
             let (kit, _, _, _) = small_kit();
             let cmds = vec![ChangeKitCommand::Name { name: "flat-inv".into() }];
-            let tmp = KitGraph::from_full_dto(kit.read().expect("r").to_full_dto());
+            let tmp = KitGraph::from_full(kit.read().expect("r").to_full());
             let inv_apply = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply tmp");
             let kc = KitChange::lift_flat(&kit, cmds.clone(), KitChangeKind::Inferred, None, None).expect("lift");
             assert_eq!(serde_json::to_value(&kc.flatten_inverse_commands()).expect("json"), serde_json::to_value(&inv_apply).expect("json"));
@@ -30013,13 +30018,13 @@ mod tests {
 
         #[test]
         fn control_plane_batch_apply_with_undo_matches_bare_apply_many_dto() {
-            let base = KitGraph::new("a0").to_full_dto();
-            let a: KitGraphRef = KitGraph::from_full_dto(base.clone());
-            let b: KitGraphRef = KitGraph::from_full_dto(base);
+            let base = KitGraph::new("a0").to_full();
+            let a: KitGraphRef = KitGraph::from_full(base.clone());
+            let b: KitGraphRef = KitGraph::from_full(base);
             let cmds = vec![ChangeKitCommand::Name { name: "a1".into() }];
             KitGraph::control_plane_batch_apply_with_undo(&a, &cmds).expect("cp");
             ChangeKitCommand::apply_many(&b, &cmds).expect("am");
-            assert_eq!(a.read().expect("r").to_full_dto(), b.read().expect("r").to_full_dto());
+            assert_eq!(a.read().expect("r").to_full(), b.read().expect("r").to_full());
         }
 
         #[test]
@@ -30043,24 +30048,24 @@ mod tests {
         fn diff_between_identical_designs_empty() {
             let a = DesignStore::new("d");
             let b = DesignStore::new("d");
-            let da = a.to_full_dto();
-            let db = b.to_full_dto();
+            let da = a.to_full();
+            let db = b.to_full();
             let d = DesignDiff::between(&da, &db);
             assert!(d.is_empty());
         }
     }
 
     mod flatten {
-        use crate::connection::ConnectionFullDto;
-        use crate::connector::ConnectorFullDto;
-        use crate::design::{DesignFullDto, DesignStore};
+        use crate::connection::ConnectionFull;
+        use crate::connector::ConnectorFull;
+        use crate::design::{DesignFull, DesignStore};
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph};
-        use crate::piece::{PieceFullDto, PieceIdDto};
-        use crate::port::{PortFullDto, PortIdDto};
-        use crate::side::SideMetadataDto;
-        use crate::typ::{TypeFullDto, TypeIdDto};
+        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::piece::{PieceFull, PieceRef, PoseDto};
+        use crate::port::{PortFull, PortRef};
+        use crate::side::SideMetadata;
+        use crate::typ::{TypeFull, TypeRef};
 
         fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit_graph::KitGraphRef, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
@@ -30078,35 +30083,35 @@ mod tests {
             let ab_id = Id::new_v7();
             let bc_id = Id::new_v7();
 
-            let kit = KitGraph::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full(KitFull {
                 id: kit_id,
                 name: "kit".into(),
-                ports: vec![PortFullDto { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
-                types: vec![TypeFullDto {
+                ports: vec![PortFull { id: port_id.clone(), point: Some(Point::ZERO), direction: Some(Vector::Z), ..Default::default() }],
+                types: vec![TypeFull {
                     id: type_id.clone(),
                     name: "typ".into(),
-                    connectors: vec![ConnectorFullDto { id: connector_id, code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
+                    connectors: vec![ConnectorFull { id: connector_id, code: "C".into(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() }],
                     ..Default::default()
                 }],
-                designs: vec![DesignFullDto {
+                designs: vec![DesignFull {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceFullDto { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
-                        PieceFullDto { id: middle_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
-                        PieceFullDto { id: leaf_id.clone(), pose: leaf_plane.map(|p| PoseDto { plane: Some(p), center: None }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFull { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
+                        PieceFull { id: middle_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
+                        PieceFull { id: leaf_id.clone(), pose: leaf_plane.map(|p| PoseDto { plane: Some(p), center: None }), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
                     ],
                     connections: vec![
-                        ConnectionFullDto {
+                        ConnectionFull {
                             id: ab_id,
-                            connected: SideMetadataDto { id: root_side_id, piece: PieceIdDto { id: root_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
-                            connecting: SideMetadataDto { id: middle_ab_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
+                            connected: SideMetadata { id: root_side_id, piece: PieceRef { id: root_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadata { id: middle_ab_side_id, piece: PieceRef { id: middle_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
                             ..Default::default()
                         },
-                        ConnectionFullDto {
+                        ConnectionFull {
                             id: bc_id,
-                            connected: SideMetadataDto { id: middle_bc_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
-                            connecting: SideMetadataDto { id: leaf_side_id, piece: PieceIdDto { id: leaf_id.clone() }, port: Some(PortIdDto { id: port_id }), design_piece: None, connector: None },
+                            connected: SideMetadata { id: middle_bc_side_id, piece: PieceRef { id: middle_id.clone() }, port: Some(PortRef { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadata { id: leaf_side_id, piece: PieceRef { id: leaf_id.clone() }, port: Some(PortRef { id: port_id }), design_piece: None, connector: None },
                             ..Default::default()
                         },
                     ],
@@ -30185,13 +30190,13 @@ mod tests {
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let root_path = root.read().expect("root read").path();
-            assert_eq!(root_path, vec![PieceIdDto { id: root_id.clone() }]);
+            assert_eq!(root_path, vec![PieceRef { id: root_id.clone() }]);
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(middle_path, vec![PieceIdDto { id: root_id.clone() }, PieceIdDto { id: middle_id.clone() },]);
+            assert_eq!(middle_path, vec![PieceRef { id: root_id.clone() }, PieceRef { id: middle_id.clone() },]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(leaf_path, vec![PieceIdDto { id: root_id }, PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]);
+            assert_eq!(leaf_path, vec![PieceRef { id: root_id }, PieceRef { id: middle_id }, PieceRef { id: leaf_id },]);
         }
 
         #[test]
@@ -30209,10 +30214,10 @@ mod tests {
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(middle_path, vec![PieceIdDto { id: middle_id.clone() }]);
+            assert_eq!(middle_path, vec![PieceRef { id: middle_id.clone() }]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(leaf_path, vec![PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]);
+            assert_eq!(leaf_path, vec![PieceRef { id: middle_id }, PieceRef { id: leaf_id },]);
         }
 
         #[test]
@@ -30313,7 +30318,7 @@ mod tests {
 
         #[test]
         fn author_setter_invalidates_local_hash() {
-            let mut a = AuthorStore::from_full_dto(crate::author::AuthorFullDto { id: crate::Id::new_v7(), name: "n".into(), email: "e".into(), role: None, rank: None });
+            let mut a = AuthorStore::from_full(crate::author::AuthorFull { id: crate::Id::new_v7(), name: "n".into(), email: "e".into(), role: None, rank: None });
             let h0 = a.hash();
             a.set_name("n2".into());
             let h1 = a.hash();
@@ -30329,15 +30334,15 @@ mod tests {
         use serde::Deserialize;
         use serde_json::Value;
 
-        use crate::connection::ConnectionFullDto;
-        use crate::connector::ConnectorFullDto;
-        use crate::design::DesignFullDto;
+        use crate::connection::ConnectionFull;
+        use crate::connector::ConnectorFull;
+        use crate::design::DesignFull;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
-        use crate::piece::{PieceFullDto, PieceIdDto};
-        use crate::port::{PortFullDto, PortIdDto};
-        use crate::side::SideMetadataDto;
-        use crate::typ::{TypeFullDto, TypeIdDto};
+        use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+        use crate::piece::{PieceFull, PieceRef};
+        use crate::port::{PortFull, PortRef};
+        use crate::side::SideMetadata;
+        use crate::typ::{TypeFull, TypeRef};
 
         #[derive(Debug, Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -30410,16 +30415,16 @@ mod tests {
 
             let make_port = |id: Id, compatible_with: Vec<Id>| {
                 let name = id.as_str().to_string();
-                PortFullDto { id, name, compatible_ports: compatible_with.into_iter().map(|i| PortIdDto { id: i }).collect(), ..Default::default() }
+                PortFull { id, name, compatible_ports: compatible_with.into_iter().map(|i| PortRef { id: i }).collect(), ..Default::default() }
             };
 
-            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto { id: Id::from(id), code: code.to_string(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() };
+            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFull { id: Id::from(id), code: code.to_string(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() };
 
-            let make_type = |id: Id, name: &str, connectors: Vec<ConnectorFullDto>| TypeFullDto { id, name: name.to_string(), connectors, ..Default::default() };
+            let make_type = |id: Id, name: &str, connectors: Vec<ConnectorFull>| TypeFull { id, name: name.to_string(), connectors, ..Default::default() };
 
             let kit_ports = vec![make_port(port_l.clone(), vec![]), make_port(port_g.clone(), vec![]), make_port(port_l_compatible.clone(), vec![port_l.clone()])];
 
-            let dto = KitFullDto {
+            let dto = KitFull {
                 id: Id::from("synthetic-kit"),
                 name: "synthetic-kit".to_string(),
                 ports: kit_ports,
@@ -30435,70 +30440,70 @@ mod tests {
                     make_type(connectorless.clone(), "candidate-empty", vec![]),
                 ],
                 designs: vec![
-                    DesignFullDto {
+                    DesignFull {
                         id: root_design.clone(),
                         name: "root-design".to_string(),
                         pieces: vec![
-                            PieceFullDto { id: piece_external_lg.clone(), name: Some("piece-external-lg".to_string()), r#type: Some(TypeIdDto { id: selected_external_lg.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_isolated_lg.clone(), name: Some("piece-isolated-lg".to_string()), r#type: Some(TypeIdDto { id: selected_isolated_lg.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_external_ll.clone(), name: Some("piece-external-ll".to_string()), r#type: Some(TypeIdDto { id: selected_external_ll.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_neighbor_l.clone(), name: Some("piece-neighbor-l".to_string()), r#type: Some(TypeIdDto { id: neighbor_l.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_neighbor_g.clone(), name: Some("piece-neighbor-g".to_string()), r#type: Some(TypeIdDto { id: neighbor_g.clone() }), ..Default::default() },
+                            PieceFull { id: piece_external_lg.clone(), name: Some("piece-external-lg".to_string()), r#type: Some(TypeRef { id: selected_external_lg.clone() }), ..Default::default() },
+                            PieceFull { id: piece_isolated_lg.clone(), name: Some("piece-isolated-lg".to_string()), r#type: Some(TypeRef { id: selected_isolated_lg.clone() }), ..Default::default() },
+                            PieceFull { id: piece_external_ll.clone(), name: Some("piece-external-ll".to_string()), r#type: Some(TypeRef { id: selected_external_ll.clone() }), ..Default::default() },
+                            PieceFull { id: piece_neighbor_l.clone(), name: Some("piece-neighbor-l".to_string()), r#type: Some(TypeRef { id: neighbor_l.clone() }), ..Default::default() },
+                            PieceFull { id: piece_neighbor_g.clone(), name: Some("piece-neighbor-g".to_string()), r#type: Some(TypeRef { id: neighbor_g.clone() }), ..Default::default() },
                         ],
                         connections: vec![
-                            ConnectionFullDto {
+                            ConnectionFull {
                                 id: Id::from("root-lg-left"),
-                                connected: SideMetadataDto { id: Id::from("root-lg-left-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadataDto { id: Id::from("root-lg-left-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-lg-left-selected"), piece: PieceRef { id: piece_external_lg.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-lg-left-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
-                            ConnectionFullDto {
+                            ConnectionFull {
                                 id: Id::from("root-lg-gable"),
-                                connected: SideMetadataDto { id: Id::from("root-lg-gable-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadataDto { id: Id::from("root-lg-gable-neighbor"), piece: PieceIdDto { id: piece_neighbor_g.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-lg-gable-selected"), piece: PieceRef { id: piece_external_lg.clone() }, port: Some(PortRef { id: port_g.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-lg-gable-neighbor"), piece: PieceRef { id: piece_neighbor_g.clone() }, port: Some(PortRef { id: port_g.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
-                            ConnectionFullDto {
+                            ConnectionFull {
                                 id: Id::from("root-ll-left-0"),
-                                connected: SideMetadataDto { id: Id::from("root-ll-left-0-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadataDto { id: Id::from("root-ll-left-0-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-ll-left-0-selected"), piece: PieceRef { id: piece_external_ll.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-ll-left-0-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
-                            ConnectionFullDto {
+                            ConnectionFull {
                                 id: Id::from("root-ll-left-1"),
-                                connected: SideMetadataDto { id: Id::from("root-ll-left-1-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
-                                connecting: SideMetadataDto { id: Id::from("root-ll-left-1-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connected: SideMetadata { id: Id::from("root-ll-left-1-selected"), piece: PieceRef { id: piece_external_ll.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadata { id: Id::from("root-ll-left-1-neighbor"), piece: PieceRef { id: piece_neighbor_l.clone() }, port: Some(PortRef { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                         ],
                         ..Default::default()
                     },
-                    DesignFullDto {
+                    DesignFull {
                         id: candidate_design_free_lg.clone(),
                         name: "candidate-design-free-lg".to_string(),
-                        pieces: vec![PieceFullDto { id: piece_candidate_free_lg.clone(), name: Some("piece-candidate-free-lg".to_string()), r#type: Some(TypeIdDto { id: candidate_lg.clone() }), ..Default::default() }],
+                        pieces: vec![PieceFull { id: piece_candidate_free_lg.clone(), name: Some("piece-candidate-free-lg".to_string()), r#type: Some(TypeRef { id: candidate_lg.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
-                    DesignFullDto {
+                    DesignFull {
                         id: candidate_design_consumed_lg.clone(),
                         name: "candidate-design-consumed-lg".to_string(),
                         pieces: vec![
-                            PieceFullDto { id: piece_candidate_consumed_lg.clone(), name: Some("piece-candidate-consumed-lg".to_string()), r#type: Some(TypeIdDto { id: candidate_lg.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_candidate_consumed_neighbor.clone(), name: Some("piece-candidate-consumed-neighbor".to_string()), r#type: Some(TypeIdDto { id: neighbor_l.clone() }), ..Default::default() },
+                            PieceFull { id: piece_candidate_consumed_lg.clone(), name: Some("piece-candidate-consumed-lg".to_string()), r#type: Some(TypeRef { id: candidate_lg.clone() }), ..Default::default() },
+                            PieceFull { id: piece_candidate_consumed_neighbor.clone(), name: Some("piece-candidate-consumed-neighbor".to_string()), r#type: Some(TypeRef { id: neighbor_l.clone() }), ..Default::default() },
                         ],
-                        connections: vec![ConnectionFullDto {
+                        connections: vec![ConnectionFull {
                             id: Id::from("candidate-consumed-lg-left"),
-                            connected: SideMetadataDto {
+                            connected: SideMetadata {
                                 id: Id::from("candidate-consumed-lg-left-primary"),
-                                piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() },
-                                port: Some(PortIdDto { id: port_l_compatible.clone() }),
+                                piece: PieceRef { id: piece_candidate_consumed_lg.clone() },
+                                port: Some(PortRef { id: port_l_compatible.clone() }),
                                 design_piece: None,
                                 connector: None,
                             },
-                            connecting: SideMetadataDto {
+                            connecting: SideMetadata {
                                 id: Id::from("candidate-consumed-lg-left-neighbor"),
-                                piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() },
-                                port: Some(PortIdDto { id: port_l.clone() }),
+                                piece: PieceRef { id: piece_candidate_consumed_neighbor.clone() },
+                                port: Some(PortRef { id: port_l.clone() }),
                                 design_piece: None,
                                 connector: None,
                             },
@@ -30506,10 +30511,10 @@ mod tests {
                         }],
                         ..Default::default()
                     },
-                    DesignFullDto {
+                    DesignFull {
                         id: candidate_design_empty.clone(),
                         name: "candidate-design-empty".to_string(),
-                        pieces: vec![PieceFullDto { id: piece_candidate_empty.clone(), name: Some("piece-candidate-empty".to_string()), r#type: Some(TypeIdDto { id: connectorless.clone() }), ..Default::default() }],
+                        pieces: vec![PieceFull { id: piece_candidate_empty.clone(), name: Some("piece-candidate-empty".to_string()), r#type: Some(TypeRef { id: connectorless.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
                 ],
@@ -30528,7 +30533,7 @@ mod tests {
             ids.insert("candidate-design-free-lg", candidate_design_free_lg.clone());
             ids.insert("candidate-design-consumed-lg", candidate_design_consumed_lg.clone());
             ids.insert("candidate-design-empty", candidate_design_empty.clone());
-            (KitGraph::from_full_dto(dto), ids)
+            (KitGraph::from_full(dto), ids)
         }
 
         fn contains_id<T>(items: &[T], expected_id: &str, id_of: impl Fn(&T) -> Id) -> bool {
@@ -30653,19 +30658,19 @@ mod tests {
     mod metabolism_kit {
         use std::path::Path;
 
-        use crate::kit_graph::{KitFullDto, KitGraph};
+        use crate::kit_graph::{KitFull, KitGraph};
 
         #[test]
         fn metabolism_asset_loads_families_and_nested_ports() {
             let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join("semio").join("metabolism.kit.semio.json");
             let json = std::fs::read_to_string(&path).expect("read metabolism.kit.semio.json");
-            let dto: KitFullDto = serde_json::from_str(&json).expect("parse KitFullDto");
+            let dto: KitFull = serde_json::from_str(&json).expect("parse KitFull");
             let family_count = dto.families.len();
             let ports_in_dto: usize = dto.families.iter().map(|f| f.ports.len()).sum();
             assert_eq!(family_count, 12, "fixture should list 12 families");
             assert_eq!(ports_in_dto, 18, "fixture should contain 18 ports under families");
 
-            let kit = KitGraph::from_full_dto(dto);
+            let kit = KitGraph::from_full(dto);
             let kr = kit.read().expect("kit read");
             assert_eq!(kr.families.len(), 12, "hydrated kit keeps all families");
             let ports_loaded: usize = kr.families.iter().filter_map(|f| f.read().ok()).map(|f| f.ports.len()).sum();
@@ -30678,24 +30683,24 @@ mod tests {
         use rusqlite::Connection;
         use tempfile::tempdir;
 
-        use crate::design::DesignFullDto;
+        use crate::design::DesignFull;
         use crate::id::Id;
         use crate::kit_change::{KitChange, KitChangeKind};
         use crate::kit_checkpoint::KitCheckpoint;
-        use crate::kit_graph::{KitFullDto, KitGraph};
-        use crate::piece::PieceFullDto;
-        use crate::typ::TypeFullDto;
+        use crate::kit_graph::{KitFull, KitGraph};
+        use crate::piece::PieceFull;
+        use crate::typ::TypeFull;
 
         #[test]
         fn sqlite_schema_roundtrip() {
             let type_id = Id::new_v7();
             let piece_id = Id::new_v7();
-            let kit = KitGraph::from_full_dto(KitFullDto {
+            let kit = KitGraph::from_full(KitFull {
                 id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
                 ports: vec![],
-                types: vec![TypeFullDto { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
-                designs: vec![DesignFullDto { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFullDto { id: piece_id, r#type: Some(crate::typ::TypeIdDto { id: type_id }), ..Default::default() }], ..Default::default() }],
+                types: vec![TypeFull { id: type_id.clone(), name: "Wall".into(), ..Default::default() }],
+                designs: vec![DesignFull { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFull { id: piece_id, r#type: Some(crate::typ::TypeRef { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
             let dir = tempdir().expect("tempdir");
@@ -30741,23 +30746,23 @@ mod tests {
     mod io_local_folder {
         use tempfile::tempdir;
 
-        use crate::file::FileFullDto;
-        use crate::folder::FolderFullDto;
+        use crate::file::FileFull;
+        use crate::folder::FolderFull;
         use crate::id::Id;
-        use crate::kit_graph::{KitFullDto, KitGraph};
+        use crate::kit_graph::{KitFull, KitGraph};
 
         #[test]
         fn local_folder_roundtrip_externalizes_and_rehydrates_assets() {
             let file_id = Id::new_v7();
             let folder_id = Id::new_v7();
-            let dto = KitFullDto {
+            let dto = KitFull {
                 id: Id::new_v7(),
                 name: "local-folder-roundtrip".into(),
-                files: vec![FileFullDto { id: file_id.clone(), url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(), mime: Some("text/plain".into()), ..Default::default() }],
-                folders: vec![FolderFullDto { id: folder_id, path: "assets/docs".into(), ..Default::default() }],
+                files: vec![FileFull { id: file_id.clone(), url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(), mime: Some("text/plain".into()), ..Default::default() }],
+                folders: vec![FolderFull { id: folder_id, path: "assets/docs".into(), ..Default::default() }],
                 ..Default::default()
             };
-            let kit = KitGraph::from_full_dto(dto);
+            let kit = KitGraph::from_full(dto);
             let dir = tempdir().expect("tempdir");
 
             kit.read().expect("read").save_local_folder(dir.path()).expect("save local folder");
@@ -30937,19 +30942,19 @@ mod tests {
         mod common {
             //! Helpers for event-sequence tests.
 
-            use crate::connection::ConnectionFullDto;
-            use crate::connector::ConnectorFullDto;
-            use crate::design::DesignFullDto;
+            use crate::connection::ConnectionFull;
+            use crate::connector::ConnectorFull;
+            use crate::design::DesignFull;
             use crate::events::{EntityKind, EntityRef, KitEvent};
-            use crate::file::FileFullDto;
-            use crate::group::GroupFullDto;
+            use crate::file::FileFull;
+            use crate::group::GroupFull;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph, KitGraphRef};
-            use crate::layer::LayerFullDto;
-            use crate::piece::{PieceFullDto, PieceIdDto};
-            use crate::port::{PortFullDto, PortIdDto};
-            use crate::side::SideMetadataDto;
-            use crate::typ::{TypeFullDto, TypeIdDto};
+            use crate::kit_graph::{KitFull, KitGraph, KitGraphRef};
+            use crate::layer::LayerFull;
+            use crate::piece::{PieceFull, PieceRef};
+            use crate::port::{PortFull, PortRef};
+            use crate::side::SideMetadata;
+            use crate::typ::{TypeFull, TypeRef};
 
             pub fn drain(rx: &mut async_broadcast::Receiver<KitEvent>) -> Vec<KitEvent> {
                 let mut out = Vec::new();
@@ -30970,14 +30975,14 @@ mod tests {
                 let piece_id = Id::new_v7();
                 let kit_id = Id::new_v7();
 
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFull { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, type_id, design_id, piece_id)
             }
 
@@ -30987,20 +30992,20 @@ mod tests {
                 let piece_id = Id::new_v7();
                 let layer_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto {
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
-                        layers: vec![LayerFullDto { id: layer_id.clone(), name: "L".into(), ..Default::default() }],
+                        pieces: vec![PieceFull { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
+                        layers: vec![LayerFull { id: layer_id.clone(), name: "L".into(), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, design_id, layer_id)
             }
 
@@ -31010,20 +31015,20 @@ mod tests {
                 let piece_id = Id::new_v7();
                 let group_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto {
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
-                        groups: vec![GroupFullDto { id: group_id.clone(), name: "G".into(), pieces: vec![PieceIdDto { id: piece_id.clone() }], ..Default::default() }],
+                        pieces: vec![PieceFull { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
+                        groups: vec![GroupFull { id: group_id.clone(), name: "G".into(), pieces: vec![PieceRef { id: piece_id.clone() }], ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, design_id, group_id)
             }
 
@@ -31032,49 +31037,49 @@ mod tests {
                 let port_id = Id::new_v7();
                 let conn_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
-                    types: vec![TypeFullDto {
+                    ports: vec![PortFull { id: port_id.clone(), ..Default::default() }],
+                    types: vec![TypeFull {
                         id: type_id.clone(),
                         name: "typ".into(),
-                        connectors: vec![ConnectorFullDto { id: conn_id.clone(), code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
+                        connectors: vec![ConnectorFull { id: conn_id.clone(), code: "C".into(), port: Some(PortRef { id: port_id.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, type_id, conn_id)
             }
 
             pub fn kit_with_type_only() -> (KitGraphRef, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto { id: kit_id, name: "kit".into(), types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
-                (KitGraph::from_full_dto(dto), type_id)
+                let dto = KitFull { id: kit_id, name: "kit".into(), types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
+                (KitGraph::from_full(dto), type_id)
             }
 
             pub fn kit_with_port() -> (KitGraphRef, Id, Id) {
                 let type_id = Id::new_v7();
                 let port_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    ports: vec![PortFull { id: port_id.clone(), ..Default::default() }],
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, type_id, port_id)
             }
 
             pub fn kit_with_file() -> (KitGraphRef, Id) {
                 let file_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto { id: kit_id, name: "kit".into(), files: vec![FileFullDto { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
-                let kit = KitGraph::from_full_dto(dto);
+                let dto = KitFull { id: kit_id, name: "kit".into(), files: vec![FileFull { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
+                let kit = KitGraph::from_full(dto);
                 (kit, file_id)
             }
 
@@ -31088,28 +31093,28 @@ mod tests {
                 let side_b = Id::new_v7();
                 let kit_id = Id::new_v7();
 
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto {
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull {
                         id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![
-                            PieceFullDto { id: piece_a.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
-                            PieceFullDto { id: piece_b.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                            PieceFull { id: piece_a.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
+                            PieceFull { id: piece_b.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() },
                         ],
-                        connections: vec![ConnectionFullDto {
+                        connections: vec![ConnectionFull {
                             id: conn_id.clone(),
-                            connected: SideMetadataDto { id: side_a, piece: PieceIdDto { id: piece_a.clone() }, port: None, design_piece: None, connector: None },
-                            connecting: SideMetadataDto { id: side_b, piece: PieceIdDto { id: piece_b.clone() }, port: None, design_piece: None, connector: None },
+                            connected: SideMetadata { id: side_a, piece: PieceRef { id: piece_a.clone() }, port: None, design_piece: None, connector: None },
+                            connecting: SideMetadata { id: side_b, piece: PieceRef { id: piece_b.clone() }, port: None, design_piece: None, connector: None },
                             ..Default::default()
                         }],
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
@@ -31224,15 +31229,15 @@ mod tests {
         }
 
         mod attribute {
-            use crate::attribute::AttributeFullDto;
+            use crate::attribute::AttributeFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
+            use crate::kit_graph::{KitFull, KitGraph};
 
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFullDto { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFull { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -31245,15 +31250,15 @@ mod tests {
         }
 
         mod author {
-            use crate::author::AuthorFullDto;
+            use crate::author::AuthorFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
+            use crate::kit_graph::{KitFull, KitGraph};
 
             #[test]
             fn author_set_email_emits() {
                 let ag = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), authors: vec![AuthorFullDto { id: ag.clone(), name: "n".into(), email: "e@x".into(), role: None, rank: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), authors: vec![AuthorFull { id: ag.clone(), name: "n".into(), email: "e@x".into(), role: None, rank: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -31310,13 +31315,13 @@ mod tests {
         }
 
         mod benchmark {
-            use crate::benchmark::BenchmarkFullDto;
+            use crate::benchmark::BenchmarkFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::port::PortFullDto;
-            use crate::quality::QualityFullDto;
-            use crate::typ::TypeFullDto;
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::port::PortFull;
+            use crate::quality::QualityFull;
+            use crate::typ::TypeFull;
 
             #[test]
             fn benchmark_set_min_emits() {
@@ -31324,15 +31329,15 @@ mod tests {
                 let pg = Id::new_v7();
                 let qg = Id::new_v7();
                 let bg = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full(KitFull {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    ports: vec![PortFullDto {
+                    ports: vec![PortFull {
                         id: pg.clone(),
-                        qualities: vec![QualityFullDto { id: qg.clone(), key: "qk".into(), benchmarks: vec![BenchmarkFullDto { id: bg.clone(), name: "bn".into(), ..Default::default() }], ..Default::default() }],
+                        qualities: vec![QualityFull { id: qg.clone(), key: "qk".into(), benchmarks: vec![BenchmarkFull { id: bg.clone(), name: "bn".into(), ..Default::default() }], ..Default::default() }],
                         ..Default::default()
                     }],
-                    types: vec![TypeFullDto { id: tg.clone(), name: "t".into(), ..Default::default() }],
+                    types: vec![TypeFull { id: tg.clone(), name: "t".into(), ..Default::default() }],
                     ..Default::default()
                 });
                 let mut rx = kit.read().unwrap().subscribe();
@@ -31351,15 +31356,15 @@ mod tests {
         }
 
         mod concept {
-            use crate::concept::ConceptFullDto;
+            use crate::concept::ConceptFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
+            use crate::kit_graph::{KitFull, KitGraph};
 
             #[test]
             fn concept_set_name_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), concepts: vec![ConceptFullDto { id: g.clone(), name: "c".into(), description: None, order: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), concepts: vec![ConceptFull { id: g.clone(), name: "c".into(), description: None, order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let c = {
                     let kr = kit.read().unwrap();
@@ -31434,15 +31439,15 @@ mod tests {
         mod diff_apply {
             use crate::events::{EntityKind, EntityRef, KitEvent};
             use crate::id::Id;
-            use crate::piece::PieceFullDto;
-            use crate::typ::TypeIdDto;
+            use crate::piece::PieceFull;
+            use crate::typ::TypeRef;
 
             #[test]
             fn semantic_add_design_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write().unwrap().semantic_add_design_piece(dg.as_str(), PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }).unwrap();
+                kit.write().unwrap().semantic_add_design_piece(dg.as_str(), PieceFull { id: new_piece.clone(), r#type: Some(TypeRef { id: tg.clone() }), ..Default::default() }).unwrap();
                 let evs = super::common::drain(&mut rx);
                 let child = EntityRef::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
@@ -31496,33 +31501,33 @@ mod tests {
                 let conn_a = crate::id::Id::new_v7();
                 let conn_b = crate::id::Id::new_v7();
                 let kit_id = crate::id::Id::new_v7();
-                let dto = crate::kit_graph::KitFullDto {
+                let dto = crate::kit_graph::KitFull {
                     id: kit_id,
                     name: "kit".into(),
                     ports: vec![
-                        crate::port::PortFullDto {
+                        crate::port::PortFull {
                             id: port_a.clone(),
-                            compatible_ports: vec![crate::port::PortIdDto { id: port_b.clone() }],
+                            compatible_ports: vec![crate::port::PortRef { id: port_b.clone() }],
                             ..Default::default()
                         },
-                        crate::port::PortFullDto {
+                        crate::port::PortFull {
                             id: port_b.clone(),
-                            compatible_ports: vec![crate::port::PortIdDto { id: port_a.clone() }],
+                            compatible_ports: vec![crate::port::PortRef { id: port_a.clone() }],
                             ..Default::default()
                         },
                     ],
-                    types: vec![crate::typ::TypeFullDto {
+                    types: vec![crate::typ::TypeFull {
                         id: type_id.clone(),
                         name: "typ".into(),
                         connectors: vec![
-                            crate::connector::ConnectorFullDto { id: conn_a.clone(), code: "A".into(), port: Some(crate::port::PortIdDto { id: port_a.clone() }), ..Default::default() },
-                            crate::connector::ConnectorFullDto { id: conn_b.clone(), code: "B".into(), port: Some(crate::port::PortIdDto { id: port_b.clone() }), ..Default::default() },
+                            crate::connector::ConnectorFull { id: conn_a.clone(), code: "A".into(), port: Some(crate::port::PortRef { id: port_a.clone() }), ..Default::default() },
+                            crate::connector::ConnectorFull { id: conn_b.clone(), code: "B".into(), port: Some(crate::port::PortRef { id: port_b.clone() }), ..Default::default() },
                         ],
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                let kit = crate::kit_graph::KitGraph::from_full_dto(dto);
+                let kit = crate::kit_graph::KitGraph::from_full(dto);
                 let kr = kit.read().unwrap();
                 let t = kr.semio_type(type_id.as_str()).unwrap();
                 let tr = t.read().unwrap();
@@ -31540,7 +31545,7 @@ mod tests {
         mod design {
             use crate::events::{EntityKind, EntityRef};
             use crate::id::Id;
-            use crate::location::LocationIdDto;
+            use crate::location::LocationRef;
 
             macro_rules! design_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
@@ -31566,7 +31571,7 @@ mod tests {
             design_meta_test!(design_set_description, crate::events::DesignField::Description, |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
             design_meta_test!(design_set_icon, crate::events::DesignField::Icon, |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
             design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
-            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(LocationIdDto { id: Id::new_v7() })) });
+            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(LocationRef { id: Id::new_v7() })) });
             design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
             design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
             design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
@@ -31574,29 +31579,29 @@ mod tests {
             #[test]
             fn design_add_family_ref_emits() {
                 use crate::change_command::{ChangeDesignCommand, ChangeKitCommand};
-                use crate::design::{DesignFullDto, DesignIdDto};
+                use crate::design::{DesignFull, DesignRef};
                 use crate::events::KitEvent;
-                use crate::family::{FamilyFullDto, FamilyIdDto};
-                use crate::kit_graph::{KitFullDto, KitGraph};
-                use crate::piece::PieceFullDto;
-                use crate::typ::{TypeFullDto, TypeIdDto};
+                use crate::family::{FamilyFull, FamilyRef};
+                use crate::kit_graph::{KitFull, KitGraph};
+                use crate::piece::PieceFull;
+                use crate::typ::{TypeFull, TypeRef};
 
                 let family_id = Id::new_v7();
                 let type_id = Id::new_v7();
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    families: vec![FamilyFullDto { id: family_id.clone(), name: "F".into(), ..Default::default() }],
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
+                    families: vec![FamilyFull { id: family_id.clone(), name: "F".into(), ..Default::default() }],
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFull { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
+                let kit = KitGraph::from_full(dto);
                 let mut rx = kit.read().unwrap().subscribe();
-                let cmd = ChangeKitCommand::ChangeDesignCommands { design_id: DesignIdDto { id: design_id.clone() }, commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyIdDto { id: family_id.clone() }] }] };
+                let cmd = ChangeKitCommand::ChangeDesignCommands { design_id: DesignRef { id: design_id.clone() }, commands: vec![ChangeDesignCommand::SetFamilies { families: vec![FamilyRef { id: family_id.clone() }] }] };
                 cmd.apply(&kit).unwrap();
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::Design { event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Families), .. })));
@@ -31622,14 +31627,14 @@ mod tests {
 
         mod folder {
             use crate::events::KitEvent;
-            use crate::folder::FolderFullDto;
+            use crate::folder::FolderFull;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
+            use crate::kit_graph::{KitFull, KitGraph};
 
             #[test]
             fn folder_set_description_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), folders: vec![FolderFullDto { id: g.clone(), path: "/p".into(), description: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), folders: vec![FolderFull { id: g.clone(), path: "/p".into(), description: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let f = {
                     let kr = kit.read().unwrap();
@@ -31893,7 +31898,7 @@ mod tests {
                     let tr = t.read().unwrap();
                     tr.port(port_g.as_str()).unwrap().clone()
                 };
-                let fid = crate::family::FamilyIdDto { id: Id::new_v7() };
+                let fid = crate::family::FamilyRef { id: Id::new_v7() };
                 p.write().unwrap().set_compatible_families(vec![fid]).unwrap();
                 let evs = super::common::drain(&mut rx);
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::Port { event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies), .. })));
@@ -31903,13 +31908,13 @@ mod tests {
         mod prop {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::prop::PropFullDto;
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::prop::PropFull;
 
             #[test]
             fn prop_set_unit_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None, quality: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), props: vec![PropFull { id: g.clone(), key: "k".into(), value: "v".into(), unit: None, quality: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
                     let kr = kit.read().unwrap();
@@ -31924,13 +31929,13 @@ mod tests {
         mod quality {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::quality::QualityFullDto;
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::quality::QualityFull;
 
             #[test]
             fn quality_set_key_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), qualities: vec![QualityFullDto { id: g.clone(), key: "k1".into(), ..Default::default() }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), qualities: vec![QualityFull { id: g.clone(), key: "k1".into(), ..Default::default() }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let q = {
                     let kr = kit.read().unwrap();
@@ -31944,25 +31949,25 @@ mod tests {
 
         mod representation {
             use crate::events::KitEvent;
-            use crate::file::{FileFullDto, FileIdDto};
+            use crate::file::{FileFull, FileRef};
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::representation::RepresentationFullDto;
-            use crate::typ::TypeFullDto;
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::representation::RepresentationFull;
+            use crate::typ::TypeFull;
 
             #[test]
             fn representation_set_url_emits() {
                 let fg = Id::new_v7();
                 let rg = Id::new_v7();
                 let tg = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full(KitFull {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    files: vec![FileFullDto { id: fg.clone(), url: "https://f".into(), ..Default::default() }],
-                    types: vec![TypeFullDto {
+                    files: vec![FileFull { id: fg.clone(), url: "https://f".into(), ..Default::default() }],
+                    types: vec![TypeFull {
                         id: tg.clone(),
                         name: "t".into(),
-                        representations: vec![RepresentationFullDto { id: rg.clone(), url: "https://r".into(), file: Some(FileIdDto { id: fg.clone() }), ..Default::default() }],
+                        representations: vec![RepresentationFull { id: rg.clone(), url: "https://r".into(), file: Some(FileRef { id: fg.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -32009,13 +32014,13 @@ mod tests {
         }
 
         mod stat {
-            use crate::design::DesignFullDto;
+            use crate::design::DesignFull;
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::piece::PieceFullDto;
-            use crate::stat::StatFullDto;
-            use crate::typ::{TypeFullDto, TypeIdDto};
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::piece::PieceFull;
+            use crate::stat::StatFull;
+            use crate::typ::{TypeFull, TypeRef};
 
             #[test]
             fn stat_set_description_emits() {
@@ -32023,15 +32028,15 @@ mod tests {
                 let design_id = Id::new_v7();
                 let piece_id = Id::new_v7();
                 let stat_id = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto {
+                let kit = KitGraph::from_full(KitFull {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
-                    designs: vec![DesignFullDto {
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFull {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
-                        stats: vec![StatFullDto { id: stat_id.clone(), key: "sk".into(), value: "sv".into(), description: None, unit: None }],
+                        pieces: vec![PieceFull { id: piece_id.clone(), r#type: Some(TypeRef { id: type_id.clone() }), ..Default::default() }],
+                        stats: vec![StatFull { id: stat_id.clone(), key: "sk".into(), value: "sv".into(), description: None, unit: None }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -32052,13 +32057,13 @@ mod tests {
         mod tag {
             use crate::events::KitEvent;
             use crate::id::Id;
-            use crate::kit_graph::{KitFullDto, KitGraph};
-            use crate::tag::TagFullDto;
+            use crate::kit_graph::{KitFull, KitGraph};
+            use crate::tag::TagFull;
 
             #[test]
             fn tag_set_order_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), tags: vec![TagFullDto { id: g.clone(), name: "t".into(), order: None }], ..Default::default() });
+                let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), tags: vec![TagFull { id: g.clone(), name: "t".into(), order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let t = {
                     let kr = kit.read().unwrap();
@@ -32101,29 +32106,29 @@ mod tests {
             type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
             type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
             type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
-            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::location::LocationIdDto { id: crate::id::Id::new_v7() })) });
+            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::location::LocationRef { id: crate::id::Id::new_v7() })) });
             type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
             type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
 
             #[test]
             fn type_add_family_ref_roundtrip() {
                 use crate::diff::{FamilyIdsDiff, TypeDiff};
-                use crate::family::{FamilyFullDto, FamilyIdDto};
-                use crate::kit_graph::{KitFullDto, KitGraph};
-                use crate::typ::TypeFullDto;
+                use crate::family::{FamilyFull, FamilyRef};
+                use crate::kit_graph::{KitFull, KitGraph};
+                use crate::typ::TypeFull;
 
                 let family_id = Id::new_v7();
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
+                let dto = KitFull {
                     id: kit_id,
                     name: "kit".into(),
-                    families: vec![FamilyFullDto { id: family_id.clone(), name: "F".into(), ..Default::default() }],
-                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    families: vec![FamilyFull { id: family_id.clone(), name: "F".into(), ..Default::default() }],
+                    types: vec![TypeFull { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     ..Default::default()
                 };
-                let kit = KitGraph::from_full_dto(dto);
-                let fragment = TypeDiff { families: Some(FamilyIdsDiff { added: vec![FamilyIdDto { id: family_id.clone() }], removed: vec![], ..Default::default() }), ..Default::default() };
+                let kit = KitGraph::from_full(dto);
+                let fragment = TypeDiff { families: Some(FamilyIdsDiff { added: vec![FamilyRef { id: family_id.clone() }], removed: vec![], ..Default::default() }), ..Default::default() };
                 KitGraph::apply_type_diff_fragment(&kit, &type_id, &fragment).unwrap();
                 let t = kit.read().unwrap().semio_type(type_id.as_str()).unwrap();
                 let tr = t.read().unwrap();
@@ -32145,19 +32150,19 @@ mod tests {
         use crate::kit_store_command::{self, KitStoreCommand};
         use crate::kit_transaction::TransactionCommand;
         use crate::read::{ReadKitCommand, ReadTypeCommand, ReadTypeCommandOutput};
-        use crate::typ::TypeIdDto;
+        use crate::typ::TypeRef;
         use crate::typ::TypeStore;
         fn make_kit_with_type() -> (Arc<RwLock<KitGraph>>, Id) {
             let mut inner = KitGraph::new("k");
             let t = Arc::new(RwLock::new(TypeStore::new("T0")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
-            inner.initial = inner.to_full_dto();
+            inner.initial = inner.to_full();
             (Arc::new(RwLock::new(inner)), tid)
         }
 
         fn read_type_name(g: &crate::kit_graph::KitGraph, tid: &Id) -> String {
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(g).expect("read type");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => match &results[0] {
@@ -32179,20 +32184,20 @@ mod tests {
             let a = KitGraph::new("a");
             let mut b = KitGraph::new("b");
             b.set_name("renamed".into()).unwrap();
-            let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: b.to_full_dto() };
-            let ka = KitGraph::from_full_dto(a.to_full_dto());
+            let cmd = ChangeKitCommand::ReplaceKitFromFull { dto: b.to_full() };
+            let ka = KitGraph::from_full(a.to_full());
             cmd.apply(&ka).expect("apply");
             assert_eq!(ka.read().unwrap().name, "renamed");
         }
 
         #[test]
         fn add_family_change_command_undo_roundtrip() {
-            use crate::family::FamilyFullDto;
-            use crate::kit_graph::KitFullDto;
+            use crate::family::FamilyFull;
+            use crate::kit_graph::KitFull;
 
-            let kit = KitGraph::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), ..Default::default() });
+            let kit = KitGraph::from_full(KitFull { id: Id::new_v7(), name: "k".into(), ..Default::default() });
             let fid = Id::new_v7();
-            let cmd = ChangeKitCommand::AddFamily { family: FamilyFullDto { id: fid.clone(), name: "Fam".into(), ..Default::default() } };
+            let cmd = ChangeKitCommand::AddFamily { family: FamilyFull { id: fid.clone(), name: "Fam".into(), ..Default::default() } };
             let inv = cmd.apply(&kit).expect("apply add family");
             assert_eq!(kit.read().expect("kr").families.len(), 1);
             ChangeKitCommand::apply_many(&kit, &inv).expect("undo");
@@ -32205,7 +32210,7 @@ mod tests {
             let t = Arc::new(RwLock::new(TypeStore::new("T")));
             let tid = t.read().expect("tr").id.clone();
             inner.types.push(t);
-            inner.initial = inner.to_full_dto();
+            inner.initial = inner.to_full();
             let k = Arc::new(RwLock::new(inner));
             let did = match KitGraph::execute(&k, KitStoreCommand::NewDraft { checkpoint_id: None, alternative_id: None }).expect("nd") {
                 kit_store_command::KitStoreCommandResult::NewDraft { draft_id } => draft_id,
@@ -32228,7 +32233,7 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32252,7 +32257,7 @@ mod tests {
             inner.types.push(t);
             drop(inner);
             let g = k.read().unwrap();
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
@@ -32303,11 +32308,11 @@ mod tests {
                         id: txid,
                         commands: vec![
                             TransactionCommand::ChangeKitCommands {
-                                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
+                                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
                             },
-                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
                             TransactionCommand::Undo,
-                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
+                            TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid.clone() }, commands: vec![ReadTypeCommand::ReadTypeNameCommand] }] },
                         ],
                     }],
                 },
@@ -32379,7 +32384,7 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32442,7 +32447,7 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32499,7 +32504,7 @@ mod tests {
                             id: tx0,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32559,7 +32564,7 @@ mod tests {
                             id: tx1,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32607,7 +32612,7 @@ mod tests {
                             id: tx,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32656,7 +32661,7 @@ mod tests {
             };
 
             let change_name = |name: &str| TransactionCommand::ChangeKitCommands {
-                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
+                commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
             };
 
             let run_tx = |command: TransactionCommand| {
@@ -32753,7 +32758,7 @@ mod tests {
                             id: tx0,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32812,7 +32817,7 @@ mod tests {
                             id: tx1,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32872,7 +32877,7 @@ mod tests {
                             id: tx,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeRef { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
                                 },
                                 TransactionCommand::Finalize,
                             ],
@@ -32901,7 +32906,7 @@ mod tests {
         fn read_command_tree_returns_nested_results() {
             let (k, tid) = make_kit_with_type();
             let g = k.read().expect("g");
-            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::ReadTypeFullCommand, ReadTypeCommand::ReadTypeNameCommand] };
+            let cmd = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypeFullCommand, ReadTypeCommand::ReadTypeNameCommand] };
             let r = cmd.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
@@ -32918,7 +32923,7 @@ mod tests {
         fn read_type_ports_and_name_nested() {
             let (k, tid) = make_kit_with_type();
             let g = k.read().expect("g");
-            let r = ReadKitCommand::ReadKitTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::ReadTypePortsFullCommand, ReadTypeCommand::ReadTypeNameCommand] }.execute(&*g).expect("r");
+            let r = ReadKitCommand::ReadKitTypeCommands { id: TypeRef { id: tid }, commands: vec![ReadTypeCommand::ReadTypePortsFullCommand, ReadTypeCommand::ReadTypeNameCommand] }.execute(&*g).expect("r");
             match r {
                 crate::read::ReadKitCommandOutput::ReadKitTypeCommands { results } => {
                     assert!(matches!(&results[0], ReadTypeCommandOutput::ReadTypePortsFullCommand { .. }));
@@ -32940,7 +32945,7 @@ mod wasm_handle_tests {
     #[wasm_bindgen_test]
     fn kit_store_handle_create_roundtrips_snapshot() {
         let kit = KitGraph::new("wasm-kit-test");
-        let dto = kit.to_full_dto();
+        let dto = kit.to_full();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
         let snap = h.snapshot().expect("snapshot");
         let parsed: serde_json::Value = serde_wasm_bindgen::from_value(snap).unwrap();
@@ -32951,7 +32956,7 @@ mod wasm_handle_tests {
     async fn kit_graphql_query_scoped_kit_name() {
         crate::wasm::boot();
         let kit = KitGraph::new("wasm-gql-name");
-        let dto = kit.to_full_dto();
+        let dto = kit.to_full();
         let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
 
         let req = r#"{"query":"query($scope: KitReadScopeInput!) { kit(scope: $scope) { name } }","variables":{"scope":{"theKit":{"confirm":true}}}}"#;
@@ -32963,27 +32968,27 @@ mod wasm_handle_tests {
     }
 }
 
-pub use attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
-pub use author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
-pub use benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
+pub use attribute::{AttributeFull, AttributeRef, AttributeMetadata, AttributeShallow, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
+pub use author::{AuthorFull, AuthorRef, AuthorMetadata, AuthorShallow, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
+pub use benchmark::{BenchmarkFull, BenchmarkRef, BenchmarkMetadata, BenchmarkShallow, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
 pub use change_command::{
     ChangeAttributeCommand, ChangeConnectionCommand, ChangeConnectorCommand, ChangeDesignCommand, ChangeGroupCommand, ChangeKitCommand, ChangeLayerCommand, ChangePieceCommand, ChangePortCommand, ChangePropCommand, ChangeRepresentationCommand,
     ChangeStatCommand, ChangeTypeCommand,
 };
-pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
-pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
-pub use connector::{ColorDto, ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
-pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
+pub use concept::{ConceptFull, ConceptRef, ConceptMetadata, ConceptShallow, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
+pub use connection::{ConnectionFull, ConnectionRef, ConnectionMetadata, ConnectionShallow, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
+pub use connector::{ColorDto, ConnectorFull, ConnectorRef, ConnectorMetadata, ConnectorShallow, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
+pub use design::{DesignFull, DesignRef, DesignMetadata, DesignShallow, DesignStore, DesignStoreRef, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
-pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
-pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
+pub use file::{FileFull, FileRef, FileMetadata, FileShallow, FileStore, FileStoreRef, FileStoreWeak};
+pub use folder::{FolderFull, FolderRef, FolderMetadata, FolderShallow, FolderStore, FolderStoreRef, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Plane, Point, Vector};
-pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
+pub use group::{GroupFull, GroupRef, GroupMetadata, GroupShallow, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{KitFullDto, KitGraphRef, KitGraphWeak, KitIdDto, KitMetadataDto, KitShallowDto, KitStore};
+pub use kit::{KitFull, KitGraphRef, KitGraphWeak, KitRef, KitMetadata, KitShallow, KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{Change, KitChange, KitChangeKind, KitDesignAtomicsBlock, KitDesignChange, KitDesignChangeBlock, PieceChange, TypeChange};
@@ -32995,12 +33000,12 @@ pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_graph::KitGraph;
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};
-pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreRef, LocationStoreWeak};
-pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak};
-pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak};
-pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
-pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef, QualityStoreWeak};
+pub use layer::{LayerFull, LayerRef, LayerMetadata, LayerShallow, LayerStore, LayerStoreRef, LayerStoreWeak};
+pub use location::{LocationFull, LocationRef, LocationMetadata, LocationShallow, LocationStore, LocationStoreRef, LocationStoreWeak};
+pub use piece::{PieceFull, PieceRef, PieceMetadata, PieceShallow, PieceStore, PieceStoreRef, PieceStoreWeak};
+pub use port::{PortFull, PortRef, PortMetadata, PortShallow, PortStore, PortStoreRef, PortStoreWeak};
+pub use prop::{PropFull, PropRef, PropMetadata, PropShallow, PropStore, PropStoreRef, PropStoreWeak};
+pub use quality::{QualityFull, QualityRef, QualityMetadata, QualityShallow, QualityStore, QualityStoreRef, QualityStoreWeak};
 pub use read::{
     DesignFlattenMapEntryDto, ReadAttributeCommand, ReadAttributeCommandOutput, ReadAuthorCommand, ReadAuthorCommandOutput, ReadBenchmarkCommand, ReadBenchmarkCommandOutput, ReadConceptCommand, ReadConceptCommandOutput, ReadConnectionCommand,
     ReadConnectionCommandOutput, ReadConnectorCommand, ReadConnectorCommandOutput, ReadDesignCommand, ReadDesignCommandOutput, ReadFamilyCommand, ReadFamilyCommandOutput, ReadFileCommand, ReadFileCommandOutput, ReadFolderCommand,
@@ -33009,8 +33014,8 @@ pub use read::{
     ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
-pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak};
-pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
-pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
-pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};
+pub use representation::{RepresentationFull, RepresentationRef, RepresentationMetadata, RepresentationShallow, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
+pub use side::{SideFull, SideRef, SideMetadata, SideShallow, SideStore, SideStoreRef, SideStoreWeak};
+pub use stat::{StatFull, StatRef, StatMetadata, StatShallow, StatStore, StatStoreRef, StatStoreWeak};
+pub use tag::{TagFull, TagRef, TagMetadata, TagShallow, TagStore, TagStoreRef, TagStoreWeak};
+pub use typ::{TypeFull, TypeRef, TypeMetadata, TypeShallow, TypeStore, TypeStoreRef, TypeStoreWeak};

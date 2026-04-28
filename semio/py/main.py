@@ -14740,7 +14740,7 @@ class SyncKit:
                 {
                     "cmds": [
                         {
-                            "replaceKitFromFullDto": {"dto": imported.to_dict()},
+                            "replaceKitFromFull": {"dto": imported.to_dict()},
                         }
                     ],
                 },
@@ -14759,7 +14759,7 @@ class SyncKit:
                 {
                     "cmds": [
                         {
-                            "replaceKitFromFullDto": {"dto": imported.to_dict()},
+                            "replaceKitFromFull": {"dto": imported.to_dict()},
                         }
                     ],
                 },

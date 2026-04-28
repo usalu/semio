@@ -102,7 +102,10 @@ async function storybookExecuteSessionCommands(
         `mutation($aid: KitAlternativeIdIn!, $pcp: String) { session { alternative(id: $aid) { createDraft(parentCheckpointId: $pcp) { id } } } }`,
         { aid: { id: aid }, pcp: pcp && pcp.length > 0 ? pcp : null },
       );
-      const id = str(((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["createDraft"] as Record<string, unknown> | undefined)?.["id"]);
+      const session = d["session"] as Record<string, unknown> | undefined;
+      const alt = session?.["alternative"] as Record<string, unknown> | undefined;
+      const draft = alt?.["createDraft"] as Record<string, unknown> | undefined;
+      const id = str(draft?.["id"]);
       results.push({ newDraft: { draftId: id ?? "" } });
       continue;
     }
@@ -126,11 +129,11 @@ async function storybookExecuteSessionCommands(
             `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { startTransaction { id } } } } }`,
             { aid: { id: aid } },
           );
-          const tid = str(
-            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[
-              "startTransaction"
-            ] as Record<string, unknown> | undefined)?.["id"],
-          );
+          const sessionT = d["session"] as Record<string, unknown> | undefined;
+          const altT = sessionT?.["alternative"] as Record<string, unknown> | undefined;
+          const draftT = altT?.["draft"] as Record<string, unknown> | undefined;
+          const startTx = draftT?.["startTransaction"] as Record<string, unknown> | undefined;
+          const tid = str(startTx?.["id"]);
           results.push({ executeKitDraftCommands: { results: [{ startTransaction: { transactionId: tid ?? "" } }] } });
           continue;
         }
@@ -141,11 +144,11 @@ async function storybookExecuteSessionCommands(
             `mutation($aid: KitAlternativeIdIn!, $msg: String!) { session { alternative(id: $aid) { draft { finalize(message: $msg) { id } } } } }`,
             { aid: { id: aid }, msg },
           );
-          const cpid = str(
-            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[
-              "finalize"
-            ] as Record<string, unknown> | undefined)?.["id"],
-          );
+          const sessionF = d["session"] as Record<string, unknown> | undefined;
+          const altF = sessionF?.["alternative"] as Record<string, unknown> | undefined;
+          const draftF = altF?.["draft"] as Record<string, unknown> | undefined;
+          const finalize = draftF?.["finalize"] as Record<string, unknown> | undefined;
+          const cpid = str(finalize?.["id"]);
           results.push({ executeKitDraftCommands: { results: [{ finalizeToKitCheckpoint: { checkpointId: cpid ?? "" } }] } });
           continue;
         }
@@ -162,8 +165,10 @@ async function storybookExecuteSessionCommands(
             `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { ${dt}(count: $c) } } } }`,
             { aid: { id: aid }, c: count },
           );
-          const ok =
-            (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.[dt] === true;
+          const sessionU = d["session"] as Record<string, unknown> | undefined;
+          const altU = sessionU?.["alternative"] as Record<string, unknown> | undefined;
+          const draftU = altU?.["draft"] as Record<string, unknown> | undefined;
+          const ok = draftU?.[dt] === true;
           results.push({ executeKitDraftCommands: { results: [{ [dt]: { ok } }] } });
           continue;
         }
@@ -185,7 +190,11 @@ async function storybookExecuteSessionCommands(
                 `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { finalize { id } } } } } }`,
                 { aid: { id: aid } },
               );
-              const fin = (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.["finalize"];
+              const sessionX = d["session"] as Record<string, unknown> | undefined;
+              const altX = sessionX?.["alternative"] as Record<string, unknown> | undefined;
+              const draftX = altX?.["draft"] as Record<string, unknown> | undefined;
+              const tx = draftX?.["transaction"] as Record<string, unknown> | undefined;
+              const fin = tx?.["finalize"];
               const cpid = str(fin != null && typeof fin === "object" && !Array.isArray(fin) ? (fin as Record<string, unknown>)["id"] : undefined);
               results.push({
                 executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ finalize: { checkpointId: cpid ?? "" } }] } }] },
@@ -207,7 +216,11 @@ async function storybookExecuteSessionCommands(
                 `mutation($aid: KitAlternativeIdIn!, $c: Int) { session { alternative(id: $aid) { draft { transaction { ${txt}(count: $c) } } } } }`,
                 { aid: { id: aid }, c: count },
               );
-              const tv = (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.[txt];
+              const sessionTx = d["session"] as Record<string, unknown> | undefined;
+              const altTx = sessionTx?.["alternative"] as Record<string, unknown> | undefined;
+              const draftTx = altTx?.["draft"] as Record<string, unknown> | undefined;
+              const transaction = draftTx?.["transaction"] as Record<string, unknown> | undefined;
+              const tv = transaction?.[txt];
               const ok = tv === true;
               results.push({
                 executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ [txt]: { ok } }] } }] },
@@ -221,8 +234,11 @@ async function storybookExecuteSessionCommands(
                 `mutation($aid: KitAlternativeIdIn!) { session { alternative(id: $aid) { draft { transaction { ${gqlOp}(count: 99) } } } } }`,
                 { aid: { id: aid } },
               );
-              const ok =
-                (((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["draft"] as Record<string, unknown> | undefined)?.["transaction"] as Record<string, unknown> | undefined)?.[gqlOp] === true;
+              const sessionA = d["session"] as Record<string, unknown> | undefined;
+              const altA = sessionA?.["alternative"] as Record<string, unknown> | undefined;
+              const draftA = altA?.["draft"] as Record<string, unknown> | undefined;
+              const transactionA = draftA?.["transaction"] as Record<string, unknown> | undefined;
+              const ok = transactionA?.[gqlOp] === true;
               results.push({
                 executeKitDraftCommands: { results: [{ executeTransactionCommands: { results: [{ [txt]: { ok } }] } }] },
               });
@@ -305,7 +321,10 @@ export async function storybookKitGraphqlExecuteStoreCommand(
             aid: { id: aid },
             msg,
           });
-          const ncp = str(((d["session"] as Record<string, unknown> | undefined)?.["alternative"] as Record<string, unknown> | undefined)?.["unify"] as Record<string, unknown> | undefined)?.["id"];
+          const sessionU = d["session"] as Record<string, unknown> | undefined;
+          const altU = sessionU?.["alternative"] as Record<string, unknown> | undefined;
+          const unify = altU?.["unify"] as Record<string, unknown> | undefined;
+          const ncp = str(unify?.["id"]);
           data = { executeKitAlternativeCommands: { results: [{ unifyKitCheckpointsToSingleKitCheckpoint: { newCheckpointId: ncp ?? "" } }] } };
           break;
         }

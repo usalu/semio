@@ -588,7 +588,7 @@ export type ChangeKitCommand =
   | { readonly removeKitAttribute: { readonly id: KitIdDto } }
   | { readonly addFile: { readonly file: FileDto } }
   | { readonly removeFile: { readonly fileId: KitIdDto } }
-  | { readonly replaceKitFromFullDto: { readonly dto: KitFullDto } }
+  | { readonly replaceKitFromFull: { readonly dto: KitFullDto } }
   | { readonly clusterPieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly clusterName: string } }
   | { readonly dragPieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly du: number; readonly dv: number } }
   | { readonly movePieces: { readonly designId: KitIdDto; readonly pieceIds: readonly string[]; readonly gap: number; readonly shift: number; readonly rise: number } }

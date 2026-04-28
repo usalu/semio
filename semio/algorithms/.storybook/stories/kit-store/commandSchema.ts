@@ -91,9 +91,9 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
   { id: "ck-version", label: "Kit: version", json: j({ version: { version: "0.0.0-story" } }) },
   {
     id: "ck-replaceKit",
-    label: "Kit: replaceKitFromFullDto (placeholder — replace `dto` with a full `KitFullDto` JSON)",
+    label: "Kit: replaceKitFromFull (placeholder — replace `dto` with a full `KitFullDto` JSON)",
     json: j({
-      replaceKitFromFullDto: {
+      replaceKitFromFull: {
         dto: { id: "PLACEHOLDER_KIT_ID", name: "replaced" },
       },
     }),
@@ -146,7 +146,7 @@ export const CHANGE_KIT_PRESETS: readonly ChangeKitPreset[] = [
  * Use with raw JSON editor; invalid / unwired variants surface as `InvalidOperation` in the UI.
  */
 export const ALL_CHANGE_KIT_ROOT_KEYS = [
-  "replaceKitFromFullDto",
+  "replaceKitFromFull",
   "name",
   "description",
   "icon",
@@ -268,7 +268,7 @@ export const READ_KIT_PRESETS: readonly ReadKitPreset[] = [
 
 /** Rows for the on-screen coverage checklist (mirrors `ALL_CHANGE_KIT_ROOT_KEYS` + nested groups). */
 export const KIT_STORE_COVERAGE_ROWS: readonly { group: string; key: string }[] = [
-  { group: "ChangeKit (root)", key: "replaceKitFromFullDto + all ALL_CHANGE_KIT_ROOT_KEYS" },
+  { group: "ChangeKit (root)", key: "replaceKitFromFull + all ALL_CHANGE_KIT_ROOT_KEYS" },
   { group: "ChangeType", key: "see CHANGE_TYPE_COMMAND_KEYS" },
   { group: "ReadKit", key: "see ALL_READ_KIT_COMMAND_KEYS (generated from semio/rs/read_module.rs)" },
 ];
