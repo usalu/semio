@@ -4855,14 +4855,16 @@ class TestMcp:
             assert result.get("ok") is True
 
         for piece in expected_design.get("pieces", []):
-            if "plane" in piece and "center" in piece:
-                plane = piece["plane"]
+            pose = piece.get("pose") or {}
+            plane = pose.get("plane")
+            center = pose.get("center")
+            if plane is not None and center is not None:
                 result = engine.add_current_design_piece_with_plane(
                     piece["id"],
                     piece["name"],
                     piece["type"]["id"],
-                    piece["center"]["u"],
-                    piece["center"]["v"],
+                    center["u"],
+                    center["v"],
                     plane["origin"]["x"],
                     plane["origin"]["y"],
                     plane["origin"]["z"],

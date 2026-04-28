@@ -13699,24 +13699,35 @@ def _parse_type_from_sqlite(row: dict, connectors: list[dict], representations: 
 
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
-    """🔖_parse_piece_from_sqlite performs the _parse_piece_from_sqlite operation."""
+    """🔖Build a piece dict from a SQLite row aligned with ``semio/sqlite/schema.sql`` (``pose_*`` columns, ``design_ref_id``, ``hidden`` / ``locked``)."""
+    _pose_plane_keys = (
+        "pose_plane_origin_x",
+        "pose_plane_origin_y",
+        "pose_plane_origin_z",
+        "pose_plane_x_axis_x",
+        "pose_plane_x_axis_y",
+        "pose_plane_x_axis_z",
+        "pose_plane_y_axis_x",
+        "pose_plane_y_axis_y",
+        "pose_plane_y_axis_z",
+    )
     plane = None
-    if row.get("plane_origin_x") is not None:
+    if any(row.get(k) is not None for k in _pose_plane_keys):
         plane = {
             "origin": {
-                "x": row.get("plane_origin_x", 0.0),
-                "y": row.get("plane_origin_y", 0.0),
-                "z": row.get("plane_origin_z", 0.0),
+                "x": row.get("pose_plane_origin_x", 0.0),
+                "y": row.get("pose_plane_origin_y", 0.0),
+                "z": row.get("pose_plane_origin_z", 0.0),
             },
             "xAxis": {
-                "x": row.get("plane_x_axis_x", 1.0),
-                "y": row.get("plane_x_axis_y", 0.0),
-                "z": row.get("plane_x_axis_z", 0.0),
+                "x": row.get("pose_plane_x_axis_x", 1.0),
+                "y": row.get("pose_plane_x_axis_y", 0.0),
+                "z": row.get("pose_plane_x_axis_z", 0.0),
             },
             "yAxis": {
-                "x": row.get("plane_y_axis_x", 0.0),
-                "y": row.get("plane_y_axis_y", 1.0),
-                "z": row.get("plane_y_axis_z", 0.0),
+                "x": row.get("pose_plane_y_axis_x", 0.0),
+                "y": row.get("pose_plane_y_axis_y", 1.0),
+                "z": row.get("pose_plane_y_axis_z", 0.0),
             },
         }
     mirror_plane = None
@@ -13739,25 +13750,39 @@ def _parse_piece_from_sqlite(row: dict) -> dict:
             },
         }
     center = None
-    if row.get("center_u") is not None or row.get("center_v") is not None:
+    if row.get("pose_center_x") is not None or row.get("pose_center_y") is not None:
         center = {
-            "u": row.get("center_u", 0.0),
-            "v": row.get("center_v", 0.0),
+            "u": row.get("pose_center_x", 0.0),
+            "v": row.get("pose_center_y", 0.0),
         }
-    return {
+    pose: dict | None = None
+    if plane is not None or center is not None:
+        pose = {}
+        if plane is not None:
+            pose["plane"] = plane
+        if center is not None:
+            pose["center"] = center
+    hidden_raw = row.get("hidden")
+    if hidden_raw is None:
+        hidden_raw = row.get("is_hidden", 0)
+    locked_raw = row.get("locked")
+    if locked_raw is None:
+        locked_raw = row.get("is_locked", 0)
+    out = {
         "id": row.get("id"),
-        "id": row.get("name"),
+        "name": row.get("name"),
         "type": row.get("type_id"),
-        "design": row.get("design_id_ref"),
-        "plane": plane,
-        "center": center,
+        "design": row.get("design_ref_id") or row.get("design_id_ref"),
         "scale": row.get("scale"),
         "mirrorPlane": mirror_plane,
-        "isHidden": bool(row.get("is_hidden", False)),
-        "isLocked": bool(row.get("is_locked", False)),
+        "isHidden": bool(hidden_raw),
+        "isLocked": bool(locked_raw),
         "color": row.get("color"),
         "description": row.get("description"),
     }
+    if pose is not None:
+        out["pose"] = pose
+    return out
 
 
 def _parse_connection_from_sqlite(row: dict) -> dict:

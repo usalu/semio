@@ -1,167 +1,88 @@
-type AttributeFull {
-	id: Id!
-	key: String!
-	value: String!
-	definition: String
+input AlternativeBatchCommandInput @oneOf {
+	createAlternative: CreateAlternativeBatchInput
+	unifyAlternative: MessageOnlyInput
 }
 
-type AttributeShallow {
-	id: Id!
-	key: String!
-	value: String!
-	definition: String
+input AlternativeBatchInput {
+	alternativeId: String
+	commands: [AlternativeBatchCommandInput!]!
 }
 
-type AuthorFull {
-	id: Id!
-	name: String!
-	email: String!
-	role: String
-	rank: Int
+scalar AuthorShallowList
+
+input BackboneBatchCommandInput @oneOf {
+	attachBackbone: BackboneConfigBatchInput
+	detachBackbone: ConfirmOnlyInput
+	listConflicts: ConfirmOnlyInput
+	resolveConflict: ResolveConflictBatchInput
+	backboneStatus: ConfirmOnlyInput
+	syncNow: ConfirmOnlyInput
 }
 
-type AuthorShallow {
-	id: Id!
-	name: String!
-	email: String!
-	role: String
-	rank: Int
+input BackboneBatchInput {
+	commands: [BackboneBatchCommandInput!]!
 }
 
-input BackboneConfigInput @oneOf {
-	memory: ConfirmOnlyInput
-	dev: DevBackboneInput
-	local: LocalBackboneInput
-	remote: RemoteBackboneInput
-}
-
-enum BackboneKind {
-	MEMORY
-	DEV
-	LOCAL
-	REMOTE
-}
-
-type BackboneStatus {
+type BackboneBatchStatus {
 	attached: Boolean!
-	kind: BackboneKind
-	kindOther: String
+	kind: String
 	tip: String
 }
 
-type BenchmarkFull {
-	id: Id!
-	name: String!
-	min: Float
-	max: Float
-	minExcluded: Boolean
-	maxExcluded: Boolean
-}
-
-type BenchmarkMetadata {
-	id: Id!
-	name: String!
-	min: Float
-	max: Float
-	minExcluded: Boolean
-	maxExcluded: Boolean
+input BackboneConfigBatchInput @oneOf {
+	"""
+	Uses [`ConfirmOnlyInput`] so the oneof variant carries a valid GraphQL input object (no zero-field structs).
+	"""
+	memory: ConfirmOnlyInput
+	dev: DevBackboneBatchInput
+	local: LocalBackboneBatchInput
+	remote: RemoteBackboneBatchInput
 }
 
 scalar ChangeKitCommand
 
-input ChangePieceTypeInput {
+input ChangeKitCommandsBatchInput {
+	commands: [ChangeKitCommand!]!
+}
+
+input ChangePieceTypeBatchInput {
 	pieceId: String!
 	newTypeId: String!
 }
 
-input ClusterPiecesInput {
+input CheckpointBatchCommandInput @oneOf {
+	markRelease: ConfirmOnlyInput
+	setActive: ConfirmOnlyInput
+}
+
+input CheckpointBatchInput {
+	checkpointId: String
+	commands: [CheckpointBatchCommandInput!]!
+}
+
+input ClusterPiecesBatchInput {
 	pieceIds: [String!]!
 	clusterName: String!
-}
-
-type ColorDto {
-	"""
-	🎨 CSS color string for connector visuals (cached; keyed by port compatibility group).
-	"""
-	css: String!
-}
-
-type ConceptFull {
-	id: Id!
-	name: String!
-	description: String
-	order: Int
-}
-
-type ConceptShallow {
-	id: Id!
-	name: String!
-	description: String
-	order: Int
 }
 
 input ConfirmOnlyInput {
 	confirm: Boolean
 }
 
-enum ConflictResolutionInput {
+type ConflictBatchRecord {
+	id: String!
+	backboneTip: String
+	reason: String!
+	createdAt: String!
+}
+
+enum ConflictResolutionBatchInput {
 	DROP_WIP
 	FORCE_OVERWRITE_BACKBONE
 }
 
-type ConnectionFull {
-	id: Id!
-	connected: SideMetadata!
-	connecting: SideMetadata!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-	attributes: [AttributeFull!]!
-}
-
-type ConnectionMetadata {
-	id: Id!
-	connected: SideMetadata!
-	connecting: SideMetadata!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-}
-
-type ConnectionShallow {
-	id: Id!
-	connected: SideMetadata!
-	connecting: SideMetadata!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-	attributes: [AttributeShallow!]!
-}
-
-type ConnectionStore {
+type Connection {
 	id: String!
-	container: DesignStore!
-	metadata: ConnectionMetadata!
-	shallow: ConnectionShallow!
-	full: ConnectionFull!
 	gap: Float
 	shift: Float
 	rise: Float
@@ -173,330 +94,574 @@ type ConnectionStore {
 	description: String
 }
 
-type ConnectorFull {
-	id: Id!
-	code: String!
-	description: String
-	port: PortRef
-	qualities: [QualityFull!]!
-	attributes: [AttributeFull!]!
-	color: ColorDto!
-}
+scalar ConnectionFullList
 
-type ConnectorMetadata {
-	id: Id!
-	code: String!
-	description: String
-	port: PortRef
-	color: ColorDto!
-}
-
-type ConnectorRef {
-	id: Id!
-}
-
-type ConnectorShallow {
-	id: Id!
-	code: String!
-	description: String
-	port: PortRef
-	qualities: [QualityShallow!]!
-	attributes: [AttributeShallow!]!
-	color: ColorDto!
-}
-
-type ConnectorStore {
+type Connector {
 	id: String!
 	code: String!
-	description: String
-	container: TypeStore!
-	color: ColorDto!
-	metadata: ConnectorMetadata!
-	shallow: ConnectorShallow!
-	full: ConnectorFull!
 }
 
-type Coordinate {
-	u: Float!
-	v: Float!
+input CountInput {
+	count: Int
 }
 
-input CreateConnectedPieceInput {
+input CreateAlternativeBatchInput {
+	name: String!
+	fromCheckpointId: String
+}
+
+input CreateConnectedPieceBatchInput {
 	parentPiece: String!
 	parentPort: String!
 	childType: String!
 	childPort: String!
 }
 
-input CreateFixedPieceInput {
+input CreateDraftBatchInput {
+	parentCheckpointId: String
+	targetAlternativeId: String
+}
+
+input CreateFixedPieceBatchInput {
 	typeId: String!
-	plane: PlaneInput!
+	plane: PlaneInputBatch!
 }
 
-input CreateHangingPiecesInput {
+input CreateHangingPiecesBatchInput {
 	typeIds: [String!]!
-	plane: PlaneInput!
+	plane: PlaneInputBatch!
 }
 
-input CreateKitAlternativeInput {
-	name: String!
-	fromCheckpointId: String
-}
-
-input DeleteConnectionInput {
+input DeleteConnectionBatchInput {
 	connectionId: String!
 }
 
-input DesignCommandInput @oneOf {
-	clusterPieces: ClusterPiecesInput
-	dragPieces: DragPiecesInput
-	movePieces: MovePiecesInput
-	fixPieces: PieceIdsInput
-	flattenDesign: ConfirmOnlyInput
-	expandDesign: ExpandDesignInput
-	deleteConnection: DeleteConnectionInput
-	changePieceType: ChangePieceTypeInput
-	createHangingPieces: CreateHangingPiecesInput
-	createConnectedPiece: CreateConnectedPieceInput
-	createFixedPiece: CreateFixedPieceInput
-}
-
-type DesignFlattenMapEntryDto {
-	pieceId: Id!
-	plane: Plane!
-	center: Coordinate!
-}
-
-type DesignFull {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationRef
-	unit: String
-	created: String
-	updated: String
-	kit: KitRef
-	families: [FamilyRef!]!
-	pieces: [PieceFull!]!
-	connections: [ConnectionFull!]!
-	layers: [LayerFull!]!
-	groups: [GroupFull!]!
-	authors: [AuthorFull!]!
-	concepts: [ConceptFull!]!
-	tags: [TagFull!]!
-	qualities: [QualityFull!]!
-	props: [PropFull!]!
-	attributes: [AttributeFull!]!
-	stats: [StatFull!]!
-}
-
-type DesignMetadata {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationRef
-	unit: String
-	created: String
-	updated: String
-	kit: KitRef
-}
-
-type DesignMutation {
-	applyCommands(commands: [DesignCommandInput!]!): Int!
-}
-
-type DesignRef {
-	id: Id!
-}
-
-type DesignShallow {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationRef
-	unit: String
-	created: String
-	updated: String
-	kit: KitRef
-	families: [FamilyRef!]!
-	pieces: [PieceShallow!]!
-	connections: [ConnectionShallow!]!
-	layers: [LayerShallow!]!
-	groups: [GroupShallow!]!
-	authors: [AuthorShallow!]!
-	concepts: [ConceptShallow!]!
-	tags: [TagShallow!]!
-	qualities: [QualityShallow!]!
-	props: [PropShallow!]!
-	attributes: [AttributeShallow!]!
-	stats: [StatShallow!]!
-}
-
-type DesignStore {
+type Design {
 	id: String!
 	name: String!
 	description: String
-	container: KitStore!
-	metadata: DesignMetadata!
-	shallow: DesignShallow!
-	full: DesignFull!
-	pieces: [PieceStore!]!
-	pieceByDtoId(id: String!): PieceStore
-	connections: [ConnectionStore!]!
-	piecesFull: [PieceFull!]!
-	connectionsFull: [ConnectionFull!]!
-	flattenMap: [DesignFlattenMapEntryDto!]!
+	pieces: [Piece!]!
+	"""
+	­ƒîÉ Resolves a piece by persisted DTO id within this design.
+	"""
+	pieceByDtoId(id: String!): Piece
+	connections: [Connection!]!
+	"""
+	­ƒîÉ `PieceFullDto` wire list (semio read batch); prefer [`Self::pieces`] in graph UI.
+	"""
+	piecesFull: PieceFullList!
+	"""
+	­ƒîÉ `ConnectionFullDto` wire list; prefer [`Self::connections`] in graph UI.
+	"""
+	connectionsFull: ConnectionFullList!
+	flattenMap: [DesignFlattenMapEntryObject!]!
 	clusterableGroups(selection: [String!]!): [[String!]!]!
 	qualitySum(qualityId: String!): Float!
-	replaceableCatalog(selection: [String!]!): ReplaceableCatalogStore!
-	includedDesigns: [IncludedDesignInfoDto!]!
+	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
+	includedDesigns: [IncludedDesignObject!]!
 	includedDesignIds: [String!]!
+	"""
+	­ƒîÉ Per-piece derived placement map (see [`KitGraph::piece_placement_metadata`]); use `pieces` and `connections` for materialized graph nodes.
+	"""
+	piecePlacement: [PiecePlacementRowObject!]!
 }
 
-input DevBackboneInput {
+input DesignBatchCommandInput @oneOf {
+	clusterPieces: ClusterPiecesBatchInput
+	dragPieces: DragPiecesBatchInput
+	movePieces: MovePiecesBatchInput
+	fixPieces: PieceIdsBatchInput
+	flattenDesign: ConfirmOnlyInput
+	expandDesign: ExpandDesignBatchInput
+	deleteConnection: DeleteConnectionBatchInput
+	changePieceType: ChangePieceTypeBatchInput
+	createHangingPieces: CreateHangingPiecesBatchInput
+	createConnectedPiece: CreateConnectedPieceBatchInput
+	createFixedPiece: CreateFixedPieceBatchInput
+}
+
+input DesignBatchInput {
+	designId: String!
+	commands: [DesignBatchCommandInput!]!
+}
+
+type DesignFlattenMapEntryObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+}
+
+type DesignMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: GqlIdOnly
+	unit: String
+	created: String
+	updated: String
+	kit: GqlIdOnly
+}
+
+scalar DesignShallowList
+
+input DevBackboneBatchInput {
 	path: String!
 }
 
-input DragPiecesInput {
+input DraftBatchCommandInput @oneOf {
+	finalizeDraft: MessageOnlyInput
+	abortDraft: ConfirmOnlyInput
+	undoDraft: CountInput
+	redoDraft: CountInput
+	startTransaction: ConfirmOnlyInput
+	transaction: TransactionBatchInput
+}
+
+input DraftBatchInput {
+	draftId: String
+	commands: [DraftBatchCommandInput!]!
+}
+
+input DragPiecesBatchInput {
 	pieceIds: [String!]!
 	du: Float!
 	dv: Float!
 }
 
-input ExpandDesignInput {
+input ExpandDesignBatchInput {
 	nestedDesignId: String!
 }
 
-type FamilyFull {
-	id: Id!
+type GqlCoordinate3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type GqlIdOnly {
+	id: String!
+}
+
+type GqlPlaneObject {
+	origin: GqlPoint3!
+	xAxis: GqlVector3!
+	yAxis: GqlVector3!
+}
+
+type GqlPoint3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type GqlPoseObject {
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+}
+
+type GqlVector3 {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type IncludedDesignObject {
+	id: String!
+	designId: String!
+	connectionKind: String!
+	center: GqlCoordinate3
+	plane: GqlPlaneObject
+	externalConnections: ConnectionFullList!
+}
+
+type KitColoredConnectorObject {
+	typeId: GqlIdOnly!
+	connectorId: GqlIdOnly!
+	color: String!
+}
+
+scalar KitEvent
+
+scalar KitFullSnapshot
+
+type KitMetadataObject {
+	id: String!
 	name: String!
 	description: String
 	icon: String
-	ports: [PortFull!]!
-	attributes: [AttributeFull!]!
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: String
+	updated: String
+	version: String
 }
 
-type FamilyRef {
-	id: Id!
+input KitReadScopeAlternativeInput {
+	alternativeId: String!
 }
 
-type FileFull {
-	id: Id!
-	url: String!
-	mime: String
-	size: Int
-	hash: String
+input KitReadScopeCheckpointInput {
+	checkpointId: String!
+}
+
+input KitReadScopeDraftInput {
+	sessionId: String!
+	draftId: String!
+}
+
+"""
+GraphQL input: one of the wire shapes for [`crate::kit_read_scope::KitReadScope`].
+"""
+input KitReadScopeInput @oneOf {
+	theKit: ConfirmOnlyInput
+	checkpoint: KitReadScopeCheckpointInput
+	alternative: KitReadScopeAlternativeInput
+	draft: KitReadScopeDraftInput
+	transaction: KitReadScopeTransactionInput
+}
+
+input KitReadScopeTransactionInput {
+	sessionId: String!
+	draftId: String!
+	transactionId: String!
+}
+
+type KitStore {
+	name: String!
+	"""
+	­ƒîÉ Resolves a design by persisted DTO id (linear scan; for hosts that only hold string ids).
+	"""
+	designByDtoId(id: String!): Design
+	"""
+	­ƒîÉ Resolves a kit [`crate::typ::TypeStore`] by persisted DTO id.
+	"""
+	typeByDtoId(id: String!): Type
 	description: String
+	"""
+	­ƒîÉ Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	typeIds: [String!]!
+	"""
+	­ƒîÉ Persisted DTO id list for [`LiveKitRoot`] and catalog queries.
+	"""
+	designIds: [String!]!
+	types: [Type!]!
+	designs: [Design!]!
+	"""
+	­ƒîÉ Per-type metadata rows.
+	"""
+	typesMetadata: [TypeMetadataObject!]!
+	"""
+	­ƒîÉ Per-design metadata rows.
+	"""
+	designsMetadata: [DesignMetadataObject!]!
+	"""
+	­ƒîÉ Colored connector index rows.
+	"""
+	coloredConnectors: [KitColoredConnectorObject!]!
+	"""
+	­ƒîÉ Full kit DTO snapshot for this **scoped** resolver graph (live authority when scope is `theKit`; materialized otherwise).
+	"""
+	fullDto: KitFullSnapshot!
+	"""
+	`the_kit` line DTO (committed main line).
+	"""
+	theKitDto: KitFullSnapshot!
+	materializeAt(checkpointId: String): KitFullSnapshot!
+	"""
+	­ƒîÉ Kit metadata (same as [`KitGraph::get_kit_json`], strongly typed here).
+	"""
+	kitMetadata: KitMetadataObject!
+	"""
+	­ƒîÉ Shallow design rows (same as [`KitGraph::get_designs_json`]; scalar is not `JSON`).
+	"""
+	designsShallow: DesignShallowList!
+	"""
+	­ƒîÉ Shallow type rows (same as [`KitGraph::get_types_json`]).
+	"""
+	typesShallow: TypeShallowList!
+	"""
+	­ƒîÉ Shallow author rows (same as [`KitGraph::get_authors_json`]).
+	"""
+	authorsShallow: AuthorShallowList!
+	"""
+	Opaque VCS tree (same shape as `vcsState` WASM helper) as typed graph objects.
+	"""
+	vcsState: VcsStateGql!
+}
+
+input KitStoreBatchCommandInput @oneOf {
+	session: SessionBatchInput
+	checkpoint: CheckpointBatchInput
+	alternative: AlternativeBatchInput
+	backbone: BackboneBatchInput
+}
+
+input KitStoreBatchInput {
+	clientMutationId: String
+	commands: [KitStoreBatchCommandInput!]!
+}
+
+type KitStoreBatchPayload {
+	clientMutationId: String
+	results: [KitStoreBatchResult!]!
+}
+
+type KitStoreBatchResult {
+	kind: KitStoreBatchResultKind!
+	ok: Boolean
+	count: Int
+	sessionId: String
+	draftId: String
+	transactionId: String
+	checkpointId: String
+	alternativeId: String
+	backbone: BackboneBatchStatus
+	conflicts: [ConflictBatchRecord!]
+	"""
+	­ƒº¥ Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; serde wire label of [`crate::kit_change::KitChangeKind`].
+	"""
+	changeKind: String
+	"""
+	­ƒº¥ Filled for [`KitStoreBatchResultKind::ChangeKitWithInverse`]; undo atoms as [`GqlChangeKitCommand`] list.
+	"""
+	inverse: [ChangeKitCommand!]
+}
+
+enum KitStoreBatchResultKind {
+	CHANGE_KIT_COMMANDS
+	"""
+	­ƒº¥ Same forward application as [`KitStoreBatchResultKind::ChangeKitCommands`], plus `changeKind` and `inverse` in [`KitStoreBatchResult`].
+	"""
+	CHANGE_KIT_WITH_INVERSE
+	CLUSTER_PIECES
+	DRAG_PIECES
+	MOVE_PIECES
+	FIX_PIECES
+	FLATTEN_DESIGN
+	EXPAND_DESIGN
+	DELETE_CONNECTION
+	CHANGE_PIECE_TYPE
+	CREATE_HANGING_PIECES
+	CREATE_CONNECTED_PIECE
+	CREATE_FIXED_PIECE
+	NEW_SESSION
+	END_SESSION
+	NEW_DRAFT
+	START_TRANSACTION
+	FINALIZE_DRAFT
+	ABORT_DRAFT
+	UNDO_DRAFT
+	REDO_DRAFT
+	FINALIZE_TRANSACTION
+	ABORT_TRANSACTION
+	UNDO_TRANSACTION
+	REDO_TRANSACTION
+	MARK_RELEASE
+	SET_ACTIVE_CHECKPOINT
+	NEW_ALTERNATIVE
+	UNIFY_ALTERNATIVE
+	ATTACH_BACKBONE
+	DETACH_BACKBONE
+	LIST_CONFLICTS
+	RESOLVE_CONFLICT
+	BACKBONE_STATUS
+	SYNC_NOW
+}
+
+type KitStoreMutation {
+	"""
+	Batched control-plane writes (VCS, session/draft/transaction, backbone); replaces the former `submitKitCommand` shell.
+	"""
+	batch(input: KitStoreBatchInput!): KitStoreBatchPayload!
+}
+
+input LocalBackboneBatchInput {
+	folder: String!
+}
+
+input MessageOnlyInput {
+	message: String!
+}
+
+input MovePiecesBatchInput {
+	pieceIds: [String!]!
+	gap: Float!
+	shift: Float!
+	rise: Float!
+}
+
+type Mutation {
+	"""
+	Control-plane kit mutations (batched commands, VCS, design canvas).
+	"""
+	kitStore: KitStoreMutation!
+}
+
+type Piece {
+	id: String!
+	name: String
+	description: String
+	flatPlane: GqlPlaneObject!
+	flatCenter: GqlCoordinate3!
+	flatPose: GqlPoseObject!
+	scale: Float
+	"""
+	Strong ref to the resolved type for this piece (in-memory, not a lookup by id).
+	"""
+	refType: Type
+	"""
+	Parent connection when the piece is linked through a connection.
+	"""
+	parentConnection: Connection
+}
+
+scalar PieceFullList
+
+input PieceIdsBatchInput {
+	pieceIds: [String!]!
+}
+
+type PiecePlacementRowObject {
+	pieceId: String!
+	plane: GqlPlaneObject!
+	center: GqlCoordinate3!
+	fixedPieceId: String!
+	parentPieceId: String
+	depth: Int!
+	path: [String!]!
+}
+
+input PlaneInputBatch {
+	origin: PointInputBatch!
+	xAxis: VectorInputBatch!
+	yAxis: VectorInputBatch!
+}
+
+input PointInputBatch {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Query {
+	"""
+	­ƒîÉ **Scoped** kit graph root: every read requires an explicit [`KitReadScopeInput`] (see [`crate::kit_read_scope::KitReadScope`]).
+	"""
+	kit(scope: KitReadScopeInput!): KitStore!
+}
+
+input RemoteBackboneBatchInput {
+	url: String!
+	sessionId: String!
+}
+
+type ReplaceableCatalog {
+	"""
+	­ƒîÉ
+	"""
+	typeIds: [String!]!
+	"""
+	­ƒîÉ
+	"""
+	designIds: [String!]!
+}
+
+type Representation {
+	id: String!
+	url: String!
+	description: String
+}
+
+input ResolveConflictBatchInput {
+	conflictId: String!
+	strategy: ConflictResolutionBatchInput!
+}
+
+input SessionBatchCommandInput @oneOf {
+	createSession: ConfirmOnlyInput
+	endSession: ConfirmOnlyInput
+	createDraft: CreateDraftBatchInput
+	draft: DraftBatchInput
+}
+
+input SessionBatchInput {
+	sessionId: String
+	commands: [SessionBatchCommandInput!]!
+}
+
+type Subscription {
+	"""
+	Broadcast [`KitEvent`] stream (same bus as `KitStoreHandle::subscribe`); wire uses the `KitEvent` GraphQL scalar (not `JSON`).
+	"""
+	eventStream: KitEvent!
+}
+
+input TransactionBatchCommandInput @oneOf {
+	changeKitCommands: ChangeKitCommandsBatchInput
+	"""
+	­ƒº¥ Like [`TransactionBatchCommandInput::ChangeKitCommands`] but surfaces `changeKind` + `inverse` atoms from the pre-apply transaction view.
+	"""
+	changeKitWithInverse: ChangeKitCommandsBatchInput
+	"""
+	­ƒº¥ Design-canvas commands (same atoms as [`ChangeKitCommand`]) applied only inside an open transaction.
+	"""
+	design: DesignBatchInput
+	finalizeTransaction: ConfirmOnlyInput
+	abortTransaction: ConfirmOnlyInput
+	undoTransaction: CountInput
+	redoTransaction: CountInput
+}
+
+input TransactionBatchInput {
+	transactionId: String
+	commands: [TransactionBatchCommandInput!]!
+}
+
+type Type {
+	id: String!
+	name: String!
+	description: String
+	connectors: [Connector!]!
+	representations: [Representation!]!
+	"""
+	Best matching representation for tag selection.
+	"""
+	bestRepresentation(tagIds: [String!]!): Representation
+}
+
+type TypeMetadataObject {
+	id: String!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	stock: Int
+	typeVirtual: Boolean
+	unit: String
+	location: GqlIdOnly
 	created: String
 	updated: String
 }
 
-type FileRef {
-	id: Id!
-}
+scalar TypeShallowList
 
-type FileShallow {
-	id: Id!
-	url: String!
-	mime: String
-	size: Int
-	hash: String
-	description: String
-	created: String
-	updated: String
-}
-
-type FolderFull {
-	id: Id!
-	path: String!
-	description: String
-}
-
-type FolderShallow {
-	id: Id!
-	path: String!
-	description: String
-}
-
-type GroupFull {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	icon: String
-	pieces: [PieceRef!]!
-}
-
-type GroupShallow {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	icon: String
-	pieces: [PieceRef!]!
-}
-
-scalar Id
-
-enum IncludedDesignConnectionKind {
-	CONNECTED
-	FIXED
-}
-
-type IncludedDesignInfoDto {
-	id: Id!
-	designId: Id!
-	connectionKind: IncludedDesignConnectionKind!
-	center: Coordinate
-	plane: Plane
-	externalConnections: [ConnectionFull!]!
-}
-
-type KitAlternative {
+type VcsAlternativeGql {
 	id: String!
 	name: String!
-	container: KitGraph!
-	start: KitCheckpoint!
-	checkpoints: [KitCheckpoint!]!
-	store: KitStore!
-	draft: KitDraft
-	transaction: KitTransaction
+	root: String!
+	checkpoints: [String!]!
 }
 
-input KitAlternativeIdIn {
+type VcsCheckpointGql {
 	id: String!
-}
-
-type KitAlternativeMutation {
-	createDraft(parentCheckpointId: String): KitDraft!
-	draft: KitDraftMutation
-	unify(message: String!): KitCheckpoint!
-}
-
-type KitBackboneMutation {
-	attach(config: BackboneConfigInput!): BackboneStatus!
-	detach: Boolean!
-	status: BackboneStatus!
-	syncNow: Boolean!
-	resolveConflict(id: String!, strategy: ConflictResolutionInput!): Boolean!
-}
-
-type KitChangeWithInverseDto {
-	changeKind: String!
-	inverse: [ChangeKitCommand!]!
-}
-
-type KitCheckpoint {
-	id: String!
-	container: KitGraph!
-	store: KitStore!
-	parent: KitCheckpoint
+	parent: String
 	message: String
 	time: String
 	authors: [String!]!
@@ -505,593 +670,37 @@ type KitCheckpoint {
 	changeCount: Int!
 }
 
-input KitCheckpointIdIn {
+type VcsDraftGql {
 	id: String!
-}
-
-type KitCheckpointMutation {
-	markRelease: Boolean!
-	setActive: Boolean!
-}
-
-type KitConflict {
-	id: String!
-	reason: String!
-	createdAt: String!
-	wipCheckpoint: KitCheckpoint!
-	backboneTip: KitCheckpoint
-}
-
-type KitDraft {
-	id: String!
-	store: KitStore!
-	transactions: [KitTransaction!]!
-	openTransaction: KitTransaction
-	alternative: KitAlternative!
-	parent: KitCheckpoint
+	parentCheckpoint: String
+	targetAlternative: String
+	finalizedTransactionCount: Int!
+	redoTransactionCount: Int!
+	openTransactionId: String
 	canUndo: Boolean!
 	canRedo: Boolean!
 }
 
-type KitDraftMutation {
-	finalize(message: String!): KitCheckpoint!
-	abort: Boolean!
-	undo(count: Int): Boolean!
-	redo(count: Int): Boolean!
-	startTransaction: KitTransaction!
-	transaction: KitTransactionMutation
-}
-
-scalar KitEvent
-
-type KitFull {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-	types: [TypeFull!]!
-	designs: [DesignFull!]!
-	files: [FileFull!]!
-	folders: [FolderFull!]!
-	authors: [AuthorFull!]!
-	concepts: [ConceptFull!]!
-	tags: [TagFull!]!
-	qualities: [QualityFull!]!
-	props: [PropFull!]!
-	attributes: [AttributeFull!]!
-	ports: [PortFull!]!
-	families: [FamilyFull!]!
-	locations: [LocationFull!]!
-}
-
-scalar KitFullSnapshot
-
-type KitGraph {
-	id: String!
-	container: KitSession
-	theKit: KitStore
-	alternatives: [KitAlternative!]!
-	alternative(id: KitAlternativeIdIn!): KitAlternative
-	checkpoints: [KitCheckpoint!]!
-	checkpoint(id: KitCheckpointIdIn!): KitCheckpoint
-}
-
-type KitMetadata {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-}
-
-type KitRef {
-	id: Id!
-}
-
-type KitSession {
-	id: String!
-	wip: KitGraph!
-	authorative: KitGraph
-	conflicts: [KitConflict!]!
-}
-
-type KitSessionMutation {
-	createAlternative(input: CreateKitAlternativeInput!): KitAlternative!
-	alternative(id: KitAlternativeIdIn!): KitAlternativeMutation!
-	checkpoint(id: KitCheckpointIdIn!): KitCheckpointMutation!
-	backbone: KitBackboneMutation!
-}
-
-type KitShallow {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-	types: [TypeShallow!]!
-	designs: [DesignShallow!]!
-	files: [FileShallow!]!
-	folders: [FolderShallow!]!
-	authors: [AuthorShallow!]!
-	concepts: [ConceptShallow!]!
-	tags: [TagShallow!]!
-	qualities: [QualityShallow!]!
-	props: [PropShallow!]!
-	attributes: [AttributeShallow!]!
-}
-
-type KitStore {
-	container: KitGraph!
-	checkpoint: KitCheckpoint!
-	draft: KitDraft
-	transaction: KitTransaction
-	full: KitFull!
-	"""
-	🧾 Whole kit DTO as JSON scalar (`KitFullSnapshot`) for clients that round-trip serde without selecting every `KitFull` subfield.
-	"""
-	fullSnapshot: KitFullSnapshot!
-	metadata: KitMetadata!
-	shallow: KitShallow!
-	id: String
-	name: String!
-	description: String
-	design(id: String!): DesignStore
-	designs: [DesignStore!]!
-	type(id: String!): TypeStore
-	types: [TypeStore!]!
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-}
-
-type KitTransaction {
-	id: String!
-	store: KitStore!
-	draft: KitDraft!
-	state: TransactionState!
-	changeCount: Int!
-	redoChangeCount: Int!
-	canUndo: Boolean!
-	canRedo: Boolean!
-}
-
-type KitTransactionMutation {
-	changeKit(commands: [ChangeKitCommand!]!): Int!
-	changeKitWithInverse(commands: [ChangeKitCommand!]!): KitChangeWithInverseDto!
-	design(id: String!): DesignMutation!
-	finalize: KitCheckpoint!
-	abort: Boolean!
-	undo(count: Int): Boolean!
-	redo(count: Int): Boolean!
-}
-
-type LayerFull {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	order: Int
-	visible: Boolean
-	locked: Boolean
-}
-
-type LayerShallow {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	order: Int
-	visible: Boolean
-	locked: Boolean
-}
-
-input LocalBackboneInput {
-	folder: String!
-}
-
-type LocationFull {
-	id: Id!
-	longitude: Float!
-	latitude: Float!
-	altitude: Float
-	attributes: [AttributeFull!]!
-}
-
-type LocationRef {
-	id: Id!
-}
-
-input MovePiecesInput {
-	pieceIds: [String!]!
-	gap: Float!
-	shift: Float!
-	rise: Float!
-}
-
-type Mutation {
-	session: KitSessionMutation!
-}
-
-type PieceFull {
-	id: Id!
-	name: String
-	description: String
-	pose: PoseDto
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeRef
-	design: DesignRef
-	props: [PropFull!]!
-	attributes: [AttributeFull!]!
-}
-
-input PieceIdsInput {
-	pieceIds: [String!]!
-}
-
-type PieceMetadata {
-	id: Id!
-	name: String
-	description: String
-	pose: PoseDto
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeRef
-	design: DesignRef
-}
-
-type PieceRef {
-	id: Id!
-}
-
-type PieceShallow {
-	id: Id!
-	name: String
-	description: String
-	pose: PoseDto
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeRef
-	design: DesignRef
-	props: [PropShallow!]!
-	attributes: [AttributeShallow!]!
-}
-
-type PieceStore {
-	id: String!
-	name: String
-	description: String
-	container: DesignStore!
-	metadata: PieceMetadata!
-	shallow: PieceShallow!
-	full: PieceFull!
-	flatPlane: Plane!
-	flatCenter: Coordinate!
-	flatPose: PoseFull!
-	scale: Float
-	refType: TypeStore
-	parentConnection: ConnectionStore
-	parentPiece: PieceStore
-	depth: Int!
-	path: [PieceStore!]!
-}
-
-type Plane {
-	origin: Point!
-	xAxis: Vector!
-	yAxis: Vector!
-}
-
-input PlaneInput {
-	origin: PointInput!
-	xAxis: VectorInput!
-	yAxis: VectorInput!
-}
-
-type Point {
-	x: Float!
-	y: Float!
-	z: Float!
-}
-
-input PointInput {
-	x: Float!
-	y: Float!
-	z: Float!
-}
-
-type PortFull {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	compatibleFamilies: [FamilyRef!]!
-	mandatory: Boolean
-	t: Float
-	point: Point
-	direction: Vector
-	compatiblePorts: [PortRef!]!
-	qualities: [QualityFull!]!
-	attributes: [AttributeFull!]!
-}
-
-type PortRef {
-	id: Id!
-}
-
-"""
-📐Optional pose with independently-optional plane and center for piece storage.
-"""
-type PoseDto {
-	plane: Plane
-	center: Coordinate
-}
-
-type PoseFull {
-	plane: Plane!
-	center: Coordinate!
-}
-
-type PropFull {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	quality: QualityRef
-}
-
-type PropShallow {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-}
-
-type QualityFull {
-	id: Id!
-	key: String!
-	value: String
-	unit: String
-	definition: String
-	description: String
-	benchmarks: [BenchmarkFull!]!
-}
-
-type QualityRef {
-	id: Id!
-}
-
-type QualityShallow {
-	id: Id!
-	key: String!
-	value: String
-	unit: String
-	definition: String
-	description: String
-	benchmarks: [BenchmarkMetadata!]!
-}
-
-type Query {
-	session: KitSession!
-}
-
-input RemoteBackboneInput {
-	url: String!
-	sessionId: String!
-}
-
-type ReplaceableCatalogStore {
-	types: [TypeStore!]!
-	designs: [DesignStore!]!
-}
-
-type RepresentationFull {
-	id: Id!
-	url: String!
-	description: String
-	file: FileRef
-	tags: [TagFull!]!
-	qualities: [QualityFull!]!
-	attributes: [AttributeFull!]!
-}
-
-type RepresentationMetadata {
-	id: Id!
-	url: String!
-	description: String
-	file: FileRef
-}
-
-type RepresentationShallow {
-	id: Id!
-	url: String!
-	description: String
-	file: FileRef
-	tags: [TagShallow!]!
-	qualities: [QualityShallow!]!
-	attributes: [AttributeShallow!]!
-}
-
-type RepresentationStore {
-	id: String!
-	url: String!
-	description: String
-	container: TypeStore!
-	metadata: RepresentationMetadata!
-	shallow: RepresentationShallow!
-	full: RepresentationFull!
-}
-
-type SideMetadata {
-	id: Id!
-	piece: PieceRef!
-	port: PortRef
-	designPiece: PieceRef
-	connector: ConnectorRef
-}
-
-type StatFull {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	description: String
-}
-
-type StatShallow {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	description: String
-}
-
-type Subscription {
-	eventStream: KitEvent!
-}
-
-type TagFull {
-	id: Id!
-	name: String!
-	order: Int
-}
-
-type TagShallow {
-	id: Id!
-	name: String!
-	order: Int
-}
-
-enum TransactionState {
-	open
-	finalized
-}
-
-type TypeFull {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationRef
-	created: String
-	updated: String
-	families: [FamilyRef!]!
-	connectors: [ConnectorFull!]!
-	representations: [RepresentationFull!]!
-	authors: [AuthorFull!]!
-	concepts: [ConceptFull!]!
-	tags: [TagFull!]!
-	qualities: [QualityFull!]!
-	props: [PropFull!]!
-	attributes: [AttributeFull!]!
-}
-
-type TypeMetadata {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationRef
-	created: String
-	updated: String
-}
-
-type TypeRef {
-	id: Id!
-}
-
-type TypeShallow {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationRef
-	created: String
-	updated: String
-	families: [FamilyRef!]!
-	connectors: [ConnectorShallow!]!
-	representations: [RepresentationShallow!]!
-	authors: [AuthorShallow!]!
-	concepts: [ConceptShallow!]!
-	tags: [TagShallow!]!
-	qualities: [QualityShallow!]!
-	props: [PropShallow!]!
-	attributes: [AttributeShallow!]!
-}
-
-type TypeStore {
+type VcsRootGql {
 	id: String!
 	name: String!
-	description: String
-	container: KitStore!
-	metadata: TypeMetadata!
-	shallow: TypeShallow!
-	full: TypeFull!
-	connectors: [ConnectorStore!]!
-	representations: [RepresentationStore!]!
-	bestRepresentation(tagIds: [String!]!): RepresentationStore
 }
 
-type Vector {
-	x: Float!
-	y: Float!
-	z: Float!
+type VcsSessionGql {
+	id: String!
+	drafts: [VcsDraftGql!]!
 }
 
-input VectorInput {
+type VcsStateGql {
+	theKitHead: String
+	root: VcsRootGql!
+	checkpoints: [VcsCheckpointGql!]!
+	alternatives: [VcsAlternativeGql!]!
+	sessions: [VcsSessionGql!]!
+	theKitLine: [String!]!
+}
+
+input VectorInputBatch {
 	x: Float!
 	y: Float!
 	z: Float!

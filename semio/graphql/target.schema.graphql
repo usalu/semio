@@ -976,12 +976,6 @@ type TagOutput {
 	order: Int
 }
 
-type TagShallowDto {
-	id: Id!
-	name: String!
-	order: Int
-}
-
 input TransactionInput @oneOf {
 	changeKits: ChangeKitsInput
 	changeKitWithInverse: ChangeKitsInput
@@ -997,37 +991,25 @@ input TransactionInput {
 	commands: [TransactionInput!]!
 }
 
-type TypeOutput {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	stock: Int
-	isAbstract: Boolean
-	unit: String
-	location: LocationIdDto
-	created: String
-	updated: String
-	families: [FamilyIdDto!]!
-	connectors: [ConnectorOutput!]!
-	representations: [RepresentationOutput!]!
-	authors: [AuthorOutput!]!
-	concepts: [ConceptOutput!]!
-	tags: [TagOutput!]!
-	qualities: [QualityOutput!]!
-	props: [PropOutput!]!
-	attributes: [AttributeOutput!]!
-}
 
-
+# ------------------------------------------------------------
 
 
 directive @oneOf on INPUT_OBJECT
 
 interface Entity {
+    id: ID!
+    hash: String!
+    owner: Entity
+}
+
+union OperationInput = CreateFixedPieceInput
+
+interface Operation implements Entity {
 	id: ID!
 	hash: String!
+	diff: Diff!
+	input: OperationInput
 }
 
 input VectorInput {
@@ -1040,6 +1022,40 @@ type Vector {
 	x: Float!
 	y: Float!
 	z: Float!
+}
+
+input PointInput {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Point {
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+input PlaneInput {
+	origin: PointInput!
+	xAxis: VectorInput!
+	yAxis: VectorInput!
+}
+
+type Plane {
+	origin: Point!
+	xAxis: Vector!
+	yAxis: Vector!
+}
+
+input PoseInput {
+	center: CoordinateInput!
+	plane: PlaneInput!
+}
+
+type Pose {
+	center: Coordinate!
+	plane: Plane!
 }
 
 ...
@@ -1056,6 +1072,11 @@ type Type implements Entity {
 	bestRepresentation(tagIds: [ID!]!): Representation
 }
 
+enum PieceConnectionKind {
+	FIXED
+	CONNECTED
+}
+
 union Blueprint = Type | Design
 
 type Piece implements Entity {
@@ -1065,21 +1086,44 @@ type Piece implements Entity {
 	name: String
 	description: String
 	pose: Pose
-	flatPose: Pose!
 	scale: Float
 	blueprint: Blueprint!
+	connectionKind: PieceConnectionKind
+	flatPose: Pose!
 	replaceableBlueprint:[Blueprint]!
 	parentConnection: Connection
+	childConnections: [Connection!]!
 	parentPiece: Piece
+	childPieces: [Piece!]!
 	depth: Int!
 	path: [Piece!]!
 }
 
-interface Operation implements Entity {
+#region VCS
+
+type CreatedFixedPieceInput {
+	pose: Pose!,
+	name: String,
+	description: String
+}
+
+type CreatedFixedPiece implements Operation {
 	id: ID!
 	hash: String!
+	owner: Change!
+	input: CreatedFixedPieceInput!
 	diff: Diff!
 }
+
+type FixedPiece implements Operation {
+	id: ID!
+	hash: String!
+	owner: Change!
+	diff: Diff!
+}
+
+#endregion VSC
+
 
 union ChangeOwner = Transaction | Draft | Checkpoint
 
@@ -1170,7 +1214,7 @@ type Query {
 type Mutation {
 	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
 	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-	createFixedPiece(draftId: ID!, transactionId: ID!, pose: PoseInput!, name: String, description: String): ID!
+	createFixedPiece(draftId: ID!, transactionId: ID!, pose: Pose!, name: String, description: String): ID!
 	fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 
