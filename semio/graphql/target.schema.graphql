@@ -38,6 +38,16 @@ type Coordinate {
   v: Float!
 }
 
+input OffsetInput {
+  u: Float!
+  v: Float!
+}
+
+type Offset {
+  u: Float!
+  v: Float!
+}
+
 input PlaneInput {
   origin: PointInput!
   xAxis: VectorInput!
@@ -50,12 +60,12 @@ type Plane {
   yAxis: Vector!
 }
 
-input PoseInput {
+input PositionInput {
   center: CoordinateInput!
   plane: PlaneInput!
 }
 
-type Pose {
+type Position {
   center: Coordinate!
   plane: Plane!
 }
@@ -257,11 +267,11 @@ type Piece implements Entity {
   owner: Blueprint!
   name: String
   description: String
-  pose: Pose
+  pose: Position
   scale: Float
   blueprint: Blueprint!
   connectionKind: PieceConnectionKind
-  flatPose: Pose!
+  flatPosition: Position!
   replaceableBlueprint: [Blueprint!]!
   parentConnection: Connection
   childConnections: [Connection!]!
@@ -296,12 +306,12 @@ type Connection implements Entity {
 type CreatedFixedPieceInput {
   designId: ID!
   blueprintId: ID!
-  pose: Pose!
+  pose: Position!
   name: String
   description: String
 }
 
-type CreatedFixedPiece implements Operation & Entity {
+type CreatedFixedPiece implements Operation {
   id: ID!
   hash: String!
   owner: Change!
@@ -315,7 +325,7 @@ type FixedPieceInput {
   pieceId: ID!
 }
 
-type FixedPiece implements Operation & Entity {
+type FixedPiece implements Operation {
   id: ID!
   hash: String!
   owner: Change!
@@ -330,7 +340,7 @@ type DraggedPieceInput {
   offset: Offset!
 }
 
-type DraggedPiece implements Operation & Entity {
+type DraggedPiece implements Operation {
   id: ID!
   hash: String!
   owner: Change!
@@ -557,12 +567,14 @@ type Query {
 type Mutation {
   renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
   changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: PoseInput!, name: String, description: String): ID!
+  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: PositionInput!, name: String, description: String): ID!
   fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 
 type Subscription {
-  operated: Operation!
+  commandSucceeded: Command!
+  operationSucceeded: Operation!
+  operationFailed: Error!
   kitRenamed: RenamedKit!
   descriptionChanged: ChangedDescription!
   createdFixedPiece: CreatedFixedPiece!

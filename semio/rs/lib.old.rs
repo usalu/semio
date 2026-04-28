@@ -9144,7 +9144,7 @@ pub mod diff {
     use crate::kit_graph::KitIdDto;
     use crate::layer::{LayerFullDto, LayerIdDto};
     use crate::location::LocationIdDto;
-    use crate::piece::{PieceFullDto, PieceIdDto, PoseDto};
+    use crate::piece::{PieceFullDto, PieceIdDto, PositionDto};
     use crate::port::{PortFullDto, PortIdDto};
     use crate::prop::{PropFullDto, PropIdDto};
     use crate::quality::{QualityFullDto, QualityIdDto};
@@ -9806,7 +9806,7 @@ pub mod diff {
         pub name: Option<Option<String>>,
         pub description: Option<Option<String>>,
         #[serde(default)]
-        pub pose: Option<Option<PoseDto>>,
+        pub pose: Option<Option<PositionDto>>,
         pub scale: Option<Option<f64>>,
         #[serde(rename = "mirrorPlane", default)]
         pub mirror_plane: Option<Option<Plane>>,
@@ -13073,7 +13073,7 @@ pub mod events {
         Type,
         Design,
         Piece,
-        Pose,
+        Position,
         Connection,
         Side,
         Port,
@@ -13129,7 +13129,7 @@ pub mod events {
     event_field_enum!(GroupField { Name, Description, Color, Icon, Pieces });
     event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Remote, Homepage, License, Uri, Created, Updated, Version });
     event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
-    event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
+    event_field_enum!(PieceField { Plane, Position, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
     event_field_enum!(PortField { Id, Name, Description, Icon, CompatibleFamilies, CompatiblePorts, Mandatory, T, Point, Direction, Attributes });
     event_field_enum!(PropField { Key, Value, Unit, Description });
     event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
@@ -18714,17 +18714,17 @@ pub mod piece {
         pub designs: Vec<DesignStoreReference>,
     }
 
-    // #region ­ƒôìPose
+    // #region ­ƒôìPosition
     /// ­ƒôìOwned placement container for a piece's explicit plane and center.
     #[derive(Debug, Default)]
-    pub struct PoseStore {
+    pub struct PositionStore {
         pub plane: Option<Plane>,
         pub center: Option<Coordinate>,
     }
 
-    impl PoseStore {
+    impl PositionStore {
         fn entity_ref(&self, piece_id: &Id) -> EntityReference {
-            EntityReference::new(EntityKind::Pose, piece_id.clone())
+            EntityReference::new(EntityKind::Position, piece_id.clone())
         }
 
         fn hash_into(&self, w: &mut HashWriter) {
@@ -18744,7 +18744,7 @@ pub mod piece {
         pub id: Id,
         pub name: Option<String>,
         pub description: Option<String>,
-        pub pose: PoseStore,
+        pub pose: PositionStore,
         pub scale: Option<f64>,
         pub mirror_plane: Option<Plane>,
         pub hidden: Option<bool>,
@@ -18770,15 +18770,15 @@ pub mod piece {
     /// Explicit plane + center placement (world or local), used by read commands and narrow piece views.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
-    pub struct PoseFullDto {
+    pub struct PositionFullDto {
         pub plane: Plane,
         pub center: Coordinate,
     }
 
-    /// 📐 Optional piece pose for wire formats (`PieceFullDto`, GraphQL `PoseDto`); plane and center are independently optional.
+    /// 📐 Optional piece pose for wire formats (`PieceFullDto`, GraphQL `PositionDto`); plane and center are independently optional.
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     #[serde(rename_all = "camelCase")]
-    pub struct PoseDto {
+    pub struct PositionDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
@@ -18790,7 +18790,7 @@ pub mod piece {
     #[serde(rename_all = "camelCase")]
     pub struct FixedPieceOutputDto {
         pub piece: PieceIdDto,
-        pub pose: PoseFullDto,
+        pub pose: PositionFullDto,
     }
 
     /// Invariant: piece is attached under a parent piece and connection; includes derived world-space flat pose.
@@ -18800,7 +18800,7 @@ pub mod piece {
         pub piece: PieceIdDto,
         pub parent_piece: PieceIdDto,
         pub parent_connection: crate::connection::ConnectionIdDto,
-        pub flat_pose: PoseFullDto,
+        pub flat_pose: PositionFullDto,
     }
 
     /// Serializable replacement catalog for [`PieceAlternatives`] (ids only).
@@ -18819,7 +18819,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
+        pub pose: Option<PositionDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -18844,7 +18844,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
+        pub pose: Option<PositionDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -18873,7 +18873,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pose: Option<PoseDto>,
+        pub pose: Option<PositionDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
@@ -18900,7 +18900,7 @@ pub mod piece {
                 id: Id::new_v7(),
                 name: None,
                 description: None,
-                pose: PoseStore::default(),
+                pose: PositionStore::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -18924,7 +18924,7 @@ pub mod piece {
                 id,
                 name: None,
                 description: None,
-                pose: PoseStore::default(),
+                pose: PositionStore::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -19093,7 +19093,7 @@ pub mod piece {
             self.pose.plane = plane;
             self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Plane));
             self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
-            self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Pose));
+            self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Position));
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -19107,7 +19107,7 @@ pub mod piece {
             self.pose.center = center;
             self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Center));
             self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
-            self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Pose));
+            self.emit_current_piece_ev(crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Position));
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -19246,14 +19246,14 @@ pub mod piece {
             self.flat_center.get_or_init(|| self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default())
         }
 
-        /// Pose from explicit [`PoseStore`] fields (local), for fixed / root pieces.
-        pub fn pose_full_dto(&self) -> PoseFullDto {
-            PoseFullDto { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
+        /// Position from explicit [`PositionStore`] fields (local), for fixed / root pieces.
+        pub fn pose_full_dto(&self) -> PositionFullDto {
+            PositionFullDto { plane: self.pose.plane.unwrap_or_else(Plane::world_xy), center: self.pose.center.unwrap_or_default() }
         }
 
         /// World-space flat pose (uses [`Self::flat_plane`] / [`Self::flat_center`]).
-        pub fn flat_pose_full_dto(&self) -> PoseFullDto {
-            PoseFullDto { plane: self.flat_plane(), center: self.flat_center() }
+        pub fn flat_pose_full_dto(&self) -> PositionFullDto {
+            PositionFullDto { plane: self.flat_plane(), center: self.flat_center() }
         }
 
         /// ­ƒº¡Path from the fixed (root) piece down to and including this piece, computed by
@@ -19625,7 +19625,7 @@ pub mod piece {
                 description: self.description.clone(),
                 pose: match (self.pose.plane, self.pose.center) {
                     (None, None) => None,
-                    (p, c) => Some(PoseDto { plane: p, center: c }),
+                    (p, c) => Some(PositionDto { plane: p, center: c }),
                 },
                 scale: self.scale,
                 mirror_plane: self.mirror_plane,
@@ -23453,7 +23453,7 @@ pub mod io {
                 let design_ref_id: Option<String> = row.get(29)?;
                 let db_plane = plane_from_parts(row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?);
                 let db_center = piece_center_from_parts(row.get(12)?, row.get(13)?, row.get(14)?);
-                let pose = if db_plane.is_some() || db_center.is_some() { Some(crate::piece::PoseDto { plane: db_plane, center: db_center }) } else { None };
+                let pose = if db_plane.is_some() || db_center.is_some() { Some(crate::piece::PositionDto { plane: db_plane, center: db_center }) } else { None };
                 values.push(PieceFullDto {
                     id: id.clone(),
                     name: row.get(1)?,
@@ -25610,7 +25610,7 @@ pub mod kit_graphql {
         z: f64,
     }
     #[derive(Clone, Debug, SimpleObject)]
-    struct GqlPoseObject {
+    struct GqlPositionObject {
         plane: GqlPlaneObject,
         center: GqlCoordinate3,
     }
@@ -25628,8 +25628,8 @@ pub mod kit_graphql {
         // `geom::Coordinate` is 2D (u, v); GQL pose uses (x, y, z) with z = 0.
         GqlCoordinate3 { x: c.u, y: c.v, z: 0.0 }
     }
-    fn gql_pose_object(p: &crate::piece::PoseFullDto) -> GqlPoseObject {
-        GqlPoseObject { plane: gql_plane_object(&p.plane), center: gql_coord3(&p.center) }
+    fn gql_pose_object(p: &crate::piece::PositionFullDto) -> GqlPositionObject {
+        GqlPositionObject { plane: gql_plane_object(&p.plane), center: gql_coord3(&p.center) }
     }
 
     #[derive(Clone, Debug, SimpleObject)]
@@ -26098,7 +26098,7 @@ pub mod kit_graphql {
             Ok(gql_coord3(&p.flat_center()))
         }
 
-        async fn flat_pose(&self) -> Result<GqlPoseObject> {
+        async fn flat_pose(&self) -> Result<GqlPositionObject> {
             let p = self.0.read().map_err(|_| Error::new("piece lock poisoned"))?;
             Ok(gql_pose_object(&p.flat_pose_full_dto()))
         }
@@ -26961,7 +26961,7 @@ mod tests {
         use crate::geom::{Coordinate, Plane, Point, Vector};
         use crate::id::Id;
         use crate::kit_graph::{KitFullDto, KitGraph};
-        use crate::piece::{PieceFullDto, PieceIdDto, PoseDto};
+        use crate::piece::{PieceFullDto, PieceIdDto, PositionDto};
         use crate::port::{PortFullDto, PortIdDto};
         use crate::side::SideMetadataDto;
         use crate::typ::{TypeFullDto, TypeIdDto};
@@ -26996,9 +26996,9 @@ mod tests {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceFullDto { id: root_id.clone(), pose: Some(PoseDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: root_id.clone(), pose: Some(PositionDto { plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0)) }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                         PieceFullDto { id: middle_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
-                        PieceFullDto { id: leaf_id.clone(), pose: leaf_plane.map(|pl| PoseDto { plane: Some(pl), center: None }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: leaf_id.clone(), pose: leaf_plane.map(|pl| PositionDto { plane: Some(pl), center: None }), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                     ],
                     connections: vec![
                         ConnectionFullDto {
@@ -28055,9 +28055,9 @@ mod tests {
             }
 
             pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityReference, design_er: EntityReference, kit_er: EntityReference, piece_g: &Id, field: crate::events::PieceField) {
-                let pose_er = EntityReference::new(EntityKind::Pose, piece_g.clone());
+                let pose_er = EntityReference::new(EntityKind::Position, piece_g.clone());
                 assert_piece_field(evs, piece_g, field);
-                assert_piece_field(evs, piece_g, crate::events::PieceField::Pose);
+                assert_piece_field(evs, piece_g, crate::events::PieceField::Position);
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == pose_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
                 assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
@@ -29918,7 +29918,7 @@ pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
 pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
 pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreReference, LayerStoreWeak};
 pub use location::{LocationFullDto, LocationIdDto, LocationMetadataDto, LocationShallowDto, LocationStore, LocationStoreReference, LocationStoreWeak};
-pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreReference, PieceStoreWeak, PoseDto, PoseFullDto};
+pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreReference, PieceStoreWeak, PositionDto, PositionFullDto};
 pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreReference, PortStoreWeak};
 pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreReference, PropStoreWeak};
 pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreReference, QualityStoreWeak};
