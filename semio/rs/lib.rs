@@ -3569,7 +3569,7 @@ pub mod change_command {
                         if qg.benchmarks.iter().any(|b| b.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate benchmark id on quality".into()));
                         }
-                        let mut b = BenchmarkStore::empty_shell(benchmark.id.clone());
+                        let mut b = BenchmarkStore::new(benchmark.id.clone());
                         b.apply_metadata_dto(BenchmarkMetadata { id: benchmark.id.clone(), name: benchmark.name.clone(), min: benchmark.min, max: benchmark.max, min_excluded: benchmark.min_excluded, max_excluded: benchmark.max_excluded });
                         b.parent_quality = Some(Arc::downgrade(q));
                         qg.benchmarks.push(Arc::new(RwLock::new(b)));
@@ -6331,7 +6331,7 @@ pub mod kit_transaction {
     }
 
     impl Transaction {
-        pub fn new(id: Id) -> Self {
+        pub fn new() -> Self {
             Self { id, changes: Vec::new(), redo_changes: Vec::new(), state: TransactionState::Open }
         }
 
@@ -8057,12 +8057,12 @@ pub mod attribute {
 
     impl Default for AttributeStore {
         fn default() -> Self {
-            Self::empty_shell(Id::default())
+            Self::new(Id::default())
         }
     }
 
     impl AttributeStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self {
                 id,
                 key: String::new(),
@@ -8099,7 +8099,7 @@ pub mod attribute {
         }
 
         pub(crate) fn from_output(d: AttributeStore) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.apply_output_fields(&d);
             s
         }
@@ -8319,7 +8319,7 @@ pub mod author {
     }
 
     impl AuthorStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, name: String::new(), email: String::new(), role: None, rank: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -8342,7 +8342,7 @@ pub mod author {
         }
 
         pub(crate) fn from_input(d: AuthorInput) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.apply_input_fields(d);
             s
         }
@@ -8524,7 +8524,7 @@ pub mod benchmark {
     }
 
     impl BenchmarkStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, name: String::new(), min: None, max: None, min_excluded: None, max_excluded: None, parent_quality: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -8692,7 +8692,7 @@ pub mod concept {
     }
 
     impl ConceptStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, name: String::new(), description: None, order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -8714,7 +8714,7 @@ pub mod concept {
         }
 
         pub(crate) fn from_input(d: ConceptInput) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.apply_input_fields(d);
             s
         }
@@ -9635,8 +9635,8 @@ pub mod design {
     }
 
     fn connection_from_input(cdto:  piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
-        let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
-        let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
+        let s1 = Arc::new(RwLock::new(SideStore::new(cdto.connected.id.clone())));
+        let s2 = Arc::new(RwLock::new(SideStore::new(cdto.connecting.id.clone())));
         output_side_from_dto(&cdto.connected, &s1, piece_index);
         output_side_from_dto(&cdto.connecting, &s2, piece_index);
         let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
@@ -9731,7 +9731,7 @@ pub mod design {
             }
         }
 
-        pub(crate) fn empty_shell(id: Id, name: String) -> Self {
+        pub(crate) fn new(id: Id, name: String) -> Self {
             Self {
                 id,
                 name,
@@ -10838,7 +10838,7 @@ pub mod design {
                     }
                 }
                 for p in &pc.added {
-                    let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.id.clone())));
+                    let pref = Arc::new(RwLock::new(PieceStore::new(p.id.clone())));
                     {
                         let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                         pw.apply_input_dto(p.clone(), design_weak.clone(), type_index);
@@ -11184,7 +11184,7 @@ pub mod design {
 
         pub(crate) fn add_piece(&mut self, piece:  type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            let pref = Arc::new(RwLock::new(PieceStore::empty_shell(piece.id.clone())));
+            let pref = Arc::new(RwLock::new(PieceStore::new(piece.id.clone())));
             {
                 let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
                 pw.apply_input_dto(piece.clone(), design_weak, type_index);
@@ -11295,7 +11295,7 @@ pub mod design {
                 stats: stat_dtos,
             } = d;
 
-            let design = Arc::new(RwLock::new(DesignStore::empty_shell(id.clone(), name.clone())));
+            let design = Arc::new(RwLock::new(DesignStore::new(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
                 dw.apply_metadata_fields(DesignMetadata { id, name, description, icon, image, location, unit, created, updated, kit });
@@ -11308,7 +11308,7 @@ pub mod design {
             let piece_ids: Vec<Id> = piece_dtos.iter().map(|p| p.id.clone()).collect();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for pd in &piece_dtos {
-                piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(PieceStore::empty_shell(pd.id.clone()))));
+                piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(PieceStore::new(pd.id.clone()))));
             }
             for pdto in piece_dtos {
                 if let Some(p) = piece_index.get(&pdto.id) {
@@ -20983,7 +20983,7 @@ pub mod piece {
             }
         }
 
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self {
                 id,
                 name: None,
@@ -21660,71 +21660,6 @@ pub mod piece {
                 }
             }
         }
-
-        pub fn to_ref(&self) -> PieceRef {
-            PieceRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> PieceMetadata {
-            let r#type = self.type_ref.as_ref().and_then(|t| t.upgrade()).and_then(|t| t.read().ok().map(|t| TypeRef { id: t.id.clone() }));
-            let design = self.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| crate::design::DesignRef { id: d.id.clone() }));
-            let pose = if self.pose.plane.is_some() || self.pose.center.is_some() {
-                Some(PoseDto { plane: self.pose.plane, center: self.pose.center })
-            } else {
-                None
-            };
-            PieceMetadata {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                pose,
-                scale: self.scale,
-                mirror_plane: self.mirror_plane,
-                hidden: self.hidden,
-                locked: self.locked,
-                color: self.color.clone(),
-                r#type,
-                design,
-            }
-        }
-
-        pub fn to_shallow(&self) -> PieceInput {
-            let m = self.to_metadata();
-            PieceInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                pose: m.pose,
-                scale: m.scale,
-                mirror_plane: m.mirror_plane,
-                hidden: m.hidden,
-                locked: m.locked,
-                color: m.color,
-                r#type: m.r#type,
-                design: m.design,
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> PieceInput {
-            let m = self.to_metadata();
-            PieceInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                pose: m.pose,
-                scale: m.scale,
-                mirror_plane: m.mirror_plane,
-                hidden: m.hidden,
-                locked: m.locked,
-                color: m.color,
-                r#type: m.r#type,
-                design: m.design,
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
-            }
-        }
     }
 
     impl Default for PieceStore {
@@ -21860,95 +21795,6 @@ pub mod port {
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Port, self.id.clone())
-        }
-
-        pub fn from_id_dto(d: PortRef) -> Self {
-            let mut s = Self::new();
-            s.id = d.id;
-            s
-        }
-
-        pub fn from_metadata(d: PortMetadata) -> Self {
-            let mut s = Self::new();
-            s.id = d.id;
-            s.name = d.name;
-            s.description = d.description;
-            s.icon = d.icon;
-            s
-        }
-
-        pub fn from_shallow(d: ) -> Self {
-            let mut s = Self::from_metadata(PortMetadata { id: d.id, name: d.name, description: d.description, icon: d.icon });
-            s.compatible_families = d.compatible_families;
-            s.mandatory = d.mandatory;
-            s.t = d.t;
-            s.point = d.point;
-            s.direction = d.direction;
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
-            s
-        }
-
-        pub fn from_input(d: PortInput) -> Self {
-            let mut s = Self::from_metadata(PortMetadata { id: d.id, name: d.name, description: d.description, icon: d.icon });
-            s.compatible_families = d.compatible_families;
-            s.mandatory = d.mandatory;
-            s.t = d.t;
-            s.point = d.point;
-            s.direction = d.direction;
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
-            s
-        }
-
-        pub fn to_ref(&self) -> PortRef {
-            PortRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> PortMetadata {
-            PortMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
-        }
-
-        pub fn to_shallow(&self) -> PortInput {
-            let m = self.to_metadata();
-            let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
-            PortInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                compatible_families: self.compatible_families.clone(),
-                mandatory: self.mandatory,
-                t: self.t,
-                point: self.point,
-                direction: self.direction,
-                compatible_ports,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> PortInput {
-            let m = self.to_metadata();
-            let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
-            PortInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                compatible_families: self.compatible_families.clone(),
-                mandatory: self.mandatory,
-                t: self.t,
-                point: self.point,
-                direction: self.direction,
-                compatible_ports,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
-            }
         }
 
         pub fn set_id(&mut self, v: Id) -> crate::error::SetResult {
@@ -22098,83 +21944,14 @@ pub mod family {
         pub(crate) hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, Hash, async_graphql::SimpleObject)]
-    pub struct FamilyRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyMetadata {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct FamilyInput {
-        pub id: Id,
-        pub name: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub icon: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub ports: Vec<crate::port::PortInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
 
     impl FamilyStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self { id: Id::new_v7(), name: name.into(), description: None, icon: None, ports: Vec::new(), attributes: Vec::new(), parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Family, self.id.clone())
-        }
-
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        pub fn to_ref(&self) -> FamilyRef {
-            FamilyRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> FamilyMetadata {
-            FamilyMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
-        }
-
-        pub fn to_shallow(&self) -> FamilyInput {
-            let m = self.to_metadata();
-            FamilyInput { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_output()).collect() }
-        }
-
-        pub fn to_input(&self) -> FamilyInput {
-            let m = self.to_metadata();
-            FamilyInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
-            }
         }
 
         pub fn invalidate_hash(&self) {
@@ -22252,29 +22029,6 @@ pub mod prop {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct PropMetadata {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-    }
-
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
     pub struct PropInput {
         pub id: Id,
@@ -22288,32 +22042,10 @@ pub mod prop {
     }
 
     impl PropStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
-            Self { id, key: String::new(), value: String::new(), unit: None, quality: None, parent_kit: None, parent_design: None, parent_type: None, parent_piece: None, event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Prop, self.id.clone())
-        }
-
-        pub(crate) fn apply_input_fields(&mut self, d: PropInput) {
-            self.id = d.id;
-            self.key = d.key;
-            self.value = d.value;
-            self.unit = d.unit;
-            self.quality = d.quality.clone();
-            self.hash_cache.invalidate();
-        }
-
-        pub(crate) fn from_input(d: PropInput) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
-            s.apply_input_fields(d);
-            s
         }
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
@@ -22387,24 +22119,6 @@ pub mod prop {
             }
         }
 
-        pub fn to_ref(&self) -> PropRef {
-            PropRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> PropMetadata {
-            PropMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
-        }
-
-        pub fn to_shallow(&self) -> PropInput {
-            let m = self.to_metadata();
-            PropInput { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: None }
-        }
-
-        pub fn to_input(&self) -> PropInput {
-            let m = self.to_metadata();
-            PropInput { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: self.quality.clone() }
-        }
-
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
         }
@@ -22460,59 +22174,8 @@ pub mod quality {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject, async_graphql::InputObject)]
-    pub struct QualityRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityMetadata {
-        pub id: Id,
-        pub key: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub value: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub key: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub value: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub benchmarks: Vec<BenchmarkMetadata>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct QualityInput {
-        pub id: Id,
-        pub key: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub value: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub definition: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub benchmarks: Vec<BenchmarkInput>,
-    }
-
     impl QualityStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self {
                 id,
                 key: String::new(),
@@ -22605,54 +22268,6 @@ pub mod quality {
             self.invalidate_hash();
         }
 
-        pub(crate) fn from_shallow(d: ) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
-            s.apply_metadata_fields(QualityMetadata { id: d.id, key: d.key, value: d.value, unit: d.unit, definition: d.definition, description: d.description });
-            s.benchmarks = d
-                .benchmarks
-                .into_iter()
-                .map(|b| {
-                    let mut bs = BenchmarkStore::empty_shell(b.id.clone());
-                    bs.apply_metadata_dto(b);
-                    Arc::new(RwLock::new(bs))
-                })
-                .collect();
-            s
-        }
-
-        pub(crate) fn from_input(d: QualityInput) -> Self {
-            let QualityInput { id, key, value, unit, definition, description, benchmarks } = d;
-            let mut s = Self::empty_shell(id.clone());
-            s.apply_metadata_fields(QualityMetadata { id, key, value, unit, definition, description });
-            s.benchmarks = benchmarks
-                .into_iter()
-                .map(|b| {
-                    let mut bs = BenchmarkStore::empty_shell(b.id.clone());
-                    bs.apply_metadata_dto(BenchmarkMetadata { id: b.id, name: b.name, min: b.min, max: b.max, min_excluded: b.min_excluded, max_excluded: b.max_excluded });
-                    Arc::new(RwLock::new(bs))
-                })
-                .collect();
-            s
-        }
-
-        pub fn to_ref(&self) -> QualityRef {
-            QualityRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> QualityMetadata {
-            QualityMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), definition: self.definition.clone(), description: self.description.clone() }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata())).collect() }
-        }
-
-        pub fn to_input(&self) -> QualityInput {
-            let m = self.to_metadata();
-            QualityInput { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_input())).collect() }
-        }
-
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -22733,7 +22348,7 @@ pub mod report {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct OperationNote {
         #[serde(default)]
-        pub severity: NoteSeverity,
+        pub severity: Severity,
         pub message: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub pointer: Option<String>,
@@ -22741,7 +22356,7 @@ pub mod report {
 
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
     #[serde(rename_all = "lowercase")]
-    pub enum NoteSeverity {
+    pub enum Severity {
         #[default]
         Info,
         Warning,
@@ -22768,7 +22383,7 @@ pub mod report {
         }
 
         pub fn err(message: impl Into<String>) -> Self {
-            Self { ok: false, value: None, infos: Vec::new(), warnings: Vec::new(), errors: vec![OperationNote { severity: NoteSeverity::Error, message: message.into(), pointer: None }] }
+            Self { ok: false, value: None, infos: Vec::new(), warnings: Vec::new(), errors: vec![OperationNote { severity: Severity::Error, message: message.into(), pointer: None }] }
         }
 
         pub fn with_infos(mut self, infos: Vec<OperationNote>) -> Self {
@@ -22831,126 +22446,14 @@ pub mod representation {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationMetadata {
-        pub id: Id,
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileRef>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        #[serde(default, alias = "name", alias = "blob")]
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct RepresentationInput {
-        pub id: Id,
-        #[serde(default, alias = "name", alias = "blob")]
-        pub url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub file: Option<FileRef>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub tags: Vec<TagInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub qualities: Vec<QualityInput>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        pub attributes: Vec<AttributeStore>,
-    }
-
     impl RepresentationStore {
-        pub fn new(url: impl Into<String>) -> Self {
+        pub fn new() -> Self {
             Self { id: Id::new_v7(), url: url.into(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Representation, self.id.clone())
-        }
-
-        pub fn from_id_dto(d: RepresentationRef) -> Self {
-            Self { id: d.id, url: String::new(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_metadata(d: RepresentationMetadata) -> Self {
-            Self { id: d.id, url: d.url, description: d.description, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_shallow(d: ) -> Self {
-            let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
-            s.tags = d.tags.into_iter().map(TagStore::from_shallow).collect();
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
-            s
-        }
-
-        pub fn from_input(d: RepresentationInput) -> Self {
-            let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
-            s.tags = d.tags.into_iter().map(TagStore::from_input).collect();
-            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
-            s
-        }
-
-        pub fn to_ref(&self) -> RepresentationRef {
-            RepresentationRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> RepresentationMetadata {
-            let file = self.file.as_ref().and_then(|f| f.upgrade()).and_then(|f| f.read().ok().map(|f| f.to_ref()));
-            RepresentationMetadata { id: self.id.clone(), url: self.url.clone(), description: self.description.clone(), file }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                url: m.url,
-                description: m.description,
-                file: m.file,
-                tags: self.tags.iter().map(TagStore::to_shallow).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> RepresentationInput {
-            let m = self.to_metadata();
-            RepresentationInput {
-                id: m.id,
-                url: m.url,
-                description: m.description,
-                file: m.file,
-                tags: self.tags.iter().map(TagStore::to_input).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
-            }
         }
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
@@ -23053,71 +22556,14 @@ pub mod side {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideRef {
-        pub id: Id,
-    }
-
-    fn new_side_dto_id() -> Id {
-        Id::new_v7()
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideMetadata {
-        #[serde(default = "new_side_dto_id")]
-        pub id: Id,
-        pub piece: crate::piece::PieceRef,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "connector")]
-        pub connector: Option<crate::connector::ConnectorRef>,
-    }
-
-    impl Default for SideMetadata {
-        fn default() -> Self {
-            Self { id: Id::new_v7(), piece: crate::piece::PieceRef { id: Id::new_v7() }, port: None, design_piece: None, connector: None }
-        }
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub piece: crate::piece::PieceRef,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceRef>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct SideInput {
-        pub id: Id,
-        pub piece: crate::piece::PieceRef,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub port: Option<crate::port::PortRef>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
-        pub design_piece: Option<crate::piece::PieceRef>,
-    }
-
     impl SideStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, piece: Weak::new(), port: None, design_piece: None, parent_connection: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
-        }
-
-        fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Side, self.id.clone())
-        }
-
-        pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadata) {
-            self.id = d.id;
-            self.hash_cache.invalidate();
         }
 
         pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
@@ -23151,27 +22597,6 @@ pub mod side {
                     }
                 }
             }
-        }
-
-        pub fn to_ref(&self) -> SideRef {
-            SideRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> SideMetadata {
-            let piece_id = self.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone())).unwrap_or_default();
-            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
-            let design_piece = self.design_piece.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
-            SideMetadata { id: self.id.clone(), piece: crate::piece::PieceRef { id: piece_id }, port, design_piece, connector: None }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
-        }
-
-        pub fn to_input(&self) -> SideInput {
-            let m = self.to_metadata();
-            SideInput { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
         pub fn invalidate_hash(&self) {
@@ -23239,46 +22664,8 @@ pub mod stat {
         hash_cache: Cache<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatRef {
-        pub id: Id,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatMetadata {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct  {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, async_graphql::SimpleObject)]
-    pub struct StatInput {
-        pub id: Id,
-        pub key: String,
-        pub value: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub description: Option<String>,
-    }
-
     impl StatStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, key: String::new(), value: String::new(), unit: None, description: None, parent_kit: None, parent_design: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -23301,7 +22688,7 @@ pub mod stat {
         }
 
         pub(crate) fn from_input(d: StatInput) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.apply_input_fields(d);
             s
         }
@@ -23467,7 +22854,7 @@ pub mod tag {
     }
 
     impl TagStore {
-        pub(crate) fn empty_shell(id: Id) -> Self {
+        pub(crate) fn new() -> Self {
             Self { id, name: String::new(), order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
@@ -23488,7 +22875,7 @@ pub mod tag {
         }
 
         pub(crate) fn from_shallow(d: ) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.name = d.name;
             s.order = d.order;
             s.hash_cache.invalidate();
@@ -23496,7 +22883,7 @@ pub mod tag {
         }
 
         pub(crate) fn from_input(d: TagInput) -> Self {
-            let mut s = Self::empty_shell(d.id.clone());
+            let mut s = Self::new(d.id.clone());
             s.apply_input_fields(d);
             s
         }
@@ -32053,7 +31440,7 @@ pub use read::{
     ReadPortCommand, ReadPortCommandOutput, ReadPropCommand, ReadPropCommandOutput, ReadQualityCommand, ReadQualityCommandOutput, ReadRepresentationCommand, ReadRepresentationCommandOutput, ReadSideCommand, ReadSideCommandOutput, ReadStatCommand,
     ReadStatCommandOutput, ReadTagCommand, ReadTagCommandOutput, ReadTypeCommand, ReadTypeCommandOutput,
 };
-pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
+pub use report::{Severity, OperationNote, SemioReport, ValidationResult};
 pub use representation::{ RepresentationRef,   RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
 pub use side::{ SideRef,   SideStore, SideStoreRef, SideStoreWeak};
 pub use stat::{ StatRef,   StatStore, StatStoreRef, StatStoreWeak};
