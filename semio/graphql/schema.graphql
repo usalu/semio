@@ -436,7 +436,6 @@ type Query {
 	session: Session!
 	wip: Graph!
 	authoritative: Graph
-	authorative: Graph @deprecated(reason: "Use authoritative")
 	conflicts: [Conflict!]!
 }
 
@@ -551,10 +550,6 @@ input VectorInput {
 	z: Float!
 }
 
-"""
-Marks an element of a GraphQL schema as no longer supported.
-"""
-directive @deprecated(reason: String = "No longer supported") on FIELD_DEFINITION | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION | ENUM_VALUE
 """
 Directs the executor to include this field or fragment only when the `if` argument is true.
 """

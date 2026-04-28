@@ -2352,7 +2352,7 @@ pub mod event {
 
     /// 🌐 Broadcast envelope for every observable thing the control plane emits.
     #[derive(Clone)]
-    pub enum KitEvent {
+    pub enum Event {
         CommandSucceeded(op::CommandReceipt),
         OperationSucceeded(op::OperationKind),
         OperationFailed(SemioError),
@@ -2365,8 +2365,8 @@ pub mod event {
 
     /// 📣 The bus. Holds the only `emit_event` function in the crate.
     pub struct EventBus {
-        tx: Mutex<Sender<KitEvent>>,
-        keep_alive: InactiveReceiver<KitEvent>,
+        tx: Mutex<Sender<Event>>,
+        keep_alive: InactiveReceiver<Event>,
     }
 
     impl EventBus {
@@ -2379,13 +2379,13 @@ pub mod event {
         }
 
         /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
-        pub async fn emit_event(&self, ev: KitEvent) {
+        pub async fn emit_event(&self, ev: Event) {
             let tx = self.tx.lock().await;
             let _ = tx.broadcast_direct(ev).await;
         }
 
         /// 🔔 New subscriber receiver.
-        pub fn subscribe(&self) -> Receiver<KitEvent> {
+        pub fn subscribe(&self) -> Receiver<Event> {
             self.keep_alive.activate_cloned()
         }
     }
@@ -2406,7 +2406,7 @@ pub mod worker {
     use async_lock::RwLock;
 
     use crate::error::SemioError;
-    use crate::event::{EventBus, KitEvent};
+    use crate::event::{Event, EventBus};
     use crate::id::Id;
     use crate::op::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput};
     use crate::vcs::{Conflict, Graph, Session};
@@ -2493,11 +2493,11 @@ pub mod worker {
                     Command::RenameKit { .. } => "renameKit",
                     Command::ChangeDescription { .. } => "changeDescription",
                 };
-                self.bus.emit_event(KitEvent::CommandSucceeded(CommandReceipt { request_id: request_id.clone(), kind: kind.to_string() })).await;
+                self.bus.emit_event(Event::CommandSucceeded(CommandReceipt { request_id: request_id.clone(), kind: kind.to_string() })).await;
 
                 if let Err(e) = self.apply(cmd).await {
                     let err = e.with_request(request_id);
-                    self.bus.emit_event(KitEvent::OperationFailed(err)).await;
+                    self.bus.emit_event(Event::OperationFailed(err)).await;
                 }
             }
         }
@@ -2509,7 +2509,7 @@ pub mod worker {
 
                     let input = CreatedFixedPieceInput { design_id, blueprint_id, pose, name, description };
                     let op = CreatedFixedPiece::new(input, piece).await;
-                    self.bus.emit_event(KitEvent::CreatedFixedPiece(op)).await;
+                    self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
                     Ok(())
                 }
                 Command::FixPiece { .. } | Command::RenameKit { .. } | Command::ChangeDescription { .. } => {
@@ -2534,7 +2534,7 @@ pub mod gql {
     use futures_util::Stream;
 
     use crate::error::SemioError;
-    use crate::event::{EventBus, KitEvent};
+    use crate::event::{Event, EventBus};
     use crate::geom::Position;
     use crate::id::Id;
     use crate::op::{ChangedDescription, Command, CommandReceipt, CreatedFixedPiece, DraggedPiece, FixedPiece, OperationIface, RenamedKit};
@@ -2644,7 +2644,7 @@ pub mod gql {
             let mut rx = bus.subscribe();
             let s: SubStream<$ty> = Box::pin(stream! {
                 while let Ok(ev) = rx.recv().await {
-                    if let KitEvent::$variant(value) = ev { yield value; }
+                    if let Event::$variant(value) = ev { yield value; }
                 }
             });
             Ok(s)
@@ -2665,11 +2665,11 @@ pub mod gql {
             let s: SubStream<OperationIface> = Box::pin(stream! {
                 while let Ok(ev) = rx.recv().await {
                     match ev {
-                        KitEvent::CreatedFixedPiece(o) => yield OperationIface::CreatedFixedPiece(o),
-                        KitEvent::FixedPiece(o) => yield OperationIface::FixedPiece(o),
-                        KitEvent::DraggedPiece(o) => yield OperationIface::DraggedPiece(o),
-                        KitEvent::RenamedKit(o) => yield OperationIface::RenamedKit(o),
-                        KitEvent::ChangedDescription(o) => yield OperationIface::ChangedDescription(o),
+                        Event::CreatedFixedPiece(o) => yield OperationIface::CreatedFixedPiece(o),
+                        Event::FixedPiece(o) => yield OperationIface::FixedPiece(o),
+                        Event::DraggedPiece(o) => yield OperationIface::DraggedPiece(o),
+                        Event::RenamedKit(o) => yield OperationIface::RenamedKit(o),
+                        Event::ChangedDescription(o) => yield OperationIface::ChangedDescription(o),
                         _ => {}
                     }
                 }
@@ -2843,7 +2843,7 @@ mod tests {
     #[test]
     fn single_emit_event_in_codebase() {
         let src = include_str!("lib.rs");
-        let needle = concat!("pub async fn ", "emit_event(&self, ev: KitEvent)");
+        let needle = concat!("pub async fn ", "emit_event(&self, ev: Event)");
         let count = src.matches(needle).count();
         assert_eq!(count, 1, "expected exactly one canonical emit_event definition in lib.rs, found {}", count);
     }
