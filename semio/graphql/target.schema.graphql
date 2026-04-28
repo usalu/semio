@@ -1,1184 +1,478 @@
-# OLD
-input AlternativeInput @oneOf {
-	createAlternative: CreateAlternativeInput
-	unifyAlternative: MessageOnlyInput
-}
-
-type AlternativeDto {
-	id: String!
-	name: String!
-	root: String!
-	checkpoints: [String!]!
-}
-
-input AlternativeInput {
-	alternativeId: String
-	commands: [AlternativeInput!]!
-}
-
-type AttributeOutput {
-	id: Id!
-	key: String!
-	value: String!
-	definition: String
-}
-
-type AttributeShallowDto {
-	id: Id!
-	key: String!
-	value: String!
-	definition: String
-}
-
-type AuthorOutput {
-	id: Id!
-	name: String!
-	email: String!
-	role: String
-	rank: Int
-}
-
-type AuthorShallowDto {
-	id: Id!
-	name: String!
-	email: String!
-	role: String
-	rank: Int
-}
-
-input BackboneInput @oneOf {
-	attachBackbone: BackboneConfigInput
-	detachBackbone: ConfirmOnlyInput
-	listConflicts: ConfirmOnlyInput
-	resolveConflict: ResolveConflictInput
-	backboneStatus: ConfirmOnlyInput
-	syncNow: ConfirmOnlyInput
-}
-
-input BackboneConfigInput @oneOf {
-	memory: ConfirmOnlyInput
-	dev: DevBackboneInput
-	local: LocalBackboneInput
-	remote: RemoteBackboneInput
-}
-
-input BackboneInput {
-	commands: [BackboneInput!]!
-}
-
-enum BackboneKind {
-	MEMORY
-	DEV
-	LOCAL
-	REMOTE
-}
-
-type BackboneStatus {
-	attached: Boolean!
-	kind: BackboneKind
-	kindOther: String
-	tip: String
-}
-
-type BenchmarkOutput {
-	id: Id!
-	name: String!
-	min: Float
-	max: Float
-	minExcluded: Boolean
-	maxExcluded: Boolean
-}
-
-type BenchmarkMetadataDto {
-	id: Id!
-	name: String!
-	min: Float
-	max: Float
-	minExcluded: Boolean
-	maxExcluded: Boolean
-}
-
-scalar ChangeKit
-
-input ChangeKitsInput {
-	commands: [ChangeKit!]!
-}
-
-input ChangePieceTypeInput {
-	pieceId: String!
-	newTypeId: String!
-}
-
-input CheckpointInput @oneOf {
-	markRelease: ConfirmOnlyInput
-	setActive: ConfirmOnlyInput
-}
-
-type CheckpointDto {
-	id: String!
-	parent: String
-	message: String
-	time: String
-	authors: [String!]!
-	hash: String!
-	isRelease: Boolean!
-	changeCount: Int!
-}
-
-input CheckpointInput {
-	checkpointId: String
-	commands: [CheckpointInput!]!
-}
-
-input ClusterPiecesInput {
-	pieceIds: [String!]!
-	clusterName: String!
-}
-
-type ConceptOutput {
-	id: Id!
-	name: String!
-	description: String
-	order: Int
-}
-
-type ConceptShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	order: Int
-}
-
-input ConfirmOnlyInput {
-	confirm: Boolean
-}
-
-type ConflictRecord {
-	id: String!
-	backboneTip: String
-	reason: String!
-	createdAt: String!
-}
-
-enum ConflictResolutionInput {
-	DROP_WIP
-	FORCE_OVERWRITE_BACKBONE
-}
-
-type Connection {
-	id: String!
-	owner: Design!
-	metadata: ConnectionMetadataDto!
-	shallow: ConnectionShallowDto!
-	full: ConnectionOutput!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	u: Float
-	v: Float
-	description: String
-}
-
-type ConnectionOutput {
-	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-	attributes: [AttributeOutput!]!
-}
-
-type ConnectionMetadataDto {
-	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-}
-
-type ConnectionShallowDto {
-	id: Id!
-	connected: SideMetadataDto!
-	connecting: SideMetadataDto!
-	gap: Float
-	shift: Float
-	rise: Float
-	rotation: Float
-	turn: Float
-	tilt: Float
-	x: Float
-	y: Float
-	description: String
-	attributes: [AttributeShallowDto!]!
-}
-
-type Connector {
-	id: String!
-	code: String!
-	description: String
-	owner: Type!
-	metadata: ConnectorMetadataDto!
-	shallow: ConnectorShallowDto!
-	full: ConnectorOutput!
-}
-
-type ConnectorOutput {
-	id: Id!
-	code: String!
-	description: String
-	port: PortIdDto
-	qualities: [QualityOutput!]!
-	attributes: [AttributeOutput!]!
-}
-
-type ConnectorIdDto {
-	id: Id!
-}
-
-type ConnectorMetadataDto {
-	id: Id!
-	code: String!
-	description: String
-	port: PortIdDto
-}
-
-type ConnectorShallowDto {
-	id: Id!
-	code: String!
-	description: String
-	port: PortIdDto
-	qualities: [QualityShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-}
-
-type Coordinate {
-	u: Float!
-	v: Float!
-}
-
-input CountInput {
-	count: Int
-}
-
-input CreateAlternativeInput {
-	name: String!
-	fromCheckpointId: String
-}
-
-input CreateConnectedPieceInput {
-	parentPiece: String!
-	parentPort: String!
-	childType: String!
-	childPort: String!
-}
-
-input CreateDraftInput {
-	parentCheckpointId: String
-	targetAlternativeId: String
-}
-
-input CreateFixedPieceInput {
-	typeId: String!
-	plane: PlaneInput!
-}
-
-input CreateHangingPiecesInput {
-	typeIds: [String!]!
-	plane: PlaneInput!
-}
-
-input DeleteConnectionInput {
-	connectionId: String!
-}
-
-input DesignInput @oneOf {
-	clusterPieces: ClusterPiecesInput
-	dragPieces: DragPiecesInput
-	movePieces: MovePiecesInput
-	fixPieces: PieceIdsInput
-	flattenDesign: ConfirmOnlyInput
-	expandDesign: ExpandDesignInput
-	deleteConnection: DeleteConnectionInput
-	changePieceType: ChangePieceTypeInput
-	createHangingPieces: CreateHangingPiecesInput
-	createConnectedPiece: CreateConnectedPieceInput
-	createFixedPiece: CreateFixedPieceInput
-}
-
-type DesignFlattenMapEntryDto {
-	pieceId: Id!
-	plane: Plane!
-	center: Coordinate!
-}
-
-type DesignOutput {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationIdDto
-	unit: String
-	created: String
-	updated: String
-	kit: KitIdDto
-	families: [FamilyIdDto!]!
-	pieces: [PieceOutput!]!
-	connections: [ConnectionOutput!]!
-	layers: [LayerOutput!]!
-	groups: [GroupOutput!]!
-	authors: [AuthorOutput!]!
-	concepts: [ConceptOutput!]!
-	tags: [TagOutput!]!
-	qualities: [QualityOutput!]!
-	props: [PropOutput!]!
-	attributes: [AttributeOutput!]!
-	stats: [StatOutput!]!
-}
-
-type DesignIdDto {
-	id: Id!
-}
-
-input DesignInput {
-	designId: String!
-	commands: [DesignInput!]!
-}
-
-type DesignMetadataDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationIdDto
-	unit: String
-	created: String
-	updated: String
-	kit: KitIdDto
-}
-
-type DesignShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	location: LocationIdDto
-	unit: String
-	created: String
-	updated: String
-	kit: KitIdDto
-	families: [FamilyIdDto!]!
-	pieces: [PieceShallowDto!]!
-	connections: [ConnectionShallowDto!]!
-	layers: [LayerShallowDto!]!
-	groups: [GroupShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-	stats: [StatShallowDto!]!
-}
-
-type Design {
-	id: String!
-	name: String!
-	description: String
-	owner: Kit!
-	metadata: DesignMetadataDto!
-	shallow: DesignShallowDto!
-	full: DesignOutput!
-	pieces: [Piece!]!
-	pieceByDtoId(id: String!): Piece
-	connections: [Connection!]!
-	piecesFull: [PieceOutput!]!
-	connectionsFull: [ConnectionOutput!]!
-	flattenMap: [DesignFlattenMapEntryDto!]!
-	clusterableGroups(selection: [String!]!): [[String!]!]!
-	qualitySum(qualityId: String!): Float!
-	replaceableCatalog(selection: [String!]!): ReplaceableCatalog!
-	includedDesigns: [IncludedDesignInfoDto!]!
-	includedDesignIds: [String!]!
-}
-
-input DevBackboneInput {
-	path: String!
-}
-
-input DraftInput @oneOf {
-	finalizeDraft: MessageOnlyInput
-	abortDraft: ConfirmOnlyInput
-	undoDraft: CountInput
-	redoDraft: CountInput
-	startTransaction: ConfirmOnlyInput
-	transaction: TransactionInput
-}
-
-type DraftDto {
-	id: String!
-	parentCheckpoint: String
-	targetAlternative: String
-	finalizedTransactionCount: Int!
-	redoTransactionCount: Int!
-	openTransactionId: String
-	canUndo: Boolean!
-	canRedo: Boolean!
-}
-
-input DraftInput {
-	draftId: String
-	commands: [DraftInput!]!
-}
-
-input DragPiecesInput {
-	pieceIds: [String!]!
-	du: Float!
-	dv: Float!
-}
-
-input ExpandDesignInput {
-	nestedDesignId: String!
-}
-
-type FamilyIdDto {
-	id: Id!
-}
-
-type FileIdDto {
-	id: Id!
-}
-
-type FileShallowDto {
-	id: Id!
-	url: String!
-	mime: String
-	size: Int
-	hash: String!
-	description: String
-	created: String
-	updated: String
-}
-
-type FolderShallowDto {
-	id: Id!
-	path: String!
-	description: String
-}
-
-type GroupOutput {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	icon: String
-	pieces: [PieceIdDto!]!
-}
-
-type GroupShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	icon: String
-	pieces: [PieceIdDto!]!
-}
-
-scalar Id
-
-enum IncludedDesignConnectionKind {
-	CONNECTED
-	FIXED
-}
-
-type IncludedDesignInfoDto {
-	id: Id!
-	designId: Id!
-	connectionKind: IncludedDesignConnectionKind!
-	center: Coordinate
-	plane: Plane
-	externalConnections: [ConnectionOutput!]!
-}
-
-enum ChangeSemanticKind {
-	INFERRED
-	SET_KIT_METADATA
-	ADD_TYPE
-	REMOVE_TYPE
-	MODIFY_TYPE
-	ADD_DESIGN
-	REMOVE_DESIGN
-	MODIFY_DESIGN
-	ADD_PIECE
-	REMOVE_PIECE
-	CONNECT
-	DISCONNECT
-	UNIFY_CHECKPOINTS
-	MARK_RELEASE
-	OTHER
-}
-
-type KitColoredConnectorDto {
-	typeId: TypeIdDto!
-	connectorId: ConnectorIdDto!
-	color: String!
-}
-
-scalar KitEvent
-
-scalar KitFullSnapshot
-
-type KitIdDto {
-	id: Id!
-}
-
-type KitMetadataDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-}
-
-input KitReadScopeAlternativeInput {
-	alternativeId: String!
-}
-
-input KitReadScopeCheckpointInput {
-	checkpointId: String!
-}
-
-input KitReadScopeDraftInput {
-	sessionId: String!
-	draftId: String!
-}
-
-input KitReadScopeInput @oneOf {
-	theKit: ConfirmOnlyInput
-	checkpoint: KitReadScopeCheckpointInput
-	alternative: KitReadScopeAlternativeInput
-	draft: KitReadScopeDraftInput
-	transaction: KitReadScopeTransactionInput
-}
-
-input KitReadScopeTransactionInput {
-	sessionId: String!
-	draftId: String!
-	transactionId: String!
-}
-
-type KitShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	icon: String
-	image: String
-	preview: String
-	remote: String
-	homepage: String
-	license: String
-	uri: String
-	created: String
-	updated: String
-	version: String
-	types: [TypeShallowDto!]!
-	designs: [DesignShallowDto!]!
-	files: [FileShallowDto!]!
-	folders: [FolderShallowDto!]!
-	authors: [AuthorShallowDto!]!
-	concepts: [ConceptShallowDto!]!
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-}
-
-input KitInput @oneOf {
-	session: SessionInput
-	checkpoint: CheckpointInput
-	alternative: AlternativeInput
-	backbone: BackboneInput
-}
-
-input KitInput {
-	clientMutationId: String
-	commands: [KitInput!]!
-}
-
-type KitPayload {
-	clientMutationId: String
-	results: [KitResult!]!
-}
-
-type KitResult {
-	kind: KitResultKind!
-	ok: Boolean
-	count: Int
-	sessionId: String
-	draftId: String
-	transactionId: String
-	checkpointId: String
-	alternativeId: String
-	backbone: BackboneStatus
-	conflicts: [ConflictRecord!]
-	changeKind: ChangeSemanticKind
-	changeKindOther: String
-	inverse: [ChangeKit!]
-}
-
-enum KitResultKind {
-	CHANGE_KIT_COMMANDS
-	CHANGE_KIT_WITH_INVERSE
-	CLUSTER_PIECES
-	DRAG_PIECES
-	MOVE_PIECES
-	FIX_PIECES
-	FLATTEN_DESIGN
-	EXPAND_DESIGN
-	DELETE_CONNECTION
-	CHANGE_PIECE_TYPE
-	CREATE_HANGING_PIECES
-	CREATE_CONNECTED_PIECE
-	CREATE_FIXED_PIECE
-	NEW_SESSION
-	END_SESSION
-	NEW_DRAFT
-	START_TRANSACTION
-	FINALIZE_DRAFT
-	ABORT_DRAFT
-	UNDO_DRAFT
-	REDO_DRAFT
-	FINALIZE_TRANSACTION
-	ABORT_TRANSACTION
-	UNDO_TRANSACTION
-	REDO_TRANSACTION
-	MARK_RELEASE
-	SET_ACTIVE_CHECKPOINT
-	NEW_ALTERNATIVE
-	UNIFY_ALTERNATIVE
-	ATTACH_BACKBONE
-	DETACH_BACKBONE
-	LIST_CONFLICTS
-	RESOLVE_CONFLICT
-	BACKBONE_STATUS
-	SYNC_NOW
-}
-
-type LayerOutput {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	order: Int
-	visible: Boolean
-	locked: Boolean
-}
-
-type LayerShallowDto {
-	id: Id!
-	name: String!
-	description: String
-	color: String
-	order: Int
-	visible: Boolean
-	locked: Boolean
-}
-
-input LocalBackboneInput {
-	folder: String!
-}
-
-type LocationIdDto {
-	id: Id!
-}
-
-input MessageOnlyInput {
-	message: String!
-}
-
-input MovePiecesInput {
-	pieceIds: [String!]!
-	gap: Float!
-	shift: Float!
-	rise: Float!
-}
-
-type PieceOutput {
-	id: Id!
-	name: String
-	description: String
-	plane: Plane
-	center: Coordinate
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
-	props: [PropOutput!]!
-	attributes: [AttributeOutput!]!
-}
-
-type PieceIdDto {
-	id: Id!
-}
-
-input PieceIdsInput {
-	pieceIds: [String!]!
-}
-
-type PieceMetadataDto {
-	id: Id!
-	name: String
-	description: String
-	plane: Plane
-	center: Coordinate
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
-}
-
-type PieceShallowDto {
-	id: Id!
-	name: String
-	description: String
-	plane: Plane
-	center: Coordinate
-	scale: Float
-	mirrorPlane: Plane
-	hidden: Boolean
-	locked: Boolean
-	color: String
-	kind: TypeIdDto
-	design: DesignIdDto
-	props: [PropShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-}
-
-
-type Plane {
-	origin: Point!
-	xAxis: Vector!
-	yAxis: Vector!
-}
-
-input PlaneInput {
-	origin: PointInput!
-	xAxis: VectorInput!
-	yAxis: VectorInput!
-}
-
-type Point {
-	x: Float!
-	y: Float!
-	z: Float!
-}
-
-input PointInput {
-	x: Float!
-	y: Float!
-	z: Float!
-}
-
-type PortIdDto {
-	id: Id!
-}
-
-type PoseOutput {
-	plane: Plane!
-	center: Coordinate!
-}
-
-type PropOutput {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	quality: QualityIdDto
-}
-
-type PropShallowDto {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-}
-
-type QualityOutput {
-	id: Id!
-	key: String!
-	value: String
-	unit: String
-	definition: String
-	description: String
-	benchmarks: [BenchmarkOutput!]!
-}
-
-type QualityIdDto {
-	id: Id!
-}
-
-type QualityShallowDto {
-	id: Id!
-	key: String!
-	value: String
-	unit: String
-	definition: String
-	description: String
-	benchmarks: [BenchmarkMetadataDto!]!
-}
-
-input RemoteBackboneInput {
-	url: String!
-	sessionId: String!
-}
-
-type ReplaceableCatalog {
-	types: [Type!]!
-	designs: [Design!]!
-}
-
-type Representation {
-	id: String!
-	url: String!
-	description: String
-	owner: Type!
-	metadata: RepresentationMetadataDto!
-	shallow: RepresentationShallowDto!
-	full: RepresentationOutput!
-}
-
-type RepresentationOutput {
-	id: Id!
-	url: String!
-	description: String
-	file: FileIdDto
-	tags: [TagOutput!]!
-	qualities: [QualityOutput!]!
-	attributes: [AttributeOutput!]!
-}
-
-type RepresentationMetadataDto {
-	id: Id!
-	url: String!
-	description: String
-	file: FileIdDto
-}
-
-type RepresentationShallowDto {
-	id: Id!
-	url: String!
-	description: String
-	file: FileIdDto
-	tags: [TagShallowDto!]!
-	qualities: [QualityShallowDto!]!
-	attributes: [AttributeShallowDto!]!
-}
-
-input ResolveConflictInput {
-	conflictId: String!
-	strategy: ConflictResolutionInput!
-}
-
-type RootDto {
-	id: String!
-	name: String!
-}
-
-input SessionInput @oneOf {
-	createSession: ConfirmOnlyInput
-	endSession: ConfirmOnlyInput
-	createDraft: CreateDraftInput
-	draft: DraftInput
-}
-
-type SessionDto {
-	id: String!
-	drafts: [DraftDto!]!
-}
-
-input SessionInput {
-	sessionId: String
-	commands: [SessionInput!]!
-}
-
-type SideMetadataDto {
-	id: Id!
-	piece: PieceIdDto!
-	port: PortIdDto
-	designPiece: PieceIdDto
-	connector: ConnectorIdDto
-}
-
-type StatOutput {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	description: String
-}
-
-type StatShallowDto {
-	id: Id!
-	key: String!
-	value: String!
-	unit: String
-	description: String
-}
-
-type StateDto {
-	theKitHead: String
-	root: RootDto!
-	checkpoints: [CheckpointDto!]!
-	alternatives: [AlternativeDto!]!
-	sessions: [SessionDto!]!
-	theKitLine: [String!]!
-}
-
-type Subscription {
-	eventStream: KitEvent!
-}
-
-type TagOutput {
-	id: Id!
-	name: String!
-	order: Int
-}
-
-input TransactionInput @oneOf {
-	changeKits: ChangeKitsInput
-	changeKitWithInverse: ChangeKitsInput
-	design: DesignInput
-	finalizeTransaction: ConfirmOnlyInput
-	abortTransaction: ConfirmOnlyInput
-	undoTransaction: CountInput
-	redoTransaction: CountInput
-}
-
-input TransactionInput {
-	transactionId: String
-	commands: [TransactionInput!]!
-}
-
 # NEW
 # ------------------------------------------------------------
 
-
-directive @oneOf on INPUT_OBJECT
+scalar Timestamp
 
 #region Weak Entities
 
 input VectorInput {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type Vector {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 input PointInput {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
 }
 
 type Point {
-	x: Float!
-	y: Float!
-	z: Float!
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input CoordinateInput {
+  u: Float!
+  v: Float!
+}
+
+type Coordinate {
+  u: Float!
+  v: Float!
 }
 
 input PlaneInput {
-	origin: PointInput!
-	xAxis: VectorInput!
-	yAxis: VectorInput!
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
 }
 
 type Plane {
-	origin: Point!
-	xAxis: Vector!
-	yAxis: Vector!
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
 }
 
 input PoseInput {
-	center: CoordinateInput!
-	plane: PlaneInput!
+  center: CoordinateInput!
+  plane: PlaneInput!
 }
 
 type Pose {
-	center: Coordinate!
-	plane: Plane!
+  center: Coordinate!
+  plane: Plane!
 }
 
 #endregion Weak Entities
 
+#region Shared Entities
+
+type Location {
+  id: ID!
+}
+
+type File {
+  id: ID!
+  url: String!
+  mime: String
+  size: Int
+  hash: String!
+  description: String
+  created: Timestamp
+  updated: Timestamp
+}
+
+type Folder {
+  id: ID!
+  path: String!
+  description: String
+}
+
+type Author {
+  id: ID!
+  name: String!
+  email: String!
+  role: String
+  rank: Int
+}
+
+type Attribute {
+  id: ID!
+  key: String!
+  value: String!
+  definition: String
+}
+
+type Prop {
+  id: ID!
+  key: String!
+  value: String!
+  unit: String
+  quality: Quality
+}
+
+type Benchmark {
+  id: ID!
+  name: String!
+  min: Float
+  max: Float
+  minExcluded: Boolean
+  maxExcluded: Boolean
+}
+
+type Quality {
+  id: ID!
+  key: String!
+  value: String
+  unit: String
+  definition: String
+  description: String
+  benchmarks: [Benchmark!]!
+}
+
+type Tag {
+  id: ID!
+  name: String!
+  order: Int
+}
+
+type Concept {
+  id: ID!
+  name: String!
+  description: String
+  order: Int
+}
+
+type Stat {
+  id: ID!
+  key: String!
+  value: String!
+  unit: String
+  description: String
+}
+
+type Layer {
+  id: ID!
+  name: String!
+  description: String
+  color: String
+  order: Int
+  visible: Boolean
+  locked: Boolean
+}
+
+type Group {
+  id: ID!
+  name: String!
+  description: String
+  color: String
+  icon: String
+  pieces: [Piece!]!
+}
+
+type Side {
+  id: ID!
+  piece: Piece!
+  port: Connector
+  designPiece: Piece
+  connector: Connector
+}
+
+#endregion Shared Entities
+
 #region Entities
 
 interface Entity {
-    id: ID!
-    hash: String!
-    owner: Entity
+  id: ID!
+  hash: String!
 }
 
-union OperationInput = CreateFixedPieceInput | DragedPieceInput
+union OperationInput = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
 
 interface Operation implements Entity {
-	id: ID!
-	hash: String!
-	owner: Change!
-	diff: Diff!
-	input: OperationInput
+  id: ID!
+  hash: String!
+  owner: Change!
+  diff: Diff!
+  input: OperationInput
 }
-
-...
 
 #region Type
 
-...
-
-type Type implements Entity {
-	id: ID!
-	hash: String!
-	owner: Kit!
-	name: String!
-	description: String
-	...
-	connectors: [Connector!]!
-	representations: [Representation!]!
-	bestRepresentation(tagIds: [ID!]!): Representation
+type Connector implements Entity {
+  id: ID!
+  hash: String!
+  owner: Type!
+  code: String!
+  description: String
+  portId: ID
+  qualities: [Quality!]!
+  attributes: [Attribute!]!
 }
 
-...
+type Representation implements Entity {
+  id: ID!
+  hash: String!
+  owner: Type!
+  url: String!
+  description: String
+  file: File
+  tags: [Tag!]!
+  qualities: [Quality!]!
+  attributes: [Attribute!]!
+}
+
+type Type implements Entity {
+  id: ID!
+  hash: String!
+  owner: Kit!
+  name: String!
+  description: String
+  icon: String
+  image: String
+  unit: String
+  created: Timestamp
+  updated: Timestamp
+  connectors: [Connector!]!
+  connector(id: ID!): Connector
+  representations: [Representation!]!
+  representation(id: ID!): Representation
+  bestRepresentation(tagIds: [ID!]!): Representation
+  authors: [Author!]!
+  concepts: [Concept!]!
+  tags: [Tag!]!
+  qualities: [Quality!]!
+  props: [Prop!]!
+  attributes: [Attribute!]!
+  stats: [Stat!]!
+}
 
 #endregion Type
+
+#region Design
+
+enum IncludedDesignConnectionKind {
+  CONNECTED
+  FIXED
+}
+
+type DesignFlattenMapEntry {
+  piece: Piece!
+  plane: Plane!
+  center: Coordinate!
+}
+
+type IncludedDesignInfo {
+  id: ID!
+  design: Design!
+  connectionKind: IncludedDesignConnectionKind!
+  center: Coordinate
+  plane: Plane
+  externalConnections: [Connection!]!
+}
+
+type ReplaceableCatalog {
+  types: [Type!]!
+  designs: [Design!]!
+}
+
+type Design implements Entity {
+  id: ID!
+  hash: String!
+  owner: Kit!
+  name: String!
+  description: String
+  icon: String
+  image: String
+  location: Location
+  unit: String
+  created: Timestamp
+  updated: Timestamp
+  pieces: [Piece!]!
+  piece(id: ID!): Piece
+  connections: [Connection!]!
+  connection(id: ID!): Connection
+  layers: [Layer!]!
+  groups: [Group!]!
+  authors: [Author!]!
+  concepts: [Concept!]!
+  tags: [Tag!]!
+  qualities: [Quality!]!
+  props: [Prop!]!
+  attributes: [Attribute!]!
+  stats: [Stat!]!
+  flattenMap: [DesignFlattenMapEntry!]!
+  clusterableGroups(selection: [ID!]!): [[ID!]!]!
+  qualitySum(qualityId: ID!): Float!
+  replaceableCatalog(selection: [ID!]!): ReplaceableCatalog!
+  includedDesigns: [IncludedDesignInfo!]!
+  includedDesignIds: [ID!]!
+}
+
+#endregion Design
 
 #region Piece
 
 enum PieceConnectionKind {
-	FIXED
-	CONNECTED
+  FIXED
+  CONNECTED
 }
 
 union Blueprint = Type | Design
 
 type Piece implements Entity {
-	id: String!
-	hash: String!
-	owner: Blueprint!
-	name: String
-	description: String
-	pose: Pose
-	scale: Float
-	blueprint: Blueprint!
-	connectionKind: PieceConnectionKind
-	flatPose: Pose!
-	replaceableBlueprint:[Blueprint]!
-	parentConnection: Connection
-	childConnections: [Connection!]!
-	parentPiece: Piece
-	childPieces: [Piece!]!
-	depth: Int!
-	path: [Piece!]!
+  id: ID!
+  hash: String!
+  owner: Blueprint!
+  name: String
+  description: String
+  pose: Pose
+  scale: Float
+  blueprint: Blueprint!
+  connectionKind: PieceConnectionKind
+  flatPose: Pose!
+  replaceableBlueprint: [Blueprint!]!
+  parentConnection: Connection
+  childConnections: [Connection!]!
+  parentPiece: Piece
+  childPieces: [Piece!]!
+  depth: Int!
+  path: [Piece!]!
+  props: [Prop!]!
+  attributes: [Attribute!]!
+}
+
+type Connection implements Entity {
+  id: ID!
+  hash: String!
+  owner: Design!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [Attribute!]!
 }
 
 #region Operations
 
 type CreatedFixedPieceInput {
-	pose: Pose!,
-	name: String,
-	description: String
+  designId: ID!
+  blueprintId: ID!
+  pose: Pose!
+  name: String
+  description: String
 }
 
-type CreatedFixedPiece implements Operation {
-	id: ID!
-	hash: String!
-	owner: Change!
-	input: CreatedFixedPieceInput!
-	diff: Diff!
+type CreatedFixedPiece implements Operation & Entity {
+  id: ID!
+  hash: String!
+  owner: Change!
+  input: CreatedFixedPieceInput!
+  diff: Diff!
+  piece: Piece!
 }
 
-type FixedPiece implements Operation {
-	id: ID!
-	hash: String!
-	owner: Change!
-	diff: Diff!
+type FixedPieceInput {
+  designId: ID!
+  pieceId: ID!
+}
+
+type FixedPiece implements Operation & Entity {
+  id: ID!
+  hash: String!
+  owner: Change!
+  input: FixedPieceInput!
+  diff: Diff!
+  piece: Piece!
+}
+
+type DraggedPieceInput {
+  designId: ID!
+  pieceIds: [ID!]!
+  du: Float!
+  dv: Float!
+}
+
+type DraggedPiece implements Operation & Entity {
+  id: ID!
+  hash: String!
+  owner: Change!
+  input: DraggedPieceInput!
+  diff: Diff!
+  pieces: [Piece!]!
 }
 
 #endregion Operations
 
-#region Piece
-
-...
+#endregion Piece
 
 #region Kit
 
-...
-
-type Kit{
-	id: ID!
-	hash: String!
-	owner: Graph
-	checkpoint: Checkpoint
-	draft: Draft
-	transaction: Transaction
-	name: String!
-	description: String
-	...
-	design(id: ID!): Design
-	designs: [Design!]!
-	type(id: ID!): Type
-	types: [Type!]!
-	...
+type Kit implements Entity {
+  id: ID!
+  hash: String!
+  owner: Graph
+  checkpoint: Checkpoint
+  draft: Draft
+  transaction: Transaction
+  name: String!
+  description: String
+  icon: String
+  image: String
+  preview: String
+  remote: String
+  homepage: String
+  license: String
+  uri: String
+  created: Timestamp
+  updated: Timestamp
+  version: String
+  design(id: ID!): Design
+  designs: [Design!]!
+  type(id: ID!): Type
+  types: [Type!]!
+  files: [File!]!
+  folders: [Folder!]!
+  authors: [Author!]!
+  concepts: [Concept!]!
+  tags: [Tag!]!
+  qualities: [Quality!]!
+  props: [Prop!]!
+  attributes: [Attribute!]!
+  stats: [Stat!]!
 }
 
 #region Operations
 
 type RenamedKitInput {
-	name: String!
+  name: String!
 }
 
-type RenamedKit implements Operation {
-	id: ID!
-	hash: String!
-	owner: Change!
-	input: RenamedKitInput!
-	diff: Diff!
+type RenamedKit implements Operation & Entity {
+  id: ID!
+  hash: String!
+  owner: Change!
+  input: RenamedKitInput!
+  diff: Diff!
+  kit: Kit!
+}
+
+type ChangedDescriptionInput {
+  description: String!
+}
+
+type ChangedDescription implements Operation & Entity {
+  id: ID!
+  hash: String!
+  owner: Change!
+  input: ChangedDescriptionInput!
+  diff: Diff!
+  entity: Entity!
 }
 
 #endregion Operations
@@ -1187,138 +481,118 @@ type RenamedKit implements Operation {
 
 #endregion Entities
 
-
 #region VCS
 
 union ChangeOwner = Transaction | Draft | Checkpoint
 
 type Change implements Entity {
-	id: ID!
-	hash: String!
-	owner: ChangeOwner!
-	forwards: [Operation!]!
-	backwards: [Operation!]!
+  id: ID!
+  hash: String!
+  owner: ChangeOwner!
+  forwards: [Operation!]!
+  backwards: [Operation!]!
 }
 
-type Transaction {
-	id: ID!
-	hash: String!
-	changes: [Change!]!
+type Transaction implements Entity {
+  id: ID!
+  hash: String!
+  owner: Draft
+  changes: [Change!]!
 }
 
-type Draft {
-	id: ID!
-	hash: String!
-	changes: [Change!]!
+type Draft implements Entity {
+  id: ID!
+  hash: String!
+  owner: Alternative
+  parentCheckpoint: Checkpoint
+  targetAlternative: Alternative
+  openTransaction: Transaction
+  finalizedTransactions: [Transaction!]!
+  redoTransactions: [Transaction!]!
+  changes: [Change!]!
+  canUndo(steps: Int!): Boolean!
+  canRedo(steps: Int!): Boolean!
 }
 
-
-type Checkpoint {
-	id: ID
-	hash: String!
-	timestamp: Timestamp
-	authors: [Author!]!
-	root: Kit
-	parentCheckpoint: Checkpoint
-	message: String
+type Checkpoint implements Entity {
+  id: ID!
+  hash: String!
+  timestamp: Timestamp
+  authors: [Author!]!
+  root: Kit
+  parentCheckpoint: Checkpoint
+  message: String
+  isRelease: Boolean!
+  changeCount: Int!
 }
 
-type Alternative {
-	id: ID!
-	hash: String!
-	owner: Graph
-	name: String!
-	start: Checkpoint!
-	checkpoints: [Checkpoint!]!
-	store: Kit!
-	draft: Draft
-	transaction: Transaction
+type Alternative implements Entity {
+  id: ID!
+  hash: String!
+  owner: Graph
+  name: String!
+  start: Checkpoint!
+  checkpoints: [Checkpoint!]!
+  store: Kit!
+  draft: Draft
+  transaction: Transaction
 }
 
-type Graph {
-	id:ID!
-	hash: String!
-	owner: Session
-	theKit: Kit
-	alternative(id: ID!): Alternative
-	alternatives: [Alternative!]!
-	checkpoint(id:ID!): Checkpoint
-	checkpoints: [Checkpoint!]!
-	release(id: ID!): Checkpoint
-	releases: [Checkpoint!]!
+type Graph implements Entity {
+  id: ID!
+  hash: String!
+  owner: Session
+  theKit: Kit
+  alternative(id: ID!): Alternative
+  alternatives: [Alternative!]!
+  checkpoint(id: ID!): Checkpoint
+  checkpoints: [Checkpoint!]!
+  release(id: ID!): Checkpoint
+  releases: [Checkpoint!]!
 }
 
 type Session {
-	id: ID!
-	startedAt: Timestamp
+  id: ID!
+  startedAt: Timestamp
+  drafts: [Draft!]!
+}
+
+type Conflict {
+  id: ID!
+  backboneTip: String
+  reason: String!
+  createdAt: Timestamp!
 }
 
 #endregion VCS
 
-#region Events
-
-interface Event {
-  id: ID!
-  timestamp: Timestamp!
-}
-
-enum ResponseStatus {
-	SUCCESS
-	PARTIAL
-	FAILED
-}
-
-enum Severity {
-	INFO
-	WARNING
-	ERROR
-}
-
-type Message {
-	severity: Severity!
-	text: String!
-}
-
-interface Response implements Event {
-	id: ID!
-	timestamp: Timestamp!
-	request: Request!
-	status: ResponseStatus!
-	messages: [Message!]!
-}
-
-type Error
-
-
-#endregion Events
-
 type Query {
-	session: Session!
-	wip: Graph!
-	authorative: Graph
-	conflicts: [Conflict!]!
+  session: Session!
+  wip: Graph!
+  authoritative: Graph
+  authorative: Graph @deprecated(reason: "Use authoritative")
+  conflicts: [Conflict!]!
 }
 
 type Mutation {
-	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
-	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-	createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: Pose!, name: String, description: String): ID!
-	fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
+  renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
+  changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
+  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: PoseInput!, name: String, description: String): ID!
+  fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 
 type Subscription {
-	operated: Operation!
-	kitRenamed: KitRenamed!
-	createdFixedPiece: CreatedFixedPiece!
-	fixedPiece: FixedPiece!
-	error: Error!
+  operated: Operation!
+  kitRenamed: RenamedKit!
+  descriptionChanged: ChangedDescription!
+  createdFixedPiece: CreatedFixedPiece!
+  fixedPiece: FixedPiece!
+  draggedPiece: DraggedPiece!
+  error: Error!
 }
 
 schema {
-	query: Query
-	mutation: Mutation
-	subscription: Subscription
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
 }
-
-
-
