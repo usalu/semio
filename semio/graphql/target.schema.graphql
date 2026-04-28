@@ -1,3 +1,4 @@
+# OLD
 input AlternativeInput @oneOf {
 	createAlternative: CreateAlternativeInput
 	unifyAlternative: MessageOnlyInput
@@ -991,26 +992,13 @@ input TransactionInput {
 	commands: [TransactionInput!]!
 }
 
-
+# NEW
 # ------------------------------------------------------------
 
 
 directive @oneOf on INPUT_OBJECT
 
-interface Entity {
-    id: ID!
-    hash: String!
-    owner: Entity
-}
-
-union OperationInput = CreateFixedPieceInput
-
-interface Operation implements Entity {
-	id: ID!
-	hash: String!
-	diff: Diff!
-	input: OperationInput
-}
+#region Weak Entities
 
 input VectorInput {
 	x: Float!
@@ -1058,6 +1046,30 @@ type Pose {
 	plane: Plane!
 }
 
+#endregion Weak Entities
+
+#region Entities
+
+interface Entity {
+    id: ID!
+    hash: String!
+    owner: Entity
+}
+
+union OperationInput = CreateFixedPieceInput | DragedPieceInput
+
+interface Operation implements Entity {
+	id: ID!
+	hash: String!
+	owner: Change!
+	diff: Diff!
+	input: OperationInput
+}
+
+...
+
+#region Type
+
 ...
 
 type Type implements Entity {
@@ -1066,11 +1078,17 @@ type Type implements Entity {
 	owner: Kit!
 	name: String!
 	description: String
-	owner: Kit!
+	...
 	connectors: [Connector!]!
 	representations: [Representation!]!
 	bestRepresentation(tagIds: [ID!]!): Representation
 }
+
+...
+
+#endregion Type
+
+#region Piece
 
 enum PieceConnectionKind {
 	FIXED
@@ -1099,7 +1117,7 @@ type Piece implements Entity {
 	path: [Piece!]!
 }
 
-#region VCS
+#region Operations
 
 type CreatedFixedPieceInput {
 	pose: Pose!,
@@ -1122,8 +1140,55 @@ type FixedPiece implements Operation {
 	diff: Diff!
 }
 
-#endregion VSC
+#endregion Operations
 
+#region Piece
+
+...
+
+#region Kit
+
+...
+
+type Kit{
+	id: ID!
+	hash: String!
+	owner: Graph
+	checkpoint: Checkpoint
+	draft: Draft
+	transaction: Transaction
+	name: String!
+	description: String
+	...
+	design(id: ID!): Design
+	designs: [Design!]!
+	type(id: ID!): Type
+	types: [Type!]!
+	...
+}
+
+#region Operations
+
+type RenamedKitInput {
+	name: String!
+}
+
+type RenamedKit implements Operation {
+	id: ID!
+	hash: String!
+	owner: Change!
+	input: RenamedKitInput!
+	diff: Diff!
+}
+
+#endregion Operations
+
+#endregion Kit
+
+#endregion Entities
+
+
+#region VCS
 
 union ChangeOwner = Transaction | Draft | Checkpoint
 
@@ -1147,30 +1212,14 @@ type Draft {
 	changes: [Change!]!
 }
 
-type Kit{
-	id: ID!
-	hash: String!
-	owner: Graph
-	checkpoint: Checkpoint
-	draft: Draft
-	transaction: Transaction
-	name: String!
-	description: String
-	...
-	design(id: ID!): Design
-	designs: [Design!]!
-	type(id: ID!): Type
-	types: [Type!]!
-	...
-}
 
 type Checkpoint {
 	id: ID
 	hash: String!
 	timestamp: Timestamp
 	authors: [Author!]!
+	root: Kit
 	parentCheckpoint: Checkpoint
-	parent: Kit
 	message: String
 }
 
@@ -1204,19 +1253,9 @@ type Session {
 	startedAt: Timestamp
 }
 
-type Query {
-	session: Session!
-	wip: Graph!
-	authorative: Graph
-	conflicts: [Conflict!]!
-}
+#endregion VCS
 
-type Mutation {
-	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
-	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-	createFixedPiece(draftId: ID!, transactionId: ID!, pose: Pose!, name: String, description: String): ID!
-	fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
-}
+#region Events
 
 interface Event {
   id: ID!
@@ -1248,17 +1287,31 @@ interface Response implements Event {
 	messages: [Message!]!
 }
 
-interface KitChanged  {
-  	kit: Kit
-	change: Change
+type Error
+
+
+#endregion Events
+
+type Query {
+	session: Session!
+	wip: Graph!
+	authorative: Graph
+	conflicts: [Conflict!]!
 }
 
-type KitRenamed implements UserEvent & Response {
-  kit: Kit
+type Mutation {
+	renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
+	changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
+	createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: Pose!, name: String, description: String): ID!
+	fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 
 type Subscription {
-	kitRenamed: KitRenamed
+	operated: Operation!
+	kitRenamed: KitRenamed!
+	createdFixedPiece: CreatedFixedPiece!
+	fixedPiece: FixedPiece!
+	error: Error!
 }
 
 schema {
