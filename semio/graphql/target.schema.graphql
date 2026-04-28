@@ -560,7 +560,6 @@ type Query {
   session: Session!
   wip: Graph!
   authoritative: Graph
-  authorative: Graph @deprecated(reason: "Use authoritative")
   conflicts: [Conflict!]!
 }
 
