@@ -1421,9 +1421,9 @@ pub mod read {
     impl ReadAttributeCommand {
         pub fn execute(&self, a: &AttributeStore) -> Result<ReadAttributeCommandOutput> {
             Ok(match self {
-                ReadAttributeCommand::ReadAttributeInputCommand => ReadAttributeCommandOutput::ReadAttributeInputCommand { attribute: a.clone_wire() },
-                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.clone_wire() },
-                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.clone_wire() },
+                ReadAttributeCommand::ReadAttributeInputCommand => ReadAttributeCommandOutput::ReadAttributeInputCommand { attribute: a.clone_output() },
+                ReadAttributeCommand::ReadAttributeShallowCommand => ReadAttributeCommandOutput::ReadAttributeShallowCommand { attribute: a.clone_output() },
+                ReadAttributeCommand::ReadAttributeMetadataCommand => ReadAttributeCommandOutput::ReadAttributeMetadataCommand { metadata: a.clone_output() },
                 ReadAttributeCommand::ReadAttributeIdCommand => ReadAttributeCommandOutput::ReadAttributeIdCommand { id: a.id.clone() },
                 ReadAttributeCommand::ReadAttributeKeyCommand => ReadAttributeCommandOutput::ReadAttributeKeyCommand { key: a.key.clone() },
                 ReadAttributeCommand::ReadAttributeValueCommand => ReadAttributeCommandOutput::ReadAttributeValueCommand { value: a.value.clone() },
@@ -1570,8 +1570,8 @@ pub mod read {
                 ReadLocationCommand::ReadLocationLongitudeCommand => ReadLocationCommandOutput::ReadLocationLongitudeCommand { longitude: l.longitude },
                 ReadLocationCommand::ReadLocationLatitudeCommand => ReadLocationCommandOutput::ReadLocationLatitudeCommand { latitude: l.latitude },
                 ReadLocationCommand::ReadLocationAltitudeCommand => ReadLocationCommandOutput::ReadLocationAltitudeCommand { altitude: l.altitude },
-                ReadLocationCommand::ReadLocationAttributesInputCommand => ReadLocationCommandOutput::ReadLocationAttributesInputCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
-                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadLocationCommand::ReadLocationAttributesInputCommand => ReadLocationCommandOutput::ReadLocationAttributesInputCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
+                ReadLocationCommand::ReadLocationAttributesShallowCommand => ReadLocationCommandOutput::ReadLocationAttributesShallowCommand { attributes: l.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadLocationCommand::ReadLocationAttributeCommands { id, commands } => {
                     let a = l.attributes.iter().find(|a| a.read().map(|r| r.id == *id).unwrap_or(false)).ok_or_else(|| nf("Attribute", id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1632,8 +1632,8 @@ pub mod read {
                 ReadFamilyCommand::ReadFamilyIconCommand => ReadFamilyCommandOutput::ReadFamilyIconCommand { icon: f.icon.clone() },
                 ReadFamilyCommand::ReadFamilyPortsInputCommand => ReadFamilyCommandOutput::ReadFamilyPortsInputCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect() },
                 ReadFamilyCommand::ReadFamilyPortsShallowCommand => ReadFamilyCommandOutput::ReadFamilyPortsShallowCommand { ports: f.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesInputCommand => ReadFamilyCommandOutput::ReadFamilyAttributesInputCommand { attributes: f.attributes.iter().map(|a| a.clone_wire()).collect() },
-                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesInputCommand => ReadFamilyCommandOutput::ReadFamilyAttributesInputCommand { attributes: f.attributes.iter().map(|a| a.clone_output()).collect() },
+                ReadFamilyCommand::ReadFamilyAttributesShallowCommand => ReadFamilyCommandOutput::ReadFamilyAttributesShallowCommand { attributes: f.attributes.iter().map(|a| a.clone_output()).collect() },
                 ReadFamilyCommand::ReadFamilyPortCommands { id, commands } => {
                     let p = f.ports.iter().find(|p| p.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Port", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1690,9 +1690,9 @@ pub mod read {
                 ReadConnectionCommand::ReadConnectionUCommand => ReadConnectionCommandOutput::ReadConnectionUCommand { u: c.x },
                 ReadConnectionCommand::ReadConnectionVCommand => ReadConnectionCommandOutput::ReadConnectionVCommand { v: c.y },
                 ReadConnectionCommand::ReadConnectionDescriptionCommand => ReadConnectionCommandOutput::ReadConnectionDescriptionCommand { description: c.description.clone() },
-                ReadConnectionCommand::ReadConnectionAttributesInputCommand => ReadConnectionCommandOutput::ReadConnectionAttributesInputCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadConnectionCommand::ReadConnectionAttributesInputCommand => ReadConnectionCommandOutput::ReadConnectionAttributesInputCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadConnectionCommand::ReadConnectionAttributesShallowCommand => {
-                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() }
+                    ReadConnectionCommandOutput::ReadConnectionAttributesShallowCommand { attributes: c.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() }
                 }
                 ReadConnectionCommand::ReadConnectionChildPlaneMatrixCommand => ReadConnectionCommandOutput::ReadConnectionChildPlaneMatrixCommand { matrix: c.child_plane_matrix_rows() },
                 ReadConnectionCommand::ReadConnectionFlatSidesForChildCommand { child_piece_id } => {
@@ -1746,8 +1746,8 @@ pub mod read {
                 }
                 ReadPortCommand::ReadPortQualitiesInputCommand => ReadPortCommandOutput::ReadPortQualitiesInputCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect() },
                 ReadPortCommand::ReadPortQualitiesShallowCommand => ReadPortCommandOutput::ReadPortQualitiesShallowCommand { qualities: p.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
-                ReadPortCommand::ReadPortAttributesInputCommand => ReadPortCommandOutput::ReadPortAttributesInputCommand { attributes: p.attributes.iter().map(|a| a.clone_wire()).collect() },
-                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadPortCommand::ReadPortAttributesInputCommand => ReadPortCommandOutput::ReadPortAttributesInputCommand { attributes: p.attributes.iter().map(|a| a.clone_output()).collect() },
+                ReadPortCommand::ReadPortAttributesShallowCommand => ReadPortCommandOutput::ReadPortAttributesShallowCommand { attributes: p.attributes.iter().map(|a| a.clone_output()).collect() },
                 ReadPortCommand::ReadPortQualityCommands { id, commands } => {
                     let q = p.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1781,8 +1781,8 @@ pub mod read {
                 ReadConnectorCommand::ReadConnectorPortIdCommand => ReadConnectorCommandOutput::ReadConnectorPortIdCommand { port: c.to_metadata().port },
                 ReadConnectorCommand::ReadConnectorQualitiesInputCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesInputCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect() },
                 ReadConnectorCommand::ReadConnectorQualitiesShallowCommand => ReadConnectorCommandOutput::ReadConnectorQualitiesShallowCommand { qualities: c.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesInputCommand => ReadConnectorCommandOutput::ReadConnectorAttributesInputCommand { attributes: c.attributes.iter().map(|a| a.clone_wire()).collect() },
-                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesInputCommand => ReadConnectorCommandOutput::ReadConnectorAttributesInputCommand { attributes: c.attributes.iter().map(|a| a.clone_output()).collect() },
+                ReadConnectorCommand::ReadConnectorAttributesShallowCommand => ReadConnectorCommandOutput::ReadConnectorAttributesShallowCommand { attributes: c.attributes.iter().map(|a| a.clone_output()).collect() },
                 ReadConnectorCommand::ReadConnectorQualityCommands { id, commands } => {
                     let q = c.qualities.iter().find(|q| q.read().map(|r| r.id == id.id).unwrap_or(false)).ok_or_else(|| nf("Quality", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1822,8 +1822,8 @@ pub mod read {
                 ReadRepresentationCommand::ReadRepresentationQualitiesShallowCommand => {
                     ReadRepresentationCommandOutput::ReadRepresentationQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() }
                 }
-                ReadRepresentationCommand::ReadRepresentationAttributesInputCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesInputCommand { attributes: r.attributes.iter().map(|a| a.clone_wire()).collect() },
-                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.clone_wire()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesInputCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesInputCommand { attributes: r.attributes.iter().map(|a| a.clone_output()).collect() },
+                ReadRepresentationCommand::ReadRepresentationAttributesShallowCommand => ReadRepresentationCommandOutput::ReadRepresentationAttributesShallowCommand { attributes: r.attributes.iter().map(|a| a.clone_output()).collect() },
                 ReadRepresentationCommand::ReadRepresentationTagCommands { id, commands } => {
                     let t = r.tags.iter().find(|t| t.id == id.id).ok_or_else(|| nf("Tag", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -1873,8 +1873,8 @@ pub mod read {
                 ReadPieceCommand::ReadPieceDesignCommand => ReadPieceCommandOutput::ReadPieceDesignCommand { design: o.to_metadata().design },
                 ReadPieceCommand::ReadPiecePropsInputCommand => ReadPieceCommandOutput::ReadPiecePropsInputCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect() },
                 ReadPieceCommand::ReadPiecePropsShallowCommand => ReadPieceCommandOutput::ReadPiecePropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadPieceCommand::ReadPieceAttributesInputCommand => ReadPieceCommandOutput::ReadPieceAttributesInputCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
-                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadPieceCommand::ReadPieceAttributesInputCommand => ReadPieceCommandOutput::ReadPieceAttributesInputCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
+                ReadPieceCommand::ReadPieceAttributesShallowCommand => ReadPieceCommandOutput::ReadPieceAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand { flat_plane: o.flat_plane() },
                 ReadPieceCommand::ReadPieceFlatCenterCommand => ReadPieceCommandOutput::ReadPieceFlatCenterCommand { flat_center: o.flat_center() },
                 ReadPieceCommand::ReadPieceFlatPoseCommand => ReadPieceCommandOutput::ReadPieceFlatPoseCommand { flat_pose: o.flat_pose_input_dto() },
@@ -1970,8 +1970,8 @@ pub mod read {
                 ReadTypeCommand::ReadTypeQualitiesShallowCommand => ReadTypeCommandOutput::ReadTypeQualitiesShallowCommand { qualities: r.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadTypeCommand::ReadTypePropsInputCommand => ReadTypeCommandOutput::ReadTypePropsInputCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect() },
                 ReadTypeCommand::ReadTypePropsShallowCommand => ReadTypeCommandOutput::ReadTypePropsShallowCommand { props: r.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadTypeCommand::ReadTypeAttributesInputCommand => ReadTypeCommandOutput::ReadTypeAttributesInputCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
-                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadTypeCommand::ReadTypeAttributesInputCommand => ReadTypeCommandOutput::ReadTypeAttributesInputCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
+                ReadTypeCommand::ReadTypeAttributesShallowCommand => ReadTypeCommandOutput::ReadTypeAttributesShallowCommand { attributes: r.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadTypeCommand::ReadTypePortsInputCommand => ReadTypeCommandOutput::ReadTypePortsInputCommand { ports: type_all_ports(&*r) },
                 ReadTypeCommand::ReadTypeConnectorForPortIdCommand { port_id } => ReadTypeCommandOutput::ReadTypeConnectorForPortIdCommand { connector: r.connector_for_port_id(&port_id.id).and_then(|c| c.read().ok().map(|c| c.to_input())) },
                 ReadTypeCommand::ReadTypeBestRepresentationCommand { tag_ids } => ReadTypeCommandOutput::ReadTypeBestRepresentationCommand { representation: r.best_representation_for_tag_ids(&tag_ids) },
@@ -2270,8 +2270,8 @@ pub mod read {
                 ReadDesignCommand::ReadDesignQualitiesShallowCommand => ReadDesignCommandOutput::ReadDesignQualitiesShallowCommand { qualities: o.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadDesignCommand::ReadDesignPropsInputCommand => ReadDesignCommandOutput::ReadDesignPropsInputCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect() },
                 ReadDesignCommand::ReadDesignPropsShallowCommand => ReadDesignCommandOutput::ReadDesignPropsShallowCommand { props: o.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadDesignCommand::ReadDesignAttributesInputCommand => ReadDesignCommandOutput::ReadDesignAttributesInputCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
-                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadDesignCommand::ReadDesignAttributesInputCommand => ReadDesignCommandOutput::ReadDesignAttributesInputCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
+                ReadDesignCommand::ReadDesignAttributesShallowCommand => ReadDesignCommandOutput::ReadDesignAttributesShallowCommand { attributes: o.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadDesignCommand::ReadDesignStatsInputCommand => ReadDesignCommandOutput::ReadDesignStatsInputCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_input())).collect() },
                 ReadDesignCommand::ReadDesignStatsShallowCommand => ReadDesignCommandOutput::ReadDesignStatsShallowCommand { stats: o.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect() },
                 ReadDesignCommand::ReadDesignFlattenMapCommand => {
@@ -2452,8 +2452,8 @@ pub mod read {
                 ReadKitCommand::ReadKitQualitiesShallowCommand => ReadKitCommandOutput::ReadKitQualitiesShallowCommand { qualities: g.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect() },
                 ReadKitCommand::ReadKitPropsInputCommand => ReadKitCommandOutput::ReadKitPropsInputCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect() },
                 ReadKitCommand::ReadKitPropsShallowCommand => ReadKitCommandOutput::ReadKitPropsShallowCommand { props: g.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect() },
-                ReadKitCommand::ReadKitAttributesInputCommand => ReadKitCommandOutput::ReadKitAttributesInputCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
-                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect() },
+                ReadKitCommand::ReadKitAttributesInputCommand => ReadKitCommandOutput::ReadKitAttributesInputCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
+                ReadKitCommand::ReadKitAttributesShallowCommand => ReadKitCommandOutput::ReadKitAttributesShallowCommand { attributes: g.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect() },
                 ReadKitCommand::ReadKitTypeCommands { id, commands } => {
                     let t = kit_type(g, &id.id).ok_or_else(|| nf("Type", &id.id))?;
                     let mut results = Vec::with_capacity(commands.len());
@@ -2589,7 +2589,7 @@ pub mod change_command {
     use crate::design::DesignInput;
     use crate::design::DesignRef;
     use crate::design::DesignStore;
-    use crate::event_wire;
+    use crate::event_output;
     use crate::family::{ FamilyRef, FamilyStoreRef};
     use crate::file::FileInput;
     use crate::file::FileRef;
@@ -2655,7 +2655,7 @@ pub mod change_command {
         d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
     }
 
-    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadata) -> Result<()> {
+    fn reoutput_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadata) -> Result<()> {
         let index = build_piece_index(d);
         {
             let mut w = side.write().map_err(|_| SemioError::LockPoisoned("side"))?;
@@ -3575,7 +3575,7 @@ pub mod change_command {
                         qg.benchmarks.push(Arc::new(RwLock::new(b)));
                     }
                     q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkRef { id } }])
                 }
                 ChangeKitQualityCommand::RemoveBenchmark { benchmark_id } => {
@@ -3585,7 +3585,7 @@ pub mod change_command {
                     };
                     let b = { q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.remove(pos) };
                     let dto = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.to_input();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitQualityCommand::AddBenchmark { benchmark: dto }])
                 }
                 ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id, commands } => {
@@ -3938,7 +3938,7 @@ pub mod change_command {
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropRef { id } }])
                 }
                 ChangeKitCommand::RemoveKitProp { prop_id } => {
@@ -3953,7 +3953,7 @@ pub mod change_command {
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitCommand::AddKitProp { prop: dto }])
                 }
                 ChangeKitCommand::AddKitAttribute { attribute } => {
@@ -3963,13 +3963,13 @@ pub mod change_command {
                         if g.attributes.iter().any(|a| a.read().map(|r| r.id == id).unwrap_or(false)) {
                             return Err(SemioError::InvalidOperation("duplicate attribute id on kit".into()));
                         }
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_kit = Some(Arc::downgrade(kit));
                         g.attributes.push(Arc::new(RwLock::new(a)));
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitCommand::RemoveKitAttribute { id }])
                 }
                 ChangeKitCommand::RemoveKitAttribute { id } => {
@@ -3978,13 +3978,13 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: id.clone() });
                     };
                     let a = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.remove(pos) };
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_output();
                     {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.invalidate_hash();
                         g.invalidate_validation();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeKitCommand::AddKitAttribute { attribute: dto }])
                 }
                 ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
@@ -4335,7 +4335,7 @@ pub mod change_command {
                     tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
                     tw.invalidate_hash();
                     drop(tw);
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeTypeCommand::RemoveFamilyRef { family_id } => {
@@ -4348,7 +4348,7 @@ pub mod change_command {
                     tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
                     tw.invalidate_hash();
                     drop(tw);
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeTypeCommand::SetFamilies { families } => {
@@ -4365,7 +4365,7 @@ pub mod change_command {
                         tw.emit_ev(crate::events::KitEvent::Type { type_id: tw.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Families) });
                         tw.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::SetFamilies { families: old }])
                 }
                 ChangeTypeCommand::ChangePortCommands { port_id, commands } => {
@@ -4391,7 +4391,7 @@ pub mod change_command {
                         m.connectors.push(Arc::new(RwLock::new(c)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorRef { id } }])
                 }
                 ChangeTypeCommand::RemoveConnector { connector_id } => {
@@ -4402,7 +4402,7 @@ pub mod change_command {
                     let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.remove(pos);
                     let dto = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddConnector { connector: dto }])
                 }
                 ChangeTypeCommand::ChangeConnectorCommands { connector_id, commands } => {
@@ -4429,7 +4429,7 @@ pub mod change_command {
                         m.representations.push(Arc::new(RwLock::new(r)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationRef { id } }])
                 }
                 ChangeTypeCommand::RemoveRepresentation { id: rid } => {
@@ -4440,7 +4440,7 @@ pub mod change_command {
                     let r = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.representations.remove(pos);
                     let dto = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddRepresentation { representation: dto }])
                 }
                 ChangeTypeCommand::ChangeRepresentationCommands { id: rid, commands } => {
@@ -4461,7 +4461,7 @@ pub mod change_command {
                         m.authors.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeAuthor { author_id } => {
@@ -4472,7 +4472,7 @@ pub mod change_command {
                     let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.authors.remove(pos);
                     let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeAuthor { author: dto }])
                 }
                 ChangeTypeCommand::AddTypeConcept { concept } => {
@@ -4484,7 +4484,7 @@ pub mod change_command {
                         m.concepts.push(Arc::new(RwLock::new(c)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeConcept { concept_id } => {
@@ -4495,7 +4495,7 @@ pub mod change_command {
                     let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.remove(pos);
                     let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeConcept { concept: dto }])
                 }
                 ChangeTypeCommand::AddTypeTag { tag } => {
@@ -4507,7 +4507,7 @@ pub mod change_command {
                         m.tags.push(Arc::new(RwLock::new(tg)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeTag { tag_id } => {
@@ -4518,7 +4518,7 @@ pub mod change_command {
                     let x = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.tags.remove(pos);
                     let dto = x.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeTag { tag: dto }])
                 }
                 ChangeTypeCommand::AddTypeQuality { quality } => {
@@ -4540,7 +4540,7 @@ pub mod change_command {
                         m.qualities.push(qref);
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeQuality { quality_id } => {
@@ -4551,7 +4551,7 @@ pub mod change_command {
                     let q = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.remove(pos);
                     let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeQuality { quality: dto }])
                 }
                 ChangeTypeCommand::AddTypeProp { prop } => {
@@ -4563,7 +4563,7 @@ pub mod change_command {
                         m.props.push(Arc::new(RwLock::new(p)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropRef { id } }])
                 }
                 ChangeTypeCommand::RemoveTypeProp { prop_id } => {
@@ -4574,19 +4574,19 @@ pub mod change_command {
                     let p = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.props.remove(pos);
                     let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_input();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeProp { prop: dto }])
                 }
                 ChangeTypeCommand::AddTypeAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_type = Some(Arc::downgrade(&t));
                         let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
                         m.attributes.push(Arc::new(RwLock::new(a)));
                         m.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id }])
                 }
                 ChangeTypeCommand::RemoveTypeAttribute { id: aid } => {
@@ -4595,9 +4595,9 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_output();
                     t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeTypeCommand::AddTypeAttribute { attribute: dto }])
                 }
             }
@@ -4662,7 +4662,7 @@ pub mod change_command {
                     dw.invalidate_hash_local();
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeDesignCommand::RemoveFamilyRef { family_id } => {
@@ -4676,7 +4676,7 @@ pub mod change_command {
                     dw.invalidate_hash_local();
                     drop(dw);
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddFamilyRef { family_id: family_id.clone() }])
                 }
                 ChangeDesignCommand::SetFamilies { families } => {
@@ -4694,7 +4694,7 @@ pub mod change_command {
                         dw.invalidate_hash_local();
                     }
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.bubble_to_kit();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::SetFamilies { families: old }])
                 }
                 ChangeDesignCommand::Location { location } => {
@@ -4740,7 +4740,7 @@ pub mod change_command {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.add_design_piece(&did, piece.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceRef { id } }])
                 }
                 ChangeDesignCommand::RemovePiece { piece_id } => {
@@ -4757,7 +4757,7 @@ pub mod change_command {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.remove_design_pieces(&did, &[piece_id.id.clone()]).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
                 }
                 ChangeDesignCommand::RenamePiece { piece_id, name } => {
@@ -4853,7 +4853,7 @@ pub mod change_command {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.add_design_connection(&did, connection.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionRef { id } }])
                 }
                 ChangeDesignCommand::RemoveConnection { connection_id } => {
@@ -4869,7 +4869,7 @@ pub mod change_command {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         g.remove_design_connection(&did, &connection_id.id).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
                 }
                 ChangeDesignCommand::SetConnectionGap { connection_id, value } => {
@@ -4928,7 +4928,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.push(Arc::new(RwLock::new(l)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerRef { id } }])
                 }
                 ChangeDesignCommand::RemoveLayer { layer_id } => {
@@ -4939,7 +4939,7 @@ pub mod change_command {
                     let l = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.remove(pos);
                     let dto = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddLayer { layer: dto }])
                 }
                 ChangeDesignCommand::ChangeLayerCommands { layer_id, commands } => {
@@ -4948,7 +4948,7 @@ pub mod change_command {
                         inv.extend(c.apply(kit, design_id, &layer_id.id)?);
                     }
                     inv.reverse();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::ChangeLayerCommands { layer_id: layer_id.clone(), commands: inv }])
                 }
                 ChangeDesignCommand::AddGroup { group } => {
@@ -4967,7 +4967,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.groups.push(Arc::new(RwLock::new(g)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupRef { id } }])
                 }
                 ChangeDesignCommand::RemoveGroup { group_id } => {
@@ -4978,7 +4978,7 @@ pub mod change_command {
                     let g = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.groups.remove(pos);
                     let dto = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddGroup { group: dto }])
                 }
                 ChangeDesignCommand::ChangeGroupCommands { group_id, commands } => {
@@ -4987,7 +4987,7 @@ pub mod change_command {
                         inv.extend(c.apply(kit, design_id, &group_id.id)?);
                     }
                     inv.reverse();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::ChangeGroupCommands { group_id: group_id.clone(), commands: inv }])
                 }
                 ChangeDesignCommand::AddStat { stat } => {
@@ -4998,7 +4998,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.push(Arc::new(RwLock::new(s)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatRef { id } }])
                 }
                 ChangeDesignCommand::RemoveStat { stat_id } => {
@@ -5009,7 +5009,7 @@ pub mod change_command {
                     let s = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.remove(pos);
                     let dto = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddStat { stat: dto }])
                 }
                 ChangeDesignCommand::ChangeStatCommands { stat_id, commands } => {
@@ -5018,7 +5018,7 @@ pub mod change_command {
                         inv.extend(c.apply(kit, design_id, &stat_id.id)?);
                     }
                     inv.reverse();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::ChangeStatCommands { stat_id: stat_id.clone(), commands: inv }])
                 }
                 ChangeDesignCommand::AddDesignAuthor { author } => {
@@ -5029,7 +5029,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignAuthor { author_id } => {
@@ -5040,7 +5040,7 @@ pub mod change_command {
                     let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.remove(pos);
                     let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignAuthor { author: dto }])
                 }
                 ChangeDesignCommand::AddDesignConcept { concept } => {
@@ -5051,7 +5051,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.push(Arc::new(RwLock::new(c)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignConcept { concept_id } => {
@@ -5062,7 +5062,7 @@ pub mod change_command {
                     let c = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.remove(pos);
                     let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignConcept { concept: dto }])
                 }
                 ChangeDesignCommand::AddDesignTag { tag } => {
@@ -5073,7 +5073,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.push(Arc::new(RwLock::new(t)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignTag { tag_id } => {
@@ -5084,7 +5084,7 @@ pub mod change_command {
                     let t = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.remove(pos);
                     let dto = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignTag { tag: dto }])
                 }
                 ChangeDesignCommand::AddDesignQuality { quality } => {
@@ -5105,7 +5105,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.push(qref);
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignQuality { quality_id } => {
@@ -5116,7 +5116,7 @@ pub mod change_command {
                     let q = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.remove(pos);
                     let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignQuality { quality: dto }])
                 }
                 ChangeDesignCommand::AddDesignProp { prop } => {
@@ -5127,7 +5127,7 @@ pub mod change_command {
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.push(Arc::new(RwLock::new(p)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropRef { id } }])
                 }
                 ChangeDesignCommand::RemoveDesignProp { prop_id } => {
@@ -5138,18 +5138,18 @@ pub mod change_command {
                     let p = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.remove(pos);
                     let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_input();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignProp { prop: dto }])
                 }
                 ChangeDesignCommand::AddDesignAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_design = Some(Arc::downgrade(&d));
                         d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.push(Arc::new(RwLock::new(a)));
                         d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id }])
                 }
                 ChangeDesignCommand::RemoveDesignAttribute { id: aid } => {
@@ -5158,9 +5158,9 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_output();
                     d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeDesignCommand::AddDesignAttribute { attribute: dto }])
                 }
             }
@@ -5281,7 +5281,7 @@ pub mod change_command {
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.push(Arc::new(RwLock::new(p)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropRef { id } }])
                 }
                 ChangePieceCommand::RemoveProp { prop_id } => {
@@ -5292,7 +5292,7 @@ pub mod change_command {
                     let p = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.remove(pos);
                     let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_input();
                     pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::AddProp { prop: dto }])
                 }
                 ChangePieceCommand::ChangePropCommands { prop_id, commands } => {
@@ -5303,18 +5303,18 @@ pub mod change_command {
                         inv.extend(c.apply(&p)?);
                     }
                     inv.reverse();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::ChangePropCommands { prop_id: prop_id.clone(), commands: inv }])
                 }
                 ChangePieceCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_piece = Some(Arc::downgrade(&pref));
                         pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.push(Arc::new(RwLock::new(a)));
                         pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::RemoveAttribute { id }])
                 }
                 ChangePieceCommand::RemoveAttribute { id: aid } => {
@@ -5323,9 +5323,9 @@ pub mod change_command {
                         return Err(SemioError::NotFound { kind: "Attribute", id: aid.clone() });
                     };
                     let a = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.remove(pos);
-                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_output();
                     pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::AddAttribute { attribute: dto }])
                 }
                 ChangePieceCommand::ChangeAttributeCommands { id: aid, commands } => {
@@ -5342,7 +5342,7 @@ pub mod change_command {
                         inv.extend(c.apply(&a)?);
                     }
                     inv.reverse();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangePieceCommand::ChangeAttributeCommands { id: aid.clone(), commands: inv }])
                 }
                 ChangePieceCommand::Fix => {
@@ -5452,9 +5452,9 @@ pub mod change_command {
                     let d_ref: &DesignStore = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connected.clone();
                     let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
-                    rewire_side_from_metadata(d_ref, &side, new_meta)?;
+                    reoutput_side_from_metadata(d_ref, &side, new_meta)?;
                     drop(d_read);
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeConnectionCommand::ReplaceConnected { side: old_meta }])
                 }
                 ChangeConnectionCommand::ReplaceConnecting { side: new_meta } => {
@@ -5466,21 +5466,21 @@ pub mod change_command {
                     let d_ref: &DesignStore = &*d_read;
                     let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connecting.clone();
                     let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata();
-                    rewire_side_from_metadata(d_ref, &side, new_meta)?;
+                    reoutput_side_from_metadata(d_ref, &side, new_meta)?;
                     drop(d_read);
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeConnectionCommand::ReplaceConnecting { side: old_meta }])
                 }
                 ChangeConnectionCommand::AddConnectionAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_connection = Some(Arc::downgrade(&cref));
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         c.attributes.push(Arc::new(RwLock::new(a)));
                         c.notify_aggregate_change();
                     }
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id }])
                 }
                 ChangeConnectionCommand::RemoveConnectionAttribute { id: aid } => {
@@ -5491,11 +5491,11 @@ pub mod change_command {
                     let dto = {
                         let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
                         let a = c.attributes.remove(pos);
-                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_wire();
+                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.clone_output();
                         c.notify_aggregate_change();
                         dto
                     };
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeConnectionCommand::AddConnectionAttribute { attribute: dto }])
                 }
             }
@@ -5741,7 +5741,7 @@ pub mod change_command {
                         fw.name = name.clone();
                     }
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     if old == *name {
                         Ok(vec![])
                     } else {
@@ -5755,7 +5755,7 @@ pub mod change_command {
                         fw.description = description.clone();
                     }
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     if old == *description {
                         Ok(vec![])
                     } else {
@@ -5769,7 +5769,7 @@ pub mod change_command {
                         fw.icon = icon.clone();
                     }
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     if old == *icon {
                         Ok(vec![])
                     } else {
@@ -5796,7 +5796,7 @@ pub mod change_command {
                         pr.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_ports_from_ids(&port.compatible_ports, &*kr);
                     }
                     pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeFamilyCommand::RemovePort { port_id: PortRef { id: pid } }])
                 }
                 ChangeFamilyCommand::RemovePort { port_id } => {
@@ -5809,7 +5809,7 @@ pub mod change_command {
                     let dto = pr.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_input();
                     KitGraph::purge_dead_port_compatibility(kit);
                     fam.read().map_err(|_| SemioError::LockPoisoned("family"))?.invalidate_hash();
-                    event_wire::wire_graph_bus(kit);
+                    event_output::output_graph_bus(kit);
                     Ok(vec![ChangeFamilyCommand::AddPort { port: dto }])
                 }
                 ChangeFamilyCommand::ChangePortCommands { port_id, commands } => {
@@ -5893,7 +5893,7 @@ pub mod change_command {
                 ChangePortCommand::AddPortAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        let mut a = AttributeStore::from_wire(attribute.clone());
+                        let mut a = AttributeStore::from_output(attribute.clone());
                         a.parent_port = Some(Arc::downgrade(p));
                         p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.push(a);
                         p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
@@ -5979,7 +5979,7 @@ pub mod change_command {
                 ChangeConnectorCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_wire(attribute.clone()));
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_output(attribute.clone()));
                         c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
                     }
                     Ok(vec![ChangeConnectorCommand::RemoveAttribute { id }])
@@ -6077,7 +6077,7 @@ pub mod change_command {
                 ChangeRepresentationCommand::AddAttribute { attribute } => {
                     let id = attribute.id.clone();
                     {
-                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_wire(attribute.clone()));
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_output(attribute.clone()));
                         r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
                     }
                     Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id }])
@@ -6655,7 +6655,7 @@ pub mod kit_read_scope {
     }
 }
 
-pub mod kit_backbone_wire {
+pub mod kit_backbone_output {
     use serde::{Deserialize, Serialize};
 
     use crate::id::Id;
@@ -6702,7 +6702,7 @@ pub mod kit_conflict_registry {
 
     use crate::id::Id;
 
-    pub use crate::kit_backbone_wire::{ConflictResolution, KitConflict};
+    pub use crate::kit_backbone_output::{ConflictResolution, KitConflict};
 
     #[derive(Clone, Debug, Default)]
     pub struct ConflictRegistry {
@@ -6804,7 +6804,7 @@ pub mod backbone {
         Ok(())
     }
 
-    pub use crate::kit_backbone_wire::BackboneConfig;
+    pub use crate::kit_backbone_output::BackboneConfig;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -7045,7 +7045,7 @@ pub mod wip_kit {
     pub enum CoordMsg {
         WipProposal { proposed: BackboneSnapshot, reply: Option<Sender<crate::error::Result<()>>> },
         SyncNow,
-        Attach { cfg: crate::kit_backbone_wire::BackboneConfig, reply: Sender<crate::error::Result<()>> },
+        Attach { cfg: crate::kit_backbone_output::BackboneConfig, reply: Sender<crate::error::Result<()>> },
         Detach { reply: Sender<()> },
         Status { reply: Sender<crate::backbone::BackboneStatusDto> },
         SetActiveCheckpoint { id: Option<crate::id::Id>, reply: Sender<crate::error::Result<()>> },
@@ -7463,7 +7463,7 @@ pub mod kit_store_command {
             commands: Vec<KitAlternativeCommand>,
         },
         AttachBackbone {
-            config: crate::kit_backbone_wire::BackboneConfig,
+            config: crate::kit_backbone_output::BackboneConfig,
         },
         DetachBackbone,
         SetActiveCheckpoint {
@@ -7473,7 +7473,7 @@ pub mod kit_store_command {
         ListConflicts,
         ResolveConflict {
             id: Id,
-            strategy: crate::kit_backbone_wire::ConflictResolution,
+            strategy: crate::kit_backbone_output::ConflictResolution,
         },
         BackboneStatus,
         SyncNow,
@@ -7514,7 +7514,7 @@ pub mod kit_store_command {
             ok: bool,
         },
         ListConflicts {
-            items: Vec<crate::kit_backbone_wire::KitConflict>,
+            items: Vec<crate::kit_backbone_output::KitConflict>,
         },
         ResolveConflict {
             ok: bool,
@@ -7540,7 +7540,7 @@ pub mod kit_store_command {
         pub fn execute(self, kit: &KitGraphRef) -> Result<KitStoreCommandResult> {
             match self {
                 KitStoreCommand::AttachBackbone { config } => match config {
-                    crate::kit_backbone_wire::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
+                    crate::kit_backbone_output::BackboneConfig::Memory => Ok(KitStoreCommandResult::AttachBackbone { ok: true }),
                     _ => Err(SemioError::InvalidOperation("backbone attach (dev/local/remote) must be run via kit_store::KitStore::execute (semio-store control plane)".into())),
                 },
                 KitStoreCommand::DetachBackbone | KitStoreCommand::SetActiveCheckpoint { .. } | KitStoreCommand::ListConflicts | KitStoreCommand::ResolveConflict { .. } | KitStoreCommand::BackboneStatus | KitStoreCommand::SyncNow => {
@@ -8002,7 +8002,7 @@ pub mod attribute {
     pub type AttributeStoreRef = std::sync::Arc<RwLock<AttributeStore>>;
     pub type AttributeStoreWeak = Weak<RwLock<AttributeStore>>;
 
-    /// 🧾 Live attribute row plus serde wire shape (same struct; parents omitted on the wire).
+    /// 🧾 Live attribute row plus serde output shape (same struct; parents omitted on the output).
     #[derive(Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
     pub struct AttributeStore {
         pub id: Id,
@@ -8051,7 +8051,7 @@ pub mod attribute {
 
     impl Clone for AttributeStore {
         fn clone(&self) -> Self {
-            Self::wire(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
+            Self::output(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
         }
     }
 
@@ -8090,7 +8090,7 @@ pub mod attribute {
             EntityRef::new(EntityKind::Attribute, self.id.clone())
         }
 
-        pub(crate) fn apply_wire_fields(&mut self, d: &AttributeStore) {
+        pub(crate) fn apply_output_fields(&mut self, d: &AttributeStore) {
             self.id = d.id.clone();
             self.key = d.key.clone();
             self.value = d.value.clone();
@@ -8098,13 +8098,13 @@ pub mod attribute {
             self.hash_cache.invalidate();
         }
 
-        pub(crate) fn from_wire(d: AttributeStore) -> Self {
+        pub(crate) fn from_output(d: AttributeStore) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_wire_fields(&d);
+            s.apply_output_fields(&d);
             s
         }
 
-        pub fn wire(id: Id, key: String, value: String, definition: Option<String>) -> Self {
+        pub fn output(id: Id, key: String, value: String, definition: Option<String>) -> Self {
             Self {
                 id,
                 key,
@@ -8121,18 +8121,6 @@ pub mod attribute {
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
             }
-        }
-
-        pub fn clone_wire(&self) -> AttributeStore {
-            Self::wire(self.id.clone(), self.key.clone(), self.value.clone(), self.definition.clone())
-        }
-
-        pub fn to_input(&self) -> AttributeStore {
-            self.clone_wire()
-        }
-
-        pub fn to_shallow(&self) -> AttributeStore {
-            self.clone_wire()
         }
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
@@ -8442,28 +8430,6 @@ pub mod author {
             }
         }
 
-        pub fn to_ref(&self) -> AuthorRef {
-            AuthorRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> AuthorMetadata {
-            AuthorMetadata { id: self.id.clone(), name: self.name.clone(), email: self.email.clone(), role: self.role.clone(), rank: self.rank }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
-        }
-
-        pub fn to_input(&self) -> AuthorInput {
-            let m = self.to_metadata();
-            AuthorInput { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
-        }
-
-        pub fn clone_wire(&self) ->  {
-            self.to_shallow()
-        }
-
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
         }
@@ -8643,24 +8609,6 @@ pub mod benchmark {
             }
         }
 
-        pub fn to_ref(&self) -> BenchmarkRef {
-            BenchmarkRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> BenchmarkMetadata {
-            BenchmarkMetadata { id: self.id.clone(), name: self.name.clone(), min: self.min, max: self.max, min_excluded: self.min_excluded, max_excluded: self.max_excluded }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
-        }
-
-        pub fn to_input(&self) -> BenchmarkInput {
-            let m = self.to_metadata();
-            BenchmarkInput { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
-        }
-
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
         }
@@ -8833,24 +8781,6 @@ pub mod concept {
                     }
                 }
             }
-        }
-
-        pub fn to_ref(&self) -> ConceptRef {
-            ConceptRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> ConceptMetadata {
-            ConceptMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), order: self.order }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, description: m.description, order: m.order }
-        }
-
-        pub fn to_input(&self) -> ConceptInput {
-            let m = self.to_metadata();
-            ConceptInput { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -9177,66 +9107,6 @@ pub mod connection {
             let t = 0.0_f64;
             compute_child_center_uv(parent_center, connection_u, connection_v, pd.z, t)
         }
-
-        pub fn to_ref(&self) -> ConnectionRef {
-            ConnectionRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> ConnectionMetadata {
-            ConnectionMetadata {
-                id: self.id.clone(),
-                connected: self.connected.read().map(|s| s.to_metadata()).unwrap_or_default(),
-                connecting: self.connecting.read().map(|s| s.to_metadata()).unwrap_or_default(),
-                gap: self.gap,
-                shift: self.shift,
-                rise: self.rise,
-                rotation: self.rotation,
-                turn: self.turn,
-                tilt: self.tilt,
-                x: self.x,
-                y: self.y,
-                description: self.description.clone(),
-            }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                connected: m.connected,
-                connecting: m.connecting,
-                gap: m.gap,
-                shift: m.shift,
-                rise: m.rise,
-                rotation: m.rotation,
-                turn: m.turn,
-                tilt: m.tilt,
-                x: m.x,
-                y: m.y,
-                description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> ConnectionInput {
-            let m = self.to_metadata();
-            ConnectionInput {
-                id: m.id,
-                connected: m.connected,
-                connecting: m.connecting,
-                gap: m.gap,
-                shift: m.shift,
-                rise: m.rise,
-                rotation: m.rotation,
-                turn: m.turn,
-                tilt: m.tilt,
-                x: m.x,
-                y: m.y,
-                description: m.description,
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-            }
-        }
-
         pub fn flat_side_dtos_for_child(&self, child_id: &Id) -> Option<(crate::side:: crate::side::SideInput)> {
             let (a, b) = self.flatten_parent_and_child_sides(child_id)?;
             let sa = a.read().ok()?.to_input();
@@ -9427,53 +9297,16 @@ pub mod connector {
         pub fn from_shallow(d: ) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
 
         pub fn from_input(d: ConnectorInput) -> Self {
             let mut s = Self::from_metadata(ConnectorMetadata { id: d.id, code: d.code, description: d.description, port: d.port, color: ColorDto::default() });
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
-
-        pub fn to_ref(&self) -> ConnectorRef {
-            ConnectorRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> ConnectorMetadata {
-            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_ref()));
-            let css = self.color_css_string();
-            ConnectorMetadata { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port, color: ColorDto { css } }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                code: m.code,
-                description: m.description,
-                port: m.port,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
-                color: m.color,
-            }
-        }
-
-        pub fn to_input(&self) -> ConnectorInput {
-            let m = self.to_metadata();
-            ConnectorInput {
-                id: m.id,
-                code: m.code,
-                description: m.description,
-                port: m.port,
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
-                color: m.color,
-            }
-        }
-
         pub fn invalidate_color_cache(&self) {
             self.color_cache.invalidate();
         }
@@ -9804,8 +9637,8 @@ pub mod design {
     fn connection_from_input(cdto:  piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
         let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
         let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
-        wire_side_from_dto(&cdto.connected, &s1, piece_index);
-        wire_side_from_dto(&cdto.connecting, &s2, piece_index);
+        output_side_from_dto(&cdto.connected, &s1, piece_index);
+        output_side_from_dto(&cdto.connecting, &s2, piece_index);
         let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
         {
             let mut cw = conn.write().expect("connection write");
@@ -9824,7 +9657,7 @@ pub mod design {
                 description: cdto.description.clone(),
             });
             cw.parent_design = design_weak.clone();
-            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect();
+            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect();
         }
         if let Ok(mut s1w) = s1.write() {
             s1w.parent_connection = Some(Arc::downgrade(&conn));
@@ -9835,7 +9668,7 @@ pub mod design {
         conn
     }
 
-    fn wire_side_from_dto(meta: &crate::side:: side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
+    fn output_side_from_dto(meta: &crate::side:: side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -9933,7 +9766,7 @@ pub mod design {
             emit_weak(&self.event_bus, ev);
         }
 
-        pub(crate) fn rewire_piece_flatten_parents(&self) {
+        pub(crate) fn reoutput_piece_flatten_parents(&self) {
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for piece in &self.pieces {
                 if let Ok(pr) = piece.read() {
@@ -10668,7 +10501,7 @@ pub mod design {
                     true
                 }
             });
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             if invalidate {
                 self.invalidate_hash();
                 self.invalidate_flatten();
@@ -11307,7 +11140,7 @@ pub mod design {
                     }
                 }
                 for adto in &ad.added {
-                    let mut a = AttributeStore::from_wire(adto.clone());
+                    let mut a = AttributeStore::from_output(adto.clone());
                     a.parent_design = Some(design_weak.clone());
                     self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
                     self.attributes.push(Arc::new(RwLock::new(a)));
@@ -11343,7 +11176,7 @@ pub mod design {
                 }
             }
 
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
             self.invalidate_flatten();
             Ok(())
@@ -11358,7 +11191,7 @@ pub mod design {
             }
             self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, piece.id.clone()) });
             self.pieces.push(pref);
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
             self.invalidate_flatten();
             Ok(())
@@ -11368,7 +11201,7 @@ pub mod design {
             let parent = self.entity_ref();
             self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, connection_id.clone()) });
             self.connections.retain(|c| c.read().map(|c| c.id != *connection_id).unwrap_or(true));
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
             self.invalidate_flatten();
             Ok(())
@@ -11385,7 +11218,7 @@ pub mod design {
             let cref = connection_from_input(cdto.clone(), &piece_index, design_weak);
             self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cdto.id.clone()) });
             self.connections.push(cref);
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             self.invalidate_hash_local();
             self.invalidate_flatten();
             Ok(())
@@ -11425,7 +11258,7 @@ pub mod design {
                     break;
                 }
             }
-            self.rewire_piece_flatten_parents();
+            self.reoutput_piece_flatten_parents();
             let after = self.to_input();
             let forward = crate::diff::DesignDiff::between(&before, &after);
             let backward = crate::diff::DesignDiff::between(&after, &before);
@@ -11434,78 +11267,6 @@ pub mod design {
 
         pub fn to_ref(&self) -> DesignRef {
             DesignRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> DesignMetadata {
-            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit_graph::KitRef { id: k.id.clone() }));
-            DesignMetadata {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                icon: self.icon.clone(),
-                image: self.image.clone(),
-                location: self.location.clone(),
-                unit: self.unit.clone(),
-                created: self.created.clone(),
-                updated: self.updated.clone(),
-                kit,
-            }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                location: m.location,
-                unit: m.unit,
-                created: m.created,
-                updated: m.updated,
-                kit: m.kit,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
-                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
-                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow())).collect(),
-                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow())).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> DesignInput {
-            let m = self.to_metadata();
-            DesignInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                location: m.location,
-                unit: m.unit,
-                created: m.created,
-                updated: m.updated,
-                kit: m.kit,
-                families: self.families.iter().filter_map(|f| f.upgrade().and_then(|f| f.read().ok().map(|f| f.to_ref()))).collect(),
-                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_input())).collect(),
-                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_input())).collect(),
-                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_input())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_input())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_input())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_input())).collect(),
-            }
         }
 
         pub(crate) fn hydrate_from_input(d:  type_index: &HashMap<Id, TypeStoreRef>, family_by_id: &HashMap<Id, FamilyStoreRef>) -> DesignStoreRef {
@@ -11625,7 +11386,7 @@ pub mod design {
             let attributes: Vec<AttributeStoreRef> = attribute_dtos
                 .into_iter()
                 .map(|a| {
-                    let mut s = AttributeStore::from_wire(a);
+                    let mut s = AttributeStore::from_output(a);
                     s.parent_design = Some(dw.clone());
                     Arc::new(RwLock::new(s))
                 })
@@ -11665,7 +11426,7 @@ pub mod design {
             }
 
             if let Ok(dr) = design.read() {
-                dr.rewire_piece_flatten_parents();
+                dr.reoutput_piece_flatten_parents();
             }
 
             design
@@ -16468,7 +16229,7 @@ pub mod events {
     }
 }
 
-pub(crate) mod event_wire {
+pub(crate) mod event_output {
     //! Assign [`crate::events::EventBus`] weak handles to every node after kit construction.
 
     use std::sync::{Arc, Weak};
@@ -16492,32 +16253,32 @@ pub(crate) mod event_wire {
     use crate::stat::StatStoreRef;
     use crate::typ::TypeStoreRef;
 
-    pub(crate) fn wire_graph_bus(kit: &KitGraphRef) {
+    pub(crate) fn output_graph_bus(kit: &KitGraphRef) {
         let w = {
             let kr = kit.read().expect("kit read");
             Arc::downgrade(&kr.event_bus)
         };
         let kg = kit.read().expect("kit read");
         for t in &kg.types {
-            wire_type(t, &w);
+            output_type(t, &w);
         }
         for d in &kg.designs {
-            wire_design(d, &w);
+            output_design(d, &w);
         }
         for f in &kg.files {
-            wire_file(f, &w);
+            output_file(f, &w);
         }
         for f in &kg.folders {
-            wire_folder(f, &w);
+            output_folder(f, &w);
         }
         for p in &kg.ports {
-            wire_port(p, &w);
+            output_port(p, &w);
         }
         for fam in &kg.families {
-            wire_family(fam, &w);
+            output_family(fam, &w);
         }
         for loc in &kg.locations {
-            wire_location(loc, &w);
+            output_location(loc, &w);
         }
         for a in &kg.authors {
             if let Ok(mut g) = a.write() {
@@ -16535,7 +16296,7 @@ pub(crate) mod event_wire {
             }
         }
         for q in &kg.qualities {
-            wire_quality(q, &w);
+            output_quality(q, &w);
         }
         for p in &kg.props {
             if let Ok(mut g) = p.write() {
@@ -16549,14 +16310,14 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_type(t: &TypeStoreRef, w: &Weak<EventBus>) {
+    fn output_type(t: &TypeStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = t.write() {
             g.event_bus = w.clone();
             for c in &g.connectors {
-                wire_connector(c, w);
+                output_connector(c, w);
             }
             for r in &g.representations {
-                wire_representation(r, w);
+                output_representation(r, w);
             }
             for a in &g.authors {
                 if let Ok(mut aw) = a.write() {
@@ -16574,7 +16335,7 @@ pub(crate) mod event_wire {
                 }
             }
             for q in &g.qualities {
-                wire_quality(q, w);
+                output_quality(q, w);
             }
             for p in &g.props {
                 if let Ok(mut pw) = p.write() {
@@ -16589,11 +16350,11 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_port(p: &PortStoreRef, w: &Weak<EventBus>) {
+    fn output_port(p: &PortStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
-                wire_quality(q, w);
+                output_quality(q, w);
             }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
@@ -16601,11 +16362,11 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_family(f: &FamilyStoreRef, w: &Weak<EventBus>) {
+    fn output_family(f: &FamilyStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
             for p in &g.ports {
-                wire_port(p, w);
+                output_port(p, w);
             }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
@@ -16613,7 +16374,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_location(l: &LocationStoreRef, w: &Weak<EventBus>) {
+    fn output_location(l: &LocationStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
             for a in &g.attributes {
@@ -16624,11 +16385,11 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_connector(c: &ConnectorStoreRef, w: &Weak<EventBus>) {
+    fn output_connector(c: &ConnectorStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             for q in &g.qualities {
-                wire_quality(q, w);
+                output_quality(q, w);
             }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
@@ -16636,14 +16397,14 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_representation(r: &RepresentationStoreRef, w: &Weak<EventBus>) {
+    fn output_representation(r: &RepresentationStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = r.write() {
             g.event_bus = w.clone();
             for tg in g.tags.iter_mut() {
                 tg.event_bus = w.clone();
             }
             for q in &g.qualities {
-                wire_quality(q, w);
+                output_quality(q, w);
             }
             for a in g.attributes.iter_mut() {
                 a.event_bus = w.clone();
@@ -16651,20 +16412,20 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_design(d: &DesignStoreRef, w: &Weak<EventBus>) {
+    fn output_design(d: &DesignStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = d.write() {
             g.event_bus = w.clone();
             for p in &g.pieces {
-                wire_piece(p, w);
+                output_piece(p, w);
             }
             for c in &g.connections {
-                wire_connection(c, w);
+                output_connection(c, w);
             }
             for l in &g.layers {
-                wire_layer(l, w);
+                output_layer(l, w);
             }
             for gr in &g.groups {
-                wire_group(gr, w);
+                output_group(gr, w);
             }
             for a in &g.authors {
                 if let Ok(mut aw) = a.write() {
@@ -16682,7 +16443,7 @@ pub(crate) mod event_wire {
                 }
             }
             for q in &g.qualities {
-                wire_quality(q, w);
+                output_quality(q, w);
             }
             for p in &g.props {
                 if let Ok(mut pw) = p.write() {
@@ -16695,12 +16456,12 @@ pub(crate) mod event_wire {
                 }
             }
             for s in &g.stats {
-                wire_stat(s, w);
+                output_stat(s, w);
             }
         }
     }
 
-    fn wire_piece(p: &PieceStoreRef, w: &Weak<EventBus>) {
+    fn output_piece(p: &PieceStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = p.write() {
             g.event_bus = w.clone();
             for pr in &g.props {
@@ -16716,7 +16477,7 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_connection(c: &ConnectionStoreRef, w: &Weak<EventBus>) {
+    fn output_connection(c: &ConnectionStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = c.write() {
             g.event_bus = w.clone();
             if let Ok(mut s) = g.connected.write() {
@@ -16733,52 +16494,52 @@ pub(crate) mod event_wire {
         }
     }
 
-    fn wire_layer(l: &LayerStoreRef, w: &Weak<EventBus>) {
+    fn output_layer(l: &LayerStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = l.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_group(gr: &GroupStoreRef, w: &Weak<EventBus>) {
+    fn output_group(gr: &GroupStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = gr.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_file(f: &FileStoreRef, w: &Weak<EventBus>) {
+    fn output_file(f: &FileStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_folder(f: &FolderStoreRef, w: &Weak<EventBus>) {
+    fn output_folder(f: &FolderStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = f.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_quality(q: &QualityStoreRef, w: &Weak<EventBus>) {
+    fn output_quality(q: &QualityStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = q.write() {
             g.event_bus = w.clone();
             for b in &g.benchmarks {
-                wire_benchmark(b, w);
+                output_benchmark(b, w);
             }
         }
     }
 
-    fn wire_stat(s: &StatStoreRef, w: &Weak<EventBus>) {
+    fn output_stat(s: &StatStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = s.write() {
             g.event_bus = w.clone();
         }
     }
 
-    fn wire_benchmark(b: &BenchmarkStoreRef, w: &Weak<EventBus>) {
+    fn output_benchmark(b: &BenchmarkStoreRef, w: &Weak<EventBus>) {
         if let Ok(mut g) = b.write() {
             g.event_bus = w.clone();
         }
     }
 
-    pub(crate) fn rewire_parent_kits(kit: &KitGraphRef) {
+    pub(crate) fn reoutput_parent_kits(kit: &KitGraphRef) {
         let kw = Arc::downgrade(kit);
         let kg = kit.read().expect("kit read");
         for a in &kg.authors {
@@ -18018,7 +17779,7 @@ pub mod kit_graph {
     use crate::connection::{ ConnectionRef};
     use crate::design::{ DesignRef, DesignStore, DesignStoreRef};
     use crate::error::{Result, SemioError, SetError, SetResult};
-    use crate::event_wire;
+    use crate::event_output;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
     use crate::family::{ FamilyStore, FamilyStoreRef};
     use crate::file::{ FileStore, FileStoreRef};
@@ -19130,7 +18891,7 @@ pub mod kit_graph {
             diff.merge_into_baseline_dto(&mut a);
             if b0 != a {
                 Self::apply_kit_state(kit, a.clone())?;
-                crate::event_wire::emit_kit_dto_reconcile_events(kit, &b0, &a);
+                crate::event_output::emit_kit_dto_reconcile_events(kit, &b0, &a);
             }
             Ok(crate::kit_diff::KitDiff::between(&b0, &a))
         }
@@ -19165,8 +18926,8 @@ pub mod kit_graph {
                 g.the_kit_draft = preserve.7;
                 g.children = preserve.8;
             }
-            event_wire::rewire_parent_kits(kit);
-            event_wire::wire_graph_bus(kit);
+            event_output::reoutput_parent_kits(kit);
+            event_output::output_graph_bus(kit);
             {
                 let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.invalidate_hash();
@@ -19525,7 +19286,7 @@ pub mod kit_graph {
             }
         }
 
-        fn wire_compat_resolve_prop_keys_in_kit_dto(d: &mut KitInput) {
+        fn output_compat_resolve_prop_keys_in_kit_dto(d: &mut KitInput) {
             let m = Self::quality_key_index(&d.qualities);
             for p in &mut d.props {
                 Self::apply_resolved_prop_key(&m, p);
@@ -19548,7 +19309,7 @@ pub mod kit_graph {
         }
 
         pub fn from_input(mut d: KitInput) -> KitGraphRef {
-            Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
+            Self::output_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let root = d.clone();
             let KitInput {
                 id,
@@ -19612,7 +19373,7 @@ pub mod kit_graph {
                 tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_input(t)))).collect(),
                 qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect(),
                 props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect(),
                 ports: Vec::new(),
                 families: Vec::new(),
                 locations: Vec::new(),
@@ -19690,7 +19451,7 @@ pub mod kit_graph {
                     description: fd.description,
                     icon: fd.icon,
                     ports: Vec::new(),
-                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_wire(a)).collect(),
+                    attributes: fd.attributes.into_iter().map(|a| AttributeStore::from_output(a)).collect(),
                     parent_kit: None,
                     event_bus: Weak::new(),
                     hash_cache: Cache::default(),
@@ -19780,91 +19541,8 @@ pub mod kit_graph {
                     }
                 }
             }
-            event_wire::wire_graph_bus(&kit);
+            event_output::output_graph_bus(&kit);
             kit
-        }
-
-        pub fn to_ref(&self) -> KitRef {
-            KitRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> KitMetadata {
-            KitMetadata {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                icon: self.icon.clone(),
-                image: self.image.clone(),
-                preview: self.preview.clone(),
-                remote: self.remote.clone(),
-                homepage: self.homepage.clone(),
-                license: self.license.clone(),
-                uri: self.uri.clone(),
-                created: self.created.clone(),
-                updated: self.updated.clone(),
-                version: self.version.clone(),
-            }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                preview: m.preview,
-                remote: m.remote,
-                homepage: m.homepage,
-                license: m.license,
-                uri: m.uri,
-                created: m.created,
-                updated: m.updated,
-                version: m.version,
-                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
-                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow())).collect(),
-                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
-                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-            }
-        }
-
-        pub fn to_input(&self) -> KitInput {
-            let m = self.to_metadata();
-            KitInput {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                icon: m.icon,
-                image: m.image,
-                preview: m.preview,
-                remote: m.remote,
-                homepage: m.homepage,
-                license: m.license,
-                uri: m.uri,
-                created: m.created,
-                updated: m.updated,
-                version: m.version,
-                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect(),
-                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_input())).collect(),
-                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_input())).collect(),
-                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_input())).collect(),
-                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_input())).collect(),
-                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_input())).collect(),
-                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect(),
-                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
-                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                families: self.families.iter().filter_map(|f| f.read().ok().map(|f| f.to_input())).collect(),
-                locations: self.locations.iter().filter_map(|l| l.read().ok().map(|l| l.to_input())).collect(),
-            }
         }
 
         pub fn port_by_id(&self, id: &Id) -> Option<PortStoreRef> {
@@ -20012,7 +19690,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20027,7 +19705,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20047,7 +19725,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20114,7 +19792,7 @@ pub mod kit_graph {
                 description: dto.description.clone(),
                 icon: dto.icon.clone(),
                 ports: Vec::new(),
-                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_wire).collect(),
+                attributes: dto.attributes.iter().cloned().map(AttributeStore::from_output).collect(),
                 parent_kit: None,
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
@@ -20148,7 +19826,7 @@ pub mod kit_graph {
                     pref.write().map_err(|_| SetError::LockPoisoned("port".into()))?.set_compatible_ports_from_ids(&pd.compatible_ports, &*g2);
                 }
             }
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20173,7 +19851,7 @@ pub mod kit_graph {
                 g.invalidate_validation();
             }
             Self::purge_dead_port_compatibility(kit);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(Some(dto))
         }
 
@@ -20216,7 +19894,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20236,7 +19914,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20256,7 +19934,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20276,7 +19954,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20296,7 +19974,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20316,7 +19994,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20336,7 +20014,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20356,7 +20034,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20376,7 +20054,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20396,7 +20074,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20418,7 +20096,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20438,7 +20116,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20460,7 +20138,7 @@ pub mod kit_graph {
                     g.invalidate_hash();
                     g.invalidate_validation();
                 }
-                event_wire::wire_graph_bus(kit);
+                event_output::output_graph_bus(kit);
                 return Ok(Some(dto));
             }
             Ok(None)
@@ -20491,7 +20169,7 @@ pub mod kit_graph {
             g.invalidate_hash();
             g.invalidate_validation();
             drop(g);
-            event_wire::wire_graph_bus(kit);
+            event_output::output_graph_bus(kit);
             Ok(())
         }
 
@@ -20983,40 +20661,6 @@ pub mod layer {
             Self { id: Id::new_v7(), name: name.into(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
-        pub fn from_id_dto(d: LayerRef) -> Self {
-            Self { id: d.id, name: String::new(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_metadata(d: LayerMetadata) -> Self {
-            Self { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
-        }
-
-        pub fn from_shallow(d: ) -> Self {
-            Self::from_metadata(LayerMetadata { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
-        }
-
-        pub fn from_input(d: LayerInput) -> Self {
-            Self::from_metadata(LayerMetadata { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
-        }
-
-        pub fn to_ref(&self) -> LayerRef {
-            LayerRef { id: self.id.clone() }
-        }
-
-        pub fn to_metadata(&self) -> LayerMetadata {
-            LayerMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), color: self.color.clone(), order: self.order, visible: self.visible, locked: self.locked }
-        }
-
-        pub fn to_shallow(&self) ->  {
-            let m = self.to_metadata();
-             { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
-        }
-
-        pub fn to_input(&self) -> LayerInput {
-            let m = self.to_metadata();
-            LayerInput { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
-        }
-
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
@@ -21430,7 +21074,7 @@ pub mod piece {
             self.parent_connection = None;
             self.parent_design = design_weak;
             self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect();
-            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect();
+            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect();
         }
 
         pub fn invalidate_flat_pose(&self) {
@@ -22044,9 +21688,9 @@ pub mod piece {
             }
         }
 
-        pub fn to_shallow(&self) ->  {
+        pub fn to_shallow(&self) -> PieceInput {
             let m = self.to_metadata();
-             {
+            PieceInput {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22059,7 +21703,7 @@ pub mod piece {
                 r#type: m.r#type,
                 design: m.design,
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
             }
         }
 
@@ -22078,7 +21722,7 @@ pub mod piece {
                 r#type: m.r#type,
                 design: m.design,
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
             }
         }
     }
@@ -22245,7 +21889,7 @@ pub mod port {
             s.point = d.point;
             s.direction = d.direction;
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
 
@@ -22257,7 +21901,7 @@ pub mod port {
             s.point = d.point;
             s.direction = d.direction;
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
 
@@ -22269,10 +21913,10 @@ pub mod port {
             PortMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow(&self) ->  {
+        pub fn to_shallow(&self) -> PortInput {
             let m = self.to_metadata();
             let compatible_ports: Vec<PortRef> = self.compatible_ports.iter().filter_map(|w| w.upgrade().and_then(|p| p.read().ok().map(|r| PortRef { id: r.id.clone() }))).collect();
-             {
+            PortInput {
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -22284,7 +21928,7 @@ pub mod port {
                 direction: self.direction,
                 compatible_ports,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
             }
         }
 
@@ -22303,7 +21947,7 @@ pub mod port {
                 direction: self.direction,
                 compatible_ports,
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
             }
         }
 
@@ -22516,9 +22160,9 @@ pub mod family {
             FamilyMetadata { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), icon: self.icon.clone() }
         }
 
-        pub fn to_shallow(&self) ->  {
+        pub fn to_shallow(&self) -> FamilyInput {
             let m = self.to_metadata();
-             { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_wire()).collect() }
+            FamilyInput { id: m.id, name: m.name, description: m.description, icon: m.icon, attributes: self.attributes.iter().map(|a| a.clone_output()).collect() }
         }
 
         pub fn to_input(&self) -> FamilyInput {
@@ -22529,7 +22173,7 @@ pub mod family {
                 description: m.description,
                 icon: m.icon,
                 ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
             }
         }
 
@@ -22751,9 +22395,9 @@ pub mod prop {
             PropMetadata { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
         }
 
-        pub fn to_shallow(&self) ->  {
+        pub fn to_shallow(&self) -> PropInput {
             let m = self.to_metadata();
-             { id: m.id, key: m.key, value: m.value, unit: m.unit }
+            PropInput { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: None }
         }
 
         pub fn to_input(&self) -> PropInput {
@@ -23262,7 +22906,7 @@ pub mod representation {
             let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_shallow).collect();
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
 
@@ -23270,7 +22914,7 @@ pub mod representation {
             let mut s = Self::from_metadata(RepresentationMetadata { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_input).collect();
             s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect();
-            s.attributes = d.attributes.into_iter().map(AttributeStore::from_wire).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_output).collect();
             s
         }
 
@@ -23292,7 +22936,7 @@ pub mod representation {
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_shallow).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
             }
         }
 
@@ -23305,7 +22949,7 @@ pub mod representation {
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_input).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
-                attributes: self.attributes.iter().map(|a| a.clone_wire()).collect(),
+                attributes: self.attributes.iter().map(|a| a.clone_output()).collect(),
             }
         }
 
@@ -24500,7 +24144,7 @@ pub mod typ {
                 tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_input(t)))).collect(),
                 qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_input(q)))).collect(),
                 props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_input(p)))).collect(),
-                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_wire(a)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_output(a)))).collect(),
                 created: created.clone(),
                 updated: updated.clone(),
                 parent_kit: Arc::downgrade(kit),
@@ -24615,7 +24259,7 @@ pub mod typ {
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
             }
         }
 
@@ -24641,7 +24285,7 @@ pub mod typ {
                 tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_input())).collect(),
                 qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_input())).collect(),
                 props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_input())).collect(),
-                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_wire())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.clone_output())).collect(),
             }
         }
     }
@@ -25655,7 +25299,7 @@ pub mod io {
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AttributeStore::wire(Id::from(row.get::<_, String>(0)?), row.get(1)?, row.get(2)?, row.get(3)?));
+                values.push(AttributeStore::output(Id::from(row.get::<_, String>(0)?), row.get(1)?, row.get(2)?, row.get(3)?));
             }
             Ok(values)
         }
@@ -26464,7 +26108,7 @@ pub mod kit_graphql {
     use crate::representation::RepresentationStoreRef;
     use crate::typ::TypeStoreRef;
 
-    /// ­ƒº¥ `ChangeKitCommand` wire (externally tagged JSON; GraphQL name is not `JSON`).
+    /// ­ƒº¥ `ChangeKitCommand` output (externally tagged JSON; GraphQL name is not `JSON`).
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     #[serde(transparent)]
     pub struct GqlChangeKitCommand(pub ChangeKitCommand);
@@ -26817,7 +26461,7 @@ pub mod kit_graphql {
         Remote,
     }
 
-    fn backbone_kind_batch_from_wire(s: &str) -> Option<BackboneKind> {
+    fn backbone_kind_batch_from_output(s: &str) -> Option<BackboneKind> {
         match s {
             "memory" => Some(BackboneKind::Memory),
             "dev" => Some(BackboneKind::Dev),
@@ -26872,25 +26516,25 @@ pub mod kit_graphql {
         }
     }
 
-    fn backbone_wire_from_gql(config: BackboneConfigInput) -> crate::kit_backbone_wire::BackboneConfig {
+    fn backbone_output_from_gql(config: BackboneConfigInput) -> crate::kit_backbone_output::BackboneConfig {
         match config {
-            BackboneConfigInput::Memory(_) => crate::kit_backbone_wire::BackboneConfig::Memory,
-            BackboneConfigInput::Dev(v) => crate::kit_backbone_wire::BackboneConfig::Dev { path: v.path },
-            BackboneConfigInput::Local(v) => crate::kit_backbone_wire::BackboneConfig::Local { folder: v.folder },
-            BackboneConfigInput::Remote(v) => crate::kit_backbone_wire::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
+            BackboneConfigInput::Memory(_) => crate::kit_backbone_output::BackboneConfig::Memory,
+            BackboneConfigInput::Dev(v) => crate::kit_backbone_output::BackboneConfig::Dev { path: v.path },
+            BackboneConfigInput::Local(v) => crate::kit_backbone_output::BackboneConfig::Local { folder: v.folder },
+            BackboneConfigInput::Remote(v) => crate::kit_backbone_output::BackboneConfig::Remote { url: v.url, session_id: v.session_id },
         }
     }
 
-    fn conflict_resolution_from_gql(s: ConflictResolutionInput) -> crate::kit_backbone_wire::ConflictResolution {
+    fn conflict_resolution_from_gql(s: ConflictResolutionInput) -> crate::kit_backbone_output::ConflictResolution {
         match s {
-            ConflictResolutionInput::DropWip => crate::kit_backbone_wire::ConflictResolution::DropWip,
-            ConflictResolutionInput::ForceOverwriteBackbone => crate::kit_backbone_wire::ConflictResolution::ForceOverwriteBackbone,
+            ConflictResolutionInput::DropWip => crate::kit_backbone_output::ConflictResolution::DropWip,
+            ConflictResolutionInput::ForceOverwriteBackbone => crate::kit_backbone_output::ConflictResolution::ForceOverwriteBackbone,
         }
     }
 
     fn gql_backbone_status(attached: bool, kind: Option<String>, tip: Option<Id>) -> BackboneStatus {
         let (kind_gql, kind_other) = match &kind {
-            Some(k) => match backbone_kind_batch_from_wire(k) {
+            Some(k) => match backbone_kind_batch_from_output(k) {
                 Some(bk) => (Some(bk), None),
                 None => (None, kind.clone()),
             },
@@ -27067,7 +26711,7 @@ pub mod kit_graphql {
     }
 
     #[derive(Clone)]
-    pub struct KitConflictGql(pub crate::kit_backbone_wire::KitConflict);
+    pub struct KitConflictGql(pub crate::kit_backbone_output::KitConflict);
 
     #[derive(Clone)]
     pub struct KitSessionMutation;
@@ -27438,8 +27082,8 @@ pub mod kit_graphql {
     #[Object(name = "KitBackboneMutation")]
     impl KitBackboneMutation {
         async fn attach(&self, config: BackboneConfigInput) -> Result<BackboneStatus> {
-            let wire = backbone_wire_from_gql(config);
-            let res = self.shell.run_command(KitStoreCommand::AttachBackbone { config: wire }).await?;
+            let output = backbone_output_from_gql(config);
+            let res = self.shell.run_command(KitStoreCommand::AttachBackbone { config: output }).await?;
             match res {
                 KitStoreCommandResult::AttachBackbone { ok } if ok => {
                     let res2 = self.shell.run_command(KitStoreCommand::BackboneStatus).await?;
@@ -28920,7 +28564,7 @@ mod tests {
         }
 
         #[test]
-        fn gql_kit_event_json_wire_shapes_stable_for_scalar() {
+        fn gql_kit_event_json_output_shapes_stable_for_scalar() {
             use async_graphql::ScalarType;
 
             use crate::error::SetError;
@@ -29075,7 +28719,7 @@ mod tests {
 
         use crate::backbone::BackboneSnapshot;
         use crate::id::Id;
-        use crate::kit_backbone_wire::BackboneConfig;
+        use crate::kit_backbone_output::BackboneConfig;
         use crate::kit_graph::{ KitGraph};
         use crate::kit_store::KitStore;
 
@@ -29541,7 +29185,7 @@ mod tests {
         }
 
         #[test]
-        fn delete_piece_rewires_flatten_parent_refs() {
+        fn delete_piece_reoutputs_flatten_parent_refs() {
             let (kit, design_id, root_id, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
@@ -30633,7 +30277,7 @@ mod tests {
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitGraph::from_input(KitInput { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeStore::wire(g.clone(), "k".into(), "v".into(), None)], ..Default::default() });
+                let kit = KitGraph::from_input(KitInput { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeStore::output(g.clone(), "k".into(), "v".into(), None)], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -32386,7 +32030,7 @@ pub use hash::{Cache, HashWriter};
 pub use id::Id;
 pub use kit::{ KitGraphRef, KitGraphWeak, KitRef,   KitStore};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
-pub use kit_backbone_wire::{BackboneConfig, ConflictResolution, KitConflict};
+pub use kit_backbone_output::{BackboneConfig, ConflictResolution, KitConflict};
 pub use kit_change::{Change, KitChange, KitChangeKind, KitDesignAtomicsBlock, KitDesignChange, KitDesignChangeBlock, PieceChange, TypeChange};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
 #[cfg(not(target_arch = "wasm32"))]
