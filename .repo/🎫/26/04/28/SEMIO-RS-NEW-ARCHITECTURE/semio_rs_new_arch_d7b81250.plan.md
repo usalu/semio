@@ -4,34 +4,34 @@ overview: "Rebuild [semio/rs/lib.rs](semio/rs/lib.rs) as a clean greenfield skel
 todos:
  - id: scaffold-modules
    content: Lay down module/region tree in lib.rs (id, geom, meta, kit::type_, kit::design::piece, kit::design::connection, kit::design, kit, vcs, op, event, worker, gql, wasm_bridge).
-   status: in_progress
+   status: completed
  - id: weak-and-meta-types
    content: "Implement geom + meta value types with main impl + #[Object] impl, including matching *Input types from target.schema.graphql."
-   status: pending
+   status: completed
  - id: kit-entities
    content: "Implement Connector, Representation, Type, Side, Connection, Piece, Design, Kit structs with main impl + #[Object] impl mirroring target schema fields. Cache fields wired but logic is TODO except for createFixedPiece path."
-   status: pending
+   status: completed
  - id: vcs-entities
    content: Implement Change, Transaction, Draft, Checkpoint, Alternative, Graph, Session, Conflict with two-impl pattern. Graph carries the full kit + draft state used by ChildRuntime.
-   status: pending
+   status: completed
  - id: operation-types
    content: Implement Operation interface + Union OperationInput + structs CreatedFixedPiece (full forward fn), FixedPiece, DraggedPiece, RenamedKit, ChangedDescription (stubs) and their *Input types.
-   status: pending
+   status: completed
  - id: event-bus-single-emit
    content: Implement EventBus with the single emit_event function plus a guard test that asserts no other emit definition exists in lib.rs.
-   status: pending
+   status: completed
  - id: worker-runtime
    content: Implement ParentRuntime + ChildRuntime + ChildPort with async-channel inbound + async-broadcast outbound; native path uses async-executor; wasm path wires web_sys::Worker postMessage in mod wasm_bridge.
-   status: pending
+   status: completed
  - id: gql-roots-and-schema-build
    content: Implement Query/Mutation/Subscription roots, build async-graphql Schema, inject ParentRuntime + EventBus + SessionRegistry into context, expose schema SDL builder.
-   status: pending
+   status: completed
  - id: end-to-end-create-fixed-piece
    content: Wire mutation -> dispatch -> child apply -> diff -> Piece insert -> single emit_event -> subscription, returning the operation id from the mutation.
-   status: pending
+   status: completed
  - id: tests
    content: "Add #[cfg(test)] mod tests in lib.rs: schema-parses, single-emit guard, end-to-end createFixedPiece across parent+wip child, wip/authoritative isolation."
-   status: pending
+   status: completed
 isProject: false
 ---
 
@@ -132,7 +132,7 @@ mod event {
 }
 ```
 
-This is the **only** `emit*` function in the crate. Every entity that needs to fire an event holds a `Weak<EventBus>` and calls `bus.upgrade()?.emit(...).await`. A grep guard test (`#[test] fn only_one_emit_event()`) parses `lib.rs` and asserts there is exactly one `pub async fn emit` definition.
+This is the **only** `emit`\* function in the crate. Every entity that needs to fire an event holds a `Weak<EventBus>` and calls `bus.upgrade()?.emit(...).await`. A grep guard test (`#[test] fn only_one_emit_event()`) parses `lib.rs` and asserts there is exactly one `pub async fn emit` definition.
 
 ## 4. Worker topology (parent router → wip + authoritative children)
 
@@ -260,15 +260,17 @@ while let Ok(cmd) = self.inbox.recv().await {
 }
 ```
 
-4. **`Graph::apply_create_fixed_piece`** (in `mod vcs`):
-   - Locates draft + open transaction.
-   - Calls the pure forward fn `op::CreatedFixedPiece::forward(input) -> (KitDiff, Piece)`.
-   - Applies the diff to `the_kit` clone (centralised `apply_diff`, the only path that mutates `Kit` graph state).
-   - Records inverse diff into the transaction.
-   - Returns the constructed `CreatedFixedPiece` operation entity.
-5. **EventBus.emit** (single emit point) broadcasts.
-6. **Parent worker** is already subscribed to the child outbound and re-broadcasts on its own `EventBus`; subscriptions in the schema are fed from the parent bus.
-7. **Subscriber** receives `CreatedFixedPiece` GraphQL object; resolves `piece`, `diff`, `input`, `owner` via the normal `#[Object] impl`.
+1. `**Graph::apply_create_fixed_piece**` (in `mod vcs`):
+
+- Locates draft + open transaction.
+- Calls the pure forward fn `op::CreatedFixedPiece::forward(input) -> (KitDiff, Piece)`.
+- Applies the diff to `the_kit` clone (centralised `apply_diff`, the only path that mutates `Kit` graph state).
+- Records inverse diff into the transaction.
+- Returns the constructed `CreatedFixedPiece` operation entity.
+
+2. **EventBus.emit** (single emit point) broadcasts.
+3. **Parent worker** is already subscribed to the child outbound and re-broadcasts on its own `EventBus`; subscriptions in the schema are fed from the parent bus.
+4. **Subscriber** receives `CreatedFixedPiece` GraphQL object; resolves `piece`, `diff`, `input`, `owner` via the normal `#[Object] impl`.
 
 ## 7. Tests (extend, don't add files — per AGENTS.md)
 
