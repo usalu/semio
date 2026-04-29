@@ -583,13 +583,13 @@ type Attribute implements Entity { # implements WeakEntity
   definition: String!
 }
 
-type AttributeListingEdge implements EntityEdge {
+type AttributeEdge implements EntityEdge {
   cursor: String!
   node: Attribute!
 }
 
-type AttributeListingConnection implements EntityConnectionInterface {
-  edges: [AttributeListingEdge!]!
+type AttributeConnection implements EntityConnectionInterface {
+  edges: [AttributeEdge!]!
   pageInfo: PageInfo!
   hash: String!
 }
@@ -707,6 +707,17 @@ interface Operation implements Entity { # implements StrongEntity
   # Fields
   input: Input
   diff: Diff!
+}
+
+type OperationEdge implements EntityEdge {
+  cursor: String!
+  node: Operation!
+}
+
+type OperationConnection implements EntityConnectionInterface {
+  edges: [OperationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #region Kit
@@ -849,11 +860,11 @@ type Folder implements Entity { # implements StrongEntity
   name: String!
   path: String!
   description: String!
-  files: [File!]!
-  subFolders: [Folder!]!
-  families: [Family!]!
-  types: [Type!]!
-  designs: [Design!]!
+  files: FileConnection!
+  subFolders: FolderConnection!
+  families: FamilyConnection!
+  types: TypeConnection!
+  designs: DesignConnection!
 }
 
 type FolderEdge implements EntityEdge {
@@ -926,9 +937,9 @@ type Author implements Entity {
   email: String!
   role: String
   rank: Int
-  drafts: [Draft!]!
-  transactions: [Transaction!]!
-  checkpoints: [Checkpoint!]!
+  drafts: DraftConnection!
+  transactions: TransactionConnection!
+  checkpoints: CheckpointConnection!
 }
 
 type AuthorEdge implements EntityEdge {
@@ -1037,7 +1048,7 @@ type Quality implements Entity {
   unit: String
   definition: String
   description: String
-  benchmarks: [Benchmark!]!
+  benchmarks: BenchmarkConnection!
 }
 
 type QualityEdge implements EntityEdge {
@@ -1171,8 +1182,8 @@ type Connector implements Entity {
   code: String!
   description: String
   portId: ID
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+  qualities: QualityConnection!
+  attributes: AttributeConnection!
 }
 
 type ConnectorEdge implements EntityEdge {
@@ -1201,9 +1212,9 @@ type Representation implements Entity {
   url: String!
   description: String
   file: File
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+  tags: TagConnection!
+  qualities: QualityConnection!
+  attributes: AttributeConnection!
 }
 
 type RepresentationEdge implements EntityEdge {
@@ -1236,18 +1247,18 @@ type Type implements Entity {
   unit: String
   created: Timestamp
   updated: Timestamp
-  connectors: [Connector!]!
+  connectors: ConnectorConnection!
   connector(id: ID!): Connector
-  representations: [Representation!]!
+  representations: RepresentationConnection!
   representation(id: ID!): Representation
   bestRepresentation(tagIds: [ID!]!): Representation
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
+  authors: AuthorConnection!
+  concepts: ConceptConnection!
+  tags: TagConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
 }
 
 type TypeEdge implements EntityEdge {
@@ -1318,7 +1329,7 @@ type Group implements Entity {
   description: String
   color: String
   icon: String
-  pieces: [Piece!]!
+  pieces: PieceConnection!
 }
 
 type GroupEdge implements EntityEdge {
@@ -1343,6 +1354,17 @@ enum PieceConnectionKind {
 
 union Blueprint = Type | Design
 
+type BlueprintEdge implements EntityEdge {
+  cursor: String!
+  node: Blueprint!
+}
+
+type BlueprintConnection implements EntityConnectionInterface {
+  edges: [BlueprintEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union PieceOwner = Type | Design | PieceModification | Piece
 union PieceOwned = Piece | Attribute
 
@@ -1363,17 +1385,19 @@ type Piece implements Entity {
   position: Position
   scale: Float
   blueprint: Blueprint!
+  # Derived Fields
   connectionKind: PieceConnectionKind
+
   flatPosition: Position!
-  replaceableBlueprint: [Blueprint!]!
+  replaceableBlueprints: BlueprintConnection!
   parentConnection: Connection
-  childConnections: [Connection!]!
+  childConnections: ConnectionConnection!
   parentPiece: Piece
-  childPieces: [Piece!]!
+  childPieces: PieceConnection!
   depth: Int!
-  path: [Piece!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
+  path: PieceConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
 }
 
 type PieceEdge implements EntityEdge {
@@ -1410,7 +1434,7 @@ type Connection implements Entity {
   u: Float
   v: Float
   description: String
-  attributes: [Attribute!]!
+  attributes: AttributeConnection!
 }
 
 type ConnectionEdge implements EntityEdge {
@@ -1490,7 +1514,7 @@ type DraggedPiece implements Operation & Entity {
   # Fields
   input: DraggedPieceInput!
   diff: Diff!
-  pieces: [Piece!]!
+  pieces: PieceConnection!
 }
 
 union DraggedPieceOwner = Change
@@ -1557,20 +1581,20 @@ type Design implements Entity {
   unit: String
   created: Timestamp
   updated: Timestamp
-  pieces: [Piece!]!
+  pieces: PieceConnection!
   piece(id: ID!): Piece
-  connections: [Connection!]!
+  connections: ConnectionConnection!
   connection(id: ID!): Connection
-  layers: [Layer!]!
-  groups: [Group!]!
-  authors: [Author!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
+  layers: LayerConnection!
+  groups: GroupConnection!
+  authors: AuthorConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
   qualitySum(qualityId: ID!): Float!
-  references: [Design!]!
-  referencedBy: [Piece!]!
+  references: DesignConnection!
+  referencedBy: PieceConnection!
 }
 
 type DesignEdge implements EntityEdge {
@@ -1616,19 +1640,19 @@ type Kit implements Entity {
   updated: Timestamp
   version: String
   design(id: ID!): Design
-  designs: [Design!]!
+  designs: DesignConnection!
   type(id: ID!): Type
-  types: [Type!]!
-  files: [File!]!
-  folders: [Folder!]!
-  families: [Family!]!
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
+  types: TypeConnection!
+  files: FileConnection!
+  folders: FolderConnection!
+  families: FamilyConnection!
+  authors: AuthorConnection!
+  concepts: ConceptConnection!
+  tags: TagConnection!
+  qualities: QualityConnection!
+  props: PropConnection!
+  attributes: AttributeConnection!
+  stats: StatConnection!
 }
 
 type KitEdge implements EntityEdge {
@@ -1711,8 +1735,8 @@ type Change implements Entity {
   # Fields
   description: String
   origin: String
-  forwards: [Operation!]!
-  backwards: [Operation!]!
+  forwards: OperationConnection!
+  backwards: OperationConnection!
   sequenceNumber: Int!
 }
 
@@ -1739,7 +1763,7 @@ type Transaction implements Entity {
   ownerEntity: OwnerEntity # TransactionOwner
   ownedEntities: OwnedEntityConnection # TransactionOwned
   # Fields
-  changes: [Change!]!
+  changes: ChangeConnection!
 }
 
 type TransactionEdge implements EntityEdge {
@@ -1768,9 +1792,9 @@ type Draft implements Entity {
   parentCheckpoint: Checkpoint
   targetAlternative: Alternative
   openTransaction: Transaction
-  finalizedTransactions: [Transaction!]!
-  redoTransactions: [Transaction!]!
-  changes: [Change!]!
+  finalizedTransactions: TransactionConnection!
+  redoTransactions: TransactionConnection!
+  changes: ChangeConnection!
   canUndo(steps: Int!): Boolean!
   canRedo(steps: Int!): Boolean!
 }
@@ -1802,7 +1826,7 @@ type Checkpoint implements Entity {
   ownedEntities: OwnedEntityConnection # CheckpointOwned
   # Fields
   timestamp: Timestamp
-  authors: [Author!]!
+  authors: AuthorConnection!
   root: Kit
   parentCheckpoint: Checkpoint
   message: String
@@ -1835,7 +1859,7 @@ type Alternative implements Entity {
   # Fields
   name: String!
   start: Checkpoint!
-  checkpoints: [Checkpoint!]!
+  checkpoints: CheckpointConnection!
   store: Kit!
   draft: Draft
   transaction: Transaction
@@ -1866,11 +1890,11 @@ type Graph implements Entity {
   # Fields
   theKit: Kit
   alternative(id: ID!): Alternative
-  alternatives: [Alternative!]!
+  alternatives: AlternativeConnection!
   checkpoint(id: ID!): Checkpoint
-  checkpoints: [Checkpoint!]!
+  checkpoints: CheckpointConnection!
   release(id: ID!): Checkpoint
-  releases: [Checkpoint!]!
+  releases: CheckpointConnection!
 }
 
 type GraphEdge implements EntityEdge {
@@ -1899,7 +1923,7 @@ type Session implements Entity {
   ownedEntities: OwnedEntityConnection # SessionOwned
   # Fields
   startedAt: Timestamp
-  drafts: [Draft!]!
+  drafts: DraftConnection!
 }
 
 type SessionEdge implements EntityEdge {
@@ -2009,9 +2033,10 @@ union EntityEdge =
   | AlternativeEdge
   | AttributeDiffEdge
   | AttributeEdge
-  | AttributeListingEdge
+  | AttributeEdge
   | AuthorEdge
   | BenchmarkEdge
+  | BlueprintEdge
   | ChangeEdge
   | CheckpointEdge
   | ConceptEdge
@@ -2033,6 +2058,7 @@ union EntityEdge =
   | LocationEdge
   | LocationModificationEdge
   | OffsetEdge
+  | OperationEdge
   | PieceEdge
   | PlaneDiffEdge
   | PlaneEdge
@@ -2060,9 +2086,10 @@ union EntityEdge =
 union EntityConnection =
   | AlternativeConnection
   | AttributeDiffConnection
-  | AttributeListingConnection
+  | AttributeConnection
   | AuthorConnection
   | BenchmarkConnection
+  | BlueprintConnection
   | ChangeConnection
   | CheckpointConnection
   | ConceptConnection
@@ -2085,6 +2112,7 @@ union EntityConnection =
   | LocationDiffConnection
   | LocationModificationConnection
   | OffsetConnection
+  | OperationConnection
   | PieceConnection
   | PlaneConnection
   | PlaneDiffConnection
@@ -2170,9 +2198,10 @@ union OwnerEntity =
 union OwnedEntityConnection =
   | AlternativeConnection
   | AttributeDiffConnection
-  | AttributeListingConnection
+  | AttributeConnection
   | AuthorConnection
   | BenchmarkConnection
+  | BlueprintConnection
   | ChangeConnection
   | CheckpointConnection
   | ConceptConnection
@@ -2195,6 +2224,7 @@ union OwnedEntityConnection =
   | LocationDiffConnection
   | LocationModificationConnection
   | OffsetConnection
+  | OperationConnection
   | PieceConnection
   | PlaneConnection
   | PlaneDiffConnection
@@ -2227,7 +2257,7 @@ type Query {
   session: Session!
   wip: Graph!
   authoritative: Graph
-  conflicts: [Conflict!]!
+  conflicts: ConflictConnection!
   node(id: ID!): Node
   entity(id: ID!): Entity
 }
