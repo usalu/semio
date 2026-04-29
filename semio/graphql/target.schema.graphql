@@ -498,6 +498,7 @@ type Change implements Entity {
   origin: String
   forwards: [Operation!]!
   backwards: [Operation!]!
+  sequenceNumber: Int!
 }
 
 type Transaction implements Entity {
@@ -564,9 +565,28 @@ type Session {
   drafts: [Draft!]!
 }
 
+type ReadVersion {
+  checkpoint: Checkpoint
+  change: Change
+  operation: Operation
+}
+
+type WriteVersion {
+  draft: Draft
+  transaction: Transaction
+  checkpoint: Checkpoint
+  change: Change
+  operation: Operation
+}
+
+enum ConflictKind {
+
+}
+
 type Conflict {
   id: ID!
-  backboneTip: String
+  authoritativeVersion: ReadVersion
+  transactionVersion: WriteVersion
   reason: String!
   createdAt: Timestamp!
 }
