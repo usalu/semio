@@ -630,12 +630,23 @@ type AttributeDiff implements Diff {
   after: Entity! # Attribute
 }
 
+type AttributeDiffEdge implements EntityEdge {
+  cursor: String!
+  node: AttributeDiff!
+}
+
+type AttributeDiffConnection implements EntityConnectionInterface {
+  edges: [AttributeDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 type AttributeEdge implements EntityEdge {
   cursor: String!
   node: Attribute!
 }
 
-type AttributeDiffConnection implements EntityConnectionInterface {
+type DiffAttributesConnection implements EntityConnectionInterface {
   edges: [AttributeEdge!]!
   pageInfo: PageInfo!
   hash: String!
@@ -656,7 +667,7 @@ type AttributesDiff implements Entity {
   ownedEntities: OwnedEntityConnection # AttributesDiffOwned
   # Fields
   removed: EntityConnection # Attribute
-  diffs: DiffConnection # AttributeDiffConnection
+  diffs: DiffConnection # AttributeDiff via DiffEdge
   added: EntityConnection # Attribute
 }
 
@@ -898,20 +909,53 @@ type AuthorConnection implements EntityConnectionInterface {
 
 #region Prop
 
-type Prop {
-  id: ID!
+union PropOwner = Piece | Type | Design
+# union PropOwned = Nothing
+
+type Prop implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: PropOwner
+  ownerPiece: Piece
+  ownerType: Type
+  ownerDesign: Design
+  ownerEntity: OwnerEntity! # PropOwner
+  ownedEntities: OwnedEntityConnection # PropOwned
+  # Fields
   key: String!
   value: String!
   unit: String
   quality: Quality
 }
 
+type PropEdge implements EntityEdge {
+  cursor: String!
+  node: Prop!
+}
+
+type PropConnection implements EntityConnectionInterface {
+  edges: [PropEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Prop
 
 #region Benchmark
 
-type Benchmark {
-  id: ID!
+union BenchmarkOwner = Quality
+# union BenchmarkOwned = Nothing
+
+type Benchmark implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: BenchmarkOwner
+  ownerQuality: Quality
+  ownerEntity: OwnerEntity! # BenchmarkOwner
+  ownedEntities: OwnedEntityConnection # BenchmarkOwned
+  # Fields
   name: String!
   min: Float
   max: Float
@@ -919,12 +963,36 @@ type Benchmark {
   maxExcluded: Boolean
 }
 
+type BenchmarkEdge implements EntityEdge {
+  cursor: String!
+  node: Benchmark!
+}
+
+type BenchmarkConnection implements EntityConnectionInterface {
+  edges: [BenchmarkEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Benchmark
 
 #region Quality
 
-type Quality {
-  id: ID!
+union QualityOwner = Connector | Representation | Type | Design
+union QualityOwned = Benchmark
+
+type Quality implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: QualityOwner
+  ownerConnector: Connector
+  ownerRepresentation: Representation
+  ownerType: Type
+  ownerDesign: Design
+  ownerEntity: OwnerEntity! # QualityOwner
+  ownedEntities: OwnedEntityConnection # QualityOwned
+  # Fields
   key: String!
   value: String
   unit: String
@@ -933,37 +1001,115 @@ type Quality {
   benchmarks: [Benchmark!]!
 }
 
+type QualityEdge implements EntityEdge {
+  cursor: String!
+  node: Quality!
+}
+
+type QualityConnection implements EntityConnectionInterface {
+  edges: [QualityEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Quality
 
 #region Tag
 
-type Tag {
-  id: ID!
+union TagOwner = Design | Type | Representation
+# union TagOwned = Nothing
+
+type Tag implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: TagOwner
+  ownerDesign: Design
+  ownerType: Type
+  ownerRepresentation: Representation
+  ownerEntity: OwnerEntity! # TagOwner
+  ownedEntities: OwnedEntityConnection # TagOwned
+  # Fields
   name: String!
   order: Int
+}
+
+type TagEdge implements EntityEdge {
+  cursor: String!
+  node: Tag!
+}
+
+type TagConnection implements EntityConnectionInterface {
+  edges: [TagEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Tag
 
 #region Concept
 
-type Concept {
-  id: ID!
+union ConceptOwner = Design | Type
+# union ConceptOwned = Nothing
+
+type Concept implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: ConceptOwner
+  ownerDesign: Design
+  ownerType: Type
+  ownerEntity: OwnerEntity! # ConceptOwner
+  ownedEntities: OwnedEntityConnection # ConceptOwned
+  # Fields
   name: String!
   description: String
   order: Int
+}
+
+type ConceptEdge implements EntityEdge {
+  cursor: String!
+  node: Concept!
+}
+
+type ConceptConnection implements EntityConnectionInterface {
+  edges: [ConceptEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Concept
 
 #region Stat
 
-type Stat {
-  id: ID!
+union StatOwner = Design | Type
+# union StatOwned = Nothing
+
+type Stat implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: StatOwner
+  ownerDesign: Design
+  ownerType: Type
+  ownerEntity: OwnerEntity! # StatOwner
+  ownedEntities: OwnedEntityConnection # StatOwned
+  # Fields
   key: String!
   value: String!
   unit: String
   description: String
+}
+
+type StatEdge implements EntityEdge {
+  cursor: String!
+  node: Stat!
+}
+
+type StatConnection implements EntityConnectionInterface {
+  edges: [StatEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Stat
@@ -1081,8 +1227,18 @@ type TypeConnection implements EntityConnectionInterface {
 
 #region Layer
 
-type Layer {
-  id: ID!
+union LayerOwner = Design
+# union LayerOwned = Nothing
+
+type Layer implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: LayerOwner
+  ownerDesign: Design
+  ownerEntity: OwnerEntity! # LayerOwner
+  ownedEntities: OwnedEntityConnection # LayerOwned
+  # Fields
   name: String!
   description: String
   color: String
@@ -1091,17 +1247,49 @@ type Layer {
   locked: Boolean
 }
 
+type LayerEdge implements EntityEdge {
+  cursor: String!
+  node: Layer!
+}
+
+type LayerConnection implements EntityConnectionInterface {
+  edges: [LayerEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Layer
 
 #region Group
 
-type Group {
-  id: ID!
+union GroupOwner = Design
+union GroupOwned = Piece
+
+type Group implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: GroupOwner
+  ownerDesign: Design
+  ownerEntity: OwnerEntity! # GroupOwner
+  ownedEntities: OwnedEntityConnection # GroupOwned
+  # Fields
   name: String!
   description: String
   color: String
   icon: String
   pieces: [Piece!]!
+}
+
+type GroupEdge implements EntityEdge {
+  cursor: String!
+  node: Group!
+}
+
+type GroupConnection implements EntityConnectionInterface {
+  edges: [GroupEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Group
@@ -1159,17 +1347,17 @@ type PieceConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PieceOwner = Design
-union PieceOwned = Piece | Connection
+union ConnectionOwner = Design
+union ConnectionOwned = Attribute
 
 type Connection implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: PieceOwner
+  owner: ConnectionOwner
   ownerDesign: Design
-  ownerEntity: OwnerEntity! # PieceOwner
-  ownedEntities: OwnedEntityConnection # PieceOwned
+  ownerEntity: OwnerEntity! # ConnectionOwner
+  ownedEntities: OwnedEntityConnection # ConnectionOwned
   # Fields
   connected: Side!
   connecting: Side!
@@ -1276,12 +1464,33 @@ union DraggedPieceOwned = Piece
 
 #region Side
 
-type Side {
-  id: ID!
+union SideOwner = Connection
+# union SideOwned = Nothing
+
+type Side implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: SideOwner
+  ownerConnection: Connection
+  ownerEntity: OwnerEntity! # SideOwner
+  ownedEntities: OwnedEntityConnection # SideOwned
+  # Fields
   piece: Piece!
   port: Connector
   designPiece: Piece
   connector: Connector
+}
+
+type SideEdge implements EntityEdge {
+  cursor: String!
+  node: Side!
+}
+
+type SideConnection implements EntityConnectionInterface {
+  edges: [SideEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Side
@@ -1289,7 +1498,7 @@ type Side {
 #endregion Connection
 
 union DesignOwner = Kit
-union DesignOwned = Piece | Connection
+union DesignOwned = Piece | Connection | Layer | Group
 
 type Design implements Entity {
   # StrongEntity
@@ -1665,13 +1874,46 @@ type SessionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-type ReadVersion {
+union ReadVersionOwner = Conflict
+# union ReadVersionOwned = Nothing
+
+type ReadVersion implements Entity {
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: ReadVersionOwner
+  ownerConflict: Conflict
+  ownerEntity: OwnerEntity # ReadVersionOwner
+  ownedEntities: OwnedEntityConnection # ReadVersionOwned
+  # Fields
   checkpoint: Checkpoint
   change: Change
   operation: Operation
 }
 
-type WriteVersion {
+type ReadVersionEdge implements EntityEdge {
+  cursor: String!
+  node: ReadVersion!
+}
+
+type ReadVersionConnection implements EntityConnectionInterface {
+  edges: [ReadVersionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+union WriteVersionOwner = Conflict
+# union WriteVersionOwned = Nothing
+
+type WriteVersion implements Entity {
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: WriteVersionOwner
+  ownerConflict: Conflict
+  ownerEntity: OwnerEntity # WriteVersionOwner
+  ownedEntities: OwnedEntityConnection # WriteVersionOwned
+  # Fields
   draft: Draft
   transaction: Transaction
   checkpoint: Checkpoint
@@ -1679,12 +1921,45 @@ type WriteVersion {
   operation: Operation
 }
 
-type Conflict {
-  id: ID!
+type WriteVersionEdge implements EntityEdge {
+  cursor: String!
+  node: WriteVersion!
+}
+
+type WriteVersionConnection implements EntityConnectionInterface {
+  edges: [WriteVersionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+union ConflictOwner = Session | Graph
+union ConflictOwned = ReadVersion | WriteVersion
+
+type Conflict implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: ConflictOwner
+  ownerSession: Session
+  ownerGraph: Graph
+  ownerEntity: OwnerEntity! # ConflictOwner
+  ownedEntities: OwnedEntityConnection # ConflictOwned
+  # Fields
   authoritativeVersion: ReadVersion
   transactionVersion: WriteVersion
   reason: String!
   createdAt: Timestamp!
+}
+
+type ConflictEdge implements EntityEdge {
+  cursor: String!
+  node: Conflict!
+}
+
+type ConflictConnection implements EntityConnectionInterface {
+  edges: [ConflictEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion VCS
@@ -1693,12 +1968,16 @@ type Conflict {
 
 union EntityEdge =
   | AlternativeEdge
+  | AttributeDiffEdge
   | AttributeEdge
   | AttributeListingEdge
   | AuthorEdge
-  | ConnectionEdge
+  | BenchmarkEdge
   | ChangeEdge
   | CheckpointEdge
+  | ConceptEdge
+  | ConflictEdge
+  | ConnectionEdge
   | ConnectorEdge
   | CoordinateEdge
   | DesignEdge
@@ -1707,7 +1986,9 @@ union EntityEdge =
   | FileEdge
   | FolderEdge
   | GraphEdge
+  | GroupEdge
   | KitEdge
+  | LayerEdge
   | LocationDiffEdge
   | LocationEdge
   | LocationModificationEdge
@@ -1723,29 +2004,42 @@ union EntityEdge =
   | PointEdge
   | PositionEdge
   | PositionModificationEdge
+  | PropEdge
+  | QualityEdge
+  | ReadVersionEdge
   | RepresentationEdge
   | SessionEdge
+  | SideEdge
+  | StatEdge
+  | TagEdge
   | TransactionEdge
   | TypeEdge
   | VectorEdge
+  | WriteVersionEdge
 
 union EntityConnection =
   | AlternativeConnection
   | AttributeDiffConnection
   | AttributeListingConnection
   | AuthorConnection
-  | ConnectionConnection
+  | BenchmarkConnection
   | ChangeConnection
   | CheckpointConnection
+  | ConceptConnection
+  | ConflictConnection
+  | ConnectionConnection
   | ConnectorConnection
   | CoordinateConnection
   | DesignConnection
+  | DiffAttributesConnection
   | DraftConnection
   | DiffsConnection
   | FileConnection
   | FolderConnection
   | GraphConnection
+  | GroupConnection
   | KitConnection
+  | LayerConnection
   | LocationConnection
   | LocationDiffConnection
   | LocationModificationConnection
@@ -1761,11 +2055,18 @@ union EntityConnection =
   | PositionDiffConnection
   | PositionConnection
   | PositionModificationConnection
+  | PropConnection
+  | QualityConnection
+  | ReadVersionConnection
   | RepresentationConnection
   | SessionConnection
+  | SideConnection
+  | StatConnection
+  | TagConnection
   | TransactionConnection
   | TypeConnection
   | VectorConnection
+  | WriteVersionConnection
 
 union OwnerEntity =
   | Alternative
@@ -1774,9 +2075,12 @@ union OwnerEntity =
   | AttributeModification
   | AttributesDiff
   | Author
+  | Benchmark
   | ChangedDescription
   | Change
   | Checkpoint
+  | Concept
+  | Conflict
   | Connector
   | Connection
   | Coordinate
@@ -1789,7 +2093,9 @@ union OwnerEntity =
   | FixedPiece
   | Folder
   | Graph
+  | Group
   | Kit
+  | Layer
   | Location
   | LocationDiff
   | LocationModification
@@ -1805,30 +2111,43 @@ union OwnerEntity =
   | Position
   | PositionDiff
   | PositionModification
+  | Prop
+  | Quality
+  | ReadVersion
   | RenamedKit
   | Representation
   | Session
+  | Side
+  | Stat
+  | Tag
   | Transaction
   | Type
   | Vector
+  | WriteVersion
 
 union OwnedEntityConnection =
   | AlternativeConnection
   | AttributeDiffConnection
   | AttributeListingConnection
   | AuthorConnection
-  | ConnectionConnection
+  | BenchmarkConnection
   | ChangeConnection
   | CheckpointConnection
+  | ConceptConnection
+  | ConflictConnection
+  | ConnectionConnection
   | ConnectorConnection
   | CoordinateConnection
   | DesignConnection
+  | DiffAttributesConnection
   | DraftConnection
   | DiffsConnection
   | FileConnection
   | FolderConnection
   | GraphConnection
+  | GroupConnection
   | KitConnection
+  | LayerConnection
   | LocationConnection
   | LocationDiffConnection
   | LocationModificationConnection
@@ -1844,11 +2163,18 @@ union OwnedEntityConnection =
   | PositionDiffConnection
   | PositionConnection
   | PositionModificationConnection
+  | PropConnection
+  | QualityConnection
+  | ReadVersionConnection
   | RepresentationConnection
   | SessionConnection
+  | SideConnection
+  | StatConnection
+  | TagConnection
   | TransactionConnection
   | TypeConnection
   | VectorConnection
+  | WriteVersionConnection
 
 #endregion Unions
 
