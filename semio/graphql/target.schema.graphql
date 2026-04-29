@@ -8,7 +8,12 @@ scalar Timestamp
 
 #region Entities
 
-interface Entity {
+interface Node {
+  id: ID!
+}
+
+interface Entity implements Node {
+  id: ID!
   hash: String!
   owner: Entity
   owns: [Entity!]!
@@ -32,24 +37,36 @@ interface Entity {
   # hash: String! // Our own extension ontop of the relay specs
 # }
 
-# interface Modification { # implements Modification
+#region Weak // Weak entities have hash as id
+
+# interface WeakEntity implements Entity {
+#   id: ID! # hash
+# }
+
+# interface Modification implements WeakEntity {
   # FIELD: NULLABLE FIELD // if the field was modified then return the modified value
   # removeNULLABLEFIELD: Boolean // use this if the field is by default nullable to indicate that it was removed
 # }
 
-interface Diff {
+interface Diff implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   before: Entity!
   # modification: Modification!
   after: Entity!
 }
 
-interface Diffs {
+interface Diffs implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   removed: [Entity!]!
   diffs: [Diff!]!
   added: [Entity!]!
 }
-
-#region Weak
 
 input VectorInput {
   x: Float!
@@ -57,7 +74,11 @@ input VectorInput {
   z: Float!
 }
 
-type Vector {
+type Vector implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   x: Float!
   y: Float!
   z: Float!
@@ -69,7 +90,11 @@ input PointInput {
   z: Float!
 }
 
-type Point {
+type Point implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   x: Float!
   y: Float!
   z: Float!
@@ -80,7 +105,11 @@ input CoordinateInput {
   v: Float!
 }
 
-type Coordinate {
+type Coordinate implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   u: Float!
   v: Float!
 }
@@ -90,7 +119,11 @@ input OffsetInput {
   v: Float!
 }
 
-type Offset {
+type Offset implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   u: Float!
   v: Float!
 }
@@ -101,7 +134,11 @@ input PlaneInput {
   yAxis: VectorInput!
 }
 
-type Plane {
+type Plane implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
@@ -112,17 +149,29 @@ input PositionInput {
   plane: PlaneInput!
 }
 
-type Position {
+type Position implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   center: Coordinate!
   plane: Plane!
 }
 
-type PositionModification { # implements Modification
+type PositionModification implements Entity { # implements Modification
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   center: Coordinate
   plane: Plane
 }
 
 type PositionDiff implements Diff {
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   before: Entity! # Position
   modification: PositionModification!
   after: Entity! # Position
@@ -134,19 +183,31 @@ input LocationInput {
   altitude: Float
 }
 
-type Location {
+type Location implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   longitude: Float!
   latitude: Float!
   altitude: Float!
 }
 
-type LocationModification { # implements Modification
+type LocationModification implements Entity { # implements Modification
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   longitude: Float
   latitude: Float
   altitude: Float
 }
 
-type LocationDiff {
+type LocationDiff implements Diff {
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   before: Entity! # Location
   modification: LocationModification!
   after: Entity! # Location
@@ -158,25 +219,41 @@ input AttributeInput {
   definition: String
 }
 
-type Attribute {
+type Attribute implements Entity { # implements WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   key: String!
   value: String!
   definition: String!
 }
 
 type AttributeModification { # implements Modification
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   key: String
   value: String
   definition: String
 }
 
-type AttributeDiff {
+type AttributeDiff implements Diff {
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   before: Attribute!
   modification: AttributeModification!
   after: Attribute!
 }
 
-type AttributesDiff {
+type AttributesDiff implements Diffs {
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   removed: [Attribute!]
   diffs: [AttributeDiff!]
   added: [Attribute!]
@@ -186,48 +263,49 @@ type AttributesDiff {
 
 #region Strong
 
-interface Node {
-  id: ID!
-}
+# interface StrongEntity implements Entity {
+#   id: ID! # uuidv7
+#   hash: String!
+#   owner: Entity # ENTITYKIND
+#   owns: [Entity!]! # ENTITYKIND
+# }
 
-interface StrongEntity implements Node {
-  id: ID!
-  hash: String!
-  owner: Entity
-  owns: [Entity!]!
-}
+union Input = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
 
-union OperationInput = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
-
-interface Operation implements Entity {
-  id: ID!
+interface Operation implements Entity { # implements StrongEntity
+  id: ID! # uuidv7
   hash: String!
   owner: Entity # Change
   owns: [Entity!]! # Input
   diff: Diff!
-  input: OperationInput
+  input: Input
 }
 
 #region Kit
 
 #region Place
 
-type Place implements Entity {
+type Place implements Entity { # implements StrongEntity
   id: ID!
   hash: String!
-  owner: Kit!
+  owner: Entity!
+  owns: [Entity!]!
   name: String
   location: Location
 }
 
-type PlaceModification { # implements Modification
+type PlaceModification implements Entity { # implements Modification
+  id: ID! # hash
   name: String
   location: LocationModification
   removeLocation: Boolean
 }
 
-type PlaceDiff {
-  hash: String
+type PlaceDiff implements Diff {
+  id: ID! # hash
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
   before: Place!
   modification: PlaceModification!
   after: Place!
@@ -235,11 +313,32 @@ type PlaceDiff {
 
 #endregion Place
 
-#region File
+#region Folder
 
-type File {
+union FolderOwner = Kit | Folder
+union FolderOwned = Folder | File | Design | Type
+
+type Folder implements Entity { # implements StrongEntity
   id: ID!
   hash: String!
+  owner: Entity! # FolderOwner
+  owns: [Entity!]! # FolderOwned
+  name: String!
+  path: String!
+  description: String!
+}
+
+#endregion Folder
+
+#region File
+
+union FileOwner = Kit | Folder
+
+type File implements Entity { # implements StrongEntity
+  id: ID!
+  hash: String!
+  owner: Entity! # FileOwner
+  owns: [Entity!]! # Nothing
   url: String!
   mime: String
   size: Int
@@ -248,19 +347,7 @@ type File {
   updated: Timestamp
 }
 
-type FileModification {
-
 #endregion File
-
-#region Folder
-
-type Folder {
-  id: ID!
-  path: String!
-  description: String
-}
-
-#endregion Folder
 
 #region Author
 
@@ -762,6 +849,7 @@ type Query {
   authoritative: Graph
   conflicts: [Conflict!]!
   node(id: ID!): Node
+  entity(id: ID!): Entity
 }
 
 type Mutation {
