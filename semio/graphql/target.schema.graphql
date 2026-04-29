@@ -85,17 +85,6 @@ union DiffConnection =
 
 union DiffsOwner = Diff | Operation | Change
 
-type DiffsEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type DiffsConnection implements EntityConnection {
-  edges: [DiffsEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
 #region Weak // Weak entities have hash as id
 
 # interface WeakEntity implements Entity {
@@ -133,6 +122,17 @@ type PlaneDiff implements Diff {
   after: Plane!
 }
 
+type PlaneDiffEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaneDiffConnection implements EntityConnection {
+  edges: [PlaneDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 type Diffs implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
@@ -142,6 +142,17 @@ type Diffs implements Entity { # implements WeakEntity
   removed: EntityConnection
   diffs: DiffConnection
   added: EntityConnection
+}
+
+type DiffsEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type DiffsConnection implements EntityConnection {
+  edges: [DiffsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #region Vector
@@ -288,10 +299,13 @@ input PlaneInput {
   yAxis: VectorInput!
 }
 
-#endregion Plane
-
 union PlaneOwner = Piece | PieceModification | PlaneDiff
 union PlaneOwned = Point | Vector
+
+type PlaneEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Plane implements Entity { # implements WeakEntity
   id: ID! # hash
@@ -304,8 +318,19 @@ type Plane implements Entity { # implements WeakEntity
   yAxis: Vector!
 }
 
+type PlaneConnection implements EntityConnection {
+  edges: [PlaneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union PlaneModificationOwner = PieceModification | PositionModification | LocationModification | PlaceModification | AttributeModification | PlaneDiff
 union PlaneModificationOwned = Point | Vector | Plane
+
+type PlaneModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type PlaneModification implements Entity { # implements Modification
   id: ID! # hash
@@ -316,6 +341,12 @@ type PlaneModification implements Entity { # implements Modification
   origin: Point
   xAxis: Vector
   yAxis: Vector
+}
+
+type PlaneModificationConnection implements EntityConnection {
+  edges: [PlaneModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Plane
@@ -329,6 +360,11 @@ input PositionInput {
 
 union PositionOwner = Piece | PositionModification | Plane | PositionDiff
 
+type PositionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Position implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
@@ -339,7 +375,18 @@ type Position implements Entity { # implements WeakEntity
   plane: Plane!
 }
 
+type PositionConnection implements EntityConnection {
+  edges: [PositionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union PositionModificationOwner = PieceModification | PositionDiff
+
+type PositionModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type PositionModification implements Entity { # implements Modification
   id: ID! # hash
@@ -350,6 +397,12 @@ type PositionModification implements Entity { # implements Modification
   plane: Plane
 }
 
+type PositionModificationConnection implements EntityConnection {
+  edges: [PositionModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 type PositionDiff implements Diff {
   id: ID! # hash
   hash: String!
@@ -358,6 +411,17 @@ type PositionDiff implements Diff {
   before: Entity! # Position
   modification: PositionModification!
   after: Entity! # Position
+}
+
+type PointDiffEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PointDiffConnection implements EntityConnection {
+  edges: [PointDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Position
@@ -372,6 +436,11 @@ input LocationInput {
 
 union LocationOwner = Place | Kit | Design
 
+type LocationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Location implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
@@ -382,7 +451,18 @@ type Location implements Entity { # implements WeakEntity
   altitude: Float!
 }
 
+type LocationConnection implements EntityConnection {
+  edges: [LocationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union LocationModificationOwner = PlaceModification | LocationDiff
+
+type LocationModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type LocationModification implements Entity { # implements Modification
   id: ID! # hash
@@ -394,6 +474,12 @@ type LocationModification implements Entity { # implements Modification
   altitude: Float
 }
 
+type LocationModificationConnection implements EntityConnection {
+  edges: [LocationModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 type LocationDiff implements Diff {
   id: ID! # hash
   hash: String!
@@ -402,6 +488,17 @@ type LocationDiff implements Diff {
   before: Entity! # Location
   modification: LocationModification!
   after: Entity! # Location
+}
+
+type LocationDiffEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type LocationDiffConnection implements EntityConnection {
+  edges: [LocationDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Location
@@ -459,6 +556,17 @@ type AttributeDiffConnection implements EntityConnection {
   hash: String!
 }
 
+type AttributeListingEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type AttributeListingConnection implements EntityConnection {
+  edges: [AttributeListingEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union AttributesDiffOwner = Diff | Operation | Change
 
 type AttributesDiff implements Diffs {
@@ -491,7 +599,7 @@ union OperationOwner = Change
 interface Operation implements Entity { # implements StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: Entity # Change
+  owner: Entity # OperationOwner
   owns: EntityConnection # Input
   diff: Diff!
   input: Input
@@ -503,6 +611,11 @@ interface Operation implements Entity { # implements StrongEntity
 
 union PlaceOwner = Kit | Checkpoint | Graph
 
+type PlaceEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Place implements Entity { # implements StrongEntity
   id: ID!
   hash: String!
@@ -512,7 +625,18 @@ type Place implements Entity { # implements StrongEntity
   location: Location
 }
 
+type PlaceConnection implements EntityConnection {
+  edges: [PlaceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union PlaceModificationOwner = PlaceDiff | Place
+
+type PlaceModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type PlaceModification implements Entity { # implements Modification
   id: ID! # hash
@@ -522,6 +646,12 @@ type PlaceModification implements Entity { # implements Modification
   name: String
   location: LocationModification
   removeLocation: Boolean
+}
+
+type PlaceModificationConnection implements EntityConnection {
+  edges: [PlaceModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type PlaceDiff implements Diff {
@@ -534,12 +664,28 @@ type PlaceDiff implements Diff {
   after: Place!
 }
 
+type PlaceDiffEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaceDiffConnection implements EntityConnection {
+  edges: [PlaceDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Place
 
 #region Folder
 
 union FolderOwner = Kit | Folder
 union FolderOwned = Folder | File | Design | Type
+
+type FolderEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Folder implements Entity { # implements StrongEntity
   id: ID!
@@ -551,11 +697,22 @@ type Folder implements Entity { # implements StrongEntity
   description: String!
 }
 
+type FolderConnection implements EntityConnection {
+  edges: [FolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Folder
 
 #region File
 
 union FileOwner = Kit | Folder
+
+type FileEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type File implements Entity { # implements StrongEntity
   id: ID!
@@ -570,11 +727,22 @@ type File implements Entity { # implements StrongEntity
   updated: Timestamp
 }
 
+type FileConnection implements EntityConnection {
+  edges: [FileEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion File
 
 #region Author
 
 union AuthorOwner = Kit | Checkpoint | Graph | Session
+
+type AuthorEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Author implements Entity {
   id: ID!
@@ -588,6 +756,12 @@ type Author implements Entity {
   drafts: [Draft!]!
   transactions: [Transaction!]!
   checkpoints: [Checkpoint!]!
+}
+
+type AuthorConnection implements EntityConnection {
+  edges: [AuthorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Author
@@ -668,6 +842,11 @@ type Stat {
 
 union ConnectorOwner = Type
 
+type ConnectorEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Connector implements Entity {
   id: ID!
   hash: String!
@@ -680,7 +859,18 @@ type Connector implements Entity {
   attributes: [Attribute!]!
 }
 
+type ConnectorConnection implements EntityConnection {
+  edges: [ConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union RepresentationOwner = Type
+
+type RepresentationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Representation implements Entity {
   id: ID!
@@ -695,7 +885,18 @@ type Representation implements Entity {
   attributes: [Attribute!]!
 }
 
+type RepresentationConnection implements EntityConnection {
+  edges: [RepresentationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union TypeOwner = Kit
+
+type TypeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Type implements Entity {
   id: ID!
@@ -721,6 +922,12 @@ type Type implements Entity {
   props: [Prop!]!
   attributes: [Attribute!]!
   stats: [Stat!]!
+}
+
+type TypeConnection implements EntityConnection {
+  edges: [TypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #endregion Type
@@ -765,6 +972,11 @@ union Blueprint = Type | Design
 
 union PieceOwner = Type | Design | PieceModification | Piece
 
+type PieceListingEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Piece implements Entity {
   id: ID!
   hash: String!
@@ -788,7 +1000,18 @@ type Piece implements Entity {
   attributes: [Attribute!]!
 }
 
+type PieceListingConnection implements EntityConnection {
+  edges: [PieceListingEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union PieceBridgeOwner = Design
+
+type BridgeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Connection implements Entity {
   id: ID!
@@ -807,6 +1030,12 @@ type Connection implements Entity {
   v: Float
   description: String
   attributes: [Attribute!]!
+}
+
+type BridgeConnection implements EntityConnection {
+  edges: [BridgeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #region Operations
@@ -888,6 +1117,11 @@ type Side {
 
 union DesignOwner = Kit
 
+type DesignEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
 type Design implements Entity {
   id: ID!
   hash: String!
@@ -919,9 +1153,20 @@ type Design implements Entity {
   referencedBy: [Piece!]!
 }
 
+type DesignConnection implements EntityConnection {
+  edges: [DesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 #endregion Design
 
 union KitOwner = Graph | Checkpoint | Alternative
+
+type KitEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Kit implements Entity {
   id: ID!
@@ -956,6 +1201,12 @@ type Kit implements Entity {
   props: [Prop!]!
   attributes: [Attribute!]!
   stats: [Stat!]!
+}
+
+type KitConnection implements EntityConnection {
+  edges: [KitEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 #region Operations
@@ -997,361 +1248,16 @@ union ChangedDescriptionOwner = Change
 
 #endregion Kit
 
-#region 🔖PlaneDiffConnection
-
-type PlaneDiffEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaneDiffConnection implements EntityConnection {
-  edges: [PlaneDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-#endregion 🔖PlaneDiffConnection
-
-#region 🔖PointDiffConnection
-
-type PointDiffEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PointDiffConnection implements EntityConnection {
-  edges: [PointDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-#endregion 🔖PointDiffConnection
-
-#region 🔖LocationDiffConnection
-
-type LocationDiffEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type LocationDiffConnection implements EntityConnection {
-  edges: [LocationDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-#endregion 🔖LocationDiffConnection
-
-#region 🔖PlaceDiffConnection
-
-type PlaceDiffEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaceDiffConnection implements EntityConnection {
-  edges: [PlaceDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-#endregion 🔖PlaceDiffConnection
-
-#region 🔖EntityRelayEdgesConnections
-
-type AlternativeEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type AlternativeConnection implements EntityConnection {
-  edges: [AlternativeEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type AttributeListingEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type AttributeListingConnection implements EntityConnection {
-  edges: [AttributeListingEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type AuthorEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type AuthorConnection implements EntityConnection {
-  edges: [AuthorEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type BridgeEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type BridgeConnection implements EntityConnection {
-  edges: [BridgeEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ChangeEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type ChangeConnection implements EntityConnection {
-  edges: [ChangeEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type CheckpointEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type CheckpointConnection implements EntityConnection {
-  edges: [CheckpointEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ConnectorEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type ConnectorConnection implements EntityConnection {
-  edges: [ConnectorEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type DesignEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type DesignConnection implements EntityConnection {
-  edges: [DesignEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type DraftEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type DraftConnection implements EntityConnection {
-  edges: [DraftEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type FileEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type FileConnection implements EntityConnection {
-  edges: [FileEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type FolderEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type FolderConnection implements EntityConnection {
-  edges: [FolderEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type GraphEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type GraphConnection implements EntityConnection {
-  edges: [GraphEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type KitEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type KitConnection implements EntityConnection {
-  edges: [KitEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type LocationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type LocationConnection implements EntityConnection {
-  edges: [LocationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type LocationModificationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type LocationModificationConnection implements EntityConnection {
-  edges: [LocationModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PieceListingEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PieceListingConnection implements EntityConnection {
-  edges: [PieceListingEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PlaneEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaneConnection implements EntityConnection {
-  edges: [PlaneEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PlaneModificationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaneModificationConnection implements EntityConnection {
-  edges: [PlaneModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PlaceEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaceConnection implements EntityConnection {
-  edges: [PlaceEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PlaceModificationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PlaceModificationConnection implements EntityConnection {
-  edges: [PlaceModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PositionEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PositionConnection implements EntityConnection {
-  edges: [PositionEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type PositionModificationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type PositionModificationConnection implements EntityConnection {
-  edges: [PositionModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type RepresentationEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type RepresentationConnection implements EntityConnection {
-  edges: [RepresentationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type SessionEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type SessionConnection implements EntityConnection {
-  edges: [SessionEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type TransactionEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type TransactionConnection implements EntityConnection {
-  edges: [TransactionEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type TypeEdge implements EntityEdge {
-  cursor: String!
-  node: Entity!
-}
-
-type TypeConnection implements EntityConnection {
-  edges: [TypeEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-#endregion 🔖EntityRelayEdgesConnections
-
 #endregion Entities
 
 #region VCS
 
 union ChangeOwner = Transaction | Draft | Checkpoint
+
+type ChangeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Change implements Entity {
   id: ID!
@@ -1365,7 +1271,18 @@ type Change implements Entity {
   sequenceNumber: Int!
 }
 
+type ChangeConnection implements EntityConnection {
+  edges: [ChangeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union TransactionOwner = Draft
+
+type TransactionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Transaction implements Entity {
   id: ID!
@@ -1375,7 +1292,18 @@ type Transaction implements Entity {
   changes: [Change!]!
 }
 
+type TransactionConnection implements EntityConnection {
+  edges: [TransactionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union DraftOwner = Author
+
+type DraftEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Draft implements Entity {
   id: ID!
@@ -1392,7 +1320,18 @@ type Draft implements Entity {
   canRedo(steps: Int!): Boolean!
 }
 
+type DraftConnection implements EntityConnection {
+  edges: [DraftEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union CheckpointOwner = Alternative | Graph | Kit | Author
+
+type CheckpointEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Checkpoint implements Entity {
   id: ID!
@@ -1408,7 +1347,18 @@ type Checkpoint implements Entity {
   changeCount: Int!
 }
 
+type CheckpointConnection implements EntityConnection {
+  edges: [CheckpointEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union AlternativeOwner = Graph
+
+type AlternativeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Alternative implements Entity {
   id: ID!
@@ -1423,7 +1373,18 @@ type Alternative implements Entity {
   transaction: Transaction
 }
 
+type AlternativeConnection implements EntityConnection {
+  edges: [AlternativeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union GraphOwner = Session
+
+type GraphEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Graph implements Entity {
   id: ID!
@@ -1439,7 +1400,18 @@ type Graph implements Entity {
   releases: [Checkpoint!]!
 }
 
+type GraphConnection implements EntityConnection {
+  edges: [GraphEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
 union SessionOwner = Graph | Checkpoint | Alternative
+
+type SessionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
 
 type Session implements Entity {
   id: ID!
@@ -1448,6 +1420,12 @@ type Session implements Entity {
   owns: EntityConnection
   startedAt: Timestamp
   drafts: [Draft!]!
+}
+
+type SessionConnection implements EntityConnection {
+  edges: [SessionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
 }
 
 type ReadVersion {
