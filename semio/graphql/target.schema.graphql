@@ -52,44 +52,6 @@ interface EntityConnectionInterface {
 #   removeNULLABLEFIELD: Boolean // use this if the field is by default nullable to indicate that it was removed
 # }
 
-union Modification = 
-  | AlternativeModification
-  | AttributeModification
-  | AuthorModification
-  | BenchmarkModification
-  | ChangeModification
-  | CheckpointModification
-  | ConceptModification
-  | ConflictModification
-  | ConnectionModification
-  | ConnectorModification
-  | CoordinateModification
-  | DesignModification
-  | DraftModification
-  | FamilyModification
-  | FileModification
-  | FolderModification
-  | GraphModification
-  | GroupModification
-  | KitModification
-  | LayerModification
-  | OffsetModification
-  | PieceModification
-  | PointModification
-  | PropModification
-  | QualityModification
-  | ReadVersionModification
-  | RepresentationModification
-  | SessionModification
-  | SideModification
-  | StatModification
-  | TagModification
-  | TransactionModification
-  | TypeModification
-  | VectorModification
-  | WriteVersionModification
-
-
 type ModificationEdge implements EntityEdge {
   cursor: String!
   node: Modification!
@@ -100,55 +62,6 @@ type ModificationConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
-union DiffOwner =
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | RenamedKit
-union DiffOwned = 
-  | AlternativeDiff
-  | AttributeDiff
-  | AuthorDiff
-  | BenchmarkDiff
-  | ChangeDiff
-  | CheckpointDiff
-  | ConceptDiff
-  | ConflictDiff
-  | ConnectionDiff
-  | ConnectorDiff
-  | CoordinateDiff
-  | DesignDiff
-  | DraftDiff
-  | FamilyDiff
-  | FileDiff
-  | FolderDiff
-  | GraphDiff
-  | GroupDiff
-  | KitDiff
-  | LayerDiff
-  | LocationDiff
-  | OffsetDiff
-  | PieceDiff
-  | PlaceDiff
-  | PointDiff
-  | PositionDiff
-  | PropDiff
-  | QualityDiff
-  | ReadVersionDiff
-  | RepresentationDiff
-  | SessionDiff
-  | SideDiff
-  | StatDiff
-  | TagDiff
-  | TransactionDiff
-  | TypeDiff
-  | VectorDiff
-  | WriteVersionDiff
-
 
 interface Diff implements Entity { # implements WeakEntity
   # WeakEntity
@@ -176,67 +89,6 @@ type DiffConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
-union DiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
-union DiffsOwned =
-  
-  | AlternativeDiffs
-  | AttributeDiff
-  | AuthorDiffs
-  | BenchmarkDiffs
-  | ChangeDiffs
-  | CheckpointDiffs
-  | ConceptDiffs
-  | ConflictDiffs
-  | ConnectionDiffs
-  | ConnectorDiffs
-  | CoordinateDiffs
-  | DesignDiffs
-  | Diffs
-  | DraftDiffs
-  | FamilyDiffs
-  | FileDiffs
-  | FolderDiffs
-  | GraphDiffs
-  | GroupDiffs
-  | KitDiffs
-  | LayerDiffs
-  | LocationDiff
-  | LocationDiffs
-  | OffsetDiffs
-  | PieceDiffs
-  | PlaceDiff
-  | PlaceDiffs
-  | PlaneDiff
-  | PlaneDiffs
-  | PointDiffs
-  | PositionDiff
-  | PositionDiffs
-  | PropDiffs
-  | QualityDiffs
-  | ReadVersionDiffs
-  | RepresentationDiffs
-  | SessionDiffs
-  | SideDiffs
-  | StatDiffs
-  | TagDiffs
-  | TransactionDiffs
-  | TypeDiffs
-  | VectorDiffs
-  | WriteVersionDiffs
-
 
 type Diffs implements Entity { # implements WeakEntity
   # WeakEntity
@@ -304,13 +156,9 @@ type VectorConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union VectorModificationOwner =
-  | VectorDiff
-  | VectorModification
-  | Vector
+union VectorModificationOwner = VectorDiff | VectorModification | Vector
 
-union VectorModificationOwned =
-  | Vector
+union VectorModificationOwned = Vector
 
 type VectorModification implements Entity {
   # WeakEntity
@@ -362,28 +210,9 @@ type VectorDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union VectorDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union VectorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union VectorDiffsOwned =
-  | VectorDiffs
-  | VectorDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union VectorDiffsOwned = VectorDiffs | VectorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type VectorDiffs implements Entity {
   # WeakEntity
@@ -410,7 +239,6 @@ type VectorDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Vector
 
@@ -451,13 +279,9 @@ type PointConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PointModificationOwner =
-  | PointDiff
-  | PointModification
-  | Point
+union PointModificationOwner = PointDiff | PointModification | Point
 
-union PointModificationOwned =
-  | Point
+union PointModificationOwned = Point
 
 type PointModification implements Entity {
   # WeakEntity
@@ -509,28 +333,9 @@ type PointDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PointDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PointDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PointDiffsOwned =
-  | PointDiffs
-  | PointDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PointDiffsOwned = PointDiffs | PointDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PointDiffs implements Entity {
   # WeakEntity
@@ -557,7 +362,6 @@ type PointDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Point
 
@@ -596,13 +400,9 @@ type CoordinateConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union CoordinateModificationOwner =
-  | CoordinateDiff
-  | CoordinateModification
-  | Coordinate
+union CoordinateModificationOwner = CoordinateDiff | CoordinateModification | Coordinate
 
-union CoordinateModificationOwned =
-  | Coordinate
+union CoordinateModificationOwned = Coordinate
 
 type CoordinateModification implements Entity {
   # WeakEntity
@@ -654,28 +454,9 @@ type CoordinateDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union CoordinateDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union CoordinateDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union CoordinateDiffsOwned =
-  | CoordinateDiffs
-  | CoordinateDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union CoordinateDiffsOwned = CoordinateDiffs | CoordinateDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type CoordinateDiffs implements Entity {
   # WeakEntity
@@ -702,7 +483,6 @@ type CoordinateDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Coordinate
 
@@ -741,13 +521,9 @@ type OffsetConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union OffsetModificationOwner =
-  | OffsetDiff
-  | OffsetModification
-  | Offset
+union OffsetModificationOwner = OffsetDiff | OffsetModification | Offset
 
-union OffsetModificationOwned =
-  | Offset
+union OffsetModificationOwned = Offset
 
 type OffsetModification implements Entity {
   # WeakEntity
@@ -799,28 +575,9 @@ type OffsetDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union OffsetDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union OffsetDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union OffsetDiffsOwned =
-  | OffsetDiffs
-  | OffsetDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union OffsetDiffsOwned = OffsetDiffs | OffsetDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type OffsetDiffs implements Entity {
   # WeakEntity
@@ -847,7 +604,6 @@ type OffsetDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Offset
 
@@ -949,27 +705,9 @@ type PlaneDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PlaneDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PlaneDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PlaneDiffsOwned =
-  | PlaneDiffs
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PlaneDiffsOwned = PlaneDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PlaneDiffs implements Entity {
   # WeakEntity
@@ -1091,27 +829,9 @@ type PositionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PositionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PositionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PositionDiffsOwned =
-  | PositionDiffs
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PositionDiffsOwned = PositionDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PositionDiffs implements Entity {
   # WeakEntity
@@ -1235,27 +955,9 @@ type LocationDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union LocationDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union LocationDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union LocationDiffsOwned =
-  | LocationDiffs
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union LocationDiffsOwned = LocationDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type LocationDiffs implements Entity {
   # WeakEntity
@@ -1402,19 +1104,7 @@ type DiffAttributesConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AttributeDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union AttributeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 union AttributeDiffsOwned = Attribute | AttributeDiff | Diffs
 
 type AttributeDiffs implements Entity {
@@ -1576,27 +1266,9 @@ type PlaceDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PlaceDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PlaceDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PlaceDiffsOwned =
-  | PlaceDiffs
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PlaceDiffsOwned = PlaceDiffs | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PlaceDiffs implements Entity {
   # WeakEntity
@@ -1655,13 +1327,9 @@ type FamilyConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FamilyModificationOwner =
-  | FamilyDiff
-  | FamilyModification
-  | Family
+union FamilyModificationOwner = FamilyDiff | FamilyModification | Family
 
-union FamilyModificationOwned =
-  | Family
+union FamilyModificationOwned = Family
 
 type FamilyModification implements Entity {
   # WeakEntity
@@ -1713,28 +1381,9 @@ type FamilyDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FamilyDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union FamilyDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union FamilyDiffsOwned =
-  | FamilyDiffs
-  | FamilyDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union FamilyDiffsOwned = FamilyDiffs | FamilyDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type FamilyDiffs implements Entity {
   # WeakEntity
@@ -1761,7 +1410,6 @@ type FamilyDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Family
 
@@ -1801,13 +1449,9 @@ type FolderConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FolderModificationOwner =
-  | FolderDiff
-  | FolderModification
-  | Folder
+union FolderModificationOwner = FolderDiff | FolderModification | Folder
 
-union FolderModificationOwned =
-  | Folder
+union FolderModificationOwned = Folder
 
 type FolderModification implements Entity {
   # WeakEntity
@@ -1859,28 +1503,9 @@ type FolderDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FolderDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union FolderDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union FolderDiffsOwned =
-  | FolderDiffs
-  | FolderDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union FolderDiffsOwned = FolderDiffs | FolderDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type FolderDiffs implements Entity {
   # WeakEntity
@@ -1907,7 +1532,6 @@ type FolderDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Folder
 
@@ -1945,13 +1569,9 @@ type FileConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FileModificationOwner =
-  | FileDiff
-  | FileModification
-  | File
+union FileModificationOwner = FileDiff | FileModification | File
 
-union FileModificationOwned =
-  | File
+union FileModificationOwned = File
 
 type FileModification implements Entity {
   # WeakEntity
@@ -2003,28 +1623,9 @@ type FileDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union FileDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union FileDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union FileDiffsOwned =
-  | FileDiffs
-  | FileDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union FileDiffsOwned = FileDiffs | FileDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type FileDiffs implements Entity {
   # WeakEntity
@@ -2051,7 +1652,6 @@ type FileDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion File
 
@@ -2092,13 +1692,9 @@ type AuthorConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AuthorModificationOwner =
-  | AuthorDiff
-  | AuthorModification
-  | Author
+union AuthorModificationOwner = AuthorDiff | AuthorModification | Author
 
-union AuthorModificationOwned =
-  | Author
+union AuthorModificationOwned = Author
 
 type AuthorModification implements Entity {
   # WeakEntity
@@ -2150,28 +1746,9 @@ type AuthorDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AuthorDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union AuthorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union AuthorDiffsOwned =
-  | AuthorDiffs
-  | AuthorDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union AuthorDiffsOwned = AuthorDiffs | AuthorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type AuthorDiffs implements Entity {
   # WeakEntity
@@ -2198,7 +1775,6 @@ type AuthorDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Author
 
@@ -2236,13 +1812,9 @@ type PropConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PropModificationOwner =
-  | PropDiff
-  | PropModification
-  | Prop
+union PropModificationOwner = PropDiff | PropModification | Prop
 
-union PropModificationOwned =
-  | Prop
+union PropModificationOwned = Prop
 
 type PropModification implements Entity {
   # WeakEntity
@@ -2294,28 +1866,9 @@ type PropDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PropDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PropDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PropDiffsOwned =
-  | PropDiffs
-  | PropDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PropDiffsOwned = PropDiffs | PropDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PropDiffs implements Entity {
   # WeakEntity
@@ -2342,7 +1895,6 @@ type PropDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Prop
 
@@ -2378,13 +1930,9 @@ type BenchmarkConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union BenchmarkModificationOwner =
-  | BenchmarkDiff
-  | BenchmarkModification
-  | Benchmark
+union BenchmarkModificationOwner = BenchmarkDiff | BenchmarkModification | Benchmark
 
-union BenchmarkModificationOwned =
-  | Benchmark
+union BenchmarkModificationOwned = Benchmark
 
 type BenchmarkModification implements Entity {
   # WeakEntity
@@ -2436,28 +1984,9 @@ type BenchmarkDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union BenchmarkDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union BenchmarkDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union BenchmarkDiffsOwned =
-  | BenchmarkDiffs
-  | BenchmarkDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union BenchmarkDiffsOwned = BenchmarkDiffs | BenchmarkDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type BenchmarkDiffs implements Entity {
   # WeakEntity
@@ -2484,7 +2013,6 @@ type BenchmarkDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Benchmark
 
@@ -2525,13 +2053,9 @@ type QualityConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union QualityModificationOwner =
-  | QualityDiff
-  | QualityModification
-  | Quality
+union QualityModificationOwner = QualityDiff | QualityModification | Quality
 
-union QualityModificationOwned =
-  | Quality
+union QualityModificationOwned = Quality
 
 type QualityModification implements Entity {
   # WeakEntity
@@ -2583,28 +2107,9 @@ type QualityDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union QualityDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union QualityDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union QualityDiffsOwned =
-  | QualityDiffs
-  | QualityDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union QualityDiffsOwned = QualityDiffs | QualityDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type QualityDiffs implements Entity {
   # WeakEntity
@@ -2631,7 +2136,6 @@ type QualityDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Quality
 
@@ -2666,13 +2170,9 @@ type TagConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TagModificationOwner =
-  | TagDiff
-  | TagModification
-  | Tag
+union TagModificationOwner = TagDiff | TagModification | Tag
 
-union TagModificationOwned =
-  | Tag
+union TagModificationOwned = Tag
 
 type TagModification implements Entity {
   # WeakEntity
@@ -2724,28 +2224,9 @@ type TagDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TagDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union TagDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union TagDiffsOwned =
-  | TagDiffs
-  | TagDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union TagDiffsOwned = TagDiffs | TagDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type TagDiffs implements Entity {
   # WeakEntity
@@ -2772,7 +2253,6 @@ type TagDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Tag
 
@@ -2807,13 +2287,9 @@ type ConceptConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConceptModificationOwner =
-  | ConceptDiff
-  | ConceptModification
-  | Concept
+union ConceptModificationOwner = ConceptDiff | ConceptModification | Concept
 
-union ConceptModificationOwned =
-  | Concept
+union ConceptModificationOwned = Concept
 
 type ConceptModification implements Entity {
   # WeakEntity
@@ -2865,28 +2341,9 @@ type ConceptDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConceptDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ConceptDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ConceptDiffsOwned =
-  | ConceptDiffs
-  | ConceptDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ConceptDiffsOwned = ConceptDiffs | ConceptDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ConceptDiffs implements Entity {
   # WeakEntity
@@ -2913,7 +2370,6 @@ type ConceptDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Concept
 
@@ -2950,13 +2406,9 @@ type StatConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union StatModificationOwner =
-  | StatDiff
-  | StatModification
-  | Stat
+union StatModificationOwner = StatDiff | StatModification | Stat
 
-union StatModificationOwned =
-  | Stat
+union StatModificationOwned = Stat
 
 type StatModification implements Entity {
   # WeakEntity
@@ -3008,28 +2460,9 @@ type StatDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union StatDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union StatDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union StatDiffsOwned =
-  | StatDiffs
-  | StatDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union StatDiffsOwned = StatDiffs | StatDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type StatDiffs implements Entity {
   # WeakEntity
@@ -3056,7 +2489,6 @@ type StatDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Stat
 
@@ -3092,13 +2524,9 @@ type ConnectorConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConnectorModificationOwner =
-  | ConnectorDiff
-  | ConnectorModification
-  | Connector
+union ConnectorModificationOwner = ConnectorDiff | ConnectorModification | Connector
 
-union ConnectorModificationOwned =
-  | Connector
+union ConnectorModificationOwned = Connector
 
 type ConnectorModification implements Entity {
   # WeakEntity
@@ -3150,28 +2578,9 @@ type ConnectorDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConnectorDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ConnectorDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ConnectorDiffsOwned =
-  | ConnectorDiffs
-  | ConnectorDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ConnectorDiffsOwned = ConnectorDiffs | ConnectorDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ConnectorDiffs implements Entity {
   # WeakEntity
@@ -3198,7 +2607,6 @@ type ConnectorDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union RepresentationOwner = Type
 union RepresentationOwned = Attribute | File
@@ -3231,13 +2639,9 @@ type RepresentationConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union RepresentationModificationOwner =
-  | RepresentationDiff
-  | RepresentationModification
-  | Representation
+union RepresentationModificationOwner = RepresentationDiff | RepresentationModification | Representation
 
-union RepresentationModificationOwned =
-  | Representation
+union RepresentationModificationOwned = Representation
 
 type RepresentationModification implements Entity {
   # WeakEntity
@@ -3289,28 +2693,9 @@ type RepresentationDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union RepresentationDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union RepresentationDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union RepresentationDiffsOwned =
-  | RepresentationDiffs
-  | RepresentationDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union RepresentationDiffsOwned = RepresentationDiffs | RepresentationDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type RepresentationDiffs implements Entity {
   # WeakEntity
@@ -3337,7 +2722,6 @@ type RepresentationDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union TypeOwner = Kit
 union TypeOwned = Connector | Representation | Type | Piece
@@ -3383,13 +2767,9 @@ type TypeConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TypeModificationOwner =
-  | TypeDiff
-  | TypeModification
-  | Type
+union TypeModificationOwner = TypeDiff | TypeModification | Type
 
-union TypeModificationOwned =
-  | Type
+union TypeModificationOwned = Type
 
 type TypeModification implements Entity {
   # WeakEntity
@@ -3441,28 +2821,9 @@ type TypeDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TypeDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union TypeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union TypeDiffsOwned =
-  | TypeDiffs
-  | TypeDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union TypeDiffsOwned = TypeDiffs | TypeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type TypeDiffs implements Entity {
   # WeakEntity
@@ -3489,7 +2850,6 @@ type TypeDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Type
 
@@ -3528,13 +2888,9 @@ type LayerConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union LayerModificationOwner =
-  | LayerDiff
-  | LayerModification
-  | Layer
+union LayerModificationOwner = LayerDiff | LayerModification | Layer
 
-union LayerModificationOwned =
-  | Layer
+union LayerModificationOwned = Layer
 
 type LayerModification implements Entity {
   # WeakEntity
@@ -3586,28 +2942,9 @@ type LayerDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union LayerDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union LayerDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union LayerDiffsOwned =
-  | LayerDiffs
-  | LayerDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union LayerDiffsOwned = LayerDiffs | LayerDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type LayerDiffs implements Entity {
   # WeakEntity
@@ -3634,7 +2971,6 @@ type LayerDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Layer
 
@@ -3670,13 +3006,9 @@ type GroupConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union GroupModificationOwner =
-  | GroupDiff
-  | GroupModification
-  | Group
+union GroupModificationOwner = GroupDiff | GroupModification | Group
 
-union GroupModificationOwned =
-  | Group
+union GroupModificationOwned = Group
 
 type GroupModification implements Entity {
   # WeakEntity
@@ -3728,28 +3060,9 @@ type GroupDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union GroupDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union GroupDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union GroupDiffsOwned =
-  | GroupDiffs
-  | GroupDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union GroupDiffsOwned = GroupDiffs | GroupDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type GroupDiffs implements Entity {
   # WeakEntity
@@ -3776,7 +3089,6 @@ type GroupDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Group
 
@@ -3822,9 +3134,8 @@ type Piece implements Entity {
   blueprint: Blueprint!
   props: PropConnection!
   attributes: AttributeConnection!
-  # Derived Fields
-  connectionKind: PieceConnectionKind
   # Computed Fields
+  connectionKind: PieceConnectionKind
   parentPiece: Piece
   parentConnection: Connection
   childConnections: ConnectionConnection!
@@ -3846,13 +3157,9 @@ type PieceConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PieceModificationOwner =
-  | PieceDiff
-  | PieceModification
-  | Piece
+union PieceModificationOwner = PieceDiff | PieceModification | Piece
 
-union PieceModificationOwned =
-  | Piece
+union PieceModificationOwned = Piece
 
 type PieceModification implements Entity {
   # WeakEntity
@@ -3904,28 +3211,9 @@ type PieceDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PieceDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PieceDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PieceDiffsOwned =
-  | PieceDiffs
-  | PieceDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PieceDiffsOwned = PieceDiffs | PieceDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PieceDiffs implements Entity {
   # WeakEntity
@@ -3952,7 +3240,6 @@ type PieceDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union ConnectionOwner = Design
 union ConnectionOwned = Side | Attribute
@@ -3991,13 +3278,9 @@ type ConnectionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConnectionModificationOwner =
-  | ConnectionDiff
-  | ConnectionModification
-  | Connection
+union ConnectionModificationOwner = ConnectionDiff | ConnectionModification | Connection
 
-union ConnectionModificationOwned =
-  | Connection
+union ConnectionModificationOwned = Connection
 
 type ConnectionModification implements Entity {
   # WeakEntity
@@ -4049,28 +3332,9 @@ type ConnectionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConnectionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ConnectionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ConnectionDiffsOwned =
-  | ConnectionDiffs
-  | ConnectionDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ConnectionDiffsOwned = ConnectionDiffs | ConnectionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ConnectionDiffs implements Entity {
   # WeakEntity
@@ -4097,7 +3361,6 @@ type ConnectionDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #region Operations
 
@@ -4208,13 +3471,9 @@ type SideConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union SideModificationOwner =
-  | SideDiff
-  | SideModification
-  | Side
+union SideModificationOwner = SideDiff | SideModification | Side
 
-union SideModificationOwned =
-  | Side
+union SideModificationOwned = Side
 
 type SideModification implements Entity {
   # WeakEntity
@@ -4266,28 +3525,9 @@ type SideDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union SideDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union SideDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union SideDiffsOwned =
-  | SideDiffs
-  | SideDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union SideDiffsOwned = SideDiffs | SideDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type SideDiffs implements Entity {
   # WeakEntity
@@ -4314,7 +3554,6 @@ type SideDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Side
 
@@ -4367,13 +3606,9 @@ type DesignConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union DesignModificationOwner =
-  | DesignDiff
-  | DesignModification
-  | Design
+union DesignModificationOwner = DesignDiff | DesignModification | Design
 
-union DesignModificationOwned =
-  | Design
+union DesignModificationOwned = Design
 
 type DesignModification implements Entity {
   # WeakEntity
@@ -4425,28 +3660,9 @@ type DesignDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union DesignDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union DesignDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union DesignDiffsOwned =
-  | DesignDiffs
-  | DesignDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union DesignDiffsOwned = DesignDiffs | DesignDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type DesignDiffs implements Entity {
   # WeakEntity
@@ -4473,7 +3689,6 @@ type DesignDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #endregion Design
 
@@ -4533,13 +3748,9 @@ type KitConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union KitModificationOwner =
-  | KitDiff
-  | KitModification
-  | Kit
+union KitModificationOwner = KitDiff | KitModification | Kit
 
-union KitModificationOwned =
-  | Kit
+union KitModificationOwned = Kit
 
 type KitModification implements Entity {
   # WeakEntity
@@ -4591,28 +3802,9 @@ type KitDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union KitDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union KitDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union KitDiffsOwned =
-  | KitDiffs
-  | KitDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union KitDiffsOwned = KitDiffs | KitDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type KitDiffs implements Entity {
   # WeakEntity
@@ -4639,7 +3831,6 @@ type KitDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 #region Operations
 
@@ -4695,12 +3886,7 @@ union ChangedDescriptionOwner = Change
 #region VCS
 
 union ChangeOwner = Transaction | Draft | Checkpoint
-union ChangeOwned =
-  | ChangedDescription
-  | CreatedFixedPiece
-  | DraggedPiece
-  | FixedPiece
-  | RenamedKit
+union ChangeOwned = ChangedDescription | CreatedFixedPiece | DraggedPiece | FixedPiece | RenamedKit
 
 type Change implements Entity {
   # StrongEntity
@@ -4731,13 +3917,9 @@ type ChangeConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ChangeModificationOwner =
-  | ChangeDiff
-  | ChangeModification
-  | Change
+union ChangeModificationOwner = ChangeDiff | ChangeModification | Change
 
-union ChangeModificationOwned =
-  | Change
+union ChangeModificationOwned = Change
 
 type ChangeModification implements Entity {
   # WeakEntity
@@ -4789,28 +3971,9 @@ type ChangeDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ChangeDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ChangeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ChangeDiffsOwned =
-  | ChangeDiffs
-  | ChangeDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ChangeDiffsOwned = ChangeDiffs | ChangeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ChangeDiffs implements Entity {
   # WeakEntity
@@ -4838,7 +4001,6 @@ type ChangeDiffsConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-
 union TransactionOwner = Draft
 union TransactionOwned = Change
 
@@ -4865,13 +4027,9 @@ type TransactionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TransactionModificationOwner =
-  | TransactionDiff
-  | TransactionModification
-  | Transaction
+union TransactionModificationOwner = TransactionDiff | TransactionModification | Transaction
 
-union TransactionModificationOwned =
-  | Transaction
+union TransactionModificationOwned = Transaction
 
 type TransactionModification implements Entity {
   # WeakEntity
@@ -4923,28 +4081,9 @@ type TransactionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union TransactionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union TransactionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union TransactionDiffsOwned =
-  | TransactionDiffs
-  | TransactionDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union TransactionDiffsOwned = TransactionDiffs | TransactionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type TransactionDiffs implements Entity {
   # WeakEntity
@@ -4971,7 +4110,6 @@ type TransactionDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union DraftOwner = Author
 union DraftOwned = Change | Transaction | Checkpoint
@@ -5006,13 +4144,9 @@ type DraftConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union DraftModificationOwner =
-  | DraftDiff
-  | DraftModification
-  | Draft
+union DraftModificationOwner = DraftDiff | DraftModification | Draft
 
-union DraftModificationOwned =
-  | Draft
+union DraftModificationOwned = Draft
 
 type DraftModification implements Entity {
   # WeakEntity
@@ -5064,28 +4198,9 @@ type DraftDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union DraftDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union DraftDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union DraftDiffsOwned =
-  | DraftDiffs
-  | DraftDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union DraftDiffsOwned = DraftDiffs | DraftDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type DraftDiffs implements Entity {
   # WeakEntity
@@ -5112,7 +4227,6 @@ type DraftDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union CheckpointOwner = Alternative | Graph | Kit | Author
 union CheckpointOwned = Kit | Author | Checkpoint
@@ -5149,13 +4263,9 @@ type CheckpointConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union CheckpointModificationOwner =
-  | CheckpointDiff
-  | CheckpointModification
-  | Checkpoint
+union CheckpointModificationOwner = CheckpointDiff | CheckpointModification | Checkpoint
 
-union CheckpointModificationOwned =
-  | Checkpoint
+union CheckpointModificationOwned = Checkpoint
 
 type CheckpointModification implements Entity {
   # WeakEntity
@@ -5207,28 +4317,9 @@ type CheckpointDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union CheckpointDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union CheckpointDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union CheckpointDiffsOwned =
-  | CheckpointDiffs
-  | CheckpointDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union CheckpointDiffsOwned = CheckpointDiffs | CheckpointDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type CheckpointDiffs implements Entity {
   # WeakEntity
@@ -5255,7 +4346,6 @@ type CheckpointDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union AlternativeOwner = Graph
 union AlternativeOwned = Checkpoint | Kit | Draft | Transaction
@@ -5288,13 +4378,9 @@ type AlternativeConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AlternativeModificationOwner =
-  | AlternativeDiff
-  | AlternativeModification
-  | Alternative
+union AlternativeModificationOwner = AlternativeDiff | AlternativeModification | Alternative
 
-union AlternativeModificationOwned =
-  | Alternative
+union AlternativeModificationOwned = Alternative
 
 type AlternativeModification implements Entity {
   # WeakEntity
@@ -5346,28 +4432,9 @@ type AlternativeDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AlternativeDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union AlternativeDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union AlternativeDiffsOwned =
-  | AlternativeDiffs
-  | AlternativeDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union AlternativeDiffsOwned = AlternativeDiffs | AlternativeDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type AlternativeDiffs implements Entity {
   # WeakEntity
@@ -5394,7 +4461,6 @@ type AlternativeDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union GraphOwner = Session
 union GraphOwned = Kit | Alternative | Checkpoint | Session
@@ -5428,13 +4494,9 @@ type GraphConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union GraphModificationOwner =
-  | GraphDiff
-  | GraphModification
-  | Graph
+union GraphModificationOwner = GraphDiff | GraphModification | Graph
 
-union GraphModificationOwned =
-  | Graph
+union GraphModificationOwned = Graph
 
 type GraphModification implements Entity {
   # WeakEntity
@@ -5486,28 +4548,9 @@ type GraphDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union GraphDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union GraphDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union GraphDiffsOwned =
-  | GraphDiffs
-  | GraphDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union GraphDiffsOwned = GraphDiffs | GraphDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type GraphDiffs implements Entity {
   # WeakEntity
@@ -5534,7 +4577,6 @@ type GraphDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union SessionOwner = Graph | Checkpoint | Alternative
 union SessionOwned = Draft | Graph | Checkpoint | Alternative
@@ -5565,13 +4607,9 @@ type SessionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union SessionModificationOwner =
-  | SessionDiff
-  | SessionModification
-  | Session
+union SessionModificationOwner = SessionDiff | SessionModification | Session
 
-union SessionModificationOwned =
-  | Session
+union SessionModificationOwned = Session
 
 type SessionModification implements Entity {
   # WeakEntity
@@ -5623,28 +4661,9 @@ type SessionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union SessionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union SessionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union SessionDiffsOwned =
-  | SessionDiffs
-  | SessionDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union SessionDiffsOwned = SessionDiffs | SessionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type SessionDiffs implements Entity {
   # WeakEntity
@@ -5671,7 +4690,6 @@ type SessionDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union ReadVersionOwner = Conflict
 # union ReadVersionOwned = Nothing
@@ -5701,13 +4719,9 @@ type ReadVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ReadVersionModificationOwner =
-  | ReadVersionDiff
-  | ReadVersionModification
-  | ReadVersion
+union ReadVersionModificationOwner = ReadVersionDiff | ReadVersionModification | ReadVersion
 
-union ReadVersionModificationOwned =
-  | ReadVersion
+union ReadVersionModificationOwned = ReadVersion
 
 type ReadVersionModification implements Entity {
   # WeakEntity
@@ -5759,28 +4773,9 @@ type ReadVersionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ReadVersionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ReadVersionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ReadVersionDiffsOwned =
-  | ReadVersionDiffs
-  | ReadVersionDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ReadVersionDiffsOwned = ReadVersionDiffs | ReadVersionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ReadVersionDiffs implements Entity {
   # WeakEntity
@@ -5807,7 +4802,6 @@ type ReadVersionDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union WriteVersionOwner = Conflict
 # union WriteVersionOwned = Nothing
@@ -5839,13 +4833,9 @@ type WriteVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union WriteVersionModificationOwner =
-  | WriteVersionDiff
-  | WriteVersionModification
-  | WriteVersion
+union WriteVersionModificationOwner = WriteVersionDiff | WriteVersionModification | WriteVersion
 
-union WriteVersionModificationOwned =
-  | WriteVersion
+union WriteVersionModificationOwned = WriteVersion
 
 type WriteVersionModification implements Entity {
   # WeakEntity
@@ -5897,28 +4887,9 @@ type WriteVersionDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union WriteVersionDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union WriteVersionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union WriteVersionDiffsOwned =
-  | WriteVersionDiffs
-  | WriteVersionDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union WriteVersionDiffsOwned = WriteVersionDiffs | WriteVersionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type WriteVersionDiffs implements Entity {
   # WeakEntity
@@ -5945,7 +4916,6 @@ type WriteVersionDiffsConnection implements EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String!
 }
-
 
 union ConflictOwner = Session | Graph
 union ConflictOwned = ReadVersion | WriteVersion
@@ -5977,13 +4947,9 @@ type ConflictConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConflictModificationOwner =
-  | ConflictDiff
-  | ConflictModification
-  | Conflict
+union ConflictModificationOwner = ConflictDiff | ConflictModification | Conflict
 
-union ConflictModificationOwned =
-  | Conflict
+union ConflictModificationOwned = Conflict
 
 type ConflictModification implements Entity {
   # WeakEntity
@@ -6035,28 +5001,9 @@ type ConflictDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ConflictDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union ConflictDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union ConflictDiffsOwned =
-  | ConflictDiffs
-  | ConflictDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union ConflictDiffsOwned = ConflictDiffs | ConflictDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type ConflictDiffs implements Entity {
   # WeakEntity
@@ -6084,13 +5031,11 @@ type ConflictDiffsConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-
 #endregion VCS
 
 #region Unions
 
 union AggregateEntityEdge =
-  
   | AlternativeDiffEdge
   | AlternativeDiffsEdge
   | AlternativeEdge
@@ -6253,9 +5198,7 @@ union AggregateEntityEdge =
   | WriteVersionEdge
   | WriteVersionModificationEdge
 
-
 union EntityConnection =
-  
   | AlternativeConnection
   | AlternativeDiffConnection
   | AlternativeDiffsConnection
@@ -6419,9 +5362,7 @@ union EntityConnection =
   | WriteVersionDiffsConnection
   | WriteVersionModificationConnection
 
-
 union OwnerEntity =
-  
   | Alternative
   | AlternativeDiff
   | AlternativeDiffs
@@ -6585,9 +5526,7 @@ union OwnerEntity =
   | WriteVersionDiffs
   | WriteVersionModification
 
-
 union OwnedEntityConnection =
-  
   | AlternativeConnection
   | AlternativeDiffConnection
   | AlternativeDiffsConnection
@@ -6751,6 +5690,130 @@ union OwnedEntityConnection =
   | WriteVersionDiffsConnection
   | WriteVersionModificationConnection
 
+union Modification =
+  | AlternativeModification
+  | AttributeModification
+  | AuthorModification
+  | BenchmarkModification
+  | ChangeModification
+  | CheckpointModification
+  | ConceptModification
+  | ConflictModification
+  | ConnectionModification
+  | ConnectorModification
+  | CoordinateModification
+  | DesignModification
+  | DraftModification
+  | FamilyModification
+  | FileModification
+  | FolderModification
+  | GraphModification
+  | GroupModification
+  | KitModification
+  | LayerModification
+  | OffsetModification
+  | PieceModification
+  | PointModification
+  | PropModification
+  | QualityModification
+  | ReadVersionModification
+  | RepresentationModification
+  | SessionModification
+  | SideModification
+  | StatModification
+  | TagModification
+  | TransactionModification
+  | TypeModification
+  | VectorModification
+  | WriteVersionModification
+
+union DiffOwner = Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | RenamedKit
+union DiffOwned =
+  | AlternativeDiff
+  | AttributeDiff
+  | AuthorDiff
+  | BenchmarkDiff
+  | ChangeDiff
+  | CheckpointDiff
+  | ConceptDiff
+  | ConflictDiff
+  | ConnectionDiff
+  | ConnectorDiff
+  | CoordinateDiff
+  | DesignDiff
+  | DraftDiff
+  | FamilyDiff
+  | FileDiff
+  | FolderDiff
+  | GraphDiff
+  | GroupDiff
+  | KitDiff
+  | LayerDiff
+  | LocationDiff
+  | OffsetDiff
+  | PieceDiff
+  | PlaceDiff
+  | PointDiff
+  | PositionDiff
+  | PropDiff
+  | QualityDiff
+  | ReadVersionDiff
+  | RepresentationDiff
+  | SessionDiff
+  | SideDiff
+  | StatDiff
+  | TagDiff
+  | TransactionDiff
+  | TypeDiff
+  | VectorDiff
+  | WriteVersionDiff
+
+union DiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
+union DiffsOwned =
+  | AlternativeDiffs
+  | AttributeDiff
+  | AuthorDiffs
+  | BenchmarkDiffs
+  | ChangeDiffs
+  | CheckpointDiffs
+  | ConceptDiffs
+  | ConflictDiffs
+  | ConnectionDiffs
+  | ConnectorDiffs
+  | CoordinateDiffs
+  | DesignDiffs
+  | Diffs
+  | DraftDiffs
+  | FamilyDiffs
+  | FileDiffs
+  | FolderDiffs
+  | GraphDiffs
+  | GroupDiffs
+  | KitDiffs
+  | LayerDiffs
+  | LocationDiff
+  | LocationDiffs
+  | OffsetDiffs
+  | PieceDiffs
+  | PlaceDiff
+  | PlaceDiffs
+  | PlaneDiff
+  | PlaneDiffs
+  | PointDiffs
+  | PositionDiff
+  | PositionDiffs
+  | PropDiffs
+  | QualityDiffs
+  | ReadVersionDiffs
+  | RepresentationDiffs
+  | SessionDiffs
+  | SideDiffs
+  | StatDiffs
+  | TagDiffs
+  | TransactionDiffs
+  | TypeDiffs
+  | VectorDiffs
+  | WriteVersionDiffs
 
 #endregion Unions
 
