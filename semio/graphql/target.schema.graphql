@@ -12,13 +12,37 @@ interface Node {
   id: ID!
 }
 
+interface Entity implements Node { # Our own extension ontop of the relay specs
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: EntityConnection
+}
+
+interface EntityEdge {
+  cursor: String! # an entity id
+  # node: ENTITY
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String # start at this entity
+  endCursor: String # end at this entity
+}
+
+interface EntityConnection {
+  # edges: [ENTITYEdge]
+  pageInfo: PageInfo!
+  hash: String! # Our own extension ontop of the relay specs
+}
+
 union EntityConnection =
   AlternativeConnection
   | AttributeDiffConnection
   | AttributeListingConnection
   | AuthorConnection
   | BridgeConnection
-  | BridgeSegmentConnection
   | ChangeConnection
   | CheckpointConnection
   | ConnectorConnection
@@ -72,31 +96,6 @@ type DiffsConnection implements EntityConnection {
   hash: String!
 }
 
-interface Entity implements Node { # Our own extension ontop of the relay specs
-  id: ID!
-  hash: String! 
-  owner: Entity
-  owns: EntityConnection
-}
-
-interface EntityEdge {
-  cursor: String! // an entity id
-  # node: ENTITY
-}
-
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String // start at this entity
-  endCursor: String // end at this entity
-}
-
-interface EntityConnection {
-  # edges: [ENTITYEdge]
-  pageInfo: PageInfo!
-  hash: String! // Our own extension ontop of the relay specs
-}
-
 #region Weak // Weak entities have hash as id
 
 # interface WeakEntity implements Entity {
@@ -133,8 +132,6 @@ type PlaneDiff implements Diff {
   modification: PlaneModification!
   after: Plane!
 }
-
-union DiffConnection = PlaneDiffConnection | PointDiffConnection | AttributeDiffConnection | LocationDiffConnection | PlaceDiffConnection
 
 type Diffs implements Entity { # implements WeakEntity
   id: ID! # hash
@@ -308,7 +305,7 @@ type Plane implements Entity { # implements WeakEntity
 }
 
 union PlaneModificationOwner = PieceModification | PositionModification | LocationModification | PlaceModification | AttributeModification | PlaneDiff
-union PlaneModificationOwned = Point | Vector | Plane | PlaneModification
+union PlaneModificationOwned = Point | Vector | Plane
 
 type PlaneModification implements Entity { # implements Modification
   id: ID! # hash
@@ -488,6 +485,8 @@ type AttributesDiff implements Diffs {
 # }
 
 union Input = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
+
+union OperationOwner = Change
 
 interface Operation implements Entity { # implements StrongEntity
   id: ID! # uuidv7
@@ -1057,6 +1056,296 @@ type PlaceDiffConnection implements EntityConnection {
 }
 
 #endregion 🔖PlaceDiffConnection
+
+#region 🔖EntityRelayEdgesConnections
+
+type AlternativeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type AlternativeConnection implements EntityConnection {
+  edges: [AlternativeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type AttributeListingEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type AttributeListingConnection implements EntityConnection {
+  edges: [AttributeListingEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type AuthorEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type AuthorConnection implements EntityConnection {
+  edges: [AuthorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type BridgeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type BridgeConnection implements EntityConnection {
+  edges: [BridgeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type ChangeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type ChangeConnection implements EntityConnection {
+  edges: [ChangeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type CheckpointEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type CheckpointConnection implements EntityConnection {
+  edges: [CheckpointEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type ConnectorEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type ConnectorConnection implements EntityConnection {
+  edges: [ConnectorEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type DesignEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type DesignConnection implements EntityConnection {
+  edges: [DesignEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type DraftEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type DraftConnection implements EntityConnection {
+  edges: [DraftEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type FileEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type FileConnection implements EntityConnection {
+  edges: [FileEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type FolderEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type FolderConnection implements EntityConnection {
+  edges: [FolderEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type GraphEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type GraphConnection implements EntityConnection {
+  edges: [GraphEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type KitEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type KitConnection implements EntityConnection {
+  edges: [KitEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type LocationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type LocationConnection implements EntityConnection {
+  edges: [LocationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type LocationModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type LocationModificationConnection implements EntityConnection {
+  edges: [LocationModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PieceListingEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PieceListingConnection implements EntityConnection {
+  edges: [PieceListingEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PlaneEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaneConnection implements EntityConnection {
+  edges: [PlaneEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PlaneModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaneModificationConnection implements EntityConnection {
+  edges: [PlaneModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PlaceEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaceConnection implements EntityConnection {
+  edges: [PlaceEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PlaceModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PlaceModificationConnection implements EntityConnection {
+  edges: [PlaceModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PositionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PositionConnection implements EntityConnection {
+  edges: [PositionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PositionModificationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type PositionModificationConnection implements EntityConnection {
+  edges: [PositionModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type RepresentationEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type RepresentationConnection implements EntityConnection {
+  edges: [RepresentationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type SessionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type SessionConnection implements EntityConnection {
+  edges: [SessionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type TransactionEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type TransactionConnection implements EntityConnection {
+  edges: [TransactionEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type TypeEdge implements EntityEdge {
+  cursor: String!
+  node: Entity!
+}
+
+type TypeConnection implements EntityConnection {
+  edges: [TypeEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+#endregion 🔖EntityRelayEdgesConnections
 
 #endregion Entities
 
