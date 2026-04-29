@@ -15,8 +15,9 @@ interface Node {
 interface Entity implements Node { # Our own extension ontop of the relay specs
   id: ID!
   hash: String!
-  owner: Entity
-  owns: EntityConnection
+  owner: OwnerEntity
+  owns: OwnsEntityConnection
+
 }
 
 interface EntityEdge {
@@ -36,44 +37,6 @@ interface EntityConnectionInterface {
   hash: String! # Our own extension ontop of the relay specs
 }
 
-union EntityConnection =
-  | AlternativeConnection
-  | AttributeDiffConnection
-  | AttributeListingConnection
-  | AuthorConnection
-  | BridgeConnection
-  | ChangeConnection
-  | CheckpointConnection
-  | ConnectorConnection
-  | CoordinateConnection
-  | DesignConnection
-  | DraftConnection
-  | DiffsConnection
-  | FileConnection
-  | FolderConnection
-  | GraphConnection
-  | KitConnection
-  | LocationConnection
-  | LocationDiffConnection
-  | LocationModificationConnection
-  | OffsetConnection
-  | PieceListingConnection
-  | PlaneConnection
-  | PlaneDiffConnection
-  | PlaneModificationConnection
-  | PlaceConnection
-  | PlaceDiffConnection
-  | PlaceModificationConnection
-  | PointConnection
-  | PointDiffConnection
-  | PositionConnection
-  | PositionModificationConnection
-  | RepresentationConnection
-  | SessionConnection
-  | TransactionConnection
-  | TypeConnection
-  | VectorConnection
-
 #region Weak // Weak entities have hash as id
 
 # interface WeakEntity implements Entity {
@@ -83,8 +46,8 @@ union EntityConnection =
 #region Diffs
 
 # interface Modification implements WeakEntity {
-# FIELD: NULLABLE FIELD // if the field was modified then return the modified value
-# removeNULLABLEFIELD: Boolean // use this if the field is by default nullable to indicate that it was removed
+#   FIELD: NULLABLE FIELD // if the field was modified then return the modified value
+#   removeNULLABLEFIELD: Boolean // use this if the field is by default nullable to indicate that it was removed
 # }
 
 union Modification = PlaneModification | AttributeModification
@@ -97,6 +60,7 @@ interface Diff implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # DiffOwner
   owns: EntityConnection # DiffOwned
+
   before: Entity!
   modification: Modification!
   after: Entity!
@@ -110,6 +74,7 @@ type Diffs implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # DiffsOwner
   owns: EntityConnection #DiffsOwned
+
   removed: EntityConnection
   diffs: DiffConnection
   added: EntityConnection
@@ -144,6 +109,7 @@ type Vector implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # VectorOwner
   owns: EntityConnection # VectorOwned
+
   x: Float!
   y: Float!
   z: Float!
@@ -212,6 +178,7 @@ type Coordinate implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # CoordinateOwner
   owns: EntityConnection # CoordinateOwned
+
   u: Float!
   v: Float!
 }
@@ -244,6 +211,7 @@ type Offset implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # OffsetOwner
   owns: EntityConnection # OffsetOwned
+
   u: Float!
   v: Float!
 }
@@ -277,6 +245,7 @@ type Plane implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # PlaneOwner
   owns: EntityConnection # PlaneOwned
+
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
@@ -379,6 +348,7 @@ type PositionModification implements Entity { # implements Modification
   hash: String!
   owner: Entity # PositionModificationOwner
   owns: EntityConnection
+
   center: Coordinate
   plane: Plane
 }
@@ -399,6 +369,7 @@ type PositionDiff implements Diff {
   hash: String!
   owner: Entity
   owns: EntityConnection
+
   before: Entity! # Position
   modification: PositionModification!
   after: Entity! # Position
@@ -432,6 +403,7 @@ type Location implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # LocationOwner
   owns: EntityConnection
+
   longitude: Float!
   latitude: Float!
   altitude: Float!
@@ -455,6 +427,7 @@ type LocationModification implements Entity { # implements Modification
   hash: String!
   owner: Entity # LocationModificationOwner
   owns: EntityConnection
+
   longitude: Float
   latitude: Float
   altitude: Float
@@ -476,6 +449,7 @@ type LocationDiff implements Diff {
   hash: String!
   owner: Entity
   owns: EntityConnection
+
   before: Entity! # Location
   modification: LocationModification!
   after: Entity! # Location
@@ -509,6 +483,7 @@ type Attribute implements Entity { # implements WeakEntity
   hash: String!
   owner: Entity # AttributeOwner
   owns: EntityConnection
+
   key: String!
   value: String!
   definition: String!
@@ -532,6 +507,7 @@ type AttributeModification implements Entity { # implements Modification
   hash: String!
   owner: Entity # AttributeModificationOwner
   owns: EntityConnection
+
   key: String
   value: String
   definition: String
@@ -542,6 +518,7 @@ type AttributeDiff implements Diff {
   hash: String!
   owner: Entity
   owns: EntityConnection
+
   before: Entity! # Attribute
   modification: AttributeModification!
   after: Entity! # Attribute
@@ -565,6 +542,7 @@ type AttributesDiff implements Diffs {
   hash: String!
   owner: Entity # AttributesDiffOwner
   owns: EntityConnection
+
   removed: EntityConnection # Attribute
   diffs: DiffConnection # AttributeDiffConnection
   added: EntityConnection # Attribute
@@ -581,6 +559,7 @@ type AttributesDiff implements Diffs {
 #   hash: String!
 #   owner: Entity # ENTITYKIND
 #   owns: EntityConnection # ENTITYKIND
+
 # }
 
 union Input = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
@@ -592,6 +571,7 @@ interface Operation implements Entity { # implements StrongEntity
   hash: String!
   owner: Entity # OperationOwner
   owns: EntityConnection # Input
+
   diff: Diff!
   input: Input
 }
@@ -607,6 +587,7 @@ type Place implements Entity { # implements StrongEntity
   hash: String!
   owner: Entity! # PlaceOwner
   owns: EntityConnection
+
   name: String
   location: Location
 }
@@ -629,6 +610,7 @@ type PlaceModification implements Entity { # implements Modification
   hash: String!
   owner: Entity # PlaceModificationOwner
   owns: EntityConnection
+
   name: String
   location: LocationModification
   removeLocation: Boolean
@@ -650,6 +632,7 @@ type PlaceDiff implements Diff {
   hash: String!
   owner: Entity
   owns: EntityConnection
+
   before: Place!
   modification: PlaceModification!
   after: Place!
@@ -678,6 +661,7 @@ type Folder implements Entity { # implements StrongEntity
   hash: String!
   owner: Entity! # FolderOwner
   owns: EntityConnection # FolderOwned
+
   name: String!
   path: String!
   description: String!
@@ -705,6 +689,7 @@ type File implements Entity { # implements StrongEntity
   hash: String!
   owner: Entity! # FileOwner
   owns: EntityConnection # Nothing
+
   url: String!
   mime: String
   size: Int
@@ -735,6 +720,7 @@ type Author implements Entity {
   hash: String!
   owner: Entity # AuthorOwner
   owns: EntityConnection
+
   name: String!
   email: String!
   role: String
@@ -838,6 +824,7 @@ type Connector implements Entity {
   hash: String!
   owner: Entity! # ConnectorOwner
   owns: EntityConnection
+
   code: String!
   description: String
   portId: ID
@@ -863,6 +850,7 @@ type Representation implements Entity {
   hash: String!
   owner: Entity! # RepresentationOwner
   owns: EntityConnection
+
   url: String!
   description: String
   file: File
@@ -889,6 +877,7 @@ type Type implements Entity {
   hash: String!
   owner: Entity! # TypeOwner
   owns: EntityConnection
+
   name: String!
   description: String
   icon: String
@@ -968,6 +957,7 @@ type Piece implements Entity {
   hash: String!
   owner: Entity! # PieceOwner
   owns: EntityConnection
+
   name: String
   description: String
   position: Position
@@ -1004,6 +994,7 @@ type Connection implements Entity {
   hash: String!
   owner: Entity! # PieceBridgeOwner
   owns: EntityConnection
+
   connected: Side!
   connecting: Side!
   gap: Float
@@ -1044,6 +1035,7 @@ type CreatedFixedPiece implements Operation & Entity {
   hash: String!
   owner: Entity! # CreatedFixedPieceOwner
   owns: EntityConnection
+
   input: CreatedFixedPieceInput!
   diff: Diff!
   piece: Piece!
@@ -1061,6 +1053,7 @@ type FixedPiece implements Operation & Entity {
   hash: String!
   owner: Entity! # FixedPieceOwner
   owns: EntityConnection
+
   input: FixedPieceInput!
   diff: Diff!
   piece: Piece!
@@ -1079,6 +1072,7 @@ type DraggedPiece implements Operation & Entity {
   hash: String!
   owner: Entity! # DraggedPieceOwner
   owns: EntityConnection
+
   input: DraggedPieceInput!
   diff: Diff!
   pieces: [Piece!]!
@@ -1113,6 +1107,7 @@ type Design implements Entity {
   hash: String!
   owner: Entity! # DesignOwner
   owns: EntityConnection
+
   name: String!
   description: String
   icon: String
@@ -1159,6 +1154,7 @@ type Kit implements Entity {
   hash: String!
   owner: Entity # KitOwner
   owns: EntityConnection
+
   checkpoint: Checkpoint
   draft: Draft
   transaction: Transaction
@@ -1211,6 +1207,7 @@ type RenamedKit implements Operation & Entity {
   hash: String!
   owner: Entity! # RenamedKitOwner
   owns: EntityConnection
+
   input: RenamedKitInput!
   diff: Diff!
   kit: Kit!
@@ -1228,6 +1225,7 @@ type ChangedDescription implements Operation & Entity {
   hash: String!
   owner: Entity! # ChangedDescriptionOwner
   owns: EntityConnection
+
   input: ChangedDescriptionInput!
   diff: Diff!
   entity: Entity!
@@ -1250,6 +1248,7 @@ type Change implements Entity {
   hash: String!
   owner: Entity! # ChangeOwner
   owns: EntityConnection
+
   description: String
   origin: String
   forwards: [Operation!]!
@@ -1275,6 +1274,7 @@ type Transaction implements Entity {
   hash: String!
   owner: Entity # TransactionOwner
   owns: EntityConnection
+
   changes: [Change!]!
 }
 
@@ -1296,6 +1296,7 @@ type Draft implements Entity {
   hash: String!
   owner: Entity! # DraftOwner
   owns: EntityConnection
+
   parentCheckpoint: Checkpoint
   targetAlternative: Alternative
   openTransaction: Transaction
@@ -1324,6 +1325,7 @@ type Checkpoint implements Entity {
   hash: String!
   owner: Entity # CheckpointOwner
   owns: EntityConnection
+
   timestamp: Timestamp
   authors: [Author!]!
   root: Kit
@@ -1351,6 +1353,7 @@ type Alternative implements Entity {
   hash: String!
   owner: Entity # AlternativeOwner
   owns: EntityConnection
+
   name: String!
   start: Checkpoint!
   checkpoints: [Checkpoint!]!
@@ -1377,6 +1380,7 @@ type Graph implements Entity {
   hash: String!
   owner: Entity # GraphOwner
   owns: EntityConnection
+
   theKit: Kit
   alternative(id: ID!): Alternative
   alternatives: [Alternative!]!
@@ -1404,6 +1408,7 @@ type Session implements Entity {
   hash: String!
   owner: Entity # SessionOwner
   owns: EntityConnection
+
   startedAt: Timestamp
   drafts: [Draft!]!
 }
@@ -1442,6 +1447,169 @@ type Conflict {
 }
 
 #endregion VCS
+
+#region Unions
+
+union EntityEdge =
+  | AlternativeEdge
+  | AttributeEdge
+  | AttributeListingEdge
+  | AuthorEdge
+  | BridgeEdge
+  | ChangeEdge
+  | CheckpointEdge
+  | ConnectorEdge
+  | CoordinateEdge
+  | DesignEdge
+  | DraftEdge
+  | DiffsEdge
+  | FileEdge
+  | FolderEdge
+  | GraphEdge
+  | KitEdge
+  | LocationDiffEdge
+  | LocationEdge
+  | LocationModificationEdge
+  | OffsetEdge
+  | PieceListingEdge
+  | PlaneDiffEdge
+  | PlaneEdge
+  | PlaneModificationEdge
+  | PlaceDiffEdge
+  | PlaceEdge
+  | PlaceModificationEdge
+  | PointDiffEdge
+  | PointEdge
+  | PositionEdge
+  | PositionModificationEdge
+  | RepresentationEdge
+  | SessionEdge
+  | TransactionEdge
+  | TypeEdge
+  | VectorEdge
+
+union EntityConnection =
+  | AlternativeConnection
+  | AttributeDiffConnection
+  | AttributeListingConnection
+  | AuthorConnection
+  | BridgeConnection
+  | ChangeConnection
+  | CheckpointConnection
+  | ConnectorConnection
+  | CoordinateConnection
+  | DesignConnection
+  | DraftConnection
+  | DiffsConnection
+  | FileConnection
+  | FolderConnection
+  | GraphConnection
+  | KitConnection
+  | LocationConnection
+  | LocationDiffConnection
+  | LocationModificationConnection
+  | OffsetConnection
+  | PieceListingConnection
+  | PlaneConnection
+  | PlaneDiffConnection
+  | PlaneModificationConnection
+  | PlaceConnection
+  | PlaceDiffConnection
+  | PlaceModificationConnection
+  | PointConnection
+  | PointDiffConnection
+  | PositionConnection
+  | PositionModificationConnection
+  | RepresentationConnection
+  | SessionConnection
+  | TransactionConnection
+  | TypeConnection
+  | VectorConnection
+
+union OwnerEntity =
+  | Alternative
+  | Attribute
+  | AttributeDiff
+  | AttributeModification
+  | Author
+  | ChangedDescription
+  | Change
+  | Checkpoint
+  | Connector
+  | Connection
+  | Coordinate
+  | CreatedFixedPiece
+  | Design
+  | Diffs
+  | Draft
+  | DraggedPiece
+  | File
+  | FixedPiece
+  | Folder
+  | Graph
+  | Kit
+  | Location
+  | LocationDiff
+  | LocationModification
+  | Offset
+  | Piece
+  | Plane
+  | PlaneDiff
+  | PlaneModification
+  | Place
+  | PlaceDiff
+  | PlaceModification
+  | Point
+  | Position
+  | PositionDiff
+  | PositionModification
+  | RenamedKit
+  | Representation
+  | Session
+  | Transaction
+  | Type
+  | Vector
+
+union OwnsEntityConnection =
+
+  | AlternativeConnection
+  | AttributeDiffConnection
+  | AttributeListingConnection
+  | AuthorConnection
+  | BridgeConnection
+  | ChangeConnection
+  | CheckpointConnection
+  | ConnectorConnection
+  | CoordinateConnection
+  | DesignConnection
+  | DraftConnection
+  | DiffsConnection
+  | FileConnection
+  | FolderConnection
+  | GraphConnection
+  | KitConnection
+  | LocationConnection
+  | LocationDiffConnection
+  | LocationModificationConnection
+  | OffsetConnection
+  | PieceListingConnection
+  | PlaneConnection
+  | PlaneDiffConnection
+  | PlaneModificationConnection
+  | PlaceConnection
+  | PlaceDiffConnection
+  | PlaceModificationConnection
+  | PointConnection
+  | PointDiffConnection
+  | PositionConnection
+  | PositionModificationConnection
+  | RepresentationConnection
+  | SessionConnection
+  | TransactionConnection
+  | TypeConnection
+  | VectorConnection
+
+#endregion Unions
 
 #region Schema
 
