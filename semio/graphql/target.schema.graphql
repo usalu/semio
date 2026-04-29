@@ -61,7 +61,7 @@ interface Diff implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -80,7 +80,7 @@ type Diffs implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffsOwner
+  owner: DiffsOwner!
   ownerDiff: Diff
   ownerOperation: Operation
   ownerChange: Change
@@ -120,7 +120,7 @@ type Vector implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: VectorOwner
+  owner: VectorOwner!
   ownerPlane: Plane
   ownerPlaneModification: PlaneModification
   ownerEntity: OwnerEntity # VectorOwner
@@ -159,7 +159,7 @@ type Point implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: PointOwner
+  owner: PointOwner!
   ownerPlane: Plane
   ownerPlaneModification: PlaneModification
   ownerEntity: OwnerEntity # PointOwner
@@ -197,7 +197,7 @@ type Coordinate implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: CoordinateOwner
+  owner: CoordinateOwner!
   ownerPosition: Position
   ownerPositionModification: PositionModification
   ownerEntity: OwnerEntity # CoordinateOwner
@@ -234,7 +234,7 @@ type Offset implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: OffsetOwner
+  owner: OffsetOwner!
   ownerPosition: Position
   ownerPositionModification: PositionModification
   ownerEntity: OwnerEntity # OffsetOwner
@@ -272,7 +272,7 @@ type Plane implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: PlaneOwner
+  owner: PlaneOwner!
   ownerPiece: Piece
   ownerPieceModification: PieceModification
   ownerPlaneDiff: PlaneDiff
@@ -302,7 +302,7 @@ type PlaneModification implements Entity { # implements Modification
   # Modification
   id: ID! # hash
   hash: String!
-  owner: PlaneModificationOwner
+  owner: PlaneModificationOwner!
   ownerPieceModification: PieceModification
   ownerPositionModification: PositionModification
   ownerLocationModification: LocationModification
@@ -332,7 +332,7 @@ type PlaneDiff implements Diff {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -371,7 +371,7 @@ type Position implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: PositionOwner
+  owner: PositionOwner!
   ownerPiece: Piece
   ownerPositionModification: PositionModification
   ownerPlane: Plane
@@ -401,7 +401,7 @@ type PositionModification implements Entity { # implements Modification
   # Modification
   id: ID! # hash
   hash: String!
-  owner: PositionModificationOwner
+  owner: PositionModificationOwner!
   ownerPieceModification: PieceModification
   ownerPositionDiff: PositionDiff
   ownerEntity: OwnerEntity # PositionModificationOwner
@@ -426,7 +426,7 @@ type PositionDiff implements Diff {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -466,7 +466,7 @@ type Location implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: LocationOwner
+  owner: LocationOwner!
   ownerPlace: Place
   ownerKit: Kit
   ownerDesign: Design
@@ -496,7 +496,7 @@ type LocationModification implements Entity { # implements Modification
   # Modification
   id: ID! # hash
   hash: String!
-  owner: LocationModificationOwner
+  owner: LocationModificationOwner!
   ownerPlaceModification: PlaceModification
   ownerLocationDiff: LocationDiff
   ownerEntity: OwnerEntity # LocationModificationOwner
@@ -522,7 +522,7 @@ type LocationDiff implements Diff {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -555,20 +555,23 @@ input AttributeInput {
   definition: String
 }
 
-union AttributeOwner = Piece | Connector | Representation | Kit | Design | Type | AttributeDiff | PositionModification | PieceModification
+union AttributeOwner = Piece | Connector | Representation | Connection | Kit | Design | Type | Concept | Tag | AttributeDiff | PositionModification | PieceModification
 union AttributeOwned = Attribute
 
 type Attribute implements Entity { # implements WeakEntity
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: AttributeOwner
+  owner: AttributeOwner!
   ownerPiece: Piece
   ownerConnector: Connector
   ownerRepresentation: Representation
+  ownerConnection: Connection
   ownerKit: Kit
   ownerDesign: Design
   ownerType: Type
+  ownerConcept: Concept
+  ownerTag: Tag
   ownerAttributeDiff: AttributeDiff
   ownerPositionModification: PositionModification
   ownerPieceModification: PieceModification
@@ -591,20 +594,23 @@ type AttributeListingConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union AttributeModificationOwner = PieceModification | Connector | Representation | Kit | Design | Type | AttributeDiff
+union AttributeModificationOwner = PieceModification | Connector | Representation | Connection | Kit | Design | Type | Concept | Tag | AttributeDiff
 union AttributeModificationOwned = AttributeModification
 
 type AttributeModification implements Entity { # implements Modification
   # Modification
   id: ID! # hash
   hash: String!
-  owner: AttributeModificationOwner
+  owner: AttributeModificationOwner!
   ownerPieceModification: PieceModification
   ownerConnector: Connector
   ownerRepresentation: Representation
+  ownerConnection: Connection
   ownerKit: Kit
   ownerDesign: Design
   ownerType: Type
+  ownerConcept: Concept
+  ownerTag: Tag
   ownerAttributeDiff: AttributeDiff
   ownerEntity: OwnerEntity # AttributeModificationOwner
   ownedEntities: OwnedEntityConnection # AttributeModificationOwned
@@ -618,7 +624,7 @@ type AttributeDiff implements Diff {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -659,7 +665,7 @@ type AttributesDiff implements Entity {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: AttributesDiffOwner
+  owner: AttributesDiffOwner!
   ownerDiff: Diff
   ownerOperation: Operation
   ownerChange: Change
@@ -694,7 +700,7 @@ interface Operation implements Entity { # implements StrongEntity
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: OperationOwner
+  owner: OperationOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity # OperationOwner
   ownedEntities: OwnedEntityConnection # OperationOwned
@@ -714,7 +720,7 @@ type Place implements Entity { # implements StrongEntity
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: PlaceOwner
+  owner: PlaceOwner!
   ownerKit: Kit
   ownerCheckpoint: Checkpoint
   ownerGraph: Graph
@@ -743,7 +749,7 @@ type PlaceModification implements Entity { # implements Modification
   # Modification
   id: ID! # hash
   hash: String!
-  owner: PlaceModificationOwner
+  owner: PlaceModificationOwner!
   ownerPlaceDiff: PlaceDiff
   ownerPlace: Place
   ownerEntity: OwnerEntity # PlaceModificationOwner
@@ -769,7 +775,7 @@ type PlaceDiff implements Diff {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: DiffOwner
+  owner: DiffOwner!
   ownerDiffs: Diffs
   ownerChange: Change
   ownerOperation: Operation
@@ -794,6 +800,37 @@ type PlaceDiffConnection implements EntityConnectionInterface {
 
 #endregion Place
 
+#region Family
+
+union FamilyOwner = Kit
+# union FamilyOwned = Nothing
+
+type Family implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: FamilyOwner!
+  ownerKit: Kit
+  ownerEntity: OwnerEntity! # FamilyOwner
+  ownedEntities: OwnedEntityConnection # FamilyOwned
+  # Fields
+  name: String!
+  description: String
+}
+
+type FamilyEdge implements EntityEdge {
+  cursor: String!
+  node: Family!
+}
+
+type FamilyConnection implements EntityConnectionInterface {
+  edges: [FamilyEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+#endregion Family
+
 #region Folder
 
 union FolderOwner = Kit | Folder
@@ -803,7 +840,7 @@ type Folder implements Entity { # implements StrongEntity
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: FolderOwner
+  owner: FolderOwner!
   ownerKit: Kit
   ownerFolder: Folder
   ownerEntity: OwnerEntity! # FolderOwner
@@ -841,7 +878,7 @@ type File implements Entity { # implements StrongEntity
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: FileOwner
+  owner: FileOwner!
   ownerKit: Kit
   ownerFolder: Folder
   ownerEntity: OwnerEntity! # FileOwner
@@ -877,7 +914,7 @@ type Author implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: AuthorOwner
+  owner: AuthorOwner!
   ownerKit: Kit
   ownerCheckpoint: Checkpoint
   ownerGraph: Graph
@@ -909,17 +946,18 @@ type AuthorConnection implements EntityConnectionInterface {
 
 #region Prop
 
-union PropOwner = Piece | Type | Design
+union PropOwner = Piece | Type | Design | Kit
 # union PropOwned = Nothing
 
 type Prop implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: PropOwner
+  owner: PropOwner!
   ownerPiece: Piece
   ownerType: Type
   ownerDesign: Design
+  ownerKit: Kit
   ownerEntity: OwnerEntity! # PropOwner
   ownedEntities: OwnedEntityConnection # PropOwned
   # Fields
@@ -951,7 +989,7 @@ type Benchmark implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: BenchmarkOwner
+  owner: BenchmarkOwner!
   ownerQuality: Quality
   ownerEntity: OwnerEntity! # BenchmarkOwner
   ownedEntities: OwnedEntityConnection # BenchmarkOwned
@@ -978,18 +1016,19 @@ type BenchmarkConnection implements EntityConnectionInterface {
 
 #region Quality
 
-union QualityOwner = Connector | Representation | Type | Design
+union QualityOwner = Connector | Representation | Type | Design | Kit
 union QualityOwned = Benchmark
 
 type Quality implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: QualityOwner
+  owner: QualityOwner!
   ownerConnector: Connector
   ownerRepresentation: Representation
   ownerType: Type
   ownerDesign: Design
+  ownerKit: Kit
   ownerEntity: OwnerEntity! # QualityOwner
   ownedEntities: OwnedEntityConnection # QualityOwned
   # Fields
@@ -1016,15 +1055,15 @@ type QualityConnection implements EntityConnectionInterface {
 
 #region Tag
 
-union TagOwner = Design | Type | Representation
+union TagOwner = Kit | Type | Representation
 # union TagOwned = Nothing
 
 type Tag implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: TagOwner
-  ownerDesign: Design
+  owner: TagOwner!
+  ownerKit: Kit
   ownerType: Type
   ownerRepresentation: Representation
   ownerEntity: OwnerEntity! # TagOwner
@@ -1049,15 +1088,15 @@ type TagConnection implements EntityConnectionInterface {
 
 #region Concept
 
-union ConceptOwner = Design | Type
+union ConceptOwner = Kit | Type
 # union ConceptOwned = Nothing
 
 type Concept implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ConceptOwner
-  ownerDesign: Design
+  owner: ConceptOwner!
+  ownerKit: Kit
   ownerType: Type
   ownerEntity: OwnerEntity! # ConceptOwner
   ownedEntities: OwnedEntityConnection # ConceptOwned
@@ -1082,14 +1121,15 @@ type ConceptConnection implements EntityConnectionInterface {
 
 #region Stat
 
-union StatOwner = Design | Type
+union StatOwner = Kit | Design | Type
 # union StatOwned = Nothing
 
 type Stat implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: StatOwner
+  owner: StatOwner!
+  ownerKit: Kit
   ownerDesign: Design
   ownerType: Type
   ownerEntity: OwnerEntity! # StatOwner
@@ -1123,7 +1163,7 @@ type Connector implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ConnectorOwner
+  owner: ConnectorOwner!
   ownerType: Type
   ownerEntity: OwnerEntity! # ConnectorOwner
   ownedEntities: OwnedEntityConnection # ConnectorOwned
@@ -1153,7 +1193,7 @@ type Representation implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: RepresentationOwner
+  owner: RepresentationOwner!
   ownerType: Type
   ownerEntity: OwnerEntity! # RepresentationOwner
   ownedEntities: OwnedEntityConnection # RepresentationOwned
@@ -1184,7 +1224,7 @@ type Type implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: TypeOwner
+  owner: TypeOwner!
   ownerKit: Kit
   ownerEntity: OwnerEntity! # TypeOwner
   ownedEntities: OwnedEntityConnection # TypeOwned
@@ -1234,7 +1274,7 @@ type Layer implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: LayerOwner
+  owner: LayerOwner!
   ownerDesign: Design
   ownerEntity: OwnerEntity! # LayerOwner
   ownedEntities: OwnedEntityConnection # LayerOwned
@@ -1269,7 +1309,7 @@ type Group implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: GroupOwner
+  owner: GroupOwner!
   ownerDesign: Design
   ownerEntity: OwnerEntity! # GroupOwner
   ownedEntities: OwnedEntityConnection # GroupOwned
@@ -1304,19 +1344,19 @@ enum PieceConnectionKind {
 union Blueprint = Type | Design
 
 union PieceOwner = Type | Design | PieceModification | Piece
-union PieceOwned = Connection | Piece | Attribute
+union PieceOwned = Piece | Attribute
 
 type Piece implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: PieceOwner
+  owner: PieceOwner!
   ownerType: Type
   ownerDesign: Design
   ownerPieceModification: PieceModification
   ownerPiece: Piece
   ownerEntity: OwnerEntity! # PieceOwner
-  ownedEntities: OwnedEntityConnection # PieceOwned
+  ownedEntities: OwnedEntityConnection # PieceOwned — Piece subtree & attrs (design-owned bridges surface via Design)
   # Fields
   name: String
   description: String
@@ -1348,16 +1388,16 @@ type PieceConnection implements EntityConnectionInterface {
 }
 
 union ConnectionOwner = Design
-union ConnectionOwned = Attribute
+union ConnectionOwned = Side | Attribute
 
 type Connection implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ConnectionOwner
+  owner: ConnectionOwner!
   ownerDesign: Design
   ownerEntity: OwnerEntity! # ConnectionOwner
-  ownedEntities: OwnedEntityConnection # ConnectionOwned
+  ownedEntities: OwnedEntityConnection # ConnectionOwned — endpoint sides & connection attrs
   # Fields
   connected: Side!
   connecting: Side!
@@ -1398,7 +1438,7 @@ type CreatedFixedPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: CreatedFixedPieceOwner
+  owner: CreatedFixedPieceOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity! # CreatedFixedPieceOwner
   ownedEntities: OwnedEntityConnection # CreatedFixedPieceOwned
@@ -1420,7 +1460,7 @@ type FixedPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: FixedPieceOwner
+  owner: FixedPieceOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity! # FixedPieceOwner
   ownedEntities: OwnedEntityConnection # FixedPieceOwned
@@ -1443,7 +1483,7 @@ type DraggedPiece implements Operation & Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: DraggedPieceOwner
+  owner: DraggedPieceOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity! # DraggedPieceOwner
   ownedEntities: OwnedEntityConnection # DraggedPieceOwned
@@ -1471,7 +1511,7 @@ type Side implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: SideOwner
+  owner: SideOwner!
   ownerConnection: Connection
   ownerEntity: OwnerEntity! # SideOwner
   ownedEntities: OwnedEntityConnection # SideOwned
@@ -1504,7 +1544,7 @@ type Design implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: DesignOwner
+  owner: DesignOwner!
   ownerKit: Kit
   ownerEntity: OwnerEntity! # DesignOwner
   ownedEntities: OwnedEntityConnection # DesignOwned
@@ -1524,8 +1564,6 @@ type Design implements Entity {
   layers: [Layer!]!
   groups: [Group!]!
   authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
   qualities: [Quality!]!
   props: [Prop!]!
   attributes: [Attribute!]!
@@ -1549,13 +1587,13 @@ type DesignConnection implements EntityConnectionInterface {
 #endregion Design
 
 union KitOwner = Graph | Checkpoint | Alternative
-union KitOwned = Design | Type | File | Folder | Author | Place | Kit
+union KitOwned = Design | Type | File | Folder | Author | Place | Kit | Concept | Tag | Family | Quality | Prop | Stat
 
 type Kit implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: KitOwner
+  owner: KitOwner!
   ownerGraph: Graph
   ownerCheckpoint: Checkpoint
   ownerAlternative: Alternative
@@ -1583,6 +1621,7 @@ type Kit implements Entity {
   types: [Type!]!
   files: [File!]!
   folders: [Folder!]!
+  families: [Family!]!
   authors: [Author!]!
   concepts: [Concept!]!
   tags: [Tag!]!
@@ -1613,7 +1652,7 @@ type RenamedKit implements Operation & Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: RenamedKitOwner
+  owner: RenamedKitOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity! # RenamedKitOwner
   ownedEntities: OwnedEntityConnection # RenamedKitOwned
@@ -1635,7 +1674,7 @@ type ChangedDescription implements Operation & Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ChangedDescriptionOwner
+  owner: ChangedDescriptionOwner!
   ownerChange: Change
   ownerEntity: OwnerEntity! # ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # ChangedDescriptionOwned
@@ -1663,7 +1702,7 @@ type Change implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ChangeOwner
+  owner: ChangeOwner!
   ownerTransaction: Transaction
   ownerDraft: Draft
   ownerCheckpoint: Checkpoint
@@ -1695,7 +1734,7 @@ type Transaction implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: TransactionOwner
+  owner: TransactionOwner!
   ownerDraft: Draft
   ownerEntity: OwnerEntity # TransactionOwner
   ownedEntities: OwnedEntityConnection # TransactionOwned
@@ -1721,7 +1760,7 @@ type Draft implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: DraftOwner
+  owner: DraftOwner!
   ownerAuthor: Author
   ownerEntity: OwnerEntity! # DraftOwner
   ownedEntities: OwnedEntityConnection # DraftOwned
@@ -1754,7 +1793,7 @@ type Checkpoint implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: CheckpointOwner
+  owner: CheckpointOwner!
   ownerAlternative: Alternative
   ownerGraph: Graph
   ownerKit: Kit
@@ -1789,7 +1828,7 @@ type Alternative implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: AlternativeOwner
+  owner: AlternativeOwner!
   ownerGraph: Graph
   ownerEntity: OwnerEntity # AlternativeOwner
   ownedEntities: OwnedEntityConnection # AlternativeOwned
@@ -1820,7 +1859,7 @@ type Graph implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: GraphOwner
+  owner: GraphOwner!
   ownerSession: Session
   ownerEntity: OwnerEntity # GraphOwner
   ownedEntities: OwnedEntityConnection # GraphOwned
@@ -1852,7 +1891,7 @@ type Session implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: SessionOwner
+  owner: SessionOwner!
   ownerGraph: Graph
   ownerCheckpoint: Checkpoint
   ownerAlternative: Alternative
@@ -1881,7 +1920,7 @@ type ReadVersion implements Entity {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: ReadVersionOwner
+  owner: ReadVersionOwner!
   ownerConflict: Conflict
   ownerEntity: OwnerEntity # ReadVersionOwner
   ownedEntities: OwnedEntityConnection # ReadVersionOwned
@@ -1909,7 +1948,7 @@ type WriteVersion implements Entity {
   # WeakEntity
   id: ID! # hash
   hash: String!
-  owner: WriteVersionOwner
+  owner: WriteVersionOwner!
   ownerConflict: Conflict
   ownerEntity: OwnerEntity # WriteVersionOwner
   ownedEntities: OwnedEntityConnection # WriteVersionOwned
@@ -1939,7 +1978,7 @@ type Conflict implements Entity {
   # StrongEntity
   id: ID! # uuidv7
   hash: String!
-  owner: ConflictOwner
+  owner: ConflictOwner!
   ownerSession: Session
   ownerGraph: Graph
   ownerEntity: OwnerEntity! # ConflictOwner
@@ -1982,6 +2021,7 @@ union EntityEdge =
   | CoordinateEdge
   | DesignEdge
   | DraftEdge
+  | FamilyEdge
   | DiffsEdge
   | FileEdge
   | FolderEdge
@@ -2033,6 +2073,7 @@ union EntityConnection =
   | DesignConnection
   | DiffAttributesConnection
   | DraftConnection
+  | FamilyConnection
   | DiffsConnection
   | FileConnection
   | FolderConnection
@@ -2089,6 +2130,7 @@ union OwnerEntity =
   | Diffs
   | Draft
   | DraggedPiece
+  | Family
   | File
   | FixedPiece
   | Folder
@@ -2141,6 +2183,7 @@ union OwnedEntityConnection =
   | DesignConnection
   | DiffAttributesConnection
   | DraftConnection
+  | FamilyConnection
   | DiffsConnection
   | FileConnection
   | FolderConnection
