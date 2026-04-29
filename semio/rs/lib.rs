@@ -362,6 +362,64 @@ pub mod kit {
         use crate::meta::{Attribute, Author, Concept, File, Prop, Quality, Stat, Tag};
         use crate::timestamp::Timestamp;
 
+        //#region 🛟 port
+        /// 🔌 Kit-level named attachment point; referenced by [`Connector`] and [`super::connection::Side`].
+        pub struct Port {
+            pub id: Id,
+            pub owner_type: Weak<Type>,
+            pub code: RwLock<Option<String>>,
+            pub label: RwLock<Option<String>>,
+            pub order: RwLock<Option<i32>>,
+        }
+
+        impl Default for Port {
+            fn default() -> Self {
+                Self {
+                    id: Id::default(),
+                    owner_type: Weak::new(),
+                    code: RwLock::new(None),
+                    label: RwLock::new(None),
+                    order: RwLock::new(None),
+                }
+            }
+        }
+
+        impl Port {
+            pub async fn new(owner_type: Weak<Type>) -> Arc<Self> {
+                Arc::new(Self { id: Id::new().await, owner_type, code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) })
+            }
+
+            pub async fn compute_hash(&self) -> String {
+                let code = self.code.read().await.clone().unwrap_or_default();
+                let label = self.label.read().await.clone().unwrap_or_default();
+                let ord = self.order.read().await.map(|i| i.to_string()).unwrap_or_default();
+                h(&[self.id.as_str(), code.as_str(), label.as_str(), ord.as_str()])
+            }
+        }
+
+        #[Object(name = "Port")]
+        impl Port {
+            async fn id(&self) -> Id {
+                self.id.clone()
+            }
+            async fn hash(&self) -> String {
+                self.compute_hash().await
+            }
+            async fn owner(&self) -> Arc<Type> {
+                self.owner_type.upgrade().unwrap_or_default()
+            }
+            async fn code(&self) -> Option<String> {
+                self.code.read().await.clone()
+            }
+            async fn label(&self) -> Option<String> {
+                self.label.read().await.clone()
+            }
+            async fn order(&self) -> Option<i32> {
+                *self.order.read().await
+            }
+        }
+        //#endregion 🛟 port
+
         //#region ⚓ connector
         pub struct Connector {
             pub id: Id,
@@ -408,9 +466,10 @@ pub mod kit {
             async fn description(&self) -> Option<String> {
                 self.description.read().await.clone()
             }
-            #[graphql(name = "portId")]
-            async fn port_id(&self) -> Option<Id> {
-                self.port_id.read().await.clone()
+            async fn port(&self) -> Option<Arc<Port>> {
+                let pid = self.port_id.read().await.clone()?;
+                let t = self.owner_type.upgrade()?;
+                t.port_by_id(&pid).await
             }
             async fn qualities(&self) -> Vec<Quality> {
                 self.qualities.read().await.clone()
@@ -504,6 +563,7 @@ pub mod kit {
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
             pub connectors: RwLock<Vec<Arc<Connector>>>,
+            pub ports: RwLock<Vec<Arc<Port>>>,
             pub representations: RwLock<Vec<Arc<Representation>>>,
             pub authors: RwLock<Vec<Author>>,
             pub concepts: RwLock<Vec<Concept>>,
@@ -527,6 +587,7 @@ pub mod kit {
                     created: RwLock::new(None),
                     updated: RwLock::new(None),
                     connectors: RwLock::new(Vec::new()),
+                    ports: RwLock::new(Vec::new()),
                     representations: RwLock::new(Vec::new()),
                     authors: RwLock::new(Vec::new()),
                     concepts: RwLock::new(Vec::new()),
@@ -553,6 +614,9 @@ pub mod kit {
             /// 🔎 Linear scan of the connector Vec without cloning matched siblings.
             pub async fn connector_by_id(&self, id: &Id) -> Option<Arc<Connector>> {
                 self.connectors.read().await.iter().find(|c| &c.id == id).cloned()
+            }
+            pub async fn port_by_id(&self, id: &Id) -> Option<Arc<Port>> {
+                self.ports.read().await.iter().find(|p| &p.id == id).cloned()
             }
             pub async fn representation_by_id(&self, id: &Id) -> Option<Arc<Representation>> {
                 self.representations.read().await.iter().find(|r| &r.id == id).cloned()
@@ -848,7 +912,7 @@ pub mod kit {
             pub struct Side {
                 pub id: Id,
                 pub piece: RwLock<Weak<super::piece::Piece>>,
-                pub port: RwLock<Weak<super::super::r#type::Connector>>,
+                pub port: RwLock<Weak<super::super::r#type::Port>>,
                 pub design_piece: RwLock<Weak<super::piece::Piece>>,
                 pub connector: RwLock<Weak<super::super::r#type::Connector>>,
             }
@@ -873,7 +937,7 @@ pub mod kit {
                 async fn piece(&self) -> Arc<super::piece::Piece> {
                     self.piece.read().await.upgrade().unwrap_or_default()
                 }
-                async fn port(&self) -> Option<Arc<super::super::r#type::Connector>> {
+                async fn port(&self) -> Option<Arc<super::super::r#type::Port>> {
                     self.port.read().await.upgrade()
                 }
                 #[graphql(name = "designPiece")]
@@ -2820,6 +2884,8 @@ mod tests {
             "type Query",
             "type Mutation",
             "type Piece",
+            "type Connector",
+            "type Port",
             "type Connection",
             "type Design",
             "type Kit",

@@ -5302,6 +5302,10 @@ union AggregateEntityEdge =
   | PointDiffsEdge
   | PointEdge
   | PointModificationEdge
+  | PortDiffEdge
+  | PortDiffsEdge
+  | PortEdge
+  | PortModificationEdge
   | PositionDiffEdge
   | PositionDiffsEdge
   | PositionEdge
@@ -5466,6 +5470,10 @@ union EntityConnection =
   | PointDiffConnection
   | PointDiffsConnection
   | PointModificationConnection
+  | PortConnection
+  | PortDiffConnection
+  | PortDiffsConnection
+  | PortModificationConnection
   | PositionConnection
   | PositionDiffConnection
   | PositionDiffsConnection
@@ -5629,6 +5637,10 @@ union OwnerEntity =
   | PointDiff
   | PointDiffs
   | PointModification
+  | Port
+  | PortDiff
+  | PortDiffs
+  | PortModification
   | Position
   | PositionDiff
   | PositionDiffs
@@ -5794,6 +5806,10 @@ union OwnedEntityConnection =
   | PointDiffConnection
   | PointDiffsConnection
   | PointModificationConnection
+  | PortConnection
+  | PortDiffConnection
+  | PortDiffsConnection
+  | PortModificationConnection
   | PositionConnection
   | PositionDiffConnection
   | PositionDiffsConnection
@@ -5871,6 +5887,7 @@ union Modification =
   | OffsetModification
   | PieceModification
   | PointModification
+  | PortModification
   | PropModification
   | QualityModification
   | ReadVersionModification
@@ -5911,6 +5928,7 @@ union DiffOwned =
   | PieceDiff
   | PlaceDiff
   | PointDiff
+  | PortDiff
   | PositionDiff
   | PropDiff
   | QualityDiff
@@ -5957,6 +5975,7 @@ union DiffsOwned =
   | PlaneDiff
   | PlaneDiffs
   | PointDiffs
+  | PortDiffs
   | PositionDiff
   | PositionDiffs
   | PropDiffs
