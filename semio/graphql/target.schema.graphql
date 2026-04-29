@@ -70,6 +70,17 @@ type Position {
   plane: Plane!
 }
 
+type PositionModification {
+  center: Coordinate
+  plane: Plane
+}
+
+type PositionDiff {
+  before: Position
+  modification: PositionModification!
+  after: Position!
+}
+
 input LocationInput {
   longitude: Float!
   latitude: Float!
@@ -79,7 +90,50 @@ input LocationInput {
 type Location {
   longitude: Float!
   latitude: Float!
+  altitude: Float!
+}
+
+type LocationModification {
+  longitude: Float
+  latitude: Float
   altitude: Float
+}
+
+type LocationDiff {
+  before: Location!
+  modification: LocationModification!
+  after: Location!
+}
+
+input AttributeInput {
+  key: String!
+  value: String
+  definition: String
+}
+
+type Attribute {
+  id: ID!
+  key: String!
+  value: String!
+  definition: String
+}
+
+type AttributeModification {
+  key: String
+  value: String
+  definition: String
+}
+
+type AttributeDiff {
+  before: Attribute!
+  modification: AttributeModification!
+  after: Attribute!
+}
+
+type AttributesDiff {
+  removed: [Attribute!]
+  diffs: [AttributeDiff!]
+  added: [Attribute!]
 }
 
 #endregion Weak
@@ -118,13 +172,6 @@ type Author {
   drafts: [Draft!]!
   transactions: [Transaction!]!
   checkpoints: [Checkpoints!]!
-}
-
-type Attribute {
-  id: ID!
-  key: String!
-  value: String!
-  definition: String
 }
 
 type Prop {
@@ -284,7 +331,7 @@ type Piece implements Entity {
   owner: Blueprint!
   name: String
   description: String
-  pose: Position
+  position: Position
   scale: Float
   blueprint: Blueprint!
   connectionKind: PieceConnectionKind
@@ -323,7 +370,7 @@ type Connection implements Entity {
 type CreatedFixedPieceInput {
   designId: ID!
   blueprintId: ID!
-  pose: Position!
+  position: Position!
   name: String
   description: String
 }
@@ -605,7 +652,7 @@ type Query {
 type Mutation {
   renameKit(draftId: ID!, transactionId: ID!, name: String!): ID!
   changeDescription(draftId: ID!, transactionId: ID!, description: String!): ID!
-  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, pose: PositionInput!, name: String, description: String): ID!
+  createFixedPiece(draftId: ID!, transactionId: ID!, designId: ID!, position: PositionInput!, name: String, description: String): ID!
   fixPiece(draftId: ID!, transactionId: ID!, designId: ID!, pieceId: ID!): ID!
 }
 

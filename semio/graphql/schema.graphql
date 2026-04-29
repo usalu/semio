@@ -147,7 +147,7 @@ type CreatedFixedPiece implements Operation {
 type CreatedFixedPieceInput {
   designId: Id!
   blueprintId: Id!
-  pose: Position!
+  position: Position!
   name: String
   description: String
 }
@@ -329,7 +329,7 @@ type Location {
 type Mutation {
   renameKit(draftId: Id!, transactionId: Id!, name: String!): Id!
   changeDescription(draftId: Id!, transactionId: Id!, description: String!): Id!
-  createFixedPiece(draftId: Id!, transactionId: Id!, designId: Id!, pose: PositionInput!, name: String, description: String): Id!
+  createFixedPiece(draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Id!
   fixPiece(draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Id!
 }
 
@@ -359,7 +359,7 @@ type Piece {
   owner: Blueprint!
   name: String
   description: String
-  pose: Position
+  position: Position
   scale: Float
   blueprint: Blueprint!
   connectionKind: PieceConnectionKind

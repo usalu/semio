@@ -35,12 +35,11 @@ Key constraints:
 - read on any data for any version at any time for all three graphs (kits are different for checkpoint and change - wip additionally has draft and transactions)
 - writes by user only inside transaction.
 - first-class non-blocking conflict resolution for drafts (e.g. if draft is moving pieces that were deleted on the authoratitive)
-- dont change the target grapqhl schema structurally, only extend it
 
 First idea:
 
 - Use three webworkers with three event-sourced lanes + materialized read caches: wip, stage, authoritative
-- Use version (combination of checkpoint id and change id
+- Use version (combination of checkpoint id and change id)
 - wip is the active one used by the ui
 - authoritative is exactly the one of the backbone
 - stage is the attempt to merge changes of wip into authoritative
@@ -48,7 +47,15 @@ First idea:
 - local backbone (folder with .semio folder with four sqlite files: wip.db, stage.db, authoritative.db, conflicts.db and file blobs are globally stored under blobs/BLOBHASH.EXT)
 - dev backbone (everything embedded in one json file)
 
+Non-goals:
+
+- Dont leak backbone logic into target architecture (they are just at runtime attatchable and detachable persistence)
+- No general Json as part of graphql or rust - just hardcoded and typesafe buissness logic
+- dont change the target grapqhl schema structurally, only extend it
+
 How would you implement/refactor/rewrite semio/rs/lib.rs for this?
+
+#schema.graphql #semio/rs #metabolism.kit.semio.json
 
 ---
 

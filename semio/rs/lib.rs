@@ -3,7 +3,7 @@
 //! Every entity from `semio/graphql/target.schema.graphql` is one Rust struct shared as
 //! `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take
 //! `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships,
-//! so a query like `wip.theKit.design(id).piece(id).pose` only acquires the locks it actually
+//! so a query like `wip.theKit.design(id).piece(id).position` only acquires the locks it actually
 //! needs and never deep-copies an aggregate Vec. There is exactly **one** `emit_event` in
 //! the entire crate ([`event::EventBus::emit_event`]); every mutation routes through it.
 //!
@@ -140,7 +140,7 @@ pub mod error {
 //#region 📐 geom
 
 pub mod geom {
-    //! 📐 Pure value geometry: vectors, points, planes, poses (Copy values; never Arc-wrapped).
+    //! 📐 Pure value geometry: vectors, points, planes, positions (Copy values; never Arc-wrapped).
     use async_graphql::{InputObject, SimpleObject};
     use serde::{Deserialize, Serialize};
 
@@ -700,7 +700,7 @@ pub mod kit {
                 pub owner_design: Weak<super::Design>,
                 pub name: RwLock<Option<String>>,
                 pub description: RwLock<Option<String>>,
-                pub pose: RwLock<Option<Position>>,
+                pub position: RwLock<Option<Position>>,
                 pub scale: RwLock<Option<f64>>,
                 pub blueprint: RwLock<super::super::r#type::Blueprint>,
                 pub connection_kind: RwLock<Option<PieceConnectionKind>>,
@@ -721,7 +721,7 @@ pub mod kit {
                         owner_design: Weak::new(),
                         name: RwLock::new(None),
                         description: RwLock::new(None),
-                        pose: RwLock::new(None),
+                        position: RwLock::new(None),
                         scale: RwLock::new(None),
                         blueprint: RwLock::new(super::super::r#type::Blueprint::default()),
                         connection_kind: RwLock::new(None),
@@ -738,8 +738,8 @@ pub mod kit {
             }
 
             impl Piece {
-                pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, pose: Position) -> Arc<Self> {
-                    Arc::new(Self { id: Id::new().await, owner_design, pose: RwLock::new(Some(pose)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
+                pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
+                    Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(position)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
                 pub async fn set_name(&self, name: Option<String>) {
@@ -748,8 +748,8 @@ pub mod kit {
                 pub async fn set_description(&self, description: Option<String>) {
                     *self.description.write().await = description;
                 }
-                pub async fn set_pose(&self, pose: Option<Position>) {
-                    *self.pose.write().await = pose;
+                pub async fn set_position(&self, position: Option<Position>) {
+                    *self.position.write().await = position;
                 }
 
                 pub async fn compute_hash(&self) -> String {
@@ -758,7 +758,7 @@ pub mod kit {
                 }
 
                 pub async fn compute_flat_position(&self) -> Position {
-                    self.pose.read().await.unwrap_or_default()
+                    self.position.read().await.unwrap_or_default()
                 }
             }
 
@@ -779,8 +779,8 @@ pub mod kit {
                 async fn description(&self) -> Option<String> {
                     self.description.read().await.clone()
                 }
-                async fn pose(&self) -> Option<Position> {
-                    *self.pose.read().await
+                async fn position(&self) -> Option<Position> {
+                    *self.position.read().await
                 }
                 async fn scale(&self) -> Option<f64> {
                     *self.scale.read().await
@@ -1788,7 +1788,7 @@ pub mod vcs {
             transaction_id: Id,
             design_id: Id,
             blueprint_id: Id,
-            pose: crate::geom::Position,
+            position: crate::geom::Position,
             name: Option<String>,
             description: Option<String>,
         ) -> Result<Arc<crate::kit::design::piece::Piece>, SemioError> {
@@ -1798,7 +1798,7 @@ pub mod vcs {
             let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(&self.the_kit), format!("type-{}", blueprint_id.as_str())).await;
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
 
-            let piece = crate::kit::design::piece::Piece::new_fixed(Arc::downgrade(&design), blueprint, pose).await;
+            let piece = crate::kit::design::piece::Piece::new_fixed(Arc::downgrade(&design), blueprint, position).await;
             piece.set_name(name).await;
             piece.set_description(description).await;
             let _ = design.insert_piece(piece.clone()).await;
@@ -1935,7 +1935,7 @@ pub mod op {
     pub struct CreatedFixedPieceInput {
         pub design_id: Id,
         pub blueprint_id: Id,
-        pub pose: Position,
+        pub position: Position,
         pub name: Option<String>,
         pub description: Option<String>,
     }
@@ -1950,8 +1950,8 @@ pub mod op {
         async fn blueprint_id(&self) -> Id {
             self.blueprint_id.clone()
         }
-        async fn pose(&self) -> Position {
-            self.pose
+        async fn position(&self) -> Position {
+            self.position
         }
         async fn name(&self) -> Option<String> {
             self.name.clone()
@@ -2271,7 +2271,7 @@ pub mod op {
         pub design_id: Id,
         #[graphql(name = "blueprintId")]
         pub blueprint_id: Id,
-        pub pose: Position,
+        pub position: Position,
         pub name: Option<String>,
         pub description: Option<String>,
     }
@@ -2308,7 +2308,7 @@ pub mod op {
     /// 📡 Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
     pub enum Command {
-        CreateFixedPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, blueprint_id: Id, pose: Position, name: Option<String>, description: Option<String> },
+        CreateFixedPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, blueprint_id: Id, position: Position, name: Option<String>, description: Option<String> },
         FixPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id },
         RenameKit { request_id: Id, draft_id: Id, transaction_id: Id, name: String },
         ChangeDescription { request_id: Id, draft_id: Id, transaction_id: Id, description: String },
@@ -2504,10 +2504,10 @@ pub mod worker {
 
         async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
-                Command::CreateFixedPiece { request_id: _, draft_id, transaction_id, design_id, blueprint_id, pose, name, description } => {
-                    let piece = self.graph.apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), pose, name.clone(), description.clone()).await?;
+                Command::CreateFixedPiece { request_id: _, draft_id, transaction_id, design_id, blueprint_id, position, name, description } => {
+                    let piece = self.graph.apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone()).await?;
 
-                    let input = CreatedFixedPieceInput { design_id, blueprint_id, pose, name, description };
+                    let input = CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
                     let op = CreatedFixedPiece::new(input, piece).await;
                     self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
                     Ok(())
@@ -2605,7 +2605,7 @@ pub mod gql {
             #[graphql(name = "draftId")] draft_id: Id,
             #[graphql(name = "transactionId")] transaction_id: Id,
             #[graphql(name = "designId")] design_id: Id,
-            pose: Position,
+            position: Position,
             name: Option<String>,
             description: Option<String>,
         ) -> async_graphql::Result<Id> {
@@ -2614,7 +2614,7 @@ pub mod gql {
             // Skeleton: the GraphQL `createFixedPiece` does not yet take an explicit blueprint id;
             // we mint one so the piece always has a blueprint reference. A follow-up ticket adds the arg.
             let blueprint_id = Id::new().await;
-            rt.dispatch_wip(Command::CreateFixedPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, pose, name, description }).await;
+            rt.dispatch_wip(Command::CreateFixedPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, position, name, description }).await;
             Ok(request_id)
         }
 
@@ -2775,7 +2775,7 @@ mod tests {
     use futures_lite::future::block_on;
     use serde_json::json;
 
-    fn pose_value() -> serde_json::Value {
+    fn position_value() -> serde_json::Value {
         json!({
             "center": { "u": 0.0, "v": 0.0 },
             "plane": {
@@ -2791,13 +2791,13 @@ mod tests {
             "draftId": "d1",
             "txId": "t1",
             "designId": design_id,
-            "pose": pose_value()
+            "position": position_value()
         })
     }
 
     const CREATE_FIXED_PIECE: &str = r#"
-        mutation($draftId: ID!, $txId: ID!, $designId: ID!, $pose: PositionInput!) {
-            createFixedPiece(draftId: $draftId, transactionId: $txId, designId: $designId, pose: $pose)
+        mutation($draftId: ID!, $txId: ID!, $designId: ID!, $position: PositionInput!) {
+            createFixedPiece(draftId: $draftId, transactionId: $txId, designId: $designId, position: $position)
         }
     "#;
 
@@ -2858,7 +2858,7 @@ mod tests {
             // The wip child applies asynchronously; wait briefly for the event loop.
             std::thread::sleep(std::time::Duration::from_millis(150));
 
-            let q = "{ wip { theKit { designs { id pieces { id pose { center { u } } } } } } }";
+            let q = "{ wip { theKit { designs { id pieces { id position { center { u } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
             let data = res.data.into_json().unwrap();
@@ -2893,15 +2893,15 @@ mod tests {
             let schema = async_graphql::Schema::build(crate::gql::Query, crate::gql::Mutation, crate::gql::SubscriptionRoot).data(rt.clone()).data(bus).finish();
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
-            let pose = crate::geom::Position::default();
+            let position = crate::geom::Position::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), pose, None, None).await.expect("insert piece 1");
-            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, pose, None, None).await.expect("insert piece 2");
+            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1");
+            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2");
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
 
-            let q = "{ wip { theKit { designs { pieces { id pose { center { u } } } } } } }";
+            let q = "{ wip { theKit { designs { pieces { id position { center { u } } } } } } }";
             let res = schema.execute(q).await;
             assert!(res.errors.is_empty(), "{:?}", res.errors);
 
