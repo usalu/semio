@@ -8,6 +8,8 @@ scalar Timestamp
 
 #region Entities
 
+#region General
+
 interface Node {
   id: ID!
 }
@@ -38,12 +40,18 @@ interface EntityConnectionInterface {
   pageInfo: PageInfo!
   hash: String! # Our own extension ontop of the relay specs
 }
-
-#region Weak // Weak entities have hash as id
-
 # interface WeakEntity implements Entity {
 #   id: ID! # hash
 # }
+
+# interface StrongEntity implements Entity {
+#   id: ID! # uuidv7
+#   hash: String!
+#   ownerEntity: OwnerEntity # ENTITYKIND
+#   ownedEntities: OwnedEntityConnection # ENTITYKIND
+# }
+
+#endregion General
 
 #region Diffs
 
@@ -1135,18 +1143,6 @@ type AttributeDiffsConnection implements EntityConnectionInterface {
 }
 
 #endregion Attribute
-
-#endregion Weak
-
-#region Strong
-
-# interface StrongEntity implements Entity {
-#   id: ID! # uuidv7
-#   hash: String!
-#   ownerEntity: OwnerEntity # ENTITYKIND
-#   ownedEntities: OwnedEntityConnection # ENTITYKIND
-
-# }
 
 union Input = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
 
@@ -2492,6 +2488,141 @@ type StatDiffsConnection implements EntityConnectionInterface {
 
 #endregion Stat
 
+#region Port
+
+union PortOwner = Type
+# union PortOwned = Nothing
+
+type Port implements Entity {
+  # StrongEntity
+  id: ID! # uuidv7
+  hash: String!
+  owner: PortOwner!
+  ownerType: Type
+  ownerEntity: OwnerEntity! # PortOwner
+  ownedEntities: OwnedEntityConnection # PortOwned
+  # Fields
+  code: String
+  label: String
+  order: Int
+}
+
+type PortEdge implements EntityEdge {
+  cursor: String!
+  node: Port!
+}
+
+type PortConnection implements EntityConnectionInterface {
+  edges: [PortEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+union PortModificationOwner = PortDiff | PortModification | Port
+
+union PortModificationOwned = Port
+
+type PortModification implements Entity {
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: PortModificationOwner!
+  ownerPortDiff: PortDiff
+  ownerPortModification: PortModification
+  ownerPort: Port
+  ownerEntity: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type PortModificationEdge implements EntityEdge {
+  cursor: String!
+  node: PortModification!
+}
+
+type PortModificationConnection implements EntityConnectionInterface {
+  edges: [PortModificationEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+type PortDiff implements Diff {
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: DiffOwner!
+  ownerDiffs: Diffs
+  ownerChange: Change
+  ownerOperation: Operation
+  ownerEntity: OwnerEntity # DiffOwner
+  ownedEntities: OwnedEntityConnection # DiffOwned
+  # Diff
+  before: Port!
+  modification: PortModification!
+  after: Port!
+}
+
+type PortDiffEdge implements EntityEdge {
+  cursor: String!
+  node: PortDiff!
+}
+
+type PortDiffConnection implements EntityConnectionInterface {
+  edges: [PortDiffEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+union PortDiffsOwner =
+  | AttributeDiff
+  | Change
+  | ChangedDescription
+  | CreatedFixedPiece
+  | Diffs
+  | DraggedPiece
+  | FixedPiece
+  | LocationDiff
+  | PlaneDiff
+  | PlaceDiff
+  | PositionDiff
+  | RenamedKit
+
+union PortDiffsOwned =
+  | PortDiffs
+  | PortDiff
+  | PlaneDiff
+  | PositionDiff
+  | AttributeDiff
+  | LocationDiff
+  | PlaceDiff
+
+type PortDiffs implements Entity {
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: PortDiffsOwner!
+  ownerDiff: Diff
+  ownerOperation: Operation
+  ownerChange: Change
+  ownerEntity: OwnerEntity # PortDiffsOwner
+  ownedEntities: OwnedEntityConnection # PortDiffsOwned
+  removed: EntityConnection
+  diffs: PortDiffConnection
+  added: EntityConnection
+}
+
+type PortDiffsEdge implements EntityEdge {
+  cursor: String!
+  node: PortDiffs!
+}
+
+type PortDiffsConnection implements EntityConnectionInterface {
+  edges: [PortDiffsEdge!]!
+  pageInfo: PageInfo!
+  hash: String!
+}
+
+#endregion Port
+
 #region Type
 
 union ConnectorOwner = Type
@@ -2508,7 +2639,8 @@ type Connector implements Entity {
   # Fields
   code: String!
   description: String
-  portId: ID
+  port: Port
+  # Computed Fields
   qualities: QualityConnection!
   attributes: AttributeConnection!
 }
@@ -2538,6 +2670,10 @@ type ConnectorModification implements Entity {
   ownerConnector: Connector
   ownerEntity: OwnerEntity
   ownedEntities: OwnedEntityConnection
+  # Fields
+  code: String
+  description: String
+  port: Port
 }
 
 type ConnectorModificationEdge implements EntityEdge {
@@ -2623,6 +2759,7 @@ type Representation implements Entity {
   url: String!
   description: String
   file: File
+  # Computed Fields
   tags: TagConnection!
   qualities: QualityConnection!
   attributes: AttributeConnection!
@@ -2724,7 +2861,7 @@ type RepresentationDiffsConnection implements EntityConnectionInterface {
 }
 
 union TypeOwner = Kit
-union TypeOwned = Connector | Representation | Type | Piece
+union TypeOwned = Connector | Piece | Port | Representation | Type
 
 type Type implements Entity {
   # StrongEntity
@@ -2742,6 +2879,7 @@ type Type implements Entity {
   unit: String
   created: Timestamp
   updated: Timestamp
+  # Computed Fields
   connectors: ConnectorConnection!
   connector(id: ID!): Connector
   representations: RepresentationConnection!
@@ -3455,7 +3593,7 @@ type Side implements Entity {
   ownedEntities: OwnedEntityConnection # SideOwned
   # Fields
   piece: Piece!
-  port: Connector
+  port: Port
   designPiece: Piece
   connector: Connector
 }
@@ -3559,6 +3697,23 @@ type SideDiffsConnection implements EntityConnectionInterface {
 
 #endregion Connection
 
+#region Clump
+
+type Clump implements Entity { # implements WeakEntity
+  # WeakEntity
+  id: ID! # hash
+  hash: String!
+  owner: ClumpOwner!
+  ownerEntity: OwnerEntity! # ClumpOwner
+  ownedEntities: OwnedEntityConnection # ClumpOwned
+  # Computed Fields
+  fixedPiece: Piece
+  connectedPieces: PieceConnection
+  pieces: PieceConnection
+}
+
+#endregion Clump
+
 union DesignOwner = Kit
 union DesignOwned = Piece | Connection | Layer | Group
 
@@ -3579,6 +3734,7 @@ type Design implements Entity {
   unit: String
   created: Timestamp
   updated: Timestamp
+  # Computed Fields
   pieces: PieceConnection!
   piece(id: ID!): Piece
   connections: ConnectionConnection!
@@ -3721,6 +3877,7 @@ type Kit implements Entity {
   created: Timestamp
   updated: Timestamp
   version: String
+  # Computed Fields
   design(id: ID!): Design
   designs: DesignConnection!
   type(id: ID!): Type

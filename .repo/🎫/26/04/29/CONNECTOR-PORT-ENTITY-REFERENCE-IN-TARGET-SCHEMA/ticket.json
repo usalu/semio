@@ -1,0 +1,13 @@
+{
+  "title": "Connector Port Entity Reference in Target Schema",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Replace Connector.portId ID scalar with port: Port entity in target.schema.graphql; add Port region and union merges.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1404"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪772b83b233ca453eaf07111e957ca5e4"
+  ]
+}
