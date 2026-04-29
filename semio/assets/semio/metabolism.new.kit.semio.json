@@ -5,7 +5,7 @@
     "hash": "…",
     "authors": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -21,21 +21,21 @@
       "description": "🏗 Everything for metabolistic architecture.",
       "types": {
         "hash": "…",
-        "values": [
+        "edges": [
           {
             "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
             "hash": "…",
             "name": "Base",
             "representations": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
                   "hash": "…",
                   "name": "base",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -53,7 +53,7 @@
                   "name": "base_1to500",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -75,7 +75,7 @@
                   "name": "base_1to200",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -97,7 +97,7 @@
                   "name": "e5267da44d",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -127,7 +127,7 @@
                   "name": "b394acfd5c",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -157,7 +157,7 @@
                   "name": "base_collider",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -177,7 +177,7 @@
             },
             "connectors": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "…",
@@ -201,7 +201,7 @@
                   "mandatory": false,
                   "props": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "43555719-0b24-4069-bd92-20f3539f1577",
                         "hash": "…",
@@ -251,7 +251,7 @@
             },
             "props": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160",
                   "hash": "…",
@@ -398,7 +398,7 @@
               "updatedAt": "2025-11-23T01:10:21.034Z",
               "authors": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
                     "hash": "…"
@@ -410,7 +410,7 @@
               "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
               "families": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
                     "hash": "…"
@@ -425,7 +425,7 @@
     },
     "checkpoints": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -433,7 +433,7 @@
           "message": "…",
           "authors": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -442,7 +442,7 @@
           },
           "changes": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
@@ -450,7 +450,7 @@
                 "origin": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -518,7 +518,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -549,7 +549,7 @@
 
     "alternatives": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -561,7 +561,7 @@
           },
           "checkpoints": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -573,7 +573,7 @@
     },
     "drafts": {
       "hash": "…",
-      "values:": [
+      "edges:": [
         {
           "id": "…",
           "hash": "…",
@@ -583,13 +583,13 @@
           },
           "transactions": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -598,7 +598,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -617,7 +617,7 @@
     "hash": "…",
     "authors": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -633,21 +633,21 @@
       "description": "🏗 Everything for metabolistic architecture.",
       "types": {
         "hash": "…",
-        "values": [
+        "edges": [
           {
             "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
             "hash": "…",
             "name": "Base",
             "representations": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
                   "hash": "…",
                   "name": "base",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -665,7 +665,7 @@
                   "name": "base_1to500",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -687,7 +687,7 @@
                   "name": "base_1to200",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -709,7 +709,7 @@
                   "name": "e5267da44d",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -739,7 +739,7 @@
                   "name": "b394acfd5c",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -769,7 +769,7 @@
                   "name": "base_collider",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -789,7 +789,7 @@
             },
             "connectors": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "…",
@@ -813,7 +813,7 @@
                   "mandatory": false,
                   "props": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "43555719-0b24-4069-bd92-20f3539f1577",
                         "hash": "…",
@@ -863,7 +863,7 @@
             },
             "props": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160",
                   "hash": "…",
@@ -1010,7 +1010,7 @@
               "updatedAt": "2025-11-23T01:10:21.034Z",
               "authors": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
                     "hash": "…"
@@ -1022,7 +1022,7 @@
               "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
               "families": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
                     "hash": "…"
@@ -1037,7 +1037,7 @@
     },
     "checkpoints": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -1045,7 +1045,7 @@
           "message": "…",
           "authors": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -1054,7 +1054,7 @@
           },
           "changes": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
@@ -1062,7 +1062,7 @@
                 "origin": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -1130,7 +1130,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -1161,7 +1161,7 @@
 
     "alternatives": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -1173,7 +1173,7 @@
           },
           "checkpoints": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -1185,7 +1185,7 @@
     },
     "drafts": {
       "hash": "…",
-      "values:": [
+      "edges:": [
         {
           "id": "…",
           "hash": "…",
@@ -1195,13 +1195,13 @@
           },
           "transactions": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -1210,7 +1210,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -1229,7 +1229,7 @@
     "hash": "…",
     "authors": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -1245,21 +1245,21 @@
       "description": "🏗 Everything for metabolistic architecture.",
       "types": {
         "hash": "…",
-        "values": [
+        "edges": [
           {
             "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
             "hash": "…",
             "name": "Base",
             "representations": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3",
                   "hash": "…",
                   "name": "base",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -1277,7 +1277,7 @@
                   "name": "base_1to500",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -1299,7 +1299,7 @@
                   "name": "base_1to200",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
                         "hash": "…"
@@ -1321,7 +1321,7 @@
                   "name": "e5267da44d",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -1351,7 +1351,7 @@
                   "name": "b394acfd5c",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
                         "hash": "…"
@@ -1381,7 +1381,7 @@
                   "name": "base_collider",
                   "tags": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
                         "hash": "…"
@@ -1401,7 +1401,7 @@
             },
             "connectors": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "…",
@@ -1425,7 +1425,7 @@
                   "mandatory": false,
                   "props": {
                     "hash": "…",
-                    "values": [
+                    "edges": [
                       {
                         "id": "43555719-0b24-4069-bd92-20f3539f1577",
                         "hash": "…",
@@ -1475,7 +1475,7 @@
             },
             "props": {
               "hash": "…",
-              "values": [
+              "edges": [
                 {
                   "id": "d177f31d-7bc7-418a-8cfd-3b0f8fb15160",
                   "hash": "…",
@@ -1622,7 +1622,7 @@
               "updatedAt": "2025-11-23T01:10:21.034Z",
               "authors": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
                     "hash": "…"
@@ -1634,7 +1634,7 @@
               "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
               "families": {
                 "hash": "…",
-                "values": [
+                "edges": [
                   {
                     "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
                     "hash": "…"
@@ -1649,7 +1649,7 @@
     },
     "checkpoints": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -1657,7 +1657,7 @@
           "message": "…",
           "authors": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -1666,7 +1666,7 @@
           },
           "changes": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
@@ -1674,7 +1674,7 @@
                 "origin": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -1742,7 +1742,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…",
@@ -1773,7 +1773,7 @@
 
     "alternatives": {
       "hash": "…",
-      "values": [
+      "edges": [
         {
           "id": "…",
           "hash": "…",
@@ -1785,7 +1785,7 @@
           },
           "checkpoints": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…"
@@ -1797,7 +1797,7 @@
     },
     "drafts": {
       "hash": "…",
-      "values:": [
+      "edges:": [
         {
           "id": "…",
           "hash": "…",
@@ -1807,13 +1807,13 @@
           },
           "transactions": {
             "hash": "…",
-            "values": [
+            "edges": [
               {
                 "id": "…",
                 "hash": "…",
                 "forwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -1822,7 +1822,7 @@
                 },
                 "backwards": {
                   "hash": "…",
-                  "values": [
+                  "edges": [
                     {
                       "id": "…",
                       "hash": "…"
@@ -1838,7 +1838,7 @@
   },
   "conflicts": {
     "hash": "…",
-    "values": [
+    "edges": [
       {
         "id": "…",
         "hash": "…",
@@ -1848,7 +1848,7 @@
   },
   "blobs": {
     "hash": "…",
-    "values": [
+    "edges": [
       {
         "id": "…",
         "hash": "…",

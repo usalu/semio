@@ -1,6 +1,53 @@
+# Extension of the [relay specs](https://relay.dev/docs/guides/graphql-server-specification)
+
+#region Scalars
+
 scalar Timestamp
 
+#endregion Scalars
+
 #region Entities
+
+interface Entity {
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
+}
+
+# interface ENTITYEdge {
+#   cursor: String! // an entity id
+#   node: ENTITY
+# }
+
+# type PageInfo {
+#   hasNextPage: Boolean!
+#   hasPreviousPage: Boolean!
+#   startCursor: String // start at this entity
+#   endCursor: String // end at this entity
+# }
+
+# interface ENTITYConnection {
+  # edges: [ENTITYEdge]
+  # pageInfo: PageInfo!
+  # hash: String! // Our own extension ontop of the relay specs
+# }
+
+# interface Modification { # implements Modification
+  # FIELD: NULLABLE FIELD // if the field was modified then return the modified value
+  # removeNULLABLEFIELD: Boolean // use this if the field is by default nullable to indicate that it was removed
+# }
+
+interface Diff {
+  before: Entity!
+  # modification: Modification!
+  after: Entity!
+}
+
+interface Diffs {
+  removed: [Entity!]!
+  diffs: [Diff!]!
+  added: [Entity!]!
+}
 
 #region Weak
 
@@ -70,15 +117,15 @@ type Position {
   plane: Plane!
 }
 
-type PositionModification {
+type PositionModification { # implements Modification
   center: Coordinate
   plane: Plane
 }
 
-type PositionDiff {
-  before: Position
+type PositionDiff implements Diff {
+  before: Entity! # Position
   modification: PositionModification!
-  after: Position!
+  after: Entity! # Position
 }
 
 input LocationInput {
@@ -93,16 +140,16 @@ type Location {
   altitude: Float!
 }
 
-type LocationModification {
+type LocationModification { # implements Modification
   longitude: Float
   latitude: Float
   altitude: Float
 }
 
 type LocationDiff {
-  before: Location!
+  before: Entity! # Location
   modification: LocationModification!
-  after: Location!
+  after: Entity! # Location
 }
 
 input AttributeInput {
@@ -112,13 +159,12 @@ input AttributeInput {
 }
 
 type Attribute {
-  id: ID!
   key: String!
   value: String!
-  definition: String
+  definition: String!
 }
 
-type AttributeModification {
+type AttributeModification { # implements Modification
   key: String
   value: String
   definition: String
@@ -140,28 +186,83 @@ type AttributesDiff {
 
 #region Strong
 
-type Place {
+interface Node {
   id: ID!
-  name: String
-  place: Place
 }
+
+interface StrongEntity implements Node {
+  id: ID!
+  hash: String!
+  owner: Entity
+  owns: [Entity!]!
+}
+
+union OperationInput = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
+
+interface Operation implements Entity {
+  id: ID!
+  hash: String!
+  owner: Entity # Change
+  owns: [Entity!]! # Input
+  diff: Diff!
+  input: OperationInput
+}
+
+#region Kit
+
+#region Place
+
+type Place implements Entity {
+  id: ID!
+  hash: String!
+  owner: Kit!
+  name: String
+  location: Location
+}
+
+type PlaceModification { # implements Modification
+  name: String
+  location: LocationModification
+  removeLocation: Boolean
+}
+
+type PlaceDiff {
+  hash: String
+  before: Place!
+  modification: PlaceModification!
+  after: Place!
+}
+
+#endregion Place
+
+#region File
 
 type File {
   id: ID!
+  hash: String!
   url: String!
   mime: String
   size: Int
-  hash: String!
   description: String
   created: Timestamp
   updated: Timestamp
 }
+
+type FileModification {
+
+#endregion File
+
+#region Folder
 
 type Folder {
   id: ID!
   path: String!
   description: String
 }
+
+#endregion Folder
+
+#region Author
 
 type Author {
   id: ID!
@@ -174,6 +275,10 @@ type Author {
   checkpoints: [Checkpoints!]!
 }
 
+#endregion Author
+
+#region Prop
+
 type Prop {
   id: ID!
   key: String!
@@ -181,6 +286,10 @@ type Prop {
   unit: String
   quality: Quality
 }
+
+#endregion Prop
+
+#region Benchmark
 
 type Benchmark {
   id: ID!
@@ -190,6 +299,10 @@ type Benchmark {
   minExcluded: Boolean
   maxExcluded: Boolean
 }
+
+#endregion Benchmark
+
+#region Quality
 
 type Quality {
   id: ID!
@@ -201,11 +314,19 @@ type Quality {
   benchmarks: [Benchmark!]!
 }
 
+#endregion Quality
+
+#region Tag
+
 type Tag {
   id: ID!
   name: String!
   order: Int
 }
+
+#endregion Tag
+
+#region Concept
 
 type Concept {
   id: ID!
@@ -213,6 +334,10 @@ type Concept {
   description: String
   order: Int
 }
+
+#endregion Concept
+
+#region Stat
 
 type Stat {
   id: ID!
@@ -222,45 +347,7 @@ type Stat {
   description: String
 }
 
-type Layer {
-  id: ID!
-  name: String!
-  description: String
-  color: String
-  order: Int
-  visible: Boolean
-  locked: Boolean
-}
-
-type Group {
-  id: ID!
-  name: String!
-  description: String
-  color: String
-  icon: String
-  pieces: [Piece!]!
-}
-
-#endregion Shared Entities
-
-#region Strong
-
-interface Entity {
-  id: ID!
-  hash: String!
-}
-
-union OperationInput = RenamedKitInput | ChangedDescriptionInput | CreatedFixedPieceInput | FixedPieceInput | DraggedPieceInput
-
-interface Operation implements Entity {
-  id: ID!
-  hash: String!
-  owner: Change!
-  diff: Diff!
-  input: OperationInput
-}
-
-#region Kit
+#endregion Stat
 
 #region Type
 
@@ -315,6 +402,33 @@ type Type implements Entity {
 #endregion Type
 
 #region Design
+
+#region Layer
+
+type Layer {
+  id: ID!
+  name: String!
+  description: String
+  color: String
+  order: Int
+  visible: Boolean
+  locked: Boolean
+}
+
+#endregion Layer
+
+#region Group
+
+type Group {
+  id: ID!
+  name: String!
+  description: String
+  color: String
+  icon: String
+  pieces: [Piece!]!
+}
+
+#endregion Group
 
 #region Piece
 
@@ -647,6 +761,7 @@ type Query {
   wip: Graph!
   authoritative: Graph
   conflicts: [Conflict!]!
+  node(id: ID!): Node
 }
 
 type Mutation {
