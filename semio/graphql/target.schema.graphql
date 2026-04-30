@@ -361,6 +361,10 @@ type PointModification implements Entity {
   pointOwner: Point # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # PointModification
+  x: Float # computed
+  y: Float # computed
+  z: Float # computed
 }
 
 type PointModificationEdge implements EntityEdge {
@@ -481,6 +485,9 @@ type CoordinateModification implements Entity {
   coordinateOwner: Coordinate # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # CoordinateModification
+  u: Float # computed
+  v: Float # computed
 }
 
 type CoordinateModificationEdge implements EntityEdge {
@@ -601,6 +608,9 @@ type OffsetModification implements Entity {
   offsetOwner: Offset # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # OffsetModification
+  u: Float # computed
+  v: Float # computed
 }
 
 type OffsetModificationEdge implements EntityEdge {
@@ -726,9 +736,10 @@ type PlaneModification implements Entity { # implements Modification
   planeDiffOwner: PlaneDiff
   entityOwner: OwnerEntity # computed // PlaneModificationOwner
   ownedEntities: OwnedEntityConnection # computed // PlaneModificationOwned
-  origin: Point # data
-  xAxis: Vector # data
-  yAxis: Vector # data
+  # PlaneModification
+  origin: Point # computed
+  xAxis: Vector # computed
+  yAxis: Vector # computed
 }
 
 type PlaneModificationEdge implements EntityEdge {
@@ -849,8 +860,9 @@ type PositionModification implements Entity { # implements Modification
   positionDiffOwner: PositionDiff
   entityOwner: OwnerEntity # computed // PositionModificationOwner
   ownedEntities: OwnedEntityConnection # computed // PositionModificationOwned
-  center: Coordinate # data
-  plane: Plane # data
+  # PositionModification
+  center: Coordinate # computed
+  plane: Plane # computed
 }
 
 type PositionModificationEdge implements EntityEdge {
@@ -972,9 +984,10 @@ type LocationModification implements Entity { # implements Modification
   locationDiffOwner: LocationDiff
   entityOwner: OwnerEntity # computed // LocationModificationOwner
   ownedEntities: OwnedEntityConnection # computed // LocationModificationOwned
-  longitude: Float # data
-  latitude: Float # data
-  altitude: Float # data
+  # LocationModification
+  longitude: Float # computed
+  latitude: Float # computed
+  altitude: Float # computed
 }
 
 type LocationModificationEdge implements EntityEdge {
@@ -1113,9 +1126,10 @@ type AttributeModification implements Entity { # implements Modification
   attributeDiffOwner: AttributeDiff
   entityOwner: OwnerEntity # computed // AttributeModificationOwner
   ownedEntities: OwnedEntityConnection # computed // AttributeModificationOwned
-  key: String # data
-  value: String # data
-  definition: String # data
+  # AttributeModification
+  key: String # computed
+  value: String # computed
+  definition: String # computed
 }
 
 type AttributeModificationEdge implements EntityEdge {
@@ -1265,9 +1279,11 @@ type PlaceModification implements Entity { # implements Modification
   placeOwner: Place
   entityOwner: OwnerEntity # computed // PlaceModificationOwner
   ownedEntities: OwnedEntityConnection # computed // PlaceModificationOwned
-  name: String # data
-  location: LocationModification # data
-  removeLocation: Boolean # data
+  # PlaceModification
+  name: String # computed
+  removeName: Boolean # computed
+  location: Location # computed
+  removeLocation: Boolean # computed
 }
 
 type PlaceModificationEdge implements EntityEdge {
@@ -1382,6 +1398,10 @@ type FamilyModification implements Entity {
   familyOwner: Family # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # FamilyModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
 }
 
 type FamilyModificationEdge implements EntityEdge {
@@ -1503,6 +1523,15 @@ type FolderModification implements Entity {
   folderOwner: Folder # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # FolderModification
+  name: String # computed
+  path: String # computed
+  description: String # computed
+  files: FileConnection # computed
+  subFolders: FolderConnection # computed
+  families: FamilyConnection # computed
+  types: TypeConnection # computed
+  designs: DesignConnection # computed
 }
 
 type FolderModificationEdge implements EntityEdge {
@@ -1627,6 +1656,24 @@ type FileModification implements Entity {
   fileOwner: File # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # FileModification
+  url: String # computed
+  mime: String # computed
+  removeMime: Boolean # computed
+  size: Int # computed
+  removeSize: Boolean # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  createdBy: Author # computed
+  removeCreatedBy: Boolean # computed
+  authoredBy: AuthorConnection # computed
+  removeAuthoredBy: Boolean # computed
+  changedIn: CheckpointConnection # computed
+  removeChangedIn: Boolean # computed
+  lastChangedBy: Author # computed
+  removeLastChangedBy: Boolean # computed
+  lastChangedIn: Checkpoint # computed
+  removeLastChangedIn: Boolean # computed
 }
 
 type FileModificationEdge implements EntityEdge {
@@ -1749,6 +1796,16 @@ type AuthorModification implements Entity {
   authorOwner: Author # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # AuthorModification
+  name: String # computed
+  email: String # computed
+  role: String # computed
+  removeRole: Boolean # computed
+  rank: Int # computed
+  removeRank: Boolean # computed
+  drafts: DraftConnection # computed
+  transactions: TransactionConnection # computed
+  checkpoints: CheckpointConnection # computed
 }
 
 type AuthorModificationEdge implements EntityEdge {
@@ -1868,6 +1925,13 @@ type PropModification implements Entity {
   propOwner: Prop # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # PropModification
+  key: String # computed
+  value: String # computed
+  unit: String # computed
+  removeUnit: Boolean # computed
+  quality: Quality # computed
+  removeQuality: Boolean # computed
 }
 
 type PropModificationEdge implements EntityEdge {
@@ -1985,6 +2049,16 @@ type BenchmarkModification implements Entity {
   benchmarkOwner: Benchmark # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # BenchmarkModification
+  name: String # computed
+  min: Float # computed
+  removeMin: Boolean # computed
+  max: Float # computed
+  removeMax: Boolean # computed
+  minExcluded: Boolean # computed
+  removeMinExcluded: Boolean # computed
+  maxExcluded: Boolean # computed
+  removeMaxExcluded: Boolean # computed
 }
 
 type BenchmarkModificationEdge implements EntityEdge {
@@ -2107,6 +2181,17 @@ type QualityModification implements Entity {
   qualityOwner: Quality # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # QualityModification
+  key: String # computed
+  value: String # computed
+  removeValue: Boolean # computed
+  unit: String # computed
+  removeUnit: Boolean # computed
+  definition: String # computed
+  removeDefinition: Boolean # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  benchmarks: BenchmarkConnection # computed
 }
 
 type QualityModificationEdge implements EntityEdge {
@@ -2223,6 +2308,10 @@ type TagModification implements Entity {
   tagOwner: Tag # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # TagModification
+  name: String # computed
+  order: Int # computed
+  removeOrder: Boolean # computed
 }
 
 type TagModificationEdge implements EntityEdge {
@@ -2339,6 +2428,12 @@ type ConceptModification implements Entity {
   conceptOwner: Concept # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # ConceptModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  order: Int # computed
+  removeOrder: Boolean # computed
 }
 
 type ConceptModificationEdge implements EntityEdge {
@@ -2457,6 +2552,13 @@ type StatModification implements Entity {
   statOwner: Stat # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # StatModification
+  key: String # computed
+  value: String # computed
+  unit: String # computed
+  removeUnit: Boolean # computed
+  description: String # computed
+  removeDescription: Boolean # computed
 }
 
 type StatModificationEdge implements EntityEdge {
@@ -2572,6 +2674,13 @@ type PortModification implements Entity {
   portOwner: Port # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # PortModification
+  code: String # computed
+  removeCode: Boolean # computed
+  label: String # computed
+  removeLabel: Boolean # computed
+  order: Int # computed
+  removeOrder: Boolean # computed
 }
 
 type PortModificationEdge implements EntityEdge {
@@ -2690,9 +2799,12 @@ type ConnectorModification implements Entity {
   connectorOwner: Connector # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
-  code: String # data
-  description: String # data
-  port: Port # data
+  # ConnectorModification
+  code: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  port: Port # computed
+  removePort: Boolean # computed
 }
 
 type ConnectorModificationEdge implements EntityEdge {
@@ -2808,6 +2920,12 @@ type RepresentationModification implements Entity {
   representationOwner: Representation # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # RepresentationModification
+  url: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  file: File # computed
+  removeFile: Boolean # computed
 }
 
 type RepresentationModificationEdge implements EntityEdge {
@@ -2941,6 +3059,26 @@ type TypeModification implements Entity {
   typeOwner: Type # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # TypeModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  icon: String # computed
+  removeIcon: Boolean # computed
+  image: String # computed
+  removeImage: Boolean # computed
+  unit: String # computed
+  removeUnit: Boolean # computed
+  createdBy: Author # computed
+  removeCreatedBy: Boolean # computed
+  authoredBy: AuthorConnection # computed
+  removeAuthoredBy: Boolean # computed
+  changedIn: CheckpointConnection # computed
+  removeChangedIn: Boolean # computed
+  lastChangedBy: Author # computed
+  removeLastChangedBy: Boolean # computed
+  lastChangedIn: Checkpoint # computed
+  removeLastChangedIn: Boolean # computed
 }
 
 type TypeModificationEdge implements EntityEdge {
@@ -3061,6 +3199,18 @@ type LayerModification implements Entity {
   layerOwner: Layer # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # LayerModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  color: String # computed
+  removeColor: Boolean # computed
+  order: Int # computed
+  removeOrder: Boolean # computed
+  visible: Boolean # computed
+  removeVisible: Boolean # computed
+  locked: Boolean # computed
+  removeLocked: Boolean # computed
 }
 
 type LayerModificationEdge implements EntityEdge {
@@ -3178,6 +3328,15 @@ type GroupModification implements Entity {
   groupOwner: Group # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # GroupModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  color: String # computed
+  removeColor: Boolean # computed
+  icon: String # computed
+  removeIcon: Boolean # computed
+  pieces: PieceConnection # computed
 }
 
 type GroupModificationEdge implements EntityEdge {
@@ -3328,6 +3487,18 @@ type PieceModification implements Entity {
   pieceOwner: Piece # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # PieceModification
+  name: String # computed
+  removeName: Boolean # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  position: Position # computed
+  removePosition: Boolean # computed
+  scale: Float # computed
+  removeScale: Boolean # computed
+  blueprint: Blueprint # computed
+  props: PropConnection # computed
+  attributes: AttributeConnection # computed
 }
 
 type PieceModificationEdge implements EntityEdge {
@@ -3637,6 +3808,14 @@ type SideModification implements Entity {
   sideOwner: Side # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # SideModification
+  piece: Piece # computed
+  port: Port # computed
+  removePort: Boolean # computed
+  designPiece: Piece # computed
+  removeDesignPiece: Boolean # computed
+  connector: Connector # computed
+  removeConnector: Boolean # computed
 }
 
 type SideModificationEdge implements EntityEdge {
@@ -3794,6 +3973,28 @@ type DesignModification implements Entity {
   designOwner: Design # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # DesignModification
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  icon: String # computed
+  removeIcon: Boolean # computed
+  image: String # computed
+  removeImage: Boolean # computed
+  place: Place # computed
+  removePlace: Boolean # computed
+  unit: String # computed
+  removeUnit: Boolean # computed
+  createdBy: Author # computed
+  removeCreatedBy: Boolean # computed
+  authoredBy: AuthorConnection # computed
+  removeAuthoredBy: Boolean # computed
+  changedIn: CheckpointConnection # computed
+  removeChangedIn: Boolean # computed
+  lastChangedBy: Author # computed
+  removeLastChangedBy: Boolean # computed
+  lastChangedIn: Checkpoint # computed
+  removeLastChangedIn: Boolean # computed
 }
 
 type DesignModificationEdge implements EntityEdge {
@@ -3940,6 +4141,30 @@ type KitModification implements Entity {
   kitOwner: Kit # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # KitModification
+  checkpoint: Checkpoint # computed
+  removeCheckpoint: Boolean # computed
+  draft: Draft # computed
+  removeDraft: Boolean # computed
+  transaction: Transaction # computed
+  removeTransaction: Boolean # computed
+  name: String # computed
+  description: String # computed
+  removeDescription: Boolean # computed
+  icon: String # computed
+  removeIcon: Boolean # computed
+  image: String # computed
+  removeImage: Boolean # computed
+  preview: String # computed
+  removePreview: Boolean # computed
+  remote: String # computed
+  removeRemote: Boolean # computed
+  homepage: String # computed
+  removeHomepage: Boolean # computed
+  license: String # computed
+  removeLicense: Boolean # computed
+  uri: String # computed
+  removeUri: Boolean # computed
 }
 
 type KitModificationEdge implements EntityEdge {
@@ -4106,6 +4331,14 @@ type ChangeModification implements Entity {
   changeOwner: Change # reference // spine
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # ChangeModification
+  description: String # computed
+  removeDescription: Boolean # computed
+  origin: String # computed
+  removeOrigin: Boolean # computed
+  forwards: OperationConnection # computed
+  backwards: OperationConnection # computed
+  sequenceNumber: Int # computed
 }
 
 type ChangeModificationEdge implements EntityEdge {
@@ -4215,6 +4448,8 @@ type TransactionModification implements Entity {
   transactionOwner: Transaction # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # TransactionModification
+  changes: ChangeConnection # computed
 }
 
 type TransactionModificationEdge implements EntityEdge {
@@ -4331,6 +4566,18 @@ type DraftModification implements Entity {
   draftOwner: Draft # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # DraftModification
+  parentCheckpoint: Checkpoint # computed
+  removeParentCheckpoint: Boolean # computed
+  targetAlternative: Alternative # computed
+  removeTargetAlternative: Boolean # computed
+  openTransaction: Transaction # computed
+  removeOpenTransaction: Boolean # computed
+  finalizedTransactions: TransactionConnection # computed
+  redoTransactions: TransactionConnection # computed
+  changes: ChangeConnection # computed
+  canUndo: Boolean # computed
+  canRedo: Boolean # computed
 }
 
 type DraftModificationEdge implements EntityEdge {
@@ -4451,6 +4698,12 @@ type CheckpointModification implements Entity {
   checkpointOwner: Checkpoint # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # CheckpointModification
+  timestamp: Timestamp # computed
+  removeTimestamp: Boolean # computed
+  message: String # computed
+  removeMessage: Boolean # computed
+  isRelease: Boolean # computed
 }
 
 type CheckpointModificationEdge implements EntityEdge {
@@ -4569,6 +4822,11 @@ type AlternativeModification implements Entity {
   alternativeOwner: Alternative # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # AlternativeModification
+  name: String # computed
+  draft: Draft # computed
+  removeDraft: Boolean # computed
+  checkpoints: CheckpointConnection # computed
 }
 
 type AlternativeModificationEdge implements EntityEdge {
@@ -4689,6 +4947,11 @@ type GraphModification implements Entity {
   graphOwner: Graph # reference
   entityOwner: OwnerEntity # computed
   ownedEntities: OwnedEntityConnection # computed
+  # GraphModification
+  theKit: Kit # computed
+  removeTheKit: Boolean # computed
+  alternatives: AlternativeConnection # computed
+  checkpoints: CheckpointConnection # computed
 }
 
 type GraphModificationEdge implements EntityEdge {
