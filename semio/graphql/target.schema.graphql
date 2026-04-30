@@ -1550,8 +1550,13 @@ type File implements Entity { # implements StrongEntity
   mime: String
   size: Int
   description: String
-  created: Timestamp
-  updated: Timestamp
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection
+  changedIn: CheckpointConnection
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
 }
 
 type FileEdge implements EntityEdge {
@@ -2858,8 +2863,13 @@ type Type implements Entity {
   icon: String
   image: String
   unit: String
-  created: Timestamp
-  updated: Timestamp
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection
+  changedIn: CheckpointConnection
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
   # Computed Fields
   connectors: ConnectorConnection!
   connector(id: ID!): Connector
@@ -3713,8 +3723,13 @@ type Design implements Entity {
   image: String
   place: Place
   unit: String
-  created: Timestamp
-  updated: Timestamp
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection
+  changedIn: CheckpointConnection
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
   # Computed Fields
   pieces: PieceConnection!
   piece(id: ID!): Piece
@@ -3855,9 +3870,6 @@ type Kit implements Entity {
   homepage: String
   license: String
   uri: String
-  created: Timestamp
-  updated: Timestamp
-  version: String
   # Computed Fields
   design(id: ID!): Design
   designs: DesignConnection!
@@ -3873,6 +3885,13 @@ type Kit implements Entity {
   props: PropConnection!
   attributes: AttributeConnection!
   stats: StatConnection!
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection
+  changedIn: CheckpointConnection
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
 }
 
 type KitEdge implements EntityEdge {
@@ -4857,90 +4876,6 @@ type ReadVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union ReadVersionModificationOwner = ReadVersionDiff | ReadVersionModification | ReadVersion
-
-union ReadVersionModificationOwned = ReadVersion
-
-type ReadVersionModification implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: ReadVersionModificationOwner!
-  readVersionDiffOwner: ReadVersionDiff
-  readVersionModificationOwner: ReadVersionModification
-  readVersionOwner: ReadVersion
-  entityOwner: OwnerEntity
-  ownedEntities: OwnedEntityConnection
-}
-
-type ReadVersionModificationEdge implements EntityEdge {
-  cursor: String!
-  node: ReadVersionModification!
-}
-
-type ReadVersionModificationConnection implements EntityConnectionInterface {
-  edges: [ReadVersionModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ReadVersionDiff implements Diff {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: DiffOwner!
-  ownerDiffs: Diffs
-  changeOwner: Change
-  operationOwner: Operation
-  entityOwner: OwnerEntity # DiffOwner
-  ownedEntities: OwnedEntityConnection # DiffOwned
-  # Diff
-  before: ReadVersion!
-  modification: ReadVersionModification!
-  after: ReadVersion!
-}
-
-type ReadVersionDiffEdge implements EntityEdge {
-  cursor: String!
-  node: ReadVersionDiff!
-}
-
-type ReadVersionDiffConnection implements EntityConnectionInterface {
-  edges: [ReadVersionDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-union ReadVersionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
-
-union ReadVersionDiffsOwned = ReadVersionDiffs | ReadVersionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
-
-type ReadVersionDiffs implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: ReadVersionDiffsOwner!
-  diffOwner: Diff
-  operationOwner: Operation
-  changeOwner: Change
-  entityOwner: OwnerEntity # ReadVersionDiffsOwner
-  ownedEntities: OwnedEntityConnection # ReadVersionDiffsOwned
-  removed: EntityConnection
-  diffs: ReadVersionDiffConnection
-  added: EntityConnection
-}
-
-type ReadVersionDiffsEdge implements EntityEdge {
-  cursor: String!
-  node: ReadVersionDiffs!
-}
-
-type ReadVersionDiffsConnection implements EntityConnectionInterface {
-  edges: [ReadVersionDiffsEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
 union WriteVersionOwner = Conflict
 # union WriteVersionOwned = Nothing
 
@@ -4971,90 +4906,6 @@ type WriteVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union WriteVersionModificationOwner = WriteVersionDiff | WriteVersionModification | WriteVersion
-
-union WriteVersionModificationOwned = WriteVersion
-
-type WriteVersionModification implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: WriteVersionModificationOwner!
-  writeVersionDiffOwner: WriteVersionDiff
-  writeVersionModificationOwner: WriteVersionModification
-  writeVersionOwner: WriteVersion
-  entityOwner: OwnerEntity
-  ownedEntities: OwnedEntityConnection
-}
-
-type WriteVersionModificationEdge implements EntityEdge {
-  cursor: String!
-  node: WriteVersionModification!
-}
-
-type WriteVersionModificationConnection implements EntityConnectionInterface {
-  edges: [WriteVersionModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type WriteVersionDiff implements Diff {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: DiffOwner!
-  ownerDiffs: Diffs
-  changeOwner: Change
-  operationOwner: Operation
-  entityOwner: OwnerEntity # DiffOwner
-  ownedEntities: OwnedEntityConnection # DiffOwned
-  # Diff
-  before: WriteVersion!
-  modification: WriteVersionModification!
-  after: WriteVersion!
-}
-
-type WriteVersionDiffEdge implements EntityEdge {
-  cursor: String!
-  node: WriteVersionDiff!
-}
-
-type WriteVersionDiffConnection implements EntityConnectionInterface {
-  edges: [WriteVersionDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-union WriteVersionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
-
-union WriteVersionDiffsOwned = WriteVersionDiffs | WriteVersionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
-
-type WriteVersionDiffs implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: WriteVersionDiffsOwner!
-  diffOwner: Diff
-  operationOwner: Operation
-  changeOwner: Change
-  entityOwner: OwnerEntity # WriteVersionDiffsOwner
-  ownedEntities: OwnedEntityConnection # WriteVersionDiffsOwned
-  removed: EntityConnection
-  diffs: WriteVersionDiffConnection
-  added: EntityConnection
-}
-
-type WriteVersionDiffsEdge implements EntityEdge {
-  cursor: String!
-  node: WriteVersionDiffs!
-}
-
-type WriteVersionDiffsConnection implements EntityConnectionInterface {
-  edges: [WriteVersionDiffsEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
 union ConflictOwner = Session | Graph
 union ConflictOwned = ReadVersion | WriteVersion
 
@@ -5071,7 +4922,13 @@ type Conflict implements Entity {
   authoritativeVersion: ReadVersion
   transactionVersion: WriteVersion
   reason: String!
-  createdAt: Timestamp!
+  createdAt: Timestamp
+  createdBy: Author
+  authoredBy: AuthorConnection
+  changedIn: CheckpointConnection
+  lastChangedAt: Timestamp
+  lastChangedBy: Author
+  lastChangedIn: Checkpoint
 }
 
 type ConflictEdge implements EntityEdge {
@@ -5081,90 +4938,6 @@ type ConflictEdge implements EntityEdge {
 
 type ConflictConnection implements EntityConnectionInterface {
   edges: [ConflictEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-union ConflictModificationOwner = ConflictDiff | ConflictModification | Conflict
-
-union ConflictModificationOwned = Conflict
-
-type ConflictModification implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: ConflictModificationOwner!
-  conflictDiffOwner: ConflictDiff
-  conflictModificationOwner: ConflictModification
-  conflictOwner: Conflict
-  entityOwner: OwnerEntity
-  ownedEntities: OwnedEntityConnection
-}
-
-type ConflictModificationEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictModification!
-}
-
-type ConflictModificationConnection implements EntityConnectionInterface {
-  edges: [ConflictModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type ConflictDiff implements Diff {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: DiffOwner!
-  ownerDiffs: Diffs
-  changeOwner: Change
-  operationOwner: Operation
-  entityOwner: OwnerEntity # DiffOwner
-  ownedEntities: OwnedEntityConnection # DiffOwned
-  # Diff
-  before: Conflict!
-  modification: ConflictModification!
-  after: Conflict!
-}
-
-type ConflictDiffEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictDiff!
-}
-
-type ConflictDiffConnection implements EntityConnectionInterface {
-  edges: [ConflictDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-union ConflictDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
-
-union ConflictDiffsOwned = ConflictDiffs | ConflictDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
-
-type ConflictDiffs implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: ConflictDiffsOwner!
-  diffOwner: Diff
-  operationOwner: Operation
-  changeOwner: Change
-  entityOwner: OwnerEntity # ConflictDiffsOwner
-  ownedEntities: OwnedEntityConnection # ConflictDiffsOwned
-  removed: EntityConnection
-  diffs: ConflictDiffConnection
-  added: EntityConnection
-}
-
-type ConflictDiffsEdge implements EntityEdge {
-  cursor: String!
-  node: ConflictDiffs!
-}
-
-type ConflictDiffsConnection implements EntityConnectionInterface {
-  edges: [ConflictDiffsEdge!]!
   pageInfo: PageInfo!
   hash: String!
 }
