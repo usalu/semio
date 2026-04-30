@@ -108,7 +108,7 @@ type Diffs implements Entity { # implements WeakEntity
   changeOwner: Change
   entityOwner: OwnerEntity # DiffsOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
-  # Fields
+  # Data Fields
   removed: EntityConnection
   diffs: DiffConnection
   added: EntityConnection
@@ -147,7 +147,7 @@ type Vector implements Entity { # implements WeakEntity
   planeModificationOwner: PlaneModification
   entityOwner: OwnerEntity # VectorOwner
   ownedEntities: OwnedEntityConnection # VectorOwned
-  # Fields
+  # Data Fields
   x: Float!
   y: Float!
   z: Float!
@@ -270,7 +270,7 @@ type Point implements Entity { # implements WeakEntity
   planeModificationOwner: PlaneModification
   entityOwner: OwnerEntity # PointOwner
   ownedEntities: OwnedEntityConnection # PointOwned
-  # Fields
+  # Data Fields
   x: Float!
   y: Float!
   z: Float!
@@ -392,7 +392,7 @@ type Coordinate implements Entity { # implements WeakEntity
   positionModificationOwner: PositionModification
   entityOwner: OwnerEntity # CoordinateOwner
   ownedEntities: OwnedEntityConnection # CoordinateOwned
-  # Fields
+  # Data Fields
   u: Float!
   v: Float!
 }
@@ -513,7 +513,7 @@ type Offset implements Entity { # implements WeakEntity
   positionModificationOwner: PositionModification
   entityOwner: OwnerEntity # OffsetOwner
   ownedEntities: OwnedEntityConnection # OffsetOwned
-  # Fields
+  # Data Fields
   u: Float!
   v: Float!
 }
@@ -636,7 +636,7 @@ type Plane implements Entity { # implements WeakEntity
   planeDiffOwner: PlaneDiff
   entityOwner: OwnerEntity # PlaneOwner
   ownedEntities: OwnedEntityConnection # PlaneOwned
-  # Fields
+  # Data Fields
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
@@ -669,7 +669,7 @@ type PlaneModification implements Entity { # implements Modification
   planeDiffOwner: PlaneDiff
   entityOwner: OwnerEntity # PlaneModificationOwner
   ownedEntities: OwnedEntityConnection # PlaneModificationOwned
-  # Fields
+  # Data Fields
   origin: Point
   xAxis: Vector
   yAxis: Vector
@@ -766,7 +766,7 @@ type Position implements Entity { # implements WeakEntity
   positionDiffOwner: PositionDiff
   entityOwner: OwnerEntity # PositionOwner
   ownedEntities: OwnedEntityConnection # PositionOwned
-  # Fields
+  # Data Fields
   center: Coordinate!
   plane: Plane!
 }
@@ -794,7 +794,7 @@ type PositionModification implements Entity { # implements Modification
   positionDiffOwner: PositionDiff
   entityOwner: OwnerEntity # PositionModificationOwner
   ownedEntities: OwnedEntityConnection # PositionModificationOwned
-  # Fields
+  # Data Fields
   center: Coordinate
   plane: Plane
 }
@@ -890,7 +890,7 @@ type Location implements Entity { # implements WeakEntity
   designOwner: Design
   entityOwner: OwnerEntity # LocationOwner
   ownedEntities: OwnedEntityConnection # LocationOwned
-  # Fields
+  # Data Fields
   longitude: Float!
   latitude: Float!
   altitude: Float!
@@ -919,7 +919,7 @@ type LocationModification implements Entity { # implements Modification
   locationDiffOwner: LocationDiff
   entityOwner: OwnerEntity # LocationModificationOwner
   ownedEntities: OwnedEntityConnection # LocationModificationOwned
-  # Fields
+  # Data Fields
   longitude: Float
   latitude: Float
   altitude: Float
@@ -1025,7 +1025,7 @@ type Attribute implements Entity { # implements WeakEntity
   pieceModificationOwner: PieceModification
   entityOwner: OwnerEntity # AttributeOwner
   ownedEntities: OwnedEntityConnection # AttributeOwned
-  # Fields
+  # Data Fields
   key: String!
   value: String!
   definition: String!
@@ -1062,7 +1062,7 @@ type AttributeModification implements Entity { # implements Modification
   attributeDiffOwner: AttributeDiff
   entityOwner: OwnerEntity # AttributeModificationOwner
   ownedEntities: OwnedEntityConnection # AttributeModificationOwned
-  # Fields
+  # Data Fields
   key: String
   value: String
   definition: String
@@ -1125,7 +1125,7 @@ type AttributeDiffs implements Entity {
   changeOwner: Change
   entityOwner: OwnerEntity # AttributeDiffsOwner
   ownedEntities: OwnedEntityConnection # AttributeDiffsOwned
-  # Fields
+  # Data Fields
   removed: EntityConnection # Attribute
   diffs: DiffConnection # AttributeDiff
   added: EntityConnection # Attribute
@@ -1157,7 +1157,7 @@ interface Operation implements Entity { # implements StrongEntity
   changeOwner: Change
   entityOwner: OwnerEntity # OperationOwner
   ownedEntities: OwnedEntityConnection # OperationOwned
-  # Fields
+  # Data Fields
   input: Input
   diff: Diff!
 }
@@ -1190,7 +1190,7 @@ type Place implements Entity { # implements StrongEntity
   graphOwner: Graph
   entityOwner: OwnerEntity! # PlaceOwner
   ownedEntities: OwnedEntityConnection # PlaceOwned
-  # Fields
+  # Data Fields
   name: String
   location: Location
 }
@@ -1218,7 +1218,7 @@ type PlaceModification implements Entity { # implements Modification
   placeOwner: Place
   entityOwner: OwnerEntity # PlaceModificationOwner
   ownedEntities: OwnedEntityConnection # PlaceModificationOwned
-  # Fields
+  # Data Fields
   name: String
   location: LocationModification
   removeLocation: Boolean
@@ -1307,7 +1307,7 @@ type Family implements Entity {
   kitOwner: Kit
   entityOwner: OwnerEntity! # FamilyOwner
   ownedEntities: OwnedEntityConnection # FamilyOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
 }
@@ -1423,7 +1423,7 @@ type Folder implements Entity { # implements StrongEntity
   folderOwner: Folder
   entityOwner: OwnerEntity! # FolderOwner
   ownedEntities: OwnedEntityConnection # FolderOwned
-  # Fields
+  # Data Fields
   name: String!
   path: String!
   description: String!
@@ -1545,7 +1545,7 @@ type File implements Entity { # implements StrongEntity
   folderOwner: Folder
   entityOwner: OwnerEntity! # FileOwner
   ownedEntities: OwnedEntityConnection # Nothing
-  # Fields
+  # Data Fields
   url: String!
   mime: String
   size: Int
@@ -1672,7 +1672,7 @@ type Author implements Entity {
   sessionOwner: Session
   entityOwner: OwnerEntity # AuthorOwner
   ownedEntities: OwnedEntityConnection # AuthorOwned
-  # Fields
+  # Data Fields
   name: String!
   email: String!
   role: String
@@ -1795,7 +1795,7 @@ type Prop implements Entity {
   kitOwner: Kit
   entityOwner: OwnerEntity! # PropOwner
   ownedEntities: OwnedEntityConnection # PropOwned
-  # Fields
+  # Data Fields
   key: String!
   value: String!
   unit: String
@@ -1912,7 +1912,7 @@ type Benchmark implements Entity {
   qualityOwner: Quality
   entityOwner: OwnerEntity! # BenchmarkOwner
   ownedEntities: OwnedEntityConnection # BenchmarkOwned
-  # Fields
+  # Data Fields
   name: String!
   min: Float
   max: Float
@@ -2034,7 +2034,7 @@ type Quality implements Entity {
   kitOwner: Kit
   entityOwner: OwnerEntity! # QualityOwner
   ownedEntities: OwnedEntityConnection # QualityOwned
-  # Fields
+  # Data Fields
   key: String!
   value: String
   unit: String
@@ -2155,7 +2155,7 @@ type Tag implements Entity {
   representationOwner: Representation
   entityOwner: OwnerEntity! # TagOwner
   ownedEntities: OwnedEntityConnection # TagOwned
-  # Fields
+  # Data Fields
   name: String!
   order: Int
 }
@@ -2271,7 +2271,7 @@ type Concept implements Entity {
   typeOwner: Type
   entityOwner: OwnerEntity! # ConceptOwner
   ownedEntities: OwnedEntityConnection # ConceptOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
   order: Int
@@ -2389,7 +2389,7 @@ type Stat implements Entity {
   typeOwner: Type
   entityOwner: OwnerEntity! # StatOwner
   ownedEntities: OwnedEntityConnection # StatOwned
-  # Fields
+  # Data Fields
   key: String!
   value: String!
   unit: String
@@ -2506,7 +2506,7 @@ type Port implements Entity {
   typeOwner: Type
   entityOwner: OwnerEntity! # PortOwner
   ownedEntities: OwnedEntityConnection # PortOwned
-  # Fields
+  # Data Fields
   code: String
   label: String
   order: Int
@@ -2622,7 +2622,7 @@ type Connector implements Entity {
   typeOwner: Type
   entityOwner: OwnerEntity! # ConnectorOwner
   ownedEntities: OwnedEntityConnection # ConnectorOwned
-  # Fields
+  # Data Fields
   code: String!
   description: String
   port: Port
@@ -2656,7 +2656,7 @@ type ConnectorModification implements Entity {
   connectorOwner: Connector
   entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
-  # Fields
+  # Data Fields
   code: String
   description: String
   port: Port
@@ -2741,7 +2741,7 @@ type Representation implements Entity {
   typeOwner: Type
   entityOwner: OwnerEntity! # RepresentationOwner
   ownedEntities: OwnedEntityConnection # RepresentationOwned
-  # Fields
+  # Data Fields
   url: String!
   description: String
   file: File
@@ -2857,7 +2857,7 @@ type Type implements Entity {
   kitOwner: Kit
   entityOwner: OwnerEntity! # TypeOwner
   ownedEntities: OwnedEntityConnection # TypeOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
   icon: String
@@ -2997,7 +2997,7 @@ type Layer implements Entity {
   designOwner: Design
   entityOwner: OwnerEntity! # LayerOwner
   ownedEntities: OwnedEntityConnection # LayerOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
   color: String
@@ -3116,7 +3116,7 @@ type Group implements Entity {
   designOwner: Design
   entityOwner: OwnerEntity! # GroupOwner
   ownedEntities: OwnedEntityConnection # GroupOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
   color: String
@@ -3255,7 +3255,7 @@ type Piece implements Entity {
   pieceOwner: Piece
   entityOwner: OwnerEntity! # PieceOwner
   ownedEntities: OwnedEntityConnection # PieceOwned — Piece subtree & attrs (design-owned bridges surface via Design)
-  # Fields
+  # Data Fields
   name: String
   description: String
   position: Position
@@ -3381,7 +3381,7 @@ type Connection implements Entity {
   designOwner: Design
   entityOwner: OwnerEntity! # ConnectionOwner
   ownedEntities: OwnedEntityConnection # ConnectionOwned — endpoint sides & connection attrs
-  # Fields
+  # Data Fields
   connected: Side!
   connecting: Side!
   gap: Float
@@ -3509,7 +3509,7 @@ type CreatedFixedPiece implements Operation & Entity {
   changeOwner: Change
   entityOwner: OwnerEntity! # CreatedFixedPieceOwner
   ownedEntities: OwnedEntityConnection # CreatedFixedPieceOwned
-  # Fields
+  # Data Fields
   input: CreatedFixedPieceInput!
   diff: Diff!
   piece: Piece!
@@ -3531,7 +3531,7 @@ type FixedPiece implements Operation & Entity {
   changeOwner: Change
   entityOwner: OwnerEntity! # FixedPieceOwner
   ownedEntities: OwnedEntityConnection # FixedPieceOwned
-  # Fields
+  # Data Fields
   input: FixedPieceInput!
   diff: Diff!
   piece: Piece!
@@ -3554,7 +3554,7 @@ type DraggedPiece implements Operation & Entity {
   changeOwner: Change
   entityOwner: OwnerEntity! # DraggedPieceOwner
   ownedEntities: OwnedEntityConnection # DraggedPieceOwned
-  # Fields
+  # Data Fields
   input: DraggedPieceInput!
   diff: Diff!
   pieces: PieceConnection!
@@ -3582,7 +3582,7 @@ type Side implements Entity {
   connectionOwner: Connection
   entityOwner: OwnerEntity! # SideOwner
   ownedEntities: OwnedEntityConnection # SideOwned
-  # Fields
+  # Data Fields
   piece: Piece!
   port: Port
   designPiece: Piece
@@ -3716,7 +3716,7 @@ type Design implements Entity {
   kitOwner: Kit
   entityOwner: OwnerEntity! # DesignOwner
   ownedEntities: OwnedEntityConnection # DesignOwned
-  # Fields
+  # Data Fields
   name: String!
   description: String
   icon: String
@@ -3857,7 +3857,7 @@ type Kit implements Entity {
   alternativeOwner: Alternative
   entityOwner: OwnerEntity # KitOwner
   ownedEntities: OwnedEntityConnection # KitOwned
-  # Fields
+  # Data Fields
   checkpoint: Checkpoint
   draft: Draft
   transaction: Transaction
@@ -4003,7 +4003,7 @@ type RenamedKit implements Operation & Entity {
   changeOwner: Change
   entityOwner: OwnerEntity! # RenamedKitOwner
   ownedEntities: OwnedEntityConnection # RenamedKitOwned
-  # Fields
+  # Data Fields
   input: RenamedKitInput!
   diff: Diff!
   kit: Kit!
@@ -4025,7 +4025,7 @@ type ChangedDescription implements Operation & Entity {
   changeOwner: Change
   entityOwner: OwnerEntity! # ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # ChangedDescriptionOwned
-  # Fields
+  # Data Fields
   input: ChangedDescriptionInput!
   diff: Diff!
   entity: Entity!
@@ -4055,7 +4055,7 @@ type Change implements Entity {
   checkpointOwner: Checkpoint
   entityOwner: OwnerEntity! # ChangeOwner
   ownedEntities: OwnedEntityConnection # ChangeOwned
-  # Fields
+  # Data Fields
   description: String
   origin: String
   forwards: OperationConnection!
@@ -4169,7 +4169,7 @@ type Transaction implements Entity {
   draftOwner: Draft
   entityOwner: OwnerEntity # TransactionOwner
   ownedEntities: OwnedEntityConnection # TransactionOwned
-  # Fields
+  # Data Fields
   changes: ChangeConnection!
 }
 
@@ -4279,7 +4279,7 @@ type Draft implements Entity {
   authorOwner: Author
   entityOwner: OwnerEntity! # DraftOwner
   ownedEntities: OwnedEntityConnection # DraftOwned
-  # Fields
+  # Data Fields
   parentCheckpoint: Checkpoint
   targetAlternative: Alternative
   openTransaction: Transaction
@@ -4386,7 +4386,7 @@ type DraftDiffsConnection implements EntityConnectionInterface {
 }
 
 union CheckpointOwner = Alternative | Graph | Kit | Author
-union CheckpointOwned = Kit | Author | Checkpoint
+union CheckpointOwned = Change
 
 type Checkpoint implements Entity {
   # StrongEntity
@@ -4399,13 +4399,15 @@ type Checkpoint implements Entity {
   authorOwner: Author
   entityOwner: OwnerEntity # CheckpointOwner
   ownedEntities: OwnedEntityConnection # CheckpointOwned
-  # Fields
+  # Data Fields
   timestamp: Timestamp
-  authors: AuthorConnection!
-  root: Kit
-  parentCheckpoint: Checkpoint
   message: String
   isRelease: Boolean!
+  # Reference Fields
+  parentCheckpoint: Checkpoint
+  authors: AuthorConnection!
+  # Computed Fields
+  root: Kit
   changeCount: Int!
 }
 
@@ -4504,8 +4506,10 @@ type CheckpointDiffsConnection implements EntityConnectionInterface {
   hash: String!
 }
 
+#region Alternatives
+
 union AlternativeOwner = Graph
-union AlternativeOwned = Checkpoint | Kit | Draft | Transaction
+union AlternativeOwned = Draft
 
 type Alternative implements Entity {
   # StrongEntity
@@ -4515,12 +4519,14 @@ type Alternative implements Entity {
   graphOwner: Graph
   entityOwner: OwnerEntity # AlternativeOwner
   ownedEntities: OwnedEntityConnection # AlternativeOwned
-  # Fields
+  # Data Fields
   name: String!
-  start: Checkpoint!
-  checkpoints: CheckpointConnection!
-  store: Kit!
   draft: Draft
+  checkpoints: CheckpointConnection!
+  # Reference Fields
+  start: Checkpoint!
+  # Computed Fields
+  store: Kit!
   transaction: Transaction
 }
 
@@ -4619,6 +4625,10 @@ type AlternativeDiffsConnection implements EntityConnectionInterface {
   hash: String!
 }
 
+#endregion Alternatives
+
+#region Graphs
+
 union GraphOwner = Session
 union GraphOwned = Kit | Alternative | Checkpoint | Session
 
@@ -4630,14 +4640,15 @@ type Graph implements Entity {
   sessionOwner: Session
   entityOwner: OwnerEntity # GraphOwner
   ownedEntities: OwnedEntityConnection # GraphOwned
-  # Fields
+  # Data Fields
   theKit: Kit
-  alternative(id: ID!): Alternative
   alternatives: AlternativeConnection!
-  checkpoint(id: ID!): Checkpoint
   checkpoints: CheckpointConnection!
-  release(id: ID!): Checkpoint
+  # Computed Fields
+  alternative(id: ID!): Alternative
+  checkpoint(id: ID!): Checkpoint
   releases: CheckpointConnection!
+  release(id: ID!): Checkpoint
 }
 
 type GraphEdge implements EntityEdge {
@@ -4748,10 +4759,14 @@ type Session implements Entity {
   alternativeOwner: Alternative
   entityOwner: OwnerEntity # SessionOwner
   ownedEntities: OwnedEntityConnection # SessionOwned
-  # Fields
+  # Data Fields
   startedAt: Timestamp
   drafts: DraftConnection!
 }
+
+#endregion Graphs
+
+#region Sessions
 
 type SessionEdge implements EntityEdge {
   cursor: String!
@@ -4764,89 +4779,11 @@ type SessionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union SessionModificationOwner = SessionDiff | SessionModification | Session
+#endregion Sessions
 
-union SessionModificationOwned = Session
+#region Versions
 
-type SessionModification implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: SessionModificationOwner!
-  sessionDiffOwner: SessionDiff
-  sessionModificationOwner: SessionModification
-  sessionOwner: Session
-  entityOwner: OwnerEntity
-  ownedEntities: OwnedEntityConnection
-}
-
-type SessionModificationEdge implements EntityEdge {
-  cursor: String!
-  node: SessionModification!
-}
-
-type SessionModificationConnection implements EntityConnectionInterface {
-  edges: [SessionModificationEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-type SessionDiff implements Diff {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: DiffOwner!
-  ownerDiffs: Diffs
-  changeOwner: Change
-  operationOwner: Operation
-  entityOwner: OwnerEntity # DiffOwner
-  ownedEntities: OwnedEntityConnection # DiffOwned
-  # Diff
-  before: Session!
-  modification: SessionModification!
-  after: Session!
-}
-
-type SessionDiffEdge implements EntityEdge {
-  cursor: String!
-  node: SessionDiff!
-}
-
-type SessionDiffConnection implements EntityConnectionInterface {
-  edges: [SessionDiffEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
-
-union SessionDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
-
-union SessionDiffsOwned = SessionDiffs | SessionDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
-
-type SessionDiffs implements Entity {
-  # WeakEntity
-  id: ID! # hash
-  hash: String!
-  owner: SessionDiffsOwner!
-  diffOwner: Diff
-  operationOwner: Operation
-  changeOwner: Change
-  entityOwner: OwnerEntity # SessionDiffsOwner
-  ownedEntities: OwnedEntityConnection # SessionDiffsOwned
-  removed: EntityConnection
-  diffs: SessionDiffConnection
-  added: EntityConnection
-}
-
-type SessionDiffsEdge implements EntityEdge {
-  cursor: String!
-  node: SessionDiffs!
-}
-
-type SessionDiffsConnection implements EntityConnectionInterface {
-  edges: [SessionDiffsEdge!]!
-  pageInfo: PageInfo!
-  hash: String!
-}
+#region Read
 
 union ReadVersionOwner = Conflict
 # union ReadVersionOwned = Nothing
@@ -4859,7 +4796,7 @@ type ReadVersion implements Entity {
   conflictOwner: Conflict
   entityOwner: OwnerEntity # ReadVersionOwner
   ownedEntities: OwnedEntityConnection # ReadVersionOwned
-  # Fields
+  # Data Fields
   checkpoint: Checkpoint
   change: Change
   operation: Operation
@@ -4876,6 +4813,10 @@ type ReadVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
+#endregion Read
+
+#region Write
+
 union WriteVersionOwner = Conflict
 # union WriteVersionOwned = Nothing
 
@@ -4887,7 +4828,7 @@ type WriteVersion implements Entity {
   conflictOwner: Conflict
   entityOwner: OwnerEntity # WriteVersionOwner
   ownedEntities: OwnedEntityConnection # WriteVersionOwned
-  # Fields
+  # Data Fields
   draft: Draft
   transaction: Transaction
   checkpoint: Checkpoint
@@ -4906,6 +4847,15 @@ type WriteVersionConnection implements EntityConnectionInterface {
   hash: String!
 }
 
+#endregion Write
+
+union Version = ReadVersion | WriteVersion
+union VersionConnection = ReadVersionConnection | WriteVersionConnection
+
+#endregion Versions
+
+#region Conflicts
+
 union ConflictOwner = Session | Graph
 union ConflictOwned = ReadVersion | WriteVersion
 
@@ -4918,7 +4868,7 @@ type Conflict implements Entity {
   graphOwner: Graph
   entityOwner: OwnerEntity! # ConflictOwner
   ownedEntities: OwnedEntityConnection # ConflictOwned
-  # Fields
+  # Data Fields
   authoritativeVersion: ReadVersion
   transactionVersion: WriteVersion
   reason: String!
