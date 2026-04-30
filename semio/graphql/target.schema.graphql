@@ -18,8 +18,8 @@ interface Entity implements Node { # Our own extension ontop of the relay specs
   id: ID!
   hash: String!
   # owner: ENTITY
-  # ownerENTITY: OwnerENTITY
-  ownerEntity: OwnerEntity
+  # ENTITYOwner: ENTITYOwner
+  EntityOwner: EntityOwner
   # owns: ENTITYConnection
   ownedEntities: OwnedEntityConnection
 }
@@ -47,7 +47,7 @@ interface EntityConnectionInterface {
 # interface StrongEntity implements Entity {
 #   id: ID! # uuidv7
 #   hash: String!
-#   ownerEntity: OwnerEntity # ENTITYKIND
+#   entityOwner: OwnerEntity # ENTITYKIND
 #   ownedEntities: OwnedEntityConnection # ENTITYKIND
 # }
 
@@ -77,9 +77,9 @@ interface Diff implements Entity { # implements WeakEntity
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Entity!
@@ -103,10 +103,10 @@ type Diffs implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: DiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # DiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # DiffsOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Fields
   removed: EntityConnection
@@ -143,9 +143,9 @@ type Vector implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: VectorOwner!
-  ownerPlane: Plane
-  ownerPlaneModification: PlaneModification
-  ownerEntity: OwnerEntity # VectorOwner
+  planeOwner: Plane
+  planeModificationOwner: PlaneModification
+  entityOwner: OwnerEntity # VectorOwner
   ownedEntities: OwnedEntityConnection # VectorOwned
   # Fields
   x: Float!
@@ -173,10 +173,10 @@ type VectorModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: VectorModificationOwner!
-  ownerVectorDiff: VectorDiff
-  ownerVectorModification: VectorModification
-  ownerVector: Vector
-  ownerEntity: OwnerEntity
+  vectorDiffOwner: VectorDiff
+  vectorModificationOwner: VectorModification
+  vectorOwner: Vector
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -197,9 +197,9 @@ type VectorDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Vector!
@@ -227,10 +227,10 @@ type VectorDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: VectorDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # VectorDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # VectorDiffsOwner
   ownedEntities: OwnedEntityConnection # VectorDiffsOwned
   removed: EntityConnection
   diffs: VectorDiffConnection
@@ -266,9 +266,9 @@ type Point implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: PointOwner!
-  ownerPlane: Plane
-  ownerPlaneModification: PlaneModification
-  ownerEntity: OwnerEntity # PointOwner
+  planeOwner: Plane
+  planeModificationOwner: PlaneModification
+  entityOwner: OwnerEntity # PointOwner
   ownedEntities: OwnedEntityConnection # PointOwned
   # Fields
   x: Float!
@@ -296,10 +296,10 @@ type PointModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: PointModificationOwner!
-  ownerPointDiff: PointDiff
-  ownerPointModification: PointModification
-  ownerPoint: Point
-  ownerEntity: OwnerEntity
+  pointDiffOwner: PointDiff
+  pointModificationOwner: PointModification
+  pointOwner: Point
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -320,9 +320,9 @@ type PointDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Point!
@@ -350,10 +350,10 @@ type PointDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PointDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PointDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PointDiffsOwner
   ownedEntities: OwnedEntityConnection # PointDiffsOwned
   removed: EntityConnection
   diffs: PointDiffConnection
@@ -388,9 +388,9 @@ type Coordinate implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: CoordinateOwner!
-  ownerPosition: Position
-  ownerPositionModification: PositionModification
-  ownerEntity: OwnerEntity # CoordinateOwner
+  positionOwner: Position
+  positionModificationOwner: PositionModification
+  entityOwner: OwnerEntity # CoordinateOwner
   ownedEntities: OwnedEntityConnection # CoordinateOwned
   # Fields
   u: Float!
@@ -417,10 +417,10 @@ type CoordinateModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: CoordinateModificationOwner!
-  ownerCoordinateDiff: CoordinateDiff
-  ownerCoordinateModification: CoordinateModification
-  ownerCoordinate: Coordinate
-  ownerEntity: OwnerEntity
+  coordinateDiffOwner: CoordinateDiff
+  coordinateModificationOwner: CoordinateModification
+  coordinateOwner: Coordinate
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -441,9 +441,9 @@ type CoordinateDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Coordinate!
@@ -471,10 +471,10 @@ type CoordinateDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: CoordinateDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # CoordinateDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # CoordinateDiffsOwner
   ownedEntities: OwnedEntityConnection # CoordinateDiffsOwned
   removed: EntityConnection
   diffs: CoordinateDiffConnection
@@ -509,9 +509,9 @@ type Offset implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: OffsetOwner!
-  ownerPosition: Position
-  ownerPositionModification: PositionModification
-  ownerEntity: OwnerEntity # OffsetOwner
+  positionOwner: Position
+  positionModificationOwner: PositionModification
+  entityOwner: OwnerEntity # OffsetOwner
   ownedEntities: OwnedEntityConnection # OffsetOwned
   # Fields
   u: Float!
@@ -538,10 +538,10 @@ type OffsetModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: OffsetModificationOwner!
-  ownerOffsetDiff: OffsetDiff
-  ownerOffsetModification: OffsetModification
-  ownerOffset: Offset
-  ownerEntity: OwnerEntity
+  offsetDiffOwner: OffsetDiff
+  offsetModificationOwner: OffsetModification
+  offsetOwner: Offset
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -562,9 +562,9 @@ type OffsetDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Offset!
@@ -592,10 +592,10 @@ type OffsetDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: OffsetDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # OffsetDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # OffsetDiffsOwner
   ownedEntities: OwnedEntityConnection # OffsetDiffsOwned
   removed: EntityConnection
   diffs: OffsetDiffConnection
@@ -631,10 +631,10 @@ type Plane implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: PlaneOwner!
-  ownerPiece: Piece
-  ownerPieceModification: PieceModification
-  ownerPlaneDiff: PlaneDiff
-  ownerEntity: OwnerEntity # PlaneOwner
+  pieceOwner: Piece
+  pieceModificationOwner: PieceModification
+  planeDiffOwner: PlaneDiff
+  entityOwner: OwnerEntity # PlaneOwner
   ownedEntities: OwnedEntityConnection # PlaneOwned
   # Fields
   origin: Point!
@@ -661,13 +661,13 @@ type PlaneModification implements Entity { # implements Modification
   id: ID! # hash
   hash: String!
   owner: PlaneModificationOwner!
-  ownerPieceModification: PieceModification
-  ownerPositionModification: PositionModification
-  ownerLocationModification: LocationModification
-  ownerPlaceModification: PlaceModification
-  ownerAttributeModification: AttributeModification
-  ownerPlaneDiff: PlaneDiff
-  ownerEntity: OwnerEntity # PlaneModificationOwner
+  pieceModificationOwner: PieceModification
+  positionModificationOwner: PositionModification
+  locationModificationOwner: LocationModification
+  placeModificationOwner: PlaceModification
+  attributeModificationOwner: AttributeModification
+  planeDiffOwner: PlaneDiff
+  entityOwner: OwnerEntity # PlaneModificationOwner
   ownedEntities: OwnedEntityConnection # PlaneModificationOwned
   # Fields
   origin: Point
@@ -692,9 +692,9 @@ type PlaneDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Plane!
@@ -722,10 +722,10 @@ type PlaneDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PlaneDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PlaneDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PlaneDiffsOwner
   ownedEntities: OwnedEntityConnection # PlaneDiffsOwned
   removed: EntityConnection
   diffs: PlaneDiffConnection
@@ -760,11 +760,11 @@ type Position implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: PositionOwner!
-  ownerPiece: Piece
-  ownerPositionModification: PositionModification
-  ownerPlane: Plane
-  ownerPositionDiff: PositionDiff
-  ownerEntity: OwnerEntity # PositionOwner
+  pieceOwner: Piece
+  positionModificationOwner: PositionModification
+  planeOwner: Plane
+  positionDiffOwner: PositionDiff
+  entityOwner: OwnerEntity # PositionOwner
   ownedEntities: OwnedEntityConnection # PositionOwned
   # Fields
   center: Coordinate!
@@ -790,9 +790,9 @@ type PositionModification implements Entity { # implements Modification
   id: ID! # hash
   hash: String!
   owner: PositionModificationOwner!
-  ownerPieceModification: PieceModification
-  ownerPositionDiff: PositionDiff
-  ownerEntity: OwnerEntity # PositionModificationOwner
+  pieceModificationOwner: PieceModification
+  positionDiffOwner: PositionDiff
+  entityOwner: OwnerEntity # PositionModificationOwner
   ownedEntities: OwnedEntityConnection # PositionModificationOwned
   # Fields
   center: Coordinate
@@ -816,9 +816,9 @@ type PositionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Entity! # Position
@@ -846,10 +846,10 @@ type PositionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PositionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PositionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PositionDiffsOwner
   ownedEntities: OwnedEntityConnection # PositionDiffsOwned
   removed: EntityConnection
   diffs: PositionDiffConnection
@@ -885,10 +885,10 @@ type Location implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: LocationOwner!
-  ownerPlace: Place
-  ownerKit: Kit
-  ownerDesign: Design
-  ownerEntity: OwnerEntity # LocationOwner
+  placeOwner: Place
+  kitOwner: Kit
+  designOwner: Design
+  entityOwner: OwnerEntity # LocationOwner
   ownedEntities: OwnedEntityConnection # LocationOwned
   # Fields
   longitude: Float!
@@ -915,9 +915,9 @@ type LocationModification implements Entity { # implements Modification
   id: ID! # hash
   hash: String!
   owner: LocationModificationOwner!
-  ownerPlaceModification: PlaceModification
-  ownerLocationDiff: LocationDiff
-  ownerEntity: OwnerEntity # LocationModificationOwner
+  placeModificationOwner: PlaceModification
+  locationDiffOwner: LocationDiff
+  entityOwner: OwnerEntity # LocationModificationOwner
   ownedEntities: OwnedEntityConnection # LocationModificationOwned
   # Fields
   longitude: Float
@@ -942,9 +942,9 @@ type LocationDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Entity! # Location
@@ -972,10 +972,10 @@ type LocationDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: LocationDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # LocationDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # LocationDiffsOwner
   ownedEntities: OwnedEntityConnection # LocationDiffsOwned
   removed: EntityConnection
   diffs: LocationDiffConnection
@@ -1011,19 +1011,19 @@ type Attribute implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: AttributeOwner!
-  ownerPiece: Piece
-  ownerConnector: Connector
-  ownerRepresentation: Representation
-  ownerConnection: Connection
-  ownerKit: Kit
-  ownerDesign: Design
-  ownerType: Type
-  ownerConcept: Concept
-  ownerTag: Tag
-  ownerAttributeDiff: AttributeDiff
-  ownerPositionModification: PositionModification
-  ownerPieceModification: PieceModification
-  ownerEntity: OwnerEntity # AttributeOwner
+  pieceOwner: Piece
+  connectorOwner: Connector
+  representationOwner: Representation
+  connectionOwner: Connection
+  kitOwner: Kit
+  designOwner: Design
+  typeOwner: Type
+  conceptOwner: Concept
+  tagOwner: Tag
+  attributeDiffOwner: AttributeDiff
+  positionModificationOwner: PositionModification
+  pieceModificationOwner: PieceModification
+  entityOwner: OwnerEntity # AttributeOwner
   ownedEntities: OwnedEntityConnection # AttributeOwned
   # Fields
   key: String!
@@ -1050,17 +1050,17 @@ type AttributeModification implements Entity { # implements Modification
   id: ID! # hash
   hash: String!
   owner: AttributeModificationOwner!
-  ownerPieceModification: PieceModification
-  ownerConnector: Connector
-  ownerRepresentation: Representation
-  ownerConnection: Connection
-  ownerKit: Kit
-  ownerDesign: Design
-  ownerType: Type
-  ownerConcept: Concept
-  ownerTag: Tag
-  ownerAttributeDiff: AttributeDiff
-  ownerEntity: OwnerEntity # AttributeModificationOwner
+  pieceModificationOwner: PieceModification
+  connectorOwner: Connector
+  representationOwner: Representation
+  connectionOwner: Connection
+  kitOwner: Kit
+  designOwner: Design
+  typeOwner: Type
+  conceptOwner: Concept
+  tagOwner: Tag
+  attributeDiffOwner: AttributeDiff
+  entityOwner: OwnerEntity # AttributeModificationOwner
   ownedEntities: OwnedEntityConnection # AttributeModificationOwned
   # Fields
   key: String
@@ -1085,9 +1085,9 @@ type AttributeDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Entity! # Attribute
@@ -1120,10 +1120,10 @@ type AttributeDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: AttributeDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # AttributeDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # AttributeDiffsOwner
   ownedEntities: OwnedEntityConnection # AttributeDiffsOwned
   # Fields
   removed: EntityConnection # Attribute
@@ -1154,8 +1154,8 @@ interface Operation implements Entity { # implements StrongEntity
   id: ID! # uuidv7
   hash: String!
   owner: OperationOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity # OperationOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity # OperationOwner
   ownedEntities: OwnedEntityConnection # OperationOwned
   # Fields
   input: Input
@@ -1185,10 +1185,10 @@ type Place implements Entity { # implements StrongEntity
   id: ID! # uuidv7
   hash: String!
   owner: PlaceOwner!
-  ownerKit: Kit
-  ownerCheckpoint: Checkpoint
-  ownerGraph: Graph
-  ownerEntity: OwnerEntity! # PlaceOwner
+  kitOwner: Kit
+  checkpointOwner: Checkpoint
+  graphOwner: Graph
+  entityOwner: OwnerEntity! # PlaceOwner
   ownedEntities: OwnedEntityConnection # PlaceOwned
   # Fields
   name: String
@@ -1214,9 +1214,9 @@ type PlaceModification implements Entity { # implements Modification
   id: ID! # hash
   hash: String!
   owner: PlaceModificationOwner!
-  ownerPlaceDiff: PlaceDiff
-  ownerPlace: Place
-  ownerEntity: OwnerEntity # PlaceModificationOwner
+  placeDiffOwner: PlaceDiff
+  placeOwner: Place
+  entityOwner: OwnerEntity # PlaceModificationOwner
   ownedEntities: OwnedEntityConnection # PlaceModificationOwned
   # Fields
   name: String
@@ -1241,9 +1241,9 @@ type PlaceDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Place!
@@ -1271,10 +1271,10 @@ type PlaceDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PlaceDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PlaceDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PlaceDiffsOwner
   ownedEntities: OwnedEntityConnection # PlaceDiffsOwned
   removed: EntityConnection
   diffs: PlaceDiffConnection
@@ -1304,8 +1304,8 @@ type Family implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: FamilyOwner!
-  ownerKit: Kit
-  ownerEntity: OwnerEntity! # FamilyOwner
+  kitOwner: Kit
+  entityOwner: OwnerEntity! # FamilyOwner
   ownedEntities: OwnedEntityConnection # FamilyOwned
   # Fields
   name: String!
@@ -1332,10 +1332,10 @@ type FamilyModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: FamilyModificationOwner!
-  ownerFamilyDiff: FamilyDiff
-  ownerFamilyModification: FamilyModification
-  ownerFamily: Family
-  ownerEntity: OwnerEntity
+  familyDiffOwner: FamilyDiff
+  familyModificationOwner: FamilyModification
+  familyOwner: Family
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1356,9 +1356,9 @@ type FamilyDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Family!
@@ -1386,10 +1386,10 @@ type FamilyDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: FamilyDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # FamilyDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # FamilyDiffsOwner
   ownedEntities: OwnedEntityConnection # FamilyDiffsOwned
   removed: EntityConnection
   diffs: FamilyDiffConnection
@@ -1419,9 +1419,9 @@ type Folder implements Entity { # implements StrongEntity
   id: ID! # uuidv7
   hash: String!
   owner: FolderOwner!
-  ownerKit: Kit
-  ownerFolder: Folder
-  ownerEntity: OwnerEntity! # FolderOwner
+  kitOwner: Kit
+  folderOwner: Folder
+  entityOwner: OwnerEntity! # FolderOwner
   ownedEntities: OwnedEntityConnection # FolderOwned
   # Fields
   name: String!
@@ -1454,10 +1454,10 @@ type FolderModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: FolderModificationOwner!
-  ownerFolderDiff: FolderDiff
-  ownerFolderModification: FolderModification
-  ownerFolder: Folder
-  ownerEntity: OwnerEntity
+  folderDiffOwner: FolderDiff
+  folderModificationOwner: FolderModification
+  folderOwner: Folder
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1478,9 +1478,9 @@ type FolderDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Folder!
@@ -1508,10 +1508,10 @@ type FolderDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: FolderDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # FolderDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # FolderDiffsOwner
   ownedEntities: OwnedEntityConnection # FolderDiffsOwned
   removed: EntityConnection
   diffs: FolderDiffConnection
@@ -1541,9 +1541,9 @@ type File implements Entity { # implements StrongEntity
   id: ID! # uuidv7
   hash: String!
   owner: FileOwner!
-  ownerKit: Kit
-  ownerFolder: Folder
-  ownerEntity: OwnerEntity! # FileOwner
+  kitOwner: Kit
+  folderOwner: Folder
+  entityOwner: OwnerEntity! # FileOwner
   ownedEntities: OwnedEntityConnection # Nothing
   # Fields
   url: String!
@@ -1574,10 +1574,10 @@ type FileModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: FileModificationOwner!
-  ownerFileDiff: FileDiff
-  ownerFileModification: FileModification
-  ownerFile: File
-  ownerEntity: OwnerEntity
+  fileDiffOwner: FileDiff
+  fileModificationOwner: FileModification
+  fileOwner: File
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1598,9 +1598,9 @@ type FileDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: File!
@@ -1628,10 +1628,10 @@ type FileDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: FileDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # FileDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # FileDiffsOwner
   ownedEntities: OwnedEntityConnection # FileDiffsOwned
   removed: EntityConnection
   diffs: FileDiffConnection
@@ -1661,11 +1661,11 @@ type Author implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: AuthorOwner!
-  ownerKit: Kit
-  ownerCheckpoint: Checkpoint
-  ownerGraph: Graph
-  ownerSession: Session
-  ownerEntity: OwnerEntity # AuthorOwner
+  kitOwner: Kit
+  checkpointOwner: Checkpoint
+  graphOwner: Graph
+  sessionOwner: Session
+  entityOwner: OwnerEntity # AuthorOwner
   ownedEntities: OwnedEntityConnection # AuthorOwned
   # Fields
   name: String!
@@ -1697,10 +1697,10 @@ type AuthorModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: AuthorModificationOwner!
-  ownerAuthorDiff: AuthorDiff
-  ownerAuthorModification: AuthorModification
-  ownerAuthor: Author
-  ownerEntity: OwnerEntity
+  authorDiffOwner: AuthorDiff
+  authorModificationOwner: AuthorModification
+  authorOwner: Author
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1721,9 +1721,9 @@ type AuthorDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Author!
@@ -1751,10 +1751,10 @@ type AuthorDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: AuthorDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # AuthorDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # AuthorDiffsOwner
   ownedEntities: OwnedEntityConnection # AuthorDiffsOwned
   removed: EntityConnection
   diffs: AuthorDiffConnection
@@ -1784,11 +1784,11 @@ type Prop implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: PropOwner!
-  ownerPiece: Piece
-  ownerType: Type
-  ownerDesign: Design
-  ownerKit: Kit
-  ownerEntity: OwnerEntity! # PropOwner
+  pieceOwner: Piece
+  typeOwner: Type
+  designOwner: Design
+  kitOwner: Kit
+  entityOwner: OwnerEntity! # PropOwner
   ownedEntities: OwnedEntityConnection # PropOwned
   # Fields
   key: String!
@@ -1817,10 +1817,10 @@ type PropModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: PropModificationOwner!
-  ownerPropDiff: PropDiff
-  ownerPropModification: PropModification
-  ownerProp: Prop
-  ownerEntity: OwnerEntity
+  propDiffOwner: PropDiff
+  propModificationOwner: PropModification
+  propOwner: Prop
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1841,9 +1841,9 @@ type PropDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Prop!
@@ -1871,10 +1871,10 @@ type PropDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PropDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PropDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PropDiffsOwner
   ownedEntities: OwnedEntityConnection # PropDiffsOwned
   removed: EntityConnection
   diffs: PropDiffConnection
@@ -1904,8 +1904,8 @@ type Benchmark implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: BenchmarkOwner!
-  ownerQuality: Quality
-  ownerEntity: OwnerEntity! # BenchmarkOwner
+  qualityOwner: Quality
+  entityOwner: OwnerEntity! # BenchmarkOwner
   ownedEntities: OwnedEntityConnection # BenchmarkOwned
   # Fields
   name: String!
@@ -1935,10 +1935,10 @@ type BenchmarkModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: BenchmarkModificationOwner!
-  ownerBenchmarkDiff: BenchmarkDiff
-  ownerBenchmarkModification: BenchmarkModification
-  ownerBenchmark: Benchmark
-  ownerEntity: OwnerEntity
+  benchmarkDiffOwner: BenchmarkDiff
+  benchmarkModificationOwner: BenchmarkModification
+  benchmarkOwner: Benchmark
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -1959,9 +1959,9 @@ type BenchmarkDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Benchmark!
@@ -1989,10 +1989,10 @@ type BenchmarkDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: BenchmarkDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # BenchmarkDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # BenchmarkDiffsOwner
   ownedEntities: OwnedEntityConnection # BenchmarkDiffsOwned
   removed: EntityConnection
   diffs: BenchmarkDiffConnection
@@ -2022,12 +2022,12 @@ type Quality implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: QualityOwner!
-  ownerConnector: Connector
-  ownerRepresentation: Representation
-  ownerType: Type
-  ownerDesign: Design
-  ownerKit: Kit
-  ownerEntity: OwnerEntity! # QualityOwner
+  connectorOwner: Connector
+  representationOwner: Representation
+  typeOwner: Type
+  designOwner: Design
+  kitOwner: Kit
+  entityOwner: OwnerEntity! # QualityOwner
   ownedEntities: OwnedEntityConnection # QualityOwned
   # Fields
   key: String!
@@ -2058,10 +2058,10 @@ type QualityModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: QualityModificationOwner!
-  ownerQualityDiff: QualityDiff
-  ownerQualityModification: QualityModification
-  ownerQuality: Quality
-  ownerEntity: OwnerEntity
+  qualityDiffOwner: QualityDiff
+  qualityModificationOwner: QualityModification
+  qualityOwner: Quality
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2082,9 +2082,9 @@ type QualityDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Quality!
@@ -2112,10 +2112,10 @@ type QualityDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: QualityDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # QualityDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # QualityDiffsOwner
   ownedEntities: OwnedEntityConnection # QualityDiffsOwned
   removed: EntityConnection
   diffs: QualityDiffConnection
@@ -2145,10 +2145,10 @@ type Tag implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: TagOwner!
-  ownerKit: Kit
-  ownerType: Type
-  ownerRepresentation: Representation
-  ownerEntity: OwnerEntity! # TagOwner
+  kitOwner: Kit
+  typeOwner: Type
+  representationOwner: Representation
+  entityOwner: OwnerEntity! # TagOwner
   ownedEntities: OwnedEntityConnection # TagOwned
   # Fields
   name: String!
@@ -2175,10 +2175,10 @@ type TagModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: TagModificationOwner!
-  ownerTagDiff: TagDiff
-  ownerTagModification: TagModification
-  ownerTag: Tag
-  ownerEntity: OwnerEntity
+  tagDiffOwner: TagDiff
+  tagModificationOwner: TagModification
+  tagOwner: Tag
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2199,9 +2199,9 @@ type TagDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Tag!
@@ -2229,10 +2229,10 @@ type TagDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: TagDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # TagDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # TagDiffsOwner
   ownedEntities: OwnedEntityConnection # TagDiffsOwned
   removed: EntityConnection
   diffs: TagDiffConnection
@@ -2262,9 +2262,9 @@ type Concept implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ConceptOwner!
-  ownerKit: Kit
-  ownerType: Type
-  ownerEntity: OwnerEntity! # ConceptOwner
+  kitOwner: Kit
+  typeOwner: Type
+  entityOwner: OwnerEntity! # ConceptOwner
   ownedEntities: OwnedEntityConnection # ConceptOwned
   # Fields
   name: String!
@@ -2292,10 +2292,10 @@ type ConceptModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConceptModificationOwner!
-  ownerConceptDiff: ConceptDiff
-  ownerConceptModification: ConceptModification
-  ownerConcept: Concept
-  ownerEntity: OwnerEntity
+  conceptDiffOwner: ConceptDiff
+  conceptModificationOwner: ConceptModification
+  conceptOwner: Concept
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2316,9 +2316,9 @@ type ConceptDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Concept!
@@ -2346,10 +2346,10 @@ type ConceptDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConceptDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ConceptDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ConceptDiffsOwner
   ownedEntities: OwnedEntityConnection # ConceptDiffsOwned
   removed: EntityConnection
   diffs: ConceptDiffConnection
@@ -2379,10 +2379,10 @@ type Stat implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: StatOwner!
-  ownerKit: Kit
-  ownerDesign: Design
-  ownerType: Type
-  ownerEntity: OwnerEntity! # StatOwner
+  kitOwner: Kit
+  designOwner: Design
+  typeOwner: Type
+  entityOwner: OwnerEntity! # StatOwner
   ownedEntities: OwnedEntityConnection # StatOwned
   # Fields
   key: String!
@@ -2411,10 +2411,10 @@ type StatModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: StatModificationOwner!
-  ownerStatDiff: StatDiff
-  ownerStatModification: StatModification
-  ownerStat: Stat
-  ownerEntity: OwnerEntity
+  statDiffOwner: StatDiff
+  statModificationOwner: StatModification
+  statOwner: Stat
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2435,9 +2435,9 @@ type StatDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Stat!
@@ -2465,10 +2465,10 @@ type StatDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: StatDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # StatDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # StatDiffsOwner
   ownedEntities: OwnedEntityConnection # StatDiffsOwned
   removed: EntityConnection
   diffs: StatDiffConnection
@@ -2498,8 +2498,8 @@ type Port implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: PortOwner!
-  ownerType: Type
-  ownerEntity: OwnerEntity! # PortOwner
+  typeOwner: Type
+  entityOwner: OwnerEntity! # PortOwner
   ownedEntities: OwnedEntityConnection # PortOwned
   # Fields
   code: String
@@ -2527,10 +2527,10 @@ type PortModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: PortModificationOwner!
-  ownerPortDiff: PortDiff
-  ownerPortModification: PortModification
-  ownerPort: Port
-  ownerEntity: OwnerEntity
+  portDiffOwner: PortDiff
+  portModificationOwner: PortModification
+  portOwner: Port
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2551,9 +2551,9 @@ type PortDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Port!
@@ -2572,38 +2572,19 @@ type PortDiffConnection implements EntityConnectionInterface {
   hash: String!
 }
 
-union PortDiffsOwner =
-  | AttributeDiff
-  | Change
-  | ChangedDescription
-  | CreatedFixedPiece
-  | Diffs
-  | DraggedPiece
-  | FixedPiece
-  | LocationDiff
-  | PlaneDiff
-  | PlaceDiff
-  | PositionDiff
-  | RenamedKit
+union PortDiffsOwner = AttributeDiff | Change | ChangedDescription | CreatedFixedPiece | Diffs | DraggedPiece | FixedPiece | LocationDiff | PlaneDiff | PlaceDiff | PositionDiff | RenamedKit
 
-union PortDiffsOwned =
-  | PortDiffs
-  | PortDiff
-  | PlaneDiff
-  | PositionDiff
-  | AttributeDiff
-  | LocationDiff
-  | PlaceDiff
+union PortDiffsOwned = PortDiffs | PortDiff | PlaneDiff | PositionDiff | AttributeDiff | LocationDiff | PlaceDiff
 
 type PortDiffs implements Entity {
   # WeakEntity
   id: ID! # hash
   hash: String!
   owner: PortDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PortDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PortDiffsOwner
   ownedEntities: OwnedEntityConnection # PortDiffsOwned
   removed: EntityConnection
   diffs: PortDiffConnection
@@ -2633,8 +2614,8 @@ type Connector implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ConnectorOwner!
-  ownerType: Type
-  ownerEntity: OwnerEntity! # ConnectorOwner
+  typeOwner: Type
+  entityOwner: OwnerEntity! # ConnectorOwner
   ownedEntities: OwnedEntityConnection # ConnectorOwned
   # Fields
   code: String!
@@ -2665,10 +2646,10 @@ type ConnectorModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConnectorModificationOwner!
-  ownerConnectorDiff: ConnectorDiff
-  ownerConnectorModification: ConnectorModification
-  ownerConnector: Connector
-  ownerEntity: OwnerEntity
+  connectorDiffOwner: ConnectorDiff
+  connectorModificationOwner: ConnectorModification
+  connectorOwner: Connector
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
   # Fields
   code: String
@@ -2693,9 +2674,9 @@ type ConnectorDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Connector!
@@ -2723,10 +2704,10 @@ type ConnectorDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConnectorDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ConnectorDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ConnectorDiffsOwner
   ownedEntities: OwnedEntityConnection # ConnectorDiffsOwned
   removed: EntityConnection
   diffs: ConnectorDiffConnection
@@ -2752,8 +2733,8 @@ type Representation implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: RepresentationOwner!
-  ownerType: Type
-  ownerEntity: OwnerEntity! # RepresentationOwner
+  typeOwner: Type
+  entityOwner: OwnerEntity! # RepresentationOwner
   ownedEntities: OwnedEntityConnection # RepresentationOwned
   # Fields
   url: String!
@@ -2785,10 +2766,10 @@ type RepresentationModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: RepresentationModificationOwner!
-  ownerRepresentationDiff: RepresentationDiff
-  ownerRepresentationModification: RepresentationModification
-  ownerRepresentation: Representation
-  ownerEntity: OwnerEntity
+  representationDiffOwner: RepresentationDiff
+  representationModificationOwner: RepresentationModification
+  representationOwner: Representation
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2809,9 +2790,9 @@ type RepresentationDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Representation!
@@ -2839,10 +2820,10 @@ type RepresentationDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: RepresentationDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # RepresentationDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # RepresentationDiffsOwner
   ownedEntities: OwnedEntityConnection # RepresentationDiffsOwned
   removed: EntityConnection
   diffs: RepresentationDiffConnection
@@ -2868,8 +2849,8 @@ type Type implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: TypeOwner!
-  ownerKit: Kit
-  ownerEntity: OwnerEntity! # TypeOwner
+  kitOwner: Kit
+  entityOwner: OwnerEntity! # TypeOwner
   ownedEntities: OwnedEntityConnection # TypeOwned
   # Fields
   name: String!
@@ -2914,10 +2895,10 @@ type TypeModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: TypeModificationOwner!
-  ownerTypeDiff: TypeDiff
-  ownerTypeModification: TypeModification
-  ownerType: Type
-  ownerEntity: OwnerEntity
+  typeDiffOwner: TypeDiff
+  typeModificationOwner: TypeModification
+  typeOwner: Type
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -2938,9 +2919,9 @@ type TypeDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Type!
@@ -2968,10 +2949,10 @@ type TypeDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: TypeDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # TypeDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # TypeDiffsOwner
   ownedEntities: OwnedEntityConnection # TypeDiffsOwned
   removed: EntityConnection
   diffs: TypeDiffConnection
@@ -3003,8 +2984,8 @@ type Layer implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: LayerOwner!
-  ownerDesign: Design
-  ownerEntity: OwnerEntity! # LayerOwner
+  designOwner: Design
+  entityOwner: OwnerEntity! # LayerOwner
   ownedEntities: OwnedEntityConnection # LayerOwned
   # Fields
   name: String!
@@ -3035,10 +3016,10 @@ type LayerModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: LayerModificationOwner!
-  ownerLayerDiff: LayerDiff
-  ownerLayerModification: LayerModification
-  ownerLayer: Layer
-  ownerEntity: OwnerEntity
+  layerDiffOwner: LayerDiff
+  layerModificationOwner: LayerModification
+  layerOwner: Layer
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3059,9 +3040,9 @@ type LayerDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Layer!
@@ -3089,10 +3070,10 @@ type LayerDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: LayerDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # LayerDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # LayerDiffsOwner
   ownedEntities: OwnedEntityConnection # LayerDiffsOwned
   removed: EntityConnection
   diffs: LayerDiffConnection
@@ -3122,8 +3103,8 @@ type Group implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: GroupOwner!
-  ownerDesign: Design
-  ownerEntity: OwnerEntity! # GroupOwner
+  designOwner: Design
+  entityOwner: OwnerEntity! # GroupOwner
   ownedEntities: OwnedEntityConnection # GroupOwned
   # Fields
   name: String!
@@ -3153,10 +3134,10 @@ type GroupModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: GroupModificationOwner!
-  ownerGroupDiff: GroupDiff
-  ownerGroupModification: GroupModification
-  ownerGroup: Group
-  ownerEntity: OwnerEntity
+  groupDiffOwner: GroupDiff
+  groupModificationOwner: GroupModification
+  groupOwner: Group
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3177,9 +3158,9 @@ type GroupDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Group!
@@ -3207,10 +3188,10 @@ type GroupDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: GroupDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # GroupDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # GroupDiffsOwner
   ownedEntities: OwnedEntityConnection # GroupDiffsOwned
   removed: EntityConnection
   diffs: GroupDiffConnection
@@ -3258,11 +3239,11 @@ type Piece implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: PieceOwner!
-  ownerType: Type
-  ownerDesign: Design
-  ownerPieceModification: PieceModification
-  ownerPiece: Piece
-  ownerEntity: OwnerEntity! # PieceOwner
+  typeOwner: Type
+  designOwner: Design
+  pieceModificationOwner: PieceModification
+  pieceOwner: Piece
+  entityOwner: OwnerEntity! # PieceOwner
   ownedEntities: OwnedEntityConnection # PieceOwned — Piece subtree & attrs (design-owned bridges surface via Design)
   # Fields
   name: String
@@ -3304,10 +3285,10 @@ type PieceModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: PieceModificationOwner!
-  ownerPieceDiff: PieceDiff
-  ownerPieceModification: PieceModification
-  ownerPiece: Piece
-  ownerEntity: OwnerEntity
+  pieceDiffOwner: PieceDiff
+  pieceModificationOwner: PieceModification
+  pieceOwner: Piece
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3328,9 +3309,9 @@ type PieceDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Piece!
@@ -3358,10 +3339,10 @@ type PieceDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: PieceDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # PieceDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # PieceDiffsOwner
   ownedEntities: OwnedEntityConnection # PieceDiffsOwned
   removed: EntityConnection
   diffs: PieceDiffConnection
@@ -3387,8 +3368,8 @@ type Connection implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ConnectionOwner!
-  ownerDesign: Design
-  ownerEntity: OwnerEntity! # ConnectionOwner
+  designOwner: Design
+  entityOwner: OwnerEntity! # ConnectionOwner
   ownedEntities: OwnedEntityConnection # ConnectionOwned — endpoint sides & connection attrs
   # Fields
   connected: Side!
@@ -3425,10 +3406,10 @@ type ConnectionModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConnectionModificationOwner!
-  ownerConnectionDiff: ConnectionDiff
-  ownerConnectionModification: ConnectionModification
-  ownerConnection: Connection
-  ownerEntity: OwnerEntity
+  connectionDiffOwner: ConnectionDiff
+  connectionModificationOwner: ConnectionModification
+  connectionOwner: Connection
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3449,9 +3430,9 @@ type ConnectionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Connection!
@@ -3479,10 +3460,10 @@ type ConnectionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConnectionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ConnectionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ConnectionDiffsOwner
   ownedEntities: OwnedEntityConnection # ConnectionDiffsOwned
   removed: EntityConnection
   diffs: ConnectionDiffConnection
@@ -3515,8 +3496,8 @@ type CreatedFixedPiece implements Operation & Entity {
   id: ID! # uuidv7
   hash: String!
   owner: CreatedFixedPieceOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity! # CreatedFixedPieceOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity! # CreatedFixedPieceOwner
   ownedEntities: OwnedEntityConnection # CreatedFixedPieceOwned
   # Fields
   input: CreatedFixedPieceInput!
@@ -3537,8 +3518,8 @@ type FixedPiece implements Operation & Entity {
   id: ID! # uuidv7
   hash: String!
   owner: FixedPieceOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity! # FixedPieceOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity! # FixedPieceOwner
   ownedEntities: OwnedEntityConnection # FixedPieceOwned
   # Fields
   input: FixedPieceInput!
@@ -3560,8 +3541,8 @@ type DraggedPiece implements Operation & Entity {
   id: ID! # uuidv7
   hash: String!
   owner: DraggedPieceOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity! # DraggedPieceOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity! # DraggedPieceOwner
   ownedEntities: OwnedEntityConnection # DraggedPieceOwned
   # Fields
   input: DraggedPieceInput!
@@ -3588,8 +3569,8 @@ type Side implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: SideOwner!
-  ownerConnection: Connection
-  ownerEntity: OwnerEntity! # SideOwner
+  connectionOwner: Connection
+  entityOwner: OwnerEntity! # SideOwner
   ownedEntities: OwnedEntityConnection # SideOwned
   # Fields
   piece: Piece!
@@ -3618,10 +3599,10 @@ type SideModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: SideModificationOwner!
-  ownerSideDiff: SideDiff
-  ownerSideModification: SideModification
-  ownerSide: Side
-  ownerEntity: OwnerEntity
+  sideDiffOwner: SideDiff
+  sideModificationOwner: SideModification
+  sideOwner: Side
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3642,9 +3623,9 @@ type SideDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Side!
@@ -3672,10 +3653,10 @@ type SideDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: SideDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # SideDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # SideDiffsOwner
   ownedEntities: OwnedEntityConnection # SideDiffsOwned
   removed: EntityConnection
   diffs: SideDiffConnection
@@ -3704,7 +3685,7 @@ type Clump implements Entity { # implements WeakEntity
   id: ID! # hash
   hash: String!
   owner: ClumpOwner!
-  ownerEntity: OwnerEntity! # ClumpOwner
+  entityOwner: OwnerEntity! # ClumpOwner
   ownedEntities: OwnedEntityConnection # ClumpOwned
   # Computed Fields
   fixedPiece: Piece
@@ -3722,8 +3703,8 @@ type Design implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: DesignOwner!
-  ownerKit: Kit
-  ownerEntity: OwnerEntity! # DesignOwner
+  kitOwner: Kit
+  entityOwner: OwnerEntity! # DesignOwner
   ownedEntities: OwnedEntityConnection # DesignOwned
   # Fields
   name: String!
@@ -3771,10 +3752,10 @@ type DesignModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: DesignModificationOwner!
-  ownerDesignDiff: DesignDiff
-  ownerDesignModification: DesignModification
-  ownerDesign: Design
-  ownerEntity: OwnerEntity
+  designDiffOwner: DesignDiff
+  designModificationOwner: DesignModification
+  designOwner: Design
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3795,9 +3776,9 @@ type DesignDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Design!
@@ -3825,10 +3806,10 @@ type DesignDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: DesignDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # DesignDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # DesignDiffsOwner
   ownedEntities: OwnedEntityConnection # DesignDiffsOwned
   removed: EntityConnection
   diffs: DesignDiffConnection
@@ -3856,10 +3837,10 @@ type Kit implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: KitOwner!
-  ownerGraph: Graph
-  ownerCheckpoint: Checkpoint
-  ownerAlternative: Alternative
-  ownerEntity: OwnerEntity # KitOwner
+  graphOwner: Graph
+  checkpointOwner: Checkpoint
+  alternativeOwner: Alternative
+  entityOwner: OwnerEntity # KitOwner
   ownedEntities: OwnedEntityConnection # KitOwned
   # Fields
   checkpoint: Checkpoint
@@ -3914,10 +3895,10 @@ type KitModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: KitModificationOwner!
-  ownerKitDiff: KitDiff
-  ownerKitModification: KitModification
-  ownerKit: Kit
-  ownerEntity: OwnerEntity
+  kitDiffOwner: KitDiff
+  kitModificationOwner: KitModification
+  kitOwner: Kit
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -3938,9 +3919,9 @@ type KitDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Kit!
@@ -3968,10 +3949,10 @@ type KitDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: KitDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # KitDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # KitDiffsOwner
   ownedEntities: OwnedEntityConnection # KitDiffsOwned
   removed: EntityConnection
   diffs: KitDiffConnection
@@ -4000,8 +3981,8 @@ type RenamedKit implements Operation & Entity {
   id: ID! # uuidv7
   hash: String!
   owner: RenamedKitOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity! # RenamedKitOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity! # RenamedKitOwner
   ownedEntities: OwnedEntityConnection # RenamedKitOwned
   # Fields
   input: RenamedKitInput!
@@ -4022,8 +4003,8 @@ type ChangedDescription implements Operation & Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ChangedDescriptionOwner!
-  ownerChange: Change
-  ownerEntity: OwnerEntity! # ChangedDescriptionOwner
+  changeOwner: Change
+  entityOwner: OwnerEntity! # ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # ChangedDescriptionOwned
   # Fields
   input: ChangedDescriptionInput!
@@ -4050,10 +4031,10 @@ type Change implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ChangeOwner!
-  ownerTransaction: Transaction
-  ownerDraft: Draft
-  ownerCheckpoint: Checkpoint
-  ownerEntity: OwnerEntity! # ChangeOwner
+  transactionOwner: Transaction
+  draftOwner: Draft
+  checkpointOwner: Checkpoint
+  entityOwner: OwnerEntity! # ChangeOwner
   ownedEntities: OwnedEntityConnection # ChangeOwned
   # Fields
   description: String
@@ -4083,10 +4064,10 @@ type ChangeModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ChangeModificationOwner!
-  ownerChangeDiff: ChangeDiff
-  ownerChangeModification: ChangeModification
-  ownerChange: Change
-  ownerEntity: OwnerEntity
+  changeDiffOwner: ChangeDiff
+  changeModificationOwner: ChangeModification
+  changeOwner: Change
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4107,9 +4088,9 @@ type ChangeDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Change!
@@ -4137,10 +4118,10 @@ type ChangeDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ChangeDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ChangeDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ChangeDiffsOwner
   ownedEntities: OwnedEntityConnection # ChangeDiffsOwned
   removed: EntityConnection
   diffs: ChangeDiffConnection
@@ -4166,8 +4147,8 @@ type Transaction implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: TransactionOwner!
-  ownerDraft: Draft
-  ownerEntity: OwnerEntity # TransactionOwner
+  draftOwner: Draft
+  entityOwner: OwnerEntity # TransactionOwner
   ownedEntities: OwnedEntityConnection # TransactionOwned
   # Fields
   changes: ChangeConnection!
@@ -4193,10 +4174,10 @@ type TransactionModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: TransactionModificationOwner!
-  ownerTransactionDiff: TransactionDiff
-  ownerTransactionModification: TransactionModification
-  ownerTransaction: Transaction
-  ownerEntity: OwnerEntity
+  transactionDiffOwner: TransactionDiff
+  transactionModificationOwner: TransactionModification
+  transactionOwner: Transaction
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4217,9 +4198,9 @@ type TransactionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Transaction!
@@ -4247,10 +4228,10 @@ type TransactionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: TransactionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # TransactionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # TransactionDiffsOwner
   ownedEntities: OwnedEntityConnection # TransactionDiffsOwned
   removed: EntityConnection
   diffs: TransactionDiffConnection
@@ -4276,8 +4257,8 @@ type Draft implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: DraftOwner!
-  ownerAuthor: Author
-  ownerEntity: OwnerEntity! # DraftOwner
+  authorOwner: Author
+  entityOwner: OwnerEntity! # DraftOwner
   ownedEntities: OwnedEntityConnection # DraftOwned
   # Fields
   parentCheckpoint: Checkpoint
@@ -4310,10 +4291,10 @@ type DraftModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: DraftModificationOwner!
-  ownerDraftDiff: DraftDiff
-  ownerDraftModification: DraftModification
-  ownerDraft: Draft
-  ownerEntity: OwnerEntity
+  draftDiffOwner: DraftDiff
+  draftModificationOwner: DraftModification
+  draftOwner: Draft
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4334,9 +4315,9 @@ type DraftDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Draft!
@@ -4364,10 +4345,10 @@ type DraftDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: DraftDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # DraftDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # DraftDiffsOwner
   ownedEntities: OwnedEntityConnection # DraftDiffsOwned
   removed: EntityConnection
   diffs: DraftDiffConnection
@@ -4393,11 +4374,11 @@ type Checkpoint implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: CheckpointOwner!
-  ownerAlternative: Alternative
-  ownerGraph: Graph
-  ownerKit: Kit
-  ownerAuthor: Author
-  ownerEntity: OwnerEntity # CheckpointOwner
+  alternativeOwner: Alternative
+  graphOwner: Graph
+  kitOwner: Kit
+  authorOwner: Author
+  entityOwner: OwnerEntity # CheckpointOwner
   ownedEntities: OwnedEntityConnection # CheckpointOwned
   # Fields
   timestamp: Timestamp
@@ -4429,10 +4410,10 @@ type CheckpointModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: CheckpointModificationOwner!
-  ownerCheckpointDiff: CheckpointDiff
-  ownerCheckpointModification: CheckpointModification
-  ownerCheckpoint: Checkpoint
-  ownerEntity: OwnerEntity
+  checkpointDiffOwner: CheckpointDiff
+  checkpointModificationOwner: CheckpointModification
+  checkpointOwner: Checkpoint
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4453,9 +4434,9 @@ type CheckpointDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Checkpoint!
@@ -4483,10 +4464,10 @@ type CheckpointDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: CheckpointDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # CheckpointDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # CheckpointDiffsOwner
   ownedEntities: OwnedEntityConnection # CheckpointDiffsOwned
   removed: EntityConnection
   diffs: CheckpointDiffConnection
@@ -4512,8 +4493,8 @@ type Alternative implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: AlternativeOwner!
-  ownerGraph: Graph
-  ownerEntity: OwnerEntity # AlternativeOwner
+  graphOwner: Graph
+  entityOwner: OwnerEntity # AlternativeOwner
   ownedEntities: OwnedEntityConnection # AlternativeOwned
   # Fields
   name: String!
@@ -4544,10 +4525,10 @@ type AlternativeModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: AlternativeModificationOwner!
-  ownerAlternativeDiff: AlternativeDiff
-  ownerAlternativeModification: AlternativeModification
-  ownerAlternative: Alternative
-  ownerEntity: OwnerEntity
+  alternativeDiffOwner: AlternativeDiff
+  alternativeModificationOwner: AlternativeModification
+  alternativeOwner: Alternative
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4568,9 +4549,9 @@ type AlternativeDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Alternative!
@@ -4598,10 +4579,10 @@ type AlternativeDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: AlternativeDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # AlternativeDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # AlternativeDiffsOwner
   ownedEntities: OwnedEntityConnection # AlternativeDiffsOwned
   removed: EntityConnection
   diffs: AlternativeDiffConnection
@@ -4627,8 +4608,8 @@ type Graph implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: GraphOwner!
-  ownerSession: Session
-  ownerEntity: OwnerEntity # GraphOwner
+  sessionOwner: Session
+  entityOwner: OwnerEntity # GraphOwner
   ownedEntities: OwnedEntityConnection # GraphOwned
   # Fields
   theKit: Kit
@@ -4660,10 +4641,10 @@ type GraphModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: GraphModificationOwner!
-  ownerGraphDiff: GraphDiff
-  ownerGraphModification: GraphModification
-  ownerGraph: Graph
-  ownerEntity: OwnerEntity
+  graphDiffOwner: GraphDiff
+  graphModificationOwner: GraphModification
+  graphOwner: Graph
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4684,9 +4665,9 @@ type GraphDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Graph!
@@ -4714,10 +4695,10 @@ type GraphDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: GraphDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # GraphDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # GraphDiffsOwner
   ownedEntities: OwnedEntityConnection # GraphDiffsOwned
   removed: EntityConnection
   diffs: GraphDiffConnection
@@ -4743,10 +4724,10 @@ type Session implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: SessionOwner!
-  ownerGraph: Graph
-  ownerCheckpoint: Checkpoint
-  ownerAlternative: Alternative
-  ownerEntity: OwnerEntity # SessionOwner
+  graphOwner: Graph
+  checkpointOwner: Checkpoint
+  alternativeOwner: Alternative
+  entityOwner: OwnerEntity # SessionOwner
   ownedEntities: OwnedEntityConnection # SessionOwned
   # Fields
   startedAt: Timestamp
@@ -4773,10 +4754,10 @@ type SessionModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: SessionModificationOwner!
-  ownerSessionDiff: SessionDiff
-  ownerSessionModification: SessionModification
-  ownerSession: Session
-  ownerEntity: OwnerEntity
+  sessionDiffOwner: SessionDiff
+  sessionModificationOwner: SessionModification
+  sessionOwner: Session
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4797,9 +4778,9 @@ type SessionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Session!
@@ -4827,10 +4808,10 @@ type SessionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: SessionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # SessionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # SessionDiffsOwner
   ownedEntities: OwnedEntityConnection # SessionDiffsOwned
   removed: EntityConnection
   diffs: SessionDiffConnection
@@ -4856,8 +4837,8 @@ type ReadVersion implements Entity {
   id: ID! # hash
   hash: String!
   owner: ReadVersionOwner!
-  ownerConflict: Conflict
-  ownerEntity: OwnerEntity # ReadVersionOwner
+  conflictOwner: Conflict
+  entityOwner: OwnerEntity # ReadVersionOwner
   ownedEntities: OwnedEntityConnection # ReadVersionOwned
   # Fields
   checkpoint: Checkpoint
@@ -4885,10 +4866,10 @@ type ReadVersionModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ReadVersionModificationOwner!
-  ownerReadVersionDiff: ReadVersionDiff
-  ownerReadVersionModification: ReadVersionModification
-  ownerReadVersion: ReadVersion
-  ownerEntity: OwnerEntity
+  readVersionDiffOwner: ReadVersionDiff
+  readVersionModificationOwner: ReadVersionModification
+  readVersionOwner: ReadVersion
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -4909,9 +4890,9 @@ type ReadVersionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: ReadVersion!
@@ -4939,10 +4920,10 @@ type ReadVersionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ReadVersionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ReadVersionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ReadVersionDiffsOwner
   ownedEntities: OwnedEntityConnection # ReadVersionDiffsOwned
   removed: EntityConnection
   diffs: ReadVersionDiffConnection
@@ -4968,8 +4949,8 @@ type WriteVersion implements Entity {
   id: ID! # hash
   hash: String!
   owner: WriteVersionOwner!
-  ownerConflict: Conflict
-  ownerEntity: OwnerEntity # WriteVersionOwner
+  conflictOwner: Conflict
+  entityOwner: OwnerEntity # WriteVersionOwner
   ownedEntities: OwnedEntityConnection # WriteVersionOwned
   # Fields
   draft: Draft
@@ -4999,10 +4980,10 @@ type WriteVersionModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: WriteVersionModificationOwner!
-  ownerWriteVersionDiff: WriteVersionDiff
-  ownerWriteVersionModification: WriteVersionModification
-  ownerWriteVersion: WriteVersion
-  ownerEntity: OwnerEntity
+  writeVersionDiffOwner: WriteVersionDiff
+  writeVersionModificationOwner: WriteVersionModification
+  writeVersionOwner: WriteVersion
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -5023,9 +5004,9 @@ type WriteVersionDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: WriteVersion!
@@ -5053,10 +5034,10 @@ type WriteVersionDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: WriteVersionDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # WriteVersionDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # WriteVersionDiffsOwner
   ownedEntities: OwnedEntityConnection # WriteVersionDiffsOwned
   removed: EntityConnection
   diffs: WriteVersionDiffConnection
@@ -5082,9 +5063,9 @@ type Conflict implements Entity {
   id: ID! # uuidv7
   hash: String!
   owner: ConflictOwner!
-  ownerSession: Session
-  ownerGraph: Graph
-  ownerEntity: OwnerEntity! # ConflictOwner
+  sessionOwner: Session
+  graphOwner: Graph
+  entityOwner: OwnerEntity! # ConflictOwner
   ownedEntities: OwnedEntityConnection # ConflictOwned
   # Fields
   authoritativeVersion: ReadVersion
@@ -5113,10 +5094,10 @@ type ConflictModification implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConflictModificationOwner!
-  ownerConflictDiff: ConflictDiff
-  ownerConflictModification: ConflictModification
-  ownerConflict: Conflict
-  ownerEntity: OwnerEntity
+  conflictDiffOwner: ConflictDiff
+  conflictModificationOwner: ConflictModification
+  conflictOwner: Conflict
+  entityOwner: OwnerEntity
   ownedEntities: OwnedEntityConnection
 }
 
@@ -5137,9 +5118,9 @@ type ConflictDiff implements Diff {
   hash: String!
   owner: DiffOwner!
   ownerDiffs: Diffs
-  ownerChange: Change
-  ownerOperation: Operation
-  ownerEntity: OwnerEntity # DiffOwner
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity # DiffOwner
   ownedEntities: OwnedEntityConnection # DiffOwned
   # Diff
   before: Conflict!
@@ -5167,10 +5148,10 @@ type ConflictDiffs implements Entity {
   id: ID! # hash
   hash: String!
   owner: ConflictDiffsOwner!
-  ownerDiff: Diff
-  ownerOperation: Operation
-  ownerChange: Change
-  ownerEntity: OwnerEntity # ConflictDiffsOwner
+  diffOwner: Diff
+  operationOwner: Operation
+  changeOwner: Change
+  entityOwner: OwnerEntity # ConflictDiffsOwner
   ownedEntities: OwnedEntityConnection # ConflictDiffsOwned
   removed: EntityConnection
   diffs: ConflictDiffConnection
