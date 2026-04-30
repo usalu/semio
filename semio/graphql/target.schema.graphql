@@ -11,45 +11,65 @@ scalar Timestamp
 #region General
 
 interface Node {
-  id: ID!
+  id: ID! # data
 }
 
 interface Entity implements Node { # Our own extension ontop of the relay specs
-  id: ID!
-  hash: String!
-  # owner: ENTITY
+  id: ID! # data
+  hash: String! # cached
+  # owner: ENTITY # reference
+  # ENTITYOwner: ENTITYOwner # computed
+  entityOwner: EntityOwner # computed
+  # owns: ENTITYConnection # computed
+  ownedEntities: OwnedEntityConnection # computed
+}
+
+interface EntityEdge {
+  cursor: String! # computed
+}
+
+type PageInfo {
+  hasNextPage: Boolean! # computed
+  hasPreviousPage: Boolean! # computed
+  startCursor: String # computed // start at this entity
+  endCursor: String # computed // end at this entity
+}
+
+interface EntityConnectionInterface {
+  # edges: [ENTITYEdge] # computed
+  pageInfo: PageInfo! # computed
+  hash: String! # cached // ur own extension ontop of the relay specs
+}
+
+interface WeakEntity implements Entity {
+  id: ID! # computed // hash
+  hash: String! # cached
+  # owner: ENTITY # reference
   # ENTITYOwner: ENTITYOwner
-  EntityOwner: EntityOwner
+  entityOwner: EntityOwner
   # owns: ENTITYConnection
   ownedEntities: OwnedEntityConnection
 }
 
-interface EntityEdge {
-  cursor: String!
+interface StrongEntity implements Entity {
+  id: ID! # data // uuidv7
+  hash: String! # cached
+  # owner: ENTITY # reference
+  # ENTITYOwner: ENTITYOwner # computed
+  entityOwner: OwnerEntity # computed // ENTITYKIND
+  ownedEntities: OwnedEntityConnection # computed // ENTITYKIND
 }
 
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String # start at this entity
-  endCursor: String # end at this entity
+interface Artifact implements StrongEntity {
+  id: ID! # computed // hash
+  hash: String! # cached
+  # owner: ENTITY # reference
+  # ENTITYOwner: ENTITYOwner
+  entityOwner: EntityOwner
+  # owns: ENTITYConnection
+  ownedEntities: OwnedEntityConnection
+  # Derived Fields
 }
-
-interface EntityConnectionInterface {
-  # edges: [ENTITYEdge]
-  pageInfo: PageInfo!
-  hash: String! # Our own extension ontop of the relay specs
-}
-# interface WeakEntity implements Entity {
-#   id: ID! # hash
-# }
-
-# interface StrongEntity implements Entity {
-#   id: ID! # uuidv7
-#   hash: String!
-#   entityOwner: OwnerEntity # ENTITYKIND
-#   ownedEntities: OwnedEntityConnection # ENTITYKIND
-# }
 
 #endregion General
 
@@ -61,7 +81,7 @@ interface EntityConnectionInterface {
 # }
 
 type ModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Modification!
 }
 
@@ -73,8 +93,8 @@ type ModificationConnection implements EntityConnectionInterface {
 
 interface Diff implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -88,7 +108,7 @@ interface Diff implements Entity { # implements WeakEntity
 }
 
 type DiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Diff!
 }
 
@@ -100,8 +120,8 @@ type DiffConnection implements EntityConnectionInterface {
 
 type Diffs implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -115,7 +135,7 @@ type Diffs implements Entity { # implements WeakEntity
 }
 
 type DiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Diffs!
 }
 
@@ -140,8 +160,8 @@ union VectorOwned = Plane | PlaneModification
 
 type Vector implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: VectorOwner!
   planeOwner: Plane
   planeModificationOwner: PlaneModification
@@ -154,7 +174,7 @@ type Vector implements Entity { # implements WeakEntity
 }
 
 type VectorEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Vector!
 }
 
@@ -170,8 +190,8 @@ union VectorModificationOwned = Vector
 
 type VectorModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: VectorModificationOwner!
   vectorDiffOwner: VectorDiff
   vectorModificationOwner: VectorModification
@@ -181,7 +201,7 @@ type VectorModification implements Entity {
 }
 
 type VectorModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: VectorModification!
 }
 
@@ -193,8 +213,8 @@ type VectorModificationConnection implements EntityConnectionInterface {
 
 type VectorDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -208,7 +228,7 @@ type VectorDiff implements Diff {
 }
 
 type VectorDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: VectorDiff!
 }
 
@@ -224,8 +244,8 @@ union VectorDiffsOwned = VectorDiffs | VectorDiff | PlaneDiff | PositionDiff | A
 
 type VectorDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: VectorDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -238,7 +258,7 @@ type VectorDiffs implements Entity {
 }
 
 type VectorDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: VectorDiffs!
 }
 
@@ -263,8 +283,8 @@ union PointOwned = Plane | PlaneModification
 
 type Point implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PointOwner!
   planeOwner: Plane
   planeModificationOwner: PlaneModification
@@ -277,7 +297,7 @@ type Point implements Entity { # implements WeakEntity
 }
 
 type PointEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Point!
 }
 
@@ -293,8 +313,8 @@ union PointModificationOwned = Point
 
 type PointModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PointModificationOwner!
   pointDiffOwner: PointDiff
   pointModificationOwner: PointModification
@@ -304,7 +324,7 @@ type PointModification implements Entity {
 }
 
 type PointModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PointModification!
 }
 
@@ -316,8 +336,8 @@ type PointModificationConnection implements EntityConnectionInterface {
 
 type PointDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -331,7 +351,7 @@ type PointDiff implements Diff {
 }
 
 type PointDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PointDiff!
 }
 
@@ -347,8 +367,8 @@ union PointDiffsOwned = PointDiffs | PointDiff | PlaneDiff | PositionDiff | Attr
 
 type PointDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PointDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -361,7 +381,7 @@ type PointDiffs implements Entity {
 }
 
 type PointDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PointDiffs!
 }
 
@@ -385,8 +405,8 @@ union CoordinateOwned = Position | PositionModification
 
 type Coordinate implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: CoordinateOwner!
   positionOwner: Position
   positionModificationOwner: PositionModification
@@ -398,7 +418,7 @@ type Coordinate implements Entity { # implements WeakEntity
 }
 
 type CoordinateEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Coordinate!
 }
 
@@ -414,8 +434,8 @@ union CoordinateModificationOwned = Coordinate
 
 type CoordinateModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: CoordinateModificationOwner!
   coordinateDiffOwner: CoordinateDiff
   coordinateModificationOwner: CoordinateModification
@@ -425,7 +445,7 @@ type CoordinateModification implements Entity {
 }
 
 type CoordinateModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CoordinateModification!
 }
 
@@ -437,8 +457,8 @@ type CoordinateModificationConnection implements EntityConnectionInterface {
 
 type CoordinateDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -452,7 +472,7 @@ type CoordinateDiff implements Diff {
 }
 
 type CoordinateDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CoordinateDiff!
 }
 
@@ -468,8 +488,8 @@ union CoordinateDiffsOwned = CoordinateDiffs | CoordinateDiff | PlaneDiff | Posi
 
 type CoordinateDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: CoordinateDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -482,7 +502,7 @@ type CoordinateDiffs implements Entity {
 }
 
 type CoordinateDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CoordinateDiffs!
 }
 
@@ -506,8 +526,8 @@ union OffsetOwned = Position | PositionModification
 
 type Offset implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: OffsetOwner!
   positionOwner: Position
   positionModificationOwner: PositionModification
@@ -519,7 +539,7 @@ type Offset implements Entity { # implements WeakEntity
 }
 
 type OffsetEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Offset!
 }
 
@@ -535,8 +555,8 @@ union OffsetModificationOwned = Offset
 
 type OffsetModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: OffsetModificationOwner!
   offsetDiffOwner: OffsetDiff
   offsetModificationOwner: OffsetModification
@@ -546,7 +566,7 @@ type OffsetModification implements Entity {
 }
 
 type OffsetModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: OffsetModification!
 }
 
@@ -558,8 +578,8 @@ type OffsetModificationConnection implements EntityConnectionInterface {
 
 type OffsetDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -573,7 +593,7 @@ type OffsetDiff implements Diff {
 }
 
 type OffsetDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: OffsetDiff!
 }
 
@@ -589,8 +609,8 @@ union OffsetDiffsOwned = OffsetDiffs | OffsetDiff | PlaneDiff | PositionDiff | A
 
 type OffsetDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: OffsetDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -603,7 +623,7 @@ type OffsetDiffs implements Entity {
 }
 
 type OffsetDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: OffsetDiffs!
 }
 
@@ -628,8 +648,8 @@ union PlaneOwned = Point | Vector
 
 type Plane implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PlaneOwner!
   pieceOwner: Piece
   pieceModificationOwner: PieceModification
@@ -643,7 +663,7 @@ type Plane implements Entity { # implements WeakEntity
 }
 
 type PlaneEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Plane!
 }
 
@@ -658,8 +678,8 @@ union PlaneModificationOwned = Point | Vector | Plane
 
 type PlaneModification implements Entity { # implements Modification
   # Modification
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PlaneModificationOwner!
   pieceModificationOwner: PieceModification
   positionModificationOwner: PositionModification
@@ -676,7 +696,7 @@ type PlaneModification implements Entity { # implements Modification
 }
 
 type PlaneModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaneModification!
 }
 
@@ -688,8 +708,8 @@ type PlaneModificationConnection implements EntityConnectionInterface {
 
 type PlaneDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -703,7 +723,7 @@ type PlaneDiff implements Diff {
 }
 
 type PlaneDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaneDiff!
 }
 
@@ -719,8 +739,8 @@ union PlaneDiffsOwned = PlaneDiffs | PlaneDiff | PositionDiff | AttributeDiff | 
 
 type PlaneDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PlaneDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -733,7 +753,7 @@ type PlaneDiffs implements Entity {
 }
 
 type PlaneDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaneDiffs!
 }
 
@@ -757,8 +777,8 @@ union PositionOwner = Piece | PositionModification | Plane | PositionDiff
 
 type Position implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PositionOwner!
   pieceOwner: Piece
   positionModificationOwner: PositionModification
@@ -772,7 +792,7 @@ type Position implements Entity { # implements WeakEntity
 }
 
 type PositionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Position!
 }
 
@@ -787,8 +807,8 @@ union PositionModificationOwner = PieceModification | PositionDiff
 
 type PositionModification implements Entity { # implements Modification
   # Modification
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PositionModificationOwner!
   pieceModificationOwner: PieceModification
   positionDiffOwner: PositionDiff
@@ -800,7 +820,7 @@ type PositionModification implements Entity { # implements Modification
 }
 
 type PositionModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PositionModification!
 }
 
@@ -812,8 +832,8 @@ type PositionModificationConnection implements EntityConnectionInterface {
 
 type PositionDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -827,7 +847,7 @@ type PositionDiff implements Diff {
 }
 
 type PositionDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PositionDiff!
 }
 
@@ -843,8 +863,8 @@ union PositionDiffsOwned = PositionDiffs | PlaneDiff | PositionDiff | AttributeD
 
 type PositionDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PositionDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -857,7 +877,7 @@ type PositionDiffs implements Entity {
 }
 
 type PositionDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PositionDiffs!
 }
 
@@ -882,8 +902,8 @@ union LocationOwner = Place | Kit | Design
 
 type Location implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: LocationOwner!
   placeOwner: Place
   kitOwner: Kit
@@ -897,7 +917,7 @@ type Location implements Entity { # implements WeakEntity
 }
 
 type LocationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Location!
 }
 
@@ -912,8 +932,8 @@ union LocationModificationOwner = PlaceModification | LocationDiff
 
 type LocationModification implements Entity { # implements Modification
   # Modification
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: LocationModificationOwner!
   placeModificationOwner: PlaceModification
   locationDiffOwner: LocationDiff
@@ -926,7 +946,7 @@ type LocationModification implements Entity { # implements Modification
 }
 
 type LocationModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LocationModification!
 }
 
@@ -938,8 +958,8 @@ type LocationModificationConnection implements EntityConnectionInterface {
 
 type LocationDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -953,7 +973,7 @@ type LocationDiff implements Diff {
 }
 
 type LocationDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LocationDiff!
 }
 
@@ -969,8 +989,8 @@ union LocationDiffsOwned = LocationDiffs | PlaneDiff | PositionDiff | AttributeD
 
 type LocationDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: LocationDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -983,7 +1003,7 @@ type LocationDiffs implements Entity {
 }
 
 type LocationDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LocationDiffs!
 }
 
@@ -1008,8 +1028,8 @@ union AttributeOwned = Attribute
 
 type Attribute implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AttributeOwner!
   pieceOwner: Piece
   connectorOwner: Connector
@@ -1032,7 +1052,7 @@ type Attribute implements Entity { # implements WeakEntity
 }
 
 type AttributeEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Attribute!
 }
 
@@ -1047,8 +1067,8 @@ union AttributeModificationOwned = AttributeModification
 
 type AttributeModification implements Entity { # implements Modification
   # Modification
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AttributeModificationOwner!
   pieceModificationOwner: PieceModification
   connectorOwner: Connector
@@ -1069,7 +1089,7 @@ type AttributeModification implements Entity { # implements Modification
 }
 
 type AttributeModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AttributeModification!
 }
 
@@ -1081,8 +1101,8 @@ type AttributeModificationConnection implements EntityConnectionInterface {
 
 type AttributeDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1096,7 +1116,7 @@ type AttributeDiff implements Diff {
 }
 
 type AttributeDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AttributeDiff!
 }
 
@@ -1117,8 +1137,8 @@ union AttributeDiffsOwned = Attribute | AttributeDiff | Diffs
 
 type AttributeDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AttributeDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1132,7 +1152,7 @@ type AttributeDiffs implements Entity {
 }
 
 type AttributeDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AttributeDiffs!
 }
 
@@ -1151,8 +1171,8 @@ union OperationOwner = Change
 
 interface Operation implements Entity { # implements StrongEntity
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: OperationOwner!
   changeOwner: Change
   entityOwner: OwnerEntity # OperationOwner
@@ -1163,7 +1183,7 @@ interface Operation implements Entity { # implements StrongEntity
 }
 
 type OperationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Operation!
 }
 
@@ -1182,8 +1202,8 @@ union PlaceOwned = Location
 
 type Place implements Entity { # implements StrongEntity
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: PlaceOwner!
   kitOwner: Kit
   checkpointOwner: Checkpoint
@@ -1196,7 +1216,7 @@ type Place implements Entity { # implements StrongEntity
 }
 
 type PlaceEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Place!
 }
 
@@ -1211,8 +1231,8 @@ union PlaceModificationOwned = LocationModification | Place
 
 type PlaceModification implements Entity { # implements Modification
   # Modification
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PlaceModificationOwner!
   placeDiffOwner: PlaceDiff
   placeOwner: Place
@@ -1225,7 +1245,7 @@ type PlaceModification implements Entity { # implements Modification
 }
 
 type PlaceModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaceModification!
 }
 
@@ -1237,8 +1257,8 @@ type PlaceModificationConnection implements EntityConnectionInterface {
 
 type PlaceDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1252,7 +1272,7 @@ type PlaceDiff implements Diff {
 }
 
 type PlaceDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaceDiff!
 }
 
@@ -1268,8 +1288,8 @@ union PlaceDiffsOwned = PlaceDiffs | PlaneDiff | PositionDiff | AttributeDiff | 
 
 type PlaceDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PlaceDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1282,7 +1302,7 @@ type PlaceDiffs implements Entity {
 }
 
 type PlaceDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PlaceDiffs!
 }
 
@@ -1301,8 +1321,8 @@ union FamilyOwner = Kit
 
 type Family implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: FamilyOwner!
   kitOwner: Kit
   entityOwner: OwnerEntity! # FamilyOwner
@@ -1313,7 +1333,7 @@ type Family implements Entity {
 }
 
 type FamilyEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Family!
 }
 
@@ -1329,8 +1349,8 @@ union FamilyModificationOwned = Family
 
 type FamilyModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FamilyModificationOwner!
   familyDiffOwner: FamilyDiff
   familyModificationOwner: FamilyModification
@@ -1340,7 +1360,7 @@ type FamilyModification implements Entity {
 }
 
 type FamilyModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FamilyModification!
 }
 
@@ -1352,8 +1372,8 @@ type FamilyModificationConnection implements EntityConnectionInterface {
 
 type FamilyDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1367,7 +1387,7 @@ type FamilyDiff implements Diff {
 }
 
 type FamilyDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FamilyDiff!
 }
 
@@ -1383,8 +1403,8 @@ union FamilyDiffsOwned = FamilyDiffs | FamilyDiff | PlaneDiff | PositionDiff | A
 
 type FamilyDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FamilyDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1397,7 +1417,7 @@ type FamilyDiffs implements Entity {
 }
 
 type FamilyDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FamilyDiffs!
 }
 
@@ -1416,8 +1436,8 @@ union FolderOwned = Folder | File | Design | Type | Family
 
 type Folder implements Entity { # implements StrongEntity
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: FolderOwner!
   kitOwner: Kit
   folderOwner: Folder
@@ -1435,7 +1455,7 @@ type Folder implements Entity { # implements StrongEntity
 }
 
 type FolderEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Folder!
 }
 
@@ -1451,8 +1471,8 @@ union FolderModificationOwned = Folder
 
 type FolderModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FolderModificationOwner!
   folderDiffOwner: FolderDiff
   folderModificationOwner: FolderModification
@@ -1462,7 +1482,7 @@ type FolderModification implements Entity {
 }
 
 type FolderModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FolderModification!
 }
 
@@ -1474,8 +1494,8 @@ type FolderModificationConnection implements EntityConnectionInterface {
 
 type FolderDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1489,7 +1509,7 @@ type FolderDiff implements Diff {
 }
 
 type FolderDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FolderDiff!
 }
 
@@ -1505,8 +1525,8 @@ union FolderDiffsOwned = FolderDiffs | FolderDiff | PlaneDiff | PositionDiff | A
 
 type FolderDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FolderDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1519,7 +1539,7 @@ type FolderDiffs implements Entity {
 }
 
 type FolderDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FolderDiffs!
 }
 
@@ -1538,8 +1558,8 @@ union FileOwner = Kit | Folder
 
 type File implements Entity { # implements StrongEntity
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: FileOwner!
   kitOwner: Kit
   folderOwner: Folder
@@ -1560,7 +1580,7 @@ type File implements Entity { # implements StrongEntity
 }
 
 type FileEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: File!
 }
 
@@ -1576,8 +1596,8 @@ union FileModificationOwned = File
 
 type FileModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FileModificationOwner!
   fileDiffOwner: FileDiff
   fileModificationOwner: FileModification
@@ -1587,7 +1607,7 @@ type FileModification implements Entity {
 }
 
 type FileModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FileModification!
 }
 
@@ -1599,8 +1619,8 @@ type FileModificationConnection implements EntityConnectionInterface {
 
 type FileDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1614,7 +1634,7 @@ type FileDiff implements Diff {
 }
 
 type FileDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FileDiff!
 }
 
@@ -1630,8 +1650,8 @@ union FileDiffsOwned = FileDiffs | FileDiff | PlaneDiff | PositionDiff | Attribu
 
 type FileDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: FileDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1644,7 +1664,7 @@ type FileDiffs implements Entity {
 }
 
 type FileDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: FileDiffs!
 }
 
@@ -1663,8 +1683,8 @@ union AuthorOwned = Draft | Transaction | Checkpoint
 
 type Author implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: AuthorOwner!
   kitOwner: Kit
   checkpointOwner: Checkpoint
@@ -1683,7 +1703,7 @@ type Author implements Entity {
 }
 
 type AuthorEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Author!
 }
 
@@ -1699,8 +1719,8 @@ union AuthorModificationOwned = Author
 
 type AuthorModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AuthorModificationOwner!
   authorDiffOwner: AuthorDiff
   authorModificationOwner: AuthorModification
@@ -1710,7 +1730,7 @@ type AuthorModification implements Entity {
 }
 
 type AuthorModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AuthorModification!
 }
 
@@ -1722,8 +1742,8 @@ type AuthorModificationConnection implements EntityConnectionInterface {
 
 type AuthorDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1737,7 +1757,7 @@ type AuthorDiff implements Diff {
 }
 
 type AuthorDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AuthorDiff!
 }
 
@@ -1753,8 +1773,8 @@ union AuthorDiffsOwned = AuthorDiffs | AuthorDiff | PlaneDiff | PositionDiff | A
 
 type AuthorDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AuthorDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1767,7 +1787,7 @@ type AuthorDiffs implements Entity {
 }
 
 type AuthorDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AuthorDiffs!
 }
 
@@ -1786,8 +1806,8 @@ union PropOwner = Piece | Type | Design | Kit
 
 type Prop implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: PropOwner!
   pieceOwner: Piece
   typeOwner: Type
@@ -1803,7 +1823,7 @@ type Prop implements Entity {
 }
 
 type PropEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Prop!
 }
 
@@ -1819,8 +1839,8 @@ union PropModificationOwned = Prop
 
 type PropModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PropModificationOwner!
   propDiffOwner: PropDiff
   propModificationOwner: PropModification
@@ -1830,7 +1850,7 @@ type PropModification implements Entity {
 }
 
 type PropModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PropModification!
 }
 
@@ -1842,8 +1862,8 @@ type PropModificationConnection implements EntityConnectionInterface {
 
 type PropDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1857,7 +1877,7 @@ type PropDiff implements Diff {
 }
 
 type PropDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PropDiff!
 }
 
@@ -1873,8 +1893,8 @@ union PropDiffsOwned = PropDiffs | PropDiff | PlaneDiff | PositionDiff | Attribu
 
 type PropDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PropDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -1887,7 +1907,7 @@ type PropDiffs implements Entity {
 }
 
 type PropDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PropDiffs!
 }
 
@@ -1906,8 +1926,8 @@ union BenchmarkOwner = Quality
 
 type Benchmark implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: BenchmarkOwner!
   qualityOwner: Quality
   entityOwner: OwnerEntity! # BenchmarkOwner
@@ -1921,7 +1941,7 @@ type Benchmark implements Entity {
 }
 
 type BenchmarkEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Benchmark!
 }
 
@@ -1937,8 +1957,8 @@ union BenchmarkModificationOwned = Benchmark
 
 type BenchmarkModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: BenchmarkModificationOwner!
   benchmarkDiffOwner: BenchmarkDiff
   benchmarkModificationOwner: BenchmarkModification
@@ -1948,7 +1968,7 @@ type BenchmarkModification implements Entity {
 }
 
 type BenchmarkModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: BenchmarkModification!
 }
 
@@ -1960,8 +1980,8 @@ type BenchmarkModificationConnection implements EntityConnectionInterface {
 
 type BenchmarkDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -1975,7 +1995,7 @@ type BenchmarkDiff implements Diff {
 }
 
 type BenchmarkDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: BenchmarkDiff!
 }
 
@@ -1991,8 +2011,8 @@ union BenchmarkDiffsOwned = BenchmarkDiffs | BenchmarkDiff | PlaneDiff | Positio
 
 type BenchmarkDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: BenchmarkDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2005,7 +2025,7 @@ type BenchmarkDiffs implements Entity {
 }
 
 type BenchmarkDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: BenchmarkDiffs!
 }
 
@@ -2024,8 +2044,8 @@ union QualityOwned = Benchmark
 
 type Quality implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: QualityOwner!
   connectorOwner: Connector
   representationOwner: Representation
@@ -2044,7 +2064,7 @@ type Quality implements Entity {
 }
 
 type QualityEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Quality!
 }
 
@@ -2060,8 +2080,8 @@ union QualityModificationOwned = Quality
 
 type QualityModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: QualityModificationOwner!
   qualityDiffOwner: QualityDiff
   qualityModificationOwner: QualityModification
@@ -2071,7 +2091,7 @@ type QualityModification implements Entity {
 }
 
 type QualityModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: QualityModification!
 }
 
@@ -2083,8 +2103,8 @@ type QualityModificationConnection implements EntityConnectionInterface {
 
 type QualityDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2098,7 +2118,7 @@ type QualityDiff implements Diff {
 }
 
 type QualityDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: QualityDiff!
 }
 
@@ -2114,8 +2134,8 @@ union QualityDiffsOwned = QualityDiffs | QualityDiff | PlaneDiff | PositionDiff 
 
 type QualityDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: QualityDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2128,7 +2148,7 @@ type QualityDiffs implements Entity {
 }
 
 type QualityDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: QualityDiffs!
 }
 
@@ -2147,8 +2167,8 @@ union TagOwner = Kit | Type | Representation
 
 type Tag implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: TagOwner!
   kitOwner: Kit
   typeOwner: Type
@@ -2161,7 +2181,7 @@ type Tag implements Entity {
 }
 
 type TagEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Tag!
 }
 
@@ -2177,8 +2197,8 @@ union TagModificationOwned = Tag
 
 type TagModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TagModificationOwner!
   tagDiffOwner: TagDiff
   tagModificationOwner: TagModification
@@ -2188,7 +2208,7 @@ type TagModification implements Entity {
 }
 
 type TagModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TagModification!
 }
 
@@ -2200,8 +2220,8 @@ type TagModificationConnection implements EntityConnectionInterface {
 
 type TagDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2215,7 +2235,7 @@ type TagDiff implements Diff {
 }
 
 type TagDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TagDiff!
 }
 
@@ -2231,8 +2251,8 @@ union TagDiffsOwned = TagDiffs | TagDiff | PlaneDiff | PositionDiff | AttributeD
 
 type TagDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TagDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2245,7 +2265,7 @@ type TagDiffs implements Entity {
 }
 
 type TagDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TagDiffs!
 }
 
@@ -2264,8 +2284,8 @@ union ConceptOwner = Kit | Type
 
 type Concept implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ConceptOwner!
   kitOwner: Kit
   typeOwner: Type
@@ -2278,7 +2298,7 @@ type Concept implements Entity {
 }
 
 type ConceptEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Concept!
 }
 
@@ -2294,8 +2314,8 @@ union ConceptModificationOwned = Concept
 
 type ConceptModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConceptModificationOwner!
   conceptDiffOwner: ConceptDiff
   conceptModificationOwner: ConceptModification
@@ -2305,7 +2325,7 @@ type ConceptModification implements Entity {
 }
 
 type ConceptModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConceptModification!
 }
 
@@ -2317,8 +2337,8 @@ type ConceptModificationConnection implements EntityConnectionInterface {
 
 type ConceptDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2332,7 +2352,7 @@ type ConceptDiff implements Diff {
 }
 
 type ConceptDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConceptDiff!
 }
 
@@ -2348,8 +2368,8 @@ union ConceptDiffsOwned = ConceptDiffs | ConceptDiff | PlaneDiff | PositionDiff 
 
 type ConceptDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConceptDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2362,7 +2382,7 @@ type ConceptDiffs implements Entity {
 }
 
 type ConceptDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConceptDiffs!
 }
 
@@ -2381,8 +2401,8 @@ union StatOwner = Kit | Design | Type
 
 type Stat implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: StatOwner!
   kitOwner: Kit
   designOwner: Design
@@ -2397,7 +2417,7 @@ type Stat implements Entity {
 }
 
 type StatEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Stat!
 }
 
@@ -2413,8 +2433,8 @@ union StatModificationOwned = Stat
 
 type StatModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: StatModificationOwner!
   statDiffOwner: StatDiff
   statModificationOwner: StatModification
@@ -2424,7 +2444,7 @@ type StatModification implements Entity {
 }
 
 type StatModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: StatModification!
 }
 
@@ -2436,8 +2456,8 @@ type StatModificationConnection implements EntityConnectionInterface {
 
 type StatDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2451,7 +2471,7 @@ type StatDiff implements Diff {
 }
 
 type StatDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: StatDiff!
 }
 
@@ -2467,8 +2487,8 @@ union StatDiffsOwned = StatDiffs | StatDiff | PlaneDiff | PositionDiff | Attribu
 
 type StatDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: StatDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2481,7 +2501,7 @@ type StatDiffs implements Entity {
 }
 
 type StatDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: StatDiffs!
 }
 
@@ -2500,8 +2520,8 @@ union PortOwner = Type
 
 type Port implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: PortOwner!
   typeOwner: Type
   entityOwner: OwnerEntity! # PortOwner
@@ -2513,7 +2533,7 @@ type Port implements Entity {
 }
 
 type PortEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Port!
 }
 
@@ -2529,8 +2549,8 @@ union PortModificationOwned = Port
 
 type PortModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PortModificationOwner!
   portDiffOwner: PortDiff
   portModificationOwner: PortModification
@@ -2540,7 +2560,7 @@ type PortModification implements Entity {
 }
 
 type PortModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PortModification!
 }
 
@@ -2552,8 +2572,8 @@ type PortModificationConnection implements EntityConnectionInterface {
 
 type PortDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2567,7 +2587,7 @@ type PortDiff implements Diff {
 }
 
 type PortDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PortDiff!
 }
 
@@ -2583,8 +2603,8 @@ union PortDiffsOwned = PortDiffs | PortDiff | PlaneDiff | PositionDiff | Attribu
 
 type PortDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PortDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2597,7 +2617,7 @@ type PortDiffs implements Entity {
 }
 
 type PortDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PortDiffs!
 }
 
@@ -2616,8 +2636,8 @@ union ConnectorOwned = Attribute
 
 type Connector implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ConnectorOwner!
   typeOwner: Type
   entityOwner: OwnerEntity! # ConnectorOwner
@@ -2632,7 +2652,7 @@ type Connector implements Entity {
 }
 
 type ConnectorEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Connector!
 }
 
@@ -2648,8 +2668,8 @@ union ConnectorModificationOwned = Connector
 
 type ConnectorModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConnectorModificationOwner!
   connectorDiffOwner: ConnectorDiff
   connectorModificationOwner: ConnectorModification
@@ -2663,7 +2683,7 @@ type ConnectorModification implements Entity {
 }
 
 type ConnectorModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectorModification!
 }
 
@@ -2675,8 +2695,8 @@ type ConnectorModificationConnection implements EntityConnectionInterface {
 
 type ConnectorDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2690,7 +2710,7 @@ type ConnectorDiff implements Diff {
 }
 
 type ConnectorDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectorDiff!
 }
 
@@ -2706,8 +2726,8 @@ union ConnectorDiffsOwned = ConnectorDiffs | ConnectorDiff | PlaneDiff | Positio
 
 type ConnectorDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConnectorDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2720,7 +2740,7 @@ type ConnectorDiffs implements Entity {
 }
 
 type ConnectorDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectorDiffs!
 }
 
@@ -2735,8 +2755,8 @@ union RepresentationOwned = Attribute | File
 
 type Representation implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: RepresentationOwner!
   typeOwner: Type
   entityOwner: OwnerEntity! # RepresentationOwner
@@ -2752,7 +2772,7 @@ type Representation implements Entity {
 }
 
 type RepresentationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Representation!
 }
 
@@ -2768,8 +2788,8 @@ union RepresentationModificationOwned = Representation
 
 type RepresentationModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: RepresentationModificationOwner!
   representationDiffOwner: RepresentationDiff
   representationModificationOwner: RepresentationModification
@@ -2779,7 +2799,7 @@ type RepresentationModification implements Entity {
 }
 
 type RepresentationModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: RepresentationModification!
 }
 
@@ -2791,8 +2811,8 @@ type RepresentationModificationConnection implements EntityConnectionInterface {
 
 type RepresentationDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2806,7 +2826,7 @@ type RepresentationDiff implements Diff {
 }
 
 type RepresentationDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: RepresentationDiff!
 }
 
@@ -2822,8 +2842,8 @@ union RepresentationDiffsOwned = RepresentationDiffs | RepresentationDiff | Plan
 
 type RepresentationDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: RepresentationDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2836,7 +2856,7 @@ type RepresentationDiffs implements Entity {
 }
 
 type RepresentationDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: RepresentationDiffs!
 }
 
@@ -2851,8 +2871,8 @@ union TypeOwned = Connector | Piece | Port | Representation | Type
 
 type Type implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: TypeOwner!
   kitOwner: Kit
   entityOwner: OwnerEntity! # TypeOwner
@@ -2886,7 +2906,7 @@ type Type implements Entity {
 }
 
 type TypeEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Type!
 }
 
@@ -2902,8 +2922,8 @@ union TypeModificationOwned = Type
 
 type TypeModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TypeModificationOwner!
   typeDiffOwner: TypeDiff
   typeModificationOwner: TypeModification
@@ -2913,7 +2933,7 @@ type TypeModification implements Entity {
 }
 
 type TypeModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TypeModification!
 }
 
@@ -2925,8 +2945,8 @@ type TypeModificationConnection implements EntityConnectionInterface {
 
 type TypeDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -2940,7 +2960,7 @@ type TypeDiff implements Diff {
 }
 
 type TypeDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TypeDiff!
 }
 
@@ -2956,8 +2976,8 @@ union TypeDiffsOwned = TypeDiffs | TypeDiff | PlaneDiff | PositionDiff | Attribu
 
 type TypeDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TypeDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -2970,7 +2990,7 @@ type TypeDiffs implements Entity {
 }
 
 type TypeDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TypeDiffs!
 }
 
@@ -2991,8 +3011,8 @@ union LayerOwner = Design
 
 type Layer implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: LayerOwner!
   designOwner: Design
   entityOwner: OwnerEntity! # LayerOwner
@@ -3007,7 +3027,7 @@ type Layer implements Entity {
 }
 
 type LayerEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Layer!
 }
 
@@ -3023,8 +3043,8 @@ union LayerModificationOwned = Layer
 
 type LayerModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: LayerModificationOwner!
   layerDiffOwner: LayerDiff
   layerModificationOwner: LayerModification
@@ -3034,7 +3054,7 @@ type LayerModification implements Entity {
 }
 
 type LayerModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LayerModification!
 }
 
@@ -3046,8 +3066,8 @@ type LayerModificationConnection implements EntityConnectionInterface {
 
 type LayerDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3061,7 +3081,7 @@ type LayerDiff implements Diff {
 }
 
 type LayerDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LayerDiff!
 }
 
@@ -3077,8 +3097,8 @@ union LayerDiffsOwned = LayerDiffs | LayerDiff | PlaneDiff | PositionDiff | Attr
 
 type LayerDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: LayerDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3091,7 +3111,7 @@ type LayerDiffs implements Entity {
 }
 
 type LayerDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: LayerDiffs!
 }
 
@@ -3110,8 +3130,8 @@ union GroupOwned = Piece
 
 type Group implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: GroupOwner!
   designOwner: Design
   entityOwner: OwnerEntity! # GroupOwner
@@ -3125,7 +3145,7 @@ type Group implements Entity {
 }
 
 type GroupEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Group!
 }
 
@@ -3141,8 +3161,8 @@ union GroupModificationOwned = Group
 
 type GroupModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: GroupModificationOwner!
   groupDiffOwner: GroupDiff
   groupModificationOwner: GroupModification
@@ -3152,7 +3172,7 @@ type GroupModification implements Entity {
 }
 
 type GroupModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GroupModification!
 }
 
@@ -3164,8 +3184,8 @@ type GroupModificationConnection implements EntityConnectionInterface {
 
 type GroupDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3179,7 +3199,7 @@ type GroupDiff implements Diff {
 }
 
 type GroupDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GroupDiff!
 }
 
@@ -3195,8 +3215,8 @@ union GroupDiffsOwned = GroupDiffs | GroupDiff | PlaneDiff | PositionDiff | Attr
 
 type GroupDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: GroupDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3209,7 +3229,7 @@ type GroupDiffs implements Entity {
 }
 
 type GroupDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GroupDiffs!
 }
 
@@ -3231,7 +3251,7 @@ enum PieceConnectionKind {
 union Blueprint = Type | Design
 
 type BlueprintEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Blueprint!
 }
 
@@ -3246,8 +3266,8 @@ union PieceOwned = Piece | Attribute
 
 type Piece implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: PieceOwner!
   typeOwner: Type
   designOwner: Design
@@ -3276,7 +3296,7 @@ type Piece implements Entity {
 }
 
 type PieceEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Piece!
 }
 
@@ -3292,8 +3312,8 @@ union PieceModificationOwned = Piece
 
 type PieceModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PieceModificationOwner!
   pieceDiffOwner: PieceDiff
   pieceModificationOwner: PieceModification
@@ -3303,7 +3323,7 @@ type PieceModification implements Entity {
 }
 
 type PieceModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PieceModification!
 }
 
@@ -3315,8 +3335,8 @@ type PieceModificationConnection implements EntityConnectionInterface {
 
 type PieceDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3330,7 +3350,7 @@ type PieceDiff implements Diff {
 }
 
 type PieceDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PieceDiff!
 }
 
@@ -3346,8 +3366,8 @@ union PieceDiffsOwned = PieceDiffs | PieceDiff | PlaneDiff | PositionDiff | Attr
 
 type PieceDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: PieceDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3360,7 +3380,7 @@ type PieceDiffs implements Entity {
 }
 
 type PieceDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: PieceDiffs!
 }
 
@@ -3375,8 +3395,8 @@ union ConnectionOwned = Side | Attribute
 
 type Connection implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ConnectionOwner!
   designOwner: Design
   entityOwner: OwnerEntity! # ConnectionOwner
@@ -3397,7 +3417,7 @@ type Connection implements Entity {
 }
 
 type ConnectionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Connection!
 }
 
@@ -3413,8 +3433,8 @@ union ConnectionModificationOwned = Connection
 
 type ConnectionModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConnectionModificationOwner!
   connectionDiffOwner: ConnectionDiff
   connectionModificationOwner: ConnectionModification
@@ -3424,7 +3444,7 @@ type ConnectionModification implements Entity {
 }
 
 type ConnectionModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectionModification!
 }
 
@@ -3436,8 +3456,8 @@ type ConnectionModificationConnection implements EntityConnectionInterface {
 
 type ConnectionDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3451,7 +3471,7 @@ type ConnectionDiff implements Diff {
 }
 
 type ConnectionDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectionDiff!
 }
 
@@ -3467,8 +3487,8 @@ union ConnectionDiffsOwned = ConnectionDiffs | ConnectionDiff | PlaneDiff | Posi
 
 type ConnectionDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ConnectionDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3481,7 +3501,7 @@ type ConnectionDiffs implements Entity {
 }
 
 type ConnectionDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ConnectionDiffs!
 }
 
@@ -3503,8 +3523,8 @@ type CreatedFixedPieceInput {
 
 type CreatedFixedPiece implements Operation & Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: CreatedFixedPieceOwner!
   changeOwner: Change
   entityOwner: OwnerEntity! # CreatedFixedPieceOwner
@@ -3525,8 +3545,8 @@ type FixedPieceInput {
 
 type FixedPiece implements Operation & Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: FixedPieceOwner!
   changeOwner: Change
   entityOwner: OwnerEntity! # FixedPieceOwner
@@ -3548,8 +3568,8 @@ type DraggedPieceInput {
 
 type DraggedPiece implements Operation & Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: DraggedPieceOwner!
   changeOwner: Change
   entityOwner: OwnerEntity! # DraggedPieceOwner
@@ -3576,8 +3596,8 @@ union SideOwner = Connection
 
 type Side implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: SideOwner!
   connectionOwner: Connection
   entityOwner: OwnerEntity! # SideOwner
@@ -3590,7 +3610,7 @@ type Side implements Entity {
 }
 
 type SideEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Side!
 }
 
@@ -3606,8 +3626,8 @@ union SideModificationOwned = Side
 
 type SideModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: SideModificationOwner!
   sideDiffOwner: SideDiff
   sideModificationOwner: SideModification
@@ -3617,7 +3637,7 @@ type SideModification implements Entity {
 }
 
 type SideModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: SideModification!
 }
 
@@ -3629,8 +3649,8 @@ type SideModificationConnection implements EntityConnectionInterface {
 
 type SideDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3644,7 +3664,7 @@ type SideDiff implements Diff {
 }
 
 type SideDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: SideDiff!
 }
 
@@ -3660,8 +3680,8 @@ union SideDiffsOwned = SideDiffs | SideDiff | PlaneDiff | PositionDiff | Attribu
 
 type SideDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: SideDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3674,7 +3694,7 @@ type SideDiffs implements Entity {
 }
 
 type SideDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: SideDiffs!
 }
 
@@ -3692,8 +3712,8 @@ type SideDiffsConnection implements EntityConnectionInterface {
 
 type Clump implements Entity { # implements WeakEntity
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ClumpOwner!
   entityOwner: OwnerEntity! # ClumpOwner
   ownedEntities: OwnedEntityConnection # ClumpOwned
@@ -3710,8 +3730,8 @@ union DesignOwned = Piece | Connection | Layer | Group
 
 type Design implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: DesignOwner!
   kitOwner: Kit
   entityOwner: OwnerEntity! # DesignOwner
@@ -3748,7 +3768,7 @@ type Design implements Entity {
 }
 
 type DesignEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Design!
 }
 
@@ -3764,8 +3784,8 @@ union DesignModificationOwned = Design
 
 type DesignModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DesignModificationOwner!
   designDiffOwner: DesignDiff
   designModificationOwner: DesignModification
@@ -3775,7 +3795,7 @@ type DesignModification implements Entity {
 }
 
 type DesignModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DesignModification!
 }
 
@@ -3787,8 +3807,8 @@ type DesignModificationConnection implements EntityConnectionInterface {
 
 type DesignDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3802,7 +3822,7 @@ type DesignDiff implements Diff {
 }
 
 type DesignDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DesignDiff!
 }
 
@@ -3818,8 +3838,8 @@ union DesignDiffsOwned = DesignDiffs | DesignDiff | PlaneDiff | PositionDiff | A
 
 type DesignDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DesignDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3832,7 +3852,7 @@ type DesignDiffs implements Entity {
 }
 
 type DesignDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DesignDiffs!
 }
 
@@ -3849,8 +3869,8 @@ union KitOwned = Design | Type | File | Folder | Author | Place | Kit | Concept 
 
 type Kit implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: KitOwner!
   graphOwner: Graph
   checkpointOwner: Checkpoint
@@ -3895,7 +3915,7 @@ type Kit implements Entity {
 }
 
 type KitEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Kit!
 }
 
@@ -3911,8 +3931,8 @@ union KitModificationOwned = Kit
 
 type KitModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: KitModificationOwner!
   kitDiffOwner: KitDiff
   kitModificationOwner: KitModification
@@ -3922,7 +3942,7 @@ type KitModification implements Entity {
 }
 
 type KitModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: KitModification!
 }
 
@@ -3934,8 +3954,8 @@ type KitModificationConnection implements EntityConnectionInterface {
 
 type KitDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -3949,7 +3969,7 @@ type KitDiff implements Diff {
 }
 
 type KitDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: KitDiff!
 }
 
@@ -3965,8 +3985,8 @@ union KitDiffsOwned = KitDiffs | KitDiff | PlaneDiff | PositionDiff | AttributeD
 
 type KitDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: KitDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -3979,7 +3999,7 @@ type KitDiffs implements Entity {
 }
 
 type KitDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: KitDiffs!
 }
 
@@ -3997,8 +4017,8 @@ type RenamedKitInput {
 
 type RenamedKit implements Operation & Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: RenamedKitOwner!
   changeOwner: Change
   entityOwner: OwnerEntity! # RenamedKitOwner
@@ -4019,8 +4039,8 @@ type ChangedDescriptionInput {
 
 type ChangedDescription implements Operation & Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ChangedDescriptionOwner!
   changeOwner: Change
   entityOwner: OwnerEntity! # ChangedDescriptionOwner
@@ -4047,8 +4067,8 @@ union ChangeOwned = ChangedDescription | CreatedFixedPiece | DraggedPiece | Fixe
 
 type Change implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ChangeOwner!
   transactionOwner: Transaction
   draftOwner: Draft
@@ -4064,7 +4084,7 @@ type Change implements Entity {
 }
 
 type ChangeEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Change!
 }
 
@@ -4080,8 +4100,8 @@ union ChangeModificationOwned = Change
 
 type ChangeModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ChangeModificationOwner!
   changeDiffOwner: ChangeDiff
   changeModificationOwner: ChangeModification
@@ -4091,7 +4111,7 @@ type ChangeModification implements Entity {
 }
 
 type ChangeModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ChangeModification!
 }
 
@@ -4103,8 +4123,8 @@ type ChangeModificationConnection implements EntityConnectionInterface {
 
 type ChangeDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4118,7 +4138,7 @@ type ChangeDiff implements Diff {
 }
 
 type ChangeDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ChangeDiff!
 }
 
@@ -4134,8 +4154,8 @@ union ChangeDiffsOwned = ChangeDiffs | ChangeDiff | PlaneDiff | PositionDiff | A
 
 type ChangeDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ChangeDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4148,7 +4168,7 @@ type ChangeDiffs implements Entity {
 }
 
 type ChangeDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ChangeDiffs!
 }
 
@@ -4163,8 +4183,8 @@ union TransactionOwned = Change
 
 type Transaction implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: TransactionOwner!
   draftOwner: Draft
   entityOwner: OwnerEntity # TransactionOwner
@@ -4174,7 +4194,7 @@ type Transaction implements Entity {
 }
 
 type TransactionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Transaction!
 }
 
@@ -4190,8 +4210,8 @@ union TransactionModificationOwned = Transaction
 
 type TransactionModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TransactionModificationOwner!
   transactionDiffOwner: TransactionDiff
   transactionModificationOwner: TransactionModification
@@ -4201,7 +4221,7 @@ type TransactionModification implements Entity {
 }
 
 type TransactionModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TransactionModification!
 }
 
@@ -4213,8 +4233,8 @@ type TransactionModificationConnection implements EntityConnectionInterface {
 
 type TransactionDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4228,7 +4248,7 @@ type TransactionDiff implements Diff {
 }
 
 type TransactionDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TransactionDiff!
 }
 
@@ -4244,8 +4264,8 @@ union TransactionDiffsOwned = TransactionDiffs | TransactionDiff | PlaneDiff | P
 
 type TransactionDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: TransactionDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4258,7 +4278,7 @@ type TransactionDiffs implements Entity {
 }
 
 type TransactionDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: TransactionDiffs!
 }
 
@@ -4273,8 +4293,8 @@ union DraftOwned = Change | Transaction | Checkpoint
 
 type Draft implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: DraftOwner!
   authorOwner: Author
   entityOwner: OwnerEntity! # DraftOwner
@@ -4291,7 +4311,7 @@ type Draft implements Entity {
 }
 
 type DraftEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Draft!
 }
 
@@ -4307,8 +4327,8 @@ union DraftModificationOwned = Draft
 
 type DraftModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DraftModificationOwner!
   draftDiffOwner: DraftDiff
   draftModificationOwner: DraftModification
@@ -4318,7 +4338,7 @@ type DraftModification implements Entity {
 }
 
 type DraftModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DraftModification!
 }
 
@@ -4330,8 +4350,8 @@ type DraftModificationConnection implements EntityConnectionInterface {
 
 type DraftDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4345,7 +4365,7 @@ type DraftDiff implements Diff {
 }
 
 type DraftDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DraftDiff!
 }
 
@@ -4361,8 +4381,8 @@ union DraftDiffsOwned = DraftDiffs | DraftDiff | PlaneDiff | PositionDiff | Attr
 
 type DraftDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DraftDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4375,7 +4395,7 @@ type DraftDiffs implements Entity {
 }
 
 type DraftDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: DraftDiffs!
 }
 
@@ -4390,8 +4410,8 @@ union CheckpointOwned = Change
 
 type Checkpoint implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: CheckpointOwner!
   alternativeOwner: Alternative
   graphOwner: Graph
@@ -4412,7 +4432,7 @@ type Checkpoint implements Entity {
 }
 
 type CheckpointEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Checkpoint!
 }
 
@@ -4428,8 +4448,8 @@ union CheckpointModificationOwned = Checkpoint
 
 type CheckpointModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: CheckpointModificationOwner!
   checkpointDiffOwner: CheckpointDiff
   checkpointModificationOwner: CheckpointModification
@@ -4439,7 +4459,7 @@ type CheckpointModification implements Entity {
 }
 
 type CheckpointModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CheckpointModification!
 }
 
@@ -4451,8 +4471,8 @@ type CheckpointModificationConnection implements EntityConnectionInterface {
 
 type CheckpointDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4466,7 +4486,7 @@ type CheckpointDiff implements Diff {
 }
 
 type CheckpointDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CheckpointDiff!
 }
 
@@ -4482,8 +4502,8 @@ union CheckpointDiffsOwned = CheckpointDiffs | CheckpointDiff | PlaneDiff | Posi
 
 type CheckpointDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: CheckpointDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4496,7 +4516,7 @@ type CheckpointDiffs implements Entity {
 }
 
 type CheckpointDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: CheckpointDiffs!
 }
 
@@ -4513,8 +4533,8 @@ union AlternativeOwned = Draft
 
 type Alternative implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: AlternativeOwner!
   graphOwner: Graph
   entityOwner: OwnerEntity # AlternativeOwner
@@ -4531,7 +4551,7 @@ type Alternative implements Entity {
 }
 
 type AlternativeEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Alternative!
 }
 
@@ -4547,8 +4567,8 @@ union AlternativeModificationOwned = Alternative
 
 type AlternativeModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AlternativeModificationOwner!
   alternativeDiffOwner: AlternativeDiff
   alternativeModificationOwner: AlternativeModification
@@ -4558,7 +4578,7 @@ type AlternativeModification implements Entity {
 }
 
 type AlternativeModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AlternativeModification!
 }
 
@@ -4570,8 +4590,8 @@ type AlternativeModificationConnection implements EntityConnectionInterface {
 
 type AlternativeDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4585,7 +4605,7 @@ type AlternativeDiff implements Diff {
 }
 
 type AlternativeDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AlternativeDiff!
 }
 
@@ -4601,8 +4621,8 @@ union AlternativeDiffsOwned = AlternativeDiffs | AlternativeDiff | PlaneDiff | P
 
 type AlternativeDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: AlternativeDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4615,7 +4635,7 @@ type AlternativeDiffs implements Entity {
 }
 
 type AlternativeDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: AlternativeDiffs!
 }
 
@@ -4634,8 +4654,8 @@ union GraphOwned = Kit | Alternative | Checkpoint | Session
 
 type Graph implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: GraphOwner!
   sessionOwner: Session
   entityOwner: OwnerEntity # GraphOwner
@@ -4652,7 +4672,7 @@ type Graph implements Entity {
 }
 
 type GraphEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Graph!
 }
 
@@ -4668,8 +4688,8 @@ union GraphModificationOwned = Graph
 
 type GraphModification implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: GraphModificationOwner!
   graphDiffOwner: GraphDiff
   graphModificationOwner: GraphModification
@@ -4679,7 +4699,7 @@ type GraphModification implements Entity {
 }
 
 type GraphModificationEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GraphModification!
 }
 
@@ -4691,8 +4711,8 @@ type GraphModificationConnection implements EntityConnectionInterface {
 
 type GraphDiff implements Diff {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: DiffOwner!
   ownerDiffs: Diffs
   changeOwner: Change
@@ -4706,7 +4726,7 @@ type GraphDiff implements Diff {
 }
 
 type GraphDiffEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GraphDiff!
 }
 
@@ -4722,8 +4742,8 @@ union GraphDiffsOwned = GraphDiffs | GraphDiff | PlaneDiff | PositionDiff | Attr
 
 type GraphDiffs implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: GraphDiffsOwner!
   diffOwner: Diff
   operationOwner: Operation
@@ -4736,7 +4756,7 @@ type GraphDiffs implements Entity {
 }
 
 type GraphDiffsEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: GraphDiffs!
 }
 
@@ -4751,8 +4771,8 @@ union SessionOwned = Draft | Graph | Checkpoint | Alternative
 
 type Session implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: SessionOwner!
   graphOwner: Graph
   checkpointOwner: Checkpoint
@@ -4769,7 +4789,7 @@ type Session implements Entity {
 #region Sessions
 
 type SessionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Session!
 }
 
@@ -4790,8 +4810,8 @@ union ReadVersionOwner = Conflict
 
 type ReadVersion implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: ReadVersionOwner!
   conflictOwner: Conflict
   entityOwner: OwnerEntity # ReadVersionOwner
@@ -4803,7 +4823,7 @@ type ReadVersion implements Entity {
 }
 
 type ReadVersionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: ReadVersion!
 }
 
@@ -4822,8 +4842,8 @@ union WriteVersionOwner = Conflict
 
 type WriteVersion implements Entity {
   # WeakEntity
-  id: ID! # hash
-  hash: String!
+  id: ID! # computed // hash
+  hash: String! # cached
   owner: WriteVersionOwner!
   conflictOwner: Conflict
   entityOwner: OwnerEntity # WriteVersionOwner
@@ -4837,7 +4857,7 @@ type WriteVersion implements Entity {
 }
 
 type WriteVersionEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: WriteVersion!
 }
 
@@ -4861,8 +4881,8 @@ union ConflictOwned = ReadVersion | WriteVersion
 
 type Conflict implements Entity {
   # StrongEntity
-  id: ID! # uuidv7
-  hash: String!
+  id: ID! # data // uuidv7
+  hash: String! # cached
   owner: ConflictOwner!
   sessionOwner: Session
   graphOwner: Graph
@@ -4882,7 +4902,7 @@ type Conflict implements Entity {
 }
 
 type ConflictEdge implements EntityEdge {
-  cursor: String!
+  cursor: String! # computed
   node: Conflict!
 }
 
