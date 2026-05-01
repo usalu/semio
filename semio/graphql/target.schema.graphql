@@ -140,9 +140,9 @@ interface Diff implements WeakEntity {
   entityOwner: OwnerEntity # computed // DiffOwner
   ownedEntities: OwnedEntityConnection # computed // DiffOwned
   # Diff
-  before: Entity! # reference // diff
-  modification: Modification! # reference // diff
-  after: Entity! # reference // diff
+  before: Entity! # computed // diff
+  modification: Modification! # computed // diff
+  after: Entity! # computed // diff
 }
 
 type DiffEdge implements EntityEdge {

@@ -19,7 +19,7 @@ dependencies = [
     "pytransform3d>=3.0.0",
     "ifcopenshell>=0.8.0",
     "sqlalchemy>=2.0.0",
-    "sqlrepresentation>=0.0.18",
+    "sqlmodel>=0.0.18",
     "trimesh>=4.0.0",
 ]
 
