@@ -116,7 +116,8 @@
     "EDITOR": "code --wait"
   },
   "remoteEnv": {
-    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright"
+    "PLAYWRIGHT_BROWSERS_PATH": "/workspaces/semio/node_modules/.cache/ms-playwright",
+    "SSH_AUTH_SOCK": "/home/vscode/.ssh/semio-ssh-agent.sock"
   },
   "customizations": {
     "vscode": {

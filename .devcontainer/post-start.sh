@@ -3,6 +3,10 @@
 #region 🔖PostStart
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
+SSH_SIGNING_KEY="${HOME}/.ssh/id_ed25519_signing"
+SSH_SIGNING_PUBLIC_KEY="${SSH_SIGNING_KEY}.pub"
+SSH_AGENT_SOCKET="${HOME}/.ssh/semio-ssh-agent.sock"
+SSH_AGENT_ENV="${HOME}/.ssh/semio-ssh-agent.env"
 #region 🔖EmojiFonts
 configure_emoji_fonts() {
   sudo mkdir -p /etc/fonts
@@ -143,6 +147,63 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
 fi
 echo "✅ Marked workspace + submodules as safe.directory for git."
 #endregion 🔖GitSafe
+#region 🔐GitSshSigning
+ensure_shell_loads_ssh_agent() {
+  local bashrc="${HOME}/.bashrc"
+  local marker="#region 🔐SemioSshAgent"
+  if [ -f "$bashrc" ] && grep -Fq "$marker" "$bashrc"; then
+    return 0
+  fi
+  cat >>"$bashrc" <<'SHELLRC'
+
+#region 🔐SemioSshAgent
+if [ -f "$HOME/.ssh/semio-ssh-agent.env" ]; then
+  . "$HOME/.ssh/semio-ssh-agent.env" >/dev/null 2>&1 || true
+fi
+#endregion 🔐SemioSshAgent
+SHELLRC
+}
+
+start_ssh_signing_agent() {
+  mkdir -p "$HOME/.ssh"
+  chmod 700 "$HOME/.ssh"
+  rm -f "$SSH_AGENT_SOCKET"
+  eval "$(ssh-agent -a "$SSH_AGENT_SOCKET" -s)" >/dev/null
+  {
+    echo "export SSH_AUTH_SOCK=$SSH_AGENT_SOCKET"
+    echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
+  } >"$SSH_AGENT_ENV"
+  chmod 600 "$SSH_AGENT_ENV"
+}
+
+configure_git_ssh_signing() {
+  if [ ! -f "$SSH_SIGNING_PUBLIC_KEY" ]; then
+    echo "⚠️  SSH signing public key not found, skipping git SSH signing setup."
+    return 0
+  fi
+  if [ -f "$SSH_SIGNING_KEY" ]; then
+    chmod 600 "$SSH_SIGNING_KEY"
+  fi
+  chmod 644 "$SSH_SIGNING_PUBLIC_KEY"
+
+  git config --global gpg.format ssh
+  git config --global gpg.ssh.program ssh-keygen
+  git config --global user.signingkey "$SSH_SIGNING_PUBLIC_KEY"
+  git config --global commit.gpgsign true
+  git config --global tag.gpgsign true
+
+  if [ ! -S "$SSH_AGENT_SOCKET" ] || ! SSH_AUTH_SOCK="$SSH_AGENT_SOCKET" ssh-add -l >/dev/null 2>&1; then
+    start_ssh_signing_agent
+  fi
+  ensure_shell_loads_ssh_agent
+  echo "✅ Configured SSH commit signing agent."
+  if ! SSH_AUTH_SOCK="$SSH_AGENT_SOCKET" ssh-add -l 2>/dev/null | grep -Fq "$(ssh-keygen -lf "$SSH_SIGNING_PUBLIC_KEY" | awk '{print $2}')"; then
+    echo "⚠️  Unlock signing once per container session with: ssh-add $SSH_SIGNING_KEY"
+  fi
+}
+
+configure_git_ssh_signing
+#endregion 🔐GitSshSigning
 #region 🔖PythonVenv
 if [ -d "$WORKSPACE/.venv" ]; then
   source "$WORKSPACE/.venv/bin/activate"
