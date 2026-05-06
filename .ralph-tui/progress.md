@@ -12,6 +12,7 @@ after each iteration and it's included in prompts for context.
 - **Attachable backbones (native RS):** `crate::kit_backbone` implements `BackboneStoreKind::DEV_JSON` (single file, `*.tmp.semio-write` + `rename(2)`) and `LOCAL_DOT_SEMIO` (`.semio/{wip,staged,authoritative,conflicts}.db` + `blobs/`). `worker::ChildRuntime::backbone` replays persisted ops via `apply_semantic_op_json` after `Kit::clear_piece_projections_for_backbone_replay`; `createFixedPiece` appends `{draftId,transactionId,kind,input}`. Wasm attach resolves to `invalid`/`NotSupported` style errors (no SQLite on wasm).
 - **GraphQL SDL parity check:** After changing `async_graphql` resolvers or types, export with `SEMIO_GRAPHQL_SCHEMA_OUT` + ignored `export_semio_graphql_schema_file` test and `diff` the output against `semio/graphql/schema.graphql`; an empty diff means the committed integrator surface matches RS.
 - **`@semio/js` kit reads vs Integrator SDL:** Full kit DTO is always `wip.theKit.fullSnapshot` (RS `kit_full_snapshot_value`); granular reads use fields that exist on `Kit` / `Design` / `Piece` in `schema.graphql` (e.g. `design { piece(id:) { flatPosition { plane { xAxis yAxis } } } }`). Hydration accepts **camelCase** plane keys from JS via `#[serde(alias)]` on `Plane`; golden / semantic-op JSON keeps **snake_case** `x_axis` / `y_axis`.
+- **`@semio/react` kit live reads:** `getSemioKitLiveReadStore` and related classes (`SemioKitViewStore`, `SemioKitDesignReadStore`, `SemioKitShallowListReadStore`) live in `semio/js` (🪜SemioKitLiveReadHub). They pair `KitStoreClient.subscribe` with per-key async fetches and `KitStoreReadSnap`; hooks call `useSyncExternalStore` with the hub’s `subscribe`/`getSnapshot` pattern. Narrow invalidation uses `kitEventTouchesPiece` / `kitEventTouchesDesign` / `kitEventAffects*` filters so e.g. `usePieceFlatPlane` only repolls when the RS-backed event stream says that projection may have changed.
 
 ---
 
@@ -60,3 +61,12 @@ after each iteration and it's included in prompts for context.
   - **Gotchas encountered:** **Plane JSON** has two conventions: persisted / golden **snake_case** vs **camelCase** kit DTO / GraphQL field names—use **aliases** on serde and **explicit** snapshot JSON for `plane` keys so both tests and JS parse stay green.
 ---
 
+## 2026-05-06 - US-007
+
+- **What was implemented:** Moved **`SemioKitLiveReadStore`** and related **view / design / shallow list** read hubs from `@semio/react` into **`semio/js`** (`🪜SemioKitLiveReadHub` after `kitStoreFromKitStoreClient`), so **`subscribe` + `getSnapshot`** for async materialized reads are owned by the JS kit layer; React hooks keep **`useSyncExternalStore`** (`useSemioReadSnap`, catalog hooks, `usePieceFlatPlane`, etc.) and **re-export** the hub API from `@semio/react`. Added an embedded test that **`usePieceFlatPlane`** rerenders only the probe for a **piece-targeted** `FlattenInvalidated` event (narrow RS-style emission). Root **`pnpm typecheck`** / **`pnpm lint`** unchanged (still validate `semio/js` + `semio/react` + GraphQL build).
+- **Files changed:** `semio/js/index.ts`, `semio/react/index.tsx`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - **Patterns discovered:** Centralizing **`getSemioKitLiveReadStore`** in `semio/js` keeps one **WeakMap** hub per `KitStoreClient` and matches the PRD: external store **callbacks** from JS, **`useSyncExternalStore`** in React only.
+  - **Gotchas encountered:** **`internalKs`** must be cast via **`unknown`** when tests stub a minimal `piece().readFlatPlane` stand-in for `KitStore`. `pnpm exec nx build semio/graphql` is part of root **typecheck**—run it after schema-touching RS work.
+
+---

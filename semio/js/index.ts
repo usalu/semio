@@ -2991,7 +2991,7 @@ class LiveType {
 // #endregion 📦LiveKitRoot
 
 // #region 🪜LiveReadHub
-/** @emoji 🧾 Live-read external stores (`useSyncExternalStore`) are implemented in `@semio/react` so `semio/js` holds no derived read caches. */
+/** @emoji 🧾 Live-read snapshot hub: {@link getSemioKitLiveReadStore} in 🪜SemioKitLiveReadHub (after {@link WasmKitStoreClient} / {@link kitStoreFromKitStoreClient}). */
 // #endregion 🪜LiveReadHub
 
 // #region 🧰EventFilters
@@ -3278,6 +3278,245 @@ export function kitStoreFromKitStoreClient(client: KitStoreClient): KitStore | n
   const probe = client as { internalKs?: () => KitStore };
   return probe.internalKs?.() ?? null;
 }
+
+// #region 🪜SemioKitLiveReadHub
+
+/** 🧾 Default {@link SemioKitLiveReadStore#getSnapshot} when a key has not polled yet (stable identity for consumers). */
+const SEMIO_KIT_LIVE_READ_EMPTY: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze([]) as readonly unknown[],
+  pending: 0,
+}) as KitStoreReadSnap;
+
+const SEMIO_KIT_DESIGN_READ_EMPTY_META: KitStoreReadSnap = Object.freeze({
+  version: 0,
+  data: Object.freeze({}) as unknown,
+  pending: 0,
+}) as KitStoreReadSnap;
+
+/**
+ * @emoji 🧾 Hub for async GraphQL-backed kit reads: {@link KitStoreClient} subscription fan-out, per-key
+ * {@link KitStoreReadSnap}, and invalidation predicates — {@link useSyncExternalStore} wires in `@semio/react`.
+ */
+export class SemioKitLiveReadStore {
+  private readonly snap = new Map<string, KitStoreReadSnap>();
+  private readonly regs: Array<{
+    key: string;
+    fetch: () => Promise<unknown>;
+    affects: (ev: KitEvent) => boolean;
+    onChange: () => void;
+  }> = [];
+  private off: (() => void) | undefined;
+
+  constructor(private readonly client: KitStoreClient) {
+    this.off = client.subscribe((ev: KitEvent) => {
+      for (const r of this.regs) {
+        if (r.affects(ev)) void this.poll(r);
+      }
+    });
+  }
+
+  subscribe(key: string, fetch: () => Promise<unknown>, affects: (ev: KitEvent) => boolean, onChange: () => void): () => void {
+    const r = { key, fetch, affects, onChange };
+    this.regs.push(r);
+    void this.poll(r);
+    return () => {
+      const i = this.regs.indexOf(r);
+      if (i >= 0) this.regs.splice(i, 1);
+    };
+  }
+
+  getSnapshot(key: string): KitStoreReadSnap {
+    return this.snap.get(key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+  }
+
+  private async poll(r: { key: string; fetch: () => Promise<unknown>; onChange: () => void }): Promise<void> {
+    const cur = this.snap.get(r.key) ?? SEMIO_KIT_LIVE_READ_EMPTY;
+    this.snap.set(r.key, { version: cur.version, data: cur.data, pending: cur.pending + 1 });
+    r.onChange();
+    try {
+      const data = await r.fetch();
+      this.snap.set(r.key, { version: cur.version + 1, data, pending: 0 });
+      r.onChange();
+    } catch {
+      this.snap.set(r.key, { version: cur.version, data: cur.data, pending: 0 });
+      r.onChange();
+    }
+  }
+
+  dispose(): void {
+    this.off?.();
+    this.off = undefined;
+    this.regs.length = 0;
+    this.snap.clear();
+  }
+}
+
+const liveReadHubs = new WeakMap<KitStoreClient, SemioKitLiveReadStore>();
+
+export function getSemioKitLiveReadStore(c: KitStoreClient): SemioKitLiveReadStore {
+  let h = liveReadHubs.get(c);
+  if (!h) {
+    h = new SemioKitLiveReadStore(c);
+    liveReadHubs.set(c, h);
+  }
+  return h;
+}
+
+function viewStoreKey(k: KitViewCatalogKey): string {
+  return `view:${k}`;
+}
+
+async function fetchViewCatalogSnapshot(client: KitStoreClient, key: KitViewCatalogKey): Promise<unknown> {
+  const ks = kitStoreFromKitStoreClient(client);
+  const scope = getKitClientReadScope(client);
+  if (!ks) {
+    if (key === "typeIds" || key === "designIds") return [];
+    return [];
+  }
+  if (key === "typeIds") return ks.kindRowIds(scope);
+  if (key === "designIds") return ks.designRowIds(scope);
+  if (key === "typesMetadata") {
+    const rows = await ks.kindMetadataRows(scope);
+    return (rows as readonly { id?: string; name?: string }[]).map((t) => ({ id: String(t.id ?? ""), name: String(t.name ?? "") }));
+  }
+  const rows = await ks.designMetadataRows(scope);
+  return (rows as readonly { id?: string; name?: string }[]).map((d) => ({ id: String(d.id ?? ""), name: String(d.name ?? "") }));
+}
+
+/** @emoji 🧾 View-catalog reads via async {@link KitStore}. */
+export class SemioKitViewStore {
+  private readonly hub: SemioKitLiveReadStore;
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(_key: KitViewCatalogKey, onChange: () => void): () => void {
+    const keys: KitViewCatalogKey[] = ["typeIds", "designIds", "typesMetadata", "designsMetadata"];
+    const unsubs = keys.map((k) =>
+      this.hub.subscribe(
+        viewStoreKey(k),
+        () => fetchViewCatalogSnapshot(this.client, k),
+        () => true,
+        onChange,
+      ),
+    );
+    return () => {
+      for (const u of unsubs) u();
+    };
+  }
+
+  getSnapshot(key: KitViewCatalogKey): unknown {
+    return this.hub.getSnapshot(viewStoreKey(key)).data;
+  }
+}
+
+const viewStores = new WeakMap<KitStoreClient, SemioKitViewStore>();
+
+export function getSemioKitViewStore(c: KitStoreClient): SemioKitViewStore {
+  let v = viewStores.get(c);
+  if (!v) {
+    v = new SemioKitViewStore(c);
+    viewStores.set(c, v);
+  }
+  return v;
+}
+
+function designReadKey(designId: string, field: KitDesignReadKind): string {
+  return `design:${designId}:${field}`;
+}
+
+/** @emoji 🧾 Per-design list/metadata reads on {@link KitStoreClient}. */
+export class SemioKitDesignReadStore {
+  private readonly hub: SemioKitLiveReadStore;
+
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(designId: string, field: KitDesignReadKind, onChange: () => void): () => void {
+    return this.hub.subscribe(
+      designReadKey(designId, field),
+      async () => {
+        const list = await this.client.getPieces(designId);
+        const conns = await this.client.getConnections(designId);
+        if (field === "metadata") {
+          const meta: { [k: string]: JsonValue } = {};
+          for (const p of list) {
+            if (p && typeof p === "object" && p !== null && "id" in p) meta[String((p as { id: string }).id)] = p as unknown as JsonValue;
+          }
+          return meta;
+        }
+        if (field === "pieces") return [...list];
+        return [...conns];
+      },
+      (ev) => kitEventTouchesDesign(ev as KitEvent, designId),
+      onChange,
+    );
+  }
+
+  getSnapshot(designId: string, field: KitDesignReadKind): KitStoreReadSnap {
+    const s = this.hub.getSnapshot(designReadKey(designId, field));
+    if (field === "metadata" && s.version === 0 && s.pending === 0 && Array.isArray(s.data) && s.data.length === 0) {
+      return SEMIO_KIT_DESIGN_READ_EMPTY_META;
+    }
+    return s;
+  }
+}
+
+const designStores = new WeakMap<KitStoreClient, SemioKitDesignReadStore>();
+
+export function getSemioKitDesignReadStore(c: KitStoreClient): SemioKitDesignReadStore {
+  let d = designStores.get(c);
+  if (!d) {
+    d = new SemioKitDesignReadStore(c);
+    designStores.set(c, d);
+  }
+  return d;
+}
+
+function shallowListKey(kind: KitShallowListKind): string {
+  return `shallow:${kind}`;
+}
+
+/** @emoji 🧾 Shallow entity lists (designs / kinds / authors). */
+export class SemioKitShallowListReadStore {
+  private readonly hub: SemioKitLiveReadStore;
+  constructor(private readonly client: KitStoreClient) {
+    this.hub = getSemioKitLiveReadStore(client);
+  }
+
+  subscribe(kind: KitShallowListKind, onChange: () => void): () => void {
+    return this.hub.subscribe(
+      shallowListKey(kind),
+      async () => {
+        if (kind === "designs") return [...(await this.client.getDesigns())];
+        if (kind === "types") return [...(await this.client.getTypes())];
+        return [...(await this.client.getAuthors())];
+      },
+      () => true,
+      onChange,
+    );
+  }
+
+  getSnapshot(kind: KitShallowListKind): KitStoreReadSnap {
+    const s = this.hub.getSnapshot(shallowListKey(kind));
+    return s;
+  }
+}
+
+const shallowStores = new WeakMap<KitStoreClient, SemioKitShallowListReadStore>();
+
+export function getSemioKitShallowListReadStore(c: KitStoreClient): SemioKitShallowListReadStore {
+  let s = shallowStores.get(c);
+  if (!s) {
+    s = new SemioKitShallowListReadStore(c);
+    shallowStores.set(c, s);
+  }
+  return s;
+}
+
+// #endregion 🪜SemioKitLiveReadHub
 
 class FallbackKitClient implements KitStoreClient {
   private readonly listeners = new Set<(ev: KitEvent) => void>();
