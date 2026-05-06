@@ -1360,6 +1360,15 @@ pub mod kit {
             };
             (crate::kit_graph_engine::DesignHandle(slot), design)
         }
+
+        /// @emoji 🔁 Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
+        pub async fn clear_piece_projections_for_backbone_replay(self: &Arc<Self>) {
+            let designs = self.designs.read().await;
+            for design in designs.iter() {
+                design.pieces.write().await.clear();
+                design.piece_id_to_index.write().await.clear();
+            }
+        }
     }
 
     #[Object(name = "Kit")]
@@ -2664,6 +2673,284 @@ pub mod kit_graph_engine {
 
 //#endregion 🧩 kit graph engine
 
+//#region 🗄️ kit backbone persistence (native)
+
+#[cfg(not(target_arch = "wasm32"))]
+pub mod kit_backbone {
+    //! @emoji 🗄️ Dev JSON + local `.semio/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_semantic_op_json`].
+
+    use std::path::{Path, PathBuf};
+    use std::sync::Arc;
+
+    use rusqlite::Connection;
+
+    use crate::error::SemioError;
+    use crate::id::Id;
+    use crate::op::BackboneStoreKind;
+    use crate::vcs::Graph;
+
+    //#region 🧾 wire format
+    /// @emoji 🧾 One row in a dev JSON `semanticOpLog` or SQLite `semantic_op_log` (camelCase `draftId` / `transactionId` to match bundle fixtures).
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct StoredSemanticOp {
+        #[serde(rename = "draftId")]
+        pub draft_id: String,
+        #[serde(rename = "transactionId")]
+        pub transaction_id: String,
+        pub kind: String,
+        pub input: serde_json::Value,
+    }
+
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct DevJsonPersistenceNotes {
+        /// @emoji 🛡️ Human-readable: write `*.tmp.semio-write` in the same directory then `rename(2)` into the final filename.
+        pub atomic_rewrite: String,
+        /// @emoji 🛡️ Human-readable: after `fsync`+`rename`, readers see the previous or the new whole file; torn JSON only on the temp path (ignored by readers).
+        pub crash_safety: String,
+    }
+
+    #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+    pub struct DevJsonBackboneFile {
+        pub kind: String,
+        pub schema: String,
+        #[serde(rename = "connectionUri")]
+        pub connection_uri: String,
+        pub persistence: DevJsonPersistenceNotes,
+        #[serde(rename = "semanticOpLog")]
+        pub semantic_op_log: Vec<StoredSemanticOp>,
+    }
+
+    impl DevJsonBackboneFile {
+        fn template(uri: &str) -> Self {
+            Self {
+                kind: "semio.kit_backbone.dev_json".to_string(),
+                schema: "2026-05-06".to_string(),
+                connection_uri: uri.to_string(),
+                persistence: DevJsonPersistenceNotes {
+                    atomic_rewrite: "Serialize full document to <path>.tmp.semio-write in the same directory, fsync, then atomic rename(2) over <path>.".to_string(),
+                    crash_safety: "Readers never observe a partial JSON object: they keep the last fully-renamed file. A crash may leave an orphan temp file to delete manually.".to_string(),
+                },
+                semantic_op_log: Vec::new(),
+            }
+        }
+    }
+    //#endregion 🧾 wire format
+
+    //#region 🧭 paths + uri
+    pub fn normalize_connection_uri(raw: &str) -> String {
+        raw.trim().to_string()
+    }
+
+    pub fn filesystem_path_from_uri(uri: &str) -> Result<PathBuf, SemioError> {
+        let u = uri.trim();
+        let p = if let Some(r) = u.strip_prefix("file://") { r } else { u };
+        if p.is_empty() {
+            return Err(SemioError::invalid("empty backbone connectionUri"));
+        }
+        Ok(PathBuf::from(p))
+    }
+
+    fn resolve_local_semio_root(project_or_dot_semio: &Path) -> PathBuf {
+        if project_or_dot_semio.file_name().and_then(|s| s.to_str()) == Some(".semio") {
+            project_or_dot_semio.to_path_buf()
+        } else {
+            project_or_dot_semio.join(".semio")
+        }
+    }
+
+    fn init_local_dot_semio_layout(semio_root: &Path) -> Result<(), SemioError> {
+        std::fs::create_dir_all(semio_root).map_err(|e| SemioError::invalid(format!("create .semio root: {e}")))?;
+        std::fs::create_dir_all(semio_root.join("blobs")).map_err(|e| SemioError::invalid(format!("create blobs dir: {e}")))?;
+        let ddl = r#"
+CREATE TABLE IF NOT EXISTS semantic_op_log (
+  seq INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id TEXT NOT NULL,
+  transaction_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  input_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS conflict_stub (
+  id INTEGER PRIMARY KEY
+);
+"#;
+        for name in ["wip.db", "staged.db", "authoritative.db", "conflicts.db"] {
+            let db = semio_root.join(name);
+            let conn = Connection::open(&db).map_err(|e| SemioError::invalid(format!("open {name}: {e}")))?;
+            conn.execute_batch(ddl).map_err(|e| SemioError::invalid(format!("init {name}: {e}")))?;
+        }
+        Ok(())
+    }
+
+    fn db_file_for_child(semio_root: &Path, child_label: &'static str) -> Result<PathBuf, SemioError> {
+        let name = match child_label {
+            "wip" => "wip.db",
+            "auth" => "authoritative.db",
+            other => return Err(SemioError::invalid(format!("unknown child label `{other}` for local backbone"))),
+        };
+        Ok(semio_root.join(name))
+    }
+    //#endregion 🧭 paths + uri
+
+    //#region ✍️ atomic json
+    fn atomic_write_json(path: &Path, doc: &DevJsonBackboneFile) -> Result<(), SemioError> {
+        let parent = path.parent().ok_or_else(|| SemioError::invalid("dev json path has no parent directory"))?;
+        std::fs::create_dir_all(parent).map_err(|e| SemioError::invalid(format!("create dev json parent: {e}")))?;
+        let tmp = path.with_extension("tmp.semio-write");
+        let body = serde_json::to_string_pretty(doc).map_err(|e| SemioError::invalid(e.to_string()))?;
+        std::fs::write(&tmp, body).map_err(|e| SemioError::invalid(format!("write temp dev json: {e}")))?;
+        std::fs::rename(&tmp, path).map_err(|e| SemioError::invalid(format!("rename dev json: {e}")))?;
+        Ok(())
+    }
+
+    fn read_or_init_dev_json(path: &Path, uri: &str) -> Result<DevJsonBackboneFile, SemioError> {
+        if !path.exists() {
+            return Ok(DevJsonBackboneFile::template(uri));
+        }
+        let s = std::fs::read_to_string(path).map_err(|e| SemioError::invalid(format!("read dev json: {e}")))?;
+        serde_json::from_str(&s).map_err(|e| SemioError::invalid(format!("parse dev json: {e}")))
+    }
+    //#endregion ✍️ atomic json
+
+    //#region 🔁 replay
+    pub async fn replay_stored_ops(graph: &Arc<Graph>, ops: &[StoredSemanticOp]) -> Result<(), SemioError> {
+        graph.the_kit.clear_piece_projections_for_backbone_replay().await;
+        for op in ops {
+            let draft_id = Id::from(op.draft_id.as_str());
+            let transaction_id = Id::from(op.transaction_id.as_str());
+            let payload = serde_json::to_string(&op.input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            crate::kit_graph_engine::apply_semantic_op_json(graph, &draft_id, &transaction_id, op.kind.as_str(), &payload).await?;
+        }
+        Ok(())
+    }
+    //#endregion 🔁 replay
+
+    //#region 🧩 attached variants
+    pub struct DevJsonAttached {
+        path: PathBuf,
+        connection_uri_normalized: String,
+    }
+
+    impl DevJsonAttached {
+        fn read_doc(&self) -> Result<DevJsonBackboneFile, SemioError> {
+            read_or_init_dev_json(&self.path, &self.connection_uri_normalized)
+        }
+
+        pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+            let mut doc = self.read_doc()?;
+            doc.semantic_op_log.push(StoredSemanticOp {
+                draft_id: draft_id.to_string(),
+                transaction_id: transaction_id.to_string(),
+                kind: kind.to_string(),
+                input: input.clone(),
+            });
+            atomic_write_json(&self.path, &doc)
+        }
+    }
+
+    pub struct LocalAttached {
+        #[allow(dead_code)]
+        semio_root: PathBuf,
+        db_path: PathBuf,
+        connection_uri_normalized: String,
+    }
+
+    impl LocalAttached {
+        pub fn append_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+            let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite append: {e}")))?;
+            let input_json = serde_json::to_string(input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            conn.execute(
+                "INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![draft_id.as_str(), transaction_id.as_str(), kind, input_json],
+            )
+            .map_err(|e| SemioError::invalid(format!("sqlite insert: {e}")))?;
+            Ok(())
+        }
+
+        fn load_ops(&self) -> Result<Vec<StoredSemanticOp>, SemioError> {
+            let conn = Connection::open(&self.db_path).map_err(|e| SemioError::invalid(format!("sqlite read: {e}")))?;
+            let mut stmt = conn
+                .prepare("SELECT draft_id, transaction_id, kind, input_json FROM semantic_op_log ORDER BY seq ASC")
+                .map_err(|e| SemioError::invalid(format!("sqlite prepare: {e}")))?;
+            let mut rows = stmt.query([]).map_err(|e| SemioError::invalid(format!("sqlite query: {e}")))?;
+            let mut out = Vec::new();
+            while let Some(row) = rows.next().map_err(|e| SemioError::invalid(format!("sqlite row: {e}")))? {
+                let draft_id: String = row.get(0).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
+                let transaction_id: String = row.get(1).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
+                let kind: String = row.get(2).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
+                let input_json: String = row.get(3).map_err(|e| SemioError::invalid(format!("sqlite col: {e}")))?;
+                let input: serde_json::Value = serde_json::from_str(&input_json).map_err(|e| SemioError::invalid(e.to_string()))?;
+                out.push(StoredSemanticOp { draft_id, transaction_id, kind, input });
+            }
+            Ok(out)
+        }
+    }
+
+    pub enum AttachedBackbone {
+        DevJson(DevJsonAttached),
+        Local(LocalAttached),
+    }
+
+    impl AttachedBackbone {
+        pub async fn mount_and_replay(connection_uri: &str, store_kind: BackboneStoreKind, child_label: &'static str, graph: &Arc<Graph>) -> Result<Self, SemioError> {
+            let norm = normalize_connection_uri(connection_uri);
+            let path = filesystem_path_from_uri(&norm)?;
+            let mut this = match store_kind {
+                BackboneStoreKind::DevJson => Self::DevJson(DevJsonAttached { path, connection_uri_normalized: norm }),
+                BackboneStoreKind::LocalDotSemio => {
+                    let semio_root = resolve_local_semio_root(&path);
+                    init_local_dot_semio_layout(&semio_root)?;
+                    let db_path = db_file_for_child(&semio_root, child_label)?;
+                    Self::Local(LocalAttached { semio_root, db_path, connection_uri_normalized: norm })
+                }
+            };
+            this.replay_into_graph(graph).await?;
+            Ok(this)
+        }
+
+        pub async fn replay_into_graph(&mut self, graph: &Arc<Graph>) -> Result<(), SemioError> {
+            let ops: Vec<StoredSemanticOp> = match self {
+                AttachedBackbone::DevJson(d) => d.read_doc()?.semantic_op_log.clone(),
+                AttachedBackbone::Local(l) => l.load_ops()?,
+            };
+            replay_stored_ops(graph, &ops).await
+        }
+
+        pub fn append_semantic_op(&mut self, draft_id: &Id, transaction_id: &Id, kind: &str, input: &serde_json::Value) -> Result<(), SemioError> {
+            match self {
+                AttachedBackbone::DevJson(d) => d.append_op(draft_id, transaction_id, kind, input),
+                AttachedBackbone::Local(l) => l.append_op(draft_id, transaction_id, kind, input),
+            }
+        }
+
+        pub fn normalized_connection_uri(&self) -> &str {
+            match self {
+                AttachedBackbone::DevJson(d) => d.connection_uri_normalized.as_str(),
+                AttachedBackbone::Local(l) => l.connection_uri_normalized.as_str(),
+            }
+        }
+    }
+    //#endregion 🧩 attached variants
+
+    /// @emoji 🧪 Build [`StoredSemanticOp`] rows from `kit-store.golden.ops.semio.json` (US-001 fixture) for persistence tests.
+    pub fn stored_ops_from_golden_ops_json(src: &serde_json::Value) -> Result<Vec<StoredSemanticOp>, SemioError> {
+        let draft_id = src["draftId"].as_str().ok_or_else(|| SemioError::invalid("golden ops missing draftId"))?.to_string();
+        let transaction_id = src["transactionId"].as_str().ok_or_else(|| SemioError::invalid("golden ops missing transactionId"))?.to_string();
+        let arr = src["ops"].as_array().ok_or_else(|| SemioError::invalid("golden ops missing ops"))?;
+        let mut out = Vec::new();
+        for rec in arr {
+            let kind = rec["kind"].as_str().ok_or_else(|| SemioError::invalid("op.kind"))?;
+            let input = rec.get("input").cloned().ok_or_else(|| SemioError::invalid("op.input"))?;
+            out.push(StoredSemanticOp { draft_id: draft_id.clone(), transaction_id: transaction_id.clone(), kind: kind.to_string(), input });
+        }
+        Ok(out)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub mod kit_backbone {}
+
+//#endregion 🗄️ kit backbone persistence (native)
+
 //#region 📣 event
 
 pub mod event {
@@ -2734,8 +3021,84 @@ pub mod worker {
     use crate::error::SemioError;
     use crate::event::{Event, EventBus};
     use crate::id::Id;
-    use crate::op::{Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput};
+    use crate::op::{BackboneStoreKind, Command, CommandReceipt, CreatedFixedPiece, CreatedFixedPieceInput};
     use crate::vcs::{Conflict, Graph, Session};
+
+    //#region 🗄️ backbone slot
+    /// @emoji 🗄️ Per-child optional persistence tail: native disk backbones; wasm stub (attach returns `NotSupported`).
+    pub struct BackboneNativeCell {
+        #[cfg(not(target_arch = "wasm32"))]
+        slot: Arc<RwLock<Option<crate::kit_backbone::AttachedBackbone>>>,
+    }
+
+    impl BackboneNativeCell {
+        pub fn new() -> Self {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                Self { slot: Arc::new(RwLock::new(None)) }
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                Self {}
+            }
+        }
+
+        pub async fn mount(&self, graph: &Arc<Graph>, child_label: &'static str, uri: &str, store_kind: BackboneStoreKind) -> Result<(), SemioError> {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(uri, store_kind, child_label, graph).await?;
+                *self.slot.write().await = Some(bone);
+                Ok(())
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = (graph, child_label, uri, store_kind);
+                Err(SemioError::invalid(
+                    "Attachable kit backbones use native disk (atomic JSON / SQLite); drive them from native hosts over GraphQL IPC instead of WASM.",
+                ))
+            }
+        }
+
+        pub async fn detach_matching(&self, uri: &str) -> Result<(), SemioError> {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let norm = crate::kit_backbone::normalize_connection_uri(uri);
+                let mut guard = self.slot.write().await;
+                match &*guard {
+                    Some(current) if current.normalized_connection_uri() != norm => {
+                        return Err(SemioError::invalid(
+                            "`connectionUri` did not match the attached backbone; detach aborted to avoid confusing persistence drift.",
+                        ));
+                    }
+                    _ => {}
+                }
+                guard.take();
+                Ok(())
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = uri;
+                Ok(())
+            }
+        }
+
+        pub async fn record_created_fixed_piece_if_attached(&self, draft_id: &Id, transaction_id: &Id, payload: &serde_json::Value) -> Result<(), SemioError> {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let mut guard = self.slot.write().await;
+                if let Some(backbone) = guard.as_mut() {
+                    backbone.append_semantic_op(draft_id, transaction_id, "createdFixedPiece", payload)?;
+                }
+                Ok(())
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                let _ = (draft_id, transaction_id, payload);
+                Ok(())
+            }
+        }
+    }
+    //#endregion 🗄️ backbone slot
 
     /// 🚪 Per-child handle held by the parent: send commands in (events flow through the shared bus).
     pub struct ChildPort {
@@ -2790,7 +3153,7 @@ pub mod worker {
     }
 
     fn spawn_child(label: &'static str, graph: Arc<Graph>, bus: Arc<EventBus>, inbox: Receiver<Command>) {
-        let fut = async move { ChildRuntime { label, graph, bus, inbox }.run().await };
+        let fut = async move { ChildRuntime { label, graph, bus, inbox, backbone: BackboneNativeCell::new() }.run().await };
         #[cfg(target_arch = "wasm32")]
         {
             wasm_bindgen_futures::spawn_local(fut);
@@ -2807,6 +3170,7 @@ pub mod worker {
         pub graph: Arc<Graph>,
         pub bus: Arc<EventBus>,
         pub inbox: Receiver<Command>,
+        pub backbone: BackboneNativeCell,
     }
 
     impl ChildRuntime {
@@ -2835,8 +3199,17 @@ pub mod worker {
                 Command::CreateFixedPiece { request_id: _, draft_id, transaction_id, design_id, blueprint_id, position, name, description } => {
                     let (piece, diff) = self
                         .graph
-                        .apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone())
+                        .apply_create_fixed_piece(draft_id.clone(), transaction_id.clone(), design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone())
                         .await?;
+
+                    let payload = serde_json::json!({
+                        "designId": design_id.as_str(),
+                        "blueprintId": blueprint_id.as_str(),
+                        "position": serde_json::to_value(position).map_err(|e| SemioError::invalid(e.to_string()))?,
+                        "name": name.clone(),
+                        "description": description.clone(),
+                    });
+                    self.backbone.record_created_fixed_piece_if_attached(&draft_id, &transaction_id, &payload).await?;
 
                     let input = CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
                     let op = CreatedFixedPiece::new(input, piece, diff).await;
@@ -2847,10 +3220,10 @@ pub mod worker {
                     // Skeleton stubs — wired through commandSucceeded only.
                     Ok(())
                 }
-                Command::BackboneAttach { .. } | Command::BackboneDetach { .. } => {
-                    // Skeleton — backbone IO is backend-specific; commandAccepted + no OperationFailed is the contract.
-                    Ok(())
+                Command::BackboneAttach { connection_uri, store_kind, .. } => {
+                    self.backbone.mount(&self.graph, self.label, &connection_uri, store_kind).await
                 }
+                Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
         }
     }
@@ -3036,7 +3409,7 @@ pub mod gql {
             Ok(CommandReceipt { request_id, kind: "fixPiece".to_string() })
         }
 
-        /// @emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); async completion via `commandSucceeded`.
+        /// @emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); replays persisted semantic ops through [`kit_graph_engine::apply_semantic_op_json`]. **Detach** clears only the backbone handle—[`Graph`] projection remains in memory (see `attachableBackbones` in `kit-store.contract.semio.json`).
         #[graphql(name = "backboneAttach")]
         async fn backbone_attach(
             &self,
@@ -3052,7 +3425,7 @@ pub mod gql {
             Ok(CommandReceipt { request_id, kind: "backboneAttach".to_string() })
         }
 
-        /// @emoji 🔗 Detach a backbone connection; async completion via `commandSucceeded`.
+        /// @emoji 🔗 Drops the active backbone handle (stop appending persisted ops). Does **not** roll back the hydrated [`Graph`] or delete on-disk stores; re-attach reloads from persistence.
         #[graphql(name = "backboneDetach")]
         async fn backbone_detach(&self, ctx: &Context<'_>, workspace: KitGraphWorkspace, #[graphql(name = "connectionUri")] connection_uri: String) -> async_graphql::Result<CommandReceipt> {
             let rt = rt(ctx)?;
@@ -3471,6 +3844,94 @@ mod tests {
             let fp = stable_projection_fingerprint(&g.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
             assert_eq!(fp, exp_fp, "projectionFingerprint via semantic json apply");
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn dev_json_backbone_persisted_ops_replay_matches_us001_projection_fingerprint() {
+        block_on(async {
+            let dir = tempfile::tempdir().expect("temp dir");
+            let path = dir.path().join("dev-kit.json");
+
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
+            let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
+            let golden_ops: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
+            let exp: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+
+            let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
+            let uri_full = format!("file://{}", path.display());
+            let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
+            let doc = crate::kit_backbone::DevJsonBackboneFile {
+                kind: "semio.kit_backbone.dev_json".to_string(),
+                schema: "2026-05-06".to_string(),
+                connection_uri: norm.clone(),
+                persistence: crate::kit_backbone::DevJsonPersistenceNotes {
+                    atomic_rewrite: "fixture".to_string(),
+                    crash_safety: "fixture".to_string(),
+                },
+                semantic_op_log: stored,
+            };
+            std::fs::write(&path, serde_json::to_string_pretty(&doc).expect("serialize dev json")).expect("write dev json");
+
+            let g = crate::vcs::Graph::new().await;
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::DevJson, "wip", &g)
+                .await
+                .expect("dev json mount+replay");
+
+            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+            assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn local_semio_sqlite_backbone_persisted_ops_replay_matches_us001_projection_fingerprint() {
+        block_on(async {
+            let dir = tempfile::tempdir().expect("temp dir");
+            let proj_root = dir.path().join("workspace");
+            std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
+            let proj_canon = proj_root.canonicalize().expect("canonical workspace");
+            let uri_full = format!("file://{}", proj_canon.display());
+            let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
+
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
+            let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
+            let golden_ops: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read ops")).expect("parse golden ops");
+            let exp: serde_json::Value =
+                serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+
+            let stored = crate::kit_backbone::stored_ops_from_golden_ops_json(&golden_ops).expect("golden → stored ops");
+
+            let g_bootstrap = crate::vcs::Graph::new().await;
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g_bootstrap)
+                .await
+                .expect("bootstrap .semio layout");
+
+            let db_path = proj_canon.join(".semio").join("wip.db");
+            let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
+            for op in &stored {
+                let input_json = serde_json::to_string(&op.input).expect("input json");
+                conn.execute(
+                    "INSERT INTO semantic_op_log (draft_id, transaction_id, kind, input_json) VALUES (?1, ?2, ?3, ?4)",
+                    rusqlite::params![op.draft_id, op.transaction_id, op.kind, input_json],
+                )
+                .expect("insert semantic op row");
+            }
+            drop(conn);
+
+            let g2 = crate::vcs::Graph::new().await;
+            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, crate::op::BackboneStoreKind::LocalDotSemio, "wip", &g2)
+                .await
+                .expect("replay wip.db");
+
+            let fp = stable_projection_fingerprint(&g2.the_kit).await;
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+            assert_eq!(fp, exp_fp, "local .semio backbone replay must match US-001 golden fingerprint");
         });
     }
 

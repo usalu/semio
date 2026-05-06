@@ -387,11 +387,11 @@ type Mutation {
 	createFixedPiece(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Command!
 	fixPiece(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Command!
 	"""
-	@emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); async completion via `commandSucceeded`.
+	@emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); replays persisted semantic ops through [`kit_graph_engine::apply_semantic_op_json`]. **Detach** clears only the backbone handle—[`Graph`] projection remains in memory (see `attachableBackbones` in `kit-store.contract.semio.json`).
 	"""
 	backboneAttach(workspace: KitGraphWorkspace!, connectionUri: String!, storeKind: BackboneStoreKind!): Command!
 	"""
-	@emoji 🔗 Detach a backbone connection; async completion via `commandSucceeded`.
+	@emoji 🔗 Drops the active backbone handle (stop appending persisted ops). Does **not** roll back the hydrated [`Graph`] or delete on-disk stores; re-attach reloads from persistence.
 	"""
 	backboneDetach(workspace: KitGraphWorkspace!, connectionUri: String!): Command!
 }

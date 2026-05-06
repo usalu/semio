@@ -9,6 +9,7 @@ after each iteration and it's included in prompts for context.
 - **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.
 - **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.
 - **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.
+- **Attachable backbones (native RS):** `crate::kit_backbone` implements `BackboneStoreKind::DEV_JSON` (single file, `*.tmp.semio-write` + `rename(2)`) and `LOCAL_DOT_SEMIO` (`.semio/{wip,staged,authoritative,conflicts}.db` + `blobs/`). `worker::ChildRuntime::backbone` replays persisted ops via `apply_semantic_op_json` after `Kit::clear_piece_projections_for_backbone_replay`; `createFixedPiece` appends `{draftId,transactionId,kind,input}`. Wasm attach resolves to `invalid`/`NotSupported` style errors (no SQLite on wasm).
 
 ---
 
@@ -37,5 +38,14 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Treat **two `Arc<Graph>` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.
   - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.
+---
+
+## 2026-05-06 - US-004
+
+- **What was implemented:** Native **`crate::kit_backbone`** with dev JSON backbone (canonical `semanticOpLog` payload + atomic temp/rename persistence notes) and local **`.semio/`** backbone (SQLite `semantic_op_log` in `wip`/`staged`/`authoritative`/`conflicts` dbs initialized together, **`blobs/`** directory ensured for `HASH.EXT`). **`worker::BackboneNativeCell`** on each async child: **`backboneAttach`/`Detach`** hydrate or drop the persistence handle; **`createFixedPiece`** appends **`createdFixedPiece`** rows while attached; replay runs **`replay_stored_ops`** → clears piece projections then **`apply_semantic_op_json`**. RS tests replay **US-001 golden ops from Dev JSON file and from `wip.db`**. Contract JSON **`attachableBackbones`** block documents atomic rewrite, crash safety, detach semantics, and `.semio` layout. **`@semio/js`** fixture assertion for dev backbone JSON shape.
+- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `semio/js/index.ts`, `tasks/prd.json`, `.repo/🎫/26/05/06/attachable-backbones-us-004/ticket.json`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - **Patterns discovered:** Keep **`apply_semantic_op_json`** as the single replay oracle; persisted rows are **`kind + input`** (plus draft/tx ids) so Dev JSON and SQLite stay aligned. **Attach** should **clear piece projections** before replay to avoid double-applying when reusing a live graph.
+  - **Gotchas encountered:** **WASM** builds must not reference `rusqlite`; gate **backbone IO** with `#[cfg(not(target_arch = "wasm32"))]` and return **`SemioError::invalid(...)`** on attach from wasm workers. **Detach URI** must **match** the mounted URI or integrators could think persistence stopped when it did not.
 ---
 

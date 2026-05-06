@@ -7099,6 +7099,23 @@ if (process.env["SEMIO_JS_RUN_EMBEDDED_TESTS"] === "1") {
       expect(b.kind).toBe("semio.kit_store.bundle");
       expect(Array.isArray(b.semanticOpLog)).toBe(true);
     });
+
+    it("dev JSON backbone wire shape documents semanticOpLog + persistence hints (US-004)", async () => {
+      const backboneDoc = {
+        kind: "semio.kit_backbone.dev_json",
+        schema: "2026-05-06",
+        connectionUri: "file:///tmp/example.dev-kit.json",
+        persistence: {
+          atomic_rewrite:
+            "Serialize full JSON to sibling path ending in .tmp.semio-write, fsync, then rename(2) over the canonical file.",
+          crash_safety: "Readers only observe the last renamed complete document; orphaned temp tails are harmless.",
+        },
+        semanticOpLog: [] as { draftId: string; transactionId: string; kind: string; input: Record<string, unknown> }[],
+      };
+      expect(backboneDoc.kind).toBe("semio.kit_backbone.dev_json");
+      expect(backboneDoc.persistence.atomic_rewrite.includes("rename")).toBe(true);
+      expect(Array.isArray(backboneDoc.semanticOpLog)).toBe(true);
+    });
   });
 
   describe("semio-js kit event entity filters", () => {
