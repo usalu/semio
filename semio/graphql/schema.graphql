@@ -1,37 +1,37 @@
 type Alternative {
-  id: Id!
-  hash: String!
-  owner: Graph
-  name: String!
-  start: Checkpoint!
-  checkpoints: [Checkpoint!]!
-  store: Kit!
-  draft: Draft
-  transaction: Transaction
+	id: Id!
+	hash: String!
+	owner: Graph
+	name: String!
+	start: Checkpoint!
+	checkpoints: [Checkpoint!]!
+	store: Kit!
+	draft: Draft
+	transaction: Transaction
 }
 
 type Attribute {
-  id: Id!
-  key: String!
-  value: String!
-  definition: String
+	id: Id!
+	key: String!
+	value: String!
+	definition: String
 }
 
 type Author {
-  id: Id!
-  name: String!
-  email: String!
-  role: String
-  rank: Int
+	id: Id!
+	name: String!
+	email: String!
+	role: String
+	rank: Int
 }
 
 type Benchmark {
-  id: Id!
-  name: String!
-  min: Float
-  max: Float
-  minExcluded: Boolean
-  maxExcluded: Boolean
+	id: Id!
+	name: String!
+	min: Float
+	max: Float
+	minExcluded: Boolean
+	maxExcluded: Boolean
 }
 
 """
@@ -40,312 +40,312 @@ type Benchmark {
 union Blueprint = Type | Design
 
 type Change {
-  id: Id!
-  hash: String!
-  owner: ChangeOwner!
-  forwards: [OperationKind!]!
-  backwards: [OperationKind!]!
+	id: Id!
+	hash: String!
+	owner: ChangeOwner!
+	forwards: [OperationKind!]!
+	backwards: [OperationKind!]!
 }
 
 union ChangeOwner = Transaction | Draft | Checkpoint
 
 type ChangedDescription implements Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  input: ChangedDescriptionInput!
-  diff: Diff!
-  entity: Kit!
+	id: Id!
+	hash: String!
+	owner: Change!
+	input: ChangedDescriptionInput!
+	diff: Diff!
+	entity: Kit!
 }
 
 type ChangedDescriptionInput {
-  description: String!
+	description: String!
 }
 
 type Checkpoint {
-  id: Id!
-  hash: String!
-  timestamp: Timestamp
-  authors: [Author!]!
-  root: Kit
-  parentCheckpoint: Checkpoint
-  message: String
-  isRelease: Boolean!
-  changeCount: Int!
+	id: Id!
+	hash: String!
+	timestamp: Timestamp
+	authors: [Author!]!
+	root: Kit
+	parentCheckpoint: Checkpoint
+	message: String
+	isRelease: Boolean!
+	changeCount: Int!
 }
 
 """
 ✅ Lightweight signal that a command was accepted (used by `commandSucceeded`).
 """
 type Command {
-  requestId: Id!
-  kind: String!
+	requestId: Id!
+	kind: String!
 }
 
 type Concept {
-  id: Id!
-  name: String!
-  description: String
-  order: Int
+	id: Id!
+	name: String!
+	description: String
+	order: Int
 }
 
 type Conflict {
-  id: Id!
-  backboneTip: String
-  reason: String!
-  createdAt: Timestamp!
+	id: Id!
+	backboneTip: String
+	reason: String!
+	createdAt: Timestamp!
 }
 
 type Connection {
-  id: Id!
-  hash: String!
-  owner: Design!
-  connected: Side!
-  connecting: Side!
-  gap: Float
-  shift: Float
-  rise: Float
-  rotation: Float
-  turn: Float
-  tilt: Float
-  u: Float
-  v: Float
-  description: String
-  attributes: [Attribute!]!
+	id: Id!
+	hash: String!
+	owner: Design!
+	connected: Side!
+	connecting: Side!
+	gap: Float
+	shift: Float
+	rise: Float
+	rotation: Float
+	turn: Float
+	tilt: Float
+	u: Float
+	v: Float
+	description: String
+	attributes: [Attribute!]!
 }
 
 type Connector {
-  id: Id!
-  hash: String!
-  owner: Type!
-  code: String!
-  description: String
-  portId: Id
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+	id: Id!
+	hash: String!
+	owner: Type!
+	code: String!
+	description: String
+	port: Port
+	qualities: [Quality!]!
+	attributes: [Attribute!]!
 }
 
 type Coordinate {
-  u: Float!
-  v: Float!
+	u: Float!
+	v: Float!
 }
 
 input CoordinateInput {
-  u: Float!
-  v: Float!
+	u: Float!
+	v: Float!
 }
 
 type CreatedFixedPiece implements Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  input: CreatedFixedPieceInput!
-  diff: Diff!
-  piece: Piece!
+	id: Id!
+	hash: String!
+	owner: Change!
+	input: CreatedFixedPieceInput!
+	diff: Diff!
+	piece: Piece!
 }
 
 type CreatedFixedPieceInput {
-  designId: Id!
-  blueprintId: Id!
-  position: Position!
-  name: String
-  description: String
+	designId: Id!
+	blueprintId: Id!
+	position: Position!
+	name: String
+	description: String
 }
 
 type Design {
-  id: Id!
-  hash: String!
-  owner: Kit!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  location: Location
-  unit: String
-  created: Timestamp
-  updated: Timestamp
-  pieces: [Piece!]!
-  piece(id: Id!): Piece
-  connections: [Connection!]!
-  connection(id: Id!): Connection
-  layers: [Layer!]!
-  groups: [Group!]!
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
-  qualitySum(qualityId: Id!): Float!
-  references: [Design!]!
-  referencedBy: [Piece!]!
+	id: Id!
+	hash: String!
+	owner: Kit!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	location: Location
+	unit: String
+	created: Timestamp
+	updated: Timestamp
+	pieces: [Piece!]!
+	piece(id: Id!): Piece
+	connections: [Connection!]!
+	connection(id: Id!): Connection
+	layers: [Layer!]!
+	groups: [Group!]!
+	authors: [Author!]!
+	concepts: [Concept!]!
+	tags: [Tag!]!
+	qualities: [Quality!]!
+	props: [Prop!]!
+	attributes: [Attribute!]!
+	stats: [Stat!]!
+	qualitySum(qualityId: Id!): Float!
+	references: [Design!]!
+	referencedBy: [Piece!]!
 }
 
 type Diff {
-  id: Id!
+	id: Id!
 }
 
 type Draft {
-  id: Id!
-  hash: String!
-  owner: Alternative
-  parentCheckpoint: Checkpoint
-  targetAlternative: Alternative
-  openTransaction: Transaction
-  finalizedTransactions: [Transaction!]!
-  redoTransactions: [Transaction!]!
-  changes: [Change!]!
-  canUndo(steps: Int!): Boolean!
-  canRedo(steps: Int!): Boolean!
+	id: Id!
+	hash: String!
+	owner: Alternative
+	parentCheckpoint: Checkpoint
+	targetAlternative: Alternative
+	openTransaction: Transaction
+	finalizedTransactions: [Transaction!]!
+	redoTransactions: [Transaction!]!
+	changes: [Change!]!
+	canUndo(steps: Int!): Boolean!
+	canRedo(steps: Int!): Boolean!
 }
 
 type DraggedPiece implements Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  input: DraggedPieceInput!
-  diff: Diff!
-  pieces: [Piece!]!
+	id: Id!
+	hash: String!
+	owner: Change!
+	input: DraggedPieceInput!
+	diff: Diff!
+	pieces: [Piece!]!
 }
 
 type DraggedPieceInput {
-  designId: Id!
-  pieceIds: [Id!]!
-  offset: Offset!
+	designId: Id!
+	pieceIds: [Id!]!
+	offset: Offset!
 }
 
 type Error {
-  kind: String!
-  message: String!
-  requestId: String
+	kind: String!
+	message: String!
+	requestId: String
 }
 
 type File {
-  id: Id!
-  url: String!
-  mime: String
-  size: Int
-  hash: String!
-  description: String
-  created: Timestamp
-  updated: Timestamp
+	id: Id!
+	url: String!
+	mime: String
+	size: Int
+	hash: String!
+	description: String
+	created: Timestamp
+	updated: Timestamp
 }
 
 type FixedPiece implements Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  input: FixedPieceInput!
-  diff: Diff!
-  piece: Piece!
+	id: Id!
+	hash: String!
+	owner: Change!
+	input: FixedPieceInput!
+	diff: Diff!
+	piece: Piece!
 }
 
 type FixedPieceInput {
-  designId: Id!
-  pieceId: Id!
+	designId: Id!
+	pieceId: Id!
 }
 
 type Folder {
-  id: Id!
-  path: String!
-  description: String
+	id: Id!
+	path: String!
+	description: String
 }
 
 type Graph {
-  id: Id!
-  hash: String!
-  owner: Session
-  theKit: Kit
-  alternative(id: Id!): Alternative
-  alternatives: [Alternative!]!
-  checkpoint(id: Id!): Checkpoint
-  checkpoints: [Checkpoint!]!
-  release(id: Id!): Checkpoint
-  releases: [Checkpoint!]!
+	id: Id!
+	hash: String!
+	owner: Session
+	theKit: Kit
+	alternative(id: Id!): Alternative
+	alternatives: [Alternative!]!
+	checkpoint(id: Id!): Checkpoint
+	checkpoints: [Checkpoint!]!
+	release(id: Id!): Checkpoint
+	releases: [Checkpoint!]!
 }
 
 type Group {
-  id: Id!
-  name: String!
-  description: String
-  color: String
-  icon: String
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	icon: String
 }
 
 scalar Id
 
 type Kit {
-  id: Id!
-  hash: String!
-  """
-  Owner [`crate::vcs::Graph`] is set by [`crate::worker::ChildRuntime::new`] via Weak.
-  """
-  owner: Graph
-  checkpoint: Checkpoint
-  draft: Draft
-  transaction: Transaction
-  name: String!
-  description: String
-  icon: String
-  image: String
-  preview: String
-  remote: String
-  homepage: String
-  license: String
-  uri: String
-  created: Timestamp
-  updated: Timestamp
-  version: String
-  design(id: Id!): Design
-  designs: [Design!]!
-  type(id: Id!): Type
-  types: [Type!]!
-  files: [File!]!
-  folders: [Folder!]!
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
+	id: Id!
+	hash: String!
+	"""
+	Owner [`crate::vcs::Graph`] is set by [`crate::worker::ChildRuntime::new`] via Weak.
+	"""
+	owner: Graph
+	checkpoint: Checkpoint
+	draft: Draft
+	transaction: Transaction
+	name: String!
+	description: String
+	icon: String
+	image: String
+	preview: String
+	remote: String
+	homepage: String
+	license: String
+	uri: String
+	created: Timestamp
+	updated: Timestamp
+	version: String
+	design(id: Id!): Design
+	designs: [Design!]!
+	type(id: Id!): Type
+	types: [Type!]!
+	files: [File!]!
+	folders: [Folder!]!
+	authors: [Author!]!
+	concepts: [Concept!]!
+	tags: [Tag!]!
+	qualities: [Quality!]!
+	props: [Prop!]!
+	attributes: [Attribute!]!
+	stats: [Stat!]!
 }
 
 type Layer {
-  id: Id!
-  name: String!
-  description: String
-  color: String
-  order: Int
-  visible: Boolean
-  locked: Boolean
+	id: Id!
+	name: String!
+	description: String
+	color: String
+	order: Int
+	visible: Boolean
+	locked: Boolean
 }
 
 type Location {
-  id: Id!
+	id: Id!
 }
 
 type Mutation {
-  renameKit(draftId: Id!, transactionId: Id!, name: String!): Id!
-  changeDescription(draftId: Id!, transactionId: Id!, description: String!): Id!
-  createFixedPiece(draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Id!
-  fixPiece(draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Id!
+	renameKit(draftId: Id!, transactionId: Id!, name: String!): Id!
+	changeDescription(draftId: Id!, transactionId: Id!, description: String!): Id!
+	createFixedPiece(draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Id!
+	fixPiece(draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Id!
 }
 
 type Offset {
-  u: Float!
-  v: Float!
+	u: Float!
+	v: Float!
 }
 
 """
 🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
 """
 interface Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  diff: Diff!
+	id: Id!
+	hash: String!
+	owner: Change!
+	diff: Diff!
 }
 
 """
@@ -354,204 +354,221 @@ interface Operation {
 union OperationKind = CreatedFixedPiece | FixedPiece | DraggedPiece | RenamedKit | ChangedDescription
 
 type Piece {
-  id: Id!
-  hash: String!
-  owner: Blueprint!
-  name: String
-  description: String
-  position: Position
-  scale: Float
-  blueprint: Blueprint!
-  connectionKind: PieceConnectionKind
-  flatPosition: Position!
-  replaceableBlueprint: [Blueprint!]!
-  parentConnection: Connection
-  childConnections: [Connection!]!
-  parentPiece: Piece
-  childPieces: [Piece!]!
-  depth: Int!
-  path: [Piece!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
+	id: Id!
+	hash: String!
+	owner: Blueprint!
+	name: String
+	description: String
+	position: Position
+	scale: Float
+	blueprint: Blueprint!
+	connectionKind: PieceConnectionKind
+	flatPosition: Position!
+	replaceableBlueprint: [Blueprint!]!
+	parentConnection: Connection
+	childConnections: [Connection!]!
+	parentPiece: Piece
+	childPieces: [Piece!]!
+	depth: Int!
+	path: [Piece!]!
+	props: [Prop!]!
+	attributes: [Attribute!]!
 }
 
 enum PieceConnectionKind {
-  FIXED
-  CONNECTED
+	FIXED
+	CONNECTED
 }
 
 type Plane {
-  origin: Point!
-  xAxis: Vector!
-  yAxis: Vector!
+	origin: Point!
+	xAxis: Vector!
+	yAxis: Vector!
 }
 
 input PlaneInput {
-  origin: PointInput!
-  xAxis: VectorInput!
-  yAxis: VectorInput!
+	origin: PointInput!
+	xAxis: VectorInput!
+	yAxis: VectorInput!
 }
 
 type Point {
-  x: Float!
-  y: Float!
-  z: Float!
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
 input PointInput {
-  x: Float!
-  y: Float!
-  z: Float!
+	x: Float!
+	y: Float!
+	z: Float!
+}
+
+type Port {
+	id: Id!
+	hash: String!
+	owner: Type!
+	code: String
+	label: String
+	order: Int
 }
 
 type Position {
-  center: Coordinate!
-  plane: Plane!
+	center: Coordinate!
+	plane: Plane!
 }
 
 input PositionInput {
-  center: CoordinateInput!
-  plane: PlaneInput!
+	center: CoordinateInput!
+	plane: PlaneInput!
 }
 
 type Prop {
-  id: Id!
-  key: String!
-  value: String!
-  unit: String
-  quality: Quality
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	quality: Quality
 }
 
 type Quality {
-  id: Id!
-  key: String!
-  value: String
-  unit: String
-  definition: String
-  description: String
-  benchmarks: [Benchmark!]!
+	id: Id!
+	key: String!
+	value: String
+	unit: String
+	definition: String
+	description: String
+	benchmarks: [Benchmark!]!
 }
 
 type Query {
-  session: Session!
-  wip: Graph!
-  authoritative: Graph
-  conflicts: [Conflict!]!
+	session: Session!
+	wip: Graph!
+	authoritative: Graph
+	conflicts: [Conflict!]!
 }
 
 type RenamedKit implements Operation {
-  id: Id!
-  hash: String!
-  owner: Change!
-  input: RenamedKitInput!
-  diff: Diff!
-  kit: Kit!
+	id: Id!
+	hash: String!
+	owner: Change!
+	input: RenamedKitInput!
+	diff: Diff!
+	kit: Kit!
 }
 
 type RenamedKitInput {
-  name: String!
+	name: String!
 }
 
 type Representation {
-  id: Id!
-  hash: String!
-  owner: Type!
-  url: String!
-  description: String
-  file: File
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  attributes: [Attribute!]!
+	id: Id!
+	hash: String!
+	owner: Type!
+	url: String!
+	description: String
+	file: File
+	tags: [Tag!]!
+	qualities: [Quality!]!
+	attributes: [Attribute!]!
 }
 
 type Session {
-  id: Id!
-  startedAt: Timestamp
-  drafts: [Draft!]!
+	id: Id!
+	startedAt: Timestamp
+	drafts: [Draft!]!
 }
 
 type Side {
-  id: Id!
-  piece: Piece!
-  port: Connector
-  designPiece: Piece
-  connector: Connector
+	id: Id!
+	piece: Piece!
+	port: Port
+	designPiece: Piece
+	connector: Connector
 }
 
 type Stat {
-  id: Id!
-  key: String!
-  value: String!
-  unit: String
-  description: String
+	id: Id!
+	key: String!
+	value: String!
+	unit: String
+	description: String
 }
 
 type SubscriptionRoot {
-  commandSucceeded: Command!
-  operationSucceeded: Operation!
-  operationFailed: Error!
-  kitRenamed: RenamedKit!
-  descriptionChanged: ChangedDescription!
-  createdFixedPiece: CreatedFixedPiece!
-  fixedPiece: FixedPiece!
-  draggedPiece: DraggedPiece!
-  error: Error!
+	commandSucceeded: Command!
+	operationSucceeded: Operation!
+	operationFailed: Error!
+	kitRenamed: RenamedKit!
+	descriptionChanged: ChangedDescription!
+	createdFixedPiece: CreatedFixedPiece!
+	fixedPiece: FixedPiece!
+	draggedPiece: DraggedPiece!
+	error: Error!
 }
 
 type Tag {
-  id: Id!
-  name: String!
-  order: Int
+	id: Id!
+	name: String!
+	order: Int
 }
 
 scalar Timestamp
 
 type Transaction {
-  id: Id!
-  hash: String!
-  owner: Draft
-  changes: [Change!]!
+	id: Id!
+	hash: String!
+	owner: Draft
+	changes: [Change!]!
 }
 
 type Type {
-  id: Id!
-  hash: String!
-  owner: Kit!
-  name: String!
-  description: String
-  icon: String
-  image: String
-  unit: String
-  created: Timestamp
-  updated: Timestamp
-  connectors: [Connector!]!
-  connector(id: Id!): Connector
-  representations: [Representation!]!
-  representation(id: Id!): Representation
-  bestRepresentation(tagIds: [Id!]!): Representation
-  authors: [Author!]!
-  concepts: [Concept!]!
-  tags: [Tag!]!
-  qualities: [Quality!]!
-  props: [Prop!]!
-  attributes: [Attribute!]!
-  stats: [Stat!]!
+	id: Id!
+	hash: String!
+	owner: Kit!
+	name: String!
+	description: String
+	icon: String
+	image: String
+	unit: String
+	created: Timestamp
+	updated: Timestamp
+	connectors: [Connector!]!
+	connector(id: Id!): Connector
+	representations: [Representation!]!
+	representation(id: Id!): Representation
+	bestRepresentation(tagIds: [Id!]!): Representation
+	authors: [Author!]!
+	concepts: [Concept!]!
+	tags: [Tag!]!
+	qualities: [Quality!]!
+	props: [Prop!]!
+	attributes: [Attribute!]!
+	stats: [Stat!]!
 }
 
 type Vector {
-  x: Float!
-  y: Float!
-  z: Float!
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
 input VectorInput {
-  x: Float!
-  y: Float!
-  z: Float!
+	x: Float!
+	y: Float!
+	z: Float!
 }
 
+"""
+Directs the executor to include this field or fragment only when the `if` argument is true.
+"""
+directive @include(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+"""
+Directs the executor to skip this field or fragment when the `if` argument is true.
+"""
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
 schema {
-  query: Query
-  mutation: Mutation
-  subscription: SubscriptionRoot
+	query: Query
+	mutation: Mutation
+	subscription: SubscriptionRoot
 }

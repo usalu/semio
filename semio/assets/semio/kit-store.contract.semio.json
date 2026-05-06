@@ -1,0 +1,29 @@
+{
+  "kind": "semio.kit_store.contract",
+  "schema": "🎆26🌙06⬆️1",
+  "title": "Kit Store Graph — Root Snapshot + Ordered Semantic Ops",
+  "summary": "🧩 Persist one materialized kit graph (root snapshot) plus a single append-ordered semantic op log. Checkpoints, drafts, and transactions are thin lifecycles over the same op records (forwards/backwards pairs are derived when applying ops, not second-class persistence). Readable heads (wip / stage / authoritative) are pointers into checkpoint + draft state machines.",
+  "rootSnapshot": {
+    "description": "Exactly one canonical kit aggregate at a chosen revision; backbone TipState merges snapshot + applied op suffix.",
+    "shape": "Bundle field `rootSnapshot.kit` mirrors the portable kit DTO (types, designs, pieces, …) used by codegen and GraphQL kit resolvers."
+  },
+  "semanticOpLog": {
+    "description": "Ordered array of persisted records: stable id, operation kind string, and JSON input payload (the same payload family as RS `op` command inputs).",
+    "ordering": "Total order is list order; replay is deterministic when ops are applied in sequence from the root snapshot.",
+    "inverseNote": "Undo stacks store inverse ops or inverse inputs; either can be regenerated from snapshot+forward knowledge — stores may still persist inverse sequences for O(1) rollback."
+  },
+  "histories": {
+    "checkpoint": {
+      "wraps": "Ordered semantic change groups; each group references op ids from `semanticOpLog` (not embedded duplicate kit trees)."
+    },
+    "draft": {
+      "wraps": "Checkpoint pointer + ordered transactions; each transaction references op ids in log order."
+    },
+    "transaction": {
+      "wraps": "Ordered forward op ids; backwards companion is derived or listed symmetrically like today’s `Change` entity."
+    }
+  },
+  "bundleShape": {
+    "requiredTopLevel": ["kind", "schema", "rootSnapshot", "semanticOpLog", "histories", "backbonePointers"]
+  }
+}

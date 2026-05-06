@@ -1,0 +1,11 @@
+{
+  "invariants": {
+    "designCount": 1,
+    "totalPieces": 2,
+    "sortedPieceCenters": [
+      [-1.0, 5.0],
+      [1.5, -7.7]
+    ]
+  },
+  "projectionFingerprint": "25fac8b72162987668fe5665924a657e56182f9c24d208451a4abfcb94099852"
+}

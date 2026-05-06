@@ -2138,7 +2138,6 @@ export function useSemioReadSnap<T extends KitStoreReadSnap>(
   return React.useSyncExternalStore(
     React.useCallback(
       (onChange) => subscribe(onChange),
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       [subscribe],
     ),
     getSnapshot,

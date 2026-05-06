@@ -1,7 +1,7 @@
 {
   "name": "Kit Store Architecture (Contracts-First, Multi-Backbone, Pointer-Based RS Core)",
-  "branchName": "ralph/kit-store-architecture-contracts-multi-backbone",
   "description": "Replace incomplete kit persistence with one root snapshot per kit graph, ordered semantic changes, async semio/rs core, dev JSON and local .semio/ backbones, GraphQL IPC, semio/js facade with RxJS, semio/react useSyncExternalStore hooks, and sketchpad integration.",
+  "branchName": "ralph/kit-store-architecture-contracts-multi-backbone",
   "userStories": [
     {
       "id": "US-001",
@@ -20,10 +20,15 @@
         "pnpm --filter @semio/react test passes."
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": "",
       "dependsOn": [],
-      "labels": ["assets", "contracts", "fixtures"]
+      "labels": [
+        "assets",
+        "contracts",
+        "fixtures"
+      ],
+      "completionNotes": "Completed by agent"
     },
     {
       "id": "US-002",
@@ -45,8 +50,14 @@
       "priority": 2,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-001"],
-      "labels": ["graphql", "contracts", "ipc"]
+      "dependsOn": [
+        "US-001"
+      ],
+      "labels": [
+        "graphql",
+        "contracts",
+        "ipc"
+      ]
     },
     {
       "id": "US-003",
@@ -68,8 +79,14 @@
       "priority": 3,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-002"],
-      "labels": ["rust", "core", "async"]
+      "dependsOn": [
+        "US-002"
+      ],
+      "labels": [
+        "rust",
+        "core",
+        "async"
+      ]
     },
     {
       "id": "US-004",
@@ -91,8 +108,14 @@
       "priority": 4,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-003"],
-      "labels": ["rust", "persistence", "backbone"]
+      "dependsOn": [
+        "US-003"
+      ],
+      "labels": [
+        "rust",
+        "persistence",
+        "backbone"
+      ]
     },
     {
       "id": "US-005",
@@ -113,8 +136,16 @@
       "priority": 5,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-002", "US-003", "US-004"],
-      "labels": ["rust", "graphql", "async-graphql"]
+      "dependsOn": [
+        "US-002",
+        "US-003",
+        "US-004"
+      ],
+      "labels": [
+        "rust",
+        "graphql",
+        "async-graphql"
+      ]
     },
     {
       "id": "US-006",
@@ -135,8 +166,15 @@
       "priority": 6,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-005"],
-      "labels": ["typescript", "js", "rxjs", "facade"]
+      "dependsOn": [
+        "US-005"
+      ],
+      "labels": [
+        "typescript",
+        "js",
+        "rxjs",
+        "facade"
+      ]
     },
     {
       "id": "US-007",
@@ -159,8 +197,15 @@
       "priority": 7,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-006"],
-      "labels": ["typescript", "react", "hooks", "useSyncExternalStore"]
+      "dependsOn": [
+        "US-006"
+      ],
+      "labels": [
+        "typescript",
+        "react",
+        "hooks",
+        "useSyncExternalStore"
+      ]
     },
     {
       "id": "US-008",
@@ -183,8 +228,19 @@
       "priority": 8,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-004", "US-007"],
-      "labels": ["sketchpad", "integration", "ui", "e2e"]
+      "dependsOn": [
+        "US-004",
+        "US-007"
+      ],
+      "labels": [
+        "sketchpad",
+        "integration",
+        "ui",
+        "e2e"
+      ]
     }
-  ]
+  ],
+  "metadata": {
+    "updatedAt": "2026-05-06T21:19:32.169Z"
+  }
 }

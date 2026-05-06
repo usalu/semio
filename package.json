@@ -38,8 +38,10 @@
   "engines": {
     "node": ">=22.13.1"
   },
-  "packageManager": "npm@11.7.0",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
+    "typecheck": "pnpm --filter @semio/js run build && pnpm --filter @semio/react run build",
+    "lint": "eslint semio/js/index.ts semio/react/index.tsx --max-warnings 0",
     "install:native": "powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1",
     "git:setup": "node -e \"const cp=require('child_process');const fs=require('fs');const path=require('path');const root=process.cwd();const source='AGENTS.md';const aliases=['CLAUDE.md','GEMINI.md'];const run=(cmd,args)=>cp.execFileSync(cmd,args,{stdio:'inherit'});run('git',['config','--local','core.symlinks','true']);const repoClientCandidates=[path.join(root,'repo','client','client.exe'),path.join(root,'repo','client','client')];const repoClientPath=repoClientCandidates.find(candidate=>fs.existsSync(candidate));const repoClient=repoClientPath?{cmd:repoClientPath,args:['configure']}:{cmd:'go',args:['run','./repo/mcp','configure']};run(repoClient.cmd,repoClient.args);for(const alias of aliases){const aliasPath=path.join(root,alias);if(fs.existsSync(aliasPath))fs.rmSync(aliasPath,{force:true});try{fs.symlinkSync(source,aliasPath,'file');}catch(error){if(process.platform!=='win32')throw error;fs.linkSync(path.join(root,source),aliasPath);}}\"",
     "pre-commit:install": "pre-commit install",
@@ -84,6 +86,7 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.0.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^16.4.0",
     "jiti": "^2.4.2",
     "lint-staged": "^16.2.7",
@@ -129,6 +132,12 @@
   },
   "dependencies": {
     "esbuild": "^0.27.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@semio/assets": "workspace:*",
+      "@semio/js": "workspace:*"
+    }
   },
   "overrides": {
     "diff": "^8.0.3",

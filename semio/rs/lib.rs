@@ -374,13 +374,7 @@ pub mod kit {
 
         impl Default for Port {
             fn default() -> Self {
-                Self {
-                    id: Id::default(),
-                    owner_type: Weak::new(),
-                    code: RwLock::new(None),
-                    label: RwLock::new(None),
-                    order: RwLock::new(None),
-                }
+                Self { id: Id::default(), owner_type: Weak::new(), code: RwLock::new(None), label: RwLock::new(None), order: RwLock::new(None) }
             }
         }
 
@@ -744,19 +738,14 @@ pub mod kit {
             use crate::id::Id;
             use crate::meta::{Attribute, Prop};
 
-            #[derive(Clone, Copy, Debug, Eq, PartialEq, Enum)]
+            #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Enum)]
             #[graphql(name = "PieceConnectionKind")]
             pub enum PieceConnectionKind {
                 #[graphql(name = "FIXED")]
+                #[default]
                 Fixed,
                 #[graphql(name = "CONNECTED")]
                 Connected,
-            }
-
-            impl Default for PieceConnectionKind {
-                fn default() -> Self {
-                    Self::Fixed
-                }
             }
 
             pub struct Piece {
@@ -2833,6 +2822,8 @@ pub mod wasm_bridge {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
+    use std::collections::BTreeMap;
+    use std::path::Path;
     use std::sync::Arc;
 
     use async_graphql::{Request, Variables};
@@ -3000,6 +2991,94 @@ mod tests {
 
             assert_eq!(after_pieces, before_pieces + 1, "mutation not visible on re-read; before={} after={}", before_pieces, after_pieces);
         });
+    }
+
+    /// 🗃️ Deterministic fingerprint: design ids + sorted (u,v) centers — ignores auto piece ids.
+    async fn stable_projection_fingerprint(kit: &Arc<crate::kit::Kit>) -> String {
+        let designs = kit.designs.read().await;
+        let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+        for d in designs.iter() {
+            let mut pts: Vec<(f64, f64)> = Vec::new();
+            for p in d.pieces.read().await.iter() {
+                if let Some(pos) = *p.position.read().await {
+                    pts.push((pos.center.u, pos.center.v));
+                }
+            }
+            pts.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            by_design.insert(d.id.as_str().to_string(), pts);
+        }
+        let flattened: Vec<String> = by_design
+            .into_iter()
+            .map(|(id, pts)| {
+                let inner = pts.iter().map(|(u, v)| format!("{u:.9}:{v:.9}")).collect::<Vec<_>>().join(";");
+                format!("{id}@{inner}")
+            })
+            .collect();
+        crate::hash::h(&[flattened.join("|")])
+    }
+
+    #[test]
+    fn kit_store_golden_ops_replay_matches_expected_invariants() {
+        block_on(async {
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
+            let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
+            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse ops");
+            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+
+            let g = crate::vcs::Graph::new().await;
+            let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
+            for rec in ops_json["ops"].as_array().expect("ops") {
+                let kind = rec["kind"].as_str().expect("op kind");
+                let input = &rec["input"];
+                match kind {
+                    "createdFixedPiece" => {
+                        let design_id = crate::id::Id::from(input["designId"].as_str().expect("designId"));
+                        let blueprint_id = crate::id::Id::from(input["blueprintId"].as_str().expect("blueprintId"));
+                        let position: crate::geom::Position = serde_json::from_value(input["position"].clone()).expect("position serde");
+                        let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
+                        let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
+                        g.apply_create_fixed_piece(draft_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
+                    }
+                    other => panic!("unsupported golden op kind: {other}"),
+                }
+            }
+
+            let inv = &exp["invariants"];
+            let ds = g.the_kit.designs.read().await;
+            assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
+            let mut total = 0usize;
+            let mut centers: Vec<[f64; 2]> = Vec::new();
+            for d in ds.iter() {
+                for p in d.pieces.read().await.iter() {
+                    total += 1;
+                    let guard = p.position.read().await;
+                    let pos = guard.as_ref().expect("piece position");
+                    centers.push([pos.center.u, pos.center.v]);
+                }
+            }
+            centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));
+            assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
+            let expect_centers: Vec<[f64; 2]> = serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
+            assert_eq!(centers.len(), expect_centers.len(), "centers len");
+            for (got, want) in centers.iter().zip(expect_centers.iter()) {
+                assert!((got[0] - want[0]).abs() < 1e-9, "center u");
+                assert!((got[1] - want[1]).abs() < 1e-9, "center v");
+            }
+
+            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio.json");
+            assert_eq!(fp, exp_fp, "projectionFingerprint");
+        });
+    }
+
+    #[test]
+    fn kit_store_bundle_metabolism_new_has_contract_shape() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/metabolism.new.kit.semio.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
+        for k in ["kind", "schema", "rootSnapshot", "semanticOpLog", "histories", "backbonePointers"] {
+            assert!(v.get(k).is_some(), "metabolism.new.kit.semio.json missing `{k}`");
+        }
     }
 }
 
