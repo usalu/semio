@@ -1,0 +1,14 @@
+{
+  "id": "407e6201-d455-47d6-bab2-459be73d83de",
+  "status": "completed",
+  "startedAt": "2026-05-06T19:52:45.444Z",
+  "updatedAt": "2026-05-06T19:54:42.014Z",
+  "agentPlugin": "cursor",
+  "trackerPlugin": "json",
+  "currentIteration": 0,
+  "maxIterations": 10,
+  "totalTasks": 0,
+  "tasksCompleted": 0,
+  "cwd": "/workspaces/semio",
+  "endedAt": "2026-05-06T19:54:42.014Z"
+}
