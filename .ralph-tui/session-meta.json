@@ -1,8 +1,8 @@
 {
-  "id": "407e6201-d455-47d6-bab2-459be73d83de",
-  "status": "completed",
-  "startedAt": "2026-05-06T19:52:45.444Z",
-  "updatedAt": "2026-05-06T19:54:42.014Z",
+  "id": "57d47ae0-17ce-471c-99f4-23611d13b088",
+  "status": "failed",
+  "startedAt": "2026-05-06T20:06:14.276Z",
+  "updatedAt": "2026-05-06T20:06:14.300Z",
   "agentPlugin": "cursor",
   "trackerPlugin": "json",
   "currentIteration": 0,
@@ -10,5 +10,5 @@
   "totalTasks": 0,
   "tasksCompleted": 0,
   "cwd": "/workspaces/semio",
-  "endedAt": "2026-05-06T19:54:42.014Z"
+  "endedAt": "2026-05-06T20:06:14.300Z"
 }
