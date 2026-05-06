@@ -40,7 +40,7 @@
   },
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "typecheck": "pnpm --filter @semio/js run build && pnpm --filter @semio/react run build",
+    "typecheck": "pnpm --filter @semio/js run build && pnpm --filter @semio/react run build && pnpm exec nx build semio/graphql",
     "lint": "eslint semio/js/index.ts semio/react/index.tsx --max-warnings 0",
     "install:native": "powershell -NoProfile -ExecutionPolicy Bypass -File .devcontainer/install-native.ps1",
     "git:setup": "node -e \"const cp=require('child_process');const fs=require('fs');const path=require('path');const root=process.cwd();const source='AGENTS.md';const aliases=['CLAUDE.md','GEMINI.md'];const run=(cmd,args)=>cp.execFileSync(cmd,args,{stdio:'inherit'});run('git',['config','--local','core.symlinks','true']);const repoClientCandidates=[path.join(root,'repo','client','client.exe'),path.join(root,'repo','client','client')];const repoClientPath=repoClientCandidates.find(candidate=>fs.existsSync(candidate));const repoClient=repoClientPath?{cmd:repoClientPath,args:['configure']}:{cmd:'go',args:['run','./repo/mcp','configure']};run(repoClient.cmd,repoClient.args);for(const alias of aliases){const aliasPath=path.join(root,alias);if(fs.existsSync(aliasPath))fs.rmSync(aliasPath,{force:true});try{fs.symlinkSync(source,aliasPath,'file');}catch(error){if(process.platform!=='win32')throw error;fs.linkSync(path.join(root,source),aliasPath);}}\"",

@@ -1,0 +1,13 @@
+{
+  "id": "2026/05/06/graphql-kit-store-contract-us-002",
+  "title": "Finalize Semio GraphQL Contract For Kit Store",
+  "status": "closed",
+  "summary": "US-002: extended async-graphql schema in semio/rs, regenerated semio/graphql/schema.graphql, documented graphqlSurface on kit-store contract, root typecheck runs nx build semio/graphql.",
+  "files": [
+    "semio/rs/lib.rs",
+    "semio/graphql/schema.graphql",
+    "semio/assets/semio/kit-store.contract.semio.json",
+    "package.json",
+    ".ralph-tui/progress.md"
+  ]
+}

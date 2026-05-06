@@ -25,5 +25,8 @@
   },
   "bundleShape": {
     "requiredTopLevel": ["kind", "schema", "rootSnapshot", "semanticOpLog", "histories", "backbonePointers"]
+  },
+  "graphqlSurface": {
+    "summary": "🌐 `semio/graphql/schema.graphql` (SDL emitted from `semio/rs` async-graphql) exposes `Query.readableKitGraph(selector)` companion `wip`/`authoritative` shorthands, `Graph.{semanticOpLog,projectionFingerprint,rootSnapshotHash}`, lifecycle `semanticOpRecordIds` / `orderedTransactionIds` on checkpoint/draft/transaction/change, `Mutation.{*,backboneAttach,backboneDetach}` returning `Command` plus `SubscriptionRoot.commandSucceeded`, and `BackboneCapabilitySet` for dev JSON vs `.semio/` without SQL."
   }
 }

@@ -1,6 +1,6 @@
 //! 🦀 semio rust control plane — in-memory Arc-reference architecture.
 //!
-//! Every entity from `semio/graphql/target.schema.graphql` is one Rust struct shared as
+//! Every entity from the emitted `semio/graphql/schema.graphql` (see `crate::gql::sdl`) is one Rust struct shared as
 //! `Arc<Self>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take
 //! `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships,
 //! so a query like `wip.theKit.design(id).piece(id).position` only acquires the locks it actually
@@ -1498,6 +1498,18 @@ pub mod vcs {
         async fn backwards(&self) -> Vec<op::OperationKind> {
             self.backwards.read().await.clone()
         }
+
+        /// @emoji 🔗 Ordered semantic op record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
+        #[graphql(name = "forwardSemanticOpRecordIds")]
+        async fn forward_semantic_op_record_ids(&self) -> Vec<Id> {
+            Vec::new()
+        }
+
+        /// @emoji 🔗 Ordered semantic op record ids for backwards / inverse application when persisted separately from `OperationKind`.
+        #[graphql(name = "backwardSemanticOpRecordIds")]
+        async fn backward_semantic_op_record_ids(&self) -> Vec<Id> {
+            Vec::new()
+        }
     }
 
     #[derive(Clone, Union)]
@@ -1550,6 +1562,12 @@ pub mod vcs {
         }
         async fn changes(&self) -> Vec<Arc<Change>> {
             self.changes.read().await.clone()
+        }
+
+        /// @emoji 🔗 Transaction forwards op sequence as `semanticOpLog` ids (see `histories.transaction`).
+        #[graphql(name = "semanticOpRecordIds")]
+        async fn semantic_op_record_ids(&self) -> Vec<Id> {
+            Vec::new()
         }
     }
     //#endregion 💼 transaction
@@ -1653,6 +1671,12 @@ pub mod vcs {
         async fn can_redo(&self, _steps: i32) -> bool {
             !self.redo_transactions.read().await.is_empty()
         }
+
+        /// @emoji 🔗 Stable transaction open order on this draft (bundle `histories.draft`).
+        #[graphql(name = "orderedTransactionIds")]
+        async fn ordered_transaction_ids(&self) -> Vec<Id> {
+            self.transactions.read().await.iter().map(|t| t.id.clone()).collect()
+        }
     }
     //#endregion 📝 draft
 
@@ -1723,6 +1747,12 @@ pub mod vcs {
         #[graphql(name = "changeCount")]
         async fn change_count(&self) -> i32 {
             *self.change_count.read().await
+        }
+
+        /// @emoji 🔗 Checkpoint-scoped semantic op ids (`histories.checkpoint` wraps op log ids without duplicating kit trees).
+        #[graphql(name = "semanticOpRecordIds")]
+        async fn semantic_op_record_ids(&self) -> Vec<Id> {
+            Vec::new()
         }
     }
     //#endregion 🪧 checkpoint
@@ -1895,6 +1925,25 @@ pub mod vcs {
         }
         async fn releases(&self) -> Vec<Arc<Checkpoint>> {
             self.releases.read().await.clone()
+        }
+
+        /// @emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
+        #[graphql(name = "semanticOpLog")]
+        async fn semantic_op_log(&self, #[graphql(name = "limit")] limit: Option<i32>) -> Vec<op::SemanticOpRecord> {
+            let _ = limit;
+            Vec::new()
+        }
+
+        /// @emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.
+        #[graphql(name = "projectionFingerprint")]
+        async fn projection_fingerprint(&self) -> String {
+            h(&[self.id.as_str(), self.the_kit.id.as_str()])
+        }
+
+        /// @emoji 📸 Hash of the materialized root kit aggregate for this graph head.
+        #[graphql(name = "rootSnapshotHash")]
+        async fn root_snapshot_hash(&self) -> String {
+            self.the_kit.compute_hash().await
         }
     }
     //#endregion 🌐 graph
@@ -2090,16 +2139,56 @@ pub mod op {
     }
     //#endregion 🧾 inputs
 
+    //#region 🧭 graph workspace + backbone store kind (readable/writable selectors)
+    /// @emoji 🧭 Which materialized graph line a read or write targets (`wip` vs `authoritative`).
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
+    #[graphql(name = "KitGraphWorkspace")]
+    pub enum KitGraphWorkspace {
+        #[graphql(name = "WIP")]
+        Wip,
+        #[graphql(name = "AUTHORITATIVE")]
+        Authoritative,
+    }
+
+    /// @emoji 🗄️ Dev JSON bundle vs local `.semio/` backbone — capability surface without SQL leakage.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
+    #[graphql(name = "BackboneStoreKind")]
+    pub enum BackboneStoreKind {
+        #[graphql(name = "DEV_JSON")]
+        DevJson,
+        #[graphql(name = "LOCAL_DOT_SEMIO")]
+        LocalDotSemio,
+    }
+    //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
+
+    //#region 📜 semantic op record (kit bundle / op log contract)
+    /// @emoji 📜 One persisted semantic op: stable id, kind string, JSON payload, monotonic sequence index.
+    #[derive(Clone, Debug, async_graphql::SimpleObject)]
+    #[graphql(name = "SemanticOpRecord")]
+    pub struct SemanticOpRecord {
+        pub id: Id,
+        #[graphql(name = "opKind")]
+        pub op_kind: String,
+        #[graphql(name = "payloadJson")]
+        pub payload_json: String,
+        pub sequence: i32,
+    }
+    //#endregion 📜 semantic op record (kit bundle / op log contract)
+
     //#region 📦 diff (placeholder)
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct Diff {
         pub id: Id,
+        pub summary: Option<String>,
     }
 
     #[Object(name = "Diff")]
     impl Diff {
         async fn id(&self) -> Id {
             self.id.clone()
+        }
+        async fn summary(&self) -> Option<String> {
+            self.summary.clone()
         }
     }
     //#endregion 📦 diff
@@ -2365,6 +2454,8 @@ pub mod op {
         FixPiece { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id },
         RenameKit { request_id: Id, draft_id: Id, transaction_id: Id, name: String },
         ChangeDescription { request_id: Id, draft_id: Id, transaction_id: Id, description: String },
+        BackboneAttach { request_id: Id, connection_uri: String, store_kind: BackboneStoreKind },
+        BackboneDetach { request_id: Id, connection_uri: String },
     }
 
     impl Command {
@@ -2374,6 +2465,8 @@ pub mod op {
                 Command::FixPiece { request_id, .. } => request_id,
                 Command::RenameKit { request_id, .. } => request_id,
                 Command::ChangeDescription { request_id, .. } => request_id,
+                Command::BackboneAttach { request_id, .. } => request_id,
+                Command::BackboneDetach { request_id, .. } => request_id,
             }
         }
     }
@@ -2545,6 +2638,8 @@ pub mod worker {
                     Command::FixPiece { .. } => "fixPiece",
                     Command::RenameKit { .. } => "renameKit",
                     Command::ChangeDescription { .. } => "changeDescription",
+                    Command::BackboneAttach { .. } => "backboneAttach",
+                    Command::BackboneDetach { .. } => "backboneDetach",
                 };
                 self.bus.emit_event(Event::CommandSucceeded(CommandReceipt { request_id: request_id.clone(), kind: kind.to_string() })).await;
 
@@ -2569,6 +2664,10 @@ pub mod worker {
                     // Skeleton stubs — wired through commandSucceeded only.
                     Ok(())
                 }
+                Command::BackboneAttach { .. } | Command::BackboneDetach { .. } => {
+                    // Skeleton — backbone IO is backend-specific; commandAccepted + no OperationFailed is the contract.
+                    Ok(())
+                }
             }
         }
     }
@@ -2582,7 +2681,7 @@ pub mod gql {
     //! 🌐 GraphQL roots: Query / Mutation / Subscription + schema builder.
     use std::sync::Arc;
 
-    use async_graphql::{Context, EmptySubscription, Object, Schema, Subscription};
+    use async_graphql::{Context, EmptySubscription, InputObject, Object, Schema, SimpleObject, Subscription};
     use async_stream::stream;
     use futures_util::Stream;
 
@@ -2590,7 +2689,7 @@ pub mod gql {
     use crate::event::{Event, EventBus};
     use crate::geom::Position;
     use crate::id::Id;
-    use crate::op::{ChangedDescription, Command, CommandReceipt, CreatedFixedPiece, DraggedPiece, FixedPiece, OperationIface, RenamedKit};
+    use crate::op::{BackboneStoreKind, ChangedDescription, Command, CommandReceipt, CreatedFixedPiece, DraggedPiece, FixedPiece, KitGraphWorkspace, OperationIface, RenamedKit};
     use crate::vcs::{Conflict, Graph, Session};
     use crate::worker::ParentRuntime;
 
@@ -2599,6 +2698,44 @@ pub mod gql {
     }
     fn bus<'a>(ctx: &'a Context<'_>) -> async_graphql::Result<&'a Arc<EventBus>> {
         ctx.data::<Arc<EventBus>>()
+    }
+
+    async fn dispatch_cmd(rt: &Arc<ParentRuntime>, workspace: KitGraphWorkspace, cmd: Command) {
+        match workspace {
+            KitGraphWorkspace::Wip => {
+                rt.dispatch_wip(cmd).await;
+            }
+            KitGraphWorkspace::Authoritative => {
+                rt.dispatch_auth(cmd).await;
+            }
+        }
+    }
+
+    /// @emoji 🧭 Identifies which readable projection of the kit store is queried (workspace + optional checkpoint/draft/tx anchors).
+    #[derive(InputObject)]
+    #[graphql(name = "ReadableGraphSelector")]
+    pub struct ReadableGraphSelector {
+        pub workspace: KitGraphWorkspace,
+        #[graphql(name = "checkpointId")]
+        pub checkpoint_id: Option<Id>,
+        #[graphql(name = "draftId")]
+        pub draft_id: Option<Id>,
+        #[graphql(name = "transactionId")]
+        pub transaction_id: Option<Id>,
+    }
+
+    /// @emoji 🗄️ Declared backbone capabilities for dev JSON vs local `.semio/` stores (no SQL surface).
+    #[derive(Clone, SimpleObject)]
+    #[graphql(name = "BackboneCapabilitySet")]
+    pub struct BackboneCapabilitySet {
+        #[graphql(name = "supportsDevJson")]
+        pub supports_dev_json: bool,
+        #[graphql(name = "supportsLocalDotSemio")]
+        pub supports_local_dot_semio: bool,
+        #[graphql(name = "supportsAttach")]
+        pub supports_attach: bool,
+        #[graphql(name = "supportsDetach")]
+        pub supports_detach: bool,
     }
 
     pub struct Query;
@@ -2629,6 +2766,25 @@ pub mod gql {
         async fn conflicts(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Arc<Conflict>>> {
             Ok(rt(ctx)?.conflicts.read().await.clone())
         }
+
+        /// @emoji 🧭 Primary read entrypoint: explicit kit-store projection (`checkpointId` / `draftId`+`transactionId` reserved for materialized tips).
+        #[graphql(name = "readableKitGraph")]
+        async fn readable_kit_graph(&self, ctx: &Context<'_>, selector: ReadableGraphSelector) -> async_graphql::Result<Arc<Graph>> {
+            let rt = rt(ctx)?;
+            let g = match selector.workspace {
+                KitGraphWorkspace::Wip => rt.wip_graph.clone(),
+                KitGraphWorkspace::Authoritative => rt.auth_graph.clone(),
+            };
+            let _ = (&selector.checkpoint_id, &selector.draft_id, &selector.transaction_id);
+            Ok(g)
+        }
+
+        /// @emoji 🧭 Backbone capability discovery for this process (integrators choose `BackboneStoreKind` without SQL).
+        #[graphql(name = "backboneCapabilities")]
+        async fn backbone_capabilities(&self, selector: ReadableGraphSelector) -> BackboneCapabilitySet {
+            let _ = selector;
+            BackboneCapabilitySet { supports_dev_json: true, supports_local_dot_semio: true, supports_attach: true, supports_detach: true }
+        }
     }
 
     pub struct Mutation;
@@ -2636,54 +2792,91 @@ pub mod gql {
     #[Object]
     impl Mutation {
         #[graphql(name = "renameKit")]
-        async fn rename_kit(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, name: String) -> async_graphql::Result<Id> {
+        async fn rename_kit(&self, ctx: &Context<'_>, workspace: KitGraphWorkspace, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, name: String) -> async_graphql::Result<CommandReceipt> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
-            rt.dispatch_wip(Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name }).await;
-            Ok(request_id)
+            let cmd = Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "renameKit".to_string() })
         }
 
         #[graphql(name = "changeDescription")]
-        async fn change_description(&self, ctx: &Context<'_>, #[graphql(name = "draftId")] draft_id: Id, #[graphql(name = "transactionId")] transaction_id: Id, description: String) -> async_graphql::Result<Id> {
+        async fn change_description(
+            &self,
+            ctx: &Context<'_>,
+            workspace: KitGraphWorkspace,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            description: String,
+        ) -> async_graphql::Result<CommandReceipt> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
-            rt.dispatch_wip(Command::ChangeDescription { request_id: request_id.clone(), draft_id, transaction_id, description }).await;
-            Ok(request_id)
+            let cmd = Command::ChangeDescription { request_id: request_id.clone(), draft_id, transaction_id, description };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "changeDescription".to_string() })
         }
 
         #[graphql(name = "createFixedPiece")]
         async fn create_fixed_piece(
             &self,
             ctx: &Context<'_>,
+            workspace: KitGraphWorkspace,
             #[graphql(name = "draftId")] draft_id: Id,
             #[graphql(name = "transactionId")] transaction_id: Id,
             #[graphql(name = "designId")] design_id: Id,
             position: Position,
             name: Option<String>,
             description: Option<String>,
-        ) -> async_graphql::Result<Id> {
+        ) -> async_graphql::Result<CommandReceipt> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
-            // Skeleton: the GraphQL `createFixedPiece` does not yet take an explicit blueprint id;
-            // we mint one so the piece always has a blueprint reference. A follow-up ticket adds the arg.
             let blueprint_id = Id::new().await;
-            rt.dispatch_wip(Command::CreateFixedPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, position, name, description }).await;
-            Ok(request_id)
+            let cmd = Command::CreateFixedPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, blueprint_id, position, name, description };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "createFixedPiece".to_string() })
         }
 
         #[graphql(name = "fixPiece")]
         async fn fix_piece(
             &self,
             ctx: &Context<'_>,
+            workspace: KitGraphWorkspace,
             #[graphql(name = "draftId")] draft_id: Id,
             #[graphql(name = "transactionId")] transaction_id: Id,
             #[graphql(name = "designId")] design_id: Id,
             #[graphql(name = "pieceId")] piece_id: Id,
-        ) -> async_graphql::Result<Id> {
+        ) -> async_graphql::Result<CommandReceipt> {
             let rt = rt(ctx)?;
             let request_id = Id::new().await;
-            rt.dispatch_wip(Command::FixPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, piece_id }).await;
-            Ok(request_id)
+            let cmd = Command::FixPiece { request_id: request_id.clone(), draft_id, transaction_id, design_id, piece_id };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "fixPiece".to_string() })
+        }
+
+        /// @emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); async completion via `commandSucceeded`.
+        #[graphql(name = "backboneAttach")]
+        async fn backbone_attach(
+            &self,
+            ctx: &Context<'_>,
+            workspace: KitGraphWorkspace,
+            #[graphql(name = "connectionUri")] connection_uri: String,
+            #[graphql(name = "storeKind")] store_kind: BackboneStoreKind,
+        ) -> async_graphql::Result<CommandReceipt> {
+            let rt = rt(ctx)?;
+            let request_id = Id::new().await;
+            let cmd = Command::BackboneAttach { request_id: request_id.clone(), connection_uri, store_kind };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "backboneAttach".to_string() })
+        }
+
+        /// @emoji 🔗 Detach a backbone connection; async completion via `commandSucceeded`.
+        #[graphql(name = "backboneDetach")]
+        async fn backbone_detach(&self, ctx: &Context<'_>, workspace: KitGraphWorkspace, #[graphql(name = "connectionUri")] connection_uri: String) -> async_graphql::Result<CommandReceipt> {
+            let rt = rt(ctx)?;
+            let request_id = Id::new().await;
+            let cmd = Command::BackboneDetach { request_id: request_id.clone(), connection_uri };
+            dispatch_cmd(rt, workspace, cmd).await;
+            Ok(CommandReceipt { request_id, kind: "backboneDetach".to_string() })
         }
     }
 
@@ -2843,6 +3036,7 @@ mod tests {
 
     fn create_fixed_piece_vars(design_id: &str) -> async_graphql::Value {
         async_graphql::value!({
+            "workspace": "WIP",
             "draftId": "d1",
             "txId": "t1",
             "designId": design_id,
@@ -2851,8 +3045,11 @@ mod tests {
     }
 
     const CREATE_FIXED_PIECE: &str = r#"
-        mutation($draftId: ID!, $txId: ID!, $designId: ID!, $position: PositionInput!) {
-            createFixedPiece(draftId: $draftId, transactionId: $txId, designId: $designId, position: $position)
+        mutation($workspace: KitGraphWorkspace!, $draftId: ID!, $txId: ID!, $designId: ID!, $position: PositionInput!) {
+            createFixedPiece(workspace: $workspace, draftId: $draftId, transactionId: $txId, designId: $designId, position: $position) {
+                requestId
+                kind
+            }
         }
     "#;
 
@@ -2891,6 +3088,12 @@ mod tests {
             "type CreatedFixedPiece",
             "interface Operation",
             "scalar Timestamp",
+            "readableKitGraph",
+            "backboneCapabilities",
+            "KitGraphWorkspace",
+            "SemanticOpRecord",
+            "backboneAttach",
+            "BackboneCapabilitySet",
         ] {
             assert!(sdl.contains(t), "schema missing `{}`", t);
         }

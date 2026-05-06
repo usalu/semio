@@ -25,6 +25,24 @@ type Author {
 	rank: Int
 }
 
+"""
+@emoji 🗄️ Declared backbone capabilities for dev JSON vs local `.semio/` stores (no SQL surface).
+"""
+type BackboneCapabilitySet {
+	supportsDevJson: Boolean!
+	supportsLocalDotSemio: Boolean!
+	supportsAttach: Boolean!
+	supportsDetach: Boolean!
+}
+
+"""
+@emoji 🗄️ Dev JSON bundle vs local `.semio/` backbone — capability surface without SQL leakage.
+"""
+enum BackboneStoreKind {
+	DEV_JSON
+	LOCAL_DOT_SEMIO
+}
+
 type Benchmark {
 	id: Id!
 	name: String!
@@ -45,6 +63,14 @@ type Change {
 	owner: ChangeOwner!
 	forwards: [OperationKind!]!
 	backwards: [OperationKind!]!
+	"""
+	@emoji 🔗 Ordered semantic op record ids constituting the forwards side (bundle `semanticOpLog` ids) when persisted.
+	"""
+	forwardSemanticOpRecordIds: [Id!]!
+	"""
+	@emoji 🔗 Ordered semantic op record ids for backwards / inverse application when persisted separately from `OperationKind`.
+	"""
+	backwardSemanticOpRecordIds: [Id!]!
 }
 
 union ChangeOwner = Transaction | Draft | Checkpoint
@@ -72,6 +98,10 @@ type Checkpoint {
 	message: String
 	isRelease: Boolean!
 	changeCount: Int!
+	"""
+	@emoji 🔗 Checkpoint-scoped semantic op ids (`histories.checkpoint` wraps op log ids without duplicating kit trees).
+	"""
+	semanticOpRecordIds: [Id!]!
 }
 
 """
@@ -184,6 +214,7 @@ type Design {
 
 type Diff {
 	id: Id!
+	summary: String
 }
 
 type Draft {
@@ -198,6 +229,10 @@ type Draft {
 	changes: [Change!]!
 	canUndo(steps: Int!): Boolean!
 	canRedo(steps: Int!): Boolean!
+	"""
+	@emoji 🔗 Stable transaction open order on this draft (bundle `histories.draft`).
+	"""
+	orderedTransactionIds: [Id!]!
 }
 
 type DraggedPiece implements Operation {
@@ -263,6 +298,18 @@ type Graph {
 	checkpoints: [Checkpoint!]!
 	release(id: Id!): Checkpoint
 	releases: [Checkpoint!]!
+	"""
+	@emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
+	"""
+	semanticOpLog(limit: Int): [SemanticOpRecord!]!
+	"""
+	@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.
+	"""
+	projectionFingerprint: String!
+	"""
+	@emoji 📸 Hash of the materialized root kit aggregate for this graph head.
+	"""
+	rootSnapshotHash: String!
 }
 
 type Group {
@@ -312,6 +359,14 @@ type Kit {
 	stats: [Stat!]!
 }
 
+"""
+@emoji 🧭 Which materialized graph line a read or write targets (`wip` vs `authoritative`).
+"""
+enum KitGraphWorkspace {
+	WIP
+	AUTHORITATIVE
+}
+
 type Layer {
 	id: Id!
 	name: String!
@@ -327,10 +382,18 @@ type Location {
 }
 
 type Mutation {
-	renameKit(draftId: Id!, transactionId: Id!, name: String!): Id!
-	changeDescription(draftId: Id!, transactionId: Id!, description: String!): Id!
-	createFixedPiece(draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Id!
-	fixPiece(draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Id!
+	renameKit(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, name: String!): Command!
+	changeDescription(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, description: String!): Command!
+	createFixedPiece(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, designId: Id!, position: PositionInput!, name: String, description: String): Command!
+	fixPiece(workspace: KitGraphWorkspace!, draftId: Id!, transactionId: Id!, designId: Id!, pieceId: Id!): Command!
+	"""
+	@emoji 🔗 Attach a backbone store handle (JSON dev bundle or local `.semio/`); async completion via `commandSucceeded`.
+	"""
+	backboneAttach(workspace: KitGraphWorkspace!, connectionUri: String!, storeKind: BackboneStoreKind!): Command!
+	"""
+	@emoji 🔗 Detach a backbone connection; async completion via `commandSucceeded`.
+	"""
+	backboneDetach(workspace: KitGraphWorkspace!, connectionUri: String!): Command!
 }
 
 type Offset {
@@ -446,6 +509,24 @@ type Query {
 	wip: Graph!
 	authoritative: Graph
 	conflicts: [Conflict!]!
+	"""
+	@emoji 🧭 Primary read entrypoint: explicit kit-store projection (`checkpointId` / `draftId`+`transactionId` reserved for materialized tips).
+	"""
+	readableKitGraph(selector: ReadableGraphSelector!): Graph!
+	"""
+	@emoji 🧭 Backbone capability discovery for this process (integrators choose `BackboneStoreKind` without SQL).
+	"""
+	backboneCapabilities(selector: ReadableGraphSelector!): BackboneCapabilitySet!
+}
+
+"""
+@emoji 🧭 Identifies which readable projection of the kit store is queried (workspace + optional checkpoint/draft/tx anchors).
+"""
+input ReadableGraphSelector {
+	workspace: KitGraphWorkspace!
+	checkpointId: Id
+	draftId: Id
+	transactionId: Id
 }
 
 type RenamedKit implements Operation {
@@ -471,6 +552,16 @@ type Representation {
 	tags: [Tag!]!
 	qualities: [Quality!]!
 	attributes: [Attribute!]!
+}
+
+"""
+@emoji 📜 One persisted semantic op: stable id, kind string, JSON payload, monotonic sequence index.
+"""
+type SemanticOpRecord {
+	id: Id!
+	opKind: String!
+	payloadJson: String!
+	sequence: Int!
 }
 
 type Session {
@@ -520,6 +611,10 @@ type Transaction {
 	hash: String!
 	owner: Draft
 	changes: [Change!]!
+	"""
+	@emoji 🔗 Transaction forwards op sequence as `semanticOpLog` ids (see `histories.transaction`).
+	"""
+	semanticOpRecordIds: [Id!]!
 }
 
 type Type {
