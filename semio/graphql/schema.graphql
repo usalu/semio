@@ -300,14 +300,17 @@ type Graph {
 	releases: [Checkpoint!]!
 	"""
 	@emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
+	**Memoization:** none — each field resolution recomputes from current graph/backbone state once wired. **Invalidate:** backbone attach/replay, bundle tips, or any writer appending to the log (no stale cached slice).
 	"""
 	semanticOpLog(limit: Int): [SemanticOpRecord!]!
 	"""
 	@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
+	**Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic op or mutation changing piece geometry on this graph line.
 	"""
 	projectionFingerprint: String!
 	"""
 	@emoji 📸 Hash of the materialized root kit aggregate for this graph head.
+	**Memoization:** none — recomputed per request from the current [`Kit`] graph. **Invalidate:** any structural or identity change the kit hash subscribes to (mutations, replay).
 	"""
 	rootSnapshotHash: String!
 }
@@ -357,6 +360,10 @@ type Kit {
 	props: [Prop!]!
 	attributes: [Attribute!]!
 	stats: [Stat!]!
+	"""
+	@emoji 📸 JSON string projection of `@semio/js` KitFullDto (camelCase ids + ordered pieces); WASM + Node pull this via GraphQL (`wip.theKit`).
+	"""
+	fullSnapshot: String!
 }
 
 """

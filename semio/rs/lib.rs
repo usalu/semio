@@ -182,8 +182,10 @@ pub mod geom {
     pub struct Plane {
         pub origin: Point,
         #[graphql(name = "xAxis")]
+        #[serde(alias = "xAxis")]
         pub x_axis: Vector,
         #[graphql(name = "yAxis")]
+        #[serde(alias = "yAxis")]
         pub y_axis: Vector,
     }
 
@@ -602,6 +604,11 @@ pub mod kit {
                 Arc::new(Self { id: Id::new().await, owner_kit, name: RwLock::new(name), ..Default::default() })
             }
 
+            /// 🧾 Insert a workspace kind with caller-controlled external [`Id`] (wasm / JSON snapshot hydration).
+            pub async fn new_with_external_id(owner_kit: Weak<crate::kit::Kit>, id: Id, name: String) -> Arc<Self> {
+                Arc::new(Self { id, owner_kit, name: RwLock::new(name), ..Default::default() })
+            }
+
             pub async fn compute_hash(&self) -> String {
                 let name = self.name.read().await;
                 let desc = self.description.read().await;
@@ -796,6 +803,11 @@ pub mod kit {
             impl Piece {
                 pub async fn new_fixed(owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
                     Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(position)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
+                }
+
+                /// 🧾 Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
+                pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: Position) -> Arc<Self> {
+                    Arc::new(Self { id, owner_design, position: RwLock::new(Some(position)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
                 pub async fn set_name(&self, name: Option<String>) {
@@ -1144,6 +1156,49 @@ pub mod kit {
             pub async fn connection_by_id(&self, id: &Id) -> Option<Arc<connection::Connection>> {
                 self.connections.read().await.iter().find(|c| &c.id == id).cloned()
             }
+
+            pub async fn hydrate_pieces_from_snapshot_json(des: &Arc<Self>, kit: &Arc<crate::kit::Kit>, d_json: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+                {
+                    let mut pcs = des.pieces.write().await;
+                    pcs.clear();
+                }
+                *des.piece_id_to_index.write().await = HashMap::new();
+                let plist = d_json.get("pieces").and_then(|p| p.as_array()).cloned().unwrap_or_default();
+                let owner_des = Arc::downgrade(des);
+                for pj in plist {
+                    let pid = pj
+                        .get("id")
+                        .and_then(|x| x.as_str())
+                        .ok_or_else(|| crate::error::SemioError::invalid("design piece missing id"))?;
+                    let type_id_raw = pj
+                        .get("type")
+                        .and_then(|t| t.get("id"))
+                        .and_then(|x| x.as_str())
+                        .ok_or_else(|| crate::error::SemioError::invalid("design piece missing type.id"))?;
+                    let ty = kit
+                        .types
+                        .read()
+                        .await
+                        .iter()
+                        .find(|t| t.id.as_str() == type_id_raw)
+                        .cloned()
+                        .ok_or_else(|| crate::error::SemioError::not_found("Type", type_id_raw))?;
+                    let plane_val = pj.get("plane").cloned().unwrap_or_else(|| serde_json::json!({}));
+                    let center_val = pj.get("center").cloned().unwrap_or_else(|| serde_json::json!({"u":0.0,"v":0.0}));
+                    let position: crate::geom::Position = serde_json::from_value(serde_json::json!({"plane": plane_val, "center": center_val}))
+                        .map_err(|e| crate::error::SemioError::invalid(format!("piece position serde: {}", e)))?;
+                    let scale = pj.get("scale").and_then(|s| s.as_f64()).unwrap_or(1.0);
+                    let nm_opt = pj.get("name").and_then(|x| x.as_str());
+                    let bp = crate::kit::r#type::Blueprint::Type(ty.clone());
+                    let piece = piece::Piece::new_fixed_with_external_id(pid.into(), owner_des.clone(), bp, position).await;
+                    if let Some(nm) = nm_opt {
+                        piece.set_name(Some(nm.to_string())).await;
+                    }
+                    *piece.scale.write().await = Some(scale);
+                    let _ = des.insert_piece(piece).await;
+                }
+                Ok(())
+            }
         }
 
         #[Object(name = "Design")]
@@ -1276,6 +1331,8 @@ pub mod kit {
         pub props: RwLock<Vec<Prop>>,
         pub attributes: RwLock<Vec<Attribute>>,
         pub stats: RwLock<Vec<Stat>>,
+        /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@semio/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
+        pub snapshot_external_kit_id: RwLock<Option<Id>>,
     }
 
     impl Default for Kit {
@@ -1307,6 +1364,7 @@ pub mod kit {
                 props: RwLock::new(Vec::new()),
                 attributes: RwLock::new(Vec::new()),
                 stats: RwLock::new(Vec::new()),
+                snapshot_external_kit_id: RwLock::new(None),
             }
         }
     }
@@ -1320,9 +1378,14 @@ pub mod kit {
             Arc::new(Self { id: Id::new_sync(), owner_graph, name: RwLock::new(name), ..Default::default() })
         }
 
+        pub async fn workspace_kit_id(&self) -> Id {
+            self.snapshot_external_kit_id.read().await.clone().unwrap_or_else(|| self.id.clone())
+        }
+
         pub async fn compute_hash(&self) -> String {
             let name = self.name.read().await;
-            h(&[self.id.as_str(), name.as_str()])
+            let kid = self.workspace_kit_id().await;
+            h(&[kid.as_str(), name.as_str()])
         }
 
         pub async fn design_by_id(&self, id: &Id) -> Option<Arc<design::Design>> {
@@ -1369,12 +1432,143 @@ pub mod kit {
                 design.piece_id_to_index.write().await.clear();
             }
         }
+
+        /// 🧾 Overlays layout + metadata from `@semio/js` `KitFullDto`-style JSON (`types`, `designs`, `pieces`); control plane authoritative copy stays in-process.
+        pub async fn hydrate_from_kit_full_snapshot_json(self: &Arc<Self>, dto: &serde_json::Value) -> Result<(), crate::error::SemioError> {
+            if let Some(n) = dto.get("name").and_then(|v| v.as_str()) {
+                *self.name.write().await = n.to_string();
+            }
+            if let Some(id_override) = dto.get("id").and_then(|v| v.as_str()) {
+                *self.snapshot_external_kit_id.write().await = Some(Id::from(id_override));
+            } else {
+                *self.snapshot_external_kit_id.write().await = None;
+            }
+
+            {
+                let mut tys = self.types.write().await;
+                tys.clear();
+                let types_arr = dto.get("types").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                let owner = Arc::downgrade(self);
+                for t in &types_arr {
+                    let Some(ts) = t.get("id").and_then(|x| x.as_str()) else { continue };
+                    let nm = t.get("name").and_then(|x| x.as_str()).unwrap_or("");
+                    let row = crate::kit::r#type::Type::new_with_external_id(owner.clone(), ts.into(), nm.to_string()).await;
+                    tys.push(row);
+                }
+            }
+
+            let owner = Arc::downgrade(self);
+            let design_arr_owned = dto
+                .get("designs")
+                .and_then(|v| v.as_array())
+                .cloned()
+                .unwrap_or_default();
+            let mut appended: Vec<Arc<design::Design>> = Vec::new();
+            for d in &design_arr_owned {
+                let Some(ds) = d.get("id").and_then(|x| x.as_str()) else { continue };
+                let dn = d.get("name").and_then(|x| x.as_str()).unwrap_or(ds);
+                let des = crate::kit::design::Design::with_id(owner.clone(), ds.into(), dn.to_string()).await;
+                design::Design::hydrate_pieces_from_snapshot_json(&des, self, d).await?;
+                appended.push(des);
+            }
+            {
+                let mut designs_slot = self.designs.write().await;
+                let mut ixmap = self.design_id_to_index.write().await;
+                designs_slot.clear();
+                ixmap.clear();
+                for des in appended {
+                    let did = des.id.clone();
+                    let idx = designs_slot.len();
+                    designs_slot.push(des);
+                    ixmap.insert(did, idx);
+                }
+            }
+
+            Ok(())
+        }
+
+        /// 🧾 Canonical JSON snapshot consumed by `@semio/js` `fullSnapshot` (single RS truth projected to DTO-shaped JSON).
+        pub async fn kit_full_snapshot_value(&self) -> serde_json::Value {
+            let id = self.workspace_kit_id().await;
+            let name = self.name.read().await.clone();
+            let created = self.created.read().await.as_ref().map(|t| t.0.clone());
+            let updated = self.updated.read().await.as_ref().map(|t| t.0.clone());
+
+            let types = {
+                let tys = self.types.read().await;
+                let mut out = Vec::<serde_json::Value>::with_capacity(tys.len());
+                for t in tys.iter() {
+                    let tid = t.id.clone();
+                    let nm = t.name.read().await.clone();
+                    out.push(serde_json::json!({"id": tid.as_str(), "name": nm, "connectors": []}));
+                }
+                serde_json::Value::Array(out)
+            };
+
+            let mut designs_arr = Vec::<serde_json::Value>::new();
+            {
+                let dz = self.designs.read().await;
+                for d in dz.iter() {
+                    let mut pieces_arr = Vec::<serde_json::Value>::new();
+                    let plist = d.pieces.read().await;
+                    for p in plist.iter() {
+                        let pos = (*p.position.read().await).unwrap_or_default();
+                        let tid = match p.blueprint.read().await.clone() {
+                            crate::kit::r#type::Blueprint::Type(ty) => ty.id.clone(),
+                            crate::kit::r#type::Blueprint::Design(_) => continue,
+                        };
+                        let pname = (*p.name.read().await).clone().unwrap_or_default();
+                        let pl = pos.plane;
+                        pieces_arr.push(serde_json::json!({
+                          "id": p.id.as_str(),
+                          "name": pname,
+                          "type": { "id": tid.as_str() },
+                          "plane": {
+                            "origin": { "x": pl.origin.x, "y": pl.origin.y, "z": pl.origin.z },
+                            "xAxis": { "x": pl.x_axis.x, "y": pl.x_axis.y, "z": pl.x_axis.z },
+                            "yAxis": { "x": pl.y_axis.x, "y": pl.y_axis.y, "z": pl.y_axis.z },
+                          },
+                          "center": serde_json::to_value(pos.center).unwrap_or_default(),
+                          "scale": p.scale.read().await.unwrap_or(1.0),
+                          "color": "#000000",
+                          "props": [],
+                          "attributes": [],
+                        }));
+                    }
+                    designs_arr.push(serde_json::json!({
+                       "id": d.id.as_str(),
+                       "name": d.name.read().await.clone(),
+                       "pieces": pieces_arr,
+                       "connections": [],
+                    }));
+                }
+            }
+
+            serde_json::json!({
+                "id": id.as_str(),
+                "name": name,
+                "createdAt": created.unwrap_or_else(|| "2020-01-01T00:00:00.000Z".to_string()),
+                "updatedAt": updated.unwrap_or_else(|| "2020-01-01T00:00:00.000Z".to_string()),
+                "types": types,
+                "designs": designs_arr,
+                "authors": [],
+                "concepts": [],
+                "qualities": [],
+                "tags": [],
+                "props": [],
+                "folders": [],
+                "files": [],
+                "layers": [],
+                "stats": [],
+                "groups": [],
+            })
+        }
     }
 
     #[Object(name = "Kit")]
     impl Kit {
         async fn id(&self) -> Id {
-            self.id.clone()
+            self.workspace_kit_id().await
         }
         async fn hash(&self) -> String {
             self.compute_hash().await
@@ -1467,6 +1661,12 @@ pub mod kit {
         }
         async fn stats(&self) -> Vec<Stat> {
             self.stats.read().await.clone()
+        }
+
+        /// @emoji 📸 JSON string projection of `@semio/js` KitFullDto (camelCase ids + ordered pieces); WASM + Node pull this via GraphQL (`wip.theKit`).
+        #[graphql(name = "fullSnapshot")]
+        async fn full_snapshot(&self) -> String {
+            serde_json::to_string(&self.kit_full_snapshot_value().await).unwrap_or_else(|_| "{}".to_string())
         }
     }
     //#endregion 📦 kit
@@ -1895,6 +2095,19 @@ pub mod vcs {
                 let kit = crate::kit::Kit::new_sync(weak_self.clone(), "the kit".to_string());
                 Self { id, owner_session: Weak::new(), the_kit: kit, alternatives: RwLock::new(Vec::new()), checkpoints: RwLock::new(Vec::new()), releases: RwLock::new(Vec::new()), drafts: RwLock::new(Vec::new()) }
             })
+        }
+
+        /// 🛰️ WIP bootstrap for `@semio/js` WASM: builds an empty typed shell then overlays [`crate::kit::Kit::hydrate_from_kit_full_snapshot_json`].
+        pub async fn new_overlay_from_kit_json(dto_json: serde_json::Value) -> Result<Arc<Self>, SemioError> {
+            let g = Self::new().await;
+            g.the_kit.hydrate_from_kit_full_snapshot_json(&dto_json).await?;
+            if let Some(c) = dto_json.get("createdAt").and_then(|v| v.as_str()) {
+                *g.the_kit.created.write().await = Some(crate::timestamp::Timestamp(c.to_string()));
+            }
+            if let Some(u) = dto_json.get("updatedAt").and_then(|v| v.as_str()) {
+                *g.the_kit.updated.write().await = Some(crate::timestamp::Timestamp(u.to_string()));
+            }
+            Ok(g)
         }
 
         pub async fn compute_hash(&self) -> String {
@@ -3143,6 +3356,22 @@ pub mod worker {
             Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions: RwLock::new(Vec::new()), conflicts: RwLock::new(Vec::new()) })
         }
 
+        /// 🛰️ WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio/js` kit JSON snapshot; authoritative line stays mint-empty.
+        pub async fn spawn_wip_overlay_from_kit_dto(dto: serde_json::Value) -> Result<Arc<Self>, crate::error::SemioError> {
+            let bus = EventBus::new(1024);
+
+            let wip_graph = Graph::new_overlay_from_kit_json(dto).await?;
+            let auth_graph = Graph::new().await;
+
+            let (wip_tx, wip_rx) = async_channel::unbounded::<Command>();
+            let (auth_tx, auth_rx) = async_channel::unbounded::<Command>();
+
+            spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
+            spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
+
+            Ok(Arc::new(Self { bus, wip: ChildPort { inbound: wip_tx }, auth: ChildPort { inbound: auth_tx }, wip_graph, auth_graph, sessions: RwLock::new(Vec::new()), conflicts: RwLock::new(Vec::new()) }))
+        }
+
         pub async fn dispatch_wip(&self, cmd: Command) -> Id {
             let id = cmd.request_id().clone();
             self.wip.send(cmd).await;
@@ -3519,10 +3748,14 @@ pub mod gql {
     }
 
     /// 🧱 Build the schema with the parent runtime + event bus injected as data.
-    pub async fn build_schema() -> Schema<Query, Mutation, SubscriptionRoot> {
-        let rt = ParentRuntime::spawn().await;
+    pub async fn build_schema_for(rt: Arc<ParentRuntime>) -> Schema<Query, Mutation, SubscriptionRoot> {
         let bus = rt.bus.clone();
         Schema::build(Query, Mutation, SubscriptionRoot).data(rt).data(bus).finish()
+    }
+
+    /// 🧱 Default schema for tests/native (fresh empty runtime pair).
+    pub async fn build_schema() -> Schema<Query, Mutation, SubscriptionRoot> {
+        build_schema_for(ParentRuntime::spawn().await).await
     }
 
     /// 📜 Convenience SDL for tests / tooling.
@@ -3542,30 +3775,145 @@ pub mod gql {
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm_bridge {
-    //! 🔌 Wires `ChildPort` ↔ `web_sys::Worker` postMessage on wasm32 targets.
+    //! 🌐 `KitStoreHandle`: GraphQL executor + subscriptions over seeded [`crate::worker::ParentRuntime`] (WASM build).
     use std::sync::Arc;
+    use std::sync::Mutex;
 
+    use async_graphql::{Request, Schema, Variables};
+    use serde::Deserialize;
     use wasm_bindgen::prelude::*;
+    use wasm_bindgen_futures::future_to_promise;
 
+    use crate::gql::{build_schema_for, Mutation, Query, SubscriptionRoot};
     use crate::worker::ParentRuntime;
+
+    type AppSchema = Schema<Query, Mutation, SubscriptionRoot>;
+
+    #[derive(Deserialize)]
+    struct WireReq {
+        query: String,
+        #[serde(rename = "operationName")]
+        #[allow(dead_code)]
+        operation_name: Option<String>,
+        variables: Option<serde_json::Value>,
+    }
+
+    fn request_from_wire(s: &str) -> Result<Request, JsValue> {
+        let w: WireReq = serde_json::from_str(s).map_err(|e| JsValue::from_str(&format!("graphql json: {}", e)))?;
+        let mut r = Request::new(w.query);
+        if let Some(v) = w.variables {
+            let vars = Variables::from_json(v);
+            r = r.variables(vars);
+        }
+        Ok(r)
+    }
 
     #[wasm_bindgen(start)]
     pub fn _start() {
         console_error_panic_hook::set_once();
     }
 
-    /// 🛰️ Boot the parent runtime inside the current (parent) web worker.
+    /// 🛰️ Boot stub (workers may call explicitly); runtime is rooted by [`KitStoreHandle`].
+    #[wasm_bindgen(js_name = boot)]
+    pub fn boot() {}
+
+    /// 📜 Schema SDL for tooling (`schema_sdl` export name matches existing pkg consumers).
     #[wasm_bindgen]
-    pub async fn parent_boot() -> JsValue {
-        let rt: Arc<ParentRuntime> = ParentRuntime::spawn().await;
-        let _ = rt;
-        JsValue::TRUE
+    pub fn schema_sdl() -> js_sys::Promise {
+        future_to_promise(async move {
+            let sdl = crate::gql::build_schema().await.sdl();
+            Ok(JsValue::from_str(&sdl))
+        })
     }
 
-    /// 📜 Schema SDL for tooling.
+    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — placeholder for iframe hosts.
+    #[wasm_bindgen(js_name = parent_boot)]
+    pub fn parent_boot() -> js_sys::Promise {
+        future_to_promise(async move {
+            let _rt: Arc<ParentRuntime> = ParentRuntime::spawn().await;
+            Ok(JsValue::TRUE)
+        })
+    }
+
+    /// 🌐 Stateful GraphQL façade for `@semio/js` embedded worker + inline WASM.
     #[wasm_bindgen]
-    pub async fn schema_sdl() -> String {
-        crate::gql::sdl().await
+    pub struct KitStoreHandle {
+        rt: Arc<ParentRuntime>,
+        schema_mtx: Arc<Mutex<Option<AppSchema>>>,
+    }
+
+    #[wasm_bindgen]
+    impl KitStoreHandle {
+        /// 🧾 `KitStoreHandle.create(JSON.parse(kitDto))`.
+        #[wasm_bindgen(js_name = create)]
+        pub fn create(dto_js: JsValue) -> js_sys::Promise {
+            future_to_promise(async move {
+                let v: serde_json::Value =
+                    serde_wasm_bindgen::from_value(dto_js).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let rt = ParentRuntime::spawn_wip_overlay_from_kit_dto(v).await.map_err(|e| JsValue::from_str(&e.message))?;
+                Ok(JsValue::from(KitStoreHandle { rt, schema_mtx: Arc::new(Mutex::new(None)) }))
+            })
+        }
+
+        #[wasm_bindgen(js_name = execute)]
+        pub fn execute(&self, req_json: &str) -> js_sys::Promise {
+            let req_str = req_json.to_string();
+            let rt = self.rt.clone();
+            let mtx = Arc::clone(&self.schema_mtx);
+            future_to_promise(async move {
+                let mut locked = mtx.lock().map_err(|_| JsValue::from_str("schema lock poisoned"))?;
+                if locked.is_none() {
+                    *locked = Some(build_schema_for(rt.clone()).await);
+                }
+                let schema = locked.as_ref().ok_or_else(|| JsValue::from_str("schema init failed"))?;
+                let schema = schema.clone();
+                drop(locked);
+
+                let mut req = request_from_wire(&req_str)?;
+                req = req.data(rt.clone()).data(rt.bus.clone());
+                let resp = schema.execute(req).await;
+                let json =
+                    serde_json::to_string(&async_graphql::Response::from(resp)).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                Ok(JsValue::from_str(&json))
+            })
+        }
+
+        #[wasm_bindgen(js_name = subscribe)]
+        pub fn subscribe(&self, req_json: &str, on_event: &::js_sys::Function) -> js_sys::Promise {
+            let cb = on_event.clone();
+            let req_str = req_json.to_string();
+            let rt = self.rt.clone();
+            let mtx = Arc::clone(&self.schema_mtx);
+            future_to_promise(async move {
+                use futures_util::StreamExt;
+
+                let mut locked = mtx.lock().map_err(|_| JsValue::from_str("schema lock poisoned"))?;
+                if locked.is_none() {
+                    *locked = Some(build_schema_for(rt.clone()).await);
+                }
+                let schema = locked.as_ref().ok_or_else(|| JsValue::from_str("schema init failed"))?;
+                let schema = schema.clone();
+                drop(locked);
+
+                let mut req = request_from_wire(&req_str)?;
+                req = req.data(rt.clone()).data(rt.bus.clone());
+                let mut stream = schema.execute_stream(req);
+                while let Some(resp) = stream.next().await {
+                    let json = serde_json::to_string(&async_graphql::Response::from(resp))
+                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let msg = JsValue::from_str(&json);
+                    if cb.call1(&JsValue::UNDEFINED, &msg).is_err() {
+                        break;
+                    }
+                }
+                Ok(JsValue::UNDEFINED)
+            })
+        }
+
+        #[wasm_bindgen(js_name = free)]
+        pub fn free(self) {
+            drop(self.rt);
+        }
     }
 }
 

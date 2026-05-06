@@ -11,6 +11,7 @@ after each iteration and it's included in prompts for context.
 - **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.
 - **Attachable backbones (native RS):** `crate::kit_backbone` implements `BackboneStoreKind::DEV_JSON` (single file, `*.tmp.semio-write` + `rename(2)`) and `LOCAL_DOT_SEMIO` (`.semio/{wip,staged,authoritative,conflicts}.db` + `blobs/`). `worker::ChildRuntime::backbone` replays persisted ops via `apply_semantic_op_json` after `Kit::clear_piece_projections_for_backbone_replay`; `createFixedPiece` appends `{draftId,transactionId,kind,input}`. Wasm attach resolves to `invalid`/`NotSupported` style errors (no SQLite on wasm).
 - **GraphQL SDL parity check:** After changing `async_graphql` resolvers or types, export with `SEMIO_GRAPHQL_SCHEMA_OUT` + ignored `export_semio_graphql_schema_file` test and `diff` the output against `semio/graphql/schema.graphql`; an empty diff means the committed integrator surface matches RS.
+- **`@semio/js` kit reads vs Integrator SDL:** Full kit DTO is always `wip.theKit.fullSnapshot` (RS `kit_full_snapshot_value`); granular reads use fields that exist on `Kit` / `Design` / `Piece` in `schema.graphql` (e.g. `design { piece(id:) { flatPosition { plane { xAxis yAxis } } } }`). Hydration accepts **camelCase** plane keys from JS via `#[serde(alias)]` on `Plane`; golden / semantic-op JSON keeps **snake_case** `x_axis` / `y_axis`.
 
 ---
 
@@ -21,14 +22,6 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Prior US-002–004 already wired the schema export path; US-005 is primarily **verification + explicit compute/memo docs** so integrators do not assume hidden caches on fingerprints or diffs.
   - **Gotchas encountered:** `async_graphql` only exports types **reachable from the schema roots**; Rust-internal unions (e.g. `OperationInput` enums) that are never referenced from `Query`/`Mutation`/`SubscriptionRoot` do not appear in the emitted SDL — avoid assuming every `derive`d GraphQL type shows up in `schema.graphql`.
----
-
-
-- **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.
-- **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).
-- **Learnings:**
-  - **Patterns discovered:** Same ordered op log underlies snapshot projection and history wrappers—difference is metadata/lifecycle, not a second persistence shape. Golden fixtures should encode **invariants** (`sortedPieceCenters`, counts) plus a stable **fingerprint** for deterministic CI.
-  - **Gotchas encountered:** Full pnpm workspace that includes `semio/algorithms` breaks install until `semio/rs/pkg` exists; narrow the workspace or document wasm-pack as a prereq. Legacy `KitStoreHandle` / `eventStream` GraphQL expectations in JS need a follow-up (e.g. US-006) rather than half-wiring old APIs.
 ---
 
 ## 2026-05-06 - US-002
@@ -56,5 +49,14 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Keep **`apply_semantic_op_json`** as the single replay oracle; persisted rows are **`kind + input`** (plus draft/tx ids) so Dev JSON and SQLite stay aligned. **Attach** should **clear piece projections** before replay to avoid double-applying when reusing a live graph.
   - **Gotchas encountered:** **WASM** builds must not reference `rusqlite`; gate **backbone IO** with `#[cfg(not(target_arch = "wasm32"))]` and return **`SemioError::invalid(...)`** on attach from wasm workers. **Detach URI** must **match** the mounted URI or integrators could think persistence stopped when it did not.
+---
+
+## 2026-05-06 - US-006
+
+- **What was implemented:** `@semio/js` **KitStore** now **awaits** `KitStoreHandle.create` (inline WASM + blob worker) so GraphQL `execute`/`subscribe` bind to a real handle; **read path** uses `materializedLiveJsonForReadScope` for design piece/connection bulk reads (no duplicate kit graph in JS), **`mapPieceRead`** / **`getPiecesMetadata`** query **`flatPosition`** per integrator SDL, and design commands that **are not** on `Design` in SDL return **empty stubs** (cluster / included / replaceable catalog) until RS exposes them. **Embedded test** for **`subscribeFiltered` / `subscribeSemioKitCommandLifecycle`** (RxJS behind conventional unsubscribe). **RS:** `Plane` serde **`alias`** for `xAxis`/`yAxis` hydration from JS; **`kit_full_snapshot_value`** emits **camelCase** `xAxis`/`yAxis` in `plane` for `KitFullDto` Zod round-trip. Regenerated **`semio/graphql/schema.graphql`** (`Kit.fullSnapshot`). Rebuilt **`semio/rs/pkg`** with `wasm-pack`. Fixed metadata read **TypeScript** narrowing for `readKitTypesMetadataCommand` / `readKitDesignsMetadataCommand`.
+- **Files changed:** `semio/js/index.ts`, `semio/rs/lib.rs`, `semio/rs/pkg/*`, `semio/graphql/schema.graphql`, `.ralph-tui/progress.md`.
+- **Learnings:**
+  - **Patterns discovered:** **`KitStoreHandle.create` is Promise-shaped** in wasm-bindgen output—treat as async at every callsite (Vitest inline path and worker `init`). **`fullSnapshot`** is the single full-kit channel; mix targeted `theKit { … }` queries only where the SDL exposes fields.
+  - **Gotchas encountered:** **Plane JSON** has two conventions: persisted / golden **snake_case** vs **camelCase** kit DTO / GraphQL field names—use **aliases** on serde and **explicit** snapshot JSON for `plane` keys so both tests and JS parse stay green.
 ---
 
