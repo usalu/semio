@@ -3,10 +3,10 @@
   "sessionId": "205b4032-ce5d-4414-9a09-de1e62aad79c",
   "status": "running",
   "startedAt": "2026-05-06T20:59:23.997Z",
-  "updatedAt": "2026-05-06T21:27:09.542Z",
-  "currentIteration": 1,
+  "updatedAt": "2026-05-06T21:34:07.359Z",
+  "currentIteration": 2,
   "maxIterations": 10,
-  "tasksCompleted": 1,
+  "tasksCompleted": 2,
   "isPaused": false,
   "agentPlugin": "cursor",
   "trackerState": {
@@ -23,8 +23,8 @@
       {
         "id": "US-002",
         "title": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "US-003",
@@ -74,6 +74,16 @@
       "durationMs": 1197781,
       "startedAt": "2026-05-06T20:59:34.384Z",
       "endedAt": "2026-05-06T21:19:32.165Z"
+    },
+    {
+      "iteration": 2,
+      "status": "completed",
+      "taskId": "US-002",
+      "taskTitle": "Finalize semio/graphql Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle",
+      "taskCompleted": true,
+      "durationMs": 455430,
+      "startedAt": "2026-05-06T21:19:34.107Z",
+      "endedAt": "2026-05-06T21:27:09.537Z"
     }
   ],
   "skippedTaskIds": [],

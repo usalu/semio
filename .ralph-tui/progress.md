@@ -8,6 +8,7 @@ after each iteration and it's included in prompts for context.
 - **Kit store assets:** Canonical shape is `semio.kit_store.bundle` with `rootSnapshot`, ordered `semanticOpLog`, optional `histories` (checkpoint/draft/transaction metadata over the same op model), and `backbonePointers`. Document the intent in `semio/assets/semio/kit-store.contract.semio.json`; pair `kit-store.golden.ops.semio.json` with `kit-store.golden.expected.semio.json` for RS replay tests (`projectionFingerprint` = blake3-style `hash::h` over sorted piece centers) and lightweight JS fixture parses.
 - **Root pnpm for semio slice:** A minimal `pnpm-workspace.yaml` including only `semio/js`, `semio/react`, and `semio/assets` avoids `pnpm install` pulling packages that depend on `file:../rs/pkg` before `wasm-pack build` populates `semio/rs/pkg`.
 - **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.
+- **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.
 
 ---
 
@@ -27,5 +28,14 @@ after each iteration and it's included in prompts for context.
 - **Learnings:**
   - **Patterns discovered:** Object-typed mutation payloads (`Command`) require selection sets in GraphQL documents—integration tests and clients must request `{ requestId kind }`. Enum variables (e.g. `KitGraphWorkspace`) flow through `async_graphql::value!` as string labels (`"WIP"`).
   - **Gotchas encountered:** `target.schema.graphql` remains a separate Relay-style design draft; runtime SDL is only what `gql::sdl()` emits—do not assume parity without an explicit codegen/link step.
+---
+
+## 2026-05-06 - US-003
+
+- **What was implemented:** Core **kit graph engine** in `semio/rs`: `crate::kit_graph_engine` with `DesignHandle`, `projection_fingerprint_for_kit` (same algorithm as kit-store golden), `deterministic_semantic_diff` (ephemeral, from op kind + payload JSON + fp before/after), and async `apply_semantic_op_json` for bundle-shaped replay. `Kit`/`Design` now keep **slot maps** (`design_id_to_index`, `piece_id_to_index`) so hot paths avoid linear Id scans; `bind_external_design_id` is the single translation from external design `Id` to internal handle + `Arc`. `Graph::apply_create_fixed_piece` returns `(piece, diff)` and uses `apply_create_fixed_piece_on_design_node` for pointer-only mutation; GraphQL `projectionFingerprint` calls the engine. `CreatedFixedPiece` events carry computed diffs. Contract JSON documents `kitGraphEngine`.
+- **Files changed:** `semio/rs/lib.rs`, `semio/assets/semio/kit-store.contract.semio.json`, `semio/graphql/schema.graphql` (SDL doc comment from resolver), `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/core-kit-graph-engine-us-003/ticket.json`.
+- **Learnings:**
+  - **Patterns discovered:** Treat **two `Arc<Graph>` instances** (wip vs authoritative) as the multi-state primitive; semantic apply + fp/diff logic stays identical per graph. Deterministic diff should key on **canonical input JSON + fp transition** so replay and live mutation agree without persisting diffs.
+  - **Gotchas encountered:** `apply_create_fixed_piece` must **clone** fields passed to the inner node helper when building `CreatedFixedPieceInput` for serde, or Rust move analysis fails; serde field names in golden JSON must match `#[serde(rename)]` on payload DTOs.
 ---
 

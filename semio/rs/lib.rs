@@ -11,6 +11,9 @@
 //! child workers (`wip` + `authoritative`), each owning its own [`vcs::Graph`] as a shared
 //! `Arc`. On native targets both children run as in-process async actors; on `wasm32` they
 //! live in dedicated web workers wired through [`wasm_bridge`].
+//!
+//! Kit graph engine ([`kit_graph_engine`]): pointer-backed design/piece slot tables, deterministic
+//! semantic diffs, and `projectionFingerprint` aligned with kit-store golden fixtures.
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
@@ -1041,6 +1044,7 @@ pub mod kit {
         //#endregion 🔗 connection
 
         //#region 🏘 design
+        use std::collections::HashMap;
         use std::sync::{Arc, Weak};
 
         use async_graphql::Object;
@@ -1063,6 +1067,8 @@ pub mod kit {
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
             pub pieces: RwLock<Vec<Arc<piece::Piece>>>,
+            /// 🧷 Internal slot table: external [`Id`] → `pieces` index (GraphQL resolves `Id` once at the boundary).
+            pub piece_id_to_index: RwLock<HashMap<Id, usize>>,
             pub connections: RwLock<Vec<Arc<connection::Connection>>>,
             pub layers: RwLock<Vec<Layer>>,
             pub groups: RwLock<Vec<Group>>,
@@ -1089,6 +1095,7 @@ pub mod kit {
                     created: RwLock::new(None),
                     updated: RwLock::new(None),
                     pieces: RwLock::new(Vec::new()),
+                    piece_id_to_index: RwLock::new(HashMap::new()),
                     connections: RwLock::new(Vec::new()),
                     layers: RwLock::new(Vec::new()),
                     groups: RwLock::new(Vec::new()),
@@ -1119,12 +1126,19 @@ pub mod kit {
 
             /// 🆕 Push a piece into this design's pieces; returns the same Arc (refcount + 1) for the caller.
             pub async fn insert_piece(&self, piece: Arc<piece::Piece>) -> Arc<piece::Piece> {
-                self.pieces.write().await.push(piece.clone());
+                let mut pieces = self.pieces.write().await;
+                let mut ix = self.piece_id_to_index.write().await;
+                let idx = pieces.len();
+                let pid = piece.id.clone();
+                pieces.push(piece.clone());
+                ix.insert(pid, idx);
                 piece
             }
 
             pub async fn piece_by_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
-                self.pieces.read().await.iter().find(|p| &p.id == id).cloned()
+                let ix = self.piece_id_to_index.read().await;
+                let idx = *ix.get(id)?;
+                self.pieces.read().await.get(idx).cloned()
             }
 
             pub async fn connection_by_id(&self, id: &Id) -> Option<Arc<connection::Connection>> {
@@ -1223,6 +1237,7 @@ pub mod kit {
     //#endregion 🏘 design
 
     //#region 📦 kit
+    use std::collections::HashMap;
     use std::sync::{Arc, Weak};
 
     use async_graphql::Object;
@@ -1249,6 +1264,8 @@ pub mod kit {
         pub updated: RwLock<Option<Timestamp>>,
         pub version: RwLock<Option<String>>,
         pub designs: RwLock<Vec<Arc<design::Design>>>,
+        /// 🧷 Internal slot table: external design [`Id`] → `designs` vec index (translate at host/GraphQL boundary only).
+        pub design_id_to_index: RwLock<HashMap<Id, usize>>,
         pub types: RwLock<Vec<Arc<r#type::Type>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
@@ -1279,6 +1296,7 @@ pub mod kit {
                 updated: RwLock::new(None),
                 version: RwLock::new(None),
                 designs: RwLock::new(Vec::new()),
+                design_id_to_index: RwLock::new(HashMap::new()),
                 types: RwLock::new(Vec::new()),
                 files: RwLock::new(Vec::new()),
                 folders: RwLock::new(Vec::new()),
@@ -1308,20 +1326,39 @@ pub mod kit {
         }
 
         pub async fn design_by_id(&self, id: &Id) -> Option<Arc<design::Design>> {
-            self.designs.read().await.iter().find(|d| &d.id == id).cloned()
+            let map = self.design_id_to_index.read().await;
+            let idx = *map.get(id)?;
+            self.designs.read().await.get(idx).cloned()
         }
         pub async fn type_by_id(&self, id: &Id) -> Option<Arc<r#type::Type>> {
             self.types.read().await.iter().find(|t| &t.id == id).cloned()
         }
 
-        /// 🆕 Insert (or look up) a design by id, returning the shared Arc.
+        /// 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_id_to_index`]).
         pub async fn ensure_design(self: &Arc<Self>, design_id: &Id) -> Arc<design::Design> {
             if let Some(d) = self.design_by_id(design_id).await {
                 return d;
             }
             let d = design::Design::with_id(Arc::downgrade(self), design_id.clone(), format!("design-{}", design_id.as_str())).await;
-            self.designs.write().await.push(d.clone());
+            let mut designs = self.designs.write().await;
+            let mut map = self.design_id_to_index.write().await;
+            if let Some(idx) = map.get(design_id) {
+                return designs[*idx].clone();
+            }
+            let idx = designs.len();
+            designs.push(d.clone());
+            map.insert(design_id.clone(), idx);
             d
+        }
+
+        /// 🧷 Single external-id translation → opaque handle + shared [`Arc`] for all subsequent hot-path graph work.
+        pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignHandle, Arc<design::Design>) {
+            let design = self.ensure_design(design_id).await;
+            let slot = {
+                let map = self.design_id_to_index.read().await;
+                *map.get(design_id).expect("design slot after ensure_design") as u32
+            };
+            (crate::kit_graph_engine::DesignHandle(slot), design)
         }
     }
 
@@ -1864,20 +1901,17 @@ pub mod vcs {
             d
         }
 
-        /// 🪡 The single graph-mutating entry point for `createFixedPiece`. Returns the new Arc<Piece>.
-        pub async fn apply_create_fixed_piece(
+        /// 🪡 Hot path: mutate using an already-bound [`crate::kit_graph_engine::DesignHandle`] / design node (no further design-id scans).
+        pub(crate) async fn apply_create_fixed_piece_on_design_node(
             self: &Arc<Self>,
             draft_id: Id,
             transaction_id: Id,
-            design_id: Id,
+            design: Arc<crate::kit::design::Design>,
             blueprint_id: Id,
             position: crate::geom::Position,
             name: Option<String>,
             description: Option<String>,
         ) -> Result<Arc<crate::kit::design::piece::Piece>, SemioError> {
-            let design: Arc<crate::kit::design::Design> = self.the_kit.ensure_design(&design_id).await;
-
-            // Mint a placeholder Type as the Piece's blueprint reference (kept as Arc inside Blueprint::Type).
             let blueprint_type = crate::kit::r#type::Type::new(Arc::downgrade(&self.the_kit), format!("type-{}", blueprint_id.as_str())).await;
             let blueprint = crate::kit::r#type::Blueprint::Type(blueprint_type);
 
@@ -1890,6 +1924,41 @@ pub mod vcs {
             let _ = draft.ensure_transaction(&transaction_id).await;
 
             Ok(piece)
+        }
+
+        /// 🪡 Graph-mutating entry for `createFixedPiece`: one external id bind, then pointer-only core; returns deterministic ephemeral diff (not persisted).
+        pub async fn apply_create_fixed_piece(
+            self: &Arc<Self>,
+            draft_id: Id,
+            transaction_id: Id,
+            design_id: Id,
+            blueprint_id: Id,
+            position: crate::geom::Position,
+            name: Option<String>,
+            description: Option<String>,
+        ) -> Result<(Arc<crate::kit::design::piece::Piece>, op::Diff), SemioError> {
+            let fp_before = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
+            let (_handle, design) = self.the_kit.bind_external_design_id(&design_id).await;
+            let piece = self
+                .apply_create_fixed_piece_on_design_node(
+                    draft_id, transaction_id, design,
+                    blueprint_id.clone(),
+                    position,
+                    name.clone(),
+                    description.clone(),
+                )
+                .await?;
+            let fp_after = crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await;
+            let input = op::CreatedFixedPieceInput {
+                design_id,
+                blueprint_id,
+                position,
+                name,
+                description,
+            };
+            let payload_json = serde_json::to_string(&input).map_err(|e| SemioError::invalid(e.to_string()))?;
+            let diff = crate::kit_graph_engine::deterministic_semantic_diff("createdFixedPiece", &payload_json, &fp_before, &fp_after);
+            Ok((piece, diff))
         }
     }
 
@@ -1934,10 +2003,10 @@ pub mod vcs {
             Vec::new()
         }
 
-        /// @emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.
+        /// @emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
         #[graphql(name = "projectionFingerprint")]
         async fn projection_fingerprint(&self) -> String {
-            h(&[self.id.as_str(), self.the_kit.id.as_str()])
+            crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await
         }
 
         /// @emoji 📸 Hash of the materialized root kit aggregate for this graph head.
@@ -2203,8 +2272,8 @@ pub mod op {
     }
 
     impl CreatedFixedPiece {
-        pub async fn new(input: CreatedFixedPieceInput, piece: Arc<crate::kit::design::piece::Piece>) -> Arc<Self> {
-            Arc::new(Self { id: Id::new().await, owner_change: Weak::new(), input, diff: Diff::default(), piece })
+        pub async fn new(input: CreatedFixedPieceInput, piece: Arc<crate::kit::design::piece::Piece>, diff: Diff) -> Arc<Self> {
+            Arc::new(Self { id: Id::new().await, owner_change: Weak::new(), input, diff, piece })
         }
     }
 
@@ -2484,6 +2553,117 @@ pub mod op {
 
 //#endregion ⚙️ op
 
+//#region 🧩 kit graph engine
+
+pub mod kit_graph_engine {
+    //! 🧩 Core kit graph engine: internal handle-backed slots, deterministic ephemeral semantic diffs, async apply for bundle replay and multi-`Graph` states (`wip` / `authoritative`).
+    use std::collections::BTreeMap;
+    use std::sync::Arc;
+
+    use serde::Deserialize;
+
+    use crate::error::SemioError;
+    use crate::hash::h;
+    use crate::id::Id;
+    use crate::kit;
+    use crate::op;
+    use crate::vcs::Graph;
+
+    //#region 🧷 handles
+    /// @emoji 🧷 Opaque internal design slot index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+    pub struct DesignHandle(pub u32);
+    //#endregion 🧷 handles
+
+    //#region 🔢 projection fingerprint
+    /// @emoji 🔢 Stable `projectionFingerprint`: blake3-style [`h`] over sorted piece centers (matches golden `kit-store.golden.expected`).
+    pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
+        let designs = kit.designs.read().await;
+        let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+        for d in designs.iter() {
+            let mut pts: Vec<(f64, f64)> = Vec::new();
+            for p in d.pieces.read().await.iter() {
+                if let Some(pos) = *p.position.read().await {
+                    pts.push((pos.center.u, pos.center.v));
+                }
+            }
+            pts.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            by_design.insert(d.id.as_str().to_string(), pts);
+        }
+        let flattened: Vec<String> = by_design
+            .into_iter()
+            .map(|(id, pts)| {
+                let inner = pts.iter().map(|(u, v)| format!("{u:.9}:{v:.9}")).collect::<Vec<_>>().join(";");
+                format!("{id}@{inner}")
+            })
+            .collect();
+        h(&[flattened.join("|")])
+    }
+    //#endregion 🔢 projection fingerprint
+
+    //#region 📦 semantic diff
+    /// @emoji 📦 Deterministic non-persisted diff from op kind + payload + projection fingerprint transition.
+    pub fn deterministic_semantic_diff(op_kind: &str, payload_json: &str, projection_fp_before: &str, projection_fp_after: &str) -> op::Diff {
+        let digest = h(&[op_kind, payload_json, projection_fp_before, projection_fp_after]);
+        op::Diff {
+            id: Id::from(format!("semio:diff:{digest}")),
+            summary: Some(digest),
+        }
+    }
+    //#endregion 📦 semantic diff
+
+    //#region 🪡 semantic op apply
+    /// @emoji 🧾 Output of [`apply_semantic_op_json`]: ephemeral diff + optional created entities.
+    pub struct AppliedSemanticOp {
+        pub diff: op::Diff,
+        pub created_piece: Option<Arc<kit::design::piece::Piece>>,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct CreatedFixedPiecePayload {
+        #[serde(rename = "designId")]
+        design_id: String,
+        #[serde(rename = "blueprintId")]
+        blueprint_id: String,
+        position: crate::geom::Position,
+        name: Option<String>,
+        description: Option<String>,
+    }
+
+    /// @emoji 🪡 Async apply for one persisted semantic op (`kind` + JSON payload); routes through [`Graph::apply_create_fixed_piece`] for `createdFixedPiece`.
+    pub async fn apply_semantic_op_json(
+        graph: &Arc<Graph>,
+        draft_id: &Id,
+        transaction_id: &Id,
+        op_kind: &str,
+        payload_json: &str,
+    ) -> Result<AppliedSemanticOp, SemioError> {
+        match op_kind {
+            "createdFixedPiece" => {
+                let payload: CreatedFixedPiecePayload = serde_json::from_str(payload_json).map_err(|e| SemioError::invalid(e.to_string()))?;
+                let design_id = Id::from(payload.design_id.as_str());
+                let blueprint_id = Id::from(payload.blueprint_id.as_str());
+                let (piece, diff) = graph
+                    .apply_create_fixed_piece(
+                        draft_id.clone(),
+                        transaction_id.clone(),
+                        design_id,
+                        blueprint_id,
+                        payload.position,
+                        payload.name,
+                        payload.description,
+                    )
+                    .await?;
+                Ok(AppliedSemanticOp { diff, created_piece: Some(piece) })
+            }
+            other => Err(SemioError::invalid(format!("unsupported semantic op kind `{other}`"))),
+        }
+    }
+    //#endregion 🪡 semantic op apply
+}
+
+//#endregion 🧩 kit graph engine
+
 //#region 📣 event
 
 pub mod event {
@@ -2653,10 +2833,13 @@ pub mod worker {
         async fn apply(&self, cmd: Command) -> Result<(), SemioError> {
             match cmd {
                 Command::CreateFixedPiece { request_id: _, draft_id, transaction_id, design_id, blueprint_id, position, name, description } => {
-                    let piece = self.graph.apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone()).await?;
+                    let (piece, diff) = self
+                        .graph
+                        .apply_create_fixed_piece(draft_id, transaction_id, design_id.clone(), blueprint_id.clone(), position, name.clone(), description.clone())
+                        .await?;
 
                     let input = CreatedFixedPieceInput { design_id, blueprint_id, position, name, description };
-                    let op = CreatedFixedPiece::new(input, piece).await;
+                    let op = CreatedFixedPiece::new(input, piece, diff).await;
                     self.bus.emit_event(Event::CreatedFixedPiece(op)).await;
                     Ok(())
                 }
@@ -3015,7 +3198,6 @@ pub mod wasm_bridge {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
-    use std::collections::BTreeMap;
     use std::path::Path;
     use std::sync::Arc;
 
@@ -3155,8 +3337,18 @@ mod tests {
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::Position::default();
             let blueprint_id = crate::id::Id::new().await;
-            let p1 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None).await.expect("insert piece 1");
-            let _p2 = rt.wip_graph.apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None).await.expect("insert piece 2");
+            let p1 = rt
+                .wip_graph
+                .apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id.clone(), position, None, None)
+                .await
+                .expect("insert piece 1")
+                .0;
+            let _p2 = rt
+                .wip_graph
+                .apply_create_fixed_piece(crate::id::Id::from("d1"), crate::id::Id::from("t1"), crate::id::Id::from("des1"), blueprint_id, position, None, None)
+                .await
+                .expect("insert piece 2")
+                .0;
 
             // Baseline strong count for p1: held by the design's pieces Vec + our local handle = 2.
             let baseline = Arc::strong_count(&p1);
@@ -3196,28 +3388,9 @@ mod tests {
         });
     }
 
-    /// 🗃️ Deterministic fingerprint: design ids + sorted (u,v) centers — ignores auto piece ids.
+    /// 🗃️ Delegates to [`crate::kit_graph_engine::projection_fingerprint_for_kit`] (single implementation).
     async fn stable_projection_fingerprint(kit: &Arc<crate::kit::Kit>) -> String {
-        let designs = kit.designs.read().await;
-        let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
-        for d in designs.iter() {
-            let mut pts: Vec<(f64, f64)> = Vec::new();
-            for p in d.pieces.read().await.iter() {
-                if let Some(pos) = *p.position.read().await {
-                    pts.push((pos.center.u, pos.center.v));
-                }
-            }
-            pts.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            by_design.insert(d.id.as_str().to_string(), pts);
-        }
-        let flattened: Vec<String> = by_design
-            .into_iter()
-            .map(|(id, pts)| {
-                let inner = pts.iter().map(|(u, v)| format!("{u:.9}:{v:.9}")).collect::<Vec<_>>().join(";");
-                format!("{id}@{inner}")
-            })
-            .collect();
-        crate::hash::h(&[flattened.join("|")])
+        crate::kit_graph_engine::projection_fingerprint_for_kit(kit.as_ref()).await
     }
 
     #[test]
@@ -3272,6 +3445,32 @@ mod tests {
             let fp = stable_projection_fingerprint(&g.the_kit).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio.json");
             assert_eq!(fp, exp_fp, "projectionFingerprint");
+        });
+    }
+
+    /// 🪡 `kit_graph_engine::apply_semantic_op_json` must replay the same golden ops as manual apply.
+    #[test]
+    fn kit_store_golden_ops_via_semantic_op_json_match_fingerprint() {
+        block_on(async {
+            let path_ops = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.ops.semio.json");
+            let path_exp = Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets/semio/kit-store.golden.expected.semio.json");
+            let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse ops");
+            let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+
+            let g = crate::vcs::Graph::new().await;
+            let draft_id = crate::id::Id::from(ops_json["draftId"].as_str().expect("draftId"));
+            let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
+            for rec in ops_json["ops"].as_array().expect("ops") {
+                let kind = rec["kind"].as_str().expect("op kind");
+                let payload = serde_json::to_string(rec.get("input").expect("input")).expect("payload json");
+                let applied = crate::kit_graph_engine::apply_semantic_op_json(&g, &draft_id, &tx_id, kind, &payload).await.expect("apply_semantic_op_json");
+                assert!(applied.created_piece.is_some(), "expected piece for {kind}");
+                assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
+            }
+
+            let fp = stable_projection_fingerprint(&g.the_kit).await;
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+            assert_eq!(fp, exp_fp, "projectionFingerprint via semantic json apply");
         });
     }
 

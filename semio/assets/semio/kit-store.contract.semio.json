@@ -28,5 +28,8 @@
   },
   "graphqlSurface": {
     "summary": "🌐 `semio/graphql/schema.graphql` (SDL emitted from `semio/rs` async-graphql) exposes `Query.readableKitGraph(selector)` companion `wip`/`authoritative` shorthands, `Graph.{semanticOpLog,projectionFingerprint,rootSnapshotHash}`, lifecycle `semanticOpRecordIds` / `orderedTransactionIds` on checkpoint/draft/transaction/change, `Mutation.{*,backboneAttach,backboneDetach}` returning `Command` plus `SubscriptionRoot.commandSucceeded`, and `BackboneCapabilitySet` for dev JSON vs `.semio/` without SQL."
+  },
+  "kitGraphEngine": {
+    "summary": "🧩 RS `crate::kit_graph_engine`: external design [`Id`] maps once via `Kit.bind_external_design_id` → `DesignHandle` + `Arc<Design>`; pieces indexed by `Design.piece_id_to_index`; `projection_fingerprint_for_kit` matches golden sorted-centers hash; `deterministic_semantic_diff` + async `apply_semantic_op_json` compute ephemeral diffs (not persisted); each `vcs::Graph` is a separate readable/writable state (e.g. wip vs authoritative)."
   }
 }

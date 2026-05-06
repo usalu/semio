@@ -303,7 +303,7 @@ type Graph {
 	"""
 	semanticOpLog(limit: Int): [SemanticOpRecord!]!
 	"""
-	@emoji 🔢 Stable `projectionFingerprint` (blake3-style `hash::h`) keyed from graph + kit identity until piece-center sort lands.
+	@emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
 	"""
 	projectionFingerprint: String!
 	"""
