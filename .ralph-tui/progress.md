@@ -10,10 +10,19 @@ after each iteration and it's included in prompts for context.
 - **GraphQL SDL source of truth:** Integrators read `semio/graphql/schema.graphql`, but it is **generated** from `semio/rs` (`async_graphql` `Schema::sdl`) via `pnpm exec nx build semio/graphql` (runs the ignored `export_semio_graphql_schema_file` test with `SEMIO_GRAPHQL_SCHEMA_OUT`). Edit the Rust schema, then rebuild—do not hand-edit the SDL long-term.
 - **Kit graph engine (RS):** `crate::kit_graph_engine` owns `projection_fingerprint_for_kit` (golden-compatible), `deterministic_semantic_diff`, and async `apply_semantic_op_json`. `Kit`/`Design` use `design_id_to_index` and `piece_id_to_index` for O(1) slot resolve after a single `bind_external_design_id` at the boundary; GraphQL `Graph.projectionFingerprint` delegates to the engine.
 - **Attachable backbones (native RS):** `crate::kit_backbone` implements `BackboneStoreKind::DEV_JSON` (single file, `*.tmp.semio-write` + `rename(2)`) and `LOCAL_DOT_SEMIO` (`.semio/{wip,staged,authoritative,conflicts}.db` + `blobs/`). `worker::ChildRuntime::backbone` replays persisted ops via `apply_semantic_op_json` after `Kit::clear_piece_projections_for_backbone_replay`; `createFixedPiece` appends `{draftId,transactionId,kind,input}`. Wasm attach resolves to `invalid`/`NotSupported` style errors (no SQLite on wasm).
+- **GraphQL SDL parity check:** After changing `async_graphql` resolvers or types, export with `SEMIO_GRAPHQL_SCHEMA_OUT` + ignored `export_semio_graphql_schema_file` test and `diff` the output against `semio/graphql/schema.graphql`; an empty diff means the committed integrator surface matches RS.
 
 ---
 
-## 2026-05-06 - US-001
+## 2026-05-06 - US-005
+
+- **What was implemented:** Confirmed **byte-for-byte SDL parity** between `crate::gql::build_schema().sdl()` and `semio/graphql/schema.graphql` (US-002 kit-store surface + full entity graph). Clarified **caching semantics in Rustdoc** on `Graph.semanticOpLog` / `projectionFingerprint` / `rootSnapshotHash` (no server memo; invalidate on live kit / backbone / replay) and on `op::Diff` (ephemeral `deterministic_semantic_diff`, not bundle-persisted; clients read via `Operation.diff`). Opened/closed ticket `graphql-target-semio-rs-us-005`.
+- **Files changed:** `semio/rs/lib.rs`, `.ralph-tui/progress.md`, `.repo/🎫/26/05/06/graphql-target-semio-rs-us-005/ticket.json`.
+- **Learnings:**
+  - **Patterns discovered:** Prior US-002–004 already wired the schema export path; US-005 is primarily **verification + explicit compute/memo docs** so integrators do not assume hidden caches on fingerprints or diffs.
+  - **Gotchas encountered:** `async_graphql` only exports types **reachable from the schema roots**; Rust-internal unions (e.g. `OperationInput` enums) that are never referenced from `Query`/`Mutation`/`SubscriptionRoot` do not appear in the emitted SDL — avoid assuming every `derive`d GraphQL type shows up in `schema.graphql`.
+---
+
 
 - **What was implemented:** Kit asset contracts aligned to **one root snapshot + ordered semantic ops** with checkpoint/draft/transaction wrappers documented in JSON; golden ops/expected pair; `metabolism.new.kit.semio.json` replaced with a minimal bundle exemplar; RS tests replay golden ops and assert invariants/fingerprint; `@semio/js` embedded tests load golden + bundle paths for structural checks; root `pnpm typecheck` / `pnpm lint` validate the touched packages.
 - **Files changed:** `semio/assets/semio/kit-store.contract.semio.json`, `kit-store.golden.*.semio.json`, `metabolism.new.kit.semio.json`, `semio/rs/lib.rs`, `semio/js/index.ts`, root `package.json`, `pnpm-workspace.yaml`, `.npmrc`, `eslint.config.mjs`, plus prior workspace/JS fixes from this epic (see git status for full set).

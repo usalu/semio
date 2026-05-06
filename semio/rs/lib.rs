@@ -2006,6 +2006,7 @@ pub mod vcs {
         }
 
         /// @emoji 📜 Ordered semantic op log for this graph line (persisted bundle field); empty until store wiring lands.
+        /// **Memoization:** none — each field resolution recomputes from current graph/backbone state once wired. **Invalidate:** backbone attach/replay, bundle tips, or any writer appending to the log (no stale cached slice).
         #[graphql(name = "semanticOpLog")]
         async fn semantic_op_log(&self, #[graphql(name = "limit")] limit: Option<i32>) -> Vec<op::SemanticOpRecord> {
             let _ = limit;
@@ -2013,12 +2014,14 @@ pub mod vcs {
         }
 
         /// @emoji 🔢 Stable `projectionFingerprint` (sorted piece centers via [`crate::kit_graph_engine::projection_fingerprint_for_kit`]).
+        /// **Memoization:** none — derived on every read from live piece centers. **Invalidate:** any semantic op or mutation changing piece geometry on this graph line.
         #[graphql(name = "projectionFingerprint")]
         async fn projection_fingerprint(&self) -> String {
             crate::kit_graph_engine::projection_fingerprint_for_kit(&self.the_kit).await
         }
 
         /// @emoji 📸 Hash of the materialized root kit aggregate for this graph head.
+        /// **Memoization:** none — recomputed per request from the current [`Kit`] graph. **Invalidate:** any structural or identity change the kit hash subscribes to (mutations, replay).
         #[graphql(name = "rootSnapshotHash")]
         async fn root_snapshot_hash(&self) -> String {
             self.the_kit.compute_hash().await
@@ -2254,6 +2257,7 @@ pub mod op {
     //#endregion 📜 semantic op record (kit bundle / op log contract)
 
     //#region 📦 diff (placeholder)
+    /// @emoji 📦 Ephemeral semantic diff for operations — computed at apply time via [`crate::kit_graph_engine::deterministic_semantic_diff`], **not** persisted in the kit bundle; clients observe it on `Operation.diff` without storing it themselves. **Memoization:** none (stable ids derive from op kind + payload + fp transition).
     #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct Diff {
         pub id: Id,
