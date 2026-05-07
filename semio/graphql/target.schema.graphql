@@ -2229,7 +2229,7 @@ interface Operation implements Entity { # implements StrongEntity
   ownerEntity: OwnerEntity # computed // OperationOwner
   ownedEntities: OwnedEntityConnection # computed // OperationOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 type OperationEdge implements EntityEdge {
@@ -4116,7 +4116,7 @@ type CreatedQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4137,7 +4137,7 @@ type CreatedQualities implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedQualitiesOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   qualities: QualityConnection! # data
 }
 
@@ -4158,7 +4158,7 @@ type RenamedQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4179,7 +4179,7 @@ type UpdatedQualityDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedQualityDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4200,7 +4200,7 @@ type UpdatedQualityIcon implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedQualityIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedQualityIconOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4221,7 +4221,7 @@ type AddedAttributeToQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
   attribute: Attribute! # data
 }
@@ -4243,7 +4243,7 @@ type AddedAttributesToQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToQualityOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
   attributes: AttributeConnection! # data
 }
@@ -4265,7 +4265,7 @@ type RemovedAttributeFromQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4286,7 +4286,7 @@ type RemovedAttributesFromQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromQualityOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   quality: Quality! # data
 }
 
@@ -4306,7 +4306,7 @@ type DeletedQuality implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedQualityOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualityOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedQualityOwner = Change
@@ -4325,7 +4325,7 @@ type DeletedQualities implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedQualitiesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedQualitiesOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedQualitiesOwner = Change
@@ -4599,7 +4599,7 @@ type CreatedTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedTagOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4620,7 +4620,7 @@ type CreatedTags implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTagsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tags: TagConnection! # data
 }
 
@@ -4641,7 +4641,7 @@ type RenamedTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedTagOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4662,7 +4662,7 @@ type UpdatedTagDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedTagDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4683,7 +4683,7 @@ type UpdatedTagIcon implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedTagIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTagIconOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4704,7 +4704,7 @@ type AddedAttributeToTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
   attribute: Attribute! # data
 }
@@ -4726,7 +4726,7 @@ type AddedAttributesToTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToTagOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
   attributes: AttributeConnection! # data
 }
@@ -4748,7 +4748,7 @@ type RemovedAttributeFromTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4769,7 +4769,7 @@ type RemovedAttributesFromTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromTagOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   tag: Tag! # data
 }
 
@@ -4789,7 +4789,7 @@ type DeletedTag implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedTagOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedTagOwner = Change
@@ -4808,7 +4808,7 @@ type DeletedTags implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedTagsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTagsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedTagsOwner = Change
@@ -5070,7 +5070,7 @@ type CreatedConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5091,7 +5091,7 @@ type CreatedConcepts implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedConceptsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concepts: ConceptConnection! # data
 }
 
@@ -5112,7 +5112,7 @@ type RenamedConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5133,7 +5133,7 @@ type UpdatedConceptDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedConceptDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5154,7 +5154,7 @@ type UpdatedConceptIcon implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedConceptIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConceptIconOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5175,7 +5175,7 @@ type AddedAttributeToConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
   attribute: Attribute! # data
 }
@@ -5197,7 +5197,7 @@ type AddedAttributesToConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToConceptOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
   attributes: AttributeConnection! # data
 }
@@ -5219,7 +5219,7 @@ type RemovedAttributeFromConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5240,7 +5240,7 @@ type RemovedAttributesFromConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromConceptOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   concept: Concept! # data
 }
 
@@ -5260,7 +5260,7 @@ type DeletedConcept implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedConceptOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedConceptOwner = Change
@@ -5279,7 +5279,7 @@ type DeletedConcepts implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedConceptsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedConceptsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedConceptsOwner = Change
@@ -5783,7 +5783,7 @@ type CreatedPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedPortOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5804,7 +5804,7 @@ type CreatedPorts implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedPortsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   ports: PortConnection! # data
 }
 
@@ -5826,7 +5826,7 @@ type RenamedPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedPortOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5847,7 +5847,7 @@ type UpdatedPortDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedPortDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5868,7 +5868,7 @@ type UpdatedPortIcon implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedPortIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPortIconOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5889,7 +5889,7 @@ type AddedAttributeToPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
   attribute: Attribute! # data
 }
@@ -5911,7 +5911,7 @@ type AddedAttributesToPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToPortOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
   attributes: AttributeConnection! # data
 }
@@ -5933,7 +5933,7 @@ type RemovedAttributeFromPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5954,7 +5954,7 @@ type RemovedAttributesFromPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromPortOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   port: Port! # data
 }
 
@@ -5974,7 +5974,7 @@ type DeletedPort implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedPortOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedPortOwner = Change
@@ -5993,7 +5993,7 @@ type DeletedPorts implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedPortsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPortsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedPortsOwner = Change
@@ -6735,7 +6735,7 @@ type CreatedType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6756,7 +6756,7 @@ type CreatedTypes implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedTypesOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   types: TypeConnection! # data
 }
 
@@ -6777,7 +6777,7 @@ type RenamedType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6798,7 +6798,7 @@ type UpdatedTypeDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedTypeDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6819,7 +6819,7 @@ type UpdatedTypeIcon implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedTypeIconOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedTypeIconOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6840,7 +6840,7 @@ type AddedAttributeToType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
   attribute: Attribute! # data
 }
@@ -6862,7 +6862,7 @@ type AddedAttributesToType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
   attributes: AttributeConnection! # data
 }
@@ -6884,7 +6884,7 @@ type RemovedAttributeFromType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6905,7 +6905,7 @@ type RemovedAttributesFromType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -6925,7 +6925,7 @@ type DeletedType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedTypeOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedTypeOwner = Change
@@ -6944,7 +6944,7 @@ type DeletedTypes implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedTypesOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedTypesOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedTypesOwner = Change
@@ -6976,7 +6976,7 @@ type AddedConnectorToType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedConnectorToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorToTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
   connector: Connector! # data
 }
@@ -6998,7 +6998,7 @@ type AddedConnectorsToType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedConnectorsToTypeOwner
   ownedEntities: OwnedEntityConnection # computed // AddedConnectorsToTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
   connectors: ConnectorConnection! # data
 }
@@ -7020,7 +7020,7 @@ type RenamedConnectorInType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedConnectorInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedConnectorInTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   connector: Connector! # data
 }
 
@@ -7041,7 +7041,7 @@ type UpdatedConnectorDescriptionInType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedConnectorDescriptionInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorDescriptionInTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   connector: Connector! # data
 }
 
@@ -7062,7 +7062,7 @@ type UpdatedConnectorIconInType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedConnectorIconInTypeOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedConnectorIconInTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   connector: Connector! # data
 }
 
@@ -7082,7 +7082,7 @@ type RemovedConnectorFromType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedConnectorFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorFromTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -7102,7 +7102,7 @@ type RemovedConnectorsFromType implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedConnectorsFromTypeOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedConnectorsFromTypeOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   type: Type! # data
 }
 
@@ -8082,7 +8082,7 @@ type AddedFixedPieceToDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedFixedPieceToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedFixedPieceToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8103,7 +8103,7 @@ type FixedPieceInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // FixedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPieceInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8125,7 +8125,7 @@ type DraggedPiecesInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DraggedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPiecesInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
 }
 
@@ -8147,7 +8147,7 @@ type DraggedPieceInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DraggedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DraggedPieceInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8193,7 +8193,7 @@ type AddedChildPieceWithParentConnectionToDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPieceWithParentConnectionToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -8216,7 +8216,7 @@ type AddedChildPiecesWithParentConnectionsToDesign implements Operation & Entity
   ownerEntity: OwnerEntity # computed // AddedChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedChildPiecesWithParentConnectionsToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -8239,7 +8239,7 @@ type AddedHangingChildPieceWithParentConnectionToDesign implements Operation & E
   ownerEntity: OwnerEntity # computed // AddedHangingChildPieceWithParentConnectionToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPieceWithParentConnectionToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
   connection: Connection! # data
 }
@@ -8262,7 +8262,7 @@ type AddedHangingChildPiecesWithParentConnectionsToDesign implements Operation &
   ownerEntity: OwnerEntity # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedHangingChildPiecesWithParentConnectionsToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
   connections: ConnectionConnection! # data
 }
@@ -8284,7 +8284,7 @@ type RenamedPieceInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedPieceInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8305,7 +8305,7 @@ type UpdatedPieceDescriptionInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // UpdatedPieceDescriptionInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // UpdatedPieceDescriptionInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8327,7 +8327,7 @@ type MovedPieceInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // MovedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPieceInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8349,7 +8349,7 @@ type MovedPiecesInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // MovedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // MovedPiecesInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
 }
 
@@ -8370,7 +8370,7 @@ type FixedPiecesInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // FixedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FixedPiecesInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
 }
 
@@ -8391,7 +8391,7 @@ type ChangedPieceToTypeInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // ChangedPieceToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPieceToTypeInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8412,7 +8412,7 @@ type ChangedPiecesToTypeInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // ChangedPiecesToTypeInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedPiecesToTypeInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   pieces: PieceConnection! # data
 }
 
@@ -8433,7 +8433,7 @@ type AddedAttributeToPiece implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToPieceOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
   attribute: Attribute! # data
 }
@@ -8455,7 +8455,7 @@ type AddedAttributesToPiece implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToPieceOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToPieceOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
   attributes: AttributeConnection! # data
 }
@@ -8477,7 +8477,7 @@ type RemovedAttributeFromPiece implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromPieceOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8498,7 +8498,7 @@ type RemovedAttributesFromPiece implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromPieceOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromPieceOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   piece: Piece! # data
 }
 
@@ -8519,7 +8519,7 @@ type DeletedPieceInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedPieceInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPieceInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedPieceInDesignOwner = Change
@@ -8539,7 +8539,7 @@ type DeletedPiecesInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedPiecesInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedPiecesInDesignOwner = Change
@@ -8560,7 +8560,7 @@ type DeletedPiecesAndConnectionsInDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedPiecesAndConnectionsInDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedPiecesAndConnectionsInDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedPiecesAndConnectionsInDesignOwner = Change
@@ -9129,7 +9129,7 @@ type CreatedDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
 }
 
@@ -9150,7 +9150,7 @@ type CreatedDesigns implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // CreatedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // CreatedDesignsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   designs: DesignConnection! # data
 }
 
@@ -9170,7 +9170,7 @@ type DeletedDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedDesignOwner = Change
@@ -9189,7 +9189,7 @@ type DeletedDesigns implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // DeletedDesignsOwner
   ownedEntities: OwnedEntityConnection # computed // DeletedDesignsOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
 }
 
 union DeletedDesignsOwner = Change
@@ -9208,7 +9208,7 @@ type FlattenedDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // FlattenedDesignOwner
   ownedEntities: OwnedEntityConnection # computed // FlattenedDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
 }
 
@@ -9229,7 +9229,7 @@ type AddedAttributeToDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributeToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributeToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
   attribute: Attribute! # data
 }
@@ -9251,7 +9251,7 @@ type AddedAttributesToDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // AddedAttributesToDesignOwner
   ownedEntities: OwnedEntityConnection # computed // AddedAttributesToDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
   attributes: AttributeConnection! # data
 }
@@ -9273,7 +9273,7 @@ type RemovedAttributeFromDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributeFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributeFromDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
 }
 
@@ -9294,7 +9294,7 @@ type RemovedAttributesFromDesign implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RemovedAttributesFromDesignOwner
   ownedEntities: OwnedEntityConnection # computed // RemovedAttributesFromDesignOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   design: Design! # data
 }
 
@@ -9592,7 +9592,7 @@ type RenamedKit implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // RenamedKitOwner
   ownedEntities: OwnedEntityConnection # computed // RenamedKitOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   kit: Kit! # data
 }
 
@@ -9613,7 +9613,7 @@ type ChangedDescription implements Operation & Entity {
   ownerEntity: OwnerEntity # computed // ChangedDescriptionOwner
   ownedEntities: OwnedEntityConnection # computed // ChangedDescriptionOwned
   input: Input # data
-  diff: Diff! # data
+  diff: Diff! # computed
   entity: Entity! # data
 }
 
