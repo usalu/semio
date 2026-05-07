@@ -361,6 +361,7 @@ pub mod geom {
 //#region 🪢 gql_relay
 
 /// 🪢 Relay `PageInfo` + connection shells for static GraphQL (edges, pageInfo, hash).
+#[allow(unused_macros)]
 pub mod gql_relay {
     use std::sync::Arc;
 
@@ -2415,6 +2416,76 @@ pub mod kit {
             }
             self.tag_by_id.write().await.remove(tag_id);
             Ok(())
+        }
+
+        /// @emoji ➕ Create [`Concept`] under kit or type.
+        pub async fn create_and_register_concept(self: &Arc<Self>, owner_id: &Id, input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::SemioError> {
+            let slot = self.resolve_concept_owner_slot(owner_id).await?;
+            let attrs = crate::meta::attributes_from_inputs(input.attributes).await;
+            let c = Concept::new(slot, input.name, input.description, input.icon, input.order, attrs).await;
+            self.register_concept(c.clone()).await;
+            match &*c.owner.read().await {
+                crate::meta::ConceptOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.concepts.write().await.push(c.clone());
+                    }
+                }
+                crate::meta::ConceptOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.concepts.write().await.push(c.clone());
+                    }
+                }
+                crate::meta::ConceptOwnerSlot::Unset => {}
+            }
+            Ok(c)
+        }
+
+        /// @emoji ➕ Create [`Quality`] under resolved owner (kit/type/representation/connector/design).
+        pub async fn create_and_register_quality(self: &Arc<Self>, owner_id: &Id, input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::SemioError> {
+            let slot = self.resolve_quality_owner_slot(owner_id).await?;
+            let attrs = crate::meta::attributes_from_inputs(input.attributes).await;
+            let q = Quality::new(
+                slot,
+                input.key,
+                input.value,
+                input.unit,
+                input.definition,
+                input.description,
+                input.icon,
+                Vec::new(),
+                attrs,
+            )
+            .await;
+            self.register_quality(q.clone()).await;
+            match &*q.owner.read().await {
+                crate::meta::QualityOwnerSlot::Kit(w) => {
+                    if let Some(k) = w.upgrade() {
+                        k.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Type(w) => {
+                    if let Some(t) = w.upgrade() {
+                        t.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Rep(w) => {
+                    if let Some(r) = w.upgrade() {
+                        r.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Conn(w) => {
+                    if let Some(c) = w.upgrade() {
+                        c.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Design(w) => {
+                    if let Some(d) = w.upgrade() {
+                        d.qualities.write().await.push(q.clone());
+                    }
+                }
+                crate::meta::QualityOwnerSlot::Unset => {}
+            }
+            Ok(q)
         }
 
         /// @emoji 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
@@ -4672,6 +4743,8 @@ pub mod op {
         RenameTag { request_id: Id, draft_id: Id, transaction_id: Id, tag_id: Id, name: String },
         DeleteTag { request_id: Id, draft_id: Id, transaction_id: Id, tag_id: Id },
         DeleteTags { request_id: Id, draft_id: Id, transaction_id: Id, tag_ids: Vec<Id> },
+        CreateConcept { request_id: Id, draft_id: Id, transaction_id: Id, owner_id: Id, input: crate::meta::ConceptInput },
+        CreateQuality { request_id: Id, draft_id: Id, transaction_id: Id, owner_id: Id, input: crate::meta::QualityInput },
         DragPieceInDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_id: Id, offset: Offset },
         DragPiecesInDesign { request_id: Id, draft_id: Id, transaction_id: Id, design_id: Id, piece_ids: Vec<Id>, offset: Offset },
         BackboneAttach { request_id: Id, connection_uri: String, store_kind: BackboneStoreKind },
@@ -4690,6 +4763,8 @@ pub mod op {
                 Command::RenameTag { request_id, .. } => request_id,
                 Command::DeleteTag { request_id, .. } => request_id,
                 Command::DeleteTags { request_id, .. } => request_id,
+                Command::CreateConcept { request_id, .. } => request_id,
+                Command::CreateQuality { request_id, .. } => request_id,
                 Command::DragPieceInDesign { request_id, .. } => request_id,
                 Command::DragPiecesInDesign { request_id, .. } => request_id,
                 Command::BackboneAttach { request_id, .. } => request_id,
@@ -4710,7 +4785,10 @@ pub mod op {
 
     /// @emoji 🧩 Declarative op row registration hook (`ops! { CreatedFixedPiece, … }`) — expand to typed op structs + history wiring.
     macro_rules! ops {
-        ($($_row:ident),* $(,)?) => {};
+        ($($row:ident),* $(,)?) => {
+            /// @emoji 🔢 Row count listed in `ops! { … }` (static registry grows toward ~100 SDL operations).
+            pub const GRAPH_OP_REGISTRY_ROWS: usize = [$(stringify!($row)),*].len();
+        };
     }
 
     ops! {
@@ -4718,7 +4796,100 @@ pub mod op {
         FixedPiece,
         DraggedPiece,
         RenamedKit,
-        ChangedDescription
+        ChangedDescription,
+        CreateTag,
+        CreateTags,
+        RenameTag,
+        UpdateTagDescription,
+        UpdateTagIcon,
+        AddAttributeToTag,
+        AddAttributesToTag,
+        RemoveAttributeFromTag,
+        RemoveAttributesFromTag,
+        DeleteTag,
+        DeleteTags,
+        CreateConcept,
+        CreateConcepts,
+        RenameConcept,
+        UpdateConceptDescription,
+        UpdateConceptIcon,
+        AddAttributeToConcept,
+        AddAttributesToConcept,
+        RemoveAttributeFromConcept,
+        RemoveAttributesFromConcept,
+        DeleteConcept,
+        DeleteConcepts,
+        CreatePort,
+        CreatePorts,
+        RenamePort,
+        UpdatePortDescription,
+        UpdatePortIcon,
+        AddAttributeToPort,
+        AddAttributesToPort,
+        RemoveAttributeFromPort,
+        RemoveAttributesFromPort,
+        DeletePort,
+        DeletePorts,
+        CreateQuality,
+        CreateQualities,
+        RenameQuality,
+        UpdateQualityDescription,
+        UpdateQualityIcon,
+        AddAttributeToQuality,
+        AddAttributesToQuality,
+        RemoveAttributeFromQuality,
+        RemoveAttributesFromQuality,
+        DeleteQuality,
+        DeleteQualities,
+        CreateType,
+        CreateTypes,
+        RenameType,
+        UpdateTypeDescription,
+        UpdateTypeIcon,
+        AddAttributeToType,
+        AddAttributesToType,
+        RemoveAttributeFromType,
+        RemoveAttributesFromType,
+        DeleteType,
+        DeleteTypes,
+        AddConnectorToType,
+        AddConnectorsToType,
+        RenameConnectorInType,
+        UpdateConnectorDescriptionInType,
+        UpdateConnectorIconInType,
+        RemoveConnectorFromType,
+        RemoveConnectorsFromType,
+        CreateDesign,
+        CreateDesigns,
+        DeleteDesign,
+        DeleteDesigns,
+        FlattenDesign,
+        AddAttributeToDesign,
+        AddAttributesToDesign,
+        RemoveAttributeFromDesign,
+        RemoveAttributesFromDesign,
+        AddFixedPieceToDesign,
+        AddChildPieceWithParentConnectionToDesign,
+        AddChildPiecesWithParentConnectionsToDesign,
+        AddHangingChildPieceWithParentConnectionToDesign,
+        AddHangingChildPiecesWithParentConnectionsToDesign,
+        RenamePieceInDesign,
+        UpdatePieceDescriptionInDesign,
+        DragPieceInDesign,
+        DragPiecesInDesign,
+        MovePieceInDesign,
+        MovePiecesInDesign,
+        FixPieceInDesign,
+        FixPiecesInDesign,
+        ChangePieceToTypeInDesign,
+        ChangePiecesToTypeInDesign,
+        AddAttributeToPiece,
+        AddAttributesToPiece,
+        RemoveAttributeFromPiece,
+        RemoveAttributesFromPiece,
+        DeletePieceInDesign,
+        DeletePiecesInDesign,
+        DeletePiecesAndConnectionsInDesign
     }
 }
 
@@ -5366,6 +5537,8 @@ pub mod worker {
                     Command::RenameTag { .. } => "renameTag",
                     Command::DeleteTag { .. } => "deleteTag",
                     Command::DeleteTags { .. } => "deleteTags",
+                    Command::CreateConcept { .. } => "createConcept",
+                    Command::CreateQuality { .. } => "createQuality",
                     Command::DragPieceInDesign { .. } => "dragPieceInDesign",
                     Command::DragPiecesInDesign { .. } => "dragPiecesInDesign",
                     Command::BackboneAttach { .. } => "backboneAttach",
@@ -5466,6 +5639,16 @@ pub mod worker {
                     self.graph.the_kit.bump_touch_epoch().await;
                     Ok(())
                 }
+                Command::CreateConcept { owner_id, input, .. } => {
+                    let _ = self.graph.the_kit.create_and_register_concept(&owner_id, input).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
+                Command::CreateQuality { owner_id, input, .. } => {
+                    let _ = self.graph.the_kit.create_and_register_quality(&owner_id, input).await?;
+                    self.graph.the_kit.bump_touch_epoch().await;
+                    Ok(())
+                }
                 Command::DragPieceInDesign { design_id, piece_id, offset, .. } => {
                     self.graph.apply_drag_piece_in_design(&design_id, &piece_id, offset).await?;
                     self.graph.the_kit.bump_touch_epoch().await;
@@ -5501,7 +5684,7 @@ pub mod gql {
     use crate::error::SemioError;
     use crate::geom::{Offset, Position};
     use crate::id::Id;
-    use crate::meta::TagInput;
+    use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::op::{Command, CommandReceipt, OperationKind};
     use crate::vcs::Graph;
     use crate::worker::ParentRuntime;
@@ -5757,6 +5940,48 @@ pub mod gql {
                 draft_id,
                 transaction_id,
                 tag_ids,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "createConcept")]
+        async fn create_concept(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "ownerId")] owner_id: Id,
+            concept: ConceptInput,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::CreateConcept {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                owner_id,
+                input: concept,
+            };
+            Ok(rt.dispatch_wip(cmd).await)
+        }
+
+        #[graphql(name = "createQuality")]
+        async fn create_quality(
+            &self,
+            ctx: &Context<'_>,
+            #[graphql(name = "draftId")] draft_id: Id,
+            #[graphql(name = "transactionId")] transaction_id: Id,
+            #[graphql(name = "ownerId")] owner_id: Id,
+            quality: QualityInput,
+        ) -> async_graphql::Result<Id> {
+            let rt = ctx.data::<Arc<ParentRuntime>>()?;
+            let request_id = Id::new().await;
+            let cmd = Command::CreateQuality {
+                request_id: request_id.clone(),
+                draft_id,
+                transaction_id,
+                owner_id,
+                input: quality,
             };
             Ok(rt.dispatch_wip(cmd).await)
         }
@@ -6139,6 +6364,9 @@ mod tests {
             "pieceInDesign",
             "addFixedPieceToDesign",
             "fixPieceInDesign",
+            "createTag",
+            "createConcept",
+            "createQuality",
             "DraftConnection",
             "DesignConnection",
             "PieceConnection",
@@ -6214,6 +6442,99 @@ mod tests {
                 .collect();
             assert!(names.iter().any(|n| n == "alpha-tag"), "tags missing new name: {:?}", names);
         });
+    }
+
+    #[test]
+    fn create_concept_on_kit_graphql_roundtrip() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let kit_id = schema
+                .execute("{ wip { theKit { id } } }")
+                .await
+                .data
+                .into_json()
+                .unwrap()["wip"]["theKit"]["id"]
+                .as_str()
+                .expect("kit id")
+                .to_string();
+
+            const M: &str = r#"
+                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $concept: ConceptInput!) {
+                    createConcept(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, concept: $concept)
+                }
+            "#;
+            let vars = async_graphql::value!({
+                "draftId": "d1",
+                "transactionId": "t1",
+                "ownerId": kit_id,
+                "concept": { "name": "beta-concept" }
+            });
+            let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createConcept errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let q = "{ wip { theKit { concepts { edges { node { name } } } } } }";
+            let res = schema.execute(q).await;
+            assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let names: Vec<String> = data["wip"]["theKit"]["concepts"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|e| e["node"]["name"].as_str().map(String::from))
+                .collect();
+            assert!(names.iter().any(|n| n == "beta-concept"), "concepts missing new name: {:?}", names);
+        });
+    }
+
+    #[test]
+    fn create_quality_on_kit_graphql_roundtrip() {
+        block_on(async {
+            let schema = crate::gql::build_schema().await;
+            let kit_id = schema
+                .execute("{ wip { theKit { id } } }")
+                .await
+                .data
+                .into_json()
+                .unwrap()["wip"]["theKit"]["id"]
+                .as_str()
+                .expect("kit id")
+                .to_string();
+
+            const M: &str = r#"
+                mutation($draftId: ID!, $transactionId: ID!, $ownerId: ID!, $quality: QualityInput!) {
+                    createQuality(draftId: $draftId, transactionId: $transactionId, ownerId: $ownerId, quality: $quality)
+                }
+            "#;
+            let vars = async_graphql::value!({
+                "draftId": "d1",
+                "transactionId": "t1",
+                "ownerId": kit_id,
+                "quality": { "key": "q1", "value": "v1" }
+            });
+            let res = schema.execute(Request::new(M).variables(Variables::from_value(vars))).await;
+            assert!(res.errors.is_empty(), "createQuality errors: {:?}", res.errors);
+
+            std::thread::sleep(std::time::Duration::from_millis(150));
+
+            let q = "{ wip { theKit { qualities { edges { node { key value } } } } } }";
+            let res = schema.execute(q).await;
+            assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
+            let data = res.data.into_json().unwrap();
+            let keys: Vec<String> = data["wip"]["theKit"]["qualities"]["edges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter_map(|e| e["node"]["key"].as_str().map(String::from))
+                .collect();
+            assert!(keys.iter().any(|k| k == "q1"), "qualities missing new key: {:?}", keys);
+        });
+    }
+
+    #[test]
+    fn graph_op_registry_row_count() {
+        assert_eq!(crate::op::GRAPH_OP_REGISTRY_ROWS, 98);
     }
 
     #[test]

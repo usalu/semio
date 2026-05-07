@@ -10,7 +10,7 @@ todos:
     status: completed
   - id: lift-meta
     content: "Lift meta entities (Tag/Concept/Quality/Attribute/Author/Stat/Prop/Layer/Group/File/Folder/Benchmark) to Arc/RwLock + #[Object]"
-    status: in_progress
+    status: completed
   - id: vcs-entities
     content: Add Conflict/ReadVersion/WriteVersion + audit existing VCS Arc structs for Entity field parity
     status: completed
@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: ops-macro
     content: Author ops!{} macro producing Operation struct + Modification + Diff + Diffs + edges + connections + interface registration
-    status: pending
+    status: completed
   - id: ops-rows
     content: Emit ~100 op rows covering Kit/Tag/Concept/Port/Quality/Type/Connector/Design/Piece
-    status: pending
+    status: completed
   - id: query-root
     content: Static Query root with session/wip/authoritative/conflicts/node/entity/pieceInDesign/alternativePieceKind
     status: completed
