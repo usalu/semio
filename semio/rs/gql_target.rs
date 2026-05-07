@@ -8,10 +8,13 @@ use async_graphql::dynamic::{
 };
 use async_graphql::parser::types::{
     BaseType, FieldDefinition, InputObjectType, InputValueDefinition, ObjectType, SchemaDefinition, ServiceDocument,
-    Type as ParserType, TypeDefinition, TypeKind, TypeSystemDefinition, UnionType,
+    Type as ParserType, TypeKind, TypeSystemDefinition, UnionType,
 };
 use async_graphql::parser::{parse_schema, Positioned};
+use async_graphql::Value as GqlValue;
 use futures_util::stream;
+use futures_util::StreamExt;
+use serde_json::Number as JsonNumber;
 
 use crate::event::EventBus;
 use crate::id::Id;
@@ -19,6 +22,28 @@ use crate::worker::ParentRuntime;
 
 /// 📜 Canonical target SDL (must match exported `semio/graphql/schema.graphql`).
 pub const TARGET_GRAPHQL_SDL: &str = include_str!("../graphql/target.schema.graphql");
+
+#[inline]
+fn fv_str(s: impl Into<String>) -> FieldValue<'static> {
+    FieldValue::from(GqlValue::String(s.into()))
+}
+
+#[inline]
+fn fv_bool(b: bool) -> FieldValue<'static> {
+    FieldValue::from(GqlValue::Boolean(b))
+}
+
+#[inline]
+fn fv_i32(i: i32) -> FieldValue<'static> {
+    FieldValue::from(GqlValue::Number(JsonNumber::from(i)))
+}
+
+#[inline]
+fn fv_f64(f: f64) -> FieldValue<'static> {
+    FieldValue::from(GqlValue::Number(
+        JsonNumber::from_f64(f).unwrap_or_else(|| JsonNumber::from(0)),
+    ))
+}
 
 fn parser_type_to_tyref(ty: &ParserType) -> TypeRef {
     let mut t = match &ty.base {
@@ -36,12 +61,12 @@ fn stub_value_for_ty(ty: &TypeRef) -> FieldValue<'static> {
         TypeRef::NonNull(inner) => stub_value_for_ty(inner),
         TypeRef::List(_) => FieldValue::from(Vec::<FieldValue>::new()),
         TypeRef::Named(n) => match n.as_ref() {
-            "String" => FieldValue::from(String::new()),
-            "Int" => FieldValue::from(0i32),
-            "Float" => FieldValue::from(0.0f64),
-            "Boolean" => FieldValue::from(false),
-            "ID" => FieldValue::from(String::new()),
-            "Timestamp" => FieldValue::from(String::new()),
+            "String" => fv_str(""),
+            "Int" => fv_i32(0),
+            "Float" => fv_f64(0.0),
+            "Boolean" => fv_bool(false),
+            "ID" => fv_str(""),
+            "Timestamp" => fv_str(""),
             _ => FieldValue::with_type(FieldValue::NULL, n.to_string()),
         },
     }
@@ -56,10 +81,8 @@ fn object_field_from_ast(field: &Positioned<FieldDefinition>) -> Field {
         FieldFuture::new(async move { Ok(Some(stub_value_for_ty(&t))) })
     });
     for arg in &field.node.arguments {
-        let mut iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
-        if let Some(d) = &arg.node.default_value {
-            iv = iv.default_value(d.node.clone().into_value());
-        }
+        let iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
+        let _ = &arg.node.default_value;
         f = f.argument(iv);
     }
     f
@@ -86,10 +109,8 @@ fn interface_from_ast(name: &str, i: &async_graphql::parser::types::InterfaceTyp
         let ty = parser_type_to_tyref(&field.node.ty.node);
         let mut ifld = InterfaceField::new(fname, ty);
         for arg in &field.node.arguments {
-            let mut iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
-            if let Some(d) = &arg.node.default_value {
-                iv = iv.default_value(d.node.clone().into_value());
-            }
+            let iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
+            let _ = &arg.node.default_value;
             ifld = ifld.argument(iv);
         }
         iface = iface.field(ifld);
@@ -116,20 +137,16 @@ fn enum_from_ast(name: &str, e: &async_graphql::parser::types::EnumType) -> Enum
 fn input_object_from_ast(name: &str, io: &InputObjectType) -> InputObject {
     let mut o = InputObject::new(name);
     for f in &io.fields {
-        let mut iv = InputValue::new(f.node.name.node.to_string(), parser_type_to_tyref(&f.node.ty.node));
-        if let Some(d) = &f.node.default_value {
-            iv = iv.default_value(d.node.clone().into_value());
-        }
+        let iv = InputValue::new(f.node.name.node.to_string(), parser_type_to_tyref(&f.node.ty.node));
+        let _ = &f.node.default_value;
         o = o.field(iv);
     }
     o
 }
 
 fn input_value_from_arg_def(arg: &Positioned<InputValueDefinition>) -> InputValue {
-    let mut iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
-    if let Some(d) = &arg.node.default_value {
-        iv = iv.default_value(d.node.clone().into_value());
-    }
+    let iv = InputValue::new(arg.node.name.node.to_string(), parser_type_to_tyref(&arg.node.ty.node));
+    let _ = &arg.node.default_value;
     iv
 }
 
@@ -142,7 +159,8 @@ fn subscription_from_object_ast(name: &str, o: &ObjectType) -> Subscription {
         for arg in &field.node.arguments {
             args.push(input_value_from_arg_def(arg));
         }
-        let mut sf = SubscriptionField::new(fname.clone(), ty_c.clone(), move |_ctx| {
+        let ty_out = ty.clone();
+        let mut sf = SubscriptionField::new(fname.clone(), ty_out.clone(), move |_ctx| {
             SubscriptionFieldFuture::new(async move {
                 Ok(stream::empty::<async_graphql::Result<FieldValue<'static>>>().boxed())
             })
@@ -231,7 +249,6 @@ pub struct DesignConn(pub Vec<Arc<crate::kit::design::Design>>);
 pub struct PieceConn(pub Vec<Arc<crate::kit::design::piece::Piece>>);
 
 fn design_connection_object() -> Object {
-    let page = empty_page_info_object();
     Object::new("DesignConnection")
         .implement("EntityConnectionInterface")
         .field(Field::new("edges", TypeRef::named_nn_list_nn("DesignEdge"), |ctx| {
@@ -267,7 +284,7 @@ fn design_connection_object() -> Object {
                     h.update(d.id.as_str().as_bytes());
                     h.update(b"\x1f");
                 }
-                Ok(Some(FieldValue::from(h.finalize().to_hex().to_string())))
+                Ok(Some(fv_str(h.finalize().to_hex().to_string())))
             })
         }))
 }
@@ -283,7 +300,7 @@ fn design_edge_object() -> Object {
         .field(Field::new("cursor", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<DesignEdge>().unwrap();
-                Ok(Some(FieldValue::from(p.cursor.clone())))
+                Ok(Some(fv_str(p.cursor.clone())))
             })
         }))
         .field(Field::new("node", TypeRef::named_nn("Design"), |ctx| {
@@ -330,7 +347,7 @@ fn piece_connection_object() -> Object {
                     h.update(p.id.as_str().as_bytes());
                     h.update(b"\x1f");
                 }
-                Ok(Some(FieldValue::from(h.finalize().to_hex().to_string())))
+                Ok(Some(fv_str(h.finalize().to_hex().to_string())))
             })
         }))
 }
@@ -346,7 +363,7 @@ fn piece_edge_object() -> Object {
         .field(Field::new("cursor", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<PieceEdge>().unwrap();
-                Ok(Some(FieldValue::from(p.cursor.clone())))
+                Ok(Some(fv_str(p.cursor.clone())))
             })
         }))
         .field(Field::new("node", TypeRef::named_nn("Piece"), |ctx| {
@@ -366,10 +383,10 @@ fn edge_cursor(i: usize) -> String {
 fn overlay_page_info_resolver() -> Object {
     Object::new("PageInfo")
         .field(Field::new("hasNextPage", TypeRef::named_nn(TypeRef::BOOLEAN), |_| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(false))) })
+            FieldFuture::new(async move { Ok(Some(fv_bool(false))) })
         }))
         .field(Field::new("hasPreviousPage", TypeRef::named_nn(TypeRef::BOOLEAN), |_| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(false))) })
+            FieldFuture::new(async move { Ok(Some(fv_bool(false))) })
         }))
         .field(Field::new("startCursor", TypeRef::named(TypeRef::STRING), |_| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
@@ -472,7 +489,7 @@ fn conflict_connection_object() -> Object {
             }),
         )
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
 }
 
@@ -487,7 +504,7 @@ fn conflict_edge_object() -> Object {
         .field(Field::new("cursor", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<ConflictEdge>().unwrap();
-                Ok(Some(FieldValue::from(p.cursor.clone())))
+                Ok(Some(fv_str(p.cursor.clone())))
             })
         }))
         .field(Field::new("node", TypeRef::named_nn("Conflict"), |ctx| {
@@ -498,19 +515,76 @@ fn conflict_edge_object() -> Object {
         }))
 }
 
+pub struct DraftConn(pub Vec<Arc<crate::vcs::Draft>>);
+
+fn draft_connection_object() -> Object {
+    Object::new("DraftConnection")
+        .implement("EntityConnectionInterface")
+        .field(Field::new("edges", TypeRef::named_nn_list_nn("DraftEdge"), |ctx| {
+            FieldFuture::new(async move {
+                let parent = ctx.parent_value.downcast_ref::<DraftConn>().unwrap();
+                let edges: Vec<FieldValue> = parent
+                    .0
+                    .iter()
+                    .enumerate()
+                    .map(|(i, d)| {
+                        FieldValue::owned_any(DraftEdge {
+                            cursor: edge_cursor(i),
+                            draft: d.clone(),
+                        })
+                    })
+                    .collect();
+                Ok(Some(FieldValue::from(edges)))
+            })
+        }))
+        .field(
+            Field::new("pageInfo", TypeRef::named_nn("PageInfo"), |ctx| {
+                FieldFuture::new(async move {
+                    let _ = ctx.parent_value.downcast_ref::<DraftConn>().unwrap();
+                    Ok(Some(FieldValue::owned_any(())))
+                })
+            }),
+        )
+        .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_| {
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
+        }))
+}
+
+pub struct DraftEdge {
+    pub cursor: String,
+    pub draft: Arc<crate::vcs::Draft>,
+}
+
+fn draft_edge_object() -> Object {
+    Object::new("DraftEdge")
+        .implement("EntityEdge")
+        .field(Field::new("cursor", TypeRef::named_nn(TypeRef::STRING), |ctx| {
+            FieldFuture::new(async move {
+                let p = ctx.parent_value.downcast_ref::<DraftEdge>().unwrap();
+                Ok(Some(fv_str(p.cursor.clone())))
+            })
+        }))
+        .field(Field::new("node", TypeRef::named_nn("Draft"), |ctx| {
+            FieldFuture::new(async move {
+                let p = ctx.parent_value.downcast_ref::<DraftEdge>().unwrap();
+                Ok(Some(FieldValue::owned_any(p.draft.clone())))
+            })
+        }))
+}
+
 fn real_graph_object() -> Object {
     Object::new("Graph")
         .implement("Entity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |ctx| {
             FieldFuture::new(async move {
                 let g = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Graph>>().unwrap();
-                Ok(Some(FieldValue::from(g.id.clone())))
+                Ok(Some(fv_str(g.id.as_str())))
             })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let g = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Graph>>().unwrap();
-                Ok(Some(FieldValue::from(g.compute_hash().await)))
+                Ok(Some(fv_str(g.compute_hash().await)))
             })
         }))
         .field(Field::new("owner", TypeRef::named_nn("GraphOwner"), |ctx| {
@@ -588,20 +662,34 @@ fn real_kit_object() -> Object {
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |ctx| {
             FieldFuture::new(async move {
                 let k = ctx.parent_value.downcast_ref::<Arc<crate::kit::Kit>>().unwrap();
-                Ok(Some(FieldValue::from(k.id.clone())))
+                Ok(Some(fv_str(k.id.as_str())))
             })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let k = ctx.parent_value.downcast_ref::<Arc<crate::kit::Kit>>().unwrap();
-                Ok(Some(FieldValue::from(k.compute_hash().await)))
+                Ok(Some(fv_str(k.compute_hash().await)))
             })
         }))
-        .field(Field::new("owner", TypeRef::named_nn("KitOwner"), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Graph"))) })
+        .field(Field::new("owner", TypeRef::named_nn("KitOwner"), |ctx| {
+            FieldFuture::new(async move {
+                let k = ctx.parent_value.downcast_ref::<Arc<crate::kit::Kit>>().unwrap();
+                if let Some(g) = k.owner_graph.upgrade() {
+                    return Ok(Some(FieldValue::owned_any(g).with_type("Graph")));
+                }
+                Ok(Some(FieldValue::with_type(FieldValue::NULL, "Graph")))
+            })
         }))
-        .field(Field::new("graphOwner", TypeRef::named("Graph"), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+        .field(Field::new("graphOwner", TypeRef::named("Graph"), |ctx| {
+            FieldFuture::new(async move {
+                let k = ctx.parent_value.downcast_ref::<Arc<crate::kit::Kit>>().unwrap();
+                Ok(Some(
+                    k.owner_graph
+                        .upgrade()
+                        .map(|g| FieldValue::owned_any(g))
+                        .unwrap_or(FieldValue::NULL),
+                ))
+            })
         }))
         .field(Field::new("checkpointOwner", TypeRef::named("Checkpoint"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
@@ -629,7 +717,7 @@ fn real_kit_object() -> Object {
         .field(Field::new("name", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let k = ctx.parent_value.downcast_ref::<Arc<crate::kit::Kit>>().unwrap();
-                Ok(Some(FieldValue::from(k.name.read().await.clone())))
+                Ok(Some(fv_str(k.name.read().await.clone())))
             })
         }))
         .field(Field::new("description", TypeRef::named(TypeRef::STRING), |ctx| {
@@ -640,7 +728,7 @@ fn real_kit_object() -> Object {
                         .read()
                         .await
                         .clone()
-                        .map(FieldValue::from)
+                        .map(fv_str)
                         .unwrap_or(FieldValue::NULL),
                 ))
             })
@@ -751,13 +839,13 @@ fn real_design_object() -> Object {
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |ctx| {
             FieldFuture::new(async move {
                 let d = ctx.parent_value.downcast_ref::<Arc<crate::kit::design::Design>>().unwrap();
-                Ok(Some(FieldValue::from(d.id.clone())))
+                Ok(Some(fv_str(d.id.as_str())))
             })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let d = ctx.parent_value.downcast_ref::<Arc<crate::kit::design::Design>>().unwrap();
-                Ok(Some(FieldValue::from(d.compute_hash().await)))
+                Ok(Some(fv_str(d.compute_hash().await)))
             })
         }))
         .field(Field::new("owner", TypeRef::named_nn("DesignOwner"), |_ctx| {
@@ -777,7 +865,7 @@ fn real_design_object() -> Object {
         .field(Field::new("name", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let d = ctx.parent_value.downcast_ref::<Arc<crate::kit::design::Design>>().unwrap();
-                Ok(Some(FieldValue::from(d.name.read().await.clone())))
+                Ok(Some(fv_str(d.name.read().await.clone())))
             })
         }))
         .field(Field::new("description", TypeRef::named(TypeRef::STRING), |_ctx| {
@@ -828,8 +916,22 @@ fn real_design_object() -> Object {
             })
         }))
         .field(
-            Field::new("piece", TypeRef::named("Piece"), |_ctx| {
-                FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+            Field::new("piece", TypeRef::named("Piece"), |ctx| {
+                FieldFuture::new(async move {
+                    let id: Id = ctx
+                        .args
+                        .try_get("id")
+                        .ok()
+                        .and_then(|a| a.deserialize().ok())
+                        .unwrap_or_default();
+                    let d = ctx.parent_value.downcast_ref::<Arc<crate::kit::design::Design>>().unwrap();
+                    Ok(Some(
+                        d.piece_by_external_id(&id)
+                            .await
+                            .map(|p| FieldValue::owned_any(p))
+                            .unwrap_or(FieldValue::NULL),
+                    ))
+                })
             })
             .argument(InputValue::new("id", TypeRef::named_nn(TypeRef::ID))),
         )
@@ -876,7 +978,7 @@ fn real_design_object() -> Object {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
         .field(Field::new("qualitySum", TypeRef::named_nn(TypeRef::FLOAT), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(0.0f64))) })
+            FieldFuture::new(async move { Ok(Some(fv_f64(0.0))) })
         }))
         .field(
             Field::new("references", TypeRef::named_nn("DesignConnection"), |_ctx| {
@@ -899,7 +1001,7 @@ fn real_piece_object() -> Object {
                     .parent_value
                     .downcast_ref::<Arc<crate::kit::design::piece::Piece>>()
                     .unwrap();
-                Ok(Some(FieldValue::from(p.id.clone())))
+                Ok(Some(fv_str(p.id.as_str())))
             })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |ctx| {
@@ -908,7 +1010,7 @@ fn real_piece_object() -> Object {
                     .parent_value
                     .downcast_ref::<Arc<crate::kit::design::piece::Piece>>()
                     .unwrap();
-                Ok(Some(FieldValue::from(p.compute_hash().await)))
+                Ok(Some(fv_str(p.compute_hash().await)))
             })
         }))
         .field(Field::new("owner", TypeRef::named_nn("PieceOwner"), |_ctx| {
@@ -947,7 +1049,7 @@ fn real_piece_object() -> Object {
                         .read()
                         .await
                         .clone()
-                        .map(FieldValue::from)
+                        .map(fv_str)
                         .unwrap_or(FieldValue::NULL),
                 ))
             })
@@ -971,8 +1073,19 @@ fn real_piece_object() -> Object {
         .field(Field::new("scale", TypeRef::named(TypeRef::FLOAT), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
-        .field(Field::new("blueprint", TypeRef::named_nn("Blueprint"), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Type"))) })
+        .field(Field::new("blueprint", TypeRef::named_nn("Blueprint"), |ctx| {
+            FieldFuture::new(async move {
+                use crate::kit::r#type::Blueprint;
+                let p = ctx
+                    .parent_value
+                    .downcast_ref::<Arc<crate::kit::design::piece::Piece>>()
+                    .unwrap();
+                let bp = p.blueprint.read().await.clone();
+                Ok(Some(match bp {
+                    Blueprint::Type(t) => FieldValue::owned_any(t).with_type("Type"),
+                    Blueprint::Design(d) => FieldValue::owned_any(d).with_type("Design"),
+                }))
+            })
         }))
         .field(Field::new("props", TypeRef::named_nn("PropConnection"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
@@ -1009,7 +1122,7 @@ fn real_piece_object() -> Object {
             }),
         )
         .field(Field::new("depth", TypeRef::named_nn(TypeRef::INT), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(0i32))) })
+            FieldFuture::new(async move { Ok(Some(fv_i32(0))) })
         }))
         .field(Field::new("flatPosition", TypeRef::named_nn("Position"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
@@ -1023,20 +1136,52 @@ fn real_piece_object() -> Object {
 
 fn real_session_object() -> Object {
     Object::new("Session")
+        .implement("Entity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |ctx| {
             FieldFuture::new(async move {
                 let s = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Session>>().unwrap();
-                Ok(Some(FieldValue::from(s.id.clone())))
+                Ok(Some(fv_str(s.id.as_str())))
             })
         }))
-        .field(Field::new("startedAt", TypeRef::named("Timestamp"), |_ctx| {
+        .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |ctx| {
+            FieldFuture::new(async move {
+                let s = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Session>>().unwrap();
+                Ok(Some(fv_str(s.id.as_str())))
+            })
+        }))
+        .field(Field::new("owner", TypeRef::named_nn("SessionOwner"), |ctx| {
+            FieldFuture::new(async move {
+                let rt = ctx.data::<Arc<ParentRuntime>>()?;
+                Ok(Some(FieldValue::owned_any(rt.wip_graph.clone()).with_type("Graph")))
+            })
+        }))
+        .field(Field::new("graphOwner", TypeRef::named("Graph"), |_ctx| {
+            FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+        }))
+        .field(Field::new("checkpointOwner", TypeRef::named("Checkpoint"), |_ctx| {
+            FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+        }))
+        .field(Field::new("alternativeOwner", TypeRef::named("Alternative"), |_ctx| {
+            FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+        }))
+        .field(Field::new("entityOwner", TypeRef::named("OwnerEntity"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
         }))
         .field(
-            Field::new("drafts", TypeRef::named_nn_list_nn("Draft"), |_ctx| {
-                FieldFuture::new(async move { Ok(Some(FieldValue::from(Vec::<FieldValue>::new()))) })
+            Field::new("ownedEntities", TypeRef::named("OwnedEntityConnection"), |_ctx| {
+                FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
             }),
         )
+        .field(Field::new("startedAt", TypeRef::named("Timestamp"), |_ctx| {
+            FieldFuture::new(async move { Ok(Some(FieldValue::NULL)) })
+        }))
+        .field(Field::new("drafts", TypeRef::named_nn("DraftConnection"), |ctx| {
+            FieldFuture::new(async move {
+                let s = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Session>>().unwrap();
+                let v = s.drafts.read().await.clone();
+                Ok(Some(FieldValue::owned_any(DraftConn(v))))
+            })
+        }))
 }
 
 fn real_conflict_object() -> Object {
@@ -1044,7 +1189,7 @@ fn real_conflict_object() -> Object {
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |ctx| {
             FieldFuture::new(async move {
                 let c = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Conflict>>().unwrap();
-                Ok(Some(FieldValue::from(c.id.clone())))
+                Ok(Some(fv_str(c.id.as_str())))
             })
         }))
         .field(Field::new("backboneTip", TypeRef::named(TypeRef::STRING), |_ctx| {
@@ -1053,13 +1198,13 @@ fn real_conflict_object() -> Object {
         .field(Field::new("reason", TypeRef::named_nn(TypeRef::STRING), |ctx| {
             FieldFuture::new(async move {
                 let c = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Conflict>>().unwrap();
-                Ok(Some(FieldValue::from(c.reason.read().await.clone())))
+                Ok(Some(fv_str(c.reason.read().await.clone())))
             })
         }))
         .field(Field::new("createdAt", TypeRef::named_nn("Timestamp"), |ctx| {
             FieldFuture::new(async move {
                 let c = ctx.parent_value.downcast_ref::<Arc<crate::vcs::Conflict>>().unwrap();
-                Ok(Some(FieldValue::from(c.created_at.read().await.clone())))
+                Ok(Some(fv_str(c.created_at.read().await.0.clone())))
             })
         }))
 }
@@ -1068,10 +1213,10 @@ fn position_value_object() -> Object {
     Object::new("Position")
         .implement("WeakEntity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from("position".to_string()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str("position"))) })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
         .field(Field::new("owner", TypeRef::named_nn("PositionOwner"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Piece"))) })
@@ -1102,10 +1247,10 @@ fn coordinate_value_object() -> Object {
     Object::new("Coordinate")
         .implement("WeakEntity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from("coord".to_string()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str("coord"))) })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
         .field(Field::new("owner", TypeRef::named_nn("CoordinateOwner"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Position"))) })
@@ -1121,13 +1266,13 @@ fn coordinate_value_object() -> Object {
         .field(Field::new("u", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let c = ctx.parent_value.downcast_ref::<crate::geom::Coordinate>().unwrap();
-                Ok(Some(FieldValue::from(c.u)))
+                Ok(Some(fv_f64(c.u)))
             })
         }))
         .field(Field::new("v", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let c = ctx.parent_value.downcast_ref::<crate::geom::Coordinate>().unwrap();
-                Ok(Some(FieldValue::from(c.v)))
+                Ok(Some(fv_f64(c.v)))
             })
         }))
 }
@@ -1136,10 +1281,10 @@ fn plane_value_object() -> Object {
     Object::new("Plane")
         .implement("WeakEntity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from("plane".to_string()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str("plane"))) })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
         .field(Field::new("owner", TypeRef::named_nn("PlaneOwner"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Position"))) })
@@ -1176,10 +1321,10 @@ fn point_value_object() -> Object {
     Object::new("Point")
         .implement("WeakEntity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from("pt".to_string()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str("pt"))) })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
         .field(Field::new("owner", TypeRef::named_nn("PointOwner"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Plane"))) })
@@ -1195,19 +1340,19 @@ fn point_value_object() -> Object {
         .field(Field::new("x", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<crate::geom::Point>().unwrap();
-                Ok(Some(FieldValue::from(p.x)))
+                Ok(Some(fv_f64(p.x)))
             })
         }))
         .field(Field::new("y", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<crate::geom::Point>().unwrap();
-                Ok(Some(FieldValue::from(p.y)))
+                Ok(Some(fv_f64(p.y)))
             })
         }))
         .field(Field::new("z", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let p = ctx.parent_value.downcast_ref::<crate::geom::Point>().unwrap();
-                Ok(Some(FieldValue::from(p.z)))
+                Ok(Some(fv_f64(p.z)))
             })
         }))
 }
@@ -1216,10 +1361,10 @@ fn vector_value_object() -> Object {
     Object::new("Vector")
         .implement("WeakEntity")
         .field(Field::new("id", TypeRef::named_nn(TypeRef::ID), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from("vec".to_string()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str("vec"))) })
         }))
         .field(Field::new("hash", TypeRef::named_nn(TypeRef::STRING), |_ctx| {
-            FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) })
+            FieldFuture::new(async move { Ok(Some(fv_str(""))) })
         }))
         .field(Field::new("owner", TypeRef::named_nn("VectorOwner"), |_ctx| {
             FieldFuture::new(async move { Ok(Some(FieldValue::with_type(FieldValue::NULL, "Plane"))) })
@@ -1235,140 +1380,115 @@ fn vector_value_object() -> Object {
         .field(Field::new("x", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let v = ctx.parent_value.downcast_ref::<crate::geom::Vector>().unwrap();
-                Ok(Some(FieldValue::from(v.x)))
+                Ok(Some(fv_f64(v.x)))
             })
         }))
         .field(Field::new("y", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let v = ctx.parent_value.downcast_ref::<crate::geom::Vector>().unwrap();
-                Ok(Some(FieldValue::from(v.y)))
+                Ok(Some(fv_f64(v.y)))
             })
         }))
         .field(Field::new("z", TypeRef::named_nn(TypeRef::FLOAT), |ctx| {
             FieldFuture::new(async move {
                 let v = ctx.parent_value.downcast_ref::<crate::geom::Vector>().unwrap();
-                Ok(Some(FieldValue::from(v.z)))
+                Ok(Some(fv_f64(v.z)))
             })
         }))
 }
 
-fn dispatch_mutation(ctx: &async_graphql::dynamic::ResolverContext<'_>, kind: &'static str) -> FieldFuture<'_> {
-    let draft_id: Id = ctx.args.try_get("draftId").ok().and_then(|a| a.deserialize().ok()).unwrap_or_default();
-    let transaction_id: Id = ctx
-        .args
-        .try_get("transactionId")
-        .ok()
-        .and_then(|a| a.deserialize().ok())
-        .unwrap_or_default();
-    let rt = match ctx.data::<Arc<ParentRuntime>>() {
-        Ok(r) => r.clone(),
-        Err(_) => {
-            return FieldFuture::new(async move { Ok(Some(FieldValue::from(String::new()))) });
-        }
-    };
-    let request_id = Id::new_sync();
-    FieldFuture::new(async move {
-        match kind {
-            "renameKit" => {
-                let name: String = ctx
-                    .args
-                    .try_get("name")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let cmd = crate::op::Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name };
-                rt.dispatch_wip(cmd).await;
+fn arg_id(args: &async_graphql::dynamic::ObjectAccessor<'_>, key: &str) -> Id {
+    args.try_get(key).ok().and_then(|a| a.deserialize().ok()).unwrap_or_default()
+}
+
+fn arg_string(args: &async_graphql::dynamic::ObjectAccessor<'_>, key: &str) -> String {
+    args.try_get(key).ok().and_then(|a| a.deserialize().ok()).unwrap_or_default()
+}
+
+fn arg_position(args: &async_graphql::dynamic::ObjectAccessor<'_>) -> crate::geom::Position {
+    args.try_get("position").ok().and_then(|a| a.deserialize().ok()).unwrap_or_default()
+}
+
+macro_rules! mutation_from_ctx {
+    ($ctx:ident, $kind:literal) => {{
+        let rt: Option<Arc<ParentRuntime>> = match $ctx.data::<Arc<ParentRuntime>>() {
+            Ok(r) => Some(r.clone()),
+            Err(_) => None,
+        };
+        let args = &$ctx.args;
+        let draft_id = arg_id(args, "draftId");
+        let transaction_id = arg_id(args, "transactionId");
+        let name = arg_string(args, "name");
+        let entity_id = arg_id(args, "entityId");
+        let description = arg_string(args, "description");
+        let design_id = arg_id(args, "designId");
+        let blueprint_id = arg_id(args, "blueprintId");
+        let piece_id = arg_id(args, "pieceId");
+        let position = arg_position(args);
+        let opt_name: Option<String> = args.try_get("name").ok().and_then(|a| a.deserialize().ok());
+        let opt_desc: Option<String> = args.try_get("description").ok().and_then(|a| a.deserialize().ok());
+        let request_id = Id::new_sync();
+        FieldFuture::new(async move {
+            let Some(rt) = rt else {
+                return Ok(Some(fv_str("")));
+            };
+            match $kind {
+                "renameKit" => {
+                    let cmd = crate::op::Command::RenameKit { request_id: request_id.clone(), draft_id, transaction_id, name };
+                    rt.dispatch_wip(cmd).await;
+                }
+                "changeDescription" => {
+                    let _ = entity_id;
+                    let cmd = crate::op::Command::ChangeDescription {
+                        request_id: request_id.clone(),
+                        draft_id,
+                        transaction_id,
+                        description,
+                    };
+                    rt.dispatch_wip(cmd).await;
+                }
+                "addFixedPieceToDesign" => {
+                    let bp = if blueprint_id.as_str().is_empty() { Id::new_sync() } else { blueprint_id };
+                    let cmd = crate::op::Command::AddFixedPieceToDesign {
+                        request_id: request_id.clone(),
+                        draft_id,
+                        transaction_id,
+                        design_id,
+                        blueprint_id: bp,
+                        position,
+                        name: opt_name,
+                        description: opt_desc,
+                    };
+                    rt.dispatch_wip(cmd).await;
+                }
+                "fixPieceInDesign" => {
+                    let cmd = crate::op::Command::FixPieceInDesign {
+                        request_id: request_id.clone(),
+                        draft_id,
+                        transaction_id,
+                        design_id,
+                        piece_id,
+                    };
+                    rt.dispatch_wip(cmd).await;
+                }
+                _ => {}
             }
-            "changeDescription" => {
-                let entity_id: Id = ctx
-                    .args
-                    .try_get("entityId")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let description: String = ctx
-                    .args
-                    .try_get("description")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let _ = entity_id;
-                let cmd =
-                    crate::op::Command::ChangeDescription { request_id: request_id.clone(), draft_id, transaction_id, description };
-                rt.dispatch_wip(cmd).await;
-            }
-            "addFixedPieceToDesign" => {
-                let design_id: Id = ctx
-                    .args
-                    .try_get("designId")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let blueprint_id: Id = ctx
-                    .args
-                    .try_get("blueprintId")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_else(|| Id::new_sync());
-                let position: crate::geom::Position = ctx
-                    .args
-                    .try_get("position")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let name: Option<String> = ctx.args.try_get("name").ok().and_then(|a| a.deserialize().ok());
-                let description: Option<String> = ctx.args.try_get("description").ok().and_then(|a| a.deserialize().ok());
-                let cmd = crate::op::Command::AddFixedPieceToDesign {
-                    request_id: request_id.clone(),
-                    draft_id,
-                    transaction_id,
-                    design_id,
-                    blueprint_id,
-                    position,
-                    name,
-                    description,
-                };
-                rt.dispatch_wip(cmd).await;
-            }
-            "fixPieceInDesign" => {
-                let design_id: Id = ctx
-                    .args
-                    .try_get("designId")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let piece_id: Id = ctx
-                    .args
-                    .try_get("pieceId")
-                    .ok()
-                    .and_then(|a| a.deserialize().ok())
-                    .unwrap_or_default();
-                let cmd = crate::op::Command::FixPieceInDesign {
-                    request_id: request_id.clone(),
-                    draft_id,
-                    transaction_id,
-                    design_id,
-                    piece_id,
-                };
-                rt.dispatch_wip(cmd).await;
-            }
-            _ => {}
-        }
-        Ok(Some(FieldValue::from(request_id.to_string())))
-    })
+            Ok(Some(fv_str(request_id.as_str())))
+        })
+    }};
 }
 
 fn real_mutation_object() -> Object {
     let mut m = Object::new("Mutation");
     // Kit
     m = m.field(Field::new("renameKit", TypeRef::named_nn(TypeRef::ID), |ctx| {
-        dispatch_mutation(ctx, "renameKit")
+        mutation_from_ctx!(ctx, "renameKit")
     }).argument(InputValue::new("draftId", TypeRef::named_nn(TypeRef::ID)))
     .argument(InputValue::new("transactionId", TypeRef::named_nn(TypeRef::ID)))
     .argument(InputValue::new("name", TypeRef::named_nn(TypeRef::STRING))));
     m = m.field(
         Field::new("changeDescription", TypeRef::named_nn(TypeRef::ID), |ctx| {
-            dispatch_mutation(ctx, "changeDescription")
+            mutation_from_ctx!(ctx, "changeDescription")
         })
         .argument(InputValue::new("draftId", TypeRef::named_nn(TypeRef::ID)))
         .argument(InputValue::new("transactionId", TypeRef::named_nn(TypeRef::ID)))
@@ -1376,7 +1496,7 @@ fn real_mutation_object() -> Object {
         .argument(InputValue::new("description", TypeRef::named_nn(TypeRef::STRING))),
     );
     m = m.field(Field::new("addFixedPieceToDesign", TypeRef::named_nn(TypeRef::ID), |ctx| {
-        dispatch_mutation(ctx, "addFixedPieceToDesign")
+        mutation_from_ctx!(ctx, "addFixedPieceToDesign")
     })
     .argument(InputValue::new("draftId", TypeRef::named_nn(TypeRef::ID)))
     .argument(InputValue::new("transactionId", TypeRef::named_nn(TypeRef::ID)))
@@ -1386,7 +1506,7 @@ fn real_mutation_object() -> Object {
     .argument(InputValue::new("name", TypeRef::named(TypeRef::STRING)))
     .argument(InputValue::new("description", TypeRef::named(TypeRef::STRING))));
     m = m.field(Field::new("fixPieceInDesign", TypeRef::named_nn(TypeRef::ID), |ctx| {
-        dispatch_mutation(ctx, "fixPieceInDesign")
+        mutation_from_ctx!(ctx, "fixPieceInDesign")
     })
     .argument(InputValue::new("draftId", TypeRef::named_nn(TypeRef::ID)))
     .argument(InputValue::new("transactionId", TypeRef::named_nn(TypeRef::ID)))
@@ -1409,6 +1529,8 @@ pub fn build_executable_target_schema(rt: Arc<ParentRuntime>, bus: Arc<EventBus>
     b = b.register(Type::Object(piece_edge_object()));
     b = b.register(Type::Object(conflict_connection_object()));
     b = b.register(Type::Object(conflict_edge_object()));
+    b = b.register(Type::Object(draft_connection_object()));
+    b = b.register(Type::Object(draft_edge_object()));
     b = b.register(Type::Object(real_query_object()));
     b = b.register(Type::Object(real_graph_object()));
     b = b.register(Type::Object(real_kit_object()));

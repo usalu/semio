@@ -1,0 +1,113 @@
+# Stubs for VCS/read-write version entities referenced by OwnerEntity but missing from the target slice.
+
+type ConflictModification implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type ConflictDiff implements Diff {
+  id: ID!
+  hash: String!
+  owner: DiffOwner!
+  ownerDiffs: Diffs
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+  before: Entity!
+  modification: Modification!
+  after: Entity!
+}
+
+type ConflictDiffs implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type ReadVersionModification implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type ReadVersionDiff implements Diff {
+  id: ID!
+  hash: String!
+  owner: DiffOwner!
+  ownerDiffs: Diffs
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+  before: Entity!
+  modification: Modification!
+  after: Entity!
+}
+
+type ReadVersionDiffs implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type WriteVersionModification implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type WriteVersionDiff implements Diff {
+  id: ID!
+  hash: String!
+  owner: DiffOwner!
+  ownerDiffs: Diffs
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+  before: Entity!
+  modification: Modification!
+  after: Entity!
+}
+
+type WriteVersionDiffs implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type SessionModification implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
+
+type SessionDiff implements Diff {
+  id: ID!
+  hash: String!
+  owner: DiffOwner!
+  ownerDiffs: Diffs
+  changeOwner: Change
+  operationOwner: Operation
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+  before: Entity!
+  modification: Modification!
+  after: Entity!
+}
+
+type SessionDiffs implements Entity {
+  id: ID!
+  hash: String!
+  entityOwner: OwnerEntity
+  ownedEntities: OwnedEntityConnection
+}
